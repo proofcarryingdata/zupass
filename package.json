@@ -20,7 +20,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "turbo": "latest"
+    "turbo": "^1.7.0"
   },
   "packageManager": "yarn@1.22.19"
 }
