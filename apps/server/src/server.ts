@@ -1,15 +1,11 @@
-import express, { Request, Response } from "express";
-import { IS_PROD } from "./isProd";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { startAPI } from "./api/api";
 
-console.log("starting server");
+const dotEnvPath = path.join(process.cwd(), ".env");
 
-const app = express();
-const port = IS_PROD ? process.env.PORT : 3002;
+console.log(`Loading environment variables from: ${dotEnvPath} `);
+dotenv.config({ path: dotEnvPath });
+console.log("Starting server");
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
-});
-
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`);
-});
+startAPI();

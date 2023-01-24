@@ -3,14 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development ts-node src/server.ts",
+    "dev": "NODE_ENV=development ts-node-dev src/server.ts",
     "build": "exit 0",
     "start": "NODE_ENV=production PORT=8080 ts-node src/server.ts",
     "lint": "exit 0"
   },
   "dependencies": {
+    "@types/pg": "^8.6.6",
     "express": "^4.18.2",
     "next": "^13.1.1",
+    "pg": "^8.8.0",
+    "postgres-migrations": "^5.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "ts-node": "^10.9.1",
@@ -22,8 +25,10 @@
     "@types/node": "^17.0.12",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
+    "dotenv": "^16.0.3",
     "eslint": "7.32.0",
     "eslint-config-custom": "*",
+    "ts-node-dev": "^2.0.0",
     "tsconfig": "*",
     "typescript": "^4.5.3"
   }
