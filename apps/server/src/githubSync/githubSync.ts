@@ -1,16 +1,16 @@
 import { Octokit } from "@octokit/rest";
+import { createTokenAuth } from "@octokit/auth-token";
 import _, { keys } from "lodash";
 import PQueue from "p-queue";
 
-const octokit = new Octokit();
 type Unarray<T> = T extends Array<infer U> ? U : T;
 type PublicKey = Unarray<
-  Awaited<ReturnType<typeof octokit.users.listPublicKeysForUser>>["data"]
+  Awaited<ReturnType<Octokit["users"]["listPublicKeysForUser"]>>["data"]
 >;
-type User = Awaited<ReturnType<typeof octokit.users.getByUsername>>["data"];
-type Repo = Awaited<ReturnType<typeof octokit.repos.get>>["data"];
+type User = Awaited<ReturnType<Octokit["users"]["getByUsername"]>>["data"];
+type Repo = Awaited<ReturnType<Octokit["repos"]["get"]>>["data"];
 type Contributor = Unarray<
-  Awaited<ReturnType<typeof octokit.repos.listContributors>>["data"]
+  Awaited<ReturnType<Octokit["repos"]["listContributors"]>>["data"]
 >;
 type Contribution = {
   contributor: Contributor;
@@ -18,12 +18,17 @@ type Contribution = {
 };
 
 export async function githubSync(): Promise<void> {
+  if (process.env.GITHUB_API_KEY === undefined) {
+    throw new Error("Missing environment variable: GITHUB_API_KEY");
+  }
+
+  const octokit = new Octokit({ auth: process.env.GITHUB_API_KEY });
   const repositoryUrls = ["https://github.com/ethers-io/ethers.js/"];
 
   const queue = new PQueue({ concurrency: 1, interval: 1000, intervalCap: 1 });
 
   const hardcodedRepositories = await Promise.all(
-    repositoryUrls.map((url) => loadRepoByUrl(url, queue))
+    repositoryUrls.map((url) => loadRepoByUrl(url, octokit, queue))
   );
 
   console.log(
@@ -34,7 +39,7 @@ export async function githubSync(): Promise<void> {
   const allContributors: Contributor[] = [];
 
   for (const repo of hardcodedRepositories) {
-    const contributors = await loadRepositoryContributors(repo, queue);
+    const contributors = await loadRepositoryContributors(repo, octokit, queue);
     contributors.forEach((c) =>
       contributions.push({
         contributor: c,
@@ -51,7 +56,7 @@ export async function githubSync(): Promise<void> {
     if (!contributor.id) {
       continue; // this contributor was anonymous.
     }
-    const keys = await loadUserKeys(contributor.id, queue);
+    const keys = await loadUserKeys(contributor.id, octokit, queue);
     allKeys.push(...keys);
   }
 
@@ -68,6 +73,7 @@ export async function githubSync(): Promise<void> {
 async function loadRepo(
   owner: string,
   repo: string,
+  octokit: Octokit,
   queue: PQueue
 ): Promise<Repo> {
   return queue.add(() =>
@@ -75,13 +81,21 @@ async function loadRepo(
   );
 }
 
-async function loadRepoById(id: number, queue: PQueue): Promise<Repo> {
+async function loadRepoById(
+  id: number,
+  octokit: Octokit,
+  queue: PQueue
+): Promise<Repo> {
   return queue.add(() =>
     octokit.request("GET /repositories/:id", { id }).then((r) => r.data)
   ) as Promise<Repo>;
 }
 
-async function loadRepoByUrl(repoUrl: string, queue: PQueue): Promise<Repo> {
+async function loadRepoByUrl(
+  repoUrl: string,
+  octokit: Octokit,
+  queue: PQueue
+): Promise<Repo> {
   console.log(`[GITHUB] Loading repo ${repoUrl}`);
 
   const regex = /https:\/\/github.com\/(.*)\/(.*)\//;
@@ -92,11 +106,12 @@ async function loadRepoByUrl(repoUrl: string, queue: PQueue): Promise<Repo> {
     );
   }
 
-  return loadRepo(match[1], match[2], queue);
+  return loadRepo(match[1], match[2], octokit, queue);
 }
 
 async function loadRepositoryContributors(
   repo: Repo,
+  octokit: Octokit,
   queue: PQueue
 ): Promise<Contributor[]> {
   console.log(`[GITHUB] Loading repo contributors for ${repo.url}`);
@@ -115,7 +130,11 @@ async function loadRepositoryContributors(
   return contributors.data;
 }
 
-async function getUserById(userId: number, queue: PQueue): Promise<User> {
+async function getUserById(
+  userId: number,
+  octokit: Octokit,
+  queue: PQueue
+): Promise<User> {
   console.log(`[GITHUB] getting user by id ${userId}`);
   return queue.add(() =>
     octokit.request("GET /user/:id", { id: userId }).then((r) => r.data)
@@ -124,9 +143,10 @@ async function getUserById(userId: number, queue: PQueue): Promise<User> {
 
 async function loadUserKeys(
   userId: number,
+  octokit: Octokit,
   queue: PQueue
 ): Promise<PublicKey[]> {
-  const user = await getUserById(userId, queue);
+  const user = await getUserById(userId, octokit, queue);
 
   const r = await octokit.rest.users.listPublicKeysForUser({
     username: user.login,
