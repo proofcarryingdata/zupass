@@ -1,12 +1,13 @@
 import express, { Request, Response } from "express";
 import { getDBClient } from "../database/postgresClient";
 import { IS_PROD } from "../isProd";
+import { initControlRoutes } from "./routes/controlAPI";
 import { initDataRoutes } from "./routes/dataAPI";
 import { initHealthcheckRoutes } from "./routes/healthCheckAPI";
 
 export async function startAPI(): Promise<express.Application> {
   const client = await getDBClient();
-  const routes = [initHealthcheckRoutes, initDataRoutes];
+  const routes = [initHealthcheckRoutes, initDataRoutes, initControlRoutes];
 
   return new Promise<express.Application>((resolve, reject) => {
     const port = IS_PROD ? process.env.PORT : 3002;

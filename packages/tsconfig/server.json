@@ -12,7 +12,7 @@
     "incremental": true,
     "esModuleInterop": true,
     "module": "Node16",
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]
