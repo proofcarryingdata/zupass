@@ -9,6 +9,7 @@
     "lint": "exit 0"
   },
   "dependencies": {
+    "@octokit/rest": "^19.0.7",
     "@types/pg": "^8.6.6",
     "express": "^4.18.2",
     "next": "^13.1.1",
