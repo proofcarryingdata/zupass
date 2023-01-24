@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "NODE_ENV=development ts-node src/server.ts",
     "build": "exit 0",
-    "start": "NODE_ENV=production ts-node src/server.ts",
+    "start": "NODE_ENV=production PORT=8080 ts-node src/server.ts",
     "lint": "exit 0"
   },
   "dependencies": {
