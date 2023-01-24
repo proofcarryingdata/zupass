@@ -1,0 +1,22 @@
+{
+  "name": "circuits",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^4.3.6",
+    "circomlib": "^2.0.3",
+    "circomlibjs": "^0.1.2",
+    "hardhat": "^2.9.1",
+    "hardhat-circom": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "circom:dev": "hardhat circom --deterministic --debug --verbose",
+    "circom:prod": "hardhat circom --verbose",
+    "test": "hardhat test"
+  }
+}
