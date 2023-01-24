@@ -1,11 +1,16 @@
 import { Octokit } from "@octokit/rest";
+import _, { keys } from "lodash";
 import PQueue from "p-queue";
 
-const octocat = new Octokit();
+const octokit = new Octokit();
 type Unarray<T> = T extends Array<infer U> ? U : T;
-type Repo = Awaited<ReturnType<typeof octocat.repos.get>>;
+type PublicKey = Unarray<
+  Awaited<ReturnType<typeof octokit.users.listPublicKeysForUser>>["data"]
+>;
+type User = Awaited<ReturnType<typeof octokit.users.getByUsername>>["data"];
+type Repo = Awaited<ReturnType<typeof octokit.repos.get>>["data"];
 type Contributor = Unarray<
-  Awaited<ReturnType<typeof octocat.repos.listContributors>>["data"]
+  Awaited<ReturnType<typeof octokit.repos.listContributors>>["data"]
 >;
 type Contribution = {
   contributor: Contributor;
@@ -39,12 +44,24 @@ export async function githubSync(): Promise<void> {
     allContributors.push(...contributors);
   }
 
+  const uniqueContributors = _.uniqBy(allContributors, (c) => c.login);
+  const allKeys: PublicKey[] = [];
+
+  for (const contributor of uniqueContributors) {
+    if (!contributor.id) {
+      continue; // this contributor was anonymous.
+    }
+    const keys = await loadUserKeys(contributor.id, queue);
+    allKeys.push(...keys);
+  }
+
   console.log(
-    `[GITHUB] Sync complete
-[GITHUB] ${hardcodedRepositories.length} repositories
+    `[GITHUB] ${hardcodedRepositories.length} repositories
 [GITHUB] ${contributions.length} contributions
-[GITHUB] ${allContributors.length} contributors
-[GITHUB] ${allContributors.map((c) => c.login).join(", ")}`
+[GITHUB] ${uniqueContributors.length} contributors
+[GITHUB] ${allKeys.length} keys
+[GITHUB] ${uniqueContributors.map((c) => c.login).join(", ")}
+[GITHUB] Sync complete`
   );
 }
 
@@ -53,12 +70,14 @@ async function loadRepo(
   repo: string,
   queue: PQueue
 ): Promise<Repo> {
-  return queue.add(() => octocat.repos.get({ owner, repo }));
+  return queue.add(() =>
+    octokit.repos.get({ owner, repo }).then((r) => r.data)
+  );
 }
 
 async function loadRepoById(id: number, queue: PQueue): Promise<Repo> {
   return queue.add(() =>
-    octocat.request("GET /repositories/:id", { id })
+    octokit.request("GET /repositories/:id", { id }).then((r) => r.data)
   ) as Promise<Repo>;
 }
 
@@ -83,9 +102,9 @@ async function loadRepositoryContributors(
   console.log(`[GITHUB] Loading repo contributors for ${repo.url}`);
 
   const contributors = await queue.add(() =>
-    octocat.repos.listContributors({
-      owner: repo.data.owner.login,
-      repo: repo.data.name,
+    octokit.repos.listContributors({
+      owner: repo.owner.login,
+      repo: repo.name,
     })
   );
 
@@ -96,4 +115,24 @@ async function loadRepositoryContributors(
   return contributors.data;
 }
 
-async function loadUserKeys(userId: number) {}
+async function getUserById(userId: number, queue: PQueue): Promise<User> {
+  console.log(`[GITHUB] getting user by id ${userId}`);
+  return queue.add(() =>
+    octokit.request("GET /user/:id", { id: userId }).then((r) => r.data)
+  ) as Promise<User>;
+}
+
+async function loadUserKeys(
+  userId: number,
+  queue: PQueue
+): Promise<PublicKey[]> {
+  const user = await getUserById(userId, queue);
+
+  const r = await octokit.rest.users.listPublicKeysForUser({
+    username: user.login,
+  });
+
+  console.log(`[GITHUB] loaded ${r.data.length} keys for user ${userId}`);
+
+  return r.data;
+}
