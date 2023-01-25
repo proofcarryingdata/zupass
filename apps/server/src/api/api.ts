@@ -22,11 +22,6 @@ export async function startAPI(): Promise<express.Application> {
 
     app
       .listen(port, () => {
-        const span = opentelemetry.metrics
-          .getMeter("zk-webserver")
-          .createCounter("launches")
-          .add(1);
-
         console.log(`App listening on port ${port}`);
         resolve(app);
       })
