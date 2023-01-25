@@ -11,7 +11,7 @@ function getDatasetName() {
   return prefix + "-dev";
 }
 
-export async function getHoneycomb(): Promise<Libhoney | null> {
+export function getHoneycombAPI(): Libhoney | null {
   if (process.env.HONEYCOMB_API_KEY === undefined) {
     return null;
   }

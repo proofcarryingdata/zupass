@@ -1,9 +1,9 @@
 import express, { Request, Response } from "express";
-import { Client } from "pg";
+import { ApplicationContext } from "../../types";
 
 export function initHealthcheckRoutes(
   app: express.Application,
-  client: Client
+  context: ApplicationContext
 ): void {
   console.log("Initializing health check routes");
 

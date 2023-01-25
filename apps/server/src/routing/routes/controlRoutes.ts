@@ -1,10 +1,10 @@
 import express, { Request, Response } from "express";
-import { Client } from "pg";
-import { githubSync } from "../../githubSync/githubSync";
+import { githubSync } from "../../services/githubSync";
+import { ApplicationContext } from "../../types";
 
 export function initControlRoutes(
   app: express.Application,
-  client: Client
+  context: ApplicationContext
 ): void {
   console.log("Initializing control routes");
 
@@ -14,6 +14,6 @@ export function initControlRoutes(
       console.error(e);
     });
 
-    res.send("Started.");
+    res.send("Started Sync Process");
   });
 }
