@@ -1,5 +1,5 @@
 import { ApplicationContext } from "../types";
 
-export function startMetrics(context: ApplicationContext) {
-  console.log("[METRICS] Starting metrics");
+export async function startMetrics(context: ApplicationContext) {
+  console.log("[INIT] Starting metrics");
 }

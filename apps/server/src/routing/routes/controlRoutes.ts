@@ -6,7 +6,7 @@ export function initControlRoutes(
   app: express.Application,
   context: ApplicationContext
 ): void {
-  console.log("Initializing control routes");
+  console.log("[INIT] Initializing control routes");
 
   app.get("/control/sync", async (req: Request, res: Response) => {
     githubSync().catch((e) => {

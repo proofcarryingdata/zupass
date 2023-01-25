@@ -1,3 +1,4 @@
+/// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
 import { IS_PROD } from "../util/isProd";
 
@@ -12,6 +13,7 @@ function getDatasetName() {
 }
 
 export function getHoneycombAPI(): Libhoney | null {
+  console.log("[INIT] Loaded a Honeycomb API");
   if (process.env.HONEYCOMB_API_KEY === undefined) {
     return null;
   }

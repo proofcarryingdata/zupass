@@ -3,7 +3,7 @@ import { getDatabaseConfiguration } from "./postgresConfiguration";
 import { migrateDatabase } from "./postgresMigrations";
 
 export async function getDBClient(): Promise<Client> {
-  console.log("Initializing Postgres client");
+  console.log("[INIT] Initializing Postgres client");
 
   const client = new Client(getDatabaseConfiguration());
   await client.connect();

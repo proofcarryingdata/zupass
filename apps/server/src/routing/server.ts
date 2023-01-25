@@ -25,7 +25,7 @@ export async function startServer(
 
     app
       .listen(port, () => {
-        console.log(`App listening on port ${port}`);
+        console.log(`[INIT] HTTP server listening on port ${port}`);
         resolve(app);
       })
       .on("error", (e: Error) => {

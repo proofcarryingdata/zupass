@@ -1,5 +1,5 @@
-// https://github.com/honeycombio/libhoney-js/issues/88
 declare module "libhoney" {
+  // https://github.com/honeycombio/libhoney-js/issues/88
   type LibhoneyOptions = {
     writeKey: string;
     dataset: string;

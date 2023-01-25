@@ -6,7 +6,7 @@ export function initDataRoutes(
   app: express.Application,
   context: ApplicationContext
 ): void {
-  console.log("Initializing data routes");
+  console.log("[INIT] Initializing data routes");
 
   app.get("/data/repositories", async (req: Request, res: Response) => {
     const repositories = await getRepositories(context.dbClient);

@@ -11,8 +11,9 @@
     "noEmit": true,
     "incremental": true,
     "esModuleInterop": true,
-    "module": "Node16",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "isolatedModules": false
   },
   "include": ["src"],
   "exclude": ["node_modules"]
