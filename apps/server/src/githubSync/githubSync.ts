@@ -1,6 +1,5 @@
 import { Octokit } from "@octokit/rest";
-import { createTokenAuth } from "@octokit/auth-token";
-import _, { keys } from "lodash";
+import _ from "lodash";
 import PQueue from "p-queue";
 
 type Unarray<T> = T extends Array<infer U> ? U : T;

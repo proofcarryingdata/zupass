@@ -1,6 +1,6 @@
+import * as path from "path";
 import { Client } from "pg";
 import { migrate } from "postgres-migrations";
-import * as path from "path";
 
 const MIGRATIONS_PATH = path.join(process.cwd(), "migrations");
 

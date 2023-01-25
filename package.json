@@ -14,7 +14,8 @@
   },
   "devDependencies": {
     "eslint-config-custom": "*",
-    "prettier": "latest"
+    "prettier": "latest",
+    "prettier-plugin-organize-imports": "^3.2.2"
   },
   "engines": {
     "node": "^18.0.0"

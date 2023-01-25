@@ -1,16 +1,16 @@
-import express, { Request, Response } from "express";
+import express from "express";
+import morgan from "morgan";
 import { getDBClient } from "../database/postgresClient";
-import { IS_PROD } from "../isProd";
-import { getHoneycomb } from "../services/honeycomb";
+import { startMetrics } from "../services/metrics";
+import { IS_PROD } from "../util/isProd";
 import { initControlRoutes } from "./routes/controlAPI";
 import { initDataRoutes } from "./routes/dataAPI";
 import { initHealthcheckRoutes } from "./routes/healthCheckAPI";
-import morgan from "morgan";
-import opentelemetry from "@opentelemetry/api";
 
 export async function startAPI(): Promise<express.Application> {
-  const honeycomb = await getHoneycomb();
   const client = await getDBClient();
+  startMetrics();
+
   const routes = [initHealthcheckRoutes, initDataRoutes, initControlRoutes];
 
   return new Promise<express.Application>((resolve, reject) => {

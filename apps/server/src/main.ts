@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
 import { startAPI } from "./api/api";
-import { IS_PROD } from "./isProd";
+import { IS_PROD } from "./util/isProd";
 
 const dotEnvPath = IS_PROD
   ? `/etc/secrets/.env`
