@@ -1,14 +1,6 @@
-This circuit will, given:
+I want to check my understanding of some details of the ed25519 circuit.
 
-- ed25519 public key and a message signed by it
-- OR an RSA public key and a message signed by it
-- verify that this public key is included in a merkle tree
-- verify that the message was signed by the private key corresponding to the given public key
-- without revealing the public key
-
-The ed25519 circuits are provided by https://github.com/Electron-Labs/ed25519-circom.
-
-The inputs to this circuit are as follows:
+According to the documentation at https://github.com/Electron-Labs/ed25519-circom, the inputs to this circuit are as follows:
 
 - `msg` is the data for the signature (I am assuming this means in binary, LSB to MSB, in bits, where the amount of bits is a multiple of 8, i.e. bytes)
 - `R8` is the first 256 bits of the signature (LSB to MSB, 256 bits)
@@ -20,3 +12,5 @@ The inputs to this circuit are as follows:
 ## Format of public key ed25519
 
 - The public key is encoded as compressed EC point: the y-coordinate, combined with the lowest bit (the parity) of the x-coordinate. For Ed25519 the public key is 32 bytes
+
+https://medium.com/electron-labs/presenting-electron-sdk-8c5774bd9d1b
