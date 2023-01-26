@@ -1,0 +1,3 @@
+[submodule "packages/packages/ed25519-circom"]
+	path = packages/packages/ed25519-circom
+	url = git@github.com:Electron-Labs/ed25519-circom.git
