@@ -672,6 +672,11 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@gozala/ed25519@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@gozala/ed25519/-/ed25519-1.6.0.tgz#609f06e879cd6867f4d956be3b65e627d9ff127c"
+  integrity sha512-ab+njApOmFRNh2+5D9QbzT68tN6iwMghGmmPUkCAAX+Rx09rbFrJzz0pXqTng5HnYmoi5oxgvGnwPAu775rVLw==
+
 "@humanwhocodes/config-array@^0.11.8":
   version "0.11.8"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.8.tgz#03595ac2075a4dc0f191cc2131de14fbd7d410b9"
@@ -856,6 +861,11 @@
   version "13.1.5"
   resolved "https://registry.yarnpkg.com/@next/swc-win32-x64-msvc/-/swc-win32-x64-msvc-13.1.5.tgz#8c7bef3dc41e624050eecb336cbd944a91fa7198"
   integrity sha512-IZHwvd649ccbWyLCfu92IXEpR250NpmBkaRelPV+WVm4jrd62FKRFCNdqdCXq6TrEg9wN8cK4YG8tm44uEZqLA==
+
+"@noble/ed25519@^1.7.1":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@noble/ed25519/-/ed25519-1.7.1.tgz#6899660f6fbb97798a6fbd227227c4589a454724"
+  integrity sha512-Rk4SkJFaXZiznFyC/t77Q0NKS4FL7TLJJsVG2V2oiEq3kJVeTdxysEe/yRWSpnWMe808XRDJ+VFh5pt/FN5plw==
 
 "@noble/hashes@1.1.2":
   version "1.1.2"
