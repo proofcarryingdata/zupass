@@ -32,10 +32,10 @@ async function test() {
   console.log(S);
 
   const publicKeyHex = ed.utils.bytesToHex(publicKey);
-  const pointA = ed.Point.fromHex(publicKeyHex);
+  const pointA = ed.ExtendedPoint.fromAffine(ed.Point.fromHex(publicKeyHex));
 
   const R8Hex = ed.utils.bytesToHex(R8);
-  const pointR = ed.Point.fromHex(R8Hex);
+  const pointR = ed.ExtendedPoint.fromAffine(ed.Point.fromHex(R8Hex));
 
   console.log(message);
   console.log(R8);
