@@ -1,5 +1,9 @@
-// @ts-nocheck
+// @ts-ignore
 import * as ed from "@noble/ed25519";
+// @ts-ignore
+import * as util from "../../ed25519-circom/test/utils";
+
+util.a;
 
 /**
 msg is the data for the signature
@@ -21,10 +25,6 @@ async function test() {
   const publicKey: Uint8Array = await ed.getPublicKey(privateKey);
   const signature: Uint8Array = await ed.sign(message, privateKey);
   const isValid = await ed.verify(signature, message, publicKey);
-
-  console.log("---");
-  console.log(signature);
-  console.log("---");
 
   const R8 = signature.subarray(0, 256 / 8);
   const S = signature.subarray(signature.length - 32, signature.length);
