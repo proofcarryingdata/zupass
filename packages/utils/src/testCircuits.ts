@@ -18,8 +18,14 @@ async function test() {
   console.log("generated proof");
   console.log(proof);
 
+  require("fs").writeFileSync("./proof.json", JSON.stringify(proof, null, 2));
+
   console.log("verifying proof");
-  const verified = await snarkjs.groth16.verify(vkeyPath, inputs, proof);
+  const verified = await snarkjs.groth16.verify(
+    JSON.parse(require("fs").readFileSync(vkeyPath).toString()),
+    proof.publicSignals,
+    proof.proof
+  );
   console.log("verification complete");
   console.log(verified);
 }
