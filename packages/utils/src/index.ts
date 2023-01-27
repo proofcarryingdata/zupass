@@ -28,12 +28,13 @@ function chunkifyPoint(point: ed.ExtendedPoint) {
   return chunks;
 }
 
-async function test() {
+export async function getInputs() {
   const privateKey = ed.utils.randomPrivateKey();
-  const message = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
+  const message = Uint8Array.from([0xab]);
   const publicKey: Uint8Array = await ed.getPublicKey(privateKey);
   const signature: Uint8Array = await ed.sign(message, privateKey);
   const isValid = await ed.verify(signature, message, publicKey);
+  const publicKeyLEB = util.buffer2bits(Buffer.from(publicKey)).reverse();
 
   const R8 = signature.subarray(0, 256 / 8);
   const S = signature.subarray(signature.length - 32, signature.length);
@@ -50,13 +51,23 @@ async function test() {
   const SBuf = util.buffer2bits(Buffer.from(S));
   SBuf.pop();
   const SLEB = SBuf.reverse();
+  const messageLEB = util.buffer2bits(Buffer.from(message)).reverse();
 
-  console.log(message);
+  console.log(messageLEB);
   console.log(R8LEB);
   console.log(SLEB);
   console.log(publicKey);
   console.log(pointAbase85);
   console.log(pointRbase85);
+
+  return {
+    msg: messageLEB,
+    A: publicKeyLEB,
+    R8: R8LEB,
+    S: SLEB,
+    PointA: pointAbase85,
+    PointR: pointRbase85,
+  };
 }
 
-test();
+getInputs();
