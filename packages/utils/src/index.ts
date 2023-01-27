@@ -1,9 +1,6 @@
-// @ts-ignore
+// @ts-nocheck
 import * as ed from "@noble/ed25519";
-// @ts-ignore
-import * as util from "../../ed25519-circom/test/utils";
-
-util.a;
+import * as util from "./util";
 
 /**
 msg is the data for the signature
@@ -19,6 +16,18 @@ x PointA is the point representing the public key on the elliptic curve (encoded
 PointR is the point representing the R8 value on the elliptic curve (encoded in base 2^85)
  */
 
+function chunkifyPoint(point: ed.ExtendedPoint) {
+  const chunks = [];
+  const pointArray = [point.x, point.y, point.z, point.t];
+  for (let i = 0; i < 4; i++) {
+    chunks.push(util.chunkBigInt(pointArray[i], BigInt(2 ** 85)));
+  }
+  for (let i = 0; i < chunks.length; i++) {
+    util.pad(chunks[i], 3);
+  }
+  return chunks;
+}
+
 async function test() {
   const privateKey = ed.utils.randomPrivateKey();
   const message = Uint8Array.from([0xab, 0xbc, 0xcd, 0xde]);
@@ -29,20 +38,25 @@ async function test() {
   const R8 = signature.subarray(0, 256 / 8);
   const S = signature.subarray(signature.length - 32, signature.length);
 
-  console.log(S);
-
   const publicKeyHex = ed.utils.bytesToHex(publicKey);
   const pointA = ed.ExtendedPoint.fromAffine(ed.Point.fromHex(publicKeyHex));
+  const pointAbase85 = chunkifyPoint(pointA);
 
   const R8Hex = ed.utils.bytesToHex(R8);
   const pointR = ed.ExtendedPoint.fromAffine(ed.Point.fromHex(R8Hex));
+  const pointRbase85 = chunkifyPoint(pointR);
+
+  const R8LEB = util.buffer2bits(Buffer.from(R8)).reverse();
+  const SBuf = util.buffer2bits(Buffer.from(S));
+  SBuf.pop();
+  const SLEB = SBuf.reverse();
 
   console.log(message);
-  console.log(R8);
-  console.log(S);
+  console.log(R8LEB);
+  console.log(SLEB);
   console.log(publicKey);
-  console.log(pointA);
-  console.log(pointR);
+  console.log(pointAbase85);
+  console.log(pointRbase85);
 }
 
 test();
