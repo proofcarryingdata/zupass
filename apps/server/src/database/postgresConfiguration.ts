@@ -32,5 +32,6 @@ export function getDatabaseConfiguration(): DBConfiguration {
     database: process.env.DATABASE_DB_NAME,
     port: 5432,
     ssl: true,
+    connectionTimeoutMillis: 0,
   };
 }
