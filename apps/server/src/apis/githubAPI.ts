@@ -25,7 +25,7 @@ export async function loadRepo(
   queue: PQueue
 ): Promise<Repo> {
   return tracer.startActiveSpan("loadRepo", (span) => {
-    span.setAttribute("repo", `${owner}${repo}`);
+    span.setAttribute("repo", `${owner}/${repo}`);
     return queue.add(() =>
       octokit.repos.get({ owner, repo }).then((r) => {
         span.end();
@@ -40,9 +40,15 @@ export async function loadRepoById(
   octokit: Octokit,
   queue: PQueue
 ): Promise<Repo> {
-  return queue.add(() =>
-    octokit.request("GET /repositories/:id", { id }).then((r) => r.data)
-  ) as Promise<Repo>;
+  return tracer.startActiveSpan("loadRepoById", (span) => {
+    span.setAttribute("repoId", id);
+    return queue.add(() =>
+      octokit.request("GET /repositories/:id", { id }).then((r) => {
+        span.end();
+        return r.data;
+      })
+    ) as Promise<Repo>;
+  });
 }
 
 export async function loadRepoByUrl(
@@ -68,20 +74,24 @@ export async function loadRepositoryContributors(
   octokit: Octokit,
   queue: PQueue
 ): Promise<Contributor[]> {
-  console.log(`[GITHUB] Loading repo contributors for ${repo.url}`);
+  return tracer.startActiveSpan("loadRepositoryContributors", async (span) => {
+    span.setAttribute("repo", `${repo.full_name}`);
+    console.log(`[GITHUB] Loading repo contributors for ${repo.url}`);
 
-  const contributors = await queue.add(() =>
-    octokit.repos.listContributors({
-      owner: repo.owner.login,
-      repo: repo.name,
-    })
-  );
+    const contributors = await queue.add(() =>
+      octokit.repos.listContributors({
+        owner: repo.owner.login,
+        repo: repo.name,
+      })
+    );
 
-  console.log(
-    `[GITHUB] Loaded ${contributors.data.length} contributors for ${repo.url}`
-  );
+    console.log(
+      `[GITHUB] Loaded ${contributors.data.length} contributors for ${repo.url}`
+    );
 
-  return contributors.data;
+    span.end();
+    return contributors.data;
+  });
 }
 
 export async function getUserById(
@@ -89,10 +99,17 @@ export async function getUserById(
   octokit: Octokit,
   queue: PQueue
 ): Promise<User> {
-  console.log(`[GITHUB] getting user by id ${userId}`);
-  return queue.add(() =>
-    octokit.request("GET /user/:id", { id: userId }).then((r) => r.data)
-  ) as Promise<User>;
+  return tracer.startActiveSpan("getUserById", async (span) => {
+    span.setAttribute("userId", userId);
+    console.log(`[GITHUB] getting user by id ${userId}`);
+
+    return queue.add(() =>
+      octokit.request("GET /user/:id", { id: userId }).then((r) => {
+        span.end();
+        return r.data;
+      })
+    ) as Promise<User>;
+  });
 }
 
 export async function loadUserKeys(
@@ -100,15 +117,18 @@ export async function loadUserKeys(
   octokit: Octokit,
   queue: PQueue
 ): Promise<PublicKey[]> {
-  const user = await getUserById(userId, octokit, queue);
+  return tracer.startActiveSpan("loadUserKeys", async (span) => {
+    const user = await getUserById(userId, octokit, queue);
 
-  const r = await octokit.rest.users.listPublicKeysForUser({
-    username: user.login,
+    const r = await octokit.rest.users.listPublicKeysForUser({
+      username: user.login,
+    });
+
+    console.log(`[GITHUB] loaded ${r.data.length} keys for user ${userId}`);
+
+    span.end();
+    return r.data;
   });
-
-  console.log(`[GITHUB] loaded ${r.data.length} keys for user ${userId}`);
-
-  return r.data;
 }
 
 export type PublicKey = Unarray<

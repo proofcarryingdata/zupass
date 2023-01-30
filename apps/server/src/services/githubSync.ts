@@ -14,7 +14,7 @@ import {
 export async function githubSync(): Promise<void> {
   const tracer = opentelemetry.trace.getTracer("github");
 
-  tracer.startActiveSpan("github-sync", async (span) => {
+  tracer.startActiveSpan("githubSync", async (span) => {
     const repositoryUrls = ["https://github.com/ethers-io/ethers.js/"];
     const octokit = initOctokit();
     const queue = new PQueue({
