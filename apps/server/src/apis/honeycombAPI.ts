@@ -27,6 +27,7 @@ export function getHoneycombAPI(): Libhoney | null {
 
 export enum EventName {
   SERVER_START = "SERVER_START",
+  METRIC = "METRIC",
 }
 
 export function sendEvent(

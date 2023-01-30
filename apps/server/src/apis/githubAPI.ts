@@ -10,6 +10,11 @@ export function initOctokit() {
   return new Octokit({ auth: process.env.GITHUB_API_KEY });
 }
 
+export async function getAPIRateLimit(octokit: Octokit) {
+  const rateLimit = await octokit.rateLimit.get();
+  return rateLimit.data.rate;
+}
+
 export async function loadRepo(
   owner: string,
   repo: string,
