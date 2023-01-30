@@ -26,9 +26,9 @@ export async function githubSync(): Promise<void> {
   tracer.startActiveSpan("githubSync", async (span) => {
     const octokit = initOctokit();
     const queue = new PQueue({
-      concurrency: 1,
+      concurrency: 5,
       interval: 1000,
-      intervalCap: 1,
+      intervalCap: 5,
     });
 
     const repos: Repo[] = [];
@@ -67,9 +67,13 @@ export async function githubSync(): Promise<void> {
     }
 
     const uniqueContributors = _.uniqBy(allContributors, (c) => c.login);
-    const allKeys: PublicKey[] = [];
+    console.log(`[GITHUB] Loaded ${uniqueContributors.length} contributors`);
 
-    for (const contributor of uniqueContributors) {
+    const allKeys: PublicKey[] = [];
+    for (let i = 0; i < uniqueContributors.length; i++) {
+      console.log(`[GITHUB] Contributor ${i + 1}/${uniqueContributors.length}`);
+      const contributor = uniqueContributors[i];
+
       if (!contributor.id) {
         continue; // this contributor was anonymous.
       }
