@@ -1,6 +1,9 @@
 import { Octokit } from "@octokit/rest";
+import opentelemetry from "@opentelemetry/api";
 import PQueue from "p-queue";
 import { Unarray } from "../util/types";
+
+const tracer = opentelemetry.trace.getTracer("github");
 
 export function initOctokit() {
   if (process.env.GITHUB_API_KEY === undefined) {
@@ -21,9 +24,15 @@ export async function loadRepo(
   octokit: Octokit,
   queue: PQueue
 ): Promise<Repo> {
-  return queue.add(() =>
-    octokit.repos.get({ owner, repo }).then((r) => r.data)
-  );
+  return tracer.startActiveSpan("loadRepo", (span) => {
+    span.setAttribute("repo", `${owner}${repo}`);
+    return queue.add(() =>
+      octokit.repos.get({ owner, repo }).then((r) => {
+        span.end();
+        return r.data;
+      })
+    );
+  });
 }
 
 export async function loadRepoById(
