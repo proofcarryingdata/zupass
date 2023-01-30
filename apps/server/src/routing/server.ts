@@ -1,5 +1,6 @@
 import express from "express";
 import morgan from "morgan";
+import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { initControlRoutes } from "./routes/controlRoutes";
@@ -26,6 +27,7 @@ export async function startServer(
     app
       .listen(port, () => {
         console.log(`[INIT] HTTP server listening on port ${port}`);
+        sendEvent(context, EventName.SERVER_START);
         resolve(app);
       })
       .on("error", (e: Error) => {

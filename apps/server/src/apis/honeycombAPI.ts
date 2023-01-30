@@ -1,5 +1,6 @@
 /// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
+import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
 
 function getDatasetName() {
@@ -22,4 +23,23 @@ export function getHoneycombAPI(): Libhoney | null {
     writeKey: process.env.HONEYCOMB_API_KEY,
     dataset: getDatasetName(),
   });
+}
+
+export enum EventName {
+  SERVER_START = "SERVER_START",
+}
+
+export function sendEvent(
+  context: ApplicationContext,
+  eventName: EventName,
+  eventData?: any
+) {
+  if (!context.honeyClient) return;
+
+  const event = context.honeyClient.newEvent();
+  if (eventData) {
+    event.add(eventData);
+  }
+  event.addField("event_name", eventName);
+  event.send();
 }
