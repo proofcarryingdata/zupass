@@ -5,17 +5,25 @@ import {
   Contribution,
   Contributor,
   initOctokit,
+  loadOrganizationRepos,
   loadRepoByUrl,
   loadRepositoryContributors,
   loadUserKeys,
   PublicKey,
+  Repo,
 } from "../apis/githubAPI";
+
+const params: InitialSyncParameters = {
+  hardcodedOrganizationNames: ["ethereum"],
+  hardcodedRepositoryUrls: ["https://github.com/ethers-io/ethers.js/"],
+  hardcodedUsers: ["ichub"],
+};
 
 export async function githubSync(): Promise<void> {
   const tracer = opentelemetry.trace.getTracer("github");
+  console.log(`[GITHUB] initializing sync`, params);
 
   tracer.startActiveSpan("githubSync", async (span) => {
-    const repositoryUrls = ["https://github.com/ethers-io/ethers.js/"];
     const octokit = initOctokit();
     const queue = new PQueue({
       concurrency: 1,
@@ -23,18 +31,27 @@ export async function githubSync(): Promise<void> {
       intervalCap: 1,
     });
 
+    const repos: Repo[] = [];
     const hardcodedRepositories = await Promise.all(
-      repositoryUrls.map((url) => loadRepoByUrl(url, octokit, queue))
+      params.hardcodedRepositoryUrls.map((url) =>
+        loadRepoByUrl(url, octokit, queue)
+      )
     );
+    repos.push(...(hardcodedRepositories.filter((r) => !!r) as Repo[]));
 
-    console.log(
-      `[GITHUB] initializing sync with ${hardcodedRepositories.length} repositories`
+    const orgRepositories = _.flatten(
+      await Promise.all(
+        params.hardcodedOrganizationNames.map((org) =>
+          loadOrganizationRepos(org, octokit, queue)
+        )
+      )
     );
+    repos.push(...orgRepositories);
 
     const contributions: Contribution[] = [];
     const allContributors: Contributor[] = [];
 
-    for (const repo of hardcodedRepositories) {
+    for (const repo of repos) {
       const contributors = await loadRepositoryContributors(
         repo,
         octokit,
@@ -70,4 +87,10 @@ export async function githubSync(): Promise<void> {
     );
     span.end();
   });
+}
+
+export interface InitialSyncParameters {
+  hardcodedOrganizationNames: string[];
+  hardcodedRepositoryUrls: string[];
+  hardcodedUsers: string[];
 }
