@@ -141,8 +141,11 @@ async function downloadPublicKeys(): Promise<PublicKey[]> {
 
 async function savePublicKeys(keys: PublicKey[]): Promise<void> {
   const savedKeyListPath = path.join(process.cwd(), "dev_keys.json");
+
   if (!IS_PROD) {
+    console.log(`[GITHUB] Saving public keys to ${savedKeyListPath}`);
     await writeFile(savedKeyListPath, JSON.stringify(keys, null, 2));
+  } else {
   }
 }
 
