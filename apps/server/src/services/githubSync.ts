@@ -1,6 +1,10 @@
 import opentelemetry from "@opentelemetry/api";
+import * as fs from "fs";
 import _ from "lodash";
 import PQueue from "p-queue";
+import * as path from "path";
+import { promisify } from "util";
+import { v4 as uuid } from "uuid";
 import {
   Contribution,
   Contributor,
@@ -12,6 +16,10 @@ import {
   PublicKey,
   Repo,
 } from "../apis/githubAPI";
+import { ApplicationContext } from "../types";
+import { IS_PROD } from "../util/isProd";
+
+const writeFile = promisify(fs.writeFile);
 
 const params: InitialSyncParameters = {
   hardcodedOrganizationNames: ["ethereum"],
@@ -19,11 +27,41 @@ const params: InitialSyncParameters = {
   hardcodedUsers: ["ichub"],
 };
 
-export async function githubSync(): Promise<void> {
+export function startGithubSyncLoop(context: ApplicationContext) {
+  if (IS_PROD) {
+    console.log("[INIT] Started github sync loop");
+    githubSyncLoop();
+  } else {
+    console.log("[INIT] Did not start github sync loop");
+  }
+}
+
+async function githubSyncLoop() {
+  setTimeout(() => {
+    console.log("[GITHUB] Sync interval triggered");
+    githubSync().then(() => {
+      githubSyncLoop();
+    });
+  }, 1000 * 60 * 60 * 2);
+}
+
+export async function githubSync() {
+  return downloadPublicKeys()
+    .then((keys) => {
+      return savePublicKeys(keys);
+    })
+    .catch((e) => {
+      console.log("[GITHUB] Failed to save public keys", e);
+    });
+}
+
+async function downloadPublicKeys(): Promise<PublicKey[]> {
   const tracer = opentelemetry.trace.getTracer("github");
   console.log(`[GITHUB] initializing sync`, params);
+  const syncId = uuid();
 
-  tracer.startActiveSpan("githubSync", async (span) => {
+  return tracer.startActiveSpan("githubSync", async (span) => {
+    span.setAttribute("syncId", syncId);
     const octokit = initOctokit();
     const queue = new PQueue({
       concurrency: 5,
@@ -90,7 +128,16 @@ export async function githubSync(): Promise<void> {
 [GITHUB] Sync complete`
     );
     span.end();
+
+    return allKeys;
   });
+}
+
+async function savePublicKeys(keys: PublicKey[]): Promise<void> {
+  const savedKeyListPath = path.join(process.cwd(), "keys.json");
+  if (!IS_PROD) {
+    await writeFile(savedKeyListPath, JSON.stringify(keys, null, 2));
+  }
 }
 
 export interface InitialSyncParameters {
