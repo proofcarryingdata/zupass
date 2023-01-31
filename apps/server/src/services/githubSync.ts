@@ -140,7 +140,7 @@ async function downloadPublicKeys(): Promise<PublicKey[]> {
 }
 
 async function savePublicKeys(keys: PublicKey[]): Promise<void> {
-  const savedKeyListPath = path.join(process.cwd(), "keys.json");
+  const savedKeyListPath = path.join(process.cwd(), "dev_keys.json");
   if (!IS_PROD) {
     await writeFile(savedKeyListPath, JSON.stringify(keys, null, 2));
   }
