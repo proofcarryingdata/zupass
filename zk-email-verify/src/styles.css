@@ -1,0 +1,66 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.fields > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 40px;
+}
+
+.fields > div > label {
+  width: 150px;
+}
+
+.fields > div > input,
+.fields > div > textarea {
+  flex: 2;
+}
+
+textarea {
+  /* white-space: pre; */
+}
+
+body {
+  padding: 16px;
+}
+
+h1 {
+  font-weight: 300;
+  line-height: 1.1;
+}
+a {
+  text-decoration: none;
+  color: gray;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+a.current_page {
+  color: black;
+}
+
+/* Dark Mode */
+
+html {
+  background-color: #171717 !important;
+}
+html {
+  filter: invert(100%) hue-rotate(180deg) brightness(105%) contrast(85%);
+  -webkit-filter: invert(100%) hue-rotate(180deg) brightness(105%) contrast(85%);
+}
+body {
+  background-color: #FFF !important;
+}
+img,
+video,
+body * [style*="background-image"] {
+  filter: hue-rotate(180deg) contrast(100%) invert(100%);
+  -webkit-filter: hue-rotate(180deg) contrast(100%) invert(100%);
+}
+
+/* End Dark Mode */
