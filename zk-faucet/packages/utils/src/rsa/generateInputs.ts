@@ -1,5 +1,6 @@
 import * as crypto from "crypto";
 import NodeRSA from "node-rsa";
+import { splitToWords } from "./util";
 
 export function generateInputs() {
   const key = new NodeRSA({ b: 2048 });
@@ -22,6 +23,18 @@ export function generateInputs() {
   const hashBigInt = BigInt(`0x${hashBuffer.toString("hex")}`);
 
   console.log("hash: ", hashBigInt);
+
+  const input = Object.assign(
+    {},
+    splitToWords(signatureBigInt, 64, 32, "sign"),
+    splitToWords(exponentBigInt, 64, 32, "exp"),
+    splitToWords(modulusBigInt, 64, 32, "modulus"),
+    splitToWords(hashBigInt, 64, 4, "hashed")
+  );
+
+  console.log(input);
+
+  return input;
 
   // const text = "Hello RSA!";
   // const encrypted = key.encrypt(text, "base64");
