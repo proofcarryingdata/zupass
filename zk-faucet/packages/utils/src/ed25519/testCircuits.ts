@@ -1,12 +1,19 @@
 const snarkjs = require("snarkjs");
+import * as path from "path";
 import { getInputs } from "./generateInputs";
 
-const zkeyPath =
-  "/Users/ivanchub/Projects/ed25519-circom/build/circuit_final_1.zkey";
-const vkeyPath =
-  "/Users/ivanchub/Projects/ed25519-circom/build/verification_key.json";
-const wasmPath =
-  "/Users/ivanchub/Projects/ed25519-circom/build/verify_js/verify.wasm";
+const zkeyPath = path.join(
+  process.cwd(),
+  "../../../ed25519-circom/build/circuit_final_1.zkey"
+);
+const vkeyPath = path.join(
+  process.cwd(),
+  "../../../ed25519-circom/build/verification_key.json"
+);
+const wasmPath = path.join(
+  process.cwd(),
+  "../../../ed25519-circom/build/verify_js/verify.wasm"
+);
 
 async function test() {
   console.log("generating inputs");
@@ -28,6 +35,7 @@ async function test() {
   );
   console.log("verification complete");
   console.log(verified);
+  process.exit(0);
 }
 
 test();
