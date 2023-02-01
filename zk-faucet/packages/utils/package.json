@@ -7,6 +7,7 @@
     "test-rsa": "ts-node src/rsa/testCircuits.ts"
   },
   "devDependencies": {
+    "@types/big-integer": "^0.0.31",
     "@types/node-rsa": "^1.1.1",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@gozala/ed25519": "^1.6.0",
     "@noble/ed25519": "^1.7.1",
+    "big-integer": "^1.6.51",
     "node-rsa": "^1.1.1",
     "snarkjs": "^0.5.0"
   }
