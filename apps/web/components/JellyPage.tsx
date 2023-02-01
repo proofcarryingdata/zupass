@@ -3,20 +3,11 @@ import styled, { keyframes } from "styled-components";
 export function JellyPage() {
   return (
     <ContainerContainer>
-      <Title>
-        <img src="/Z.png" width="100px" />
-        <img src="/K.png" width="100px" />
-        <br />
-        <img src="/F.png" width="100px" />
-        <img src="/A.png" width="100px" />
-        <img src="/U.png" width="100px" />
-        <img src="/C.png" width="100px" />
-        <img src="/E.png" width="100px" />
-        <img src="/T.png" width="100px" />
-      </Title>
       <Container>
+        <Title />
         <img src="/faucet.png" width="500px" />
         <FallingImages />
+        <StaticImages />
         <img
           style={{ position: "absolute", bottom: 0, left: 0 }}
           src="/faucet_bottom.png"
@@ -27,7 +18,85 @@ export function JellyPage() {
   );
 }
 
-const Title = styled.div``;
+function Title() {
+  const letters = [
+    "/Z.png",
+    "/K.png",
+    "/F.png",
+    "/A.png",
+    "/U.png",
+    "/C.png",
+    "/E.png",
+    "/T.png",
+  ];
+
+  return (
+    <TitleContainer>
+      {letters.map((l, i) => (
+        <Image
+          style={{
+            position: "absolute",
+            top:
+              Math.sin(((i + 0.5) / letters.length) * Math.PI - Math.PI) * 300 +
+              200,
+            left:
+              Math.cos(((i + 0.5) / letters.length) * Math.PI - Math.PI) * 300 +
+              200,
+            animationDuration: `${Math.random() * 2}s`,
+          }}
+          key={i}
+          src={l}
+          width="100px"
+        />
+      ))}
+    </TitleContainer>
+  );
+}
+
+const TitleContainer = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+`;
+
+function StaticImages() {
+  return (
+    <>
+      <Image
+        style={{
+          position: "absolute",
+          left: "10%",
+          top: "70%",
+          width: "100px",
+          transform: "rotate(180deg)",
+        }}
+        src="/octopus.png"
+      />
+      <Image
+        style={{
+          position: "absolute",
+          left: "70%",
+          top: "70%",
+          width: "80px",
+          transform: "rotate(180deg)",
+        }}
+        src="/coral_1.png"
+      />
+      <Image
+        style={{
+          position: "absolute",
+          left: "60%",
+          top: "70%",
+          width: "50px",
+          transform: "rotate(180deg)",
+        }}
+        src="/jelly_3.png"
+      />
+    </>
+  );
+}
 
 function FallingImages() {
   const urls = ["fish_1.png", "fish_2.png", "fish_3.png"];
