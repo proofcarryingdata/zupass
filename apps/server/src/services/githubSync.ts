@@ -37,15 +37,17 @@ export function startGithubSyncLoop(context: ApplicationContext) {
 }
 
 async function githubSyncLoop() {
-  setTimeout(() => {
-    console.log("[GITHUB] Sync interval triggered");
-    githubSync().then(() => {
+  console.log("[GITHUB] Sync interval triggered");
+  githubSync().then(() => {
+    console.log("[GITHUB] Sync completed - scheduling another");
+    setTimeout(() => {
       githubSyncLoop();
-    });
-  }, 1000 * 60 * 60 * 2);
+    }, 1000 * 60 * 60 * 1.5);
+  });
 }
 
 export async function githubSync() {
+  console.log("[GITHUB] Syncing github");
   return downloadPublicKeys()
     .then((keys) => {
       return savePublicKeys(keys);
