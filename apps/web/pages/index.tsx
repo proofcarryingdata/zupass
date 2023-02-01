@@ -1,7 +1,11 @@
+import { createGlobalStyle } from "styled-components";
+import { JellyPage } from "../components/JellyPage";
+
 export default function Web() {
   return (
     <div>
-      <h1>0xPARC Goerli Testnet Eth Faucet</h1>
+      <GlobalStyle />
+      {/* <h1>0xPARC Goerli Testnet Eth Faucet</h1>
       <div>
         check if your account is eligible
         <input type="text" />
@@ -16,7 +20,13 @@ export default function Web() {
         submit proof
         <textarea />
         <button>submit</button>
-      </div>
+      </div> */}
+      <JellyPage />
     </div>
   );
 }
+
+const GlobalStyle = createGlobalStyle`
+body {
+  margin: 0;
+}`;
