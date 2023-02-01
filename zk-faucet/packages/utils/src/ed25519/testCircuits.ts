@@ -1,5 +1,5 @@
 const snarkjs = require("snarkjs");
-import { getInputs } from "./index";
+import { getInputs } from "./generateInputs";
 
 const zkeyPath =
   "/Users/ivanchub/Projects/ed25519-circom/build/circuit_final_1.zkey";

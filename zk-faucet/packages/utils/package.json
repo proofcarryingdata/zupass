@@ -3,9 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "gen": "ts-node src/index.ts",
-    "test": "ts-node src/testCircuits.ts",
-    "lint": "TIMING=1 eslint \"**/*.ts*\""
+    "test-ed25519": "ts-node src/ed25519/testCircuits.ts"
   },
   "devDependencies": {
     "@types/react": "^17.0.37",
