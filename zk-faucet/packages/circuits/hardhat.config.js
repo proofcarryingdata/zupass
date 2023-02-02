@@ -23,6 +23,10 @@ module.exports = {
         // No protocol, so it defaults to groth16
       },
       {
+        name: "rsa_verify",
+        // No protocol, so it defaults to groth16
+      },
+      {
         name: "simple-polynomial",
         // Generate PLONK
         protocol: "plonk",
