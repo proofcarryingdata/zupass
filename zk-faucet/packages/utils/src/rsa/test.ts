@@ -1,25 +1,21 @@
 import * as fs from "fs";
 import {
-  CIRCOM_FIELD_MODULUS,
-  MAX_BODY_PADDED_BYTES,
-  MAX_HEADER_PADDED_BYTES,
-  STRING_PRESELECTOR,
-} from "../../src/helpers/constants";
-import { dkimVerify } from "../../src/helpers/dkim";
-import { partialSha, sha256Pad, shaHash } from "../../src/helpers/shaHash";
-import {
   assert,
-  bufferToString,
   bytesToBigInt,
-  fromHex,
   int64toBytes,
   mergeUInt8Arrays,
   packBytesIntoNBytes,
   stringToBytes,
   toCircomBigIntBytes,
-  Uint8ArrayToCharArray,
   Uint8ArrayToString,
-} from "../helpers/binaryFormat";
+} from "./binaryFormat";
+import {
+  CIRCOM_FIELD_MODULUS,
+  MAX_BODY_PADDED_BYTES,
+  MAX_HEADER_PADDED_BYTES,
+  STRING_PRESELECTOR,
+} from "./constants";
+import { partialSha, sha256Pad, shaHash } from "./shaHash";
 var Cryo = require("cryo");
 const pki = require("node-forge").pki;
 
@@ -74,10 +70,7 @@ export async function getCircuitInputs(
   rsa_signature: BigInt,
   rsa_modulus: BigInt,
   message: Buffer,
-  body: Buffer,
-  body_hash: string,
-  eth_address: string,
-  circuit: CircuitType
+  body: Buffer
 ): Promise<{
   valid: {
     validSignatureFormat?: boolean;
@@ -146,61 +139,20 @@ export async function getCircuitInputs(
     bodyRemaining = mergeUInt8Arrays(bodyRemaining, int64toBytes(0));
   }
   assert(bodyRemaining.length === MAX_BODY_PADDED_BYTES, "Invalid slice");
-  const bodyShaPrecompute = await partialSha(precomputeText, shaCutoffIndex);
 
   // Compute identity revealer
   let circuitInputs;
   const modulus = toCircomBigIntBytes(modulusBigInt);
   const signature = toCircomBigIntBytes(signatureBigInt);
 
-  const in_len_padded_bytes = messagePaddedLen.toString();
-  const in_padded = await Uint8ArrayToCharArray(messagePadded); // Packed into 1 byte signals
-  const in_body_len_padded_bytes = bodyRemainingLen.toString();
-  const in_body_padded = await Uint8ArrayToCharArray(bodyRemaining);
   const base_message = toCircomBigIntBytes(postShaBigintUnpadded);
-  const precomputed_sha = await Uint8ArrayToCharArray(bodyShaPrecompute);
-  const body_hash_idx = bufferToString(message).indexOf(body_hash).toString();
 
-  const address = bytesToBigInt(fromHex(eth_address)).toString();
-  const address_plus_one = (
-    bytesToBigInt(fromHex(eth_address)) + 1n
-  ).toString();
+  circuitInputs = {
+    modulus,
+    signature,
+    base_message,
+  };
 
-  const USERNAME_SELECTOR = Buffer.from("email was meant for @");
-  const twitter_username_idx = (
-    Buffer.from(bodyRemaining).indexOf(USERNAME_SELECTOR) +
-    USERNAME_SELECTOR.length
-  ).toString();
-  console.log("Twitter Username idx: ", twitter_username_idx);
-
-  if (circuit === CircuitType.RSA) {
-    circuitInputs = {
-      modulus,
-      signature,
-      base_message,
-    };
-  } else if (circuit === CircuitType.EMAIL) {
-    circuitInputs = {
-      in_padded,
-      modulus,
-      signature,
-      in_len_padded_bytes,
-      precomputed_sha,
-      in_body_padded,
-      in_body_len_padded_bytes,
-      twitter_username_idx,
-      address,
-      address_plus_one,
-      body_hash_idx,
-    };
-  } else {
-    assert(circuit === CircuitType.SHA, "Invalid circuit type");
-    circuitInputs = {
-      in_padded,
-      in_len_padded_bytes,
-      precomputed_sha,
-    };
-  }
   return {
     circuitInputs,
     valid: {},
@@ -211,21 +163,12 @@ export async function generate_inputs(
   email: Buffer,
   eth_address: string
 ): Promise<ICircuitInputs> {
-  var result;
-
-  console.log("DKIM verification starting");
-  result = await dkimVerify(email);
-  const _ = result.results[0].publicKey.toString();
-  console.log("DKIM verification successful");
-
   let sig = BigInt(
     "0x" + Buffer.from(result.results[0].signature, "base64").toString("hex")
   );
   let message = result.results[0].status.signature_header;
   let body = result.results[0].body;
   let body_hash = result.results[0].bodyHash;
-  let circuitType = CircuitType.EMAIL;
-
   let pubkey = result.results[0].publicKey;
   const pubKeyData = pki.publicKeyFromPem(pubkey.toString());
   let modulus = BigInt(pubKeyData.n.toString());
@@ -235,8 +178,7 @@ export async function generate_inputs(
     message,
     body,
     body_hash,
-    eth_address,
-    circuitType
+    eth_address
   );
   return fin_result.circuitInputs;
 }
