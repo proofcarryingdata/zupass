@@ -34,7 +34,12 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "compile": "mkdir -p ./build && circom circuits/main/rsa_verify.circom --r1cs --wasm --sym --verbose -o build",
+    "setup": "mkdir -p ./build && NODE_OPTIONS=--max_old_space_size=16384 snarkjs groth16 setup ./build/rsa_verify.r1cs ../pot22_final.ptau ./build/circuit_final.zkey",
+    "contribute": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey contribute ./build/circuit_final.zkey ./build/circuit_final_1.zkey --name=\"0xPARC\"",
+    "verification-key": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey export verificationkey ./build/circuit_final_1.zkey ./build/verification_key.json",
+    "build-circuits": "npm run compile && npm run setup && npm run contribute && npm run verification-key"
   },
   "eslintConfig": {
     "extends": [
