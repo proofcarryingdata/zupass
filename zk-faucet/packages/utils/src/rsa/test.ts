@@ -1,26 +1,14 @@
-import * as fs from "fs";
+import NodeRSA from "node-rsa";
 import {
   assert,
   bytesToBigInt,
-  int64toBytes,
-  mergeUInt8Arrays,
-  packBytesIntoNBytes,
   stringToBytes,
   toCircomBigIntBytes,
   Uint8ArrayToString,
 } from "./binaryFormat";
-import {
-  CIRCOM_FIELD_MODULUS,
-  MAX_BODY_PADDED_BYTES,
-  MAX_HEADER_PADDED_BYTES,
-  STRING_PRESELECTOR,
-} from "./constants";
+import { CIRCOM_FIELD_MODULUS, MAX_HEADER_PADDED_BYTES } from "./constants";
 import { partialSha, sha256Pad, shaHash } from "./shaHash";
-var Cryo = require("cryo");
-const pki = require("node-forge").pki;
 
-// const email_file = "monia_email.eml"; // "./test_email.txt", "./twitter_msg.eml", kaylee_phone_number_email_twitter
-const email_file = "twitter_msg.eml"; // "./test_email.txt", "./twitter_msg.eml", kaylee_phone_number_email_twitter
 export interface ICircuitInputs {
   modulus?: string[];
   signature?: string[];
@@ -69,8 +57,7 @@ async function findSelector(
 export async function getCircuitInputs(
   rsa_signature: BigInt,
   rsa_modulus: BigInt,
-  message: Buffer,
-  body: Buffer
+  message: Buffer
 ): Promise<{
   valid: {
     validSignatureFormat?: boolean;
@@ -103,11 +90,6 @@ export async function getCircuitInputs(
     prehashBytesUnpadded,
     MAX_HEADER_PADDED_BYTES
   );
-  const calc_length = Math.floor((body.length + 63) / 64) * 64;
-  const [bodyPadded, bodyPaddedLen] = await sha256Pad(
-    body,
-    Math.max(MAX_BODY_PADDED_BYTES, calc_length)
-  );
 
   // Ensure SHA manual unpadded is running the correct function
   const shaOut = await partialSha(messagePadded, messagePaddedLen);
@@ -118,27 +100,6 @@ export async function getCircuitInputs(
       )),
     "SHA256 calculation did not match!"
   );
-
-  // Precompute SHA prefix
-  const selector = STRING_PRESELECTOR.split("").map((char) =>
-    char.charCodeAt(0)
-  );
-  const selector_loc = await findSelector(bodyPadded, selector);
-  console.log("Body selector found at: ", selector_loc);
-  let shaCutoffIndex =
-    Math.floor((await findSelector(bodyPadded, selector)) / 64) * 64;
-  const precomputeText = bodyPadded.slice(0, shaCutoffIndex);
-  let bodyRemaining = bodyPadded.slice(shaCutoffIndex);
-  const bodyRemainingLen = bodyPaddedLen - precomputeText.length;
-  assert(bodyRemainingLen < MAX_BODY_PADDED_BYTES, "Invalid slice");
-  assert(
-    bodyRemaining.length % 64 === 0,
-    "Not going to be padded correctly with int64s"
-  );
-  while (bodyRemaining.length < MAX_BODY_PADDED_BYTES) {
-    bodyRemaining = mergeUInt8Arrays(bodyRemaining, int64toBytes(0));
-  }
-  assert(bodyRemaining.length === MAX_BODY_PADDED_BYTES, "Invalid slice");
 
   // Compute identity revealer
   let circuitInputs;
@@ -159,83 +120,27 @@ export async function getCircuitInputs(
   };
 }
 
-export async function generate_inputs(
-  email: Buffer,
-  eth_address: string
-): Promise<ICircuitInputs> {
-  let sig = BigInt(
-    "0x" + Buffer.from(result.results[0].signature, "base64").toString("hex")
-  );
-  let message = result.results[0].status.signature_header;
-  let body = result.results[0].body;
-  let body_hash = result.results[0].bodyHash;
-  let pubkey = result.results[0].publicKey;
-  const pubKeyData = pki.publicKeyFromPem(pubkey.toString());
-  let modulus = BigInt(pubKeyData.n.toString());
-  let fin_result = await getCircuitInputs(
-    sig,
-    modulus,
-    message,
-    body,
-    body_hash,
-    eth_address
-  );
-  return fin_result.circuitInputs;
-}
+export async function generate_inputs(): Promise<ICircuitInputs> {
+  const key = new NodeRSA({ b: 2048 });
+  const message = Uint8Array.from([0xff, 0xfa]);
+  const components = key.exportKey("components-public");
+  console.log(components.n.toString("hex"));
+  const modulusBigInt = BigInt(`0x${components.n.toString("hex")}`);
+  const exponentBigInt =
+    typeof components.e === "number"
+      ? BigInt(components.e)
+      : BigInt(`0x${components.e.toString("hex")}`);
+  console.log("exponent: ", exponentBigInt);
+  console.log("modulus: ", modulusBigInt);
+  const signatureBuffer = key.sign(message);
+  const signatureBigInt = BigInt(`0x${signatureBuffer.toString("hex")}`);
+  console.log("signature: ", signatureBigInt);
 
-async function do_generate() {
-  const email = fs.readFileSync(email_file);
-  console.log(email);
-  const gen_inputs = await generate_inputs(
-    email,
-    "0x0000000000000000000000000000000000000000"
+  const inputs = await getCircuitInputs(
+    signatureBigInt,
+    modulusBigInt,
+    Buffer.from(message)
   );
-  console.log(JSON.stringify(gen_inputs));
-  return gen_inputs;
-}
 
-async function gen_test() {
-  console.log(
-    packBytesIntoNBytes(
-      Uint8Array.from([
-        0, 121, 117, 115, 104, 95, 103, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
-      ])
-    )
-  );
-}
-
-export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
-  let ret = new Uint8Array(a.length + 1000);
-  let j = 0;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] === 10) {
-      ret[j] = 13;
-      j++;
-    }
-    ret[j] = a[i];
-    j++;
-  }
-  return ret.slice(0, j);
-}
-
-async function debug_file() {
-  const email = fs.readFileSync(email_file);
-  console.log(Uint8Array.from(email));
-  // Key difference: file load has 13 10, web version has just 10
-}
-
-// If main
-if (typeof require !== "undefined" && require.main === module) {
-  // debug_file();
-  const circuitInputs = do_generate();
-  console.log("Writing to file...");
-  circuitInputs.then((inputs) =>
-    fs.writeFileSync(
-      `./circuits/inputs/input_twitter.json`,
-      JSON.stringify(inputs),
-      { flag: "w" }
-    )
-  );
-  // gen_test();
+  return inputs.circuitInputs;
 }
