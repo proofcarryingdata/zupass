@@ -18,6 +18,8 @@ import * as snarkjs from "snarkjs";
 import localforage from "localforage";
 import { resolveGroupIdentifierTree } from "./resolveGroupIdentifier";
 import { getMerkleProof } from "../merkle";
+import * as forge from "node-forge";
+import { promisify } from "util";
 
 interface ICircuitInputs {
   modulus: string[];
@@ -25,8 +27,23 @@ interface ICircuitInputs {
   base_message: string[];
 }
 
+async function stringToBaseMessage(message: string): Promise<BigInt> {
+  // const prehashBytesUnpadded =
+  //   typeof message == "string"
+  //     ? new TextEncoder().encode(message)
+  //     : Uint8Array.from(message);
+  // const postShaBigintUnpadded =
+  //   bytesToBigInt(
+  //     stringToBytes((await shaHash(prehashBytesUnpadded)).toString())
+  //   ) % CIRCOM_FIELD_MODULUS;
+  // const base_message = postShaBigintUnpadded;
+  // return base_message;
+  return 0n;
+}
+
 export async function getCircuitInputs(
-  sshSignature: string
+  sshSignature: string,
+  message: string
 ): Promise<ICircuitInputs> {
   await initializePoseidon();
   let rawSignature: any, pubKeyParts: any;
@@ -38,6 +55,12 @@ export async function getCircuitInputs(
   const modulusBigInt = bytesToBigInt(pubKeyParts[2]);
   const signatureBigInt = bytesToBigInt(rawSignature);
   const baseMessageBigInt = MAGIC_DOUBLE_BLIND_BASE_MESSAGE;
+
+  const myBigInt =
+    verifyRSA(signatureBigInt, modulusBigInt) % CIRCOM_FIELD_MODULUS;
+
+  console.log(`actualBigInt: ${toCircomBigIntBytes(baseMessageBigInt)}`);
+  console.log(`myBigInt: ${toCircomBigIntBytes(myBigInt)}`);
 
   return {
     modulus: toCircomBigIntBytes(modulusBigInt),
