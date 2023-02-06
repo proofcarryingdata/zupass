@@ -25,7 +25,10 @@ async function test() {
   console.log("generated proof");
   console.log(proof);
 
-  require("fs").writeFileSync("./proof.json", JSON.stringify(proof, null, 2));
+  require("fs").writeFileSync(
+    "./proof_ed25519.json",
+    JSON.stringify(proof, null, 2)
+  );
 
   console.log("verifying proof");
   const verified = await snarkjs.groth16.verify(

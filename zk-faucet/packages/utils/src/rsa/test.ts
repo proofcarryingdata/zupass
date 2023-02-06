@@ -105,7 +105,6 @@ export async function getCircuitInputs(
   let circuitInputs;
   const modulus = toCircomBigIntBytes(modulusBigInt);
   const signature = toCircomBigIntBytes(signatureBigInt);
-
   const base_message = toCircomBigIntBytes(postShaBigintUnpadded);
 
   circuitInputs = {
@@ -141,6 +140,8 @@ export async function generate_inputs(): Promise<ICircuitInputs> {
     modulusBigInt,
     Buffer.from(message)
   );
+
+  console.log(inputs);
 
   return inputs.circuitInputs;
 }
