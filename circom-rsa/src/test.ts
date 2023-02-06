@@ -11,18 +11,8 @@ function generateRSASignature() {
 
 async function test() {
   const signature = generateRSASignature();
-
-  const inputs = getCircuitInputs(signature, {
-    message: "",
-    enableSignerId: false,
-    groupIdentifier: "",
-    groupName: "asdf",
-    signerNamespace: "asdf",
-  });
-
-  let result = await inputs;
-
-  console.log(result);
+  const inputs = getCircuitInputs(signature);
+  console.log(await inputs);
 }
 
 test();
