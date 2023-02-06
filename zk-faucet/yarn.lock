@@ -4287,6 +4287,11 @@ evp_bytestokey@^1.0.3:
     md5.js "^1.3.4"
     safe-buffer "^5.1.1"
 
+exec-sh@^0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/exec-sh/-/exec-sh-0.4.0.tgz#0f4ae8c36d166bae80e5c69aba0793d80c3488d5"
+  integrity sha512-BgAFra+J+hK/wquyWchMiqgaxSv1ec2c+//DRSePlF3NLx/tBOmkIkJEc1hWrX4Yis3tzxgv1+FiFs/mmucs/g==
+
 express@^4.18.2:
   version "4.18.2"
   resolved "https://registry.yarnpkg.com/express/-/express-4.18.2.tgz#3fabe08296e930c796c19e3c516979386ba9fd59"

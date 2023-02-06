@@ -110,9 +110,5 @@ export async function generateInputs() {
     ],
   };
 
-  console.log(inputs);
-
-  // process.exit(0);
-
   return inputs;
 }
