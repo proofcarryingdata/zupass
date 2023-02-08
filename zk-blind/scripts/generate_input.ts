@@ -1,8 +1,4 @@
-import {
-  bytesToBigInt,
-  fromHex,
-  toCircomBigIntBytes,
-} from "../helpers/binaryFormat";
+import { toCircomBigIntBytes } from "../helpers/binaryFormat";
 import { MAX_HEADER_PADDED_BYTES } from "../helpers/constants";
 import { shaHash } from "../helpers/shaHash";
 import { Hash } from "./fast-sha256";
@@ -87,26 +83,6 @@ async function Uint8ArrayToString(a: Uint8Array): Promise<string> {
     .join(";");
 }
 
-async function findSelector(
-  a: Uint8Array,
-  selector: number[]
-): Promise<number> {
-  let i = 0;
-  let j = 0;
-  while (i < a.length) {
-    if (a[i] === selector[j]) {
-      j++;
-      if (j === selector.length) {
-        return i - j + 1;
-      }
-    } else {
-      j = 0;
-    }
-    i++;
-  }
-  return -1;
-}
-
 async function partialSha(
   msg: Uint8Array,
   msgLen: number
@@ -161,41 +137,20 @@ export async function getCircuitInputs(
 }
 
 export async function generate_inputs(): Promise<any> {
-  const messageBase64 =
-    "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJzZWh5dW5AYmVya2VsZXkuZWR1IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImdlb2lwX2NvdW50cnkiOiJVUyJ9LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsidXNlcl9pZCI6InVzZXIta1dMaXBzT3dMZFd4MXdMc0I3clR3UnFlIn0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDExNjYwOTg2MjEwMzkxMTMwNjgwNyIsImF1ZCI6WyJodHRwczovL2FwaS5vcGVuYWkuY29tL3YxIiwiaHR0cHM6Ly9vcGVuYWkuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY3MzE1NTQ0NiwiZXhwIjoxNjczNzYwMjQ2LCJhenAiOiJUZEpJY2JlMTZXb1RIdE45NW55eXdoNUU0eU9vNkl0RyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgbW9kZWwucmVhZCBtb2RlbC5yZXF1ZXN0IG9yZ2FuaXphdGlvbi5yZWFkIG9mZmxpbmVfYWNjZXNzIn0";
-  const messageBuffer = Buffer.from(messageBase64);
-
+  const messageString = "hello world";
+  const message = Buffer.from(messageString);
   const key = new NodeRSA({ b: 2048 });
-  const exportedKey = key.exportKey("components-public");
-  const mySignature = key.sign(messageBuffer);
-  const mySignatureBigInt = BigInt("0x" + mySignature.toString("hex"));
-  const myModulus = exportedKey.n;
-  const myModulusBigInt = BigInt("0x" + myModulus.toString("hex"));
+  const keyComponents = key.exportKey("components-public");
+  const messageSignature = key.sign(message);
+  const messageSignatureBigInt = BigInt(
+    "0x" + messageSignature.toString("hex")
+  );
+  const keyModulus = keyComponents.n;
+  const keyModulusBigInt = BigInt("0x" + keyModulus.toString("hex"));
 
-  return getCircuitInputs(mySignatureBigInt, myModulusBigInt, messageBuffer);
+  return getCircuitInputs(messageSignatureBigInt, keyModulusBigInt, message);
 }
 
-export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
-  let ret = new Uint8Array(a.length + 1000);
-  let j = 0;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] === 10) {
-      ret[j] = 13;
-      j++;
-    }
-    ret[j] = a[i];
-    j++;
-  }
-  return ret.slice(0, j);
-}
-
-if (typeof require !== "undefined" && require.main === module) {
-  console.log("****GENERATING JWT JSON INPUT****");
-  generate_inputs().then((res) => {
-    res = {
-      ...res,
-      message_padded_bytes: "832",
-    };
-    fs.writeFileSync(`./jwt.json`, JSON.stringify(res), { flag: "w" });
-  });
-}
+console.log("****GENERATING JWT JSON INPUT****");
+const inputs = await generate_inputs();
+fs.writeFileSync(`./jwt.json`, JSON.stringify(inputs), { flag: "w" });
