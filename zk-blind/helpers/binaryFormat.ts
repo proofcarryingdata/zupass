@@ -31,7 +31,7 @@ export function bufferToUint8Array(buf: Buffer): Uint8Array {
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-      view[i] = buf[i];
+    view[i] = buf[i];
   }
   return Uint8Array.from(view);
 }
@@ -49,8 +49,8 @@ export function bytesToBigInt(bytes: Uint8Array) {
   return res;
 }
 
-export function toCircomBigIntBytes(num: BigInt | bigint) {
-  const res = [];
+export function toCircomBigIntBytes(num: BigInt | bigint): string[] {
+  const res: string[] = [];
   const bigintNum: bigint = typeof num == "bigint" ? num : num.valueOf();
   const msk = (1n << BigInt(CIRCOM_BIGINT_N)) - 1n;
   for (let i = 0; i < CIRCOM_BIGINT_K; ++i) {
@@ -98,7 +98,7 @@ export function toHex(bytes: Uint8Array): string {
 // https://github.com/nodejs/node/blob/v14.18.1/src/string_bytes.cc#L246-L261
 export function fromHex(hexString: string): Uint8Array {
   let hexStringTrimmed: string = hexString;
-  if(hexString[0] === "0" && hexString[1] === "x") {
+  if (hexString[0] === "0" && hexString[1] === "x") {
     hexStringTrimmed = hexString.slice(2);
   }
   const bytes = new Uint8Array(Math.floor((hexStringTrimmed || "").length / 2));
@@ -114,7 +114,10 @@ export function fromHex(hexString: string): Uint8Array {
   return i === bytes.length ? bytes : bytes.slice(0, i);
 }
 
-export function packedNBytesToString(packedBytes: bigint[], n: number = 7): string {
+export function packedNBytesToString(
+  packedBytes: bigint[],
+  n: number = 7
+): string {
   let chars: number[] = [];
   for (let i = 0; i < packedBytes.length; i++) {
     for (var k = 0n; k < n; k++) {
@@ -124,16 +127,24 @@ export function packedNBytesToString(packedBytes: bigint[], n: number = 7): stri
   return bytesToString(Uint8Array.from(chars));
 }
 
-
-export function packBytesIntoNBytes(messagePaddedRaw: Uint8Array | string, n = 7): Array<bigint> {
-  const messagePadded: Uint8Array = typeof messagePaddedRaw === "string" ? stringToBytes(messagePaddedRaw) : messagePaddedRaw;
+export function packBytesIntoNBytes(
+  messagePaddedRaw: Uint8Array | string,
+  n = 7
+): Array<bigint> {
+  const messagePadded: Uint8Array =
+    typeof messagePaddedRaw === "string"
+      ? stringToBytes(messagePaddedRaw)
+      : messagePaddedRaw;
   let output: Array<bigint> = [];
   for (let i = 0; i < messagePadded.length; i++) {
     if (i % n === 0) {
       output.push(0n);
     }
     const j = (i / n) | 0;
-    console.assert(j === output.length - 1, "Not editing the index of the last element -- packing loop invariants bug!");
+    console.assert(
+      j === output.length - 1,
+      "Not editing the index of the last element -- packing loop invariants bug!"
+    );
     output[j] += BigInt(messagePadded[i]) << BigInt((i % n) * 8);
   }
   return output;

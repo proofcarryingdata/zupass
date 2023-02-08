@@ -10,21 +10,12 @@ import * as fs from "fs";
 import NodeRSA from "node-rsa";
 
 export interface ICircuitInputs {
-  modulus?: string[];
-  signature?: string[];
-  base_message?: string[];
-  in_padded?: string[];
-  in_body_padded?: string[];
-  in_body_len_padded_bytes?: string;
-  in_padded_n_bytes?: string[];
-  in_len_padded_bytes?: string;
-  in_body_hash?: string[];
-  precomputed_sha?: string[];
-  body_hash_idx?: string;
-  addressParts?: string[];
-  address?: string;
-  address_plus_one?: string;
-  twitter_username_idx?: string;
+  message: string[];
+  modulus: string[];
+  signature: string[];
+  message_padded_bytes: string;
+  address: string;
+  address_plus_one: string;
 }
 
 function assert(cond: boolean, errorMessage: string) {
@@ -131,13 +122,7 @@ export async function getCircuitInputs(
   rsa_modulus: BigInt,
   msg: Buffer,
   eth_address: string
-): Promise<{
-  valid: {
-    validSignatureFormat?: boolean;
-    validMessage?: boolean;
-  };
-  circuitInputs: ICircuitInputs;
-}> {
+): Promise<ICircuitInputs> {
   const modulusBigInt = rsa_modulus;
   const prehash_message_string = msg;
   const signatureBigInt = rsa_signature;
@@ -182,10 +167,7 @@ export async function getCircuitInputs(
     address_plus_one,
   };
 
-  return {
-    circuitInputs,
-    valid: {},
-  };
+  return circuitInputs;
 }
 
 export async function generate_inputs(): Promise<any> {
@@ -200,13 +182,12 @@ export async function generate_inputs(): Promise<any> {
   const myModulus = exportedKey.n;
   const myModulusBigInt = BigInt("0x" + myModulus.toString("hex"));
 
-  const fin_result = await getCircuitInputs(
+  return getCircuitInputs(
     mySignatureBigInt,
     myModulusBigInt,
     messageBuffer,
     "0x0000000000000000000000000000000000000000"
   );
-  return fin_result.circuitInputs;
 }
 
 export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
