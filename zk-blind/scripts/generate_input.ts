@@ -151,6 +151,10 @@ export async function generate_inputs(): Promise<any> {
   return getCircuitInputs(messageSignatureBigInt, keyModulusBigInt, message);
 }
 
-console.log("****GENERATING JWT JSON INPUT****");
-const inputs = await generate_inputs();
-fs.writeFileSync(`./jwt.json`, JSON.stringify(inputs), { flag: "w" });
+async function writeNewInputs() {
+  console.log("****GENERATING JWT JSON INPUT****");
+  const inputs = await generate_inputs();
+  fs.writeFileSync(`./jwt.json`, JSON.stringify(inputs), { flag: "w" });
+}
+
+writeNewInputs();
