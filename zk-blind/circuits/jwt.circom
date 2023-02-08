@@ -16,9 +16,6 @@ template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
 
     signal input message_padded_bytes; // length of the message including the padding
 
-    signal input address;
-    signal input address_plus_one;
-
     signal input period_idx; // index of the period in the base64 encoded msg
     var max_domain_len = 30;
 
@@ -119,4 +116,4 @@ template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
 // In circom, all output signals of the main component are public (and cannot be made private), the input signals of the main component are private if not stated otherwise using the keyword public as above. The rest of signals are all private and cannot be made public.
 // This makes modulus and reveal_email_packed public. hash(signature) can optionally be made public, but is not recommended since it allows the mailserver to trace who the offender is.
 
-component main { public [ modulus, address, domain ] } = JWTVerify(960, 718, 121, 17);
+component main { public [ modulus, domain ] } = JWTVerify(960, 718, 121, 17);

@@ -14,8 +14,6 @@ export interface ICircuitInputs {
   modulus: string[];
   signature: string[];
   message_padded_bytes: string;
-  address: string;
-  address_plus_one: string;
 }
 
 function assert(cond: boolean, errorMessage: string) {
@@ -120,8 +118,7 @@ async function partialSha(
 export async function getCircuitInputs(
   rsa_signature: BigInt,
   rsa_modulus: BigInt,
-  msg: Buffer,
-  eth_address: string
+  msg: Buffer
 ): Promise<ICircuitInputs> {
   const modulusBigInt = rsa_modulus;
   const prehash_message_string = msg;
@@ -153,18 +150,11 @@ export async function getCircuitInputs(
   const message_padded_bytes = messagePaddedLen.toString();
   const message = await Uint8ArrayToCharArray(messagePadded);
 
-  const address = bytesToBigInt(fromHex(eth_address)).toString();
-  const address_plus_one = (
-    bytesToBigInt(fromHex(eth_address)) + 1n
-  ).toString();
-
   const circuitInputs = {
     message,
     modulus,
     signature,
     message_padded_bytes,
-    address,
-    address_plus_one,
   };
 
   return circuitInputs;
@@ -182,12 +172,7 @@ export async function generate_inputs(): Promise<any> {
   const myModulus = exportedKey.n;
   const myModulusBigInt = BigInt("0x" + myModulus.toString("hex"));
 
-  return getCircuitInputs(
-    mySignatureBigInt,
-    myModulusBigInt,
-    messageBuffer,
-    "0x0000000000000000000000000000000000000000"
-  );
+  return getCircuitInputs(mySignatureBigInt, myModulusBigInt, messageBuffer);
 }
 
 export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
@@ -210,8 +195,6 @@ if (typeof require !== "undefined" && require.main === module) {
     res = {
       ...res,
       message_padded_bytes: "832",
-      address: "0",
-      address_plus_one: "1",
       period_idx: "120",
       domain_idx: "141",
       domain: [
