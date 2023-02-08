@@ -151,27 +151,15 @@ export async function getCircuitInputs(
   };
   circuitInputs: ICircuitInputs;
 }> {
-  console.log("Starting processing of inputs");
-  // Derive modulus from signature
-  // const modulusBigInt = bytesToBigInt(pubKeyParts[2]);
   const modulusBigInt = rsa_modulus;
-  // Message is the email header with the body hash
   const prehash_message_string = msg;
-  // const baseMessageBigInt = AAYUSH_PREHASH_MESSAGE_INT; // bytesToBigInt(stringToBytes(message)) ||
-  // const postShaBigint = AAYUSH_POSTHASH_MESSAGE_PADDED_INT;
   const signatureBigInt = rsa_signature;
 
-  // Perform conversions
   const prehashBytesUnpadded =
     typeof prehash_message_string == "string"
       ? new TextEncoder().encode(prehash_message_string)
       : Uint8Array.from(prehash_message_string);
-  const postShaBigintUnpadded =
-    bytesToBigInt(
-      stringToBytes((await shaHash(prehashBytesUnpadded)).toString())
-    ) % CIRCOM_FIELD_MODULUS;
 
-  // Sha add padding
   const [messagePadded, messagePaddedLen] = await sha256Pad(
     prehashBytesUnpadded,
     MAX_HEADER_PADDED_BYTES
@@ -187,42 +175,26 @@ export async function getCircuitInputs(
     "SHA256 calculation did not match!"
   );
 
-  // Compute identity revealer
-  let circuitInputs;
   const modulus = toCircomBigIntBytes(modulusBigInt);
   const signature = toCircomBigIntBytes(signatureBigInt);
 
   const message_padded_bytes = messagePaddedLen.toString();
-  const message = await Uint8ArrayToCharArray(messagePadded); // Packed into 1 byte signals
-  const base_message = toCircomBigIntBytes(postShaBigintUnpadded);
+  const message = await Uint8ArrayToCharArray(messagePadded);
 
   const address = bytesToBigInt(fromHex(eth_address)).toString();
   const address_plus_one = (
     bytesToBigInt(fromHex(eth_address)) + 1n
   ).toString();
 
-  if (circuit === CircuitType.RSA) {
-    circuitInputs = {
-      modulus,
-      signature,
-      base_message,
-    };
-  } else if (circuit === CircuitType.JWT) {
-    circuitInputs = {
-      message,
-      modulus,
-      signature,
-      message_padded_bytes,
-      address,
-      address_plus_one,
-    };
-  } else {
-    assert(circuit === CircuitType.SHA, "Invalid circuit type");
-    circuitInputs = {
-      m,
-      m_padded_bytes,
-    };
-  }
+  const circuitInputs = {
+    message,
+    modulus,
+    signature,
+    message_padded_bytes,
+    address,
+    address_plus_one,
+  };
+
   return {
     circuitInputs,
     valid: {},
