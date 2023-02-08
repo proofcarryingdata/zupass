@@ -1,11 +1,7 @@
 pragma circom 2.0.3;
 
-// include "../node_modules/circomlib/circuits/bitify.circom";
 include "./sha.circom";
 include "./rsa.circom";
-include "./base64.circom";
-include "./jwt_email_regex.circom";
-include "./jwt_type_regex.circom";
 
 // k - bignum
 template JWTVerify(max_msg_bytes, max_json_bytes, n, k) {
