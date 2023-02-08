@@ -30,15 +30,6 @@ module.exports = {
     inputBasePath: "./circuits",
     ptau: "powersOfTau28_hez_final_22.ptau",
     circuits: [
-      // {
-      //   name: "utils",
-      //   protocol: "groth16"
-
-      // },
-      // {
-      //   name: "jwt_type_regex",
-      //   input: "jwt_type_regex.json"
-      // },
       {
         name: "jwt",
         protocol: "groth16",
