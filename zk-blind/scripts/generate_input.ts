@@ -1,14 +1,9 @@
-// @ts-nocheck
 import {
   bytesToBigInt,
-  stringToBytes,
   fromHex,
   toCircomBigIntBytes,
 } from "../helpers/binaryFormat";
-import {
-  CIRCOM_FIELD_MODULUS,
-  MAX_HEADER_PADDED_BYTES,
-} from "../helpers/constants";
+import { MAX_HEADER_PADDED_BYTES } from "../helpers/constants";
 import { shaHash } from "../helpers/shaHash";
 import { Hash } from "./fast-sha256";
 import * as fs from "fs";
@@ -30,13 +25,6 @@ export interface ICircuitInputs {
   address?: string;
   address_plus_one?: string;
   twitter_username_idx?: string;
-}
-
-enum CircuitType {
-  RSA = "rsa",
-  SHA = "sha",
-  TEST = "test",
-  JWT = "jwt",
 }
 
 function assert(cond: boolean, errorMessage: string) {
@@ -142,8 +130,7 @@ export async function getCircuitInputs(
   rsa_signature: BigInt,
   rsa_modulus: BigInt,
   msg: Buffer,
-  eth_address: string,
-  circuit: CircuitType
+  eth_address: string
 ): Promise<{
   valid: {
     validSignatureFormat?: boolean;
@@ -209,9 +196,7 @@ export async function generate_inputs(): Promise<any> {
   const key = new NodeRSA({ b: 2048 });
   const exportedKey = key.exportKey("components-public");
   const mySignature = key.sign(messageBuffer);
-  const mySignatureBigInt = BigInt(
-    "0x" + Buffer.from(mySignature, "base64").toString("hex")
-  );
+  const mySignatureBigInt = BigInt("0x" + mySignature.toString("hex"));
   const myModulus = exportedKey.n;
   const myModulusBigInt = BigInt("0x" + myModulus.toString("hex"));
 
@@ -219,8 +204,7 @@ export async function generate_inputs(): Promise<any> {
     mySignatureBigInt,
     myModulusBigInt,
     messageBuffer,
-    "0x0000000000000000000000000000000000000000",
-    CircuitType.JWT
+    "0x0000000000000000000000000000000000000000"
   );
   return fin_result.circuitInputs;
 }
@@ -240,6 +224,7 @@ export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
 }
 
 if (typeof require !== "undefined" && require.main === module) {
+  console.log("****GENERATING JWT JSON INPUT****");
   generate_inputs().then((res) => {
     res = {
       ...res,
