@@ -4,23 +4,15 @@ import {
   stringToBytes,
   fromHex,
   toCircomBigIntBytes,
-  packBytesIntoNBytes,
-  bufferToUint8Array,
-  bufferToString,
 } from "../helpers/binaryFormat";
 import {
   CIRCOM_FIELD_MODULUS,
   MAX_HEADER_PADDED_BYTES,
-  MAX_BODY_PADDED_BYTES,
-  STRING_PRESELECTOR,
 } from "../helpers/constants";
 import { shaHash } from "../helpers/shaHash";
-import { dkimVerify } from "../helpers/dkim";
 import { Hash } from "./fast-sha256";
 import * as fs from "fs";
 import NodeRSA from "node-rsa";
-var Cryo = require("cryo");
-const pki = require("node-forge").pki;
 
 export interface ICircuitInputs {
   modulus?: string[];
@@ -238,17 +230,9 @@ export async function getCircuitInputs(
 }
 
 export async function generate_inputs(): Promise<any> {
-  const signature =
-    "mLCysHQtDftfFey4F-ntFma22r5-qpxtkXsiDw6TY30Tnoj2kPQ_YdSjzagrwRgF7pHE8SSM_roo2wDh3c_8vDNRZeax4VICZjYmPS-3ZWAV0XyjjlgWgFleTqVT72M-VlPCdecHiYQJojlYHJyGybvTCaX1cqoF9aAMy8wBvRbSceECmX15k4nKG51Z5Le7k_vOShaxYmwrRhMIip4KRv-DW1FXAdi_F-MYSrqZ6Oq-nglMujxD2NOoHoqOqmyd1OMIrc6oIRuRqBXlRnQ0IdUDQbiXfyFVC0ItIME3a4SLoWp_rrmY1tSrGJu93MZrjhzfkNglJ-FOp4kKZAKkzA";
-  const signatureBigInt = BigInt(
-    "0x" + Buffer.from(signature, "base64").toString("hex")
-  );
   const messageBase64 =
     "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik1UaEVOVUpHTkVNMVFURTRNMEZCTWpkQ05UZzVNRFUxUlRVd1FVSkRNRU13UmtGRVFrRXpSZyJ9.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL3Byb2ZpbGUiOnsiZW1haWwiOiJzZWh5dW5AYmVya2VsZXkuZWR1IiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImdlb2lwX2NvdW50cnkiOiJVUyJ9LCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsidXNlcl9pZCI6InVzZXIta1dMaXBzT3dMZFd4MXdMc0I3clR3UnFlIn0sImlzcyI6Imh0dHBzOi8vYXV0aDAub3BlbmFpLmNvbS8iLCJzdWIiOiJnb29nbGUtb2F1dGgyfDExNjYwOTg2MjEwMzkxMTMwNjgwNyIsImF1ZCI6WyJodHRwczovL2FwaS5vcGVuYWkuY29tL3YxIiwiaHR0cHM6Ly9vcGVuYWkuYXV0aDAuY29tL3VzZXJpbmZvIl0sImlhdCI6MTY3MzE1NTQ0NiwiZXhwIjoxNjczNzYwMjQ2LCJhenAiOiJUZEpJY2JlMTZXb1RIdE45NW55eXdoNUU0eU9vNkl0RyIsInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwgbW9kZWwucmVhZCBtb2RlbC5yZXF1ZXN0IG9yZ2FuaXphdGlvbi5yZWFkIG9mZmxpbmVfYWNjZXNzIn0";
   const messageBuffer = Buffer.from(messageBase64);
-  const publicKey = fs.readFileSync("./public_key.pem", {});
-  const pubKeyData = pki.publicKeyFromPem(publicKey.toString());
-  const modulusBigInt = BigInt(pubKeyData.n.toString());
 
   const key = new NodeRSA({ b: 2048 });
   const exportedKey = key.exportKey("components-public");
@@ -259,43 +243,14 @@ export async function generate_inputs(): Promise<any> {
   const myModulus = exportedKey.n;
   const myModulusBigInt = BigInt("0x" + myModulus.toString("hex"));
 
-  console.log("FUUUUUUUUCK");
-
-  if (false) {
-    const fin_result = await getCircuitInputs(
-      signatureBigInt,
-      modulusBigInt,
-      messageBuffer,
-      "0x0000000000000000000000000000000000000000",
-      CircuitType.JWT
-    );
-    return fin_result.circuitInputs;
-  } else {
-    const fin_result = await getCircuitInputs(
-      mySignatureBigInt,
-      myModulusBigInt,
-      messageBuffer,
-      "0x0000000000000000000000000000000000000000",
-      CircuitType.JWT
-    );
-    return fin_result.circuitInputs;
-  }
-}
-
-async function do_generate() {
-  const gen_inputs = await generate_inputs();
-  return gen_inputs;
-}
-
-async function gen_test() {
-  console.log(
-    packBytesIntoNBytes(
-      Uint8Array.from([
-        0, 121, 117, 115, 104, 95, 103, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0,
-      ])
-    )
+  const fin_result = await getCircuitInputs(
+    mySignatureBigInt,
+    myModulusBigInt,
+    messageBuffer,
+    "0x0000000000000000000000000000000000000000",
+    CircuitType.JWT
   );
+  return fin_result.circuitInputs;
 }
 
 export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
@@ -312,20 +267,8 @@ export async function insert13Before10(a: Uint8Array): Promise<Uint8Array> {
   return ret.slice(0, j);
 }
 
-async function debug_file() {
-  // const email = fs.readFileSync("./test_email.txt");
-  const email = fs.readFileSync("./twitter_msg.eml");
-  console.log(Uint8Array.from(email));
-  // Key difference: file load has 13 10, web version has just 10
-}
-
-// If main
 if (typeof require !== "undefined" && require.main === module) {
-  // debug_file();
-  const circuitInputs = do_generate().then((res) => {
-    console.log("Writing to file...");
-    // console.log(res);
-
+  generate_inputs().then((res) => {
     res = {
       ...res,
       message_padded_bytes: "832",
@@ -368,5 +311,4 @@ if (typeof require !== "undefined" && require.main === module) {
     };
     fs.writeFileSync(`./jwt.json`, JSON.stringify(res), { flag: "w" });
   });
-  // gen_test();
 }
