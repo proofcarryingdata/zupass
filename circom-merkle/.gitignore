@@ -1,23 +1,26 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# node
+node_modules/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
+# hardhat
+cache
+artifacts
 
-# testing
-/coverage
+# Ignore the output from circom because we want people to build these
+# Users can remove these lines and commit the artifacts
+circuits/*.r1cs
+circuits/*.vkey.json
+circuits/*.wasm
+circuits/*.zkey
+circuits/*.ptau
 
-# production
-/build
+build/
+keys/
 
-# misc
+secret.json
+yarn.lock
+
+.env
+
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+.DS_Store?
+rsa.json

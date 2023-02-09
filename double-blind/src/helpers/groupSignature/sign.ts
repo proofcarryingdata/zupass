@@ -35,6 +35,11 @@ export async function getCircuitInputs(
   sshSignature: string,
   groupMessage: IGroupMessage
 ): Promise<{
+  valid: {
+    validSignatureFormat?: boolean;
+    validPublicKeyGroupMembership?: boolean;
+    validMessage?: boolean;
+  };
   circuitInputs?: ICircuitInputs;
   signerId?: string;
   identityRevealer?: IIdentityRevealer;
@@ -47,18 +52,41 @@ export async function getCircuitInputs(
     groupIdentifier: groupPublicKeys,
   } = groupMessage;
   await initializePoseidon();
+  let validSignatureFormat = true;
   let rawSignature: any, pubKeyParts: any;
-
-  const rawSig = getRawSignature(sshSignature);
-  rawSignature = rawSig.rawSignature;
-  pubKeyParts = rawSig.pubKeyParts;
-
+  try {
+    const rawSig = getRawSignature(sshSignature);
+    rawSignature = rawSig.rawSignature;
+    pubKeyParts = rawSig.pubKeyParts;
+  } catch (e) {
+    console.error(e);
+    return {
+      valid: {
+        validSignatureFormat: false,
+      },
+    };
+  }
   const merkleTree = await resolveGroupIdentifierTree(groupPublicKeys);
   const modulusBigInt = bytesToBigInt(pubKeyParts[2]);
   const hashedPubKey = poseidonK(toCircomBigIntBytes(modulusBigInt));
   const validPublicKeyGroupMembership = merkleTree.includes(hashedPubKey);
   const signatureBigInt = bytesToBigInt(rawSignature);
+  const messageBigInt = verifyRSA(signatureBigInt, modulusBigInt);
+  const baseMessageBigInt = MAGIC_DOUBLE_BLIND_BASE_MESSAGE;
+  const validMessage =
+    (messageBigInt &
+      ((1n << BigInt(MAGIC_DOUBLE_BLIND_BASE_MESSAGE_LEN)) - 1n)) ===
+    baseMessageBigInt;
 
+  if (!validMessage || !validPublicKeyGroupMembership) {
+    return {
+      valid: {
+        validSignatureFormat,
+        validPublicKeyGroupMembership,
+        validMessage,
+      },
+    };
+  }
   const signerNamespaceBigint = enableSignerId
     ? bytesToBigInt(await shaHash(stringToBytes(signerNamespace))) %
       CIRCOM_FIELD_MODULUS
@@ -92,6 +120,12 @@ export async function getCircuitInputs(
   }
 
   return {
+    // parts: rsaKey.parts,
+    valid: {
+      validSignatureFormat,
+      validPublicKeyGroupMembership,
+      validMessage,
+    },
     circuitInputs: {
       enableSignerId: enableSignerId ? "1" : "0",
       modulus: toCircomBigIntBytes(modulusBigInt),
