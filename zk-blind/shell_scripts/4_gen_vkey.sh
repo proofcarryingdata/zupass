@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CIRCUIT_NAME=jwt
+CIRCUIT_NAME=main
 BUILD_DIR="./build/$CIRCUIT_NAME"
 R1CS_FILE="$BUILD_DIR/$CIRCUIT_NAME.r1cs"
 PHASE1=./circuits/powersOfTau28_hez_final_22.ptau

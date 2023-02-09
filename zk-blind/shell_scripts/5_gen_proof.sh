@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CIRCUIT_NAME=jwt
+CIRCUIT_NAME=main
 BUILD_DIR="./build/$CIRCUIT_NAME"
 
 echo "****GENERATING PROOF FOR SAMPLE INPUT****"
