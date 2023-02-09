@@ -1,66 +1,37 @@
 {
-  "name": "double-blind",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.3",
-    "@testing-library/react": "^12.1.4",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/lodash": "^4.14.181",
-    "@types/node-forge": "^1.3.1",
-    "@types/styled-components": "^5.1.24",
+  "name": "circuits",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/atob": "^2.1.2",
+    "@types/node-rsa": "^1.1.1",
+    "chai": "^4.3.7",
     "circomlib": "^2.0.3",
-    "circomlibjs": "^0.1.2",
-    "localforage": "^1.10.0",
-    "lodash": "^4.17.21",
-    "node-forge": "^1.3.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-dropzone": "^12.0.4",
-    "react-error-overlay": "6.0.9",
-    "react-router": "^6.2.2",
-    "react-router-dom": "^6.2.2",
-    "react-scripts": "^4",
-    "react-use": "^17.3.2",
-    "snarkjs": "^0.4.15",
-    "sshpk": "^1.17.0",
-    "styled-components": "^5.3.5",
-    "typescript": "^4.6.3",
-    "web-vitals": "^2.1.4"
+    "circomlibjs": "^0.1.7",
+    "hardhat": "^2.12.5",
+    "hardhat-circom": "^3.3.2"
   },
-  "resolutions": {
-    "//": "See https://github.com/facebook/create-react-app/issues/11773",
-    "react-error-overlay": "6.0.9"
+  "engines": {
+    "node": ">=16"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "compile": "mkdir -p ./build && circom circuits/main/rsa_verify.circom --r1cs --wasm --sym --verbose -o build",
-    "setup": "mkdir -p ./build && NODE_OPTIONS=--max_old_space_size=16384 snarkjs groth16 setup ./build/rsa_verify.r1cs ../pot22_final.ptau ./build/circuit_final.zkey",
-    "contribute": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey contribute ./build/circuit_final.zkey ./build/circuit_final_1.zkey --name=\"0xPARC\"",
-    "verification-key": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey export verificationkey ./build/circuit_final_1.zkey ./build/verification_key.json",
-    "build-circuits": "npm run compile && npm run setup && npm run contribute && npm run verification-key"
+    "circom:dev": "hardhat circom --deterministic --debug --verbose",
+    "circom:prod": "hardhat circom --verbose",
+    "test": "hardhat test"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not ie <= 99",
-      "not android <= 4.4.4",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "cryo": "^0.0.6",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.7.2",
+    "fs": "^0.0.1-security",
+    "global": "^4.4.0",
+    "lodash": "^4.17.21",
+    "node-forge": "^1.3.1",
+    "node-rsa": "^1.1.1",
+    "snarkjs": "^0.5.0",
+    "typescript": "^4.9.4"
   }
 }

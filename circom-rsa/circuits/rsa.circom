@@ -24,14 +24,8 @@ template FpPow65537Mod(n, k) {
         }
     }
     for (var j = 0; j < k; j++) {
-        log(doublers[0].p[j]);
-    }
-    for (var j = 0; j < k; j++) {
         doublers[0].a[j] <== base[j];
         doublers[0].b[j] <== base[j];
-    }
-    for (var j = 0; j < k; j++) {
-        log(doublers[0].out[j]);
     }
     for (var i = 0; i + 1 < 16; i++) {
         for (var j = 0; j < k; j++) {
@@ -48,17 +42,13 @@ template FpPow65537Mod(n, k) {
     }
 }
 
-// Pad a message for RSA signing, given the modulus.
-// This computes:
-//   padded message === base_message[:base_len] + [0x00] + [0xff] * pad_len + [0x01]
-// See RFC 8017 Section 9.2 (https://datatracker.ietf.org/doc/html/rfc8017#section-9.2).
-// Base length is hardcoded at 664, which corresponds to the RSA-SHA-512 digest variant.
 template RSAPad(n, k) {
     signal input modulus[k];
     signal input base_message[k];
     signal output padded_message[k];
 
-    var base_len = 664;
+    var base_len = 408;
+    var msg_len = 256;
 
     signal padded_message_bits[n*k];
 
@@ -79,13 +69,22 @@ template RSAPad(n, k) {
         }
     }
 
-    for (var i = base_len; i < n*k; i++) {
+    for (var i = msg_len; i < n*k; i++) {
         base_message_bits[i] === 0;
     }
 
-    for (var i = 0; i < base_len + 8; i++) {
+    for (var i = 0; i < msg_len; i++) {
         padded_message_bits[i] <== base_message_bits[i];
     }
+
+    for (var i = base_len; i < base_len + 8; i++) {
+        padded_message_bits[i] <== 0;
+    }
+
+    for (var i = msg_len; i < base_len; i++) {
+        padded_message_bits[i] <== (0x3031300d060960864801650304020105000420 >> (i - msg_len)) & 1;
+    }
+
     component modulus_zero[(n*k + 7 - (base_len + 8))\8];
     {
         var modulus_prefix = 0;
@@ -105,6 +104,7 @@ template RSAPad(n, k) {
             }
         }
     }
+
     // The RFC guarantees at least 8 octets of 0xff padding.
     assert(base_len + 8 + 65 <= n*k);
     for (var i = base_len + 8; i < base_len + 8 + 65; i++) {
@@ -121,10 +121,6 @@ template RSAPad(n, k) {
     }
 }
 
-// Verify an SSH signature, assuming the public exponent is 65537.
-// Base message is the DER-encoded hashed message.
-// Assumes the modulus and base_message are well-formed and range-checked (or
-// otherwise trustworthy).
 template RSAVerify65537(n, k) {
     signal input signature[k];
     signal input modulus[k];
@@ -158,3 +154,5 @@ template RSAVerify65537(n, k) {
         bigPow.out[i] === padder.padded_message[i];
     }
 }
+
+// component main { public [ modulus, signature ] } = RSAVerify65537();

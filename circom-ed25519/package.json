@@ -1,0 +1,62 @@
+{
+  "name": "@electron-labs/ed25519-circom",
+  "version": "0.0.1",
+  "description": "Circom circuits for ed25519 signature verification",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "compile": "mkdir -p ./build && circom circuits/verify.circom --r1cs --wasm --sym --verbose -o build",
+    "setup": "mkdir -p ./build && NODE_OPTIONS=--max_old_space_size=16384 snarkjs groth16 setup ./build/verify.r1cs ../pot22_final.ptau ./build/circuit_final.zkey",
+    "contribute": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey contribute ./build/circuit_final.zkey ./build/circuit_final_1.zkey --name=\"0xPARC\"",
+    "verification-key": "NODE_OPTIONS=--max_old_space_size=16384 snarkjs zkey export verificationkey ./build/circuit_final_1.zkey ./build/verification_key.json",
+    "build": "npm run compile && npm run setup && npm run contribute && npm run verification-key",
+    "sign-ed25519": "cat signatures/file_to_sign.txt | ssh-keygen -Y sign -f ~/.ssh/id_ed25519 -n file > signatures/file_to_sign.ed25519.sig.txt",
+    "sign-rsa": "cat signatures/file_to_sign.txt | ssh-keygen -Y sign -f ~/.ssh/id_rsa -n file > signatures/file_to_sign.rsa.sig.txt",
+    "test": "mocha --colors --max-old-space-size=4000 --timeout 150000 --exclude test/inversemodulo* --exclude test/scalarmul* --exclude test/ed25519* --exclude test/batchverify*",
+    "test-inverse-modulo": "mocha --colors --max-old-space-size=4000 --timeout 150000 test/inversemodulo.test.js",
+    "test-scalarmul": "mocha --colors --max-old-space-size=4000 --timeout 300000 test/scalarmul.test.js",
+    "test-verify": "mocha --colors --max-old-space-size=4000 --timeout 4000000 test/ed25519verfication.test.js ",
+    "test-batch-verify": "mocha --colors --max-old-space-size=4000 --timeout 12000000 test/batchverify.test.js",
+    "clean": "rm -rf node_modules && make clean && npm i",
+    "lint": "eslint test/*.test.js --fix",
+    "publish-npm": "npm publish --access public --ignore-scripts --@OWNER:registry='https://registry.npmjs.org'",
+    "publish-github": "npm publish --access public --ignore-scripts --@electron-labs:registry='https://npm.pkg.github.com'"
+  },
+  "keywords": [
+    "circuit",
+    "circom",
+    "zksnark"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Electron-Labs/ed25519-circom.git"
+  },
+  "author": "rahulghangas, garvitgoel, BakerStreetPhantom, suniljalandhra",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@electron-labs/sha512": "^1.0.4",
+    "snarkjs": "0.5.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.1.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "axios": "^0.27.2",
+    "bigint-mod-arith": "^3.1.0",
+    "chai": "^4.3.6",
+    "circom_tester": "0.0.14",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
+    "eslint": "^8.22.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "ethereum-waffle": "^3.4.4",
+    "ethers": "^5.6.9",
+    "fast-check": "^3.1.1",
+    "hardhat": "^2.10.1",
+    "keccak256": "1.0.6",
+    "mocha": "^10.0.0",
+    "mocha-logger": "^1.0.8"
+  }
+}
