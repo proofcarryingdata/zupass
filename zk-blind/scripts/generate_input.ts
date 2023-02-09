@@ -152,9 +152,9 @@ export async function generate_inputs(): Promise<any> {
 }
 
 async function writeNewInputs() {
-  console.log("****GENERATING JWT JSON INPUT****");
+  console.log("****GENERATING JSON INPUT****");
   const inputs = await generate_inputs();
-  fs.writeFileSync(`./jwt.json`, JSON.stringify(inputs), { flag: "w" });
+  fs.writeFileSync(`./rsa.json`, JSON.stringify(inputs), { flag: "w" });
 }
 
 writeNewInputs();
