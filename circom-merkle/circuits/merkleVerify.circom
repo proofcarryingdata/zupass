@@ -1,23 +1,22 @@
 pragma circom 2.0.3;
 
 include "../node_modules/circomlib/circuits/poseidon.circom";
-include "./merkle.circom";
+include "./merkleTree.circom";
 
-template RSAGroupSigVerify(n, k, levels) {
+template MerkleVerify(n, k, levels) {
     signal input modulus[k];
-
-    component merkleChecker = MerkleTreeChecker(levels);
-    signal leaf;
     signal input root;
     signal input pathElements[levels];
     signal input pathIndices[levels];
+    signal leaf;
 
-    // connect the two components; modulus (n x k bigint representation) must hash to leaf
     component leafPoseidonK = PoseidonK(k);
     for (var i = 0; i < k; i++) {
         leafPoseidonK.inputs[i] <== modulus[i];
     }
     leaf <== leafPoseidonK.out;
+
+    component merkleChecker = MerkleTreeChecker(levels);
     merkleChecker.leaf <== leaf;
     merkleChecker.root <== root;
     for (var i = 0; i < levels; i++) {
