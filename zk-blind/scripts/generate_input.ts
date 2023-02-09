@@ -1,6 +1,6 @@
-import { toCircomBigIntBytes } from "../helpers/binaryFormat";
-import { MAX_HEADER_PADDED_BYTES } from "../helpers/constants";
-import { shaHash } from "../helpers/shaHash";
+import { toCircomBigIntBytes } from "./binaryFormat";
+import { MAX_HEADER_PADDED_BYTES } from "./constants";
+import { shaHash } from "./shaHash";
 import { Hash } from "./fast-sha256";
 import * as fs from "fs";
 import NodeRSA from "node-rsa";
