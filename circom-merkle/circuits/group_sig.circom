@@ -1,7 +1,6 @@
 pragma circom 2.0.3;
 
 include "../node_modules/circomlib/circuits/poseidon.circom";
-include "./rsa.circom";
 include "./merkle.circom";
 
 template RSAGroupSigVerify(n, k, levels) {
