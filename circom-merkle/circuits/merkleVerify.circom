@@ -3,7 +3,7 @@ pragma circom 2.0.3;
 include "../node_modules/circomlib/circuits/poseidon.circom";
 include "./merkleTree.circom";
 
-template MerkleVerify(n, k, levels) {
+template MerkleVerify(k, levels) {
     signal input modulus[k];
     signal input root;
     signal input pathElements[levels];
