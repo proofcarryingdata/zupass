@@ -1,5 +1,6 @@
 import { buildMerkleTree, getMerkleProof } from "./merklePoseidon";
 import { initializePoseidon } from "./poseidonHash";
+import * as fs from "fs";
 
 async function doThing() {
   await initializePoseidon();
@@ -9,6 +10,8 @@ async function doThing() {
 
   console.log(tree);
   console.log(proof);
+
+  fs.writeFileSync("./rsa.json", JSON.stringify(proof, null, 2));
 }
 
 doThing();
