@@ -1,3 +1,3 @@
-include "./merkleVerify.circom";
+include "./rsa_verify.circom";
 
-component main { public [ root ] } = MerkleVerify(17, 30);
+component main { public [ root ] } = MerkleTreeChecker(30);

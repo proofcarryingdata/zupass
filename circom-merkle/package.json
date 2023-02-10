@@ -1,5 +1,5 @@
 {
-  "name": "@0xparc/circom-merkle",
+  "name": "circuits",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
