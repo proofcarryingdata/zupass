@@ -1,96 +1,35 @@
-// NOTE: copied from personaelabs/data because I(@lsankar4033) don't know how to npm typescript
+import _ from "lodash";
+import { poseidon } from "./poseidonHash";
+import { CIRCOM_LEVELS } from "./constants";
 
-import { buildPoseidon } from "circomlibjs";
-
-let poseidon: any;
-let F: any;
-
-// NOTE: picked this as the null field element arbitrarily
-const NULL_NODE = 1n;
-
-export interface MerkleTree {
-  root;
-  leafToPathElements;
-  leafToPathIndices;
+export function buildMerkleTree(leaves: string[]): string[] {
+  const SIZE = leaves.length;
+  const res = _.times(2 * SIZE, () => "0");
+  for (let i = 0; i < SIZE; ++i) {
+    res[SIZE + i] = leaves[i];
+  }
+  for (let i = SIZE - 1; i > 0; --i) {
+    res[i] = poseidon([res[2 * i], res[2 * i + 1]]);
+  }
+  return res;
 }
 
-// NOTE: default tree depth based on dao hack confessions
-async function buildTreePoseidon(
-  leaves,
-  depth = 15,
-  proof_depth = 30,
-  nullNode = NULL_NODE
-): Promise<MerkleTree> {
-  if (!poseidon) {
-    poseidon = await buildPoseidon();
-    F = poseidon.F;
+export function getMerkleProof(merkleTree: string[], leaf: string) {
+  const pathElements = [];
+  const pathIndices = [];
+  for (let idx = merkleTree.indexOf(leaf); idx > 1; idx = idx >> 1) {
+    pathElements.push(merkleTree[idx ^ 1]);
+    pathIndices.push(idx & 1);
   }
-
-  // pad with nullNode to guarantee a tree of the desired depth
-  const requiredLeaves = 2 ** depth;
-  if (leaves.length < requiredLeaves) {
-    leaves = leaves.concat(
-      Array(requiredLeaves - leaves.length).fill(nullNode)
-    );
+  while (pathElements.length < CIRCOM_LEVELS) {
+    pathElements.push(0);
+    pathIndices.push(0);
   }
-
-  leaves = leaves.map(BigInt);
-  leaves.sort();
-
-  // the equivalent of pathElements and pathIndices in merkle.circom
-  const outputLeaves = leaves.filter((w) => w !== nullNode);
-  let leafToPathElements = Object.fromEntries(outputLeaves.map((w) => [w, []]));
-  let leafToPathIndices = Object.fromEntries(outputLeaves.map((w) => [w, []]));
-
-  let nodeToLeaves = Object.fromEntries(leaves.map((w) => [w, [w]]));
-  let curLevel = leaves;
-  while (curLevel.length > 1) {
-    let newLevel = [];
-
-    for (let i = 0; i < curLevel.length; i += 2) {
-      let child1 = curLevel[i];
-      let child2 = i == curLevel.length - 1 ? nullNode : curLevel[i + 1];
-
-      let child1Leaves = nodeToLeaves[child1];
-      let child2Leaves = child2 == nullNode ? [] : nodeToLeaves[child2];
-
-      for (const leaf of child1Leaves) {
-        if (leaf !== nullNode) {
-          leafToPathElements[leaf].push(child2);
-          leafToPathIndices[leaf].push("0");
-        }
-      }
-
-      for (const leaf of child2Leaves) {
-        if (leaf !== nullNode) {
-          leafToPathElements[leaf].push(child1);
-          leafToPathIndices[leaf].push("1");
-        }
-      }
-
-      let poseidonRes = poseidon([child1, child2]);
-      let parent = F.toObject(poseidonRes);
-
-      nodeToLeaves[parent] = child1Leaves.concat(child2Leaves);
-
-      newLevel.push(parent);
-    }
-
-    curLevel = newLevel;
-  }
-
-  for (const leaf in leafToPathElements) {
-    while (leafToPathElements[leaf].length < proof_depth) {
-      leafToPathElements[leaf].push(nullNode);
-      leafToPathIndices[leaf].push("0");
-    }
-  }
-
+  const root = merkleTree[1];
   return {
-    root: curLevel[0],
-    leafToPathElements,
-    leafToPathIndices,
+    leaf,
+    pathElements,
+    pathIndices,
+    root,
   };
 }
-
-export { buildTreePoseidon };
