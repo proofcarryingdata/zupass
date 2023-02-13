@@ -1,8 +1,8 @@
 pragma circom 2.0.2;
 
-include "../node_modules/circomlib/circuits/comparators.circom";
-include "../node_modules/circomlib/circuits/bitify.circom";
-include "../node_modules/circomlib/circuits/gates.circom";
+include "../../circuits/node_modules/circomlib/circuits/comparators.circom";
+include "../../circuits/node_modules/circomlib/circuits/bitify.circom";
+include "../../circuits/node_modules/circomlib/circuits/gates.circom";
 
 include "bigint_func.circom";
 

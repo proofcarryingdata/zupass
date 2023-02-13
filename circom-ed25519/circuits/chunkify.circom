@@ -1,6 +1,6 @@
 pragma circom 2.0.0;
 
-include "../node_modules/circomlib/circuits/bitify.circom";
+include "../../circuits/node_modules/circomlib/circuits/bitify.circom";
 
 template Chunkify(n, chunkSize) {
   signal input in[n];

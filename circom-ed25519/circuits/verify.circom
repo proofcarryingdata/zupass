@@ -5,9 +5,9 @@ include "./modulus.circom";
 include "./point-addition.circom";
 include "./pointcompress.circom";
 
-include "../node_modules/@electron-labs/sha512/circuits/sha512/sha512.circom";
-include "../node_modules/circomlib/circuits/comparators.circom";
-include "../node_modules/circomlib/circuits/gates.circom";
+include "../../circuits/node_modules/@electron-labs/sha512/circuits/sha512/sha512.circom";
+include "../../circuits/node_modules/circomlib/circuits/comparators.circom";
+include "../../circuits/node_modules/circomlib/circuits/gates.circom";
 
 template Ed25519Verifier(n) {
   assert(n % 8 == 0);

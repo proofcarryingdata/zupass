@@ -3,7 +3,7 @@ pragma circom 2.0.0;
 include "modinv.circom";
 include "chunkedmul.circom";
 include "modulus.circom";
-include "../node_modules/circomlib/circuits/bitify.circom";
+include "../../circuits/node_modules/circomlib/circuits/bitify.circom";
 
 template PointCompress(){
     signal input P[4][3];

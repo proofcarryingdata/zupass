@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@electron-labs/sha512@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@electron-labs/sha512/-/sha512-1.0.4.tgz#005f9a98ea9580191a4817151209262d8db34cda"
+  integrity sha512-WaU89leCfuwR9TFIUyTyX6ZBOaykdD8pIw0rCsuSaOCs0e4ppO4K6VYIcZA6Bi//MCz5Gzdqrv+O3qPBTRWGBw==
+
 "@ethersproject/abi@5.7.0", "@ethersproject/abi@^5.1.2", "@ethersproject/abi@^5.7.0":
   version "5.7.0"
   resolved "https://registry.yarnpkg.com/@ethersproject/abi/-/abi-5.7.0.tgz#b3f3e045bbbeed1af3947335c247ad625a44e449"
