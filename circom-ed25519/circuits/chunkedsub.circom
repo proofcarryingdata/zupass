@@ -7,14 +7,14 @@ template ChunkedSub(k, base) {
   signal output out[k];
   signal output underflow;
 
-  component unit0 = ModSub(base);
+  component unit0 = ModSub_ED(base);
   unit0.a <== a[0];
   unit0.b <== b[0];
   out[0] <== unit0.out;
 
   component unit[k - 1];
   for (var i = 1; i < k; i++) {
-    unit[i - 1] = ModSubThree(base);
+    unit[i - 1] = ModSubThree_ED(base);
     unit[i - 1].a <== a[i];
     unit[i - 1].b <== b[i];
     if (i == 1) {
@@ -27,7 +27,7 @@ template ChunkedSub(k, base) {
   underflow <== unit[k - 2].borrow;
 }
 
-template ModSub(base) {
+template ModSub_ED(base) {
   signal input a;
   signal input b;
   signal output out;
@@ -39,7 +39,7 @@ template ModSub(base) {
   out <== borrow * (1 << base) + a - b;
 }
 
-template ModSubThree(base) {
+template ModSubThree_ED(base) {
   signal input a;
   signal input b;
   signal input c;

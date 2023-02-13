@@ -12,7 +12,7 @@ template BigModInv51() {
   var p[3] = [38685626227668133590597613, 38685626227668133590597631, 38685626227668133590597631];
 
   // length k
-  var inv[100] = mod_inv(85, 3, in, p);
+  var inv[100] = mod_inv_ED(85, 3, in, p);
   for (var i = 0; i < 3; i++) {
     out[i] <-- inv[i];
   }

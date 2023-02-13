@@ -1,15 +1,15 @@
 pragma circom 2.0.0;
 
-function SplitFn(in, n, m) {
+function SplitFn_ED(in, n, m) {
     return [in % (1 << n), (in \ (1 << n)) % (1 << m)];
 }
 
-function SplitThreeFn(in, n, m, k) {
+function SplitThreeFn_ED(in, n, m, k) {
     return [in % (1 << n), (in \ (1 << n)) % (1 << m), (in \ (1 << n + m)) % (1 << k)];
 }
 
 // 1 if true, 0 if false
-function long_gt(n, k, a, b) {
+function long_gt_ED(n, k, a, b) {
     for (var i = k - 1; i >= 0; i--) {
         if (a[i] > b[i]) {
             return 1;
@@ -25,7 +25,7 @@ function long_gt(n, k, a, b) {
 // a has k registers
 // b has k registers
 // a >= b
-function long_sub(n, k, a, b) {
+function long_sub_ED(n, k, a, b) {
     var diff[100];
     var borrow[100];
     for (var i = 0; i < k; i++) {
@@ -52,7 +52,7 @@ function long_sub(n, k, a, b) {
 
 // a is a n-bit scalar
 // b has k registers
-function long_scalar_mult(n, k, a, b) {
+function long_scalar_mult_ED(n, k, a, b) {
     var out[100];
     for (var i = 0; i < 100; i++) {
         out[i] = 0;
@@ -73,7 +73,7 @@ function long_scalar_mult(n, k, a, b) {
 // out[1] has length k -- remainder
 // implements algorithm of https://people.eecs.berkeley.edu/~fateman/282/F%20Wright%20notes/week4.pdf
 // b[k-1] must be nonzero!
-function long_div(n, k, a, b) {
+function long_div_ED(n, k, a, b) {
     var out[2][100];
 
     var remainder[200];
@@ -95,9 +95,9 @@ function long_div(n, k, a, b) {
             }
         }
 
-        out[0][i] = short_div(n, k, dividend, b);
+        out[0][i] = short_div_ED(n, k, dividend, b);
 
-        var mult_shift[100] = long_scalar_mult(n, k, out[0][i], b);
+        var mult_shift[100] = long_scalar_mult_ED(n, k, out[0][i], b);
         var subtrahend[200];
         for (var j = 0; j < 2 * k; j++) {
             subtrahend[j] = 0;
@@ -107,7 +107,7 @@ function long_div(n, k, a, b) {
                subtrahend[i + j] = mult_shift[j];
             }
         }
-        remainder = long_sub(n, 2 * k, remainder, subtrahend);
+        remainder = long_sub_ED(n, 2 * k, remainder, subtrahend);
     }
     for (var i = 0; i < k; i++) {
         out[1][i] = remainder[i];
@@ -122,16 +122,16 @@ function long_div(n, k, a, b) {
 // b has k registers
 // assumes leading digit of b is at least 2 ** (n - 1)
 // 0 <= a < (2**n) * b
-function short_div_norm(n, k, a, b) {
+function short_div_norm_ED(n, k, a, b) {
    var qhat = (a[k] * (1 << n) + a[k - 1]) \ b[k - 1];
    if (qhat > (1 << n) - 1) {
       qhat = (1 << n) - 1;
    }
 
-   var mult[100] = long_scalar_mult(n, k, qhat, b);
-   if (long_gt(n, k + 1, mult, a) == 1) {
-      mult = long_sub(n, k + 1, mult, b);
-      if (long_gt(n, k + 1, mult, a) == 1) {
+   var mult[100] = long_scalar_mult_ED(n, k, qhat, b);
+   if (long_gt_ED(n, k + 1, mult, a) == 1) {
+      mult = long_sub_ED(n, k + 1, mult, b);
+      if (long_gt_ED(n, k + 1, mult, a) == 1) {
          return qhat - 2;
       } else {
          return qhat - 1;
@@ -146,19 +146,19 @@ function short_div_norm(n, k, a, b) {
 // b has k registers
 // assumes leading digit of b is non-zero
 // 0 <= a < (2**n) * b
-function short_div(n, k, a, b) {
+function short_div_ED(n, k, a, b) {
    var scale = (1 << n) \ (1 + b[k - 1]);
 
    // k + 2 registers now
-   var norm_a[200] = long_scalar_mult(n, k + 1, scale, a);
+   var norm_a[200] = long_scalar_mult_ED(n, k + 1, scale, a);
    // k + 1 registers now
-   var norm_b[200] = long_scalar_mult(n, k, scale, b);
+   var norm_b[200] = long_scalar_mult_ED(n, k, scale, b);
 
    var ret;
    if (norm_b[k] != 0) {
-       ret = short_div_norm(n, k + 1, norm_a, norm_b);
+       ret = short_div_norm_ED(n, k + 1, norm_a, norm_b);
    } else {
-       ret = short_div_norm(n, k, norm_a, norm_b);
+       ret = short_div_norm_ED(n, k, norm_a, norm_b);
    }
    return ret;
 }
@@ -167,7 +167,7 @@ function short_div(n, k, a, b) {
 // a and b both have k registers
 // out[0] has length 2 * k
 // adapted from BigMulShortLong and LongToShortNoEndCarry2 witness computation
-function prod(n, k, a, b) {
+function prod_ED(n, k, a, b) {
     // first compute the intermediate values. taken from BigMulShortLong
     var prod_val[100]; // length is 2 * k - 1
     for (var i = 0; i < 2 * k - 1; i++) {
@@ -188,20 +188,20 @@ function prod(n, k, a, b) {
 
     var split[100][3]; // first dimension has length 2 * k - 1
     for (var i = 0; i < 2 * k - 1; i++) {
-        split[i] = SplitThreeFn(prod_val[i], n, n, n);
+        split[i] = SplitThreeFn_ED(prod_val[i], n, n, n);
     }
 
     var carry[100]; // length is 2 * k - 1
     carry[0] = 0;
     out[0] = split[0][0];
     if (2 * k - 1 > 1) {
-        var sumAndCarry[2] = SplitFn(split[0][1] + split[1][0], n, n);
+        var sumAndCarry[2] = SplitFn_ED(split[0][1] + split[1][0], n, n);
         out[1] = sumAndCarry[0];
         carry[1] = sumAndCarry[1];
     }
     if (2 * k - 1 > 2) {
         for (var i = 2; i < 2 * k - 1; i++) {
-            var sumAndCarry[2] = SplitFn(split[i][0] + split[i-1][1] + split[i-2][2] + carry[i-1], n, n);
+            var sumAndCarry[2] = SplitFn_ED(split[i][0] + split[i-1][1] + split[i-2][2] + carry[i-1], n, n);
             out[i] = sumAndCarry[0];
             carry[i] = sumAndCarry[1];
         }
@@ -217,7 +217,7 @@ function prod(n, k, a, b) {
 // k * n <= 500
 // p is a prime
 // computes a^e mod p
-function mod_exp(n, k, a, p, e) {
+function mod_exp_ED(n, k, a, p, e) {
     var eBits[500]; // length is k * n
     for (var i = 0; i < k; i++) {
         for (var j = 0; j < n; j++) {
@@ -236,18 +236,18 @@ function mod_exp(n, k, a, p, e) {
         // multiply by a if bit is 0
         if (eBits[i] == 1) {
             var temp[200]; // length 2 * k
-            temp = prod(n, k, out, a);
+            temp = prod_ED(n, k, out, a);
             var temp2[2][100];
-            temp2 = long_div(n, k, temp, p);
+            temp2 = long_div_ED(n, k, temp, p);
             out = temp2[1];
         }
 
         // square, unless we're at the end
         if (i > 0) {
             var temp[200]; // length 2 * k
-            temp = prod(n, k, out, out);
+            temp = prod_ED(n, k, out, out);
             var temp2[2][100];
-            temp2 = long_div(n, k, temp, p);
+            temp2 = long_div_ED(n, k, temp, p);
             out = temp2[1];
         }
 
@@ -262,7 +262,7 @@ function mod_exp(n, k, a, p, e) {
 // p is a prime
 // if a == 0 mod p, returns 0
 // else computes inv = a^(p-2) mod p
-function mod_inv(n, k, a, p) {
+function mod_inv_ED(n, k, a, p) {
     var isZero = 1;
     for (var i = 0; i < k; i++) {
         if (a[i] != 0) {
@@ -293,8 +293,8 @@ function mod_inv(n, k, a, p) {
     two[0] = 2;
 
     var pMinusTwo[100];
-    pMinusTwo = long_sub(n, k, pCopy, two); // length k
+    pMinusTwo = long_sub_ED(n, k, pCopy, two); // length k
     var out[100];
-    out = mod_exp(n, k, a, pCopy, pMinusTwo);
+    out = mod_exp_ED(n, k, a, pCopy, pMinusTwo);
     return out;
 }
