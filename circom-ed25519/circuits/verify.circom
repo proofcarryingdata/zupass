@@ -194,4 +194,4 @@ template PointEqual() {
   out <== and2[1].out;
 }
 
-component main {public [msg, A, R8, S, PointA, PointR]} = Ed25519Verifier(16);
+// component main {public [msg, A, R8, S, PointA, PointR]} = Ed25519Verifier(16);
