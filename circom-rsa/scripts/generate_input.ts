@@ -136,7 +136,7 @@ export async function getCircuitInputs(
   return circuitInputs;
 }
 
-export async function generate_inputs(): Promise<any> {
+export async function generate_inputs(): Promise<ICircuitInputs> {
   const messageString = "hello world";
   const message = Buffer.from(messageString);
   const key = new NodeRSA({ b: 2048 });
