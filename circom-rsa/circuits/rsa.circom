@@ -1,5 +1,7 @@
 pragma circom 2.0.3;
 
+include "../../circuits/node_modules/circomlib/circuits/gates.circom";
+include "../../circuits/node_modules/circomlib/circuits/comparators.circom";
 include "./fp.circom";
 
 // Computes base^65537 mod modulus
@@ -126,6 +128,8 @@ template RSAVerify65537(n, k) {
     signal input modulus[k];
     signal input base_message[k];
 
+    signal output valid;
+
     component padder = RSAPad(n, k);
     for (var i = 0; i < k; i++) {
         padder.modulus[i] <== modulus[i];
@@ -141,7 +145,8 @@ template RSAVerify65537(n, k) {
         bigLessThan.a[i] <== signature[i];
         bigLessThan.b[i] <== modulus[i];
     }
-    bigLessThan.out === 1;
+
+    // bigLessThan.out === 1;
 
     component bigPow = FpPow65537Mod(n, k);
     for (var i = 0; i < k; i++) {
@@ -150,9 +155,26 @@ template RSAVerify65537(n, k) {
     }
     // By construction of the padding, the padded message is necessarily
     // smaller than the modulus. Thus, we don't have to check that bigPow is fully reduced.
+    // for (var i = 0; i < k; i++) {
+    //     bigPow.out[i] === padder.padded_message[i];
+    // }
+
+    // ivan's contribution begin
+    component multiAnd = MultiAND(k + 1);
+    // following code replaces `bigLessThan.out === 1;`
+    component firstEquality = IsEqual();
+    firstEquality.in[0] <== bigLessThan.out;
+    firstEquality.in[1] <== 1;
+    multiAnd.in[0] <== firstEquality.out;
+    component remainingEqualities[k];
     for (var i = 0; i < k; i++) {
-        bigPow.out[i] === padder.padded_message[i];
+        remainingEqualities[i] = IsEqual();
+        remainingEqualities[i].in[0] <== bigPow.out[i];
+        remainingEqualities[i].in[1] <== padder.padded_message[i];
+        multiAnd.in[i + 1] <== remainingEqualities[i].out;
     }
+    valid <== multiAnd.out;
+    // ivan's contribution end
 }
 
 // component main { public [ modulus, signature ] } = RSAVerify65537();

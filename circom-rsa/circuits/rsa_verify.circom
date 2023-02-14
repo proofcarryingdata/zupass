@@ -44,4 +44,9 @@ template RSAVerify(max_msg_bytes, max_json_bytes, n, k) {
     for (var i = 0; i < k; i++) {
         rsa.signature[i] <== signature[i];
     }
+
+    // ivan's contribution begin
+    signal output valid;
+    valid <== rsa.valid;
+    // ivan's contribution end
 }
