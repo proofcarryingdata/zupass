@@ -12,7 +12,7 @@ template Main() {
   signal input rsa_signature[17];
   signal input rsa_message_padded_bytes; // length of the message including the padding
 
-  signal input ed25519_msg[n];
+  signal input ed25519_msg[16];
   
   signal input ed25519_A[256];
   signal input ed25519_R8[256];
@@ -36,12 +36,12 @@ template Main() {
   rsaChecker.message_padded_bytes <== rsa_message_padded_bytes;
 
   component ed25519Checker = Ed25519Verifier(16);
-  ed25519Checker.msg <== ed25519_msg[n];
-  ed25519Checker.A <== ed25519_A[256];
-  ed25519Checker.R8 <== ed25519_R8[256];
-  ed25519Checker.S <== ed25519_S[255];
-  ed25519Checker.PointA <== ed25519_PointA[4][3];
-  ed25519Checker.PointR <== ed25519_PointR[4][3];
+  ed25519Checker.msg <== ed25519_msg;
+  ed25519Checker.A <== ed25519_A;
+  ed25519Checker.R8 <== ed25519_R8;
+  ed25519Checker.S <== ed25519_S;
+  ed25519Checker.PointA <== ed25519_PointA;
+  ed25519Checker.PointR <== ed25519_PointR;
 
 }
 
