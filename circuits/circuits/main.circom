@@ -5,6 +5,9 @@ include "../../circom-rsa/circuits/rsa_verify.circom";
 include "../../circom-ed25519/circuits/verify.circom";
 
 template Main() {
+  // 1 for RSA
+  // 2 for ED25519
+  signal input signatureAlgorithm;
   signal input merkleRoot;
 
   signal input rsa_message[960]; // TODO: header + . + payload. idk if it's k, we should pad this in javascript beforehand
@@ -13,21 +16,19 @@ template Main() {
   signal input rsa_message_padded_bytes; // length of the message including the padding
 
   signal input ed25519_msg[16];
-  
   signal input ed25519_A[256];
   signal input ed25519_R8[256];
   signal input ed25519_S[255];
-
   signal input ed25519_PointA[4][3];
   signal input ed25519_PointR[4][3];
 
   signal output out;
 
-  component checker = MerkleTreeChecker(1);
-  checker.root <== merkleRoot;
-  checker.leaf <== 0;
-  checker.pathElements <== [ 0 ];
-  checker.pathIndices <== [ 0 ];
+  // component checker = MerkleTreeChecker(1);
+  // checker.root <== merkleRoot;
+  // checker.leaf <== 0;
+  // checker.pathElements <== [ 0 ];
+  // checker.pathIndices <== [ 0 ];
 
   component rsaChecker = RSAVerify(960, 718, 121, 17);
   rsaChecker.message <== rsa_message;
@@ -42,7 +43,6 @@ template Main() {
   ed25519Checker.S <== ed25519_S;
   ed25519Checker.PointA <== ed25519_PointA;
   ed25519Checker.PointR <== ed25519_PointR;
-
 }
 
 component main { public [ merkleRoot ] } = Main();
