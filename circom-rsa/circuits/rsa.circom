@@ -48,6 +48,7 @@ template RSAPad(n, k) {
     signal input modulus[k];
     signal input base_message[k];
     signal output padded_message[k];
+    signal output valid;
 
     var base_len = 408;
     var msg_len = 256;
@@ -71,8 +72,15 @@ template RSAPad(n, k) {
         }
     }
 
+    var bits = n * k - msg_len;
+    component zeroPaddedAnd = MultiAND(bits);
+    component isZeros[bits];
     for (var i = msg_len; i < n*k; i++) {
-        base_message_bits[i] === 0;
+        var idx = i - msg_len;
+        // base_message_bits[i] === 0;
+        isZeros[idx] = IsZero();
+        isZeros[idx].in <== base_message_bits[i];
+        zeroPaddedAnd.in[idx] <== isZeros[idx].out;
     }
 
     for (var i = 0; i < msg_len; i++) {
@@ -121,6 +129,8 @@ template RSAPad(n, k) {
         }
         padded_message[i] <== padded_message_b2n[i].out;
     }
+
+    valid <== zeroPaddedAnd.out;
 }
 
 template RSAVerify65537(n, k) {
@@ -160,18 +170,19 @@ template RSAVerify65537(n, k) {
     // }
 
     // ivan's contribution begin
-    component multiAnd = MultiAND(k + 1);
+    component multiAnd = MultiAND(k + 1 + 1);
     // following code replaces `bigLessThan.out === 1;`
     component firstEquality = IsEqual();
     firstEquality.in[0] <== bigLessThan.out;
     firstEquality.in[1] <== 1;
     multiAnd.in[0] <== firstEquality.out;
+    multiAnd.in[1] <== padder.valid;
     component remainingEqualities[k];
     for (var i = 0; i < k; i++) {
         remainingEqualities[i] = IsEqual();
         remainingEqualities[i].in[0] <== bigPow.out[i];
         remainingEqualities[i].in[1] <== padder.padded_message[i];
-        multiAnd.in[i + 1] <== remainingEqualities[i].out;
+        multiAnd.in[i + 1 + 1] <== remainingEqualities[i].out;
     }
     valid <== multiAnd.out;
     // ivan's contribution end
