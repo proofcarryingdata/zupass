@@ -14,10 +14,27 @@ interface TestCase {
   input: {
     rsaInputs: RSACircuitInputs;
     ed25519Inputs: any;
+    merkleInputs: any;
     signatureAlgorithm: number;
   };
   expected: boolean;
   comment: string;
+}
+
+async function getMerkleInputs() {
+  const depth = 30;
+  const pathElements = [];
+  const pathIndices = [];
+
+  for (let i = 0; i < depth; i++) {
+    pathElements.push(0);
+    pathIndices.push(0);
+  }
+
+  return {
+    pathElements,
+    pathIndices,
+  };
 }
 
 async function makeTestCases(): Promise<TestCase[]> {
@@ -27,6 +44,7 @@ async function makeTestCases(): Promise<TestCase[]> {
     input: {
       rsaInputs: await generateRSACircuitInputs(),
       ed25519Inputs: await getEd25519CircuitInputs(),
+      merkleInputs: await getMerkleInputs(),
       signatureAlgorithm: 0,
     },
     expected: true,
@@ -37,6 +55,7 @@ async function makeTestCases(): Promise<TestCase[]> {
     input: {
       rsaInputs: await generateRSACircuitInputs(),
       ed25519Inputs: await getEd25519CircuitInputs(),
+      merkleInputs: await getMerkleInputs(),
       signatureAlgorithm: 1,
     },
     expected: true,
@@ -47,7 +66,9 @@ async function makeTestCases(): Promise<TestCase[]> {
 }
 
 function testCaseToInputs(testCase: TestCase): any {
-  const output: any = {};
+  const output: any = {
+    ...testCase.input.merkleInputs,
+  };
 
   for (const entry of Object.entries(testCase.input.rsaInputs)) {
     output["rsa_" + entry[0]] = entry[1];
