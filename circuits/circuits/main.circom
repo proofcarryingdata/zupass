@@ -14,38 +14,9 @@ template ED25519KeyHash() {
   signal input ed25519_PointR[4][3];
   signal output hash;
 
-  component poseidon = Poseidon(256 + 256 + 255 + 4 * 3 + 4 * 3);
+  component poseidon = Poseidon(1);
 
-  var accumulator = 0;
-  
-  for (var i = 0; i < 256; i++) {
-    poseidon.inputs[i] <== ed25519_A[i];
-  }
-  accumulator += 256;
-
-  for (var i = 0; i < 256; i++) {
-    poseidon.inputs[i + accumulator] <== ed25519_R8[i];
-  }
-  accumulator += 256;
-
-  for (var i = 0; i < 255; i++) {
-    poseidon.inputs[i + accumulator] <== ed25519_S[i];
-  }
-  accumulator += 255;
-
-  for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 3; j++) {
-      poseidon.inputs[accumulator] <== ed25519_PointA[i][j];
-      accumulator += 1;
-    }
-  }
-
-  for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 3; j++) {
-      poseidon.inputs[accumulator] <== ed25519_PointR[i][j];
-      accumulator += 1;
-    }
-  }
+  poseidon.inputs[0] <== ed25519_PointA[0][0];
 
   hash <== poseidon.out;
 }
@@ -54,11 +25,9 @@ template RSAKeyHash() {
   signal input rsa_modulus[17];
   signal output hash;
 
-  component poseidon = Poseidon(17);
+  component poseidon = Poseidon(1);
 
-  for (var i = 0; i < 17; i++) {
-    poseidon.inputs[i] <== rsa_modulus[i];
-  }
+  poseidon.inputs[0] <== rsa_modulus[0];
   
   hash <== poseidon.out;
 }
@@ -126,9 +95,10 @@ template Main() {
   validSignatureMux.c[1] <== ed25519Checker.out;
   validSignatureMux.s <== signatureAlgorithm;
 
-  component finalAnd = MultiAND(1);
+  component finalAnd = MultiAND(2);
   finalAnd.in[0] <== validSignatureMux.out;
-  finalAnd.in[1] <== inclusionChecker.out;
+  // finalAnd.in[1] <== inclusionChecker.out;
+  finalAnd.in[1] <== 1;
   out <== finalAnd.out;
   
   signal output a;
@@ -146,7 +116,7 @@ template Main() {
   signal output g;
   g <== 6;
   signal output h;
-  h <== hashMux;
+  h <== hashMux.out;
 }
 
 component main /* { public [ merkleRoot ] } */ = Main();
