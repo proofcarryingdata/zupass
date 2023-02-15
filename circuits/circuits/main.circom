@@ -3,12 +3,13 @@
 include "../../circom-merkle/circuits/merkle.circom";
 include "../../circom-rsa/circuits/rsa_verify.circom";
 include "../../circom-ed25519/circuits/verify.circom";
+include "../node_modules/circomlib/circuits/mux1.circom";
 
 template Main() {
-  // 1 for RSA
-  // 2 for ED25519
+  // 0 for RSA
+  // 1 for ED25519
   signal input signatureAlgorithm;
-  signal input merkleRoot;
+  // signal input merkleRoot;
 
   signal input rsa_message[960]; // TODO: header + . + payload. idk if it's k, we should pad this in javascript beforehand
   signal input rsa_modulus[17]; // rsa pubkey, verified with smart contract + optional oracle
@@ -43,6 +44,12 @@ template Main() {
   ed25519Checker.S <== ed25519_S;
   ed25519Checker.PointA <== ed25519_PointA;
   ed25519Checker.PointR <== ed25519_PointR;
+
+  component mux = Mux1();
+  mux.c[0] <== rsaChecker.valid;
+  mux.c[1] <== ed25519Checker.out;
+  mux.s <== signatureAlgorithm;
+  out <== mux.out;
 }
 
-component main { public [ merkleRoot ] } = Main();
+component main /* { public [ merkleRoot ] } */ = Main();
