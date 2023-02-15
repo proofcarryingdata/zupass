@@ -4,7 +4,7 @@ CIRCUIT_NAME=main
 BUILD_DIR="./build/$CIRCUIT_NAME"
 R1CS_FILE="$BUILD_DIR/$CIRCUIT_NAME.r1cs"
 PARTIAL_ZKEYS="$BUILD_DIR"/partial_zkeys
-PHASE1=./circuits/powersOfTau28_hez_final_22.ptau
+PHASE1=../pot22_final.ptau
 
 if [ ! -d "$BUILD_DIR"/partial_zkeys ]; then
     echo "No partial_zkeys directory found. Creating partial_zkeys directory..."
