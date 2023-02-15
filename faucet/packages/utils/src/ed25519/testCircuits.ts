@@ -1,6 +1,6 @@
 const snarkjs = require("snarkjs");
 import * as path from "path";
-import { getInputs } from "./generateInputs";
+import { getEd25519CircuitInputs } from "./generateInputs";
 
 const zkeyPath = path.join(
   process.cwd(),
@@ -17,7 +17,7 @@ const wasmPath = path.join(
 
 async function test() {
   console.log("generating inputs");
-  const inputs = await getInputs();
+  const inputs = await getEd25519CircuitInputs();
   console.log("generated inputs");
 
   console.log("generating proof");

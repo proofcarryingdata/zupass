@@ -2,10 +2,9 @@ import { toCircomBigIntBytes } from "./binaryFormat";
 import { MAX_HEADER_PADDED_BYTES } from "./constants";
 import { shaHash } from "./shaHash";
 import { Hash } from "./fast-sha256";
-import * as fs from "fs";
 import NodeRSA from "node-rsa";
 
-export interface ICircuitInputs {
+export interface RSACircuitInputs {
   message: string[];
   modulus: string[];
   signature: string[];
@@ -95,7 +94,7 @@ export async function getCircuitInputs(
   rsa_signature: BigInt,
   rsa_modulus: BigInt,
   msg: Buffer
-): Promise<ICircuitInputs> {
+): Promise<RSACircuitInputs> {
   const modulusBigInt = rsa_modulus;
   const prehash_message_string = msg;
   const signatureBigInt = rsa_signature;
@@ -136,7 +135,7 @@ export async function getCircuitInputs(
   return circuitInputs;
 }
 
-export async function generate_inputs(): Promise<ICircuitInputs> {
+export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const messageString = "hello world";
   const message = Buffer.from(messageString);
   const key = new NodeRSA({ b: 2048 });

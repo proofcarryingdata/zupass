@@ -10,7 +10,7 @@ import * as util from "./util";
  * PointA is the point representing the public key on the elliptic curve (encoded in base 2^85 for brevity)
  * PointR is the point representing the R8 value on the elliptic curve (encoded in base 2^85)
  */
-export async function getInputs() {
+export async function getEd25519CircuitInputs() {
   const message = Uint8Array.from([0xff, 0xfa]);
   const privateKey = ed.utils.randomPrivateKey();
   const publicKey: Uint8Array = await ed.getPublicKey(privateKey);

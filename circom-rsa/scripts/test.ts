@@ -1,13 +1,13 @@
 const snarkjs = require("snarkjs");
 import * as path from "path";
-import { generate_inputs, ICircuitInputs } from "./generate_input";
+import { generateRSACircuitInputs, RSACircuitInputs } from "./generate_input";
 
 const zkeyPath = path.join(process.cwd(), "/build/main/main.zkey");
 const vkeyPath = path.join(process.cwd(), "/build/main/vkey.json");
 const wasmPath = path.join(process.cwd(), "/build/main/main_js/main.wasm");
 
 interface TestCase {
-  input: ICircuitInputs;
+  input: RSACircuitInputs;
   expected: boolean;
   comment: string;
 }
@@ -16,12 +16,12 @@ async function makeTestCases(): Promise<TestCase[]> {
   const cases: TestCase[] = [];
 
   cases.push({
-    input: await generate_inputs(),
+    input: await generateRSACircuitInputs(),
     expected: true,
     comment: "valid inputs should verify properly",
   });
 
-  const invalidInput1 = await generate_inputs();
+  const invalidInput1 = await generateRSACircuitInputs();
   const editedSignaturePart = [...invalidInput1.signature[0]];
   if (editedSignaturePart[0] === "1") {
     editedSignaturePart[0] = "2";
