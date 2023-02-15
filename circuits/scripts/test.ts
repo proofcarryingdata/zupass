@@ -14,6 +14,7 @@ interface TestCase {
   input: {
     rsaInputs: RSACircuitInputs;
     ed25519Inputs: any;
+    signatureAlgorithm: number;
   };
   expected: boolean;
   comment: string;
@@ -26,9 +27,20 @@ async function makeTestCases(): Promise<TestCase[]> {
     input: {
       rsaInputs: await generateRSACircuitInputs(),
       ed25519Inputs: await getEd25519CircuitInputs(),
+      signatureAlgorithm: 0,
     },
     expected: true,
-    comment: "valid inputs should verify properly",
+    comment: "both signatures valid, verifying RSA one",
+  });
+
+  cases.push({
+    input: {
+      rsaInputs: await generateRSACircuitInputs(),
+      ed25519Inputs: await getEd25519CircuitInputs(),
+      signatureAlgorithm: 1,
+    },
+    expected: true,
+    comment: "both signatures valid, verifying ed25519 one",
   });
 
   return cases;
@@ -45,7 +57,7 @@ function testCaseToInputs(testCase: TestCase): any {
     output["ed25519_" + entry[0]] = entry[1];
   }
 
-  output.signatureAlgorithm = "0";
+  output.signatureAlgorithm = testCase.input.signatureAlgorithm;
 
   return output;
 }
