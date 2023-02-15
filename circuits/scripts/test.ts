@@ -5,6 +5,10 @@ import {
   RSACircuitInputs,
 } from "../../circom-rsa/scripts/generate_input";
 import { getEd25519CircuitInputs } from "../../faucet/packages/utils/src/ed25519/generateInputs";
+import {
+  initializePoseidon,
+  poseidon,
+} from "/Users/ivanchub/Projects/zk-faucet/circom-merkle/scripts/poseidonHash";
 
 const zkeyPath = path.join(process.cwd(), "/build/main/main.zkey");
 const vkeyPath = path.join(process.cwd(), "/build/main/vkey.json");
@@ -22,11 +26,15 @@ interface TestCase {
 }
 
 async function hashRsaKey(rsaInputs: RSACircuitInputs): Promise<BigInt> {
-  return 0n;
+  await initializePoseidon();
+  const hash = poseidon([BigInt(rsaInputs.modulus[0])]);
+  return BigInt(hash);
 }
 
 async function hashEd25519Inputs(ed25519Inputs: any): Promise<BigInt> {
-  return 0n;
+  await initializePoseidon();
+  const hash = poseidon([BigInt(ed25519Inputs.PointA[0][0])]);
+  return BigInt(hash);
 }
 
 async function getMerkleInputs(
@@ -44,10 +52,10 @@ async function getMerkleInputs(
   }
 
   if (signatureAlgorithm === 0) {
-    let leaf = hashRsaKey(rsaInputs);
+    let leaf = await hashRsaKey(rsaInputs);
     console.log(`leaf`, leaf);
   } else {
-    let leaf = hashEd25519Inputs(ed25519Inputs);
+    let leaf = await hashEd25519Inputs(ed25519Inputs);
     console.log(`leaf`, leaf);
   }
 

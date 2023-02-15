@@ -1,14 +1,10 @@
 // @ts-ignore
 import { buildPoseidon } from "circomlibjs";
 
-console.log(buildPoseidon);
-
 let poseidonHasher: any;
 export async function initializePoseidon() {
   if (!poseidonHasher) {
     poseidonHasher = await buildPoseidon();
-    console.log("HASHER");
-    console.log(poseidonHasher);
   }
 }
 export const poseidon = (arr: (number | bigint | string)[]): string =>
