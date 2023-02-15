@@ -50,8 +50,6 @@ export async function getEd25519CircuitInputs() {
 function chunkifyPoint(point: ed.ExtendedPoint) {
   const chunks = [];
   const pointArray = [point.x, point.y, point.z, point.t];
-  console.log(point);
-  console.log(pointArray);
   for (let i = 0; i < 4; i++) {
     chunks.push(util.chunkBigInt(pointArray[i], BigInt(2 ** 85)));
   }

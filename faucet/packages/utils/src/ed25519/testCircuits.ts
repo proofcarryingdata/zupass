@@ -4,15 +4,15 @@ import { getEd25519CircuitInputs } from "./generateInputs";
 
 const zkeyPath = path.join(
   process.cwd(),
-  "../../../ed25519-circom/build/circuit_final_1.zkey"
+  "../../../circom-ed25519/build/circuit_final_1.zkey"
 );
 const vkeyPath = path.join(
   process.cwd(),
-  "../../../ed25519-circom/build/verification_key.json"
+  "../../../circom-ed25519/build/verification_key.json"
 );
 const wasmPath = path.join(
   process.cwd(),
-  "../../../ed25519-circom/build/verify_js/verify.wasm"
+  "../../../circom-ed25519/build/verify_js/verify.wasm"
 );
 
 async function test() {
@@ -36,6 +36,7 @@ async function test() {
     proof.publicSignals,
     proof.proof
   );
+  console.log("public signals", proof.publicSignals);
   console.log("verification complete");
   console.log(verified);
   process.exit(0);

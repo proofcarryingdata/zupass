@@ -2,7 +2,7 @@
 
 include "../../circom-merkle/circuits/merkle.circom";
 include "../../circom-rsa/circuits/rsa_verify.circom";
-include "../../circom-ed25519/circuits/verify.circom";
+include "../../circom-ed25519/circuits/verifier.circom";
 include "../node_modules/circomlib/circuits/mux1.circom";
 include "../node_modules/circomlib/circuits/poseidon.circom";
 
