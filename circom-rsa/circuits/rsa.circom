@@ -117,8 +117,15 @@ template RSAPad(n, k) {
 
     // The RFC guarantees at least 8 octets of 0xff padding.
     assert(base_len + 8 + 65 <= n*k);
+    component onePaddingAnd = MultiAND(65);
+    component isEqual[65];
     for (var i = base_len + 8; i < base_len + 8 + 65; i++) {
-        padded_message_bits[i] === 1;
+        // padded_message_bits[i] === 1;
+        var idx = i - base_len - 8;
+        isEqual[idx] = IsEqual();
+        isEqual[idx].in[0] <== 1;
+        isEqual[idx].in[1] <== padded_message_bits[i];
+        onePaddingAnd.in[idx] <== isEqual[idx].out;
     }
 
     component padded_message_b2n[k];
@@ -130,7 +137,10 @@ template RSAPad(n, k) {
         padded_message[i] <== padded_message_b2n[i].out;
     }
 
-    valid <== zeroPaddedAnd.out;
+    component finalAnd = MultiAND(2);
+    finalAnd.in[0] <== onePaddingAnd.out;
+    finalAnd.in[1] <== zeroPaddedAnd.out;
+    valid <== finalAnd.out;
 }
 
 template RSAVerify65537(n, k) {
