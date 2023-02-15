@@ -21,7 +21,19 @@ interface TestCase {
   comment: string;
 }
 
-async function getMerkleInputs() {
+async function hashRsaKey(rsaInputs: RSACircuitInputs): Promise<BigInt> {
+  return 0n;
+}
+
+async function hashEd25519Inputs(ed25519Inputs: any): Promise<BigInt> {
+  return 0n;
+}
+
+async function getMerkleInputs(
+  rsaInputs: RSACircuitInputs,
+  ed25519Inputs: any,
+  signatureAlgorithm: number
+) {
   const depth = 30;
   const pathElements = [];
   const pathIndices = [];
@@ -29,6 +41,14 @@ async function getMerkleInputs() {
   for (let i = 0; i < depth; i++) {
     pathElements.push(0);
     pathIndices.push(0);
+  }
+
+  if (signatureAlgorithm === 0) {
+    let leaf = hashRsaKey(rsaInputs);
+    console.log(`leaf`, leaf);
+  } else {
+    let leaf = hashEd25519Inputs(ed25519Inputs);
+    console.log(`leaf`, leaf);
   }
 
   return {
@@ -40,27 +60,47 @@ async function getMerkleInputs() {
 async function makeTestCases(): Promise<TestCase[]> {
   const cases: TestCase[] = [];
 
-  cases.push({
-    input: {
-      rsaInputs: await generateRSACircuitInputs(),
-      ed25519Inputs: await getEd25519CircuitInputs(),
-      merkleInputs: await getMerkleInputs(),
-      signatureAlgorithm: 0,
-    },
-    expected: true,
-    comment: "both signatures valid, verifying RSA one",
-  });
+  {
+    const rsaInputs = await generateRSACircuitInputs();
+    const ed25519Inputs = await getEd25519CircuitInputs();
+    const signatureAlgorithm = 0;
+    const merkleInputs = await getMerkleInputs(
+      rsaInputs,
+      ed25519Inputs,
+      signatureAlgorithm
+    );
+    cases.push({
+      input: {
+        rsaInputs,
+        ed25519Inputs,
+        merkleInputs,
+        signatureAlgorithm,
+      },
+      expected: true,
+      comment: "both signatures valid, verifying RSA one",
+    });
+  }
 
-  cases.push({
-    input: {
-      rsaInputs: await generateRSACircuitInputs(),
-      ed25519Inputs: await getEd25519CircuitInputs(),
-      merkleInputs: await getMerkleInputs(),
-      signatureAlgorithm: 1,
-    },
-    expected: true,
-    comment: "both signatures valid, verifying ed25519 one",
-  });
+  {
+    const rsaInputs = await generateRSACircuitInputs();
+    const ed25519Inputs = await getEd25519CircuitInputs();
+    const signatureAlgorithm = 1;
+    const merkleInputs = await getMerkleInputs(
+      rsaInputs,
+      ed25519Inputs,
+      signatureAlgorithm
+    );
+    cases.push({
+      input: {
+        rsaInputs,
+        ed25519Inputs,
+        merkleInputs,
+        signatureAlgorithm,
+      },
+      expected: true,
+      comment: "both signatures valid, verifying RSA one",
+    });
+  }
 
   return cases;
 }
