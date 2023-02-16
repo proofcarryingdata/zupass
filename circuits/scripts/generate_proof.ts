@@ -26,20 +26,11 @@ const pathToMerkleTree = "";
 export async function generateSshProof() {
   const messagePath = path.join(process.cwd(), "operands", "input.txt");
   const message = fs.readFileSync(messagePath).toString();
-  console.log(message);
   const signaturePath = path.join(process.cwd(), "operands", "signature.txt");
   const signature = fs.readFileSync(signaturePath).toString();
+
   const rawSignature = getRawSignature(signature);
   const modulus = rawSignature.pubKeyParts[2];
-
-  // byte[6]   MAGIC_PREAMBLE
-  // string    namespace
-  // string    reserved
-  // string    hash_algorithm
-  // string    H(message)
-
-  console.log(rawSignature);
-
   const preamble = new TextEncoder().encode("SSHSIG");
   const namespace = rawSignature.namespace;
   const reserved = rawSignature.reserved;
@@ -48,8 +39,6 @@ export async function generateSshProof() {
     await shaHash(new TextEncoder().encode(message), "hex")
   );
 
-  console.log("hashed message", hashedMessage);
-
   const preimage = new Uint8Array([
     ...preamble,
     ...namespace,
@@ -57,12 +46,6 @@ export async function generateSshProof() {
     ...hash_algorithm,
     ...hashedMessage,
   ]);
-
-  console.log("PREIMAGE", JSON.stringify([...hashedMessage]));
-
-  // console.log(preimage);
-
-  console.log("preimage length", preimage.length);
 
   const rsaInputs = await getRsaCircuitInputs(
     preimage,

@@ -104,26 +104,18 @@ export async function getCircuitInputs(
       ? new TextEncoder().encode(prehash_message_string)
       : Uint8Array.from(prehash_message_string);
 
-  console.log("prehashBytesUnpadded len", prehashBytesUnpadded.length);
   const [messagePadded, messagePaddedLen] = await sha256Pad(
     prehashBytesUnpadded,
     MAX_HEADER_PADDED_BYTES
   );
 
-  console.log("message padded", messagePadded);
-  console.log("message padded len", messagePaddedLen);
-
   // Ensure SHA manual unpadded is running the correct function
   const shaOut = await partialSha(messagePadded, messagePaddedLen);
-
-  console.log("shaout", shaOut);
 
   const partialShaOutStr = await Uint8ArrayToString(shaOut);
   const hashed = await Uint8ArrayToString(
     Uint8Array.from((await shaHash(prehashBytesUnpadded)) as any)
   );
-  console.log(1, partialShaOutStr);
-  console.log(2, hashed);
 
   assert(partialShaOutStr === hashed, "SHA256 calculation did not match!");
 
@@ -148,21 +140,10 @@ export async function getRsaCircuitInputs(
   signature: Uint8Array,
   modulus: BigInt
 ) {
-  console.log("message bytes", [...messageBytes]);
-  const message = Buffer.from([
-    166, 101, 164, 89, 32, 66, 47, 157, 65, 126, 72, 103, 239, 220, 79, 184,
-    160, 74, 31, 63, 255, 31, 160, 126, 153, 142, 134, 247, 247, 162, 122, 227,
-  ]);
-  // const key = new NodeRSA({ b: 2048 });
-  // key.setOptions({ signingScheme: "pkcs1-sha512" });
-  // const keyComponents = key.exportKey("components-public");
-  // const messageSignature = key.sign(message);
+  const message = Buffer.from(messageBytes);
   const messageSignatureBigInt = BigInt(
     "0x" + Buffer.from(signature).toString("hex")
   );
-  // const keyModulus = keyComponents.n;
-  // const keyModulusBigInt = BigInt("0x" + keyModulus.toString("hex"));
-
   return getCircuitInputs(messageSignatureBigInt, modulus, message);
 }
 
@@ -171,7 +152,6 @@ export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const message = Buffer.from(messageString);
 
   const key = new NodeRSA({ b: 2048 });
-  // key.setOptions({ signingScheme: "pkcs1-sha512" });
   const keyComponents = key.exportKey("components-public");
   const messageSignature = key.sign(message);
   const messageSignatureBigInt = BigInt(

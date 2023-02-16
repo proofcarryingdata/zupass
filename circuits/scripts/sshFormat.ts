@@ -64,6 +64,7 @@ export function getRawSignature(signature: string) {
   // decrypt signature https://github.dev/openssh/openssh-portable/blob/4bbe815ba974b4fd89cc3fc3e3ef1be847a0befe/ssh-rsa.c#L223-L224
   const rawSigParts = unpackSshBytes(rawSignatureEncoded, 2);
   const rawSignature = rawSigParts[1];
+
   return {
     rawSignature,
     namespace,
