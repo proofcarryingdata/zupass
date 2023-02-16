@@ -11,6 +11,8 @@ import {
 } from "/Users/ivanchub/Projects/zk-faucet/circom-merkle/scripts/merklePoseidon";
 import { getMerkleInputs, testCaseToInputs } from "./test";
 
+import { createHash } from "crypto";
+
 const zkeyPath = path.join(process.cwd(), "/build/main/main.zkey");
 const vkeyPath = path.join(process.cwd(), "/build/main/vkey.json");
 const wasmPath = path.join(process.cwd(), "/build/main/main_js/main.wasm");
@@ -23,10 +25,13 @@ const pathToMerkleTree = "";
 export async function generateSshProof() {
   const messagePath = path.join(process.cwd(), "operands", "input.txt");
   const message = fs.readFileSync(messagePath).toString();
+  console.log(message);
   const signaturePath = path.join(process.cwd(), "operands", "signature.txt");
   const signature = fs.readFileSync(signaturePath).toString();
   const rawSignature = getRawSignature(signature);
   const modulus = rawSignature.pubKeyParts[2];
+
+  console.log(rawSignature);
 
   const rsaInputs = await getRsaCircuitInputs(
     message,

@@ -109,6 +109,8 @@ export async function getCircuitInputs(
     MAX_HEADER_PADDED_BYTES
   );
 
+  console.log("message padded", messagePadded);
+
   // Ensure SHA manual unpadded is running the correct function
   const shaOut = await partialSha(messagePadded, messagePaddedLen);
   assert(
@@ -141,6 +143,7 @@ export async function getRsaCircuitInputs(
   modulus: BigInt
 ) {
   const message = Buffer.from(messageString);
+  console.log("buffer", message);
   const messageSignatureBigInt = BigInt(
     "0x" + Buffer.from(signature).toString("hex")
   );
