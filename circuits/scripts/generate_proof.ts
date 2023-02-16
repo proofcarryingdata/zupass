@@ -12,6 +12,7 @@ import {
 import { getMerkleInputs, testCaseToInputs } from "./test";
 
 import { createHash } from "crypto";
+import { shaHash } from "../../circom-rsa/scripts/shaHash";
 
 const zkeyPath = path.join(process.cwd(), "/build/main/main.zkey");
 const vkeyPath = path.join(process.cwd(), "/build/main/vkey.json");
@@ -31,13 +32,40 @@ export async function generateSshProof() {
   const rawSignature = getRawSignature(signature);
   const modulus = rawSignature.pubKeyParts[2];
 
+  // byte[6]   MAGIC_PREAMBLE
+  // string    namespace
+  // string    reserved
+  // string    hash_algorithm
+  // string    H(message)
+
   console.log(rawSignature);
 
+  const preamble = new TextEncoder().encode("SSHSIG");
+  const namespace = rawSignature.namespace;
+  const reserved = rawSignature.reserved;
+  const hash_algorithm = rawSignature.hash_algorithm;
+  const hashedMessage = await shaHash(new TextEncoder().encode(message));
+
+  const preimage = new Uint8Array([
+    ...preamble,
+    ...namespace,
+    // // ...reserved,
+    ...hash_algorithm,
+    ...hashedMessage,
+  ]);
+
+  console.log("PREIMAGE", JSON.stringify([...hashedMessage]));
+
+  // console.log(preimage);
+
+  console.log("preimage length", preimage.length);
+
   const rsaInputs = await getRsaCircuitInputs(
-    message,
+    preimage,
     rawSignature.rawSignature,
     bytesToBigInt(modulus)
   );
+
   const ed25519Inputs = await getEd25519CircuitInputs();
   const signatureAlgorithm = 0;
   const merkleInputs = await getMerkleInputs(
