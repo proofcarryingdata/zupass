@@ -120,7 +120,7 @@ export async function getCircuitInputs(
 
   const partialShaOutStr = await Uint8ArrayToString(shaOut);
   const hashed = await Uint8ArrayToString(
-    Uint8Array.from(await shaHash(prehashBytesUnpadded))
+    Uint8Array.from((await shaHash(prehashBytesUnpadded)) as any)
   );
   console.log(1, partialShaOutStr);
   console.log(2, hashed);
@@ -168,12 +168,8 @@ export async function getRsaCircuitInputs(
 
 export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const messageString = "hello world";
-  const message = Buffer.from([
-    83, 83, 72, 83, 73, 71, 122, 107, 102, 97, 117, 99, 101, 116, 46, 99, 111,
-    109, 115, 104, 97, 50, 53, 54, 166, 101, 164, 89, 32, 66, 47, 157, 65, 126,
-    72, 103, 239, 220, 79, 184, 160, 74, 31, 63, 255, 31, 160, 126, 153, 142,
-    134, 247, 247, 162, 122, 227,
-  ]);
+  const message = Buffer.from(messageString);
+
   const key = new NodeRSA({ b: 2048 });
   // key.setOptions({ signingScheme: "pkcs1-sha512" });
   const keyComponents = key.exportKey("components-public");

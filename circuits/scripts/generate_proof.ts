@@ -44,7 +44,11 @@ export async function generateSshProof() {
   const namespace = rawSignature.namespace;
   const reserved = rawSignature.reserved;
   const hash_algorithm = rawSignature.hash_algorithm;
-  const hashedMessage = await shaHash(new TextEncoder().encode(message));
+  const hashedMessage = new TextEncoder().encode(
+    await shaHash(new TextEncoder().encode(message), "hex")
+  );
+
+  console.log("hashed message", hashedMessage);
 
   const preimage = new Uint8Array([
     ...preamble,
