@@ -135,6 +135,19 @@ export async function getCircuitInputs(
   return circuitInputs;
 }
 
+export async function getRsaCircuitInputs(
+  messageString: string,
+  signature: Uint8Array,
+  modulus: BigInt
+) {
+  const message = Buffer.from(messageString);
+  const messageSignatureBigInt = BigInt(
+    "0x" + Buffer.from(signature).toString("hex")
+  );
+  const keyModulusBigInt = BigInt("0x" + modulus.toString(16));
+  return getCircuitInputs(messageSignatureBigInt, keyModulusBigInt, message);
+}
+
 export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const messageString = "hello world";
   const message = Buffer.from(messageString);

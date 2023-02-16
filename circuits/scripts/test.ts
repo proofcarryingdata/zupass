@@ -47,7 +47,7 @@ async function hashEd25519Inputs(ed25519Inputs: any): Promise<BigInt> {
   return BigInt(hash);
 }
 
-async function getMerkleInputs(
+export async function getMerkleInputs(
   rsaInputs: RSACircuitInputs,
   ed25519Inputs: any,
   signatureAlgorithm: number
@@ -128,7 +128,7 @@ async function makeTestCases(): Promise<TestCase[]> {
   return cases;
 }
 
-function testCaseToInputs(testCase: TestCase): any {
+export function testCaseToInputs(testCase: TestCase): any {
   const output: any = {
     ...testCase.input.merkleInputs,
   };
@@ -185,4 +185,4 @@ async function test() {
   process.exit(0);
 }
 
-test();
+// test();
