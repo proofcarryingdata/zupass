@@ -155,6 +155,8 @@ export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const messageString = "hello world";
   const message = Buffer.from(messageString);
   const key = new NodeRSA({ b: 2048 });
+  // key.setOptions({ signingScheme: "pkcs1-sha512" });
+  console.log("KEYEKYEKYEKYE", key);
   const keyComponents = key.exportKey("components-public");
   const messageSignature = key.sign(message);
   const messageSignatureBigInt = BigInt(
