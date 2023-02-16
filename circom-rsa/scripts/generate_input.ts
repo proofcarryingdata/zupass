@@ -149,7 +149,12 @@ export async function getRsaCircuitInputs(
 
 export async function generateRSACircuitInputs(): Promise<RSACircuitInputs> {
   const messageString = "hello world";
-  const message = Buffer.from(messageString);
+  const message = Buffer.from([
+    83, 83, 72, 83, 73, 71, 0, 0, 0, 12, 122, 107, 102, 97, 117, 99, 101, 116,
+    46, 99, 111, 109, 0, 0, 0, 0, 0, 0, 0, 6, 115, 104, 97, 50, 53, 54, 0, 0, 0,
+    32, 166, 101, 164, 89, 32, 66, 47, 157, 65, 126, 72, 103, 239, 220, 79, 184,
+    160, 74, 31, 63, 255, 31, 160, 126, 153, 142, 134, 247, 247, 162, 122, 227,
+  ]);
 
   const key = new NodeRSA({ b: 2048 });
   const keyComponents = key.exportKey("components-public");

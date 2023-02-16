@@ -48,11 +48,6 @@ export function getRawSignature(signature: string) {
     rawSignatureEncoded,
   ] = strings;
 
-  console.log(
-    "decoded hash algorithm",
-    new TextDecoder().decode(hash_algorithm)
-  );
-
   // decrypt pub key https://github.dev/openssh/openssh-portable/blob/4bbe815ba974b4fd89cc3fc3e3ef1be847a0befe/sshsig.c#L203-L204
   // https://github.dev/openssh/openssh-portable/blob/4bbe815ba974b4fd89cc3fc3e3ef1be847a0befe/sshkey.c#L828-L829
   const pubKeyParts = unpackSshBytes(pubKeyEncoded, 3);

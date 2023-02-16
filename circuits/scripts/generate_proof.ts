@@ -35,17 +35,30 @@ export async function generateSshProof() {
   const namespace = rawSignature.namespace;
   const reserved = rawSignature.reserved;
   const hash_algorithm = rawSignature.hash_algorithm;
-  const hashedMessage = new TextEncoder().encode(
-    await shaHash(new TextEncoder().encode(message), "hex")
+
+  const hashedMessage = await shaHash(new TextEncoder().encode(message));
+  console.log("message to sign:", `'${message}'`);
+  console.log("decoded namespace:", `'${new TextDecoder().decode(namespace)}'`);
+  console.log(
+    "decoded hash_algorithm:",
+    `'${new TextDecoder().decode(hash_algorithm)}'`
   );
+  console.log("modulus: ", bytesToBigInt(modulus));
+  console.log("message hash: ", [...hashedMessage]);
+  console.log("message hash length:", hashedMessage.length);
 
   const preimage = new Uint8Array([
     ...preamble,
+    ...[0, 0, 0, namespace.length],
     ...namespace,
-    // // ...reserved,
+    ...[0, 0, 0, 0], // reserved
+    ...[0, 0, 0, hash_algorithm.length],
     ...hash_algorithm,
+    ...[0, 0, 0, 32],
     ...hashedMessage,
   ]);
+
+  console.log("preimage:", [...preimage]);
 
   const rsaInputs = await getRsaCircuitInputs(
     preimage,
@@ -88,9 +101,9 @@ export async function generateSshProof() {
   const isProofIndicatingValidSignature = proof.publicSignals[0] === "1";
 
   if (isProofIndicatingValidSignature === testCase.expected) {
-    console.log("expected output matches actual output");
+    console.log("test status: ", true);
   } else {
-    console.log("EXPECTED OUTPUT DOES NOT MATCH ACTUAL OUTPUT");
+    console.log("test status: ", false);
   }
 }
 
