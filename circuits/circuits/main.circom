@@ -36,7 +36,8 @@ template Main() {
   // 0 for RSA
   // 1 for ED25519
   signal input signatureAlgorithm;
-  // signal input merkleRoot;
+
+  signal input merkleRoot;
 
   signal input rsa_message[960]; // TODO: header + . + payload. idk if it's k, we should pad this in javascript beforehand
   signal input rsa_modulus[17]; // rsa pubkey, verified with smart contract + optional oracle
@@ -70,11 +71,11 @@ template Main() {
   hashMux.c[1] <== ed25519Hash.hash;
   hashMux.s <== signatureAlgorithm;
 
-  // component inclusionChecker = MerkleTreeChecker(30);
-  // inclusionChecker.root <== merkleRoot;
-  // inclusionChecker.leaf <== hashMux.out;
-  // inclusionChecker.pathElements <== pathElements;
-  // inclusionChecker.pathIndices <== pathIndices;
+  component inclusionChecker = MerkleTreeChecker(30);
+  inclusionChecker.root <== merkleRoot;
+  inclusionChecker.leaf <== hashMux.out;
+  inclusionChecker.pathElements <== pathElements;
+  inclusionChecker.pathIndices <== pathIndices;
 
   component rsaChecker = RSAVerify(960, 718, 121, 17);
   rsaChecker.message <== rsa_message;

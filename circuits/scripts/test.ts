@@ -9,6 +9,10 @@ import {
   initializePoseidon,
   poseidon,
 } from "/Users/ivanchub/Projects/zk-faucet/circom-merkle/scripts/poseidonHash";
+import {
+  buildMerkleTree,
+  getMerkleProof,
+} from "/Users/ivanchub/Projects/zk-faucet/circom-merkle/scripts/merklePoseidon";
 
 const zkeyPath = path.join(process.cwd(), "/build/main/main.zkey");
 const vkeyPath = path.join(process.cwd(), "/build/main/vkey.json");
@@ -23,6 +27,12 @@ interface TestCase {
   };
   expected: boolean;
   comment: string;
+}
+
+function merkleProof(allKeyHashes: BigInt[], leaf: BigInt) {
+  const tree = buildMerkleTree(allKeyHashes.map((t) => t.toString()));
+  const proof = getMerkleProof(tree, leaf.toString());
+  return proof;
 }
 
 async function hashRsaKey(rsaInputs: RSACircuitInputs): Promise<BigInt> {
@@ -51,17 +61,22 @@ async function getMerkleInputs(
     pathIndices.push(0);
   }
 
+  let leaf;
+
   if (signatureAlgorithm === 0) {
-    let leaf = await hashRsaKey(rsaInputs);
+    leaf = await hashRsaKey(rsaInputs);
     console.log(`leaf`, leaf);
   } else {
-    let leaf = await hashEd25519Inputs(ed25519Inputs);
+    leaf = await hashEd25519Inputs(ed25519Inputs);
     console.log(`leaf`, leaf);
   }
 
+  const proof = merkleProof([1n, 2n, leaf], leaf);
+
   return {
-    pathElements,
-    pathIndices,
+    pathElements: proof.pathElements,
+    pathIndices: proof.pathIndices,
+    merkleRoot: proof.root,
   };
 }
 
