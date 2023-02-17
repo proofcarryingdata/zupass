@@ -12,3 +12,5 @@ circuits/*.vkey.json
 circuits/*.wasm
 circuits/*.zkey
 contracts/*.sol
+
+# operands
