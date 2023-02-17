@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@electron-labs/sha512": "^1.0.4"
+    "@electron-labs/sha512": "^1.0.4",
+    "snarkjs": "^0.6.1"
   },
   "devDependencies": {
     "chai": "^4.3.6",
