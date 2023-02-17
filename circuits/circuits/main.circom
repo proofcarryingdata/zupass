@@ -44,10 +44,7 @@ template Main() {
   rsaChecker.signature <== rsa_signature;
   rsaChecker.message_padded_bytes <== rsa_message_padded_bytes;
 
-  component finalAnd = MultiAND(2);
-  finalAnd.in[0] <== rsaChecker.valid;
-  finalAnd.in[1] <== inclusionChecker.out;
-  out <== finalAnd.out;
+  out <== rsaChecker.valid;
 }
 
 component main /* { public [ merkleRoot ] } */ = Main();
