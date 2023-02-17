@@ -4,7 +4,6 @@ import {
   generateRSACircuitInputs,
   RSACircuitInputs,
 } from "../../circom-rsa/scripts/generate_input";
-import { getEd25519CircuitInputs } from "../../faucet/packages/utils/src/ed25519/generateInputs";
 import {
   initializePoseidon,
   poseidon,
@@ -21,9 +20,7 @@ const wasmPath = path.join(process.cwd(), "/build/main/main_js/main.wasm");
 interface TestCase {
   input: {
     rsaInputs: RSACircuitInputs;
-    ed25519Inputs: any;
     merkleInputs: any;
-    signatureAlgorithm: number;
   };
   expected: boolean;
   comment: string;
@@ -41,17 +38,7 @@ async function hashRsaKey(rsaInputs: RSACircuitInputs): Promise<BigInt> {
   return BigInt(hash);
 }
 
-async function hashEd25519Inputs(ed25519Inputs: any): Promise<BigInt> {
-  await initializePoseidon();
-  const hash = poseidon([BigInt(ed25519Inputs.PointA[0][0])]);
-  return BigInt(hash);
-}
-
-export async function getMerkleInputs(
-  rsaInputs: RSACircuitInputs,
-  ed25519Inputs: any,
-  signatureAlgorithm: number
-) {
+export async function getMerkleInputs(rsaInputs: RSACircuitInputs) {
   const depth = 30;
   const pathElements = [];
   const pathIndices = [];
@@ -61,15 +48,9 @@ export async function getMerkleInputs(
     pathIndices.push(0);
   }
 
-  let leaf;
+  const leaf = await hashRsaKey(rsaInputs);
 
-  if (signatureAlgorithm === 0) {
-    leaf = await hashRsaKey(rsaInputs);
-    console.log(`leaf`, leaf);
-  } else {
-    leaf = await hashEd25519Inputs(ed25519Inputs);
-    console.log(`leaf`, leaf);
-  }
+  console.log(`leaf`, leaf);
 
   const proof = merkleProof([1n, 2n, leaf], leaf);
 
@@ -85,19 +66,11 @@ async function makeTestCases(): Promise<TestCase[]> {
 
   {
     const rsaInputs = await generateRSACircuitInputs();
-    const ed25519Inputs = await getEd25519CircuitInputs();
-    const signatureAlgorithm = 0;
-    const merkleInputs = await getMerkleInputs(
-      rsaInputs,
-      ed25519Inputs,
-      signatureAlgorithm
-    );
+    const merkleInputs = await getMerkleInputs(rsaInputs);
     cases.push({
       input: {
         rsaInputs,
-        ed25519Inputs,
         merkleInputs,
-        signatureAlgorithm,
       },
       expected: true,
       comment: "both signatures valid, verifying RSA one",
@@ -106,19 +79,11 @@ async function makeTestCases(): Promise<TestCase[]> {
 
   {
     const rsaInputs = await generateRSACircuitInputs();
-    const ed25519Inputs = await getEd25519CircuitInputs();
-    const signatureAlgorithm = 1;
-    const merkleInputs = await getMerkleInputs(
-      rsaInputs,
-      ed25519Inputs,
-      signatureAlgorithm
-    );
+    const merkleInputs = await getMerkleInputs(rsaInputs);
     cases.push({
       input: {
         rsaInputs,
-        ed25519Inputs,
         merkleInputs,
-        signatureAlgorithm,
       },
       expected: true,
       comment: "both signatures valid, verifying RSA one",
@@ -136,12 +101,6 @@ export function testCaseToInputs(testCase: TestCase): any {
   for (const entry of Object.entries(testCase.input.rsaInputs)) {
     output["rsa_" + entry[0]] = entry[1];
   }
-
-  for (const entry of Object.entries(testCase.input.ed25519Inputs)) {
-    output["ed25519_" + entry[0]] = entry[1];
-  }
-
-  output.signatureAlgorithm = testCase.input.signatureAlgorithm;
 
   return output;
 }

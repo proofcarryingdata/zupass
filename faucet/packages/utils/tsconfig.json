@@ -1,9 +1,0 @@
-{
-  "extends": "tsconfig/server.json",
-  "include": [".", "node"],
-  "exclude": ["dist", "build", "node_modules"],
-  "compilerOptions": {
-    "target": "es2020",
-    "noImplicitAny": false
-  }
-}

@@ -4,7 +4,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { bytesToBigInt } from "./binaryFormat";
 import { getRsaCircuitInputs } from "../../circom-rsa/scripts/generate_input";
-import { getEd25519CircuitInputs } from "../../faucet/packages/utils/src/ed25519/generateInputs";
 import {
   buildMerkleTree,
   getMerkleProof,
@@ -72,20 +71,13 @@ export async function generateSshProof() {
     28798040674710539207596949694923013804428743443373373353914260566051348244739142782169961022732573401435294091974265892504477401700244639387273721125253458479175478899658997622019958556775204670031181345066243364457044219421361632564057092299574324356119484911427940999634425196208365533703340234208775599250862517208656264586998290864073743972682619762747116831752827458296642463698966032985559107525950660238557277791551111108517980973442187793596658648829821624998654112824489731250128010477887844913667489326752569478940063485607745241034636678984136755701038930132004614596515846637522587762280076137191718820301n
   );
 
-  const ed25519Inputs = await getEd25519CircuitInputs();
   const signatureAlgorithm = 0;
-  const merkleInputs = await getMerkleInputs(
-    rsaInputs,
-    ed25519Inputs,
-    signatureAlgorithm
-  );
+  const merkleInputs = await getMerkleInputs(rsaInputs);
 
   const testCase = {
     input: {
       rsaInputs,
-      ed25519Inputs,
       merkleInputs,
-      signatureAlgorithm,
     },
     expected: true,
     comment: "both signatures valid, verifying RSA one",
