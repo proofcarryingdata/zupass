@@ -13,4 +13,5 @@ circuits/*.wasm
 circuits/*.zkey
 contracts/*.sol
 
-# operands
+operands
+intermediate
