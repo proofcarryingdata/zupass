@@ -1,9 +1,8 @@
-import { Button } from "../components/Button";
-
 export default function Web() {
   return (
     <div>
-      <Button />
+      <h1>Welcome to Zuzalu!</h1>
+      <button>connect passport</button>
     </div>
   );
 }
