@@ -1,9 +1,12 @@
 import { receivePassportRequest } from "passport-interface";
+import { useEffect } from "react";
 import styled from "styled-components";
 
-const request = receivePassportRequest(window.location.href);
-
 export default function Receive() {
+  const request = useEffect(() => {
+    const req = receivePassportRequest(window?.location?.href);
+  }, []);
+
   return (
     <Container>
       <h1>PASSPORT</h1>
