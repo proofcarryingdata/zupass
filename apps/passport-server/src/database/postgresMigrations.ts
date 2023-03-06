@@ -8,4 +8,6 @@ export async function migrateDatabase(client: Client): Promise<void> {
   console.log(`[INIT] Executing migrations from directory ${MIGRATIONS_PATH}`);
 
   await migrate({ client }, MIGRATIONS_PATH);
+
+  console.log(`[INIT] Migrations completed successfully`);
 }
