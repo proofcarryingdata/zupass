@@ -15,7 +15,8 @@
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.6",
     "ui": "*",
-    "pcd-types": "*"
+    "pcd-types": "*",
+    "passport-interface": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
