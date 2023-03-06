@@ -1,3 +1,8 @@
-# ZK Faucet
+# Instructions
 
-This repository contains the code for the ZK circuits, web server backend, and frontend for 0xPARC's Goerli Faucet (otherwise known as the best Goerli Faucet out there!).
+In the root of this project, execute the following to start the server and the static site locally.
+
+```bash
+yarn # installs dependencies
+yarn dev
+```
