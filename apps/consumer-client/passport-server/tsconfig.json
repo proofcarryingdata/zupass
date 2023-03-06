@@ -1,0 +1,8 @@
+{
+  "extends": "tsconfig/server.json",
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "typeRoots": ["src/util/declarations/", "./node_modules/@types/"]
+  }
+}
