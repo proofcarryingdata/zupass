@@ -31,7 +31,3 @@ yarn-error.log*
 
 # turbo
 .turbo
-
-
-*.ptau
-.env
