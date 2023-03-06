@@ -1,8 +1,7 @@
 import { ApplicationContext } from "../types";
-import { githubRateLimitMetric } from "./metrics/githubRateLimitMetric";
 import { Metric } from "./types";
 
-const metrics: Metric[] = [githubRateLimitMetric];
+const metrics: Metric[] = [];
 
 export async function startMetrics(context: ApplicationContext) {
   console.log("[INIT] Starting metrics");

@@ -1,7 +1,6 @@
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getDBClient } from "./database/postgresClient";
 import { startServer } from "./routing/server";
-import { startGithubSyncLoop } from "./services/githubSync";
 import { startMetrics } from "./services/metrics";
 import { startTelemetry } from "./services/telemetry";
 import { ServiceInitializer } from "./services/types";
@@ -11,7 +10,6 @@ const services: ServiceInitializer[] = [
   startTelemetry,
   startMetrics,
   startServer,
-  startGithubSyncLoop,
 ];
 
 export async function startApplication() {

@@ -3,16 +3,10 @@ import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
-import { initControlRoutes } from "./routes/controlRoutes";
-import { initDataRoutes } from "./routes/dataRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { RouteInitializer } from "./types";
 
-const routes: RouteInitializer[] = [
-  initHealthcheckRoutes,
-  initDataRoutes,
-  initControlRoutes,
-];
+const routes: RouteInitializer[] = [initHealthcheckRoutes];
 
 export async function startServer(
   context: ApplicationContext
