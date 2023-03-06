@@ -8,6 +8,6 @@ export function initHealthcheckRoutes(
   console.log("[INIT] Initializing health check routes");
 
   app.get("/", async (req: Request, res: Response) => {
-    res.send("OK!");
+    res.send("PCD Passport Server - OK!");
   });
 }
