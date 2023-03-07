@@ -1,0 +1,13 @@
+
+html {
+    font: 14px system-ui, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Media query to fix the viewport, disable pinch-to-zoom on mobile */
+@media mobile {
+    
+}
