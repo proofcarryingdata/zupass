@@ -31,3 +31,7 @@ yarn-error.log*
 
 # turbo
 .turbo
+
+# Local postgres DB files
+apps/passport-server/local-db-data
+apps/passport-server/local-db-log

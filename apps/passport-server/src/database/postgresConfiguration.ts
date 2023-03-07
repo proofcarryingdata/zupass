@@ -24,6 +24,9 @@ export function getDatabaseConfiguration(): DBConfiguration {
   if (process.env.DATABASE_DB_NAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_DB_NAME");
   }
+  if (process.env.DATABASE_SSL === undefined) {
+    throw new Error("Missing environment variable: DATABASE_SSL");
+  }
 
   return {
     user: process.env.DATABASE_USERNAME,
@@ -31,7 +34,7 @@ export function getDatabaseConfiguration(): DBConfiguration {
     host: process.env.DATABASE_HOST,
     database: process.env.DATABASE_DB_NAME,
     port: 5432,
-    ssl: true,
+    ssl: process.env.DATABASE_SSL === "true",
     connectionTimeoutMillis: 0,
   };
 }

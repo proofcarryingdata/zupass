@@ -7,6 +7,8 @@ yarn # installs dependencies
 yarn dev
 ```
 
+If you don't have a Render DB, you can create one locally using "yarn localdb:init" followed by "yarn localdb:up". Copy over `.env.local` to `.env`. When you're done, use "yarn localdb:down" to stop the local DB.
+
 - PCD Passport UI: http://localhost:3000/
 - Example PCD App UI: http://localhost:3001/
 - PCD Passport Server: http://localhost:3002/
