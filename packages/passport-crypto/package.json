@@ -1,0 +1,24 @@
+{
+  "name": "passport-crypto",
+  "version": "0.0.0",
+  "main": "./index.tsx",
+  "types": "./index.tsx",
+  "license": "MIT",
+  "scripts": {
+    "lint": "TIMING=1 eslint \"**/*.ts*\""
+  },
+  "devDependencies": {
+    "@types/libsodium-wrappers": "^0.7.10",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.11",
+    "eslint": "^7.32.0",
+    "eslint-config-custom": "*",
+    "pcd-types": "*",
+    "react": "^18.2.0",
+    "tsconfig": "*",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "libsodium-wrappers": "^0.7.11"
+  }
+}

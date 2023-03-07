@@ -2165,6 +2165,7 @@
     "@types/koa-compose" "*"
     "@types/node" "*"
 
+<<<<<<< HEAD
 "@types/koa__router@8.0.7":
   version "8.0.7"
   resolved "https://registry.yarnpkg.com/@types/koa__router/-/koa__router-8.0.7.tgz#663d69d5ddebff5aaca27c0594430b3ba6ea20be"
@@ -2172,6 +2173,16 @@
   dependencies:
     "@types/koa" "*"
 
+=======
+<<<<<<< HEAD
+=======
+"@types/libsodium-wrappers@^0.7.10":
+  version "0.7.10"
+  resolved "https://registry.npmjs.org/@types/libsodium-wrappers/-/libsodium-wrappers-0.7.10.tgz"
+  integrity sha512-BqI9B92u+cM3ccp8mpHf+HzJ8fBlRwdmyd6+fz3p99m3V6ifT5O3zmOMi612PGkpeFeG/G6loxUnzlDNhfjPSA==
+
+>>>>>>> 50bf148 (client side e2ee)
+>>>>>>> a5de5a6 (client side e2ee)
 "@types/lodash@^4.14.191":
   version "4.14.191"
   resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.191.tgz#09511e7f7cba275acd8b419ddac8da9a6a79e2fa"
@@ -2717,9 +2728,15 @@ axobject-query@^3.1.1:
     deep-equal "^2.0.5"
 
 b4a@^1.0.1:
+<<<<<<< HEAD
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/b4a/-/b4a-1.6.2.tgz#d3dca0ac7da794aa13093e92dd57cfe61d58b07e"
   integrity sha512-YFqjbZ8iqX/wWJVmF1SSOB5TYDwsPd/sZzhSdu2PskElf55PjEe+0MhsEPgoa5eTK1VS/WqJMz9qwIFwZta+3g==
+=======
+  version "1.6.1"
+  resolved "https://registry.npmjs.org/b4a/-/b4a-1.6.1.tgz"
+  integrity sha512-AsKjNhz72yxteo/0EtQEiwkMUgk/tGmycXlbG4g3Ard2/ULtNLUykGOkeK0egmN27h0xMAhb76jYccW+XTBExA==
+>>>>>>> 50bf148 (client side e2ee)
 
 "babel-plugin-styled-components@>= 1.12.0":
   version "2.0.7"
@@ -2924,9 +2941,15 @@ camelize@^1.0.0:
   integrity sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==
 
 caniuse-lite@^1.0.30001406, caniuse-lite@^1.0.30001449:
+<<<<<<< HEAD
   version "1.0.30001464"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001464.tgz#888922718df48ce5e33dcfe1a2af7d42676c5eb7"
   integrity sha512-oww27MtUmusatpRpCGSOneQk2/l5czXANDSFvsc7VuOQ86s3ANhZetpwXNf1zY/zdfP63Xvjz325DAdAoES13g==
+=======
+  version "1.0.30001460"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001460.tgz"
+  integrity sha512-Bud7abqjvEjipUkpLs4D7gR0l8hBYBHoa+tGtKJHvT2AYzLp1z7EmVkUT4ERpVUfca8S2HGIVs883D8pUH1ZzQ==
+>>>>>>> 50bf148 (client side e2ee)
 
 chalk@^2.0.0, chalk@^2.1.0:
   version "2.4.2"
@@ -3055,6 +3078,56 @@ concat-map@0.0.1:
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
   integrity sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+"consumer-client@file:/Users/dc/code/crypto/pcd/apps/consumer-client":
+=======
+"consumer-client@file:/Users/nibnalin/Documents/pcd/apps/consumer-client":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:apps/consumer-client"
+  dependencies:
+    next "^13.1.1"
+<<<<<<< HEAD
+    passport-interface "*"
+=======
+>>>>>>> 50bf148 (client side e2ee)
+    pcd-types "*"
+    react "^18.2.0"
+    react-dom "^18.2.0"
+    styled-components "^5.3.6"
+    ui "*"
+
+<<<<<<< HEAD
+"consumer-server@file:/Users/dc/code/crypto/pcd/apps/consumer-server":
+=======
+"consumer-server@file:/Users/nibnalin/Documents/pcd/apps/consumer-server":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:apps/consumer-server"
+  dependencies:
+    "@honeycombio/opentelemetry-node" "^0.3.2"
+    "@octokit/rest" "^19.0.7"
+    "@opentelemetry/auto-instrumentations-node" "^0.36.0"
+    "@types/lodash" "^4.14.191"
+    "@types/pg" "^8.6.6"
+    express "^4.18.2"
+    libhoney "^4.0.1"
+    lodash "^4.17.21"
+    morgan "^1.10.0"
+    next "^13.1.1"
+    p-queue "6"
+    pcd-types "*"
+    pg "^8.8.0"
+    postgres-migrations "^5.3.0"
+    react "^18.2.0"
+    react-dom "^18.2.0"
+    ts-node "^10.9.1"
+    ui "*"
+    uuid "^9.0.0"
+
+>>>>>>> a5de5a6 (client side e2ee)
 content-disposition@0.5.4:
   version "0.5.4"
   resolved "https://registry.yarnpkg.com/content-disposition/-/content-disposition-0.5.4.tgz#8b82b4efac82512a02bb0b1dcec9d2c5e8eb5bfe"
@@ -3373,9 +3446,21 @@ ejs@^3.1.6:
     jake "^10.8.5"
 
 electron-to-chromium@^1.4.284:
+<<<<<<< HEAD
   version "1.4.328"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.328.tgz#b4565ffa502542b561cea16086d6d9b916c7095a"
   integrity sha512-DE9tTy2PNmy1v55AZAO542ui+MLC2cvINMK4P2LXGsJdput/ThVG9t+QGecPuAZZSgC8XoI+Jh9M1OG9IoNSCw==
+=======
+<<<<<<< HEAD
+  version "1.4.325"
+  resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.325.tgz"
+  integrity sha512-K1C03NT4I7BuzsRdCU5RWkgZxtswnKDYM6/eMhkEXqKu4e5T+ck610x3FPzu1y7HVFSiQKZqP16gnJzPpji1TQ==
+=======
+  version "1.4.320"
+  resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.320.tgz"
+  integrity sha512-h70iRscrNluMZPVICXYl5SSB+rBKo22XfuIS1ER0OQxQZpKTnFpuS6coj7wY9M/3trv7OR88rRMOlKmRvDty7Q==
+>>>>>>> 50bf148 (client side e2ee)
+>>>>>>> a5de5a6 (client side e2ee)
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -3565,6 +3650,23 @@ escodegen@^1.8.1:
   optionalDependencies:
     source-map "~0.6.1"
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+eslint-config-custom@*, "eslint-config-custom@file:/Users/dc/code/crypto/pcd/packages/eslint-config-custom":
+=======
+eslint-config-custom@*, "eslint-config-custom@file:/Users/nibnalin/Documents/pcd/packages/eslint-config-custom":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:packages/eslint-config-custom"
+  dependencies:
+    eslint "^7.23.0"
+    eslint-config-next "13.0.0"
+    eslint-config-prettier "^8.3.0"
+    eslint-config-turbo latest
+    eslint-plugin-react "7.31.8"
+
+>>>>>>> a5de5a6 (client side e2ee)
 eslint-config-next@13.0.0:
   version "13.0.0"
   resolved "https://registry.yarnpkg.com/eslint-config-next/-/eslint-config-next-13.0.0.tgz#d533ee1dbd6576fd3759ba4db4d5a6c4e039c242"
@@ -4936,6 +5038,7 @@ libhoney@^4.0.1:
     superagent-proxy "^3.0.0"
     url-join "^5.0.0"
 
+<<<<<<< HEAD
 lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
@@ -4964,6 +5067,19 @@ locate-path@^6.0.0:
   integrity sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==
   dependencies:
     p-locate "^5.0.0"
+=======
+libsodium-wrappers@^0.7.11:
+  version "0.7.11"
+  resolved "https://registry.npmjs.org/libsodium-wrappers/-/libsodium-wrappers-0.7.11.tgz"
+  integrity sha512-SrcLtXj7BM19vUKtQuyQKiQCRJPgbpauzl3s0rSwD+60wtHqSUuqcoawlMDheCJga85nKOQwxNYQxf/CKAvs6Q==
+  dependencies:
+    libsodium "^0.7.11"
+
+libsodium@^0.7.11:
+  version "0.7.11"
+  resolved "https://registry.npmjs.org/libsodium/-/libsodium-0.7.11.tgz"
+  integrity sha512-WPfJ7sS53I2s4iM58QxY3Inb83/6mjlYgcmZs7DJsvDlnmVUwNinBCi5vBT43P6bHRy01O4zsMU2CoVR6xJ40A==
+>>>>>>> a5de5a6 (client side e2ee)
 
 lodash.camelcase@^4.3.0:
   version "4.3.0"
@@ -5612,10 +5728,100 @@ parseurl@~1.3.3:
   resolved "https://registry.yarnpkg.com/parseurl/-/parseurl-1.3.3.tgz#9da19e7bee8d12dff0513ed5b76957793bc2e8d4"
   integrity sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==
 
+<<<<<<< HEAD
 path-exists@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/path-exists/-/path-exists-4.0.0.tgz#513bdbe2d3b95d7762e8c1137efa195c6c61b5b3"
   integrity sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==
+=======
+<<<<<<< HEAD
+"passport-client@file:/Users/dc/code/crypto/pcd/apps/passport-client":
+=======
+"passport-client@file:/Users/nibnalin/Documents/pcd/apps/passport-client":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:apps/passport-client"
+  dependencies:
+    "@semaphore-protocol/group" "^3.1.0"
+    "@semaphore-protocol/identity" "^3.1.0"
+    "@semaphore-protocol/proof" "^3.1.0"
+<<<<<<< HEAD
+=======
+    next "^13.1.1"
+>>>>>>> 50bf148 (client side e2ee)
+    passport-interface "*"
+    pcd-types "*"
+    react "^18.2.0"
+    react-dom "^18.2.0"
+<<<<<<< HEAD
+    semaphore-group-pcd "*"
+    semaphore-types "*"
+    styled-components "^5.3.6"
+
+passport-interface@*, "passport-interface@file:/Users/dc/code/crypto/pcd/packages/passport-interface":
+  version "0.0.0"
+  resolved "file:packages/passport-interface"
+  dependencies:
+    "@semaphore-protocol/group" "^3.1.0"
+    "@semaphore-protocol/identity" "^3.1.0"
+    "@semaphore-protocol/proof" "^3.1.0"
+    pcd-types "*"
+    semaphore-types "*"
+
+"passport-server@file:/Users/dc/code/crypto/pcd/apps/passport-server":
+=======
+    styled-components "^5.3.6"
+    ui "*"
+
+"passport-crypto@file:/Users/nibnalin/Documents/pcd/packages/passport-crypto":
+  version "0.0.0"
+  resolved "file:packages/passport-crypto"
+  dependencies:
+    libsodium-wrappers "^0.7.11"
+
+passport-interface@*, "passport-interface@file:/Users/nibnalin/Documents/pcd/packages/passport-interface":
+  version "0.0.0"
+  resolved "file:packages/passport-interface"
+
+"passport-server@file:/Users/nibnalin/Documents/pcd/apps/passport-server":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:apps/passport-server"
+  dependencies:
+    "@honeycombio/opentelemetry-node" "^0.3.2"
+    "@octokit/rest" "^19.0.7"
+    "@opentelemetry/auto-instrumentations-node" "^0.36.0"
+<<<<<<< HEAD
+    "@semaphore-protocol/group" "^3.1.0"
+    "@semaphore-protocol/identity" "^3.1.0"
+    "@semaphore-protocol/proof" "^3.1.0"
+=======
+>>>>>>> 50bf148 (client side e2ee)
+    "@types/lodash" "^4.14.191"
+    "@types/pg" "^8.6.6"
+    express "^4.18.2"
+    libhoney "^4.0.1"
+    lodash "^4.17.21"
+    morgan "^1.10.0"
+    next "^13.1.1"
+    p-queue "6"
+<<<<<<< HEAD
+    passport-interface "*"
+=======
+>>>>>>> 50bf148 (client side e2ee)
+    pcd-types "*"
+    pg "^8.8.0"
+    postgres-migrations "^5.3.0"
+    react "^18.2.0"
+    react-dom "^18.2.0"
+<<<<<<< HEAD
+    semaphore-types "*"
+=======
+>>>>>>> 50bf148 (client side e2ee)
+    ts-node "^10.9.1"
+    ui "*"
+    uuid "^9.0.0"
+>>>>>>> a5de5a6 (client side e2ee)
 
 path-is-absolute@^1.0.0:
   version "1.0.1"
@@ -5642,6 +5848,17 @@ path-type@^4.0.0:
   resolved "https://registry.yarnpkg.com/path-type/-/path-type-4.0.0.tgz#84ed01c0a7ba380afe09d90a8c180dcd9d03043b"
   integrity sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+pcd-types@*, "pcd-types@file:/Users/dc/code/crypto/pcd/packages/pcd-types":
+=======
+pcd-types@*, "pcd-types@file:/Users/nibnalin/Documents/pcd/packages/pcd-types":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:packages/pcd-types"
+
+>>>>>>> a5de5a6 (client side e2ee)
 pg-connection-string@^2.5.0:
   version "2.5.0"
   resolved "https://registry.yarnpkg.com/pg-connection-string/-/pg-connection-string-2.5.0.tgz#538cadd0f7e603fc09a12590f3b8a452c2c0cf34"
@@ -5652,10 +5869,17 @@ pg-int8@1.0.1:
   resolved "https://registry.yarnpkg.com/pg-int8/-/pg-int8-1.0.1.tgz#943bd463bf5b71b4170115f80f8efc9a0c0eb78c"
   integrity sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==
 
+<<<<<<< HEAD
 pg-pool@^3.6.0:
   version "3.6.0"
   resolved "https://registry.yarnpkg.com/pg-pool/-/pg-pool-3.6.0.tgz#3190df3e4747a0d23e5e9e8045bcd99bda0a712e"
   integrity sha512-clFRf2ksqd+F497kWFyM21tMjeikn60oGDmqMT8UBrynEwVEX/5R5xd2sdvdo1cZCFlguORNpVuqxIj+aK4cfQ==
+=======
+pg-pool@^3.5.2:
+  version "3.5.2"
+  resolved "https://registry.npmjs.org/pg-pool/-/pg-pool-3.5.2.tgz"
+  integrity sha512-His3Fh17Z4eg7oANLob6ZvH8xIVen3phEZh2QuyrIl4dQSDVEabNducv6ysROKpDNPSD+12tONZVWfSgMvDD9w==
+>>>>>>> 50bf148 (client side e2ee)
 
 pg-protocol@*, pg-protocol@^1.6.0:
   version "1.6.0"
@@ -5673,10 +5897,20 @@ pg-types@^2.1.0, pg-types@^2.2.0:
     postgres-date "~1.0.4"
     postgres-interval "^1.1.0"
 
+<<<<<<< HEAD
 pg@^8.6.0, pg@^8.8.0:
+=======
+pg@^8.6.0, pg@^8.8.0, pg@>=8.0:
+<<<<<<< HEAD
+>>>>>>> a5de5a6 (client side e2ee)
   version "8.10.0"
   resolved "https://registry.yarnpkg.com/pg/-/pg-8.10.0.tgz#5b8379c9b4a36451d110fc8cd98fc325fe62ad24"
   integrity sha512-ke7o7qSTMb47iwzOSaZMfeR7xToFdkE71ifIipOAAaLIM0DYzfOAXlgFFmYUIE2BcJtvnVlGCID84ZzCegE8CQ==
+=======
+  version "8.9.0"
+  resolved "https://registry.npmjs.org/pg/-/pg-8.9.0.tgz"
+  integrity sha512-ZJM+qkEbtOHRuXjmvBtOgNOXOtLSbxiMiUVMgE4rV6Zwocy03RicCVvDXgx8l4Biwo8/qORUnEqn2fdQzV7KCg==
+>>>>>>> 50bf148 (client side e2ee)
   dependencies:
     buffer-writer "2.0.0"
     packet-reader "1.0.0"
@@ -5900,12 +6134,25 @@ punycode@^2.1.0:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.3.0.tgz#f67fa67c94da8f4d0cfff981aee4118064199b8f"
   integrity sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==
 
+<<<<<<< HEAD
 qr.js@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/qr.js/-/qr.js-0.0.0.tgz#cace86386f59a0db8050fa90d9b6b0e88a1e364f"
   integrity sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==
+=======
+<<<<<<< HEAD
+qs@^6.11.0:
+  version "6.11.1"
+  resolved "https://registry.npmjs.org/qs/-/qs-6.11.1.tgz"
+  integrity sha512-0wsrzgTz/kAVIeuxSjnpGC56rzYtr6JT/2BwEvMaPhFIoYa1aGO8LbzuU1R0uUYQkLpWBTOj0l/CLAJB64J6nQ==
+  dependencies:
+    side-channel "^1.0.4"
+>>>>>>> a5de5a6 (client side e2ee)
 
 qs@6.11.0:
+=======
+qs@^6.11.0, qs@6.11.0:
+>>>>>>> 50bf148 (client side e2ee)
   version "6.11.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.11.0.tgz#fd0d963446f7a65e1367e01abd85429453f0c37a"
   integrity sha512-MvjoMCJwEarSbUYk5O+nmoSzSutSsTwF85zcHPQ9OrlFoZOYIjaqBAJIqIXjptyD5vThxGq52Xu/MaJzRkIk4Q==
@@ -6169,7 +6416,32 @@ resolve@^1.0.0, resolve@^1.10.0, resolve@^1.22.0, resolve@^1.22.1:
 
 resolve@^2.0.0-next.3, resolve@^2.0.0-next.4:
   version "2.0.0-next.4"
+<<<<<<< HEAD
   resolved "https://registry.yarnpkg.com/resolve/-/resolve-2.0.0-next.4.tgz#3d37a113d6429f496ec4752d2a2e58efb1fd4660"
+=======
+  resolved "https://registry.npmjs.org/resolve/-/resolve-2.0.0-next.4.tgz"
+<<<<<<< HEAD
+=======
+  integrity sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==
+  dependencies:
+    is-core-module "^2.9.0"
+    path-parse "^1.0.7"
+    supports-preserve-symlinks-flag "^1.0.0"
+
+resolve@^2.0.0-next.4:
+  version "2.0.0-next.4"
+  resolved "https://registry.npmjs.org/resolve/-/resolve-2.0.0-next.4.tgz"
+>>>>>>> 50bf148 (client side e2ee)
+  integrity sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==
+  dependencies:
+    is-core-module "^2.9.0"
+    path-parse "^1.0.7"
+    supports-preserve-symlinks-flag "^1.0.0"
+
+resolve@^2.0.0-next.4:
+  version "2.0.0-next.4"
+  resolved "https://registry.npmjs.org/resolve/-/resolve-2.0.0-next.4.tgz"
+>>>>>>> a5de5a6 (client side e2ee)
   integrity sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==
   dependencies:
     is-core-module "^2.9.0"
@@ -6825,6 +7097,7 @@ ts-node-dev@^2.0.0:
     ts-node "^10.4.0"
     tsconfig "^7.0.0"
 
+<<<<<<< HEAD
 ts-node@7.0.1:
   version "7.0.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-7.0.1.tgz#9562dc2d1e6d248d24bc55f773e3f614337d9baf"
@@ -6842,6 +7115,33 @@ ts-node@7.0.1:
 ts-node@^10.4.0, ts-node@^10.9.1:
   version "10.9.1"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-10.9.1.tgz#e73de9102958af9e1f0b168a6ff320e25adcff4b"
+=======
+ts-node@^10.4.0:
+  version "10.9.1"
+  resolved "https://registry.npmjs.org/ts-node/-/ts-node-10.9.1.tgz"
+<<<<<<< HEAD
+=======
+  integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
+  dependencies:
+    "@cspotcode/source-map-support" "^0.8.0"
+    "@tsconfig/node10" "^1.0.7"
+    "@tsconfig/node12" "^1.0.7"
+    "@tsconfig/node14" "^1.0.0"
+    "@tsconfig/node16" "^1.0.2"
+    acorn "^8.4.1"
+    acorn-walk "^8.1.1"
+    arg "^4.1.0"
+    create-require "^1.1.0"
+    diff "^4.0.1"
+    make-error "^1.1.1"
+    v8-compile-cache-lib "^3.0.1"
+    yn "3.1.1"
+
+ts-node@^10.9.1:
+  version "10.9.1"
+  resolved "https://registry.npmjs.org/ts-node/-/ts-node-10.9.1.tgz"
+>>>>>>> 50bf148 (client side e2ee)
+>>>>>>> a5de5a6 (client side e2ee)
   integrity sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==
   dependencies:
     "@cspotcode/source-map-support" "^0.8.0"
@@ -6868,6 +7168,17 @@ tsconfig-paths@^3.14.1, tsconfig-paths@^3.5.0:
     minimist "^1.2.6"
     strip-bom "^3.0.0"
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+tsconfig@*, "tsconfig@file:/Users/dc/code/crypto/pcd/packages/tsconfig":
+=======
+tsconfig@*, "tsconfig@file:/Users/nibnalin/Documents/pcd/packages/tsconfig":
+>>>>>>> 50bf148 (client side e2ee)
+  version "0.0.0"
+  resolved "file:packages/tsconfig"
+
+>>>>>>> a5de5a6 (client side e2ee)
 tsconfig@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/tsconfig/-/tsconfig-7.0.0.tgz#84538875a4dc216e5c4a5432b3a4dec3d54e91b7"
@@ -7001,17 +7312,31 @@ typed-array-length@^1.0.4:
     for-each "^0.3.3"
     is-typed-array "^1.1.9"
 
+<<<<<<< HEAD
 typescript@>=3.8, typescript@^4.5.2, typescript@^4.5.3, typescript@^4.7.4, typescript@^4.9.5:
+=======
+<<<<<<< HEAD
+typescript@*, typescript@^4.5.2, typescript@^4.5.3, typescript@^4.7.4, typescript@>=2.7, "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", typescript@>=2.9, typescript@>=3.3.1, typescript@>=3.8:
+=======
+typescript@*, typescript@^4.5.2, typescript@^4.5.3, typescript@^4.7.4, typescript@>=2.7, "typescript@>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta", typescript@>=2.9, typescript@>=3.3.1:
+>>>>>>> 50bf148 (client side e2ee)
+>>>>>>> a5de5a6 (client side e2ee)
   version "4.9.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
+<<<<<<< HEAD
 ui@*:
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/ui/-/ui-0.2.4.tgz#39b7c8086b2b1b64a72c6437c38ddc7c4e4e836d"
   integrity sha512-se2D+frb/i6JwFc7j72IEa0JADF8lfgc6ivOigaYkXHOuZRBtWe8R7UZ2YiXcbJ1dYNsjq40dn39rlNRxmVdPw==
   dependencies:
     std "0.1.x"
+=======
+ui@*, "ui@file:/Users/nibnalin/Documents/pcd/packages/ui":
+  version "0.0.0"
+  resolved "file:packages/ui"
+>>>>>>> 50bf148 (client side e2ee)
 
 unbox-primitive@^1.0.2:
   version "1.0.2"
