@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import styled from "styled-components";
 import { Button } from "../components/Button";
 import Spacer from "../components/Spacer";
+import { SemaphoreManager } from "../src/SemaphoreManager";
 
 export default function ZuzaluApp() {
   return (
@@ -27,6 +28,7 @@ export default function ZuzaluApp() {
       </Form>
       <Spacer h={8} />
       <Button onClick={useCallback(onSyncExisting, [])}>Sync Existing</Button>
+      <Button onClick={useCallback(onSemaphoreTest, [])}>Test Semaphore</Button>
     </Container>
   );
 }
@@ -50,6 +52,12 @@ function onLogin(e: React.FormEvent<HTMLFormElement>) {
 function onSyncExisting(e: React.MouseEvent<HTMLButtonElement>) {
   e.preventDefault();
   window.alert("Under construction");
+}
+
+function onSemaphoreTest(e: React.MouseEvent<HTMLButtonElement>) {
+  e.preventDefault();
+  const manager = new SemaphoreManager();
+  manager.test();
 }
 
 const Container = styled.div`
