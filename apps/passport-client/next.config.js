@@ -3,7 +3,7 @@ module.exports = {
   transpilePackages: ["ui"],
   images: {
     unoptimized: true,
-  }
+  },
   compiler: {
     styledComponents: true,
   },
