@@ -10,6 +10,7 @@
     "localdb:init": "bash -c 'initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
+    "typesql": "cd apps/passport-server && bash -c 'npx sqltyper --database postgres://admin:password@localhost:5432/postgres?ssl=false src/database/queries --verbose'",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
