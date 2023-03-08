@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "retype build"
+    "build": "retype build",
+    "dev": "retype watch"
   },
   "keywords": [],
   "author": "",
