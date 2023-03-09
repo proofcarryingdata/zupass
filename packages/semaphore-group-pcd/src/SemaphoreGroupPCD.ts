@@ -13,6 +13,12 @@ export interface SemaphoreGroupPCDArgs {
   identity: Identity;
   externalNullifier: bigint;
   signal: bigint;
+  // TODO: how do we distribute these in-package, so that consumers
+  // of the package don't have to copy-paste these artifacts?
+  // TODO: how do we account for different versions of the same type
+  // of artifact? eg. this one is parameterized by group size. Should
+  // we pre-generate a bunch of artifacts per possible group size?
+  // Should we do code-gen?
   zkeyFilePath: string;
   wasmFilePath: string;
 }
