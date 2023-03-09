@@ -5,6 +5,11 @@ enum PCDRequestType {
   Add = "Add",
 }
 
+export interface PCDResponse {
+  request: PCDRequest;
+  response: any;
+}
+
 export interface PCDRequest {
   returnUrl: string;
   type: PCDRequestType;
@@ -52,9 +57,9 @@ export function constructPassportPcdAddRequestUrl(
 export function passportReceiveRequest(
   url: string
 ): PCDGetRequest | PCDAddRequest | undefined {
-  const URL = new URLSearchParams(url);
+  const params = new URLSearchParams(new URL(url).search);
 
-  const request = JSON.parse(URL.get("request") || "");
+  const request = JSON.parse(params.get("request") || "");
 
   if (isPassportAddRequest(request)) {
     return request;
@@ -65,6 +70,17 @@ export function passportReceiveRequest(
   }
 
   return undefined;
+}
+
+export function passportResponseUrl(callbackUrl: string, response: any) {
+  return `${callbackUrl}&passport-response=${JSON.stringify(response)}`;
+}
+
+export function receiveResponseFromPassport(url: string): any {
+  const params = new URLSearchParams(new URL(url).search);
+  const response = params.get("a") ?? "{}";
+
+  return JSON.parse(response);
 }
 
 export function isPassportGetRequest(req: any): req is PCDGetRequest {

@@ -16,7 +16,8 @@
     "styled-components": "^5.3.6",
     "ui": "*",
     "pcd-types": "*",
-    "passport-interface": "*"
+    "passport-interface": "*",
+    "semaphore-group-pcd": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
