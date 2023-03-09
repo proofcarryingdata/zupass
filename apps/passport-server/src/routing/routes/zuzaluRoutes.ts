@@ -16,17 +16,19 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const redirect = req.query.redirect;
-        // TODO: check this was signed by the server and contains 'email' and 'member' that match the rest of this request
-        const token = req.query.token;
-        // TODO: check this is a valid email
-        const email = req.query.email;
-        const commitment = req.query.commitment;
+      const redirect = req.query.redirect;
+      // TODO: check this was signed by the server and contains 'email' and 'member' that match the rest of this request
+      const token = req.query.token;
+      // TODO: check this is a valid email
+      const email = req.query.email;
+      const commitment = req.query.commitment;
 
+      try {
         if (typeof redirect !== "string") {
-          throw new Error(
-            "missing 'redirect' query string parameter - it should be a string"
+          return next(
+            new Error(
+              "missing 'redirect' query string parameter - it should be a string"
+            )
           );
         }
 
@@ -37,12 +39,19 @@ export function initZuzaluRoutes(
         }
 
         const bigIntCommitment = BigInt(commitment);
+
+        if (globalGroup.indexOf(bigIntCommitment) >= 0) {
+          throw new Error(
+            `member ${bigIntCommitment} already in semaphore group`
+          );
+        }
+
         globalGroup.addMember(bigIntCommitment);
 
-        res.status(200);
-        res.redirect(redirect);
+        res.redirect(redirect + "?success=true");
       } catch (e) {
-        return next(e);
+        console.log("error adding new zuzalu participant: ", e);
+        res.redirect(redirect + "?success=false");
       }
     }
   );
