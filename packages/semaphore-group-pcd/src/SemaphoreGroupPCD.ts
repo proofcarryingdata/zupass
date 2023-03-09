@@ -13,6 +13,8 @@ export interface SemaphoreGroupPCDArgs {
   identity: Identity;
   externalNullifier: bigint;
   signal: bigint;
+  zkeyFilePath: string;
+  wasmFilePath: string;
 }
 
 export interface SemaphoreGroupPCDClaim {
@@ -52,8 +54,8 @@ export async function prove(
     args.externalNullifier,
     args.signal,
     {
-      zkeyFilePath: "../artifacts/16.zkey",
-      wasmFilePath: "../artifacts/16.wasm",
+      zkeyFilePath: args.zkeyFilePath,
+      wasmFilePath: args.wasmFilePath,
     }
   );
 

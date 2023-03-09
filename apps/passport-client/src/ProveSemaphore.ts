@@ -19,6 +19,8 @@ export async function doProveSemaphore() {
     signal: BigInt(signal),
     group,
     identity,
+    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    wasmFilePath: "/semaphore-artifacts/16.wasm",
   };
 
   const pcd = await prove(args);
