@@ -12,20 +12,17 @@ export function getDatabaseConfiguration(): DBConfiguration {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");
   }
-
   if (process.env.DATABASE_PASSWORD === undefined) {
     throw new Error("Missing environment variable: DATABASE_PASSWORD");
   }
-
   if (process.env.DATABASE_HOST === undefined) {
     throw new Error("Missing environment variable: DATABASE_HOST");
   }
-
   if (process.env.DATABASE_DB_NAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_DB_NAME");
   }
-  if (process.env.DATABASE_SSL === undefined) {
-    throw new Error("Missing environment variable: DATABASE_SSL");
+  if (!["true", "false"].includes(process.env.DATABASE_SSL || "")) {
+    throw new Error("Missing or incorrect env variable: DATABASE_SSL");
   }
 
   return {

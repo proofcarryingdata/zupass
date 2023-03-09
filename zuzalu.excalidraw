@@ -7252,8 +7252,8 @@
     },
     {
       "type": "rectangle",
-      "version": 594,
-      "versionNonce": 97032136,
+      "version": 668,
+      "versionNonce": 1526943688,
       "isDeleted": false,
       "id": "VsHq5a48NCuveIdnrbULk",
       "fillStyle": "solid",
@@ -7262,8 +7262,8 @@
       "roughness": 1,
       "opacity": 100,
       "angle": 0,
-      "x": -472.71511428891495,
-      "y": -33.03718967948407,
+      "x": -470.10275988759093,
+      "y": 232.85918730491267,
       "strokeColor": "#66b",
       "backgroundColor": "transparent",
       "width": 1239.6102022232226,
@@ -7274,7 +7274,7 @@
         "type": 3
       },
       "boundElements": [],
-      "updated": 1678230985178,
+      "updated": 1678299022464,
       "link": null,
       "locked": false
     },
@@ -8259,8 +8259,8 @@
     },
     {
       "type": "arrow",
-      "version": 298,
-      "versionNonce": 836080072,
+      "version": 305,
+      "versionNonce": 1364570552,
       "isDeleted": false,
       "id": "Rw0aJOnGRyTekfm6TL0z2",
       "fillStyle": "hachure",
@@ -8269,8 +8269,8 @@
       "roughness": 1,
       "opacity": 100,
       "angle": 0,
-      "x": -235.88801979826673,
-      "y": 676.4518401694501,
+      "x": -231.41704569401065,
+      "y": 675.2570528176217,
       "strokeColor": "#66b",
       "backgroundColor": "transparent",
       "width": 34.20440673828125,
@@ -8281,18 +8281,18 @@
         "type": 2
       },
       "boundElements": [],
-      "updated": 1678230985179,
+      "updated": 1678299018120,
       "link": null,
       "locked": false,
       "startBinding": {
         "elementId": "RQ4JaWYm65GZ0ke0NuPn4",
-        "focus": 0.4443476166415136,
-        "gap": 27.16249176226023
+        "focus": 0.43682218119485167,
+        "gap": 31.633465866516303
       },
       "endBinding": {
         "elementId": "sHMc9PSV8h4giTxYsphvS",
-        "focus": -0.44408256535612756,
-        "gap": 31.704508941274128
+        "focus": -0.43655712990946544,
+        "gap": 27.233534837018055
       },
       "lastCommittedPoint": null,
       "startArrowhead": null,
