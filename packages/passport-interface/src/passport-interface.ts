@@ -52,14 +52,20 @@ export function constructPassportPcdAddRequestUrl(
 
 export function passportReceiveRequest(
   url: string
-): PCDGetRequest | PCDAddRequest {
+): PCDGetRequest | PCDAddRequest | undefined {
   const URL = new URLSearchParams(url);
 
   const request = JSON.parse(URL.get("request") || "");
 
-  console.log(request);
+  if (isPassportAddRequest(request)) {
+    return request;
+  }
 
-  return {} as any;
+  if (isPassportGetRequest(request)) {
+    return request;
+  }
+
+  return undefined;
 }
 
 export function isPassportGetRequest(req: any): req is PCDGetRequest {
