@@ -1,4 +1,4 @@
-export default function Spacer({
+export function Spacer({
   w,
   h,
 }: {

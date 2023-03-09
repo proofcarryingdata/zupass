@@ -26,13 +26,13 @@ const BtnBase = styled.button`
   border: 1px solid #666;
   border-radius: 4px;
   font-size: 1rem;
-  background: #fff;
+  background: transparent;
   cursor: pointer;
   &:hover {
-    background: #f8f8f8;
+    background: rgba(0, 0, 0, 0.01);
   }
   &:active {
-    background: #eee;
+    background: rgba(0, 0, 0, 0.03);
   }
 `;
 
