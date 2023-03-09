@@ -1,5 +1,5 @@
 {
-  "name": "passport-interface",
+  "name": "semaphore-types",
   "version": "0.0.0",
   "main": "./index.tsx",
   "types": "./index.tsx",
@@ -10,9 +10,7 @@
   "dependencies": {
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
-    "@semaphore-protocol/proof": "^3.1.0",
-    "pcd-types": "*",
-    "semaphore-types": "*"
+    "@semaphore-protocol/proof": "^3.1.0"
   },
   "devDependencies": {
     "@types/react": "^17.0.37",
