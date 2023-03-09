@@ -5,6 +5,7 @@ import {
   generateProof,
   verifyProof,
 } from "@semaphore-protocol/proof";
+import JSONBig from "json-bigint";
 import { PCD, PCDPackage } from "pcd-types";
 import { SemaphoreGroup, serializeSemaphoreGroup } from "semaphore-types";
 
@@ -83,6 +84,16 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
   return valid;
 }
 
+export async function serialize(pcd: SemaphoreGroupPCD): Promise<string> {
+  return JSONBig().stringify(pcd);
+}
+
+export async function deserialize(
+  serialized: string
+): Promise<SemaphoreGroupPCD> {
+  return JSONBig().parse(serialized);
+}
+
 export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDClaim,
   SemaphoreGroupPCDProof,
@@ -90,4 +101,6 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
 > = {
   prove,
   verify,
+  serialize,
+  deserialize,
 };

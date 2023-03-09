@@ -6,7 +6,7 @@ import {
 } from "semaphore-group-pcd";
 
 export async function doProveSemaphore() {
-  const { prove, verify } = SemaphoreGroupPCDPackage;
+  const { prove, verify, serialize, deserialize } = SemaphoreGroupPCDPackage;
 
   const identity = new Identity();
   const group = new Group(1, 16);
@@ -24,7 +24,10 @@ export async function doProveSemaphore() {
   };
 
   const pcd = await prove(args);
-  const verified = await verify(pcd);
+  const serialized = await serialize(pcd);
+  console.log(serialized);
+  const deserialized = await deserialize(serialized);
+  const verified = await verify(deserialized);
 
   console.log(verified);
 }
