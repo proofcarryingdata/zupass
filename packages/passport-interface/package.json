@@ -7,6 +7,11 @@
   "scripts": {
     "lint": "TIMING=1 eslint \"**/*.ts*\""
   },
+  "dependencies": {
+    "@semaphore-protocol/group": "^3.1.0",
+    "@semaphore-protocol/identity": "^3.1.0",
+    "@semaphore-protocol/proof": "^3.1.0"
+  },
   "devDependencies": {
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",

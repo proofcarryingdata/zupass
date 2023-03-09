@@ -12,6 +12,9 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
+    "@semaphore-protocol/group": "^3.1.0",
+    "@semaphore-protocol/identity": "^3.1.0",
+    "@semaphore-protocol/proof": "^3.1.0",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
     "express": "^4.18.2",
@@ -27,7 +30,8 @@
     "react-dom": "^18.2.0",
     "ts-node": "^10.9.1",
     "ui": "*",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "passport-interface": "*"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
