@@ -1,5 +1,5 @@
 {
-  "name": "passport-interface",
+  "name": "semaphore-identity-delegate-pcd",
   "version": "0.0.0",
   "main": "./index.tsx",
   "types": "./index.tsx",
