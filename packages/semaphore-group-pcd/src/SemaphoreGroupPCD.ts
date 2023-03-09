@@ -5,7 +5,7 @@ import {
   generateProof,
   verifyProof,
 } from "@semaphore-protocol/proof";
-import { PCD } from "pcd-types";
+import { PCD, PCDPackage } from "pcd-types";
 import { SemaphoreGroup, serializeSemaphoreGroup } from "semaphore-types";
 
 export interface SemaphoreGroupPCDArgs {
@@ -74,3 +74,12 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
 
   return valid;
 }
+
+export const SemaphoreGroupPCDPackage: PCDPackage<
+  SemaphoreGroupPCDClaim,
+  SemaphoreGroupPCDProof,
+  SemaphoreGroupPCDArgs
+> = {
+  prove,
+  verify,
+};
