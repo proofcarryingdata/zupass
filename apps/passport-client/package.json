@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "esbuild pages/index.tsx --bundle --serve=3000 --servedir=public/ --outdir=public/js",
+    "dev": "ts-node build.ts dev",
     "build": "ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc . --noEmit && eslint . --ext .ts,.tsx"
@@ -28,7 +28,7 @@
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
-    "esbuild": "^0.17.11",
+    "esbuild": "^0.17.10",
     "eslint": "7.32.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.5.3"

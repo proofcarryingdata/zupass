@@ -1,29 +1,38 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 
-import { build, BuildOptions } from "esbuild";
+import { build, BuildOptions, context } from "esbuild";
 
-build(getOptions(process.argv[2]));
+run(process.argv[2])
+  .then(() => console.log("Done"))
+  .catch((err) => console.error(err));
 
-function getOptions(mode: string): BuildOptions {
-  const opts: BuildOptions = {
-    bundle: true,
-    entryPoints: ["pages/index.tsx"],
-    plugins: [
-      NodeModulesPolyfillPlugin(),
-      NodeGlobalsPolyfillPlugin({
-        process: true,
-      }),
-    ],
-    outdir: "public/js",
-  };
+const opts: BuildOptions = {
+  bundle: true,
+  entryPoints: ["pages/index.tsx"],
+  plugins: [
+    NodeModulesPolyfillPlugin(),
+    NodeGlobalsPolyfillPlugin({
+      process: true,
+    }),
+  ],
+  outdir: "public/js",
+};
 
-  switch (mode) {
+async function run(command: string) {
+  switch (command) {
     case "build":
-      return { ...opts, minify: true };
+      return build({ ...opts, minify: true });
     case "dev":
-    //  return { ...opts, watch: true };
+      const ctx = await context(opts);
+      ctx.watch();
+      const fn = ctx.serve.bind(ctx) as any;
+      const { host } = await fn({
+        servedir: "public",
+        port: 3000,
+      });
+      console.log(`Serving on ${host}`);
     default:
-      throw new Error(`Unknown command ${mode}`);
+      throw new Error(`Unknown command ${command}`);
   }
 }
