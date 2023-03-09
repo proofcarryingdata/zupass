@@ -27,12 +27,12 @@ export function HomeScreen() {
 function getTestCards(): Card[] {
   const c1 = {
     id: "0x1234",
-    type: "zuzulu-id",
+    type: "zuzalu-id",
     display: {
       icon: "🧑‍🦱",
-      header: "Zuzulu Resident",
+      header: "Zuzalu Resident",
       title: "Vitalik Buterin",
-      description: "Zuzulu resident #42",
+      description: "Zuzalu resident #42",
       color: "#bcb",
     },
     secret: "",
