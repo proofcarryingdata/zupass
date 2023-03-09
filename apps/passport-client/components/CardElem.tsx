@@ -1,5 +1,6 @@
+import * as React from "react";
 import styled from "styled-components";
-import { Card } from "../src/Card";
+import { Card } from "../src/model/Card";
 import { Ellipsis, H1 } from "./core";
 
 /**
