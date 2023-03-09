@@ -8,6 +8,7 @@ import { Center, H1 } from "../components/core";
 import { BigInput } from "../components/Input";
 import { Spacer } from "../components/Spacer";
 import { Card } from "../src/Card";
+import { doProveSemaphore } from "../src/ProveSemaphore";
 
 export default function ZuzaluApp() {
   // TODO: state store, dispatcher
@@ -96,6 +97,13 @@ function LoginScreen({ dispatch }: { dispatch: Dispatcher }) {
         )}
       >
         Scan and verify
+      </Button>
+      <Button
+        onClick={() => {
+          doProveSemaphore();
+        }}
+      >
+        Test Semaphore
       </Button>
     </div>
   );

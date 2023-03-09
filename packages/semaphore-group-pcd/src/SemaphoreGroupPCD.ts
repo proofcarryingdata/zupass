@@ -52,8 +52,8 @@ export async function prove(
     args.externalNullifier,
     args.signal,
     {
-      zkeyFilePath: "./semaphore-artifacts/16.zkey",
-      wasmFilePath: "./semaphore-artifacts/16.wasm",
+      zkeyFilePath: "../artifacts/16.zkey",
+      wasmFilePath: "../artifacts/16.wasm",
     }
   );
 
