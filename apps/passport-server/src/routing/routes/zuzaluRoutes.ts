@@ -1,6 +1,6 @@
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
-import { serializeSemaphoreGroup } from "passport-interface";
+import { serializeSemaphoreGroup } from "semaphore-types";
 import { ApplicationContext } from "../../types";
 
 const globalGroup = new Group("1", 16);
