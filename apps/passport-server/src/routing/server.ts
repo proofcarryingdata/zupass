@@ -19,6 +19,13 @@ export async function startServer(
 
     routes.forEach((r) => r(app, context));
 
+    app.use(
+      (err: Error, req: express.Request, res: express.Response, next: any) => {
+        console.error(err.stack);
+        res.status(500).send(err.message);
+      }
+    );
+
     app
       .listen(port, () => {
         console.log(`[INIT] HTTP server listening on port ${port}`);
