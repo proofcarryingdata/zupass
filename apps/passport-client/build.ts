@@ -1,11 +1,6 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
-
 import { build, BuildOptions, context } from "esbuild";
-
-run(process.argv[2])
-  .then(() => console.log("Done"))
-  .catch((err) => console.error(err));
 
 const opts: BuildOptions = {
   bundle: true,
@@ -19,19 +14,25 @@ const opts: BuildOptions = {
   outdir: "public/js",
 };
 
+run(process.argv[2])
+  .then(() => console.log("Success"))
+  .catch((err) => console.error(err));
+
 async function run(command: string) {
   switch (command) {
     case "build":
-      return build({ ...opts, minify: true });
+      const res = await build({ ...opts, minify: true });
+      console.error("Built", res);
+      break;
     case "dev":
       const ctx = await context(opts);
-      ctx.watch();
-      const fn = ctx.serve.bind(ctx) as any;
-      const { host } = await fn({
+      await ctx.watch();
+      const { host } = await ctx.serve({
         servedir: "public",
         port: 3000,
       });
       console.log(`Serving on ${host}`);
+      break;
     default:
       throw new Error(`Unknown command ${command}`);
   }
