@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import {
   base64_variants,
   from_base64,
@@ -6,7 +7,7 @@ import {
   to_base64,
   to_hex,
   to_string,
-} from "./libsodium";
+} from "libsodium-wrappers";
 
 declare global {
   interface Document {

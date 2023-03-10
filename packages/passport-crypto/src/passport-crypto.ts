@@ -1,22 +1,14 @@
 import { Base64String, HexString, Utf8String } from "pcd-types";
-import * as sodium from "./libsodium";
+import { getSodium } from "./libsodium";
 import * as utils from "./utils";
 
 export class PassportCrypto {
-  private ready: Promise<void> | null;
+  private sodium: Awaited<ReturnType<typeof getSodium>> | null = null;
 
-  constructor() {
+  async initialize() {
     /** Functions using Libsodium have to await
      * promise before performing any library calls */
-    this.ready = sodium.ready;
-  }
-
-  async initialize(): Promise<void> {
-    await this.ready;
-  }
-
-  deinit(): void {
-    this.ready = null;
+    this.sodium = await getSodium();
   }
 
   public generateRandomKey(bits: number): HexString {
@@ -34,13 +26,13 @@ export class PassportCrypto {
     bytes: number,
     length: number
   ): HexString {
-    const result = sodium.crypto_pwhash(
+    const result = this.sodium!.crypto_pwhash(
       length,
       utils.stringToArrayBuffer(password),
       utils.hexStringToArrayBuffer(salt),
       iterations,
       bytes,
-      sodium.crypto_pwhash_ALG_DEFAULT,
+      this.sodium!.crypto_pwhash_ALG_DEFAULT,
       "hex"
     );
     return result;
@@ -55,7 +47,7 @@ export class PassportCrypto {
     if (nonce.length !== 48) {
       throw Error("Nonce must be 24 bytes");
     }
-    const arrayBuffer = sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
+    const arrayBuffer = this.sodium!.crypto_aead_xchacha20poly1305_ietf_encrypt(
       plaintext,
       assocData || null,
       null,
@@ -75,7 +67,7 @@ export class PassportCrypto {
       throw Error("Nonce must be 24 bytes");
     }
     try {
-      return sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
+      return this.sodium!.crypto_aead_xchacha20poly1305_ietf_decrypt(
         null,
         utils.base64ToArrayBuffer(ciphertext),
         assocData || null,

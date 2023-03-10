@@ -6,6 +6,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { saveSelf } from "./participant";
+import { PassportManager } from "./PassportManager";
 import { savePCDs, ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
@@ -28,7 +29,11 @@ export type Action =
     }
   | {
       type: "reset-passport";
-    };
+    }
+  | {
+      type: "nav-scan-and-verify";
+    }
+  | { type: "testing-e2ee" };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -52,6 +57,9 @@ export async function dispatch(
       return clearError(update);
     case "reset-passport":
       return resetPassport(update);
+    case "testing-e2ee":
+      teste2ee();
+      break;
     default:
       console.error("Unknown action type", action);
   }
@@ -84,6 +92,13 @@ async function genPassport(email: string, update: ZuUpdate) {
   update({ pcds, pendingAction: { type: "new-passport", email } });
 }
 
+async function teste2ee() {
+  console.log("testing e2ee");
+
+  const passportManager = new PassportManager("test@vitalik.org");
+  await passportManager.test();
+}
+
 function doSaveSelf(
   participant: ZuParticipant,
   state: ZuState,
@@ -103,6 +118,8 @@ function doSaveSelf(
       },
     });
   }
+
+  let setState = (_: Partial<ZuState>) => {};
 
   // Save to local storage.
   saveSelf(participant);

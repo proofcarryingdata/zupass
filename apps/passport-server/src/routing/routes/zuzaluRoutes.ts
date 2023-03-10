@@ -1,8 +1,10 @@
 import { ZuParticipant } from "@pcd/passport-interface";
+import { BackendUser } from "@pcd/pcd-types";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import { createUser, fetchUser, writeUser } from "../../database/queries";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -11,6 +13,17 @@ const globalGroup = new Group("1", 16);
 
 // Zuzalu participants by UUID
 const participants = {} as Record<string, ZuParticipant>;
+function cleanDBUser(
+  user: Awaited<ReturnType<typeof fetchUser>>[0]
+): BackendUser {
+  return {
+    identifier: user.identifier,
+    status: user.status,
+    createdAt: user.created_at,
+    encryptedBlob: user.encrypted_blob,
+    updatedAt: user.updated_at,
+  };
+}
 
 // localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
 // example identity: ["da4e5656b0892923d30c0a8fa9e68a2ea5b8095c09a4198d066219d5b4e30a","651e367c40d65f65f38ba60f723feb2abcafddd1aa24e6de35a0d9189bca58"]
@@ -89,6 +102,50 @@ export function initZuzaluRoutes(
 
   app.get("/testEmail", async (req: Request, res: Response) => {
     sendEmail("test@nibnalin.me", "testing123");
+  });
+
+  app.post("/user/create", async (req: Request, res: Response) => {
+    console.log("req", req.body);
+    const { identifier, status, serverPassword, encryptedBlob } = req.body;
+
+    const write = await createUser(context.dbClient, {
+      identifier: identifier,
+      status: status,
+      server_password: serverPassword,
+      encrypted_blob: encryptedBlob,
+    });
+
+    res.json({ success: write });
+  });
+
+  app.get("/user/fetch/", async (req: Request, res: Response) => {
+    const identifier = req.query.identifier;
+
+    if (typeof identifier !== "string") {
+      throw new Error(
+        "missing 'identifier' query string parameter - it should be a string"
+      );
+    }
+
+    const users = await fetchUser(context.dbClient, {
+      searched_identifier: identifier,
+    });
+    if (users.length != 1) {
+      throw new Error("user not found");
+    }
+    res.json(cleanDBUser(users[0]));
+  });
+
+  app.post("/user/write", async (req: Request, res: Response) => {
+    const { identifier, serverPassword, encryptedBlob } = req.body;
+
+    const writes = await writeUser(context.dbClient, {
+      searched_identifier: identifier,
+      claimed_server_password: serverPassword,
+      new_encrypted_blob: encryptedBlob,
+    });
+
+    res.json({ success: writes });
   });
 }
 

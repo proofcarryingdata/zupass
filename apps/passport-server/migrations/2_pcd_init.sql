@@ -11,8 +11,6 @@ create table users (
   status SMALLINT NOT NULL,
   -- set once at row creation time
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  -- salt used for KDF
-  salt VARCHAR NOT NULL,
   -- Encrypted PCD store
   encrypted_blob TEXT NOT NULL,
   -- Authentication for user
@@ -21,4 +19,4 @@ create table users (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-create index user_identifier on users (identifier);
+create index users_identifier on users (identifier);

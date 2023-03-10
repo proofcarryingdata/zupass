@@ -6,8 +6,8 @@ import { ClientBase, Pool } from 'pg'
 
 export async function fetchUser(
   client: ClientBase | Pool, params: { searched_identifier: string }
-): Promise<Array<{ 'identifier': string; 'status': number; 'created_at': Date; 'salt': string; 'encrypted_blob': string; 'updated_at': Date }>> {
+): Promise<Array<{ 'identifier': string; 'status': number; 'created_at': Date; 'encrypted_blob': string; 'updated_at': Date }>> {
     const result = await client.query(`\
-select identifier, status, created_at, salt, encrypted_blob, updated_at from users where identifier = $1;`, [ params.searched_identifier ])
+select identifier, status, created_at, encrypted_blob, updated_at from users where identifier = $1;`, [ params.searched_identifier ])
     return result.rows
 }

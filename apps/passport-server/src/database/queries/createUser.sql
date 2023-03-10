@@ -1,0 +1,1 @@
+insert into users (identifier, status, encrypted_blob, server_password) values (${identifier}, ${status}, ${encrypted_blob}, ${server_password});

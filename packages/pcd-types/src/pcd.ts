@@ -100,3 +100,21 @@ export interface EncryptedPacket {
   nonce: HexString;
   ciphertext: Base64String;
 }
+
+export enum UserStatus {
+  REGULAR,
+  UNVERIFIED,
+}
+
+export interface BackendUser {
+  identifier: string;
+  status: number;
+  createdAt: Date;
+  encryptedBlob: string;
+  updatedAt: Date;
+}
+
+export interface ClientUser extends BackendUser {
+  masterKey: string;
+  serverPassword: string;
+}
