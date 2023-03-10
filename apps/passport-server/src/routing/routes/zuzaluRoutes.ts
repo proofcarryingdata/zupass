@@ -2,6 +2,7 @@ import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { serializeSemaphoreGroup } from "semaphore-types";
 import { ApplicationContext } from "../../types";
+import { sendEmail } from "../../util/email";
 
 const globalGroup = new Group("1", 16);
 
@@ -62,5 +63,9 @@ export function initZuzaluRoutes(
     res.json(
       JSON.stringify(serializeSemaphoreGroup(globalGroup, "Zuzalu Residents"))
     );
+  });
+
+  app.get("/testEmail", async (req: Request, res: Response) => {
+    sendEmail("test@nibnalin.me", "testing123");
   });
 }
