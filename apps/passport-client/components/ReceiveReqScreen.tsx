@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import styled from "styled-components";
 
 export default function Receive() {
-  const request = useEffect(() => {
+  useEffect(() => {
     const req = passportReceiveRequest(window?.location?.href);
     console.log("Received passport request", req);
   }, []);

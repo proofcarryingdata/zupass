@@ -2,6 +2,10 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { Button, Center, Spacer } from "./core";
 
+/**
+ * Show the user that we're generating their passport. Direct them to the email
+ * verification link.
+ */
 export function GenPassportScreen({ identity }: { identity?: Identity }) {
   let saveSelfPage = window.location.origin;
   const npp = "http://localhost:3002/zuzalu/new-participant";
