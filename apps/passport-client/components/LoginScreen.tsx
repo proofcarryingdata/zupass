@@ -1,13 +1,21 @@
 import * as React from "react";
-import { ChangeEvent, useCallback, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 import styled from "styled-components";
-import { dispatch } from "../src/dispatch";
+import { DispatchContext } from "../src/dispatch";
 import { BigInput, Button, Center, H1, Spacer } from "./core";
 
 export function LoginScreen() {
+  const [_, dispatch] = useContext(DispatchContext);
   const [email, setEmail] = useState("");
+
   const onGenPass = useCallback(
-    function (e: SubmitEvent) {
+    function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
       dispatch({ type: "gen-passport", body: { email } });
     },

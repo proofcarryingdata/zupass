@@ -1,44 +1,43 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
-import { Container } from "../components/core";
-import { GenPassportScreen } from "../components/GenPassportScreen";
-import { HomeScreen } from "../components/HomeScreen";
-import { LoginScreen } from "../components/LoginScreen";
-import { setSetState } from "../src/dispatch";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { AppContainer } from "../components/core/AppContainer";
+import { IndexScreen } from "../components/IndexScreen";
+import { SaveSelfScreen } from "../components/SaveSelfScreen";
+import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadSelf } from "../src/participant";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<{}, ZuState> {
-  constructor(props: {}) {
-    super(props);
-    const self = loadSelf();
-    this.state = {
-      self,
-      screen: self ? "home" : "login",
-    };
-  }
-
-  componentDidMount(): void {
-    setSetState(this.setState.bind(this));
-  }
+  state = loadInitialState();
+  update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
+  disp = (action: Action) => dispatch(action, this.state, this.update);
 
   render() {
-    return <Container>{renderContents(this.state)}</Container>;
+    const { state, disp } = this;
+    console.log("Rendering App", state);
+
+    return (
+      <DispatchContext.Provider value={[state, disp]}>
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<AppContainer />}>
+              <Route index element={<IndexScreen />} />
+              <Route path="save-self" element={<SaveSelfScreen />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </DispatchContext.Provider>
+    );
   }
 }
 
-function renderContents(state: ZuState) {
-  const { screen } = state;
-  switch (screen) {
-    case "login":
-      return <LoginScreen />;
-    case "gen-passport":
-      return <GenPassportScreen identity={state.identity} />;
-    case "home":
-      return <HomeScreen />;
-    default:
-      return <div>Missing: "{screen}"</div>;
-  }
+function loadInitialState(): ZuState {
+  const self = loadSelf();
+  return {
+    self,
+    screen: self ? "home" : "login",
+  };
 }
 
 const root = createRoot(document.querySelector("#root"));

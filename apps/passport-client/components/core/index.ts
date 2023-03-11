@@ -22,14 +22,3 @@ export const Ellipsis = styled.div`
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-
-export const Container = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  height: 100%;
-  width: 320px;
-  margin: 0 auto;
-  position: relative;
-`;

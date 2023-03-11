@@ -3,6 +3,9 @@ import { Card } from "../src/model/Card";
 import { CardElem } from "./CardElem";
 import { Spacer } from "./core";
 
+/**
+ * Show the user their passport, an overview of cards / PCDs.
+ */
 export function HomeScreen() {
   const cards = React.useMemo(getTestCards, []);
   const [sel, setSel] = React.useState(cards[0]);
