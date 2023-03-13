@@ -9,8 +9,17 @@ export interface Card {
   type: string;
   /** Basic in-wallet display information. */
   display: CardDisplay;
-  /** Cryptographic secret. Interpetation depends on `type`. */
-  secret: string;
+
+  // TODO: underlying secret PCD
+  // TODO: id-specific extra information
+}
+
+export interface CardZID extends Card {
+  type: "zuzalu-id";
+  pcds: {
+    /** Base64-encoded identity-revealing proof PCD */
+    identityRevealingProof: string;
+  };
 }
 
 export interface CardDisplay {

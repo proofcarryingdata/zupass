@@ -2,7 +2,7 @@ import * as React from "react";
 import { useContext, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
-import { Card } from "../../src/model/Card";
+import { Card, CardZID } from "../../src/model/Card";
 import { ZuParticipant } from "../../src/participant";
 import { Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
@@ -21,7 +21,7 @@ export function HomeScreen() {
     }
   });
 
-  const cards = useMemo(() => getTestCards(state.self), [state]);
+  const cards = useMemo(() => getTestCards(state.self), []);
   const [sel, setSel] = React.useState(cards[0]);
 
   if (state.self == null) return null;
@@ -46,17 +46,20 @@ export function HomeScreen() {
 }
 
 function getTestCards(self?: ZuParticipant): Card[] {
-  const c1 = self && {
+  const c1: CardZID | undefined = self && {
     id: "0x1234",
     type: "zuzalu-id",
     display: {
       icon: "🧑‍🦱",
       header: "Zuzalu Resident",
       title: self.name,
-      description: [self.email, self.role, self.residence].join("\n\n"),
+      description: self.email,
       color: "#bcb",
     },
-    secret: "",
+    pcds: {
+      identityRevealingProof:
+        "Integer at purus faucibus nisi maximus dignissim ut non massa. Mauris consectetur viverra enim. Etiam id nulla a ligula rhoncus auctor quis non ex. Duis eget erat id massa placerat suscipit. Vestibulum fermentum purus nec magna laoreet tempor. Duis nec condimentum massa. Nam molestie dolor nibh, ac bibendum metus tempus a. Fusce tempus massa sit amet libero molestie tincidunt.",
+    },
   };
 
   const c2 = {
@@ -69,7 +72,6 @@ function getTestCards(self?: ZuParticipant): Card[] {
       description: "Zero-knowledge proof, holder has an @mit.edu email address",
       color: "#e8bbbb",
     },
-    secret: "",
   };
 
   const c3 = {
@@ -82,7 +84,6 @@ function getTestCards(self?: ZuParticipant): Card[] {
       description: "Sample hackathon API keypair",
       color: "#dca",
     },
-    secret: "",
   };
 
   return [c1, c2, c3].filter((c) => c != null);

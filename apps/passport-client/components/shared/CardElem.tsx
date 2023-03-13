@@ -1,6 +1,8 @@
 import * as React from "react";
+import { useMemo } from "react";
+import QRCode from "react-qr-code";
 import styled from "styled-components";
-import { Card } from "../../src/model/Card";
+import { Card, CardZID } from "../../src/model/Card";
 import { H1, TextEllipsis } from "../core";
 
 /**
@@ -47,20 +49,22 @@ export function CardElem({
 }
 
 function CardBody({ card }: { card: Card }) {
-  const { display } = card;
+  const { type, display } = card;
   return (
-    <CardLine>
-      <div>
-        <H1>{display.icon}</H1>
-      </div>
-      <div>
-        <H1>{display.title}</H1>
-        <p>{display.description}</p>
-      </div>
-    </CardLine>
+    <>
+      <CardLine>
+        <div>
+          <H1>{display.icon}</H1>
+        </div>
+        <div>
+          <H1>{display.title}</H1>
+          <p>{display.description}</p>
+        </div>
+      </CardLine>
+      {type === "zuzalu-id" && <ZuzaluIdBody card={card as CardZID} />}
+    </>
   );
 }
-
 function CardHeader({ card }: { card: Card }) {
   const { display } = card;
   return (
@@ -117,8 +121,21 @@ const CardFull = styled(CardBase)`
   flex-direction: column;
   gap: 16px;
   position: relative;
-  height: 160px;
+  height: 320px;
   &:hover {
     top: -1px;
   }
+`;
+
+function ZuzaluIdBody({ card }: { card: CardZID }) {
+  const style = useMemo(() => ({ width: "160px", height: "160px" }), []);
+  return (
+    <ZIDWrap>
+      <QRCode value={card.pcds.identityRevealingProof} style={style} />
+    </ZIDWrap>
+  );
+}
+
+const ZIDWrap = styled.div`
+  padding: 0 48px;
 `;
