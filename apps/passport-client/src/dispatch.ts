@@ -75,7 +75,12 @@ function doSaveSelf(
 
   // Save to local storage.
   saveSelf(participant);
+
+  // Compute identity-revealing proof.
   update({ self: participant });
+
+  // Redirect to the home page.
+  window.location.hash = "#/";
 }
 
 function clearError(update: ZuUpdate) {

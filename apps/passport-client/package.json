@@ -17,6 +17,7 @@
     "pcd-types": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-qr-code": "^2.0.11",
     "react-router-dom": "^6.9.0",
     "semaphore-group-pcd": "*",
     "semaphore-types": "*",
