@@ -6,7 +6,8 @@
     "dev": "ts-node build.ts dev",
     "build": "ts-node build.ts build",
     "start": "exit 0",
-    "lint": "tsc . --noEmit && eslint . --ext .ts,.tsx"
+    "lint": "tsc . --noEmit && eslint . --ext .ts,.tsx",
+    "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
     "@semaphore-protocol/group": "^3.1.0",
