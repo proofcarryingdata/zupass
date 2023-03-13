@@ -7,8 +7,8 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../src/dispatch";
-import { BigInput, Button, H1, Spacer, TextCenter } from "./core";
+import { DispatchContext } from "../../src/dispatch";
+import { BigInput, Button, H1, Spacer, TextCenter } from "../core";
 
 export function LoginScreen() {
   const [_, dispatch] = useContext(DispatchContext);

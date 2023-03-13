@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Card } from "../src/model/Card";
-import { H1, TextEllipsis } from "./core";
+import { Card } from "../../src/model/Card";
+import { H1, TextEllipsis } from "../core";
 
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise

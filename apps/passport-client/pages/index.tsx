@@ -1,12 +1,12 @@
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { AppContainer } from "../components/core/AppContainer";
-import { HomeScreen } from "../components/HomeScreen";
-import { LoginScreen } from "../components/LoginScreen";
-import { NewPassportScreen } from "../components/NewPassportScreen";
-import { SaveSelfScreen } from "../components/SaveSelfScreen";
-import { SettingsScreen } from "../components/SettingsScreen";
+import { HomeScreen } from "../components/screens/HomeScreen";
+import { LoginScreen } from "../components/screens/LoginScreen";
+import { NewPassportScreen } from "../components/screens/NewPassportScreen";
+import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
+import { SettingsScreen } from "../components/screens/SettingsScreen";
+import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadSelf } from "../src/participant";
 import { ZuState } from "../src/state";

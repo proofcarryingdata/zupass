@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useContext } from "react";
-import { DispatchContext } from "../src/dispatch";
-import { Spacer, TextCenter, TextSecondary } from "./core";
+import { DispatchContext } from "../../src/dispatch";
+import { Spacer, TextCenter, TextSecondary } from "../core";
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
