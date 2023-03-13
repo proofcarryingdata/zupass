@@ -26,10 +26,21 @@ export interface SemaphoreGroupPCDArgs {
 
 export interface SemaphoreGroupPCDClaim {
   group: SemaphoreGroup;
+
   /**
    * Stringified `BigInt`.
    */
-  identityCommitment: string;
+  signal: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  externalNullifier: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  nullifierHash: string;
 }
 
 export interface SemaphoreGroupPCDProof {
@@ -68,7 +79,9 @@ export async function prove(
 
   const claim: SemaphoreGroupPCDClaim = {
     group: serializeSemaphoreGroup(args.group, "name"),
-    identityCommitment: args.identity.commitment.toString(),
+    externalNullifier: args.externalNullifier.toString(),
+    nullifierHash: fullProof.nullifierHash.toString(),
+    signal: args.signal.toString(),
   };
 
   const proof: SemaphoreGroupPCDProof = {
@@ -94,6 +107,10 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+/**
+ * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
+ * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
+ */
 export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDClaim,
   SemaphoreGroupPCDProof,
