@@ -116,6 +116,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDProof,
   SemaphoreGroupPCDArgs
 > = {
+  name: "semaphore-group-signal",
   prove,
   verify,
   serialize,
