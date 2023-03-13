@@ -2,8 +2,11 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AppContainer } from "../components/core/AppContainer";
-import { IndexScreen } from "../components/IndexScreen";
+import { HomeScreen } from "../components/HomeScreen";
+import { LoginScreen } from "../components/LoginScreen";
+import { NewPassportScreen } from "../components/NewPassportScreen";
 import { SaveSelfScreen } from "../components/SaveSelfScreen";
+import { SettingsScreen } from "../components/SettingsScreen";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadSelf } from "../src/participant";
 import { ZuState } from "../src/state";
@@ -22,8 +25,11 @@ class App extends React.Component<{}, ZuState> {
         <HashRouter>
           <Routes>
             <Route path="/" element={<AppContainer />}>
-              <Route index element={<IndexScreen />} />
+              <Route index element={<HomeScreen />} />
+              <Route path="login" element={<LoginScreen />} />
+              <Route path="new-passport" element={<NewPassportScreen />} />
               <Route path="save-self" element={<SaveSelfScreen />} />
+              <Route path="settings" element={<SettingsScreen />} />
             </Route>
           </Routes>
         </HashRouter>
@@ -34,10 +40,7 @@ class App extends React.Component<{}, ZuState> {
 
 function loadInitialState(): ZuState {
   const self = loadSelf();
-  return {
-    self,
-    screen: self ? "home" : "login",
-  };
+  return { self };
 }
 
 const root = createRoot(document.querySelector("#root"));

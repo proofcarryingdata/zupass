@@ -2,6 +2,7 @@ export interface ZuParticipant {
   name: string;
   email: string;
   role: string;
+  residence: string;
 }
 
 export function loadSelf(): ZuParticipant | undefined {

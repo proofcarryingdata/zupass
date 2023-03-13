@@ -24,6 +24,10 @@ export function initZuzaluRoutes(
       const email = req.query.email;
       const commitment = req.query.commitment;
 
+      // TODO: look up participant record
+      const name = "Alice Anon";
+      const role = "resident";
+
       try {
         if (typeof redirect !== "string") {
           return next(
@@ -49,7 +53,17 @@ export function initZuzaluRoutes(
 
         globalGroup.addMember(bigIntCommitment);
 
-        res.redirect(redirect + "?success=true");
+        // TODO: save commitment, new Merkle root to DB
+        const participant = {
+          commitment,
+          email,
+          name,
+          role,
+        };
+        const jsonP = JSON.stringify(participant);
+        console.log(`added new zuzalu participant: ${jsonP}`);
+
+        res.redirect(`${redirect}?success=true&participant=${jsonP}`);
       } catch (e) {
         console.log("error adding new zuzalu participant: ", e);
         res.redirect(redirect + "?success=false");
