@@ -25,6 +25,7 @@
     "next": "^13.1.1",
     "p-queue": "6",
     "passport-interface": "*",
+    "semaphore-group-pcd": "*",
     "pcd-types": "*",
     "pg": "^8.8.0",
     "postgres-migrations": "^5.3.0",
