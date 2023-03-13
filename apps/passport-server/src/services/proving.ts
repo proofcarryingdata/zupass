@@ -13,9 +13,38 @@ import { SemaphoreGroupPCDPackage } from "semaphore-group-pcd";
  */
 const packages: PCDPackage[] = [SemaphoreGroupPCDPackage];
 
-export function prove(proveRequest: ProveRequest): ProveResponse {}
+function getPackage(name: string) {
+  const matching = packages.find((p) => p.name === name);
 
-export function verify(verifyRequest: VerifyRequest): VerifyResponse {}
+  if (matching === undefined) {
+    throw new Error(`no package matching ${name}`);
+  }
+
+  return matching;
+}
+
+export async function prove(
+  proveRequest: ProveRequest
+): Promise<ProveResponse> {
+  const pcdPackage = getPackage(proveRequest.pcdType);
+  const pcd = await pcdPackage.prove(proveRequest.args);
+  const serializedPCD = await pcdPackage.serialize(pcd);
+
+  return {
+    serializedPCD,
+  };
+}
+
+export async function verify(
+  verifyRequest: VerifyRequest
+): Promise<VerifyResponse> {
+  const pcdPackage = getPackage(verifyRequest.pcdType);
+  const deserialized = await pcdPackage.deserialize(
+    verifyRequest.serializedPCD
+  );
+  const verified = await pcdPackage.verify(deserialized);
+  return { verified };
+}
 
 export function getSupportedPCDTypes(): SupportedPCDsResponse {
   return {

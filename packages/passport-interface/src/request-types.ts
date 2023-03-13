@@ -1,10 +1,20 @@
-export interface ProveRequest {}
+export interface ProveRequest {
+  pcdType: string;
+  args: any;
+}
 
-export interface ProveResponse {}
+export interface ProveResponse {
+  serializedPCD: string;
+}
 
-export interface VerifyRequest {}
+export interface VerifyRequest {
+  pcdType: string;
+  serializedPCD: string;
+}
 
-export interface VerifyResponse {}
+export interface VerifyResponse {
+  verified: boolean;
+}
 
 export interface SupportedPCDsResponse {
   names: string[];
