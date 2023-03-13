@@ -1,5 +1,10 @@
 import * as React from "react";
+import { useContext, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { DispatchContext } from "../src/dispatch";
 import { Card } from "../src/model/Card";
+import { ZuParticipant } from "../src/participant";
+import { AppHeader } from "./AppHeader";
 import { CardElem } from "./CardElem";
 import { Spacer } from "./core";
 
@@ -7,11 +12,24 @@ import { Spacer } from "./core";
  * Show the user their passport, an overview of cards / PCDs.
  */
 export function HomeScreen() {
-  const cards = React.useMemo(getTestCards, []);
+  const [state, dispatch] = useContext(DispatchContext);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (state.self == null) {
+      console.log("Redirecting to login screen");
+      navigate("/login");
+    }
+  });
+
+  const cards = useMemo(() => getTestCards(state.self), [state]);
   const [sel, setSel] = React.useState(cards[0]);
+
+  if (state.self == null) return null;
 
   return (
     <>
+      <Spacer h={24} />
+      <AppHeader inset={16} />
       <Spacer h={24} />
       <CardElem
         card={sel}
@@ -27,15 +45,15 @@ export function HomeScreen() {
   );
 }
 
-function getTestCards(): Card[] {
-  const c1 = {
+function getTestCards(self?: ZuParticipant): Card[] {
+  const c1 = self && {
     id: "0x1234",
     type: "zuzalu-id",
     display: {
       icon: "🧑‍🦱",
       header: "Zuzalu Resident",
-      title: "Vitalik Buterin",
-      description: "Zuzalu resident #42",
+      title: self.name,
+      description: [self.email, self.role, self.residence].join("\n\n"),
       color: "#bcb",
     },
     secret: "",
@@ -67,5 +85,5 @@ function getTestCards(): Card[] {
     secret: "",
   };
 
-  return [c1, c2, c3];
+  return [c1, c2, c3].filter((c) => c != null);
 }

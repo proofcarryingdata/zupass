@@ -1,13 +1,17 @@
-import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { Button, Center, Spacer } from "./core";
+import { useContext } from "react";
+import { DispatchContext } from "../src/dispatch";
+import { Spacer, TextCenter, TextSecondary } from "./core";
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
  * verification link.
  */
-export function GenPassportScreen({ identity }: { identity?: Identity }) {
-  let saveSelfPage = window.location.origin;
+export function NewPassportScreen() {
+  const [state] = useContext(DispatchContext);
+  const { identity } = state;
+
+  let saveSelfPage = encodeURIComponent(window.location.origin + "#/save-self");
   const npp = "http://localhost:3002/zuzalu/new-participant";
   const magicLink =
     identity &&
@@ -16,23 +20,23 @@ export function GenPassportScreen({ identity }: { identity?: Identity }) {
   return (
     <>
       <Spacer h={24} />
-      <Center>
+      <TextCenter>
         <img src="/zuzalu.png" alt="Zuzalu logo" width={128} height={128} />
-      </Center>
+      </TextCenter>
       <Spacer h={24} />
-      <p>Generating passport...</p>
-      <p>Sending email...</p>
+      <TextSecondary>
+        <p>Generating passport...</p>
+        <p>Sending email...</p>
+      </TextSecondary>
+      <Spacer h={24} />
       {magicLink && (
         <p>
           Dev mode. <a href={magicLink}>Email magic link.</a>
         </p>
       )}
       <Spacer h={24} />
-      <Button onClick={closePage}>Close Page</Button>
+      <p>Sent. Check your email.</p>
+      <p>You can close this page now.</p>
     </>
   );
-}
-
-function closePage() {
-  window.close();
 }

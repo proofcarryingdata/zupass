@@ -13,12 +13,16 @@ export const H1Center = styled(H1)`
   text-align: center;
 `;
 
-export const Center = styled.div`
+export const TextCenter = styled.div`
   text-align: center;
 `;
 
-export const Ellipsis = styled.div`
+export const TextEllipsis = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+export const TextSecondary = styled.div`
+  color: #666;
 `;

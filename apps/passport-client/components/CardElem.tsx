@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import { Card } from "../src/model/Card";
-import { Ellipsis, H1 } from "./core";
+import { H1, TextEllipsis } from "./core";
 
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
@@ -66,7 +66,7 @@ function CardHeader({ card }: { card: Card }) {
   return (
     <CardLine>
       <CardHeaderIcon>{display.icon}</CardHeaderIcon>
-      <Ellipsis>{display.header}</Ellipsis>
+      <TextEllipsis>{display.header}</TextEllipsis>
     </CardLine>
   );
 }

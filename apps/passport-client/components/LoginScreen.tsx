@@ -8,7 +8,7 @@ import {
 } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../src/dispatch";
-import { BigInput, Button, Center, H1, Spacer } from "./core";
+import { BigInput, Button, H1, Spacer, TextCenter } from "./core";
 
 export function LoginScreen() {
   const [_, dispatch] = useContext(DispatchContext);
@@ -17,7 +17,7 @@ export function LoginScreen() {
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      dispatch({ type: "gen-passport", body: { email } });
+      dispatch({ type: "new-passport", body: { email } });
     },
     [dispatch, email]
   );
@@ -25,11 +25,11 @@ export function LoginScreen() {
   return (
     <div>
       <Spacer h={24} />
-      <Center>
+      <TextCenter>
         <img src="/zuzalu.png" alt="Zuzalu logo" width={128} height={128} />
         <Spacer h={16} />
         <H1>Welcome to Zuzalu</H1>
-      </Center>
+      </TextCenter>
       <Spacer h={24} />
       <p>
         This experimental passport uses zero-knowledge proofs to show that
