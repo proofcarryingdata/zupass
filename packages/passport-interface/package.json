@@ -5,7 +5,8 @@
   "types": "./index.tsx",
   "license": "MIT",
   "scripts": {
-    "lint": "TIMING=1 eslint \"**/*.ts*\""
+    "lint": "TIMING=1 eslint \"**/*.ts*\"",
+    "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
     "@semaphore-protocol/group": "^3.1.0",

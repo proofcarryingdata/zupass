@@ -6,7 +6,8 @@
     "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev src/main.ts",
     "build": "exit 0",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "lint": "exit 0"
+    "lint": "exit 0",
+    "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
