@@ -1,11 +1,21 @@
 import * as React from "react";
+import { useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import styled from "styled-components";
+import { DispatchContext } from "../../src/dispatch";
+import { ErrorPopup } from "./ErrorPopup";
 
 export function AppContainer() {
+  const [state, dispatch] = React.useContext(DispatchContext);
+  const onClose = useCallback(
+    () => dispatch({ type: "clear-error" }),
+    [dispatch]
+  );
+
   return (
     <Container>
       <Outlet />
+      {state.error && <ErrorPopup error={state.error} onClose={onClose} />}
     </Container>
   );
 }

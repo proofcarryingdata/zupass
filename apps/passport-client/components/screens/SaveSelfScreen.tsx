@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useContext, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { DispatchContext } from "../src/dispatch";
-import { Spacer } from "./core";
+import { DispatchContext } from "../../src/dispatch";
+import { Spacer } from "../core";
 
 export function SaveSelfScreen() {
   const location = useLocation();

@@ -1,4 +1,8 @@
 export interface ZuParticipant {
+  /** Semaphor public commitment */
+  commitment: string;
+
+  /** Participant metadata */
   name: string;
   email: string;
   role: string;

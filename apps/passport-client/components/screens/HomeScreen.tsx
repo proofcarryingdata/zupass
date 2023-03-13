@@ -1,12 +1,12 @@
 import * as React from "react";
 import { useContext, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { DispatchContext } from "../src/dispatch";
-import { Card } from "../src/model/Card";
-import { ZuParticipant } from "../src/participant";
-import { AppHeader } from "./AppHeader";
-import { CardElem } from "./CardElem";
-import { Spacer } from "./core";
+import { DispatchContext } from "../../src/dispatch";
+import { Card } from "../../src/model/Card";
+import { ZuParticipant } from "../../src/participant";
+import { Spacer } from "../core";
+import { AppHeader } from "../shared/AppHeader";
+import { CardElem } from "../shared/CardElem";
 
 /**
  * Show the user their passport, an overview of cards / PCDs.

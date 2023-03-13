@@ -1,7 +1,6 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { saveSelf, ZuParticipant } from "./participant";
-import { doProveSemaphore } from "./ProveSemaphore";
 import { ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
@@ -14,11 +13,11 @@ export type Action =
       };
     }
   | {
-      type: "nav-scan-and-verify";
-    }
-  | {
       type: "save-self";
       participant: ZuParticipant;
+    }
+  | {
+      type: "clear-error";
     };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
@@ -35,10 +34,10 @@ export async function dispatch(
   switch (action.type) {
     case "new-passport":
       return genPassport(state, update);
-    case "nav-scan-and-verify":
-      return doProveSemaphore(); // TODO
     case "save-self":
-      return doSaveSelf(action.participant, update);
+      return doSaveSelf(action.participant, state, update);
+    case "clear-error":
+      return clearError(update);
     default:
       console.error("Unknown action type", action);
   }
@@ -55,8 +54,31 @@ async function genPassport(_: ZuState, update: ZuUpdate) {
   update({ identity });
 }
 
-function doSaveSelf(participant: ZuParticipant, update: ZuUpdate) {
+function doSaveSelf(
+  participant: ZuParticipant,
+  state: ZuState,
+  update: ZuUpdate
+) {
+  // Verify that the identity is correct.
+  const { identity } = state;
+  if (
+    identity == null ||
+    identity.commitment.toString() !== participant.commitment
+  ) {
+    update({
+      error: {
+        title: "Invalid identity",
+        message: "Something went wrong saving your passport. Contact support.",
+      },
+    });
+  }
+
   // Save to local storage.
   saveSelf(participant);
   update({ self: participant });
+}
+
+function clearError(update: ZuUpdate) {
+  window.location.hash = "#/";
+  update({ error: undefined });
 }

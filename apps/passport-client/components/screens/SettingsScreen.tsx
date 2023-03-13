@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { AppHeader } from "./AppHeader";
-import { Button, H1, Spacer } from "./core";
+import { Button, H1, Spacer } from "../core";
+import { AppHeader } from "../shared/AppHeader";
 
 export function SettingsScreen() {
   const onReset = useCallback(() => {
