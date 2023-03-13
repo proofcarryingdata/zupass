@@ -4,7 +4,7 @@ export interface PCD<C = unknown, P = unknown> {
   proof: P;
 }
 
-export interface PCDPackage<C, P, A> {
+export interface PCDPackage<C = unknown, P = unknown, A = unknown> {
   name: string;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;
