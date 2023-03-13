@@ -33,4 +33,16 @@ describe("semaphore group identity should work", function () {
     const verified = await verify(pcd);
     assert.equal(verified, true);
   });
+
+  it("should not verify an incorrect proof", async function () {
+    // TODO:
+  });
+
+  it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
+    // TODO:
+  });
+
+  it("verifying a deserialized PCD that is valid should result in a correct verification", async function () {
+    // TODO:
+  });
 });
