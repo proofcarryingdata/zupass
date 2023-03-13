@@ -5,6 +5,7 @@ export interface PCD<C = unknown, P = unknown> {
 }
 
 export interface PCDPackage<C, P, A> {
+  name: string;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;
   serialize(pcd: PCD<C, P>): Promise<string>;
