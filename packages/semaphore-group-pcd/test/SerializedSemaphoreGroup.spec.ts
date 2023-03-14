@@ -4,9 +4,9 @@ import assert from "assert";
 import {
   deserializeSemaphoreGroup,
   serializeSemaphoreGroup,
-} from "../src/SemaphoreTypes";
+} from "../src/SerializedSemaphoreGroup";
 
-describe("Semaphore Group", function () {
+describe("Serializing Semaphore groups", function () {
   it("should serialize and deserialize properly", async function () {
     const groupName = "GroupName";
     const originalGroup = new Group(1, 16);

@@ -13,8 +13,7 @@
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
     "json-bigint": "^1.0.0",
-    "pcd-types": "*",
-    "semaphore-types": "*"
+    "pcd-types": "*"
   },
   "devDependencies": {
     "@types/expect": "^24.3.0",

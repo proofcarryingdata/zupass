@@ -1,6 +1,6 @@
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
-import { serializeSemaphoreGroup } from "semaphore-types";
+import { serializeSemaphoreGroup } from "semaphore-group-pcd";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
