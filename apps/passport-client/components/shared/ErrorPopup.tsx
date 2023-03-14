@@ -1,17 +1,13 @@
 import * as React from "react";
 import styled from "styled-components";
+import { ZuError } from "../../src/state";
 import { Button, H1, Spacer } from "../core";
-
-interface Error {
-  title: string;
-  message: string;
-}
 
 export function ErrorPopup({
   error,
   onClose,
 }: {
-  error: Error;
+  error: ZuError;
   onClose: () => void;
 }) {
   return (
@@ -33,7 +29,6 @@ const ErrorWrap = styled.div`
   top: 24px;
   left: 0;
   right: 0;
-  bottom: 0;
   border-radius: 24px;
   padding: 24px;
   background-color: #fee;

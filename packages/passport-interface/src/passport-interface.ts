@@ -1,6 +1,6 @@
 import { PCD } from "pcd-types";
 
-enum PCDRequestType {
+export enum PCDRequestType {
   Get = "Get",
   Add = "Add",
 }
@@ -33,7 +33,8 @@ export function constructPassportPcdGetRequestUrl(
     params: parameters,
     pcdType,
   };
-  return `${passportOrigin}?request=${encodeURIComponent(JSON.stringify(req))}`;
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/prove?request=${encReq}`;
 }
 
 export function constructPassportPcdAddRequestUrl(
@@ -49,28 +50,28 @@ export function constructPassportPcdAddRequestUrl(
   return `${passportOrigin}?request=${JSON.stringify(req)}`;
 }
 
-export function passportReceiveRequest(
-  url: string
-): PCDGetRequest | PCDAddRequest | undefined {
-  const URL = new URLSearchParams(url);
+// export function passportReceiveRequest(
+//   url: string
+// ): PCDGetRequest | PCDAddRequest | undefined {
+//   const URL = new URLSearchParams(url);
 
-  const request = JSON.parse(URL.get("request") || "");
+//   const request = JSON.parse(URL.get("request") || "");
 
-  if (isPassportAddRequest(request)) {
-    return request;
-  }
+//   if (isPassportAddRequest(request)) {
+//     return request;
+//   }
 
-  if (isPassportGetRequest(request)) {
-    return request;
-  }
+//   if (isPassportGetRequest(request)) {
+//     return request;
+//   }
 
-  return undefined;
-}
+//   return undefined;
+// }
 
-export function isPassportGetRequest(req: any): req is PCDGetRequest {
-  return req.type === PCDRequestType.Get;
-}
+// export function isPassportGetRequest(req: any): req is PCDGetRequest {
+//   return req.type === PCDRequestType.Get;
+// }
 
-export function isPassportAddRequest(req: any): req is PCDAddRequest {
-  return req.type === PCDRequestType.Add;
-}
+// export function isPassportAddRequest(req: any): req is PCDAddRequest {
+//   return req.type === PCDRequestType.Add;
+// }

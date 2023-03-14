@@ -13,7 +13,6 @@ export function SaveSelfScreen() {
 
   useEffect(() => {
     // Save participant to local storage, then redirect to home screen.
-    console.log("Save self", participant);
     dispatch({ type: "save-self", participant });
   }, []);
 
