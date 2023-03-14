@@ -1,13 +1,14 @@
 import * as React from "react";
-import { useCallback } from "react";
+import { useCallback, useContext } from "react";
+import { DispatchContext } from "../../src/dispatch";
 import { Button, H1, Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
 
 export function SettingsScreen() {
+  const [_, dispatch] = useContext(DispatchContext);
   const onReset = useCallback(() => {
     if (window.confirm("Are you sure? This will delete your data.")) {
-      window.localStorage.clear();
-      window.location.hash = "#/";
+      dispatch({ type: "reset-passport" });
     }
   }, []);
 

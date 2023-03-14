@@ -1,7 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { saveSelf, ZuParticipant } from "./participant";
-import { ZuState } from "./state";
+import { ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -17,7 +17,14 @@ export type Action =
       participant: ZuParticipant;
     }
   | {
+      type: "error";
+      error: ZuError;
+    }
+  | {
       type: "clear-error";
+    }
+  | {
+      type: "reset-passport";
     };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
@@ -36,8 +43,12 @@ export async function dispatch(
       return genPassport(state, update);
     case "save-self":
       return doSaveSelf(action.participant, state, update);
+    case "error":
+      return update({ error: action.error });
     case "clear-error":
       return clearError(update);
+    case "reset-passport":
+      return resetPassport(update);
     default:
       console.error("Unknown action type", action);
   }
@@ -51,6 +62,7 @@ async function genPassport(_: ZuState, update: ZuUpdate) {
   // Generate a fresh identity, save in local storage.
   const identity = new Identity();
   console.log("Created identity", identity.toString());
+  window.localStorage["identity"] = identity.toString();
   update({ identity });
 }
 
@@ -61,6 +73,7 @@ function doSaveSelf(
 ) {
   // Verify that the identity is correct.
   const { identity } = state;
+  console.log("Save self", identity, participant);
   if (
     identity == null ||
     identity.commitment.toString() !== participant.commitment
@@ -86,4 +99,10 @@ function doSaveSelf(
 function clearError(update: ZuUpdate) {
   window.location.hash = "#/";
   update({ error: undefined });
+}
+
+function resetPassport(update: ZuUpdate) {
+  window.localStorage.clear();
+  window.location.hash = "#/";
+  update({ self: undefined });
 }

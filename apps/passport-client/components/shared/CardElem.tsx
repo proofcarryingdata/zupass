@@ -131,7 +131,11 @@ function ZuzaluIdBody({ card }: { card: CardZID }) {
   const style = useMemo(() => ({ width: "160px", height: "160px" }), []);
   return (
     <ZIDWrap>
-      <QRCode value={card.pcds.identityRevealingProof} style={style} />
+      <QRCode
+        bgColor={card.display.color}
+        value={card.pcds.identityRevealingProof}
+        style={style}
+      />
     </ZIDWrap>
   );
 }

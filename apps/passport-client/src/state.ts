@@ -4,8 +4,10 @@ import { ZuParticipant } from "./participant";
 export interface ZuState {
   identity?: Identity;
   self?: ZuParticipant;
-  error?: {
-    title: string;
-    message: string;
-  };
+  error?: ZuError;
+}
+
+export interface ZuError {
+  title: string;
+  message: string;
 }

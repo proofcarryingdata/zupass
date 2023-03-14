@@ -74,6 +74,8 @@ export function initZuzaluRoutes(
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
     // TODO: check this group actually exists
     const semaphoreId = req.params.id;
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.json(
       JSON.stringify(serializeSemaphoreGroup(globalGroup, "Zuzalu Residents"))
     );

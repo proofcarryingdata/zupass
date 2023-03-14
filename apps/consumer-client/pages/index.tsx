@@ -1,4 +1,5 @@
 import { constructPassportPcdGetRequestUrl } from "passport-interface";
+import { useEffect, useState } from "react";
 
 export default function Web() {
   const url = constructPassportPcdGetRequestUrl(
@@ -10,6 +11,12 @@ export default function Web() {
     }
   );
 
+  const [proof, setProof] = useState("");
+  useEffect(() => {
+    const parts = window.location.search.split("=");
+    if (parts[0] === "?proof") setProof(parts[1]);
+  }, [setProof]);
+
   return (
     <div>
       <h1>Welcome to Zuzalu!</h1>
@@ -20,6 +27,12 @@ export default function Web() {
       >
         connect passport
       </button>
+      {proof !== "" && (
+        <div>
+          <h2>Verifying proof...</h2>
+          <pre>{proof}</pre>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,9 +1,12 @@
+import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
+import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
+import { ProveScreen } from "../components/screens/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import { SettingsScreen } from "../components/screens/SettingsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
@@ -30,6 +33,8 @@ class App extends React.Component<{}, ZuState> {
               <Route path="new-passport" element={<NewPassportScreen />} />
               <Route path="save-self" element={<SaveSelfScreen />} />
               <Route path="settings" element={<SettingsScreen />} />
+              <Route path="prove" element={<ProveScreen />} />
+              <Route path="*" element={<MissingScreen />} />
             </Route>
           </Routes>
         </HashRouter>
@@ -40,7 +45,9 @@ class App extends React.Component<{}, ZuState> {
 
 function loadInitialState(): ZuState {
   const self = loadSelf();
-  return { self };
+  const identityStr = window.localStorage["identity"];
+  const identity = identityStr ? new Identity(identityStr) : undefined;
+  return { self, identity };
 }
 
 const root = createRoot(document.querySelector("#root"));
