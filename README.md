@@ -29,6 +29,7 @@ The passport has its own client and server, and we have an example application s
 - `passport-interface`: Implements the glue code between different parties using the PCD SDK
   - `passport-interface.ts` is glue between third-party applications and `passport-client`
   - `request-type.ts` is glue between `passport-client` and `passport-server`
+- `eslint-config-custom` and `tsconfig` are helper packages for turborepo
 
 ## Production Deployment
 
