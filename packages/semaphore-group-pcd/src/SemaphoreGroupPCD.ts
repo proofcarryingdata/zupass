@@ -7,7 +7,10 @@ import {
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { PCD, PCDPackage } from "pcd-types";
-import { SemaphoreGroup, serializeSemaphoreGroup } from "semaphore-types";
+import {
+  SerializedSemaphoreGroup,
+  serializeSemaphoreGroup,
+} from "./SerializedSemaphoreGroup";
 
 export interface SemaphoreGroupPCDArgs {
   group: Group;
@@ -25,7 +28,7 @@ export interface SemaphoreGroupPCDArgs {
 }
 
 export interface SemaphoreGroupPCDClaim {
-  group: SemaphoreGroup;
+  group: SerializedSemaphoreGroup;
 
   /**
    * Stringified `BigInt`.

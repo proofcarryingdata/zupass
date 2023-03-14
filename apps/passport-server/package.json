@@ -34,7 +34,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "semaphore-group-pcd": "*",
-    "semaphore-types": "*",
     "ts-node": "^10.9.1",
     "ui": "*",
     "uuid": "^9.0.0"
