@@ -1,6 +1,6 @@
 import { Group } from "@semaphore-protocol/group";
 
-export interface SemaphoreGroup {
+export interface SerializedSemaphoreGroup {
   id: string;
   name: string;
   members: string[];
@@ -10,7 +10,7 @@ export interface SemaphoreGroup {
 export function serializeSemaphoreGroup(
   group: Group,
   name: string
-): SemaphoreGroup {
+): SerializedSemaphoreGroup {
   return {
     id: group.id.toString(),
     name,
@@ -19,7 +19,9 @@ export function serializeSemaphoreGroup(
   };
 }
 
-export function deserializeSemaphoreGroup(serializedGroup: SemaphoreGroup) {
+export function deserializeSemaphoreGroup(
+  serializedGroup: SerializedSemaphoreGroup
+) {
   const group = new Group(BigInt(serializedGroup.id), serializedGroup.depth);
   group.addMembers(serializedGroup.members.map((m) => BigInt(m)));
   return group;

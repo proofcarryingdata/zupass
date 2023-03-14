@@ -12,8 +12,8 @@ import { Identity } from "@semaphore-protocol/identity";
 import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
+  SerializedSemaphoreGroup,
 } from "semaphore-group-pcd";
-import { SemaphoreGroup } from "semaphore-types";
 
 export function ProveScreen() {
   const location = useLocation();
@@ -53,13 +53,13 @@ export function ProveScreen() {
 
 function ProveSemaGroupSig({ req }: { req: PCDReqGetSemaGroupSig }) {
   // Load semaphore group
-  const [group, setGroup] = useState<SemaphoreGroup>(null);
+  const [group, setGroup] = useState<SerializedSemaphoreGroup>(null);
   useEffect(() => {
     const fetchGroup = async () => {
       const res = await fetch(req.params.groupUrl);
       const group = JSON.parse(await res.json());
       console.log("Got semaphore group", group);
-      setGroup(group as SemaphoreGroup);
+      setGroup(group as SerializedSemaphoreGroup);
     };
     fetchGroup().catch(console.error);
   }, []);
@@ -117,7 +117,7 @@ const LineWrap = styled.div`
   margin-bottom: 16px;
 `;
 
-async function prove(identity: Identity, semaGroup: SemaphoreGroup) {
+async function prove(identity: Identity, semaGroup: SerializedSemaphoreGroup) {
   const { prove, serialize } = SemaphoreGroupPCDPackage;
 
   const group = new Group(BigInt(semaGroup.id), semaGroup.depth);
