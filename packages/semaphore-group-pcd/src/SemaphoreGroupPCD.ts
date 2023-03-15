@@ -1,6 +1,14 @@
-import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
+import {
+  BigIntArgument,
+  ObjectArgument,
+  PCD,
+  PCDArgument,
+  PCDArguments,
+  PCDPackage,
+  SerializedPCD,
+  StringArgument,
+} from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   FullProof,
   generateProof,
@@ -8,25 +16,25 @@ import {
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import {
+  deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
-  serializeSemaphoreGroup,
 } from "./SerializedSemaphoreGroup";
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 
-export interface SemaphoreGroupPCDArgs {
-  group: Group;
-  identity: Identity;
-  externalNullifier: bigint;
-  signal: bigint;
+export interface SemaphoreGroupPCDArgs extends PCDArguments {
+  group: ObjectArgument<SerializedSemaphoreGroup>;
+  identity: PCDArgument<SemaphoreGroupPCD>;
+  externalNullifier: BigIntArgument;
+  signal: BigIntArgument;
   // TODO: how do we distribute these in-package, so that consumers
   // of the package don't have to copy-paste these artifacts?
   // TODO: how do we account for different versions of the same type
   // of artifact? eg. this one is parameterized by group size. Should
   // we pre-generate a bunch of artifacts per possible group size?
   // Should we do code-gen?
-  zkeyFilePath: string;
-  wasmFilePath: string;
+  zkeyFilePath: StringArgument;
+  wasmFilePath: StringArgument;
 }
 
 export interface SemaphoreGroupPCDClaim {
@@ -71,19 +79,33 @@ export class SemaphoreGroupPCD
 export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
+  const serializedIdentityPCD = args.identity.value?.pcd;
+  if (!serializedIdentityPCD) {
+    throw new Error("cannot make group proof: missing semaphore identity PCD");
+  }
+  const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
+    serializedIdentityPCD
+  );
+
+  const serializedGroup = args.group.value;
+  if (!serializedGroup) {
+    throw new Error("cannot make group proof: missing semaphore group");
+  }
+  const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
+
   const fullProof = await generateProof(
-    args.identity,
-    args.group,
-    args.externalNullifier,
-    args.signal,
+    identityPCD.claim.identity,
+    deserializedGroup,
+    args.externalNullifier.value!,
+    args.signal.value!,
     {
-      zkeyFilePath: args.zkeyFilePath,
-      wasmFilePath: args.wasmFilePath,
+      zkeyFilePath: args.zkeyFilePath.value!,
+      wasmFilePath: args.wasmFilePath.value!,
     }
   );
 
   const claim: SemaphoreGroupPCDClaim = {
-    group: serializeSemaphoreGroup(args.group, "name"),
+    group: serializedGroup,
     externalNullifier: args.externalNullifier.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
     signal: args.signal.toString(),

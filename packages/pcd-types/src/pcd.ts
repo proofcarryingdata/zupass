@@ -4,7 +4,7 @@ export interface PCD<C = unknown, P = unknown> {
   proof: P;
 }
 
-export interface SerializedPCD {
+export interface SerializedPCD<T extends PCD = PCD> {
   type: string;
   pcd: string;
 }
@@ -18,53 +18,73 @@ export interface PCDPackage<C = unknown, P = unknown, A = unknown> {
 }
 
 export interface PCDArguments {
-  [name: string]: Argument;
+  [name: string]: Argument<any, any>;
 }
 
-export enum ArgumentType {
+export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
+  type: T;
+  specificType: U;
+}
+
+export enum ArgumentTypeName {
   String = "String",
   Number = "Number",
   BigInt = "BigInt",
   Boolean = "Boolean",
   Object = "Object",
   PCD = "PCD",
+  Unknown = "Unknown",
 }
 
-export interface Argument<Type = unknown, ValueType = unknown> {
-  type: Type;
+export interface Argument<
+  TypeName extends ArgumentTypeName,
+  ValueType = unknown
+> {
+  argumentType: TypeName;
   value?: ValueType;
   remoteUrl?: string;
   userProvided?: boolean;
 }
 
-export type StringArgument = Argument<string, ArgumentType.String>;
-export function isStringArgument(arg: Argument): arg is StringArgument {
-  return arg.type === ArgumentType.String;
+export type StringArgument = Argument<ArgumentTypeName.String, string>;
+export function isStringArgument(
+  arg: Argument<any, unknown>
+): arg is StringArgument {
+  return arg.argumentType === ArgumentTypeName.String;
 }
 
-export type NumberArgument = Argument<string, ArgumentType.Number>;
-export function isNumberArgument(arg: Argument): arg is NumberArgument {
-  return arg.type === ArgumentType.Number;
+export type NumberArgument = Argument<ArgumentTypeName.Number, string>;
+export function isNumberArgument(
+  arg: Argument<any, unknown>
+): arg is NumberArgument {
+  return arg.argumentType === ArgumentTypeName.Number;
 }
 
-export type BigIntArgument = Argument<string, ArgumentType.BigInt>;
-export function isBigIntArgument(arg: Argument): arg is BigIntArgument {
-  return arg.type === ArgumentType.BigInt;
+export type BigIntArgument = Argument<ArgumentTypeName.BigInt, string>;
+export function isBigIntArgument(
+  arg: Argument<any, unknown>
+): arg is BigIntArgument {
+  return arg.argumentType === ArgumentTypeName.BigInt;
 }
 
-export type BooleanArgument = Argument<string, ArgumentType.Boolean>;
-export function isBooleanArgument(arg: Argument): arg is BooleanArgument {
-  return arg.type === ArgumentType.Boolean;
+export type BooleanArgument = Argument<ArgumentTypeName.Boolean, string>;
+export function isBooleanArgument(
+  arg: Argument<any, unknown>
+): arg is BooleanArgument {
+  return arg.argumentType === ArgumentTypeName.Boolean;
 }
 
-export type ObjectArgument<T> = Argument<T, ArgumentType.Object>;
+export type ObjectArgument<T> = Argument<ArgumentTypeName.Object, T>;
 export function isObjectArgument(
-  arg: Argument
+  arg: Argument<any, unknown>
 ): arg is ObjectArgument<unknown> {
-  return arg.type === ArgumentType.Boolean;
+  return arg.argumentType === ArgumentTypeName.Boolean;
 }
 
-export type PCDArgument = Argument<string, ArgumentType.PCD>;
-export function isPCDArgument(arg: Argument): arg is PCDArgument {
-  return arg.type === ArgumentType.PCD;
+export type PCDArgument<T extends PCD = PCD> = Argument<
+  ArgumentTypeName.PCD,
+  SerializedPCD<T>
+>;
+export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
+  return arg.argumentType === ArgumentTypeName.PCD;
 }

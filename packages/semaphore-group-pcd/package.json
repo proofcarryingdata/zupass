@@ -12,6 +12,7 @@
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
+    "@pcd/semaphore-identity-pcd": "*",
     "json-bigint": "^1.0.0",
     "@pcd/pcd-types": "*"
   },
