@@ -64,15 +64,17 @@ export interface SemaphoreGroupPCDProof {
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
 {
-  id = uuid();
   type = SemaphoreGroupPCDTypeName;
   claim: SemaphoreGroupPCDClaim;
   proof: SemaphoreGroupPCDProof;
+  id: string;
 
   public constructor(
+    id: string,
     claim: SemaphoreGroupPCDClaim,
     proof: SemaphoreGroupPCDProof
   ) {
+    this.id = id;
     this.claim = claim;
     this.proof = proof;
   }
@@ -81,6 +83,8 @@ export class SemaphoreGroupPCD
 export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
+  console.log("ARGS", args);
+
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
     throw new Error("cannot make group proof: missing semaphore identity PCD");
@@ -117,7 +121,7 @@ export async function prove(
     proof: fullProof,
   };
 
-  return new SemaphoreGroupPCD(claim, proof);
+  return new SemaphoreGroupPCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {

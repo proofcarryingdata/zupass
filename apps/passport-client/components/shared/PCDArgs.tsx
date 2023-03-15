@@ -11,6 +11,7 @@ import {
   isPCDArgument,
   isStringArgument,
   NumberArgument,
+  PCD,
   PCDArgument,
   PCDPackage,
   StringArgument,
@@ -257,6 +258,7 @@ export function ObjectArgInput<T extends PCDPackage>({
 }) {
   const [loading, setLoading] = useState(arg.remoteUrl !== undefined);
 
+  // TODO: make this possible for all types, not just obj? unless...
   const load = useCallback(async () => {
     const res = await fetch(arg.remoteUrl);
     const remoteObject = JSON.parse(await res.json());
@@ -311,23 +313,47 @@ export function PCDArgInput<T extends PCDPackage>({
   setArgs: (args: ArgsOf<T>) => void;
   pcdCollection: PCDCollection;
 }) {
+  const [value, setValue] = useState<PCD | undefined>(undefined);
+
   const onChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
-      args[argName].value = e.target.value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+    async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      console.log("on change", e.target.value);
+      const id = e.target.value;
+      const pcd = pcdCollection.getById(id);
+
+      if (pcd) {
+        const serialized = await pcdCollection.serialize(pcd);
+        args[argName].value = serialized;
+        setArgs(JSON.parse(JSON.stringify(args)));
+      }
     },
     [args, setArgs]
   );
 
+  useEffect(() => {
+    async function doThing() {
+      if (arg.value !== undefined) {
+        const parsed = await pcdCollection.deserialize(arg.value);
+        console.log("parsed", parsed);
+        setValue(parsed);
+      }
+    }
+
+    doThing();
+  }, [arg.value]);
+
+  useEffect(() => {
+    console.log("value", value);
+  }, [value]);
+
   return (
     <ArgContainer>
       {argName}:
-      <select>
+      <select value={value?.id} onChange={onChange}>
         <option value={"none"}>select</option>
         {pcdCollection.getAll().map((pcd) => {
           return <option value={pcd.id}>{pcd.type}</option>;
-        })}{" "}
+        })}
       </select>
     </ArgContainer>
   );

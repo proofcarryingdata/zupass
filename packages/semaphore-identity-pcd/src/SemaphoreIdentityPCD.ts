@@ -18,21 +18,22 @@ export type SemaphoreIdentityPCDProof = undefined;
 export class SemaphoreIdentityPCD
   implements PCD<SemaphoreIdentityPCDClaim, SemaphoreIdentityPCDProof>
 {
-  id = uuid();
   type = SemaphoreIdentityPCDTypeName;
   claim: SemaphoreIdentityPCDClaim;
   proof: SemaphoreIdentityPCDProof;
+  id: string;
 
-  public constructor(claim: SemaphoreIdentityPCDClaim) {
+  public constructor(id: string, claim: SemaphoreIdentityPCDClaim) {
     this.claim = claim;
     this.proof = undefined;
+    this.id = id;
   }
 }
 
 export async function prove(
   args: SemaphoreIdentityPCDArgs
 ): Promise<SemaphoreIdentityPCD> {
-  return new SemaphoreIdentityPCD({ identity: args.identity });
+  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity });
 }
 
 export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
@@ -46,6 +47,7 @@ export async function serialize(
     type: SemaphoreIdentityPCDTypeName,
     pcd: JSONBig.stringify({
       type: pcd.type,
+      id: pcd.id,
       identity: pcd.claim.identity.toString(),
     }),
   };
@@ -55,7 +57,7 @@ export async function deserialize(
   serialized: string
 ): Promise<SemaphoreIdentityPCD> {
   const parsed = JSONBig.parse(serialized);
-  return new SemaphoreIdentityPCD({
+  return new SemaphoreIdentityPCD(parsed.id, {
     identity: new Identity(parsed.identity),
   });
 }
