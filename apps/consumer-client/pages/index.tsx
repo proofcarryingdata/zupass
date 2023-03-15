@@ -19,7 +19,8 @@ export default function Web() {
     {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
-        userProvided: true,
+        userProvided: false,
+        value: "1",
       },
       group: {
         argumentType: ArgumentTypeName.Object,
@@ -39,10 +40,14 @@ export default function Web() {
       wasmFilePath: {
         argumentType: ArgumentTypeName.String,
         userProvided: false,
+        // TODO: pass in via package config rather than as argument
+        value: "/semaphore-artifacts/16.zkey",
       },
       zkeyFilePath: {
         argumentType: ArgumentTypeName.String,
         userProvided: false,
+        // TODO: pass in via package config rather than as argument
+        value: "/semaphore-artifacts/16.zkey",
       },
     }
   );
