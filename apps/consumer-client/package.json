@@ -13,6 +13,7 @@
     "next": "^13.1.1",
     "@pcd/passport-interface": "*",
     "@pcd/pcd-types": "*",
+    "@pcd/semaphore-group-pcd": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.6",
