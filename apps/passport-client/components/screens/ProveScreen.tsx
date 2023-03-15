@@ -1,10 +1,10 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import * as React from "react";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext, Dispatcher } from "../../src/dispatch";
-import { H1, Spacer } from "../core";
+import { Button, H1, Spacer } from "../core";
 
 import { title } from "process";
 import { AppHeader } from "../shared/AppHeader";
@@ -12,24 +12,20 @@ import { PCDArgs } from "../shared/PCDArgs";
 
 export function ProveScreen() {
   const location = useLocation();
-  const [_, dispatch] = useContext(DispatchContext);
-
   const params = new URLSearchParams(location.search);
+  const [state, dispatch] = useContext(DispatchContext);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(request.args)));
-
-  useEffect(() => {
-    console.log(args);
-  }, [args]);
-
-  console.log("Prove request", request);
+  const pcdPackage = state.pcds.getPackage(request.pcdType);
+  const onProveClick = useCallback(async () => {
+    const proof = await pcdPackage.prove(args);
+    console.log(proof);
+  }, []);
 
   if (request.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     return null;
   }
-
-  const pcdPackage = _.pcds.getPackage(request.pcdType);
 
   return (
     <ProveWrap>
@@ -40,7 +36,10 @@ export function ProveScreen() {
       <Spacer h={24} />
       {request.pcdType}
       <pre>{JSON.stringify(args, null, 2)}</pre>
-      <PCDArgs args={args} setArgs={setArgs} />
+      <PCDArgs args={args} setArgs={setArgs} pcdCollection={state.pcds} />
+      <Spacer h={16} />
+      <Button onClick={onProveClick}>PROVE</Button>
+      <Spacer h={64} />
     </ProveWrap>
   );
 

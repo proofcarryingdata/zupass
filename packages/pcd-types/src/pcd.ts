@@ -1,4 +1,5 @@
 export interface PCD<C = unknown, P = unknown> {
+  id: string;
   type: string;
   claim: C;
   proof: P;

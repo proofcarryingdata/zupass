@@ -39,6 +39,10 @@ export class PCDCollection {
     this.pcds.push(...pcds);
   }
 
+  public getAll(): PCD[] {
+    return this.pcds;
+  }
+
   public static async deserialize(
     packages: PCDPackage[],
     serializedPCDs: SerializedPCD[]

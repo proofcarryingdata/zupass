@@ -15,6 +15,7 @@ import {
   verifyProof,
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import {
   deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
@@ -63,6 +64,7 @@ export interface SemaphoreGroupPCDProof {
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
 {
+  id = uuid();
   type = SemaphoreGroupPCDTypeName;
   claim: SemaphoreGroupPCDClaim;
   proof: SemaphoreGroupPCDProof;
