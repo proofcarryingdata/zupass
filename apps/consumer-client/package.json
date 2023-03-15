@@ -10,12 +10,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@semaphore-protocol/group": "^3.2.3",
     "next": "^13.1.1",
     "@pcd/passport-interface": "*",
     "@pcd/pcd-types": "*",
     "@pcd/semaphore-group-pcd": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "semaphore-group-pcd": "*",
     "styled-components": "^5.3.6",
     "ui": "*"
   },
