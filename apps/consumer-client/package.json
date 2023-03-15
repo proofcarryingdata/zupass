@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "next": "^13.1.1",
-    "passport-interface": "*",
-    "pcd-types": "*",
+    "@pcd/passport-interface": "*",
+    "@pcd/pcd-types": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.6",
@@ -26,8 +26,8 @@
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
     "eslint": "7.32.0",
-    "eslint-config-custom": "*",
-    "tsconfig": "*",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
     "typescript": "^4.5.3"
   }
 }

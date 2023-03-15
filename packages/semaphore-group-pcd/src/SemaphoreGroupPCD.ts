@@ -1,3 +1,4 @@
+import { PCD, PCDPackage } from "@pcd/pcd-types";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import {
@@ -6,7 +7,6 @@ import {
   verifyProof,
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
-import { PCD, PCDPackage } from "pcd-types";
 import {
   SerializedSemaphoreGroup,
   serializeSemaphoreGroup,

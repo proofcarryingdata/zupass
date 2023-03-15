@@ -1,5 +1,5 @@
+import { ProveRequest, VerifyRequest } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
-import { ProveRequest, VerifyRequest } from "passport-interface";
 import { getSupportedPCDTypes, prove, verify } from "../../services/proving";
 import { ApplicationContext } from "../../types";
 

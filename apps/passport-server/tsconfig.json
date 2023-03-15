@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/server.json",
+  "extends": "@pcd/tsconfig/server.json",
   "include": ["**/*.ts", "**/*.d.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
