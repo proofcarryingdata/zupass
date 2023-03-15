@@ -1811,6 +1811,17 @@
     js-sha512 "^0.8.0"
     poseidon-lite "^0.1.0"
 
+"@semaphore-protocol/identity@^3.2.3":
+  version "3.2.3"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.2.3.tgz#7ff18fffb1da0edd78a2c92d1ecd0356e06d6d14"
+  integrity sha512-aj4hSaFZbqlBbXwiyuiOcu9mVWmRoYqoBu/ReMegU98AwyUvk52bf8R/ZXMTnyp2IquAG3dWTfDlyRA6351qgQ==
+  dependencies:
+    "@ethersproject/bignumber" "^5.5.0"
+    "@ethersproject/keccak256" "^5.7.0"
+    "@ethersproject/random" "^5.5.1"
+    "@ethersproject/strings" "^5.6.1"
+    js-sha512 "^0.8.0"
+
 "@semaphore-protocol/proof@^3.1.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.2.0.tgz#6468e16fb67c9edc522df5deeb2c4ac0616ca8fd"
