@@ -4,6 +4,7 @@ import { serializeSemaphoreGroup } from "semaphore-types";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
+// Zuzalu residents group
 const globalGroup = new Group("1", 16);
 
 // localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
@@ -17,7 +18,7 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
-      const redirect = req.query.redirect;
+      const redirect = decodeURIComponent(req.query.redirect as string);
       // TODO: check this was signed by the server and contains 'email' and 'member' that match the rest of this request
       const token = req.query.token;
       // TODO: check this is a valid email
@@ -25,7 +26,7 @@ export function initZuzaluRoutes(
       const commitment = req.query.commitment;
 
       // TODO: look up participant record
-      const name = "Alice Anon";
+      const name = "Alice Amber";
       const role = "resident";
 
       try {
@@ -61,7 +62,8 @@ export function initZuzaluRoutes(
           role,
         };
         const jsonP = JSON.stringify(participant);
-        console.log(`added new zuzalu participant: ${jsonP}`);
+        console.log(`Added new zuzalu participant: ${jsonP}`);
+        console.log(`New group root: ${globalGroup.root}`);
 
         res.redirect(`${redirect}?success=true&participant=${jsonP}`);
       } catch (e) {

@@ -17,7 +17,7 @@ export function LoginScreen() {
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      dispatch({ type: "new-passport", body: { email } });
+      dispatch({ type: "new-passport", email });
     },
     [dispatch, email]
   );

@@ -26,3 +26,8 @@ export const TextEllipsis = styled.div`
 export const TextSecondary = styled.div`
   color: #666;
 `;
+
+export const PreWrap = styled.pre`
+  white-space: pre-wrap;
+  overflow: hidden;
+`;

@@ -8,9 +8,7 @@ export type Dispatcher = (action: Action) => void;
 export type Action =
   | {
       type: "new-passport";
-      body: {
-        email: string;
-      };
+      email: string;
     }
   | {
       type: "save-self";
@@ -40,7 +38,7 @@ export async function dispatch(
 
   switch (action.type) {
     case "new-passport":
-      return genPassport(state, update);
+      return genPassport(action.email, update);
     case "save-self":
       return doSaveSelf(action.participant, state, update);
     case "error":
@@ -54,7 +52,7 @@ export async function dispatch(
   }
 }
 
-async function genPassport(_: ZuState, update: ZuUpdate) {
+async function genPassport(email: string, update: ZuUpdate) {
   // Generate a semaphore identity, save it to the local store, generate an
   // email magic link. In prod, send email, in dev, display the link.
   window.location.hash = "#/new-passport";
@@ -63,7 +61,7 @@ async function genPassport(_: ZuState, update: ZuUpdate) {
   const identity = new Identity();
   console.log("Created identity", identity.toString());
   window.localStorage["identity"] = identity.toString();
-  update({ identity });
+  update({ identity, pendingAction: { type: "new-passport", email } });
 }
 
 function doSaveSelf(
