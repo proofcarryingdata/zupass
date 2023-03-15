@@ -1,8 +1,10 @@
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
 import { Card, CardZID } from "../../src/model/Card";
+import { createProof } from "../../src/proveSemaphore";
 import { H1, TextEllipsis } from "../core";
 
 /**
@@ -129,13 +131,21 @@ const CardFull = styled(CardBase)`
 
 function ZuzaluIdBody({ card }: { card: CardZID }) {
   const style = useMemo(() => ({ width: "160px", height: "160px" }), []);
+  const { identity } = card;
+
+  const [serialized, setSerialized] = useState<string>();
+  useEffect(() => {
+    const { serialize } = SemaphoreGroupPCDPackage;
+    createProof(identity).then(serialize).then(setSerialized);
+  }, [identity]);
+  if (serialized == null) return null;
+
+  console.log(`Displaying QR code, ${serialized.length} bytes`);
+  console.log(serialized);
+
   return (
     <ZIDWrap>
-      <QRCode
-        bgColor={card.display.color}
-        value={card.pcds.identityRevealingProof}
-        style={style}
-      />
+      <QRCode bgColor={card.display.color} value={serialized} style={style} />
     </ZIDWrap>
   );
 }
