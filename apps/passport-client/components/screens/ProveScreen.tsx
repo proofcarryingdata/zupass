@@ -23,14 +23,8 @@ export function ProveScreen() {
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
   console.log("Prove request", request);
 
-  // TODO: support arbitrary PCD transforms,
-  // looking up PCDPackage based on pcdType
   if (request.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
-    return null;
-  }
-  if (request.pcdType !== SemaphoreGroupPCDPackage.name) {
-    err(dispatch, "Unsupported PCD", `Unsupported PCD type ${request.pcdType}`);
     return null;
   }
 
