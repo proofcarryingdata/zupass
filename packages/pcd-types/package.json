@@ -15,5 +15,8 @@
     "react": "^18.2.0",
     "@pcd/tsconfig": "*",
     "typescript": "^4.5.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
