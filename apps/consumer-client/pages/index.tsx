@@ -1,4 +1,5 @@
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -9,12 +10,40 @@ import styled from "styled-components";
 
 export default function Web() {
   // Request a proof from the passport
-  const url = constructPassportPcdGetRequestUrl(
+  const url = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreGroupPCDPackage
+  >(
     "http://localhost:3000/",
     "http://localhost:3001/",
     SemaphoreGroupPCDPackage.name,
     {
-      groupUrl: "http://localhost:3002/semaphore/1",
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        userProvided: true,
+      },
+      group: {
+        argumentType: ArgumentTypeName.Object,
+        userProvided: false,
+        remoteUrl: "http://localhost:3002/semaphore/1",
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signal: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: "1",
+        userProvided: false,
+      },
+      wasmFilePath: {
+        argumentType: ArgumentTypeName.String,
+        userProvided: false,
+      },
+      zkeyFilePath: {
+        argumentType: ArgumentTypeName.String,
+        userProvided: false,
+      },
     }
   );
 
