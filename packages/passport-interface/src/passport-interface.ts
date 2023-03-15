@@ -10,7 +10,7 @@ export interface PCDRequest {
   type: PCDRequestType;
 }
 
-type ArgsOf<T> = T extends PCDPackage<unknown, unknown, infer U> ? U : T;
+export type ArgsOf<T> = T extends PCDPackage<unknown, unknown, infer U> ? U : T;
 
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   extends PCDRequest {
