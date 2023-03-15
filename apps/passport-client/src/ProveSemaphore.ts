@@ -1,9 +1,9 @@
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
 import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
-} from "semaphore-group-pcd";
+} from "@pcd/semaphore-group-pcd";
+import { Group } from "@semaphore-protocol/group";
+import { Identity } from "@semaphore-protocol/identity";
 
 export async function doProveSemaphore() {
   const { prove, verify, serialize, deserialize } = SemaphoreGroupPCDPackage;

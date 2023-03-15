@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { passportReceiveRequest } from "passport-interface";
+import { passportReceiveRequest } from "@pcd/passport-interface";
 import { useEffect } from "react";
 import styled from "styled-components";
 

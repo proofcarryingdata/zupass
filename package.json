@@ -17,7 +17,7 @@
     "test": "turbo run test"
   },
   "devDependencies": {
-    "eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "*",
     "prettier": "latest",
     "prettier-plugin-organize-imports": "^3.2.2"
   },

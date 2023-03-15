@@ -1,4 +1,4 @@
-import { constructPassportPcdGetRequestUrl } from "passport-interface";
+import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 
 export default function Web() {
