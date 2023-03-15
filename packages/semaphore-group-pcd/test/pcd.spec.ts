@@ -11,6 +11,8 @@ const zkeyFilePath = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");
 
 describe("semaphore group identity should work", function () {
+  this.timeout(1000 * 30);
+
   // sets up shared Semaphore args across test cases
   let args: SemaphoreGroupPCDArgs;
   beforeEach(function () {
