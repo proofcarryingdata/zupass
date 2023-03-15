@@ -9,7 +9,7 @@ export class PCDCollection {
     this.pcds = pcds;
   }
 
-  getPackage(name: string): PCDPackage {
+  public getPackage(name: string): PCDPackage {
     const matching = this.packages.find((p) => p.name === name);
 
     if (matching === undefined) {
@@ -29,5 +29,25 @@ export class PCDCollection {
     const pcdPackage = this.getPackage(serialized.type);
     const deserialized = await pcdPackage.deserialize(serialized.pcd);
     return deserialized;
+  }
+
+  public async serializeAll(): Promise<SerializedPCD[]> {
+    return Promise.all(this.pcds.map(this.serialize.bind(this)));
+  }
+
+  public addAll(pcds: PCD[]) {
+    this.pcds.push(...pcds);
+  }
+
+  public static async deserialize(
+    packages: PCDPackage[],
+    serializedPCDs: SerializedPCD[]
+  ): Promise<PCDCollection> {
+    const collection = new PCDCollection(packages, []);
+    const pcds = await Promise.all(
+      serializedPCDs.map(collection.deserialize.bind(collection))
+    );
+    collection.addAll(pcds);
+    return collection;
   }
 }
