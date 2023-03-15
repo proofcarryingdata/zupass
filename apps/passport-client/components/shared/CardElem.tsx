@@ -1,4 +1,6 @@
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { Buffer } from "buffer";
+import { gzip } from "pako";
 import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
@@ -142,12 +144,17 @@ function ZuzaluIdBody({ card }: { card: CardZID }) {
   }, [identity]);
   if (serialized == null) return null;
 
-  console.log(`Displaying QR code, ${serialized.length} bytes`);
-  console.log(serialized);
+  console.log(`PCD size: ${serialized.length} bytes`);
+  const compressed = gzip(serialized);
+  const base64 = Buffer.from(compressed).toString("base64");
+  console.log(`Compressed: ${compressed.length}, base64: ${base64.length}`);
+
+  const link = window.location.origin + "#/verify?pcd=" + base64;
+  console.log(`Link, ${link.length} bytes: ${link}`);
 
   return (
     <ZIDWrap>
-      <QRCode bgColor={card.display.color} value={serialized} style={style} />
+      <QRCode bgColor={card.display.color} value={link} style={style} />
     </ZIDWrap>
   );
 }
