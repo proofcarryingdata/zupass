@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import { ZuError } from "../../src/state";
-import { Button, H1, Spacer } from "../core";
+import { Button, H1, PreWrap, Spacer } from "../core";
 
 export function ErrorPopup({
   error,
@@ -16,6 +16,12 @@ export function ErrorPopup({
       <H1>❌ &nbsp; {error.title}</H1>
       <Spacer h={24} />
       <p>{error.message}</p>
+      {error.stack && (
+        <>
+          <Spacer h={24} />
+          <PreWrap>{error.stack}</PreWrap>
+        </>
+      )}
       <Spacer h={24} />
       <Button style="secondary" onClick={onClose}>
         Close

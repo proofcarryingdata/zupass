@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ErrorPopup } from "./ErrorPopup";
 
+// Wrapper for all screens.
 export function AppContainer() {
   const [state, dispatch] = React.useContext(DispatchContext);
   const onClose = useCallback(

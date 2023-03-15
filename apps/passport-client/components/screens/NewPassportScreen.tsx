@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useContext } from "react";
+import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import { Spacer, TextCenter, TextSecondary } from "../core";
 
@@ -9,13 +10,22 @@ import { Spacer, TextCenter, TextSecondary } from "../core";
  */
 export function NewPassportScreen() {
   const [state] = useContext(DispatchContext);
-  const { identity } = state;
+  const { identity, pendingAction } = state;
+  if (pendingAction == null || pendingAction.type !== "new-passport") {
+    throw new Error("Missing pending action");
+  }
+  const { email } = pendingAction;
 
   let saveSelfPage = encodeURIComponent(window.location.origin + "#/save-self");
-  const npp = "http://localhost:3002/zuzalu/new-participant";
-  const magicLink =
-    identity &&
-    `${npp}?redirect=${saveSelfPage}&commitment=${identity.commitment}`;
+
+  // Create a magic link to the passport server.
+  // TODO: move this to server side, add a token/nonce.
+  const params = new URLSearchParams({
+    redirect: saveSelfPage,
+    email,
+    commitment: identity.commitment.toString(),
+  }).toString();
+  const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
 
   return (
     <>

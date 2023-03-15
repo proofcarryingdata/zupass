@@ -121,10 +121,10 @@ async function prove(identity: Identity, semaGroup: SemaphoreGroup) {
   const { prove, serialize } = SemaphoreGroupPCDPackage;
 
   const group = new Group(BigInt(semaGroup.id), semaGroup.depth);
-  for (const member of group.members) {
+  for (const member of semaGroup.members) {
     group.addMember(BigInt(member));
   }
-  const externalNullifier = group.root;
+  const externalNullifier = 1; // group.root;
   const signal = 1;
 
   const args: SemaphoreGroupPCDArgs = {
@@ -135,20 +135,14 @@ async function prove(identity: Identity, semaGroup: SemaphoreGroup) {
     zkeyFilePath: "/semaphore-artifacts/16.zkey",
     wasmFilePath: "/semaphore-artifacts/16.wasm",
   };
-
   console.log("Proving semaphore membership", args);
+  console.log("Group root", group.root.toString());
+  console.log("Group first member", group.members[0]);
+  console.log("Identity", identity.commitment.toString());
 
-  // Dummy proof
-  let serialized =
-    "TG9yZW0gSXBzdW0gaXMgc2ltcGx5IGR1bW15IHRleHQgb2YgdGhlIHByaW50aW5nIGFuZCB0eXBlc2V0dGluZyBpbmR1c3RyeS4gTG9yZW0gSXBzdW0gaGFzIGJlZW4gdGhlIGluZHVzdHJ5J3Mgc3RhbmRhcmQgZHVtbXkgdGV4dCBldmVyIHNpbmNlIHRoZSAxNTAwcywgd2hlbiBhbiB1bmtub3duIHByaW50ZXIgdG9vayBhIGdhbGxleSBvZiB0eXBlIGFuZCBzY3JhbWJsZWQgaXQgdG8gbWFrZSBhIHR5cGUgc3BlY2ltZW4gYm9vay4K";
-
-  try {
-    const pcd = await prove(args);
-    serialized = await serialize(pcd);
-    console.log("Proof complete", serialized);
-  } catch (e) {
-    console.error("Proof failed, falling back to dummy", e);
-  }
+  const pcd = await prove(args);
+  const serialized = await serialize(pcd);
+  console.log("Proof complete", serialized);
 
   return serialized;
 }

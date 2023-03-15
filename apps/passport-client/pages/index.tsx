@@ -22,25 +22,43 @@ class App extends React.Component<{}, ZuState> {
   render() {
     const { state, disp } = this;
     console.log("Rendering App", state);
-
+    const hasStack = state.error?.stack != null;
     return (
       <DispatchContext.Provider value={[state, disp]}>
-        <HashRouter>
-          <Routes>
-            <Route path="/" element={<AppContainer />}>
-              <Route index element={<HomeScreen />} />
-              <Route path="login" element={<LoginScreen />} />
-              <Route path="new-passport" element={<NewPassportScreen />} />
-              <Route path="save-self" element={<SaveSelfScreen />} />
-              <Route path="settings" element={<SettingsScreen />} />
-              <Route path="prove" element={<ProveScreen />} />
-              <Route path="*" element={<MissingScreen />} />
-            </Route>
-          </Routes>
-        </HashRouter>
+        {!hasStack && <Router />}
+        {hasStack && <AppContainer />}
       </DispatchContext.Provider>
     );
   }
+
+  // Create a React error boundary
+  static getDerivedStateFromError(error: Error) {
+    console.log("App caught error", error);
+    const { message, stack } = error;
+    let shortStack = stack.substring(0, 280);
+    if (shortStack.length < stack.length) shortStack += "...";
+    return {
+      error: { title: "Error", message, stack: shortStack },
+    } as Partial<ZuState>;
+  }
+}
+
+function Router() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<AppContainer />}>
+          <Route index element={<HomeScreen />} />
+          <Route path="login" element={<LoginScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen />} />
+          <Route path="save-self" element={<SaveSelfScreen />} />
+          <Route path="settings" element={<SettingsScreen />} />
+          <Route path="prove" element={<ProveScreen />} />
+          <Route path="*" element={<MissingScreen />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  );
 }
 
 function loadInitialState(): ZuState {
