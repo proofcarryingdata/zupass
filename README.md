@@ -24,12 +24,12 @@ The passport has its own client and server, and we have an example application s
 
 ## Packages
 
-- `pcd-types`: Typescript types for `PCD` and `PCDPackage`
-- `semaphore-group-pcd`: Implementation of `pcd-types` for Semaphore, wrapping the code from `@semaphore-protocol`. Additionally defines a serialization format for Semaphore groups
-- `passport-interface`: Implements the glue code between different parties using the PCD SDK
-  - `passport-interface.ts` is glue between third-party applications and `passport-client`
+- `@pcd/pcd-types`: Typescript types for `PCD` and `PCDPackage`
+- `@pcd/semaphore-group-pcd`: Implementation of `@pcd/pcd-types` for Semaphore, wrapping the code from `@semaphore-protocol`. Additionally defines a serialization format for Semaphore groups
+- `@pcd/passport-interface`: Implements the glue code between different parties using the PCD SDK
+  - `@pcd/passport-interface.ts` is glue between third-party applications and `passport-client`
   - `request-type.ts` is glue between `passport-client` and `passport-server`
-- `eslint-config-custom` and `tsconfig` are helper packages for turborepo
+- `@pcd/eslint-config-custom` and `@pcd/tsconfig` are helper packages for turborepo
 
 ## Testing
 

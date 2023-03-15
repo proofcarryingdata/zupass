@@ -4,9 +4,9 @@ import {
   SupportedPCDsResponse,
   VerifyRequest,
   VerifyResponse,
-} from "passport-interface";
-import { PCDPackage } from "pcd-types";
-import { SemaphoreGroupPCDPackage } from "semaphore-group-pcd";
+} from "@pcd/passport-interface";
+import { PCDPackage } from "@pcd/pcd-types";
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 
 /**
  * Each PCD type that the proving server supports has to go into this array.

@@ -1,4 +1,4 @@
-import { PCDGetRequest, PCDRequestType } from "passport-interface";
+import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -7,13 +7,13 @@ import { DispatchContext, Dispatcher } from "../../src/dispatch";
 import { Button, H1, Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
 
-import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
 import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
-} from "semaphore-group-pcd";
+} from "@pcd/semaphore-group-pcd";
+import { Group } from "@semaphore-protocol/group";
+import { Identity } from "@semaphore-protocol/identity";
 
 export function ProveScreen() {
   const location = useLocation();

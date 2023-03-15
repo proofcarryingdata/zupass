@@ -1,4 +1,4 @@
-import { PCD } from "pcd-types";
+import { PCD } from "@pcd/pcd-types";
 
 export class PCDCollection {
   private pcds: PCD[] = [];
