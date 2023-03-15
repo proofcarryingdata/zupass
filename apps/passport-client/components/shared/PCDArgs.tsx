@@ -1,6 +1,7 @@
 import { ArgsOf } from "@pcd/passport-interface";
 import {
   Argument,
+  BigIntArgument,
   isBigIntArgument,
   isBooleanArgument,
   isNumberArgument,
@@ -60,7 +61,14 @@ export function PCDArgInput<T extends PCDPackage>({
   } else if (isNumberArgument(arg)) {
     return <ArgContainer>number arg {argName}</ArgContainer>;
   } else if (isBigIntArgument(arg)) {
-    return <ArgContainer>bigInt arg {argName}</ArgContainer>;
+    return (
+      <BigIntArgInput
+        args={args}
+        arg={arg}
+        argName={argName}
+        setArgs={setArgs}
+      />
+    );
   } else if (isBooleanArgument(arg)) {
     return <ArgContainer>boolean arg {argName}</ArgContainer>;
   } else if (isObjectArgument(arg)) {
@@ -93,7 +101,43 @@ export function StringArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       {argName}:
-      <input value={arg.value} onChange={onChange} />
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
+    </ArgContainer>
+  );
+}
+
+export function BigIntArgInput<T extends PCDPackage>({
+  arg,
+  argName,
+  args,
+  setArgs,
+}: {
+  arg: BigIntArgument;
+  argName: string;
+  args: ArgsOf<T>;
+  setArgs: (args: ArgsOf<T>) => void;
+}) {
+  const onChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      console.log("changing", e.target.value);
+      args[argName].value = e.target.value;
+      setArgs(JSON.parse(JSON.stringify(args)));
+    },
+    [args, setArgs]
+  );
+
+  return (
+    <ArgContainer>
+      {argName}:
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
     </ArgContainer>
   );
 }
