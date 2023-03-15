@@ -31,6 +31,10 @@ The passport has its own client and server, and we have an example application s
   - `request-type.ts` is glue between `passport-client` and `passport-server`
 - `eslint-config-custom` and `tsconfig` are helper packages for turborepo
 
+## Testing
+
+Each package and app which needs testing has a `test` script in its `package.json`. You can invoke all the tests serially by running the command `yarn test` at the root of the repository. Please make sure to write tests for anything you need to not break as we develop.
+
 ## Production Deployment
 
 ### Passport
