@@ -15,7 +15,7 @@ import {
   PCDPackage,
   StringArgument,
 } from "@pcd/pcd-types";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
 export function PCDArgs<T extends PCDPackage>({
@@ -255,11 +255,33 @@ export function ObjectArgInput<T extends PCDPackage>({
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
 }) {
+  const [loading, setLoading] = useState(arg.remoteUrl !== undefined);
+
+  const load = useCallback(async () => {
+    const res = await fetch(arg.remoteUrl);
+    const remoteObject = JSON.parse(await res.json());
+    return remoteObject;
+  }, [arg.remoteUrl]);
+
+  useEffect(() => {
+    if (arg.remoteUrl) {
+      load()
+        .then((obj) => {
+          setLoading(false);
+          console.log("changing", obj);
+          args[argName].value = obj;
+          setArgs(JSON.parse(JSON.stringify(args)));
+        })
+        .catch((e) => {
+          setLoading(false);
+          // todo: good error handling
+        });
+    }
+  }, [arg.remoteUrl]);
+
   const onChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
-      args[argName].value = e.target.value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      // TODO: parse JSON object, validate it
     },
     [args, setArgs]
   );
@@ -267,8 +289,8 @@ export function ObjectArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       {argName}:
-      <input
-        value={arg.value}
+      <textarea
+        value={JSON.stringify(arg.value)}
         onChange={onChange}
         disabled={!arg.userProvided}
       />

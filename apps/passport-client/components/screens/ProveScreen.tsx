@@ -42,22 +42,6 @@ export function ProveScreen() {
       <Spacer h={64} />
     </ProveWrap>
   );
-
-  // // TODO: PCDPackage needs display information, hardcoded below for now
-  // const title = "Prove membership";
-  // const req = request as PCDReqGetSemaGroupSig;
-  // const body = <ProveSemaGroupSig req={req} />;
-
-  // return (
-  //   <ProveWrap>
-  //     <Spacer h={24} />
-  //     <AppHeader />
-  //     <Spacer h={24} />
-  //     <H1>🔑 &nbsp; {title}</H1>
-  //     <Spacer h={24} />
-  //     {body}
-  //   </ProveWrap>
-  // );
 }
 
 // function ProveSemaGroupSig({ req }: { req: PCDReqGetSemaGroupSig }) {

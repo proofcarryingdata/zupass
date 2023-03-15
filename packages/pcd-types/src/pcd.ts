@@ -79,7 +79,7 @@ export type ObjectArgument<T> = Argument<ArgumentTypeName.Object, T>;
 export function isObjectArgument(
   arg: Argument<any, unknown>
 ): arg is ObjectArgument<unknown> {
-  return arg.argumentType === ArgumentTypeName.Boolean;
+  return arg.argumentType === ArgumentTypeName.Object;
 }
 
 export type PCDArgument<T extends PCD = PCD> = Argument<
