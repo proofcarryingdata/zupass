@@ -95,5 +95,6 @@ async function verifyProof(
   group.addMembers(semaGroup.members);
   const root = deserialized.proof.proof.merkleTreeRoot;
   console.log(`Proof root ${root}, group root ${group.root}`);
-  return root === group.root;
+
+  return root.toString() === group.root.toString();
 }
