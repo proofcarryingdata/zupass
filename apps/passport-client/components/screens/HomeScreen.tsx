@@ -1,5 +1,6 @@
+import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { Card, CardZID } from "../../src/model/Card";
@@ -12,7 +13,7 @@ import { CardElem } from "../shared/CardElem";
  * Show the user their passport, an overview of cards / PCDs.
  */
 export function HomeScreen() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const [state] = useContext(DispatchContext);
   const navigate = useNavigate();
   useEffect(() => {
     if (state.self == null) {
@@ -21,8 +22,11 @@ export function HomeScreen() {
     }
   });
 
-  const cards = useMemo(() => getTestCards(state.self), []);
-  const [sel, setSel] = React.useState(cards[0]);
+  const cards = useMemo(
+    () => getTestCards(state.identity, state.self),
+    [state]
+  );
+  const [sel, setSel] = useState(0);
 
   if (state.self == null) return null;
 
@@ -31,21 +35,17 @@ export function HomeScreen() {
       <Spacer h={24} />
       <AppHeader inset={16} />
       <Spacer h={24} />
-      <CardElem
-        card={sel}
-        expanded
-        onClick={() => window.alert("Under construction")}
-      />
+      <CardElem card={cards[sel]} expanded />
       <Spacer h={24} />
       {cards.map((c, i) => {
-        if (c === sel) return <CardElem key={i} />; // empty slot
-        return <CardElem key={i} card={c} onClick={() => setSel(c)} />;
+        if (i === sel) return <CardElem key={i} />; // empty slot
+        return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
       })}
     </>
   );
 }
 
-function getTestCards(self?: ZuParticipant): Card[] {
+function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
   const c1: CardZID | undefined = self && {
     id: "0x1234",
     type: "zuzalu-id",
@@ -56,10 +56,7 @@ function getTestCards(self?: ZuParticipant): Card[] {
       description: self.email,
       color: "#bcb",
     },
-    pcds: {
-      identityRevealingProof:
-        "Integer at purus faucibus nisi maximus dignissim ut non massa. Mauris consectetur viverra enim. Etiam id nulla a ligula rhoncus auctor quis non ex. Duis eget erat id massa placerat suscipit. Vestibulum fermentum purus nec magna laoreet tempor. Duis nec condimentum massa. Nam molestie dolor nibh, ac bibendum metus tempus a. Fusce tempus massa sit amet libero molestie tincidunt.",
-    },
+    identity,
   };
 
   const c2 = {

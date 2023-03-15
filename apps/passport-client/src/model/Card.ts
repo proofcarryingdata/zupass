@@ -1,3 +1,5 @@
+import { Identity } from "@semaphore-protocol/identity";
+
 /**
  * Card model. Each card has an ID, display information, a way of generating a
  * public proof, and private information.
@@ -16,10 +18,8 @@ export interface Card {
 
 export interface CardZID extends Card {
   type: "zuzalu-id";
-  pcds: {
-    /** Base64-encoded identity-revealing proof PCD */
-    identityRevealingProof: string;
-  };
+  /** Identity, produces the displayed PCD. */
+  identity: Identity;
 }
 
 export interface CardDisplay {
