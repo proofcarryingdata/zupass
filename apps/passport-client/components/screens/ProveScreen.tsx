@@ -1,6 +1,6 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import * as React from "react";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext, Dispatcher } from "../../src/dispatch";
@@ -16,6 +16,12 @@ export function ProveScreen() {
 
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
+  const [args, setArgs] = useState(JSON.parse(JSON.stringify(request.args)));
+
+  useEffect(() => {
+    console.log(args);
+  }, [args]);
+
   console.log("Prove request", request);
 
   if (request.type !== PCDRequestType.Get) {
@@ -33,9 +39,8 @@ export function ProveScreen() {
       <H1>🔑 &nbsp; {title}</H1>
       <Spacer h={24} />
       {request.pcdType}
-      <pre>{JSON.stringify(request, null, 2)}</pre>
-
-      <PCDArgs args={request.args} />
+      <pre>{JSON.stringify(args, null, 2)}</pre>
+      <PCDArgs args={args} setArgs={setArgs} />
     </ProveWrap>
   );
 
