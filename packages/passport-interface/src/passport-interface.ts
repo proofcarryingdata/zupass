@@ -12,7 +12,8 @@ export interface PCDRequest {
 
 type ArgsOf<T> = T extends PCDPackage<unknown, unknown, infer U> ? U : T;
 
-export interface PCDGetRequest<T extends PCDPackage> extends PCDRequest {
+export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
+  extends PCDRequest {
   type: PCDRequestType.Get;
   pcdType: T["name"];
   args: ArgsOf<T>;

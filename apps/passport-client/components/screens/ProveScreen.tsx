@@ -5,7 +5,6 @@ import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext, Dispatcher } from "../../src/dispatch";
 import { Button, H1, Spacer } from "../core";
-import { AppHeader } from "../shared/AppHeader";
 
 import {
   SemaphoreGroupPCDArgs,
@@ -14,6 +13,8 @@ import {
 } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
+import { title } from "process";
+import { AppHeader } from "../shared/AppHeader";
 
 export function ProveScreen() {
   const location = useLocation();
@@ -28,10 +29,7 @@ export function ProveScreen() {
     return null;
   }
 
-  // TODO: PCDPackage needs display information, hardcoded below for now
-  const title = "Prove membership";
-  const req = request as PCDReqGetSemaGroupSig;
-  const body = <ProveSemaGroupSig req={req} />;
+  const pcdPackage = _.pcds.getPackage(request.pcdType);
 
   return (
     <ProveWrap>
@@ -40,9 +38,26 @@ export function ProveScreen() {
       <Spacer h={24} />
       <H1>🔑 &nbsp; {title}</H1>
       <Spacer h={24} />
-      {body}
+      {request.pcdType}
+      <pre>{JSON.stringify(request, null, 2)}</pre>
     </ProveWrap>
   );
+
+  // // TODO: PCDPackage needs display information, hardcoded below for now
+  // const title = "Prove membership";
+  // const req = request as PCDReqGetSemaGroupSig;
+  // const body = <ProveSemaGroupSig req={req} />;
+
+  // return (
+  //   <ProveWrap>
+  //     <Spacer h={24} />
+  //     <AppHeader />
+  //     <Spacer h={24} />
+  //     <H1>🔑 &nbsp; {title}</H1>
+  //     <Spacer h={24} />
+  //     {body}
+  //   </ProveWrap>
+  // );
 }
 
 function ProveSemaGroupSig({ req }: { req: PCDReqGetSemaGroupSig }) {
@@ -89,11 +104,6 @@ function ProveSemaGroupSig({ req }: { req: PCDReqGetSemaGroupSig }) {
       ))}
     </div>
   );
-}
-
-interface PCDReqGetSemaGroupSig extends PCDGetRequest {
-  pcdType: "semaphore-group-signature";
-  params: { groupUrl: string };
 }
 
 function err(dispatch: Dispatcher, title: string, message: string) {
