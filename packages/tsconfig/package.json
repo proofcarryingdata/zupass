@@ -1,10 +1,13 @@
 {
   "name": "@pcd/tsconfig",
   "version": "0.0.1",
-  "private": true,
+  "private": false,
   "files": [
     "base.json",
     "nextjs.json",
     "react-library.json"
-  ]
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }

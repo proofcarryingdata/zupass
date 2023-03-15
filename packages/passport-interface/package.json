@@ -26,5 +26,8 @@
     "ts-mocha": "^10.0.0",
     "@pcd/tsconfig": "*",
     "typescript": "^4.5.2"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
