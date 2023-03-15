@@ -12,7 +12,7 @@ export default function Web() {
   const url = constructPassportPcdGetRequestUrl(
     "http://localhost:3000/",
     "http://localhost:3001/",
-    "semaphore-group-signature",
+    SemaphoreGroupPCDPackage.name,
     {
       groupUrl: "http://localhost:3002/semaphore/1",
     }

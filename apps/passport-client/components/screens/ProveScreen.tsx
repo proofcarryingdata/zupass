@@ -29,7 +29,7 @@ export function ProveScreen() {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     return null;
   }
-  if (request.pcdType !== "semaphore-group-signature") {
+  if (request.pcdType !== SemaphoreGroupPCDPackage.name) {
     err(dispatch, "Unsupported PCD", `Unsupported PCD type ${request.pcdType}`);
     return null;
   }
