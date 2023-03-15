@@ -1,6 +1,8 @@
-import { PCD, PCDPackage } from "@pcd/pcd-types";
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
+
+export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
 export interface SemaphoreIdentityPCDArgs {
   identity: Identity;
@@ -15,7 +17,7 @@ export type SemaphoreIdentityPCDProof = undefined;
 export class SemaphoreIdentityPCD
   implements PCD<SemaphoreIdentityPCDClaim, SemaphoreIdentityPCDProof>
 {
-  type = "SemaphoreIdentityPCD";
+  type = SemaphoreIdentityPCDTypeName;
   claim: SemaphoreIdentityPCDClaim;
   proof: SemaphoreIdentityPCDProof;
 
@@ -35,11 +37,16 @@ export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
   return pcd?.claim?.identity !== undefined;
 }
 
-export async function serialize(pcd: SemaphoreIdentityPCD): Promise<string> {
-  return JSONBig.stringify({
-    type: pcd.type,
-    identity: pcd.claim.identity.toString(),
-  });
+export async function serialize(
+  pcd: SemaphoreIdentityPCD
+): Promise<SerializedPCD> {
+  return {
+    type: SemaphoreIdentityPCDTypeName,
+    pcd: JSONBig.stringify({
+      type: pcd.type,
+      identity: pcd.claim.identity.toString(),
+    }),
+  };
 }
 
 export async function deserialize(
@@ -60,7 +67,7 @@ export const SemaphoreIdentityPCDPackage: PCDPackage<
   SemaphoreIdentityPCDProof,
   SemaphoreIdentityPCDArgs
 > = {
-  name: "SemaphoreIdentityPCD",
+  name: SemaphoreIdentityPCDTypeName,
   prove,
   verify,
   serialize,

@@ -1,4 +1,4 @@
-import { PCD, PCDPackage } from "@pcd/pcd-types";
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import {
@@ -11,6 +11,8 @@ import {
   SerializedSemaphoreGroup,
   serializeSemaphoreGroup,
 } from "./SerializedSemaphoreGroup";
+
+export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 
 export interface SemaphoreGroupPCDArgs {
   group: Group;
@@ -53,7 +55,7 @@ export interface SemaphoreGroupPCDProof {
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
 {
-  type = "SemaphoreGroupPCD";
+  type = SemaphoreGroupPCDTypeName;
   claim: SemaphoreGroupPCDClaim;
   proof: SemaphoreGroupPCDProof;
 
@@ -100,8 +102,10 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
   return valid;
 }
 
-export async function serialize(pcd: SemaphoreGroupPCD): Promise<string> {
-  return JSONBig().stringify(pcd);
+export async function serialize(
+  pcd: SemaphoreGroupPCD
+): Promise<SerializedPCD> {
+  return { type: SemaphoreGroupPCDTypeName, pcd: JSONBig().stringify(pcd) };
 }
 
 export async function deserialize(
@@ -119,7 +123,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDProof,
   SemaphoreGroupPCDArgs
 > = {
-  name: "semaphore-group-signal",
+  name: SemaphoreGroupPCDTypeName,
   prove,
   verify,
   serialize,

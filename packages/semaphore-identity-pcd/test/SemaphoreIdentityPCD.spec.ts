@@ -14,14 +14,13 @@ describe("Semaphore Identity PCD", function () {
   });
 
   it("should serialize and deserialize properly", async function () {
-    const { prove, verify, serialize, deserialize } =
-      SemaphoreIdentityPCDPackage;
+    const { prove, serialize, deserialize } = SemaphoreIdentityPCDPackage;
     const identity = new Identity();
 
     const identityPCD = await prove({ identity });
 
     const serialized = await serialize(identityPCD);
-    const deserialized = await deserialize(serialized);
+    const deserialized = await deserialize(serialized.pcd);
 
     assert.equal(
       identityPCD.claim.identity.toString(),

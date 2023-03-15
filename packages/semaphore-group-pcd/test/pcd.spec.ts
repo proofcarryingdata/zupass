@@ -55,7 +55,7 @@ describe("semaphore group identity should work", function () {
     const pcd = await prove(args);
 
     const serialized_pcd = await serialize(pcd);
-    const deserialized_pcd = await deserialize(serialized_pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd.pcd);
 
     assert.deepEqual(deserialized_pcd, pcd);
   });
@@ -65,7 +65,7 @@ describe("semaphore group identity should work", function () {
     const pcd = await prove(args);
 
     const serialized_pcd = await serialize(pcd);
-    const deserialized_pcd = await deserialize(serialized_pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd.pcd);
     const verified = await verify(deserialized_pcd);
 
     assert.equal(verified, true);

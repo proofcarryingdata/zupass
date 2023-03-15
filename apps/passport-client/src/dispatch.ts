@@ -1,3 +1,5 @@
+import { PCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { saveSelf, ZuParticipant } from "./participant";
@@ -61,7 +63,11 @@ async function genPassport(email: string, update: ZuUpdate) {
   const identity = new Identity();
   console.log("Created identity", identity.toString());
   window.localStorage["identity"] = identity.toString();
-  update({ identity, pendingAction: { type: "new-passport", email } });
+
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const pcds: PCD[] = [identityPCD];
+
+  update({ identity, pcds, pendingAction: { type: "new-passport", email } });
 }
 
 function doSaveSelf(
