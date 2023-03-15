@@ -2,6 +2,7 @@
   "name": "docs",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "build": "retype build",
