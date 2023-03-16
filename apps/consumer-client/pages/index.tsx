@@ -1,5 +1,5 @@
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -7,11 +7,6 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-
-let a = {} as any as PCDPackage<any, any, any, any>;
-let b = {} as any as PCDPackage<number, number, number, number>;
-
-a = b;
 
 export default function Web() {
   // Request a proof from the passport

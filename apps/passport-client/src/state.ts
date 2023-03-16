@@ -36,6 +36,12 @@ export async function savePCDs(pcds: PCDCollection) {
 export async function loadPCDs() {
   const stringified = window.localStorage["pcds"];
   const serialized = JSON.parse(stringified ?? "[]");
+
+  await SemaphoreGroupPCDPackage.init({
+    wasmFilePath: "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+  });
+
   return await PCDCollection.deserialize(
     [SemaphoreGroupPCDPackage, SemaphoreIdentityPCDPackage],
     serialized
