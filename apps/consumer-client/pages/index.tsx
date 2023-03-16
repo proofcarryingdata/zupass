@@ -48,7 +48,9 @@ export default function Web() {
     const proofEnc = params.get("proof");
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      console.log("parsed PCD", parsedPCD);
       SemaphoreGroupPCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
+        console.log("ASDF", pcd);
         setProof(pcd);
         console.log("Clearing URL");
         window.history.replaceState(null, document.title, "/");
@@ -104,7 +106,7 @@ const Container = styled.div`
 `;
 
 async function verifyProof(
-  proof: unknown,
+  proof: SemaphoreGroupPCD,
   semaGroup: SerializedSemaphoreGroup
 ): Promise<boolean> {
   const { deserialize, verify } = SemaphoreGroupPCDPackage;
