@@ -2,6 +2,7 @@ import { ArgsOf } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   Argument,
+  ArgumentTypeName,
   BigIntArgument,
   BooleanArgument,
   isBigIntArgument,
@@ -20,6 +21,13 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
+/**
+ * Given an {@link Argument}, renders a UI that displays its value.
+ * If the user must supply this value, allows the user to input it.
+ * If the value is loaded from the internet, loads it. Contains
+ * implementations for each type of argument, as outlined by
+ * {@link ArgumentTypeName}
+ */
 export function PCDArgs<T extends PCDPackage>({
   args,
   setArgs,
