@@ -9,6 +9,14 @@ import { Button, H1, Spacer } from "../../core";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDArgs } from "../../shared/PCDArgs";
 
+/**
+ * Renders a UI in response to a request from the passport to calculate
+ * a particular PCD. For arguments which are filled in by the requester
+ * of the PCD, displays those hardcoded values. For arguments that the
+ * user must fill in, like numbers, strings, and other PCDs, displays
+ * HTML input fields that users will fill in by hand. For arguments that
+ * are objects, supports loading from a URL.
+ */
 export function ParameterizedProveScreen() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
