@@ -99,9 +99,16 @@ export async function prove(
 }
 
 export async function verify(pcd: SemaphorePubKeyRevealPCD): Promise<boolean> {
-  const valid = await verifyProof(pcd.proof.proof, pcd.claim.groupDepth);
+  // check if proof is valid
+  const validProof = await verifyProof(pcd.proof.proof, pcd.claim.groupDepth);
 
-  return valid;
+  // make sure proof is over a group with only your identity commitment
+  const group = new Group(1, pcd.claim.groupDepth);
+  group.addMember(pcd.claim.identityCommitment);
+  const validSingletonGroup =
+    group.root.toString() === pcd.proof.proof.merkleTreeRoot;
+
+  return validProof && validSingletonGroup;
 }
 
 export async function serialize(
