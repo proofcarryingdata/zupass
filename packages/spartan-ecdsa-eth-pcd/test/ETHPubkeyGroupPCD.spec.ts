@@ -71,6 +71,17 @@ describe("ETH pubkey group membership check should work", function () {
     assert.equal(verified, true);
   });
 
+  it("should not verify a broken proof", async function () {
+    const { prove, verify } = ETHPubkeyGroupPCDPackage;
+    const pcd = await prove(args);
+
+    // change merkle root
+    pcd.claim.publicInput.circuitPubInput.merkleRoot = BigInt("0");
+
+    const verified = await verify(pcd);
+    assert.equal(verified, false);
+  });
+
   it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
     const { prove, serialize, deserialize } = ETHPubkeyGroupPCDPackage;
     const pcd = await prove(args);
