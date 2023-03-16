@@ -1,4 +1,4 @@
-import { PCD } from "@pcd/pcd-types";
+import { ArgsOf, PCD, PCDPackage } from "@pcd/pcd-types";
 
 export enum PCDRequestType {
   Get = "Get",
@@ -10,10 +10,11 @@ export interface PCDRequest {
   type: PCDRequestType;
 }
 
-export interface PCDGetRequest extends PCDRequest {
+export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
+  extends PCDRequest {
   type: PCDRequestType.Get;
-  pcdType: string;
-  params: any;
+  pcdType: T["name"];
+  args: ArgsOf<T>;
 }
 
 export interface PCDAddRequest extends PCDRequest {
@@ -21,16 +22,16 @@ export interface PCDAddRequest extends PCDRequest {
   pcd: PCD;
 }
 
-export function constructPassportPcdGetRequestUrl(
+export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
   passportOrigin: string,
   returnUrl: string,
-  pcdType: string,
-  parameters: any
+  pcdType: T["name"],
+  args: ArgsOf<T>
 ) {
-  const req: PCDGetRequest = {
+  const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
     returnUrl: returnUrl,
-    params: parameters,
+    args: args,
     pcdType,
   };
   const encReq = encodeURIComponent(JSON.stringify(req));

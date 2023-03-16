@@ -1,3 +1,5 @@
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
@@ -6,6 +8,7 @@ import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
 } from "../src/SemaphoreGroupPCD";
+import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup";
 
 const zkeyFilePath = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");
@@ -13,22 +16,43 @@ const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");
 describe("semaphore group identity should work", function () {
   this.timeout(1000 * 30);
 
+  this.beforeAll(async function () {
+    await SemaphoreGroupPCDPackage.init!({
+      zkeyFilePath,
+      wasmFilePath,
+    });
+  });
+
   // sets up shared Semaphore args across test cases
   let args: SemaphoreGroupPCDArgs;
-  beforeEach(function () {
+  beforeEach(async function () {
     const identity = new Identity();
     const group = new Group(1, 16);
     group.addMember(identity.commitment);
     const externalNullifier = group.root;
     const signal = 1;
 
+    const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
+      await SemaphoreIdentityPCDPackage.prove({ identity })
+    );
+
     args = {
-      externalNullifier: BigInt(externalNullifier),
-      signal: BigInt(signal),
-      group,
-      identity,
-      zkeyFilePath,
-      wasmFilePath,
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: externalNullifier + "",
+      },
+      signal: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: signal + "",
+      },
+      group: {
+        argumentType: ArgumentTypeName.Object,
+        value: serializeSemaphoreGroup(group, "test name"),
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: identityPCD,
+      },
     };
   });
 
@@ -55,7 +79,7 @@ describe("semaphore group identity should work", function () {
     const pcd = await prove(args);
 
     const serialized_pcd = await serialize(pcd);
-    const deserialized_pcd = await deserialize(serialized_pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd.pcd);
 
     assert.deepEqual(deserialized_pcd, pcd);
   });
@@ -65,7 +89,7 @@ describe("semaphore group identity should work", function () {
     const pcd = await prove(args);
 
     const serialized_pcd = await serialize(pcd);
-    const deserialized_pcd = await deserialize(serialized_pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd.pcd);
     const verified = await verify(deserialized_pcd);
 
     assert.equal(verified, true);

@@ -1,5 +1,5 @@
 {
-  "name": "@pcd/pcd-types",
+  "name": "@pcd/pcd-collection",
   "version": "0.0.3",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -16,6 +16,9 @@
     "react": "^18.2.0",
     "@pcd/tsconfig": "*",
     "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "@pcd/pcd-types": "*"
   },
   "publishConfig": {
     "access": "public"

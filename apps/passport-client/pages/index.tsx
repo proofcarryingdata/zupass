@@ -6,22 +6,30 @@ import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
-import { ProveScreen } from "../components/screens/ProveScreen";
+import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import { SettingsScreen } from "../components/screens/SettingsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadSelf } from "../src/participant";
-import { ZuState } from "../src/state";
+import { loadPCDs, ZuState } from "../src/state";
 
-class App extends React.Component<{}, ZuState> {
-  state = loadInitialState();
+class App extends React.Component<{}, ZuState | undefined> {
+  state = undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
-  disp = (action: Action) => dispatch(action, this.state, this.update);
+  dispatch = (action: Action) => dispatch(action, this.state, this.update);
+
+  componentDidMount() {
+    loadInitialState().then(this.setState.bind(this));
+  }
 
   render() {
-    const { state, disp } = this;
-    console.log("Rendering App", state);
+    const { state, dispatch: disp } = this;
+
+    if (!state) {
+      return null;
+    }
+
     const hasStack = state.error?.stack != null;
     return (
       <DispatchContext.Provider value={[state, disp]}>
@@ -61,11 +69,12 @@ function Router() {
   );
 }
 
-function loadInitialState(): ZuState {
+async function loadInitialState(): Promise<ZuState> {
   const self = loadSelf();
+  const pcds = await loadPCDs();
   const identityStr = window.localStorage["identity"];
   const identity = identityStr ? new Identity(identityStr) : undefined;
-  return { self, identity };
+  return { self, pcds, identity };
 }
 
 const root = createRoot(document.querySelector("#root"));

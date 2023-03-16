@@ -35,3 +35,6 @@ yarn-error.log*
 # Local postgres DB files
 apps/passport-server/local-db-data
 apps/passport-server/local-db-log
+
+# build
+*.tsbuildinfo
