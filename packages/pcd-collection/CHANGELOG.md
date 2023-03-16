@@ -1,5 +1,13 @@
 # @pcd/pcd-types
 
+## 0.0.3
+
+### Patch Changes
+
+- Preparing for zuzalu.
+- Updated dependencies
+  - @pcd/pcd-types@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
