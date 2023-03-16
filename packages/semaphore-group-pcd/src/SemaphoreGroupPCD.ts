@@ -106,6 +106,15 @@ export async function prove(
   if (!serializedGroup) {
     throw new Error("cannot make group proof: missing semaphore group");
   }
+
+  if (!args.externalNullifier.value) {
+    throw new Error("cannot make group proof: missing externalNullifier");
+  }
+
+  if (!args.signal.value) {
+    throw new Error("cannot make group proof: missing signal");
+  }
+
   const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
 
   const fullProof = await generateProof(
@@ -121,9 +130,9 @@ export async function prove(
 
   const claim: SemaphoreGroupPCDClaim = {
     group: serializedGroup,
-    externalNullifier: args.externalNullifier.toString(),
+    externalNullifier: args.externalNullifier.value.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
-    signal: args.signal.toString(),
+    signal: args.signal.value.toString(),
   };
 
   const proof: SemaphoreGroupPCDProof = {

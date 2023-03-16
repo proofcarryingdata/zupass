@@ -130,7 +130,6 @@ export function StringArgInput<T extends PCDPackage>({
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
@@ -162,7 +161,6 @@ export function NumberArgInput<T extends PCDPackage>({
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
@@ -194,7 +192,6 @@ export function BigIntArgInput<T extends PCDPackage>({
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
@@ -226,7 +223,6 @@ export function BooleanArgInput<T extends PCDPackage>({
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      console.log("changing", e.target.value);
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
@@ -270,7 +266,6 @@ export function ObjectArgInput<T extends PCDPackage>({
       load()
         .then((obj) => {
           setLoading(false);
-          console.log("changing", obj);
           args[argName].value = obj;
           setArgs(JSON.parse(JSON.stringify(args)));
         })
@@ -317,7 +312,6 @@ export function PCDArgInput<T extends PCDPackage>({
 
   const onChange = useCallback(
     async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      console.log("on change", e.target.value);
       const id = e.target.value;
       const pcd = pcdCollection.getById(id);
 
@@ -334,17 +328,12 @@ export function PCDArgInput<T extends PCDPackage>({
     async function doThing() {
       if (arg.value !== undefined) {
         const parsed = await pcdCollection.deserialize(arg.value);
-        console.log("parsed", parsed);
         setValue(parsed);
       }
     }
 
     doThing();
   }, [arg.value]);
-
-  useEffect(() => {
-    console.log("value", value);
-  }, [value]);
 
   return (
     <ArgContainer>
