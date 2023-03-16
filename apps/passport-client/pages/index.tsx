@@ -6,7 +6,7 @@ import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
-import { ProveScreen } from "../components/screens/ProveScreen";
+import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import { SettingsScreen } from "../components/screens/SettingsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
