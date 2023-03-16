@@ -30,7 +30,5 @@ describe("Semaphore Private Key PCD", function () {
     assert.equal(deserialized.claim.privateKey instanceof Identity, true);
   });
 
-  it("should work with SemaphorePubKeyRevealPCD", async function () {
-    // TODO: implement
-  });
+  it("should work with SemaphorePubKeyRevealPCD", async function () {});
 });
