@@ -48,11 +48,8 @@ export default function Web() {
     const proofEnc = params.get("proof");
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
-      console.log("parsed PCD", parsedPCD);
       SemaphoreGroupPCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
-        console.log("ASDF", pcd);
         setProof(pcd);
-        console.log("Clearing URL");
         window.history.replaceState(null, document.title, "/");
       });
     }

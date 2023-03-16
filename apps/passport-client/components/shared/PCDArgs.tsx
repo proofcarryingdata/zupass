@@ -11,6 +11,7 @@ import {
   isPCDArgument,
   isStringArgument,
   NumberArgument,
+  ObjectArgument,
   PCD,
   PCDArgument,
   PCDPackage,
@@ -247,14 +248,15 @@ export function ObjectArgInput<T extends PCDPackage>({
   args,
   setArgs,
 }: {
-  arg: BigIntArgument;
+  arg: ObjectArgument<any>;
   argName: string;
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
 }) {
   const [loading, setLoading] = useState(arg.remoteUrl !== undefined);
 
-  // TODO: make this possible for all types, not just obj? unless...
+  // TODO: implement remote loading for all types, not just
+  // objects.
   const load = useCallback(async () => {
     const res = await fetch(arg.remoteUrl);
     const remoteObject = JSON.parse(await res.json());
@@ -325,14 +327,14 @@ export function PCDArgInput<T extends PCDPackage>({
   );
 
   useEffect(() => {
-    async function doThing() {
+    async function deserialize() {
       if (arg.value !== undefined) {
         const parsed = await pcdCollection.deserialize(arg.value);
         setValue(parsed);
       }
     }
 
-    doThing();
+    deserialize();
   }, [arg.value]);
 
   return (
