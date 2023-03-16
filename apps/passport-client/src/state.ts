@@ -10,6 +10,7 @@ export interface ZuState {
   // Zuzalu semaphore identity.
   identity?: Identity;
   pcds: PCDCollection;
+  identity?: Identity;
   pendingAction?: PendingAction;
 
   // Participant metadata.

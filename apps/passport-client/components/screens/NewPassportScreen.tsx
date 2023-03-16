@@ -12,7 +12,7 @@ export function NewPassportScreen() {
   const [state] = useContext(DispatchContext);
   const { identity, pendingAction } = state;
   if (pendingAction == null || pendingAction.type !== "new-passport") {
-    // throw new Error("Missing pending action");
+    throw new Error("Missing pending action");
   }
   const { email } = pendingAction;
 
