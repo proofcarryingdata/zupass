@@ -31,14 +31,16 @@ export async function verify(pcd: InputTestPCD): Promise<boolean> {
   return true;
 }
 
-export async function serialize(pcd: InputTestPCD): Promise<SerializedPCD> {
+export async function serialize(
+  pcd: InputTestPCD
+): Promise<SerializedPCD<InputTestPCD>> {
   return {
     type: InputTestPCDTypeName,
     pcd: JSONBig.stringify({
       type: pcd.type,
       id: pcd.id,
     }),
-  };
+  } as SerializedPCD<InputTestPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<InputTestPCD> {
