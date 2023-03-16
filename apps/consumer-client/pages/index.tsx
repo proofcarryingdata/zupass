@@ -1,6 +1,7 @@
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
+  SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
@@ -41,14 +42,17 @@ export default function Web() {
   );
 
   // Handle callback from the passport, providing a proof
-  const [proof, setProof] = useState<unknown>(); // opaque JSON object
+  const [proof, setProof] = useState<SemaphoreGroupPCD>(); // opaque JSON object
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const proofEnc = params.get("proof");
     if (proofEnc) {
-      setProof(JSON.parse(decodeURIComponent(proofEnc)));
-      console.log("Clearing URL");
-      window.history.replaceState(null, document.title, "/");
+      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      SemaphoreGroupPCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
+        setProof(pcd);
+        console.log("Clearing URL");
+        window.history.replaceState(null, document.title, "/");
+      });
     }
   }, [setProof]);
 

@@ -18,8 +18,11 @@ export function ProveScreen() {
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(request.args)));
   const pcdPackage = state.pcds.getPackage(request.pcdType);
   const onProveClick = useCallback(async () => {
-    const proof = await pcdPackage.prove(args);
-    console.log(proof);
+    const pcd = await pcdPackage.prove(args);
+    const serialized = await pcdPackage.serialize(pcd);
+    window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
+      serialized
+    )}`;
   }, [args]);
 
   if (request.type !== PCDRequestType.Get) {
