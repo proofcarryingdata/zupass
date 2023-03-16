@@ -1,4 +1,4 @@
-import { PCD, PCDPackage } from "@pcd/pcd-types";
+import { ArgsOf, PCD, PCDPackage } from "@pcd/pcd-types";
 
 export enum PCDRequestType {
   Get = "Get",
@@ -9,8 +9,6 @@ export interface PCDRequest {
   returnUrl: string;
   type: PCDRequestType;
 }
-
-export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
 
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   extends PCDRequest {

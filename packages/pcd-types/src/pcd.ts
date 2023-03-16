@@ -21,6 +21,8 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   deserialize(seralized: string): Promise<PCD<C, P>>;
 }
 
+export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
+
 export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
   type: T;
   specificType: U;
