@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev src/main.ts",
-    "build": "exit 0",
+    "build": "tsc --noEmit",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
     "lint": "exit 0",
     "test": "ts-mocha --exit test/**/*.spec.ts"
@@ -13,6 +13,7 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
+    "@pcd/pcd-types": "*",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
     "express": "^4.18.2",
@@ -21,7 +22,6 @@
     "morgan": "^1.10.0",
     "next": "^13.1.1",
     "p-queue": "6",
-    "@pcd/pcd-types": "*",
     "pg": "^8.8.0",
     "postgres-migrations": "^5.3.0",
     "react": "^18.2.0",
@@ -32,6 +32,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
     "@types/expect": "^24.3.0",
     "@types/express": "^4.17.16",
     "@types/mocha": "^10.0.1",
@@ -42,11 +44,9 @@
     "@types/uuid": "^9.0.0",
     "dotenv": "^16.0.3",
     "eslint": "7.32.0",
-    "@pcd/eslint-config-custom": "*",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
-    "@pcd/tsconfig": "*",
-    "typescript": "^4.5.3"
+    "typescript": "^4.9.5"
   }
 }

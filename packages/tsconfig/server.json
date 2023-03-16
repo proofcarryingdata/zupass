@@ -4,7 +4,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "target": "es6",
-    "lib": ["esnext"],
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,

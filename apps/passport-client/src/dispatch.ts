@@ -1,7 +1,10 @@
+import { PCDCollection } from "@pcd/pcd-collection";
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { saveSelf, ZuParticipant } from "./participant";
-import { ZuError, ZuState } from "./state";
+import { savePCDs, ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -55,13 +58,24 @@ export async function dispatch(
 async function genPassport(email: string, update: ZuUpdate) {
   // Generate a semaphore identity, save it to the local store, generate an
   // email magic link. In prod, send email, in dev, display the link.
-  window.location.hash = "#/new-passport";
 
   // Generate a fresh identity, save in local storage.
   const identity = new Identity();
   console.log("Created identity", identity.toString());
   window.localStorage["identity"] = identity.toString();
+
   update({ identity, pendingAction: { type: "new-passport", email } });
+  window.location.hash = "#/new-passport";
+
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const pcds = new PCDCollection(
+    [SemaphoreIdentityPCDPackage, SemaphoreGroupPCDPackage],
+    [identityPCD]
+  );
+
+  await savePCDs(pcds);
+
+  update({ pcds, pendingAction: { type: "new-passport", email } });
 }
 
 function doSaveSelf(

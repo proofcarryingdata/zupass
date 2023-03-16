@@ -31,7 +31,7 @@ export async function prove(
   const serializedPCD = await pcdPackage.serialize(pcd);
 
   return {
-    serializedPCD,
+    serializedPCD: JSON.stringify(serializedPCD),
   };
 }
 
