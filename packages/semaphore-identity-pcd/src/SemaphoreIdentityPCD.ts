@@ -42,7 +42,7 @@ export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
 
 export async function serialize(
   pcd: SemaphoreIdentityPCD
-): Promise<SerializedPCD> {
+): Promise<SerializedPCD<SemaphoreIdentityPCD>> {
   return {
     type: SemaphoreIdentityPCDTypeName,
     pcd: JSONBig.stringify({
@@ -50,7 +50,7 @@ export async function serialize(
       id: pcd.id,
       identity: pcd.claim.identity.toString(),
     }),
-  };
+  } as SerializedPCD<SemaphoreIdentityPCD>;
 }
 
 export async function deserialize(

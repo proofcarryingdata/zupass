@@ -17,7 +17,7 @@ describe("semaphore group identity should work", function () {
   this.timeout(1000 * 30);
 
   this.beforeAll(async function () {
-    await SemaphoreGroupPCDPackage.init({
+    await SemaphoreGroupPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
     });

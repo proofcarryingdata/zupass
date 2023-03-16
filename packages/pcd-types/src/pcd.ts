@@ -5,7 +5,9 @@ export interface PCD<C = unknown, P = unknown> {
   proof: P;
 }
 
+declare const tag: unique symbol;
 export interface SerializedPCD<T extends PCD = PCD> {
+  [tag]: "SerializedPcd";
   type: string;
   pcd: string;
 }
@@ -15,7 +17,7 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;
-  serialize(pcd: PCD<C, P>): Promise<SerializedPCD>;
+  serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
   deserialize(seralized: string): Promise<PCD<C, P>>;
 }
 

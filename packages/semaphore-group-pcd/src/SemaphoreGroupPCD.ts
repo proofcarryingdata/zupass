@@ -150,8 +150,11 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
 
 export async function serialize(
   pcd: SemaphoreGroupPCD
-): Promise<SerializedPCD> {
-  return { type: SemaphoreGroupPCDTypeName, pcd: JSONBig().stringify(pcd) };
+): Promise<SerializedPCD<SemaphoreGroupPCD>> {
+  return {
+    type: SemaphoreGroupPCDTypeName,
+    pcd: JSONBig().stringify(pcd),
+  } as SerializedPCD<SemaphoreGroupPCD>;
 }
 
 export async function deserialize(
