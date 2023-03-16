@@ -1,10 +1,10 @@
+import { ZuParticipant } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { Card, CardZID } from "../../src/model/Card";
-import { ZuParticipant } from "../../src/participant";
 import { Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
 import { CardElem } from "../shared/CardElem";

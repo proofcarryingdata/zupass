@@ -9,6 +9,7 @@ import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import { SettingsScreen } from "../components/screens/SettingsScreen";
+import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadSelf } from "../src/participant";
@@ -62,6 +63,7 @@ function Router() {
           <Route path="save-self" element={<SaveSelfScreen />} />
           <Route path="settings" element={<SettingsScreen />} />
           <Route path="prove" element={<ProveScreen />} />
+          <Route path="verify" element={<VerifyScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
