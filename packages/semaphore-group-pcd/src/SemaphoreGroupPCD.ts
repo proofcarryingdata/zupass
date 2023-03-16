@@ -3,7 +3,6 @@ import {
   ObjectArgument,
   PCD,
   PCDArgument,
-  PCDArguments,
   PCDPackage,
   SerializedPCD,
 } from "@pcd/pcd-types";
@@ -35,7 +34,7 @@ export interface SempahoreGroupPCDInitArgs {
   wasmFilePath: string;
 }
 
-export interface SemaphoreGroupPCDArgs extends PCDArguments {
+export interface SemaphoreGroupPCDArgs {
   group: ObjectArgument<SerializedSemaphoreGroup>;
   identity: PCDArgument<SemaphoreGroupPCD>;
   externalNullifier: BigIntArgument;
@@ -159,7 +158,8 @@ export async function deserialize(
 export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDClaim,
   SemaphoreGroupPCDProof,
-  SemaphoreGroupPCDArgs
+  SemaphoreGroupPCDArgs,
+  SempahoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
   init,

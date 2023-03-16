@@ -1,5 +1,5 @@
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -7,6 +7,11 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+
+let a = {} as any as PCDPackage<any, any, any, any>;
+let b = {} as any as PCDPackage<number, number, number, number>;
+
+a = b;
 
 export default function Web() {
   // Request a proof from the passport
@@ -36,18 +41,6 @@ export default function Web() {
         argumentType: ArgumentTypeName.BigInt,
         value: "1",
         userProvided: false,
-      },
-      wasmFilePath: {
-        argumentType: ArgumentTypeName.String,
-        userProvided: false,
-        // TODO: pass in via package config rather than as argument
-        value: "/semaphore-artifacts/16.zkey",
-      },
-      zkeyFilePath: {
-        argumentType: ArgumentTypeName.String,
-        userProvided: false,
-        // TODO: pass in via package config rather than as argument
-        value: "/semaphore-artifacts/16.zkey",
       },
     }
   );
