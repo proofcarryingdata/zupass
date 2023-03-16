@@ -10,16 +10,18 @@ export interface SerializedPCD<T extends PCD = PCD> {
   pcd: string;
 }
 
-export interface PCDPackage<C = unknown, P = unknown, A = unknown> {
+export interface PCDPackage<
+  C = unknown,
+  P = unknown,
+  A = unknown,
+  I = unknown
+> {
   name: string;
+  init(initArgs: I): Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;
   serialize(pcd: PCD<C, P>): Promise<SerializedPCD>;
   deserialize(seralized: string): Promise<PCD<C, P>>;
-}
-
-export interface PCDArguments {
-  [name: string]: Argument<any, any>;
 }
 
 export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {

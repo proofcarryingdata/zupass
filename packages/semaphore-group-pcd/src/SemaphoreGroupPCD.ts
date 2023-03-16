@@ -6,7 +6,6 @@ import {
   PCDArguments,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
 } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -21,21 +20,26 @@ import {
   SerializedSemaphoreGroup,
 } from "./SerializedSemaphoreGroup";
 
+let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
+
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 
-export interface SemaphoreGroupPCDArgs extends PCDArguments {
-  group: ObjectArgument<SerializedSemaphoreGroup>;
-  identity: PCDArgument<SemaphoreGroupPCD>;
-  externalNullifier: BigIntArgument;
-  signal: BigIntArgument;
+export interface SempahoreGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
   // of the package don't have to copy-paste these artifacts?
   // TODO: how do we account for different versions of the same type
   // of artifact? eg. this one is parameterized by group size. Should
   // we pre-generate a bunch of artifacts per possible group size?
   // Should we do code-gen?
-  zkeyFilePath: StringArgument;
-  wasmFilePath: StringArgument;
+  zkeyFilePath: string;
+  wasmFilePath: string;
+}
+
+export interface SemaphoreGroupPCDArgs extends PCDArguments {
+  group: ObjectArgument<SerializedSemaphoreGroup>;
+  identity: PCDArgument<SemaphoreGroupPCD>;
+  externalNullifier: BigIntArgument;
+  signal: BigIntArgument;
 }
 
 export interface SemaphoreGroupPCDClaim {
@@ -80,10 +84,16 @@ export class SemaphoreGroupPCD
   }
 }
 
+export async function init(args: SempahoreGroupPCDInitArgs): Promise<void> {
+  initArgs = args;
+}
+
 export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
-  console.log("ARGS", args);
+  if (!initArgs) {
+    throw new Error("cannot make group proof: init has not been called yet");
+  }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
@@ -105,8 +115,8 @@ export async function prove(
     args.externalNullifier.value!,
     args.signal.value!,
     {
-      zkeyFilePath: args.zkeyFilePath.value!,
-      wasmFilePath: args.wasmFilePath.value!,
+      zkeyFilePath: initArgs.zkeyFilePath,
+      wasmFilePath: initArgs.wasmFilePath,
     }
   );
 
@@ -152,6 +162,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
+  init,
   prove,
   verify,
   serialize,
