@@ -1,8 +1,11 @@
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCD,
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
+  serializeSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 
@@ -17,12 +20,24 @@ export async function createProof(
   group.addMember(identity.commitment);
 
   const args: SemaphoreGroupPCDArgs = {
-    externalNullifier: BigInt(1),
-    signal: BigInt(1),
-    group,
-    identity,
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
-    wasmFilePath: "/semaphore-artifacts/16.wasm",
+    externalNullifier: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: "1",
+    },
+    signal: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: "1",
+    },
+    group: {
+      argumentType: ArgumentTypeName.Object,
+      value: serializeSemaphoreGroup(group, "test name"),
+    },
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: await SemaphoreIdentityPCDPackage.serialize(
+        await SemaphoreIdentityPCDPackage.prove({ identity })
+      ),
+    },
   };
 
   const pcd = await prove(args);

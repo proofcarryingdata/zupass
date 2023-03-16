@@ -136,7 +136,9 @@ function ZuzaluIdBody({ card }: { card: CardZID }) {
   const [serialized, setSerialized] = useState<string>();
   useEffect(() => {
     const { serialize } = SemaphoreGroupPCDPackage;
-    createProof(identity).then(serialize).then(setSerialized);
+    createProof(identity)
+      .then(serialize)
+      .then((serialized) => setSerialized(JSON.stringify(serialized)));
   }, [identity]);
   if (serialized == null) return null;
 
