@@ -12,8 +12,8 @@
     "@ethereumjs/util": "^8.0.5",
     "@pcd/pcd-types": "*",
     "@personaelabs/spartan-ecdsa": "^2.0.0",
-    "json-bigint": "^1.0.0",
-    "text-encoding": "^0.7.0"
+    "buffer": "^6.0.3",
+    "json-bigint": "^1.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

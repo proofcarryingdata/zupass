@@ -43,16 +43,14 @@ describe("ETH pubkey group membership check should work", function () {
     poseidon = new Poseidon();
     await poseidon.initWasm();
 
-    const pubKeyTree = new Tree(treeDepth, poseidon);
-
-    let pubKeyPoseidonHash: bigint = BigInt("0");
     // Insert the members into the tree
+    const pubKeyTree = new Tree(treeDepth, poseidon);
+    let pubKeyPoseidonHash: bigint = BigInt("0");
     for (const privKey of privKeys) {
       const pubKey = privateToPublic(privKey);
       const pubKeyHash = poseidon.hashPubKey(pubKey);
       pubKeyTree.insert(pubKeyHash);
 
-      // Set prover's public key hash for the reference below
       if (proverPrivKey === privKey) pubKeyPoseidonHash = pubKeyHash;
     }
 
@@ -70,6 +68,27 @@ describe("ETH pubkey group membership check should work", function () {
     const { prove, verify } = ETHPubkeyGroupPCDPackage;
     const pcd = await prove(args);
     const verified = await verify(pcd);
+    assert.equal(verified, true);
+  });
+
+  it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
+    const { prove, serialize, deserialize } = ETHPubkeyGroupPCDPackage;
+    const pcd = await prove(args);
+
+    const serialized_pcd = await serialize(pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd);
+
+    assert.deepEqual(deserialized_pcd, pcd);
+  });
+
+  it("verifying a deserialized PCD that is valid should result in a correct verification", async function () {
+    const { prove, verify, serialize, deserialize } = ETHPubkeyGroupPCDPackage;
+    const pcd = await prove(args);
+
+    const serialized_pcd = await serialize(pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd);
+    const verified = await verify(deserialized_pcd);
+
     assert.equal(verified, true);
   });
 });

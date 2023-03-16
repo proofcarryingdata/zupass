@@ -2,9 +2,10 @@ import { PCD, PCDPackage } from "@pcd/pcd-types";
 import {
   MembershipProver,
   MembershipVerifier,
+  PublicInput,
   Tree,
 } from "@personaelabs/spartan-ecdsa";
-import JSONBig from "json-bigint";
+var Buffer = require("buffer").Buffer;
 
 export interface ETHPubkeyGroupPCDArgs {
   tree: Tree;
@@ -18,7 +19,7 @@ export interface ETHPubkeyGroupPCDArgs {
 // TODO: break this up into more parts to make claim
 // more easily parseable
 export interface ETHPubkeyGroupPCDClaim {
-  publicInput: Uint8Array;
+  publicInput: PublicInput;
   circuitFilePath: string;
 }
 
@@ -65,7 +66,7 @@ export async function prove(
 
   // Set up PCD
   const claimPCD: ETHPubkeyGroupPCDClaim = {
-    publicInput: publicInput.serialize(),
+    publicInput: publicInput,
     circuitFilePath: args.circuitFilePath,
   };
   const proofPCD: ETHPubkeyGroupPCDProof = {
@@ -83,19 +84,42 @@ export async function verify(pcd: ETHPubkeyGroupPCD): Promise<boolean> {
   await verifier.initWasm();
 
   // Verify proof
-  const valid = await verifier.verify(pcd.proof.proof, pcd.claim.publicInput);
+  const valid = await verifier.verify(
+    pcd.proof.proof,
+    pcd.claim.publicInput.serialize()
+  );
 
   return valid;
 }
 
 export async function serialize(pcd: ETHPubkeyGroupPCD): Promise<string> {
-  return JSONBig().stringify(pcd);
+  let preSerializedPCD = {
+    publicInput: Buffer.from(pcd.claim.publicInput.serialize()).toString(
+      "base64"
+    ),
+    circuitFilePath: pcd.claim.circuitFilePath,
+    proof: Buffer.from(pcd.proof.proof).toString("base64"),
+  };
+
+  return JSON.stringify(preSerializedPCD);
 }
 
 export async function deserialize(
   serialized: string
 ): Promise<ETHPubkeyGroupPCD> {
-  return JSONBig().parse(serialized);
+  let postSerializedPCD = JSON.parse(serialized);
+
+  let claim: ETHPubkeyGroupPCDClaim = {
+    publicInput: PublicInput.deserialize(
+      new Uint8Array(Buffer.from(postSerializedPCD.publicInput, "base64"))
+    ),
+    circuitFilePath: postSerializedPCD.circuitFilePath,
+  };
+  let proof: ETHPubkeyGroupPCDProof = {
+    proof: new Uint8Array(Buffer.from(postSerializedPCD.proof, "base64")),
+  };
+
+  return new ETHPubkeyGroupPCD(claim, proof);
 }
 
 /**
