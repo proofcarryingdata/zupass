@@ -1,5 +1,4 @@
-import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { requestZuzaluMembershipProof } from "@pcd/passport-interface";
 import {
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
@@ -10,37 +9,6 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 
 export default function Web() {
-  // Request a proof from the passport
-  const url = constructPassportPcdGetRequestUrl<
-    typeof SemaphoreGroupPCDPackage
-  >(
-    "http://localhost:3000/",
-    "http://localhost:3001/",
-    SemaphoreGroupPCDPackage.name,
-    {
-      externalNullifier: {
-        argumentType: ArgumentTypeName.BigInt,
-        userProvided: false,
-        value: "1",
-      },
-      group: {
-        argumentType: ArgumentTypeName.Object,
-        userProvided: false,
-        remoteUrl: "http://localhost:3002/semaphore/1",
-      },
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: undefined,
-        userProvided: true,
-      },
-      signal: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: "1",
-        userProvided: false,
-      },
-    }
-  );
-
   // Handle callback from the passport, providing a proof
   const [proof, setProof] = useState<SemaphoreGroupPCD>(); // opaque JSON object
   useEffect(() => {
@@ -78,7 +46,20 @@ export default function Web() {
       <h1>Welcome to Zuzalu!</h1>
       <button
         onClick={() => {
-          window.location.href = url;
+          const RETURN_URL = window && window.location.href;
+          const PASSPORT_URL = "http://localhost:3000/";
+          const SEMAPHORE_GROUP_URL = "http://localhost:3002/semaphore/1";
+
+          console.log("test");
+
+          requestZuzaluMembershipProof(
+            PASSPORT_URL,
+            RETURN_URL,
+            SEMAPHORE_GROUP_URL,
+            (url) => {
+              window.location.href = url;
+            }
+          );
         }}
       >
         Prove Residency
