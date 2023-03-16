@@ -1,5 +1,14 @@
 # @pcd/semaphore-group-pcd
 
+## 0.0.3
+
+### Patch Changes
+
+- Preparing for zuzalu.
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.0.4
+  - @pcd/pcd-types@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
