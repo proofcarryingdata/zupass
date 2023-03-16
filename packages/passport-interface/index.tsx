@@ -1,2 +1,2 @@
-export * from "./src/passport-interface";
-export * from "./src/request-types";
+export * from "./src/PassportInterface";
+export * from "./src/RequestTypes";
