@@ -2,14 +2,13 @@ import { PCD, PCDPackage } from "@pcd/pcd-types";
 import {
   MembershipProver,
   MembershipVerifier,
-  Poseidon,
   Tree,
 } from "@personaelabs/spartan-ecdsa";
 import JSONBig from "json-bigint";
 
 export interface ETHPubkeyGroupPCDArgs {
   tree: Tree;
-  proverPubKey: Buffer;
+  pubKeyPoseidonHash: bigint;
   msgHash: Buffer;
   sig: string;
   wasmFilePath: string;
@@ -46,15 +45,8 @@ export class ETHPubkeyGroupPCD
 export async function prove(
   args: ETHPubkeyGroupPCDArgs
 ): Promise<ETHPubkeyGroupPCD> {
-  // Init the Poseidon hash
-  const poseidon = new Poseidon();
-  await poseidon.initWasm();
-
-  // Get the prover public key hash
-  const proverPubkeyHash = poseidon.hashPubKey(args.proverPubKey);
-
   // Compute the merkle proof
-  const index = args.tree.indexOf(proverPubkeyHash);
+  const index = args.tree.indexOf(args.pubKeyPoseidonHash);
   const merkleProof = args.tree.createProof(index);
 
   // Init the prover
