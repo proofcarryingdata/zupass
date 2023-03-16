@@ -9,9 +9,11 @@
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@ethereumjs/util": "^8.0.5",
     "@pcd/pcd-types": "*",
     "@personaelabs/spartan-ecdsa": "^2.0.0",
-    "json-bigint": "^1.0.0"
+    "json-bigint": "^1.0.0",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

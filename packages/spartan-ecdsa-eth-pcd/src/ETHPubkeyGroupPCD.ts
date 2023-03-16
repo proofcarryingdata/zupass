@@ -1,15 +1,31 @@
 import { PCD, PCDPackage } from "@pcd/pcd-types";
-
-import { Tree } from "@personaelabs/spartan-ecdsa";
+import {
+  MembershipProver,
+  MembershipVerifier,
+  Poseidon,
+  Tree,
+} from "@personaelabs/spartan-ecdsa";
+import JSONBig from "json-bigint";
 
 export interface ETHPubkeyGroupPCDArgs {
   tree: Tree;
   proverPubKey: Buffer;
+  msgHash: Buffer;
+  sig: string;
+  wasmFilePath: string;
+  circuitFilePath: string;
 }
 
-export interface ETHPubkeyGroupPCDClaim {}
+// TODO: break this up into more parts to make claim
+// more easily parseable
+export interface ETHPubkeyGroupPCDClaim {
+  publicInput: Uint8Array;
+  circuitFilePath: string;
+}
 
-export interface ETHPubkeyGroupPCDProof {}
+export interface ETHPubkeyGroupPCDProof {
+  proof: Uint8Array;
+}
 
 export class ETHPubkeyGroupPCD
   implements PCD<ETHPubkeyGroupPCDClaim, ETHPubkeyGroupPCDProof>
@@ -30,21 +46,64 @@ export class ETHPubkeyGroupPCD
 export async function prove(
   args: ETHPubkeyGroupPCDArgs
 ): Promise<ETHPubkeyGroupPCD> {
-  throw new Error("Not implemented");
+  // Init the Poseidon hash
+  const poseidon = new Poseidon();
+  await poseidon.initWasm();
+
+  // Get the prover public key hash
+  const proverPubkeyHash = poseidon.hashPubKey(args.proverPubKey);
+
+  // Compute the merkle proof
+  const index = args.tree.indexOf(proverPubkeyHash);
+  const merkleProof = args.tree.createProof(index);
+
+  // Init the prover
+  const prover = new MembershipProver({
+    witnessGenWasm: args.wasmFilePath,
+    circuit: args.circuitFilePath,
+  });
+  await prover.initWasm();
+
+  // Prove membership
+  const { proof, publicInput } = await prover.prove(
+    args.sig,
+    args.msgHash,
+    merkleProof
+  );
+
+  // Set up PCD
+  const claimPCD: ETHPubkeyGroupPCDClaim = {
+    publicInput: publicInput.serialize(),
+    circuitFilePath: args.circuitFilePath,
+  };
+  const proofPCD: ETHPubkeyGroupPCDProof = {
+    proof: proof,
+  };
+
+  return new ETHPubkeyGroupPCD(claimPCD, proofPCD);
 }
 
 export async function verify(pcd: ETHPubkeyGroupPCD): Promise<boolean> {
-  throw new Error("Not implemented");
+  // Init verifier
+  const verifier = new MembershipVerifier({
+    circuit: pcd.claim.circuitFilePath,
+  });
+  await verifier.initWasm();
+
+  // Verify proof
+  const valid = await verifier.verify(pcd.proof.proof, pcd.claim.publicInput);
+
+  return valid;
 }
 
 export async function serialize(pcd: ETHPubkeyGroupPCD): Promise<string> {
-  throw new Error("Not implemented");
+  return JSONBig().stringify(pcd);
 }
 
 export async function deserialize(
   serialized: string
 ): Promise<ETHPubkeyGroupPCD> {
-  throw new Error("Not implemented");
+  return JSONBig().parse(serialized);
 }
 
 /**
