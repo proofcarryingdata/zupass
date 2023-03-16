@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "lint": "TIMING=1 eslint \"**/*.ts*\"",
-    "test": "ts-mocha --exit test/**/*.spec.ts"
+    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "build": "tsc --noEmit"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",
