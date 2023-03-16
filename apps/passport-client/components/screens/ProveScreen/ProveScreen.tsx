@@ -60,9 +60,9 @@ function ProveSemaGroupSig({
   useEffect(() => {
     const fetchGroup = async () => {
       const res = await fetch(req.args.group.remoteUrl);
-      const group = JSON.parse(await res.json());
+      const group = (await res.json()) as SerializedSemaphoreGroup;
       console.log("Got semaphore group", group);
-      setGroup(group as SerializedSemaphoreGroup);
+      setGroup(group);
     };
     fetchGroup().catch(console.error);
   }, []);

@@ -69,6 +69,7 @@ function CardBody({ card }: { card: Card }) {
     </>
   );
 }
+
 function CardHeader({ card }: { card: Card }) {
   const { display } = card;
   return (
@@ -134,6 +135,7 @@ const CardFull = styled(CardBase)`
 function ZuzaluIdBody({ card }: { card: CardZID }) {
   const style = useMemo(() => ({ width: "160px", height: "160px" }), []);
   const { identity } = card;
+  if (!identity) return null;
 
   const [serialized, setSerialized] = useState<string>();
   useEffect(() => {
@@ -146,10 +148,10 @@ function ZuzaluIdBody({ card }: { card: CardZID }) {
 
   console.log(`PCD size: ${serialized.length} bytes`);
   const compressed = gzip(serialized);
-  const base64 = Buffer.from(compressed).toString("base64");
-  console.log(`Compressed: ${compressed.length}, base64: ${base64.length}`);
+  const enc = encodeURIComponent(Buffer.from(compressed).toString("base64"));
+  console.log(`Compressed: ${compressed.length}, base64: ${enc.length}`);
 
-  const link = window.location.origin + "#/verify?pcd=" + base64;
+  const link = `${window.location.origin}#/verify?pcd=${enc}`;
   console.log(`Link, ${link.length} bytes: ${link}`);
 
   return (
