@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { ZuzaluParticipant } from "@pcd/passport-interface";
 import {
   SemaphoreGroupPCDPackage,
   SemaphoreGroupPCDTypeName,
@@ -20,7 +20,7 @@ type VerifyType = "identity-proof" | "anon-proof";
 
 type VerifyResult =
   | { valid: false; type: VerifyType; message: string }
-  | { valid: true; type: "identity-proof"; participant: ZuParticipant }
+  | { valid: true; type: "identity-proof"; participant: ZuzaluParticipant }
   | { valid: true; type: "anon-proof"; role: string };
 
 export function VerifyScreen() {

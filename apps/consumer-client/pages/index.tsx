@@ -1,7 +1,9 @@
 import {
   requestZuzaluMembershipProof,
   useSemaphorePassportProof,
+  useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
+import { useState } from "react";
 import styled from "styled-components";
 import { IS_PROD } from "../src/util";
 
@@ -14,11 +16,16 @@ const PASSPORT_URL = IS_PROD
   : "http://localhost:3000/";
 
 export default function Web() {
+  const [messageToSign, setMessageToSign] = useState<string>("");
+
   const {
     semaphoreProof: proof,
     semaphoreGroup: group,
     semaphoreProofValid: valid,
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
+
+  const { signatureProof, signatureProofValid } =
+    useSemaphoreSignatureProof(messageToSign);
 
   return (
     <Container>

@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { ZuzaluParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -14,7 +14,7 @@ export interface ZuState {
 
   // Participant metadata.
   // TODO: reload from passport server on startup.
-  self?: ZuParticipant;
+  self?: ZuzaluParticipant;
 
   // If set, shows an error popover.
   error?: ZuError;

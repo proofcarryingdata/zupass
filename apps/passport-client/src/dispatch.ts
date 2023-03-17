@@ -1,9 +1,10 @@
+import { ZuzaluParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { saveSelf, ZuParticipant } from "./participant";
+import { saveSelf } from "./participant";
 import { savePCDs, ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
@@ -15,7 +16,7 @@ export type Action =
     }
   | {
       type: "save-self";
-      participant: ZuParticipant;
+      participant: ZuzaluParticipant;
     }
   | {
       type: "error";
@@ -79,7 +80,7 @@ async function genPassport(email: string, update: ZuUpdate) {
 }
 
 function doSaveSelf(
-  participant: ZuParticipant,
+  participant: ZuzaluParticipant,
   state: ZuState,
   update: ZuUpdate
 ) {
