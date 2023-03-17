@@ -1,6 +1,6 @@
 import {
-  receivePassportProof,
   requestZuzaluMembershipProof,
+  useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import styled from "styled-components";
 import { IS_PROD } from "../src/util";
@@ -18,7 +18,7 @@ export default function Web() {
     semaphoreProof: proof,
     semaphoreGroup: group,
     semaphoreProofValid: valid,
-  } = receivePassportProof(SEMAPHORE_GROUP_URL);
+  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
 
   return (
     <Container>
@@ -44,7 +44,7 @@ export default function Web() {
           <pre>{JSON.stringify(proof, null, 2)}</pre>
           <h2>Verifying proof...</h2>
           {group && <p>✅ Loaded group, {group.members.length} members</p>}
-          {valid === false && <p>❓ Proof verifying</p>}
+          {valid === undefined && <p>❓ Proof verifying</p>}
           {valid === false && <p>❌ Proof is invalid</p>}
           {valid === true && <p>✅ Proof is valid</p>}
         </>

@@ -1,5 +1,11 @@
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 
+/**
+ * This class represents all the PCDs a user may have, and also
+ * contains references to all the relevant {@link PCDPackage}s,
+ * which allows this class to effectively make use of all of the
+ * PCDs.
+ */
 export class PCDCollection {
   private packages: PCDPackage[];
   private pcds: PCD[];

@@ -24,6 +24,7 @@ export function NewPassportScreen() {
     redirect: saveSelfPage,
     email,
     commitment: identity.commitment.toString(),
+    token: "todo",
   }).toString();
   const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
 

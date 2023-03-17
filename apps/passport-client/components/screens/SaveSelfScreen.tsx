@@ -1,8 +1,8 @@
+import { ZuParticipant } from "@pcd/passport-interface";
 import * as React from "react";
 import { useContext, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
-import { ZuParticipant } from "../../src/participant";
 import { Spacer } from "../core";
 
 export function SaveSelfScreen() {
