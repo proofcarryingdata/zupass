@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.0.4
+
+### Patch Changes
+
+- Another update.
+
 ## 0.0.3
 
 ### Patch Changes

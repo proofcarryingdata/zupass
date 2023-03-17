@@ -1,5 +1,14 @@
 # @pcd/passport-interface
 
+## 0.0.4
+
+### Patch Changes
+
+- Another update.
+- Updated dependencies
+  - @pcd/pcd-types@0.0.4
+  - @pcd/semaphore-group-pcd@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes
