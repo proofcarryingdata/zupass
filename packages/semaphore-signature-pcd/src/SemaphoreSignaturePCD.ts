@@ -22,9 +22,9 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
 /**
- * Hashes a signal string with Keccak256.
- * @param signal The Semaphore signal.
- * @returns The signal hash.
+ * Hashes a message to be signed with Keccak and fits it into a baby jub jub field element.
+ * @param signal The initial message.
+ * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
 function generateMessageHash(signal: string): bigint {
   if (!isHexString(signal, 32)) {
