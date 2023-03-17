@@ -1,4 +1,4 @@
-import { PCD, PCDPackage } from "@pcd/pcd-types";
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import {
@@ -7,11 +7,11 @@ import {
   verifyProof,
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 
-export interface SemaphorePubKeyRevealPCDArgs {
-  identity: Identity;
-  externalNullifier: bigint;
-  signal: bigint;
+export const SemaphorePubKeyRevealPCDTypeName = "semaphore-pubkey-reveal-pcd";
+
+export interface SemaphorePubKeyRevealPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
   // of the package don't have to copy-paste these artifacts?
   // TODO: how do we account for different versions of the same type
@@ -20,6 +20,14 @@ export interface SemaphorePubKeyRevealPCDArgs {
   // Should we do code-gen?
   zkeyFilePath: string;
   wasmFilePath: string;
+}
+
+let initArgs: SemaphorePubKeyRevealPCDInitArgs | undefined = undefined;
+
+export interface SemaphorePubKeyRevealPCDArgs {
+  identity: Identity;
+  externalNullifier: bigint;
+  signal: bigint;
 }
 
 export interface SemaphorePubKeyRevealPCDClaim {
@@ -56,19 +64,36 @@ export class SemaphorePubKeyRevealPCD
   type = "SemaphorePubKeyRevealPCD";
   claim: SemaphorePubKeyRevealPCDClaim;
   proof: SemaphorePubKeyRevealPCDProof;
+  id: string;
 
   public constructor(
+    id: string,
     claim: SemaphorePubKeyRevealPCDClaim,
     proof: SemaphorePubKeyRevealPCDProof
   ) {
+    this.id = id;
     this.claim = claim;
     this.proof = proof;
   }
 }
 
+export async function init(
+  args: SemaphorePubKeyRevealPCDInitArgs
+): Promise<void> {
+  initArgs = args;
+}
+
 export async function prove(
   args: SemaphorePubKeyRevealPCDArgs
 ): Promise<SemaphorePubKeyRevealPCD> {
+  if (!initArgs) {
+    throw new Error(
+      "cannot make pubkey reveal proof: init has not been called yet"
+    );
+  }
+
+  // TODO: check the other parameters
+
   const group = new Group(1, 16);
   group.addMember(args.identity.commitment);
 
@@ -78,8 +103,8 @@ export async function prove(
     args.externalNullifier,
     args.signal,
     {
-      zkeyFilePath: args.zkeyFilePath,
-      wasmFilePath: args.wasmFilePath,
+      zkeyFilePath: initArgs.zkeyFilePath,
+      wasmFilePath: initArgs.wasmFilePath,
     }
   );
 
@@ -95,7 +120,7 @@ export async function prove(
     proof: fullProof,
   };
 
-  return new SemaphorePubKeyRevealPCD(claim, proof);
+  return new SemaphorePubKeyRevealPCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: SemaphorePubKeyRevealPCD): Promise<boolean> {
@@ -113,8 +138,11 @@ export async function verify(pcd: SemaphorePubKeyRevealPCD): Promise<boolean> {
 
 export async function serialize(
   pcd: SemaphorePubKeyRevealPCD
-): Promise<string> {
-  return JSONBig().stringify(pcd);
+): Promise<SerializedPCD<SemaphorePubKeyRevealPCD>> {
+  return {
+    type: SemaphorePubKeyRevealPCDTypeName,
+    pcd: JSONBig().stringify(pcd),
+  } as SerializedPCD<SemaphorePubKeyRevealPCD>;
 }
 
 export async function deserialize(
@@ -130,9 +158,11 @@ export async function deserialize(
 export const SemaphorePubKeyRevealPCDPackage: PCDPackage<
   SemaphorePubKeyRevealPCDClaim,
   SemaphorePubKeyRevealPCDProof,
-  SemaphorePubKeyRevealPCDArgs
+  SemaphorePubKeyRevealPCDArgs,
+  SemaphorePubKeyRevealPCDInitArgs
 > = {
   name: "semaphore-group-signal",
+  init,
   prove,
   verify,
   serialize,
