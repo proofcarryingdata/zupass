@@ -6,7 +6,10 @@ import {
   PCDPackage,
   SerializedPCD,
 } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage,
+} from "@pcd/semaphore-identity-pcd";
 import {
   FullProof,
   generateProof,
@@ -36,7 +39,7 @@ export interface SempahoreGroupPCDInitArgs {
 
 export interface SemaphoreGroupPCDArgs {
   group: ObjectArgument<SerializedSemaphoreGroup>;
-  identity: PCDArgument<SemaphoreGroupPCD>;
+  identity: PCDArgument<SemaphoreIdentityPCD>;
   externalNullifier: BigIntArgument;
   signal: BigIntArgument;
 }

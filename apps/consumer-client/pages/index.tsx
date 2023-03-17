@@ -3,8 +3,15 @@ import {
   requestZuzaluMembershipProof,
 } from "@pcd/passport-interface";
 import styled from "styled-components";
+import { IS_PROD } from "../src/util";
 
-const SEMAPHORE_GROUP_URL = "http://localhost:3002/semaphore/1";
+const SEMAPHORE_GROUP_URL = IS_PROD
+  ? "https://api.pcd-passport.com/semaphore/1"
+  : "http://localhost:3002/semaphore/1";
+
+const PASSPORT_URL = IS_PROD
+  ? "https://pcd-passport.com/"
+  : "http://localhost:3000/";
 
 export default function Web() {
   const {
@@ -19,7 +26,6 @@ export default function Web() {
       <button
         onClick={() => {
           const RETURN_URL = window && window.location.href;
-          const PASSPORT_URL = "http://localhost:3000/";
           requestZuzaluMembershipProof(
             PASSPORT_URL,
             RETURN_URL,
