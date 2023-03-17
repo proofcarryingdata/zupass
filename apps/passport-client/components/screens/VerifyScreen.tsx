@@ -1,7 +1,7 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import {
-  SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
+  SemaphoreGroupPCDTypeName,
 } from "@pcd/semaphore-group-pcd";
 import { Buffer } from "buffer";
 import { ungzip } from "pako";
@@ -111,7 +111,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   const pcd = await deserialize(unzipped.toString("utf8"));
   console.log(`Got PCD, should be a Zuzalu ID semaphore proof`, pcd);
 
-  if (pcd.type !== SemaphoreGroupPCD.name) {
+  if (pcd.type !== SemaphoreGroupPCDTypeName) {
     throw new Error(`PCD type '${pcd.type}' is not a Zuzalu ID proof`);
   }
   const groupSize = pcd.claim.group.members.length;
