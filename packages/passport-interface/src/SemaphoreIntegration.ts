@@ -42,7 +42,11 @@ export function requestZuzaluMembershipProof(
   navigate(url);
 }
 
-export function receivePassportProof(semaphoreGroupUrl: string) {
+/**
+ * React hook which can be used on 3rd party application websites that
+ * parses and verifies a PCD representing a Semaphore group membership proof.
+ */
+export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   const [semaphoreProof, setProof] = useState<SemaphoreGroupPCD>();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
