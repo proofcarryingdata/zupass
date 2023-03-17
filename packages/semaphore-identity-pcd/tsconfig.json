@@ -1,5 +1,5 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [".", "test", "../semaphore-identity-pcd/index.ts"],
+  "include": [".", "test"],
   "exclude": ["dist", "build", "node_modules"]
 }
