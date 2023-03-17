@@ -22,7 +22,14 @@ export default function Web() {
 
   return (
     <Container>
-      <h1>Welcome to Zuzalu!</h1>
+      <h1>consumer-client</h1>
+      <text>
+        This app goes through a sample flow for requesting two types of PCDs:
+        Zuzalu membership proofs (Semaphore group membership PCD) and a Zuzalu
+        identity confirmation PCD (Semaphore signature PCD).
+      </text>
+      <br />
+      <br />
       <button
         onClick={() => {
           const RETURN_URL = window && window.location.href;
@@ -36,7 +43,7 @@ export default function Web() {
           );
         }}
       >
-        Prove Residency
+        Request Zuzalu Membership Proof
       </button>
       {proof != null && (
         <>

@@ -65,7 +65,7 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   useEffect(() => {
     (async () => {
       const res = await fetch(semaphoreGroupUrl);
-      const group = JSON.parse(await res.json()) as SerializedSemaphoreGroup;
+      const group = (await res.json()) as SerializedSemaphoreGroup;
       setGroup(group);
     })();
   }, [setGroup]);
