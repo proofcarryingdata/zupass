@@ -1,6 +1,12 @@
-import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import {
+  BigIntArgument,
+  PCD,
+  PCDArgument,
+  PCDPackage,
+  SerializedPCD,
+} from "@pcd/pcd-types";
+import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
 import {
   FullProof,
   generateProof,
@@ -25,9 +31,9 @@ export interface SemaphorePubKeyRevealPCDInitArgs {
 let initArgs: SemaphorePubKeyRevealPCDInitArgs | undefined = undefined;
 
 export interface SemaphorePubKeyRevealPCDArgs {
-  identity: Identity;
-  externalNullifier: bigint;
-  signal: bigint;
+  identity: PCDArgument<SemaphoreIdentityPCD>;
+  externalNullifier: BigIntArgument;
+  signal: BigIntArgument;
 }
 
 export interface SemaphorePubKeyRevealPCDClaim {
@@ -61,7 +67,7 @@ export interface SemaphorePubKeyRevealPCDProof {
 export class SemaphorePubKeyRevealPCD
   implements PCD<SemaphorePubKeyRevealPCDClaim, SemaphorePubKeyRevealPCDProof>
 {
-  type = "SemaphorePubKeyRevealPCD";
+  type = SemaphorePubKeyRevealPCDTypeName;
   claim: SemaphorePubKeyRevealPCDClaim;
   proof: SemaphorePubKeyRevealPCDProof;
   id: string;
