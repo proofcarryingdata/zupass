@@ -20,16 +20,18 @@ import { PCDArgs } from "../../shared/PCDArgs";
 export function ParameterizedProveScreen() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+
   const [state, dispatch] = useContext(DispatchContext);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
+
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(request.args)));
   const pcdPackage = state.pcds.getPackage(request.pcdType);
   const onProveClick = useCallback(async () => {
     const pcd = await pcdPackage.prove(args);
     const serialized = await pcdPackage.serialize(pcd);
-    window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
-      serialized
-    )}`;
+    window.location.href = `${request.returnUrl}?${
+      request.pcdType
+    }=${JSON.stringify(serialized)}`;
   }, [args]);
 
   if (request.type !== PCDRequestType.Get) {

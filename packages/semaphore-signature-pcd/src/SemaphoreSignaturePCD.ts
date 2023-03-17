@@ -202,7 +202,7 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDInitArgs
 > = {
-  name: "semaphore-group-signal",
+  name: SemaphoreSignaturePCDTypeName,
   init,
   prove,
   verify,

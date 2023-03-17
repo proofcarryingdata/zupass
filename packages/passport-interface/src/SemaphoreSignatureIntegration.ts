@@ -26,19 +26,23 @@ export function requestSemaphoreSignatureProof(
       userProvided: false,
     },
   });
+
+  navigate(url);
 }
 
 /**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
-export function useSemaphoreSignatureProof(signedMessage: string) {
+export function useSemaphoreSignatureProof() {
   const [signatureProof, setProof] = useState<SemaphoreSignaturePCD>();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const proofEnc = params.get("proof");
+    const proofEnc = params.get(`${SemaphoreSignaturePCDPackage.name}`);
+    console.log(proofEnc);
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      console.log(parsedPCD);
       SemaphoreSignaturePCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
         setProof(pcd);
         window.history.replaceState(null, document.title, "/");

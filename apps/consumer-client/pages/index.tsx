@@ -1,4 +1,5 @@
 import {
+  requestSemaphoreSignatureProof,
   requestZuzaluMembershipProof,
   useSemaphorePassportProof,
   useSemaphoreSignatureProof,
@@ -24,46 +25,76 @@ export default function Web() {
     semaphoreProofValid: valid,
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
 
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(messageToSign);
+  const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
 
   return (
     <Container>
       <h1>consumer-client</h1>
-      <text>
-        This app goes through a sample flow for requesting two types of PCDs:
-        Zuzalu membership proofs (Semaphore group membership PCD) and a Zuzalu
-        identity confirmation PCD (Semaphore signature PCD).
-      </text>
-      <br />
-      <br />
-      <button
-        onClick={() => {
-          const RETURN_URL = window && window.location.href;
-          requestZuzaluMembershipProof(
-            PASSPORT_URL,
-            RETURN_URL,
-            SEMAPHORE_GROUP_URL,
-            (url) => {
-              window.location.href = url;
-            }
-          );
-        }}
-      >
-        Request Zuzalu Membership Proof
-      </button>
-      {proof != null && (
-        <>
-          <h2>Got Zuzalu Membership Proof from Passport</h2>
-          <pre>{JSON.stringify(proof, null, 2)}</pre>
-          <h2>Verifying proof...</h2>
-          {group && <p>✅ Loaded group, {group.members.length} members</p>}
-          {valid === undefined && <p>❓ Proof verifying</p>}
-          {valid === false && <p>❌ Proof is invalid</p>}
-          {valid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
-      {valid && <h2>Welcome, anon</h2>}
+      <Container>
+        <h2>Zuzalu Membership Proof (SemaphoreGroupPCD) </h2>
+        <button
+          onClick={() => {
+            const RETURN_URL = window && window.location.href;
+            requestZuzaluMembershipProof(
+              PASSPORT_URL,
+              RETURN_URL,
+              SEMAPHORE_GROUP_URL,
+              (url) => {
+                window.location.href = url;
+              }
+            );
+          }}
+        >
+          Request Zuzalu Membership Proof
+        </button>
+        {proof != null && (
+          <>
+            <h3>Got Zuzalu Membership Proof from Passport</h3>
+            <pre>{JSON.stringify(proof, null, 2)}</pre>
+            {group && <p>✅ Loaded group, {group.members.length} members</p>}
+            {valid === undefined && <p>❓ Proof verifying</p>}
+            {valid === false && <p>❌ Proof is invalid</p>}
+            {valid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+        {valid && <h3>Welcome, anon</h3>}
+      </Container>
+      <Container>
+        <h2>Signature or Identity Reveal Proof (SemaphoreSignaturePCD)</h2>
+        <input
+          placeholder="Message to sign"
+          type="text"
+          value={messageToSign}
+          onChange={(e) => setMessageToSign(e.target.value)}
+        />
+        <br />
+        <br />
+        <button
+          onClick={() => {
+            const RETURN_URL = window && window.location.href;
+            requestSemaphoreSignatureProof(
+              PASSPORT_URL,
+              RETURN_URL,
+              messageToSign,
+              (url) => {
+                window.location.href = url;
+              }
+            );
+          }}
+        >
+          Request Semaphore Signature
+        </button>
+        {signatureProof != null && (
+          <>
+            <h3>Got Semaphore Signature Proof from Passport</h3>
+            <pre>{JSON.stringify(proof, null, 2)}</pre>
+            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+            {signatureProofValid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+      </Container>
     </Container>
   );
 }
