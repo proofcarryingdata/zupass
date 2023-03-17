@@ -10,18 +10,18 @@
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@pcd/passport-interface": "^0.0.3",
+    "@pcd/pcd-collection": "*",
+    "@pcd/pcd-types": "*",
+    "@pcd/semaphore-group-pcd": "*",
+    "@pcd/semaphore-identity-pcd": "*",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
-    "@pcd/passport-interface": "*",
-    "@pcd/pcd-types": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.11",
     "react-router-dom": "^6.9.0",
-    "@pcd/semaphore-group-pcd": "*",
-    "@pcd/semaphore-identity-pcd": "*",
-    "@pcd/pcd-collection": "*",
     "styled-components": "^5.3.6"
   },
   "devDependencies": {
