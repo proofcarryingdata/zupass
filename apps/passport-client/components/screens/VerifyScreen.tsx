@@ -108,12 +108,13 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   console.log(`Unzipping ${buf.length}b`);
   const unzipped = Buffer.from(ungzip(buf));
   const { deserialize, verify } = SemaphoreGroupPCDPackage;
-  const pcd = await deserialize(unzipped.toString("utf8"));
+  const pcd = await deserialize(JSON.parse(unzipped.toString("utf8")).pcd);
   console.log(`Got PCD, should be a Zuzalu ID semaphore proof`, pcd);
 
   if (pcd.type !== SemaphoreGroupPCDTypeName) {
     throw new Error(`PCD type '${pcd.type}' is not a Zuzalu ID proof`);
   }
+
   const groupSize = pcd.claim.group.members.length;
   const type: VerifyType = groupSize === 1 ? "identity-proof" : "anon-proof";
   console.log(`Verifying 1-of-${groupSize} Zuzalu ${type} proof`);
