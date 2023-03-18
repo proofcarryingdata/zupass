@@ -5,8 +5,8 @@
 create table pretix_participants (
   -- email address
   email VARCHAR NOT NULL PRIMARY KEY,
-  -- Pretix ticket ID
-  -- ticket_id VARCHAR NOT NULL,
+  -- Pretix order ID
+  order_id VARCHAR NOT NULL,
   -- full name, eg "Vitalik Buterin"
   name VARCHAR NOT NULL,
   -- role, resident or visitor
