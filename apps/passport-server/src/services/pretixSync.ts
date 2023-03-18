@@ -1,4 +1,3 @@
-import { ZuParticipant } from "@pcd/passport-interface";
 import {
   fetchParticipantEmails,
   insertParticipants,
@@ -7,8 +6,6 @@ import { ApplicationContext } from "../types";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
 export function startPretixSync(context: ApplicationContext) {
-  const { dbClient, honeyClient } = context;
-
   // Make sure we can use the Pretix API.
   const pretixConfig: PretixConfig = {
     token: requireEnv("PRETIX_TOKEN"),
@@ -35,16 +32,24 @@ interface PretixConfig {
   zuEventID: string;
 }
 
+interface PretixParticipant {
+  email: string;
+  name: string;
+  role: string;
+  residence: string;
+  orderId: string;
+}
+
 // Fetch tickets from Pretix. Insert new ones only into the database.
 // TODO: handle revoked/cancelled tickets.
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
-  const { dbClient, honeyClient } = context;
+  const { dbClient } = context;
 
   // Load from Pretix, filter to valid tickets.
   const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
   console.log(`Fetched ${orders.length} orders`);
 
-  const participants: ZuParticipant[] = orders
+  const participants: PretixParticipant[] = orders
     .filter((o) => o.status === "p")
     .filter((o) => o.positions.length === 1)
     .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
@@ -53,13 +58,13 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
       email: o.email,
       name: o.positions[0].attendee_name,
       residence: "", // TODO: not in pretix yet
-      commitment: "",
+      orderId: o.code,
     }));
   console.log(`Found ${participants.length} participants`);
 
   // Insert into database.
   const existingEmails = await fetchParticipantEmails(dbClient);
-  const existingSet = new Set(existingEmails.map((e) => e.email));
+  const existingSet = new Set(existingEmails.map((e: any) => e.email));
   const newParticipants = participants.filter((p) => !existingSet.has(p.email));
 
   console.log(`Inserting ${newParticipants.length} new participants`);

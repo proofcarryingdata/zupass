@@ -5,11 +5,11 @@
 import { ClientBase, Pool } from 'pg'
 
 export async function insertParticipants(
-  client: ClientBase | Pool, params: { email: string, name: string, role: string, residence: string }
+  client: ClientBase | Pool, params: { email: string, name: string, role: string, residence: string, orderId: string }
 ): Promise<number> {
     const result = await client.query(`\
-insert into pretix_participants (email, name, role, residence)
-values ($1, $2, $3, $4)
-on conflict do nothing;`, [ params.email, params.name, params.role, params.residence ])
+insert into pretix_participants (email, name, role, residence, order_id)
+values ($1, $2, $3, $4, $5)
+on conflict do nothing;`, [ params.email, params.name, params.role, params.residence, params.orderId ])
     return result.rowCount
 }
