@@ -47,6 +47,7 @@ export function requestZuzaluMembershipProof(
  * parses and verifies a PCD representing a Semaphore group membership proof.
  */
 export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
+  const [error, setError] = useState<Error | undefined>();
   const [semaphoreProof, setProof] = useState<SemaphoreGroupPCD>();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -64,11 +65,19 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
   useEffect(() => {
     (async () => {
-      const res = await fetch(semaphoreGroupUrl);
-      const group = JSON.parse(await res.json()) as SerializedSemaphoreGroup;
-      setGroup(group);
+      if (!semaphoreProof) return;
+
+      try {
+        const res = await fetch(semaphoreGroupUrl);
+        const json = await res.text();
+
+        const group = JSON.parse(json) as SerializedSemaphoreGroup;
+        setGroup(group);
+      } catch (e) {
+        setError(e as Error);
+      }
     })();
-  }, [setGroup]);
+  }, [semaphoreProof]);
 
   // Verify the proof
   const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
@@ -79,9 +88,10 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   }, [semaphoreProof, semaphoreGroup, setValid]);
 
   return {
-    semaphoreProof,
-    semaphoreGroup,
-    semaphoreProofValid,
+    proof: semaphoreProof,
+    group: semaphoreGroup,
+    valid: semaphoreProofValid,
+    error,
   };
 }
 

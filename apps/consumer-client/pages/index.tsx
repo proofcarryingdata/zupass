@@ -2,6 +2,7 @@ import {
   requestZuzaluMembershipProof,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
+import { useEffect } from "react";
 import styled from "styled-components";
 import { IS_PROD } from "../src/util";
 
@@ -14,11 +15,14 @@ const PASSPORT_URL = IS_PROD
   : "http://localhost:3000/";
 
 export default function Web() {
-  const {
-    semaphoreProof: proof,
-    semaphoreGroup: group,
-    semaphoreProofValid: valid,
-  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
+  const { proof, group, valid, error } =
+    useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
+
+  useEffect(() => {
+    if (error) {
+      console.log("error using semaphore passport proof", error);
+    }
+  }, [error]);
 
   return (
     <Container>
