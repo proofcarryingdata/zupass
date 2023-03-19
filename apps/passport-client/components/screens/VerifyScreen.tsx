@@ -12,7 +12,7 @@ import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { CardDisplay } from "../../src/model/Card";
 import { fetchParticipant } from "../../src/participant";
-import { H1Center, Spacer } from "../core";
+import { Spacer } from "../core";
 import { CardElem } from "../shared/CardElem";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
@@ -139,3 +139,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   return { valid: true, type, participant };
 }
+
+export const H1Center = styled.h1`
+  font-size: 2rem;
+`;
