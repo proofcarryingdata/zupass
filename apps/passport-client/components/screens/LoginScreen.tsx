@@ -8,7 +8,18 @@ import {
 } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { BigInput, Button, H1, Spacer, TextCenter } from "../core";
+import {
+  BackgroundGlow,
+  BigInput,
+  Button,
+  H1,
+  H2,
+  HR,
+  Spacer,
+  TextCenter,
+  ZuLogo,
+} from "../core";
+import { LinkButton } from "../core/Button";
 
 export function LoginScreen() {
   const [_, dispatch] = useContext(DispatchContext);
@@ -23,23 +34,25 @@ export function LoginScreen() {
   );
 
   return (
-    <div>
-      <Spacer h={24} />
+    <BackgroundGlow>
+      <Spacer h={64} />
       <TextCenter>
-        <img src="/zuzalu.png" alt="Zuzalu logo" width={128} height={128} />
-        <Spacer h={16} />
-        <H1>Welcome to Zuzalu</H1>
+        <H1>PASSPORT</H1>
+        <Spacer h={24} />
+        <ZuLogo />
+        <Spacer h={24} />
+        <H2>ZUZALU</H2>
+        <Spacer h={24} />
+        <Description>
+          This experimental passport uses zero-knowledge proofs to prove Zuzalu
+          citizenship without revealing who you are.
+        </Description>
       </TextCenter>
-      <Spacer h={24} />
-      <p>
-        This experimental passport uses zero-knowledge proofs to show that
-        you&apos;re part of Zuzalu without revealing who you are.
-      </p>
-      <br />
+      <Spacer h={16} />
       <Form onSubmit={onGenPass}>
         <BigInput
           type="text"
-          placeholder="vitalik@ethereum.org"
+          placeholder="email address"
           value={email}
           onChange={useCallback(
             (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
@@ -48,24 +61,28 @@ export function LoginScreen() {
         />
         <Spacer h={8} />
         <Button style="primary" type="submit">
-          Generate Passport
+          Generate Pass
         </Button>
       </Form>
       <Spacer h={24} />
-      <hr />
+      <HR />
       <Spacer h={24} />
-      <Button
-        onClick={useCallback(
-          () => dispatch({ type: "nav-scan-and-verify" }),
-          [dispatch]
-        )}
-      >
-        Scan and verify
-      </Button>
-    </div>
+      <Form>
+        <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
+        <Spacer h={8} />
+        <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
+      </Form>
+    </BackgroundGlow>
   );
 }
 
 const Form = styled.form`
-  width: 100%;
+  width: 280px;
+  margin: 0 auto;
+`;
+
+const Description = styled.p`
+  font-weight: 300;
+  width: 220px;
+  margin: 0 auto;
 `;

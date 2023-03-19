@@ -1,8 +1,18 @@
 import * as React from "react";
 import { useContext } from "react";
+import styled from "styled-components";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
-import { Spacer, TextCenter, TextSecondary } from "../core";
+import {
+  BackgroundGlow,
+  H1,
+  H2,
+  HR,
+  Spacer,
+  TextCenter,
+  ZuLogo,
+} from "../core";
+import { LinkButton } from "../core/Button";
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
@@ -29,25 +39,52 @@ export function NewPassportScreen() {
   const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
 
   return (
-    <>
-      <Spacer h={24} />
+    <BackgroundGlow>
+      <Spacer h={64} />
       <TextCenter>
-        <img src="/zuzalu.png" alt="Zuzalu logo" width={128} height={128} />
+        <H1>PASSPORT</H1>
+        <Spacer h={24} />
+        <ZuLogo />
+        <Spacer h={24} />
+        <H2>ZUZALU</H2>
+        <Spacer h={48} />
+        <PItalic>Generating passport...</PItalic>
+        <PItalic>Sending verification email...</PItalic>
+        <PHeavy>Check your email.</PHeavy>
+        {magicLink && (
+          <PHeavy>
+            Dev mode. <a href={magicLink}>Email magic link.</a>
+          </PHeavy>
+        )}
       </TextCenter>
+      <Spacer h={48} />
+      <HR />
       <Spacer h={24} />
-      <TextSecondary>
-        <p>Generating passport...</p>
-        <p>Sending email...</p>
-      </TextSecondary>
-      <Spacer h={24} />
-      {magicLink && (
-        <p>
-          Dev mode. <a href={magicLink}>Email magic link.</a>
-        </p>
-      )}
-      <Spacer h={24} />
-      <p>Sent. Check your email.</p>
-      <p>You can close this page now.</p>
-    </>
+      <Form>
+        <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
+        <Spacer h={8} />
+        <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
+      </Form>
+    </BackgroundGlow>
   );
 }
+
+const Form = styled.form`
+  width: 280px;
+  margin: 0 auto;
+`;
+
+const PItalic = styled.p`
+  font-size: 20px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 2;
+`;
+
+const PHeavy = styled.p`
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 2;
+  color: #ffe5a4;
+`;

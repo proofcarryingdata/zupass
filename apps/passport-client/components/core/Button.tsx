@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 export function Button({
@@ -20,24 +21,35 @@ export function Button({
   );
 }
 
-const BtnBase = styled.button`
+const buttonStyle = `
   width: 100%;
-  padding: 16px;
-  color: #666;
-  border: 1px solid #666;
-  border-radius: 4px;
-  font-size: 1rem;
-  background: transparent;
+  height: 48px;
+  padding: 12px;
+  color: #19473f;
+  border: none;
+  border-radius: 99px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  background: rgba(252, 210, 112, 0.9);
   cursor: pointer;
   &:hover {
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(252, 210, 112, 0.95);
   }
   &:active {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(252, 210, 112, 1);
   }
 `;
 
-const BtnPrimary = styled(BtnBase)`
-  color: #000;
-  border-color: #000;
+const BtnBase = styled.button`
+  ${buttonStyle}
+`;
+
+const BtnPrimary = styled(BtnBase)``;
+
+export const LinkButton = styled(Link)`
+  ${buttonStyle}
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
 `;
