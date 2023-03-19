@@ -7,13 +7,21 @@ import { ApplicationContext } from "../types";
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
 export function startPretixSync(context: ApplicationContext) {
   // Make sure we can use the Pretix API.
-  const pretixConfig: PretixConfig = {
-    token: requireEnv("PRETIX_TOKEN"),
-    orgUrl: requireEnv("PRETIX_ORG_URL"),
-    zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
-  };
+  let pretixConfig: PretixConfig;
+  try {
+    pretixConfig = {
+      token: requireEnv("PRETIX_TOKEN"),
+      orgUrl: requireEnv("PRETIX_ORG_URL"),
+      zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
+    };
+  } catch (e) {
+    console.error(e);
+    console.error("Missing Pretix config, skipping sync");
+    return;
+  }
 
   // Sync periodically.
+  console.log("Starting Pretix sync: " + JSON.stringify(pretixConfig));
   trySync();
   async function trySync() {
     try {
