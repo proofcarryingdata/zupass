@@ -8,22 +8,34 @@ export { Button, BigInput, Spacer };
 
 export const H1 = styled.h1`
   color: #fcd270;
-  letter-spacing: 0.25rem;
-  font-size: 2.625rem;
+  letter-spacing: 3.5px;
+  font-size: 36px;
   font-weight: 200;
 `;
 
 export const H2 = styled.h2`
   color: #fcd270;
-  letter-spacing: 0.25rem;
-  font-size: 1.5rem;
+  letter-spacing: 3.5px;
+  font-size: 22px;
   font-weight: 300;
+`;
+
+export const H3 = styled.h3`
+  color: #fff;
+  letter-spacing: 0.5px;
+  font-size: 22px;
+  font-weight: 400;
 `;
 
 export const HR = styled.hr`
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   margin: 0 16px;
+`;
+
+export const CenterColumn = styled.div<{ w: number }>`
+  width: ${(p) => p.w + "px"};
+  margin: 0 auto;
 `;
 
 export const TextCenter = styled.div`

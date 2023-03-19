@@ -141,5 +141,5 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 }
 
 export const H1Center = styled.h1`
-  font-size: 2rem;
+  font-size: 36px;
 `;

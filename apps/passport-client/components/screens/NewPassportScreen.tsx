@@ -5,6 +5,7 @@ import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import {
   BackgroundGlow,
+  CenterColumn,
   H1,
   H2,
   HR,
@@ -60,19 +61,14 @@ export function NewPassportScreen() {
       <Spacer h={48} />
       <HR />
       <Spacer h={24} />
-      <Form>
+      <CenterColumn w={280}>
         <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
         <Spacer h={8} />
         <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
-      </Form>
+      </CenterColumn>
     </BackgroundGlow>
   );
 }
-
-const Form = styled.form`
-  width: 280px;
-  margin: 0 auto;
-`;
 
 const PItalic = styled.p`
   font-size: 20px;

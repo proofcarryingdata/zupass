@@ -33,12 +33,12 @@ export function HomeScreen() {
   return (
     <>
       <Spacer h={24} />
-      <AppHeader inset={16} />
+      <AppHeader />
       <Spacer h={24} />
       <CardElem card={cards[sel]} expanded />
       <Spacer h={24} />
       {cards.map((c, i) => {
-        if (i === sel) return <CardElem key={i} />; // empty slot
+        if (i === sel) return null;
         return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
       })}
     </>
@@ -49,38 +49,21 @@ function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
   const c1: CardZID | undefined = self && {
     id: "0x1234",
     type: "zuzalu-id",
-    display: {
-      icon: "🧑‍🦱",
-      header: "Zuzalu Resident",
-      title: self.name,
-      description: self.email,
-      color: "#bcb",
-    },
+    header: "VERIFIED ZUZALU PASSPORT",
     identity,
+    participant: self,
   };
 
   const c2 = {
     id: "0x1111",
     type: "zk-email",
-    display: {
-      icon: "✉️",
-      header: "@mit.edu email",
-      title: "@mit.edu",
-      description: "Zero-knowledge proof, holder has an @mit.edu email address",
-      color: "#e8bbbb",
-    },
+    header: "@MIT.EDU EMAIL",
   };
 
   const c3 = {
     id: "0x2222",
     type: "ed25519-keypair",
-    display: {
-      icon: "🔑",
-      header: "key #1",
-      title: "Ed25519 key #1",
-      description: "Sample hackathon API keypair",
-      color: "#dca",
-    },
+    header: "Ed25519 KEY #1",
   };
 
   return [c1, c2, c3].filter((c) => c != null);
