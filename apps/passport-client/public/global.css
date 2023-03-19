@@ -1,12 +1,12 @@
 html {
-  background: #1f1f1f;
+  background: #2A3231;
   color: #fff;
-  font: 14px PlexSans, system-ui, sans-serif;
+  font: 16px PlexSans, system-ui, sans-serif;
   line-height: 1.5;
 }
 
 a, a:visited {
-  color: inherit;
+  color: #fcd270;
   text-decoration: none;
 }
 

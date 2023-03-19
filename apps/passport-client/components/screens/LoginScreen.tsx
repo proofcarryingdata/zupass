@@ -12,6 +12,7 @@ import {
   BackgroundGlow,
   BigInput,
   Button,
+  CenterColumn,
   H1,
   H2,
   HR,
@@ -49,37 +50,34 @@ export function LoginScreen() {
         </Description>
       </TextCenter>
       <Spacer h={16} />
-      <Form onSubmit={onGenPass}>
-        <BigInput
-          type="text"
-          placeholder="email address"
-          value={email}
-          onChange={useCallback(
-            (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
-            [setEmail]
-          )}
-        />
-        <Spacer h={8} />
-        <Button style="primary" type="submit">
-          Generate Pass
-        </Button>
-      </Form>
+      <CenterColumn w={280}>
+        <form onSubmit={onGenPass}>
+          <BigInput
+            type="text"
+            placeholder="email address"
+            value={email}
+            onChange={useCallback(
+              (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
+              [setEmail]
+            )}
+          />
+          <Spacer h={8} />
+          <Button style="primary" type="submit">
+            Generate Pass
+          </Button>
+        </form>
+      </CenterColumn>
       <Spacer h={24} />
       <HR />
       <Spacer h={24} />
-      <Form>
+      <CenterColumn w={280}>
         <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
         <Spacer h={8} />
         <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
-      </Form>
+      </CenterColumn>
     </BackgroundGlow>
   );
 }
-
-const Form = styled.form`
-  width: 280px;
-  margin: 0 auto;
-`;
 
 const Description = styled.p`
   font-weight: 300;
