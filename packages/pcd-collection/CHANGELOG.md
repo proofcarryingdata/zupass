@@ -1,5 +1,13 @@
 # @pcd/pcd-types
 
+## 0.0.5
+
+### Patch Changes
+
+- new version
+- Updated dependencies
+  - @pcd/pcd-types@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
