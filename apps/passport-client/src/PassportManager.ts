@@ -1,29 +1,19 @@
-import { PCD } from "@pcd/pcd-types";
-import { PassportCrypto } from "passport-crypto";
+import { EncryptedPacket, PassportCrypto } from "passport-crypto";
+import { PASSPORT_SERVER_URL } from "./urls";
 
-// TODO: Replace with real one once it has serde
-export interface DummyPCD {
-  type: string;
-  claim: string;
-  proof: string;
-}
+class E2EE {
+  private masterKey: string;
+  private serverPassword: string;
+  private passportCrypto: PassportCrypto;
 
-const WEBSITE_ROOT = "http://localhost:3002";
+  public static async newInstance() {
+    const crypto = await PassportCrypto.newInstance();
+    return new E2EE(crypto);
+  }
 
-class PassportE2EEOperator {
-  // TODO: Use ClientUser instead
-  public identifier!: string;
-  private masterKey!: string;
-  private serverPassword!: string;
-  private userStatus!: UserStatus;
-  private passportCrypto!: PassportCrypto;
-
-  // Create new user
-  constructor(_identifier: string, _passportCrypto: PassportCrypto) {
+  private constructor(passportCrypto: PassportCrypto) {
     // Assumes that PassportCrypto has been initialized
-    this.passportCrypto = _passportCrypto;
-    this.userStatus = UserStatus.UNVERIFIED;
-    this.identifier = _identifier;
+    this.passportCrypto = passportCrypto;
     this.masterKey = this.passportCrypto.generateRandomKey(256);
     this.serverPassword = this.passportCrypto.generateRandomKey(256);
   }
@@ -32,13 +22,11 @@ class PassportE2EEOperator {
     const plaintext = JSON.stringify(pcds);
     const nonce = this.passportCrypto.generateRandomKey(192);
 
-    const aed = this.identifier; // TODO: add version?
-
     const ciphertext = this.passportCrypto.xchacha20Encrypt(
       plaintext,
       nonce,
       this.masterKey,
-      aed
+      ""
     );
     return {
       nonce,
@@ -47,12 +35,11 @@ class PassportE2EEOperator {
   }
 
   private decryptPCDs(encryptedPacket: EncryptedPacket): DummyPCD[] | null {
-    const aed = this.identifier; // TODO: add version?
     const plaintext = this.passportCrypto.xchacha20Decrypt(
       encryptedPacket.ciphertext,
       encryptedPacket.nonce,
       this.masterKey,
-      aed
+      ""
     );
 
     return plaintext != null ? JSON.parse(plaintext) : null;
@@ -60,10 +47,9 @@ class PassportE2EEOperator {
 
   public async writePCDs(pcds: DummyPCD[]): Promise<boolean> {
     const packet = await this.encryptPCDs(pcds);
-    const response = await fetch(WEBSITE_ROOT + "/user/write/", {
+    const response = await fetch(PASSPORT_SERVER_URL + "/user/write/", {
       method: "POST", // TODO: make helper function for these
       body: JSON.stringify({
-        identifier: this.identifier,
         serverPassword: this.serverPassword,
         encryptedBlob: JSON.stringify(packet),
       }),
@@ -81,7 +67,7 @@ class PassportE2EEOperator {
 
   public async readPCDs(): Promise<DummyPCD[]> {
     const response = await fetch(
-      WEBSITE_ROOT +
+      PASSPORT_SERVER_URL +
         "/user/fetch/?" +
         new URLSearchParams({
           identifier: this.identifier,
@@ -111,7 +97,7 @@ class PassportE2EEOperator {
     ];
 
     // create test user
-    const response = await fetch(WEBSITE_ROOT + "/user/create/", {
+    const response = await fetch(PASSPORT_SERVER_URL + "/user/create/", {
       method: "POST",
       body: JSON.stringify({
         identifier: this.identifier,
@@ -132,29 +118,5 @@ class PassportE2EEOperator {
     console.log("writePCDs success", success);
     const readback = await this.readPCDs();
     console.log("readback", readback);
-  }
-}
-
-export class PassportManager {
-  public identifier!: string;
-  private pcds: PCD[] = [];
-  private passportCrypto!: PassportCrypto;
-
-  async initialize(): Promise<void> {
-    await this.passportCrypto.initialize();
-  }
-
-  constructor(identifier: string) {
-    this.identifier = identifier;
-    this.passportCrypto = new PassportCrypto();
-  }
-
-  public async test() {
-    await this.initialize();
-    const operator = new PassportE2EEOperator(
-      this.identifier,
-      this.passportCrypto
-    );
-    operator.testPCDRW();
   }
 }

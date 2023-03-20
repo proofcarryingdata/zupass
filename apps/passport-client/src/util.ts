@@ -25,3 +25,4 @@ export function bigintToUuid(bigint: bigint): string {
     hex.slice(20)
   );
 }
+export const IS_PROD = process.env.NODE_ENV === "production";

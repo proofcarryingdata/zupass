@@ -1,9 +1,20 @@
-import { Base64String, HexString, Utf8String } from "@pxd/pcd-types";
 import { getSodium } from "./libsodium";
+import { Base64String, HexString, Utf8String } from "./types";
 import * as utils from "./utils";
 
+export type Sodium = Awaited<ReturnType<typeof getSodium>>;
+
 export class PassportCrypto {
-  private sodium: Awaited<ReturnType<typeof getSodium>> | null = null;
+  private sodium: Sodium;
+
+  public static async newInstance() {
+    const sodium = await getSodium();
+    return new PassportCrypto(sodium);
+  }
+
+  private constructor(sodium: Sodium) {
+    this.sodium = sodium;
+  }
 
   async initialize() {
     /** Functions using Libsodium have to await
