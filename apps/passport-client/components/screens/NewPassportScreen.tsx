@@ -23,7 +23,9 @@ export function NewPassportScreen() {
   const [state] = useContext(DispatchContext);
   const { identity, pendingAction } = state;
   if (pendingAction == null || pendingAction.type !== "new-passport") {
-    throw new Error("Missing pending action");
+    window.location.href = "#/";
+    window.location.reload();
+    return null;
   }
   const { email } = pendingAction;
 
@@ -55,12 +57,9 @@ export function NewPassportScreen() {
         <Spacer h={48} />
         <PItalic>Generating passport...</PItalic>
         <PItalic>Sending verification email...</PItalic>
-        <PHeavy>Check your email.</PHeavy>
-        {magicLink && (
-          <PHeavy>
-            Dev mode. <a href={magicLink}>Email magic link.</a>
-          </PHeavy>
-        )}
+        <PHeavy>
+          Check your email. {magicLink && <a href={magicLink}>Dev link.</a>}
+        </PHeavy>
       </TextCenter>
       <Spacer h={48} />
       <HR />

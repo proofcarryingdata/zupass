@@ -39,9 +39,9 @@ const CardContainer = styled.div<{ clickable: boolean; expanded: boolean }>`
   border-radius: ${(p) => (p.expanded ? "12px" : "12px 12px 0 0")};
   border: 1px solid
     ${(p) => (p.expanded ? "var(--accent-dark)" : "var(--primary-dark)")};
-  ${(p) => (p.expanded ? "min-height: 280px;" : "")}
   ${(p) => (p.expanded ? "background: var(--primary-dark);" : "")}
-  ${(p) => (!p.expanded ? "border-bottom: none; margin-bottom: 8px;" : "")}
+  ${(p) => (p.expanded ? "min-height: 160px;" : "")}
+  ${(p) => (!p.expanded ? "border-bottom: none; margin-bottom: 16px;" : "")}
 `;
 
 const CardHeaderCollapsed = styled.div`

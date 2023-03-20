@@ -9,7 +9,7 @@ import { sendEmail } from "../../util/email";
 // Zuzalu residents group
 const globalGroup = new Group("1", 16);
 
-// Zuzalu participants
+// Zuzalu participants by UUID
 const participants = {} as Record<string, ZuParticipant>;
 
 // localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
@@ -57,7 +57,7 @@ export function initZuzaluRoutes(
         };
         const jsonP = JSON.stringify(participant);
         console.log(`Adding new zuzalu participant: ${jsonP}`);
-        participants[commitment] = participant;
+        participants[participant.uuid] = participant;
         console.log(`New group root: ${globalGroup.root}`);
 
         res.redirect(`${redirect}?success=true&participant=${jsonP}`);
@@ -69,17 +69,14 @@ export function initZuzaluRoutes(
   );
 
   // Fetch a specific participant, given their public semaphore commitment.
-  app.get(
-    "/zuzalu/participant/:commitment",
-    async (req: Request, res: Response) => {
-      res.setHeader("Access-Control-Allow-Origin", "*");
-      const commitment = req.params.commitment;
-      console.log(`Fetching participant ${commitment}`);
-      const participant = participants[commitment];
-      if (!participant) res.status(404);
-      res.json(participant || null);
-    }
-  );
+  app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const uuid = req.params.uuid;
+    console.log(`Fetching participant ${uuid}`);
+    const participant = participants[uuid];
+    if (!participant) res.status(404);
+    res.json(participant || null);
+  });
 
   // Fetch a semaphore group.
   app.get("/semaphore/:id", async (req: Request, res: Response) => {

@@ -13,9 +13,9 @@ export function saveSelf(self: ZuParticipant) {
 }
 
 export async function fetchParticipant(
-  commitment: string
+  uuid: string
 ): Promise<ZuParticipant | null> {
-  const url = config.passportServer + "/zuzalu/participant/" + commitment;
+  const url = config.passportServer + "/zuzalu/participant/" + uuid;
   console.log(`Fetching ${url}`);
   const res = await fetch(url);
   if (!res.ok) return null;

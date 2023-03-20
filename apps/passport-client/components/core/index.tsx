@@ -38,6 +38,11 @@ export const CenterColumn = styled.div<{ w: number }>`
   margin: 0 auto;
 `;
 
+export const Placeholder = styled.div<{ minH?: number }>`
+  width: 100%;
+  ${(p) => (p.minH ? `min-height: ${p.minH}px` : "")};
+`;
+
 export const TextCenter = styled.div`
   text-align: center;
 `;

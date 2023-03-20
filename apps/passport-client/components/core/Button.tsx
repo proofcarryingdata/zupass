@@ -31,13 +31,13 @@ const buttonStyle = `
   font-size: 16px;
   font-weight: 600;
   background: var(--accent-dark);
-  opacity: 0.9;
+  opacity: 1;
   cursor: pointer;
   &:hover {
     opacity: 0.95;
   }
   &:active {
-    opacity: 1;
+    opacity: 0.9;
   }
 `;
 
