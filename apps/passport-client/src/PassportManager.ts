@@ -1,24 +1,27 @@
-import { EncryptedPacket, PassportCrypto } from "passport-crypto";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { EncryptedPacket, PCDCrypto } from "passport-crypto";
 import { PASSPORT_SERVER_URL } from "./urls";
 
 class E2EE {
   private masterKey: string;
   private serverPassword: string;
-  private passportCrypto: PassportCrypto;
+  private passportCrypto: PCDCrypto;
 
   public static async newInstance() {
-    const crypto = await PassportCrypto.newInstance();
+    const crypto = await PCDCrypto.newInstance();
     return new E2EE(crypto);
   }
 
-  private constructor(passportCrypto: PassportCrypto) {
-    // Assumes that PassportCrypto has been initialized
+  /**
+   * Assumes that `passportCrypto` has been initialized.
+   */
+  private constructor(passportCrypto: PCDCrypto) {
     this.passportCrypto = passportCrypto;
     this.masterKey = this.passportCrypto.generateRandomKey(256);
     this.serverPassword = this.passportCrypto.generateRandomKey(256);
   }
 
-  private encryptPCDs(pcds: DummyPCD[]): EncryptedPacket {
+  private encryptPCDs(pcds: SerializedPCD[]): EncryptedPacket {
     const plaintext = JSON.stringify(pcds);
     const nonce = this.passportCrypto.generateRandomKey(192);
 
@@ -34,7 +37,9 @@ class E2EE {
     };
   }
 
-  private decryptPCDs(encryptedPacket: EncryptedPacket): DummyPCD[] | null {
+  private decryptPCDs(
+    encryptedPacket: EncryptedPacket
+  ): SerializedPCD[] | null {
     const plaintext = this.passportCrypto.xchacha20Decrypt(
       encryptedPacket.ciphertext,
       encryptedPacket.nonce,
@@ -45,7 +50,7 @@ class E2EE {
     return plaintext != null ? JSON.parse(plaintext) : null;
   }
 
-  public async writePCDs(pcds: DummyPCD[]): Promise<boolean> {
+  public async writePCDs(pcds: SerializedPCD[]): Promise<boolean> {
     const packet = await this.encryptPCDs(pcds);
     const response = await fetch(PASSPORT_SERVER_URL + "/user/write/", {
       method: "POST", // TODO: make helper function for these
@@ -65,7 +70,7 @@ class E2EE {
     return res.success === 1;
   }
 
-  public async readPCDs(): Promise<DummyPCD[]> {
+  public async readPCDs(): Promise<SerializedPCD[]> {
     const response = await fetch(
       PASSPORT_SERVER_URL +
         "/user/fetch/?" +

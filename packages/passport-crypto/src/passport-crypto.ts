@@ -1,25 +1,21 @@
-import { getSodium } from "./libsodium";
+import { getSodium, Sodium } from "./libsodium";
 import { Base64String, HexString, Utf8String } from "./types";
 import * as utils from "./utils";
 
-export type Sodium = Awaited<ReturnType<typeof getSodium>>;
-
-export class PassportCrypto {
+/**
+ * This class contains cryptographic primitives that are used by the PCD
+ * application SDK and downstream packages.
+ */
+export class PCDCrypto {
   private sodium: Sodium;
 
   public static async newInstance() {
     const sodium = await getSodium();
-    return new PassportCrypto(sodium);
+    return new PCDCrypto(sodium);
   }
 
   private constructor(sodium: Sodium) {
     this.sodium = sodium;
-  }
-
-  async initialize() {
-    /** Functions using Libsodium have to await
-     * promise before performing any library calls */
-    this.sodium = await getSodium();
   }
 
   public generateRandomKey(bits: number): HexString {
