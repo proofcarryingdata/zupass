@@ -116,7 +116,7 @@ export async function prove(
     serializedIdentityPCD
   );
 
-  if (!args.signedMessage.value) {
+  if (args.signedMessage.value === undefined) {
     throw new Error(
       "cannot make semaphore signature proof: signed message is not set"
     );
