@@ -1,5 +1,14 @@
 # @pcd/semaphore-group-pcd
 
+## 0.0.6
+
+### Patch Changes
+
+- Add SemaphoreSignaturePCD
+- Updated dependencies
+  - @pcd/pcd-types@0.0.6
+  - @pcd/semaphore-identity-pcd@0.0.7
+
 ## 0.0.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.0.6
+
+### Patch Changes
+
+- Add SemaphoreSignaturePCD
+
 ## 0.0.5
 
 ### Patch Changes

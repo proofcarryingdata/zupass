@@ -1,5 +1,15 @@
 # @pcd/passport-interface
 
+## 0.0.6
+
+### Patch Changes
+
+- Add SemaphoreSignaturePCD
+- Updated dependencies
+  - @pcd/pcd-types@0.0.6
+  - @pcd/semaphore-group-pcd@0.0.6
+  - @pcd/semaphore-signature-pcd@0.0.2
+
 ## 0.0.5
 
 ### Patch Changes
