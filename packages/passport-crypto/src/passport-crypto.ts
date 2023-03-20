@@ -1,4 +1,4 @@
-import { Base64String, HexString, Utf8String } from "pcd-types";
+import { Base64String, HexString, Utf8String } from "@pxd/pcd-types";
 import { getSodium } from "./libsodium";
 import * as utils from "./utils";
 
