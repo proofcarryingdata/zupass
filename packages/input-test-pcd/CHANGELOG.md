@@ -1,5 +1,13 @@
 # @pcd/input-test-pcd
 
+## 0.0.7
+
+### Patch Changes
+
+- Add SemaphoreSignaturePCD
+- Updated dependencies
+  - @pcd/pcd-types@0.0.6
+
 ## 0.0.6
 
 ### Patch Changes
