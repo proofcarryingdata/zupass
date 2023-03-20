@@ -1,7 +1,7 @@
 import * as React from "react";
 import styled from "styled-components";
 import { Card, ZuIdCard } from "../../src/model/Card";
-import { TextCenter } from "../core";
+import { H4, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
 /**
@@ -19,42 +19,64 @@ export function CardElem({
 }) {
   // Show either a full card slot or the entire (expanded) card
   const { header } = card;
-  return (
-    <CardContainer clickable={onClick != null} {...{ onClick, expanded }}>
-      {!expanded && <CardHeaderCollapsed>{header}</CardHeaderCollapsed>}
-      {expanded && (
-        <>
-          <CardHeader>{header}</CardHeader>
+  if (expanded) {
+    return (
+      <CardContainerExpanded>
+        <CardOutlineExpanded>
+          <CardHeader col="var(--accent-lite)">{header}</CardHeader>
           <CardBody card={card} />
-        </>
-      )}
-    </CardContainer>
+        </CardOutlineExpanded>
+      </CardContainerExpanded>
+    );
+  }
+
+  return (
+    <CardContainerCollapsed {...{ onClick }}>
+      <CardOutlineCollapsed>
+        <CardHeaderCollapsed>{header}</CardHeaderCollapsed>
+      </CardOutlineCollapsed>
+    </CardContainerCollapsed>
   );
 }
 
-const CardContainer = styled.div<{ clickable: boolean; expanded: boolean }>`
-  width: calc(100% - 16px);
-  margin: 0 8px;
-  cursor: ${(p) => (p.clickable ? "pointer" : "default")};
-  border-radius: ${(p) => (p.expanded ? "12px" : "12px 12px 0 0")};
-  border: 1px solid
-    ${(p) => (p.expanded ? "var(--accent-dark)" : "var(--primary-dark)")};
-  ${(p) => (p.expanded ? "background: var(--primary-dark);" : "")}
-  ${(p) => (p.expanded ? "min-height: 160px;" : "")}
-  ${(p) => (!p.expanded ? "border-bottom: none; margin-bottom: 16px;" : "")}
+const CardContainerExpanded = styled.div`
+  width: 100%;
+  padding: 0 8px;
+`;
+
+const CardContainerCollapsed = styled(CardContainerExpanded)`
+  cursor: pointer;
+  padding: 12px 8px;
+`;
+
+const CardOutlineExpanded = styled.div`
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--accent-dark);
+  background: var(--primary-dark);
+  min-height: 160px;
+`;
+
+const CardOutlineCollapsed = styled.div`
+  width: 100%;
+  border-radius: 12px 12px 0 0;
+  border: 1px solid var(--primary-lite);
+  color: var(--primary-lite);
+  border-bottom: none;
+
+  :hover {
+    opacity: 0.9;
+  }
 `;
 
 const CardHeaderCollapsed = styled.div`
   text-align: center;
-  color: var(--primary-dark);
   font-size: 16px;
   padding: 8px;
 `;
 
-const CardHeader = styled.div`
-  font-size: 20px;
+const CardHeader = styled(H4)`
   text-align: center;
-  color: var(--accent-lite);
   padding: 12px;
 `;
 

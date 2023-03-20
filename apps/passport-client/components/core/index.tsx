@@ -29,6 +29,13 @@ export const H3 = styled.h3<{ col?: string }>`
 
 export const H4 = styled.h4<{ col?: string }>`
   color: ${(p) => p.col || "var(--white)"};
+  letter-spacing: 1px;
+  font-size: 20px;
+  font-weight: 400;
+`;
+
+export const InfoLine = styled.div`
+  color: var(--primary-dark);
   letter-spacing: 0.5px;
   font-size: 14px;
   font-weight: 300;

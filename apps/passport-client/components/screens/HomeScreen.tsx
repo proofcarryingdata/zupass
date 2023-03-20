@@ -35,7 +35,7 @@ export function HomeScreen() {
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
-      <Placeholder minH={512}>
+      <Placeholder minH={540}>
         <CardElem card={cards[sel]} expanded />
       </Placeholder>
       <Spacer h={24} />
