@@ -12,7 +12,15 @@ import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuIdCard } from "../../src/model/Card";
 import { fetchParticipant } from "../../src/participant";
-import { BackgroundGlow, H3, Spacer, TextCenter } from "../core";
+import { bigintToUuid } from "../../src/util";
+import {
+  BackgroundGlow,
+  CenterColumn,
+  H3,
+  Placeholder,
+  Spacer,
+  TextCenter,
+} from "../core";
 import { LinkButton } from "../core/Button";
 import { CardElem } from "../shared/CardElem";
 
@@ -74,14 +82,15 @@ export function VerifyScreen() {
         {result?.valid === false && <H3>PROOF INVALID.</H3>}
       </TextCenter>
       <Spacer h={48} />
-      <Placeholder>
+      <Placeholder minH={160}>
         {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-        {result?.valid === true && <CardElem card={getCard(result)} />}
+        {result?.valid === true && <CardElem expanded card={getCard(result)} />}
       </Placeholder>
+      <Spacer h={96} />
       {result != null && (
-        <TextCenter>
+        <CenterColumn w={280}>
           <LinkButton to="/">Back to Passport</LinkButton>
-        </TextCenter>
+        </CenterColumn>
       )}
     </BackgroundGlow>
   );
@@ -97,12 +106,6 @@ function getCard(result: VerifyResult): ZuIdCard {
     participant: result.participant,
   };
 }
-
-const Placeholder = styled.div`
-  width: 240px;
-  height: 160px;
-  margin: 0 auto;
-`;
 
 function ValidResultCard({ result }: { result: VerifyResult }) {
   if (!result.valid) return null;
@@ -152,8 +155,8 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   }
 
   // Verify identity proof
-  const commitment = pcd.claim.group.members[0];
-  const participant = await fetchParticipant(commitment);
+  const uuid = bigintToUuid(BigInt(pcd.claim.externalNullifier));
+  const participant = await fetchParticipant(uuid);
   if (participant == null) {
     return { valid: false, type, message: "Participant not found" };
   }

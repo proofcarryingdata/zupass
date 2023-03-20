@@ -13,7 +13,7 @@ export function ErrorPopup({
   return (
     <ErrorWrap>
       <Spacer h={24} />
-      <H1>❌ &nbsp; {error.title}</H1>
+      <H1>{error.title}</H1>
       <Spacer h={24} />
       <p>{error.message}</p>
       {error.stack && (
@@ -23,9 +23,7 @@ export function ErrorPopup({
         </>
       )}
       <Spacer h={24} />
-      <Button style="secondary" onClick={onClose}>
-        Close
-      </Button>
+      <Button onClick={onClose}>Close</Button>
     </ErrorWrap>
   );
 }

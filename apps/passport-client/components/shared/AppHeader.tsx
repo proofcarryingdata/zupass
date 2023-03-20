@@ -89,7 +89,7 @@ const ModalBg = styled.div`
 `;
 
 const ModalWrap = styled.div`
-  background: radial-gradient(circle, var(--bgLiteGray), var(--bgDarkGray));
+  background: radial-gradient(circle, var(--bg-lite-gray), var(--bg-dark-gray));
   top: 64px;
   left: 0;
   width: 100%;
@@ -132,6 +132,10 @@ function SettingsModal() {
     }
   }, []);
 
+  const comingSoon = useCallback(() => {
+    window.alert("Coming soon");
+  }, []);
+
   return (
     <>
       <Spacer h={32} />
@@ -140,6 +144,8 @@ function SettingsModal() {
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={280}>
+        <Button onClick={comingSoon}>Verify a Passport</Button>
+        <Spacer h={16} />
         <Button onClick={copySyncKey}>Copy Key for Sync</Button>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">

@@ -5,7 +5,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { Card, ZuIdCard } from "../../src/model/Card";
-import { Spacer } from "../core";
+import { Placeholder, Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
 import { CardElem } from "../shared/CardElem";
 
@@ -35,10 +35,12 @@ export function HomeScreen() {
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
-      <CardElem card={cards[sel]} expanded />
+      <Placeholder minH={512}>
+        <CardElem card={cards[sel]} expanded />
+      </Placeholder>
       <Spacer h={24} />
       {cards.map((c, i) => {
-        if (i === sel) return null;
+        if (i === sel) return <Spacer h={48} />;
         return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
       })}
     </>

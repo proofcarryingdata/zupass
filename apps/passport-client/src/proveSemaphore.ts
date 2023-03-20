@@ -8,10 +8,12 @@ import {
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
+import { uuidToBigint } from "./util";
 
 // Create a PCD proving that we own a given semaphore identity.
 export async function createProof(
-  identity: Identity
+  identity: Identity,
+  uuid: string
 ): Promise<SemaphoreGroupPCD> {
   const { prove } = SemaphoreGroupPCDPackage;
 
@@ -22,7 +24,7 @@ export async function createProof(
   const args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: "1",
+      value: uuidToBigint(uuid).toString(),
     },
     signal: {
       argumentType: ArgumentTypeName.BigInt,

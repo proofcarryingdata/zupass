@@ -12,7 +12,7 @@ create table pretix_participants (
   -- role, resident or visitor
   role VARCHAR NOT NULL,
   -- where the participant is staying
-  residence VARCHAR NOT NULL,
+  residence VARCHAR NOT NULL
 );
 
 
@@ -24,6 +24,7 @@ create table commitments (
   uuid UUID NOT NULL PRIMARY KEY,
   -- semaphore commitment
   commitment VARCHAR NOT NULL,
+  CONSTRAINT commitment_unique UNIQUE (commitment),
   -- participant ID
   participant_email VARCHAR NOT NULL REFERENCES pretix_participants(email)
 );
