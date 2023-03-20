@@ -12,6 +12,7 @@ import ScanScreen from "../components/screens/ScanScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
+import { EndToEndEncryption } from "../src/endToEndEncryption";
 import { loadSelf } from "../src/participant";
 import { loadPCDs, ZuState } from "../src/state";
 
@@ -82,7 +83,8 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const identityStr = window.localStorage["identity"];
   const identity = identityStr ? new Identity(identityStr) : undefined;
-  return { self, pcds, identity };
+  const endToEndEncryption = await EndToEndEncryption.newInstance();
+  return { self, pcds, identity, endToEndEncryption };
 }
 
 const root = createRoot(document.querySelector("#root"));

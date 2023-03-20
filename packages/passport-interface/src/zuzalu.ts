@@ -12,11 +12,6 @@ export interface ZuParticipant {
   residence: string;
 }
 
-export enum UserStatus {
-  REGULAR,
-  UNVERIFIED,
-}
-
 export interface BackendUser {
   identifier: string;
   status: number;

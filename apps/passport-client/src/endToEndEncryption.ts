@@ -1,24 +1,27 @@
 import { SerializedPCD } from "@pcd/pcd-types";
+import { Identity } from "@semaphore-protocol/identity";
 import { EncryptedPacket, PCDCrypto } from "passport-crypto";
 import { PASSPORT_SERVER_URL } from "./urls";
 
-class E2EE {
-  private masterKey: string;
+export class EndToEndEncryption {
+  private encryptionKey: string;
   private serverPassword: string;
   private passportCrypto: PCDCrypto;
+  private identity: Identity;
 
-  public static async newInstance() {
+  public static async newInstance(identity: Identity) {
     const crypto = await PCDCrypto.newInstance();
-    return new E2EE(crypto);
+    return new EndToEndEncryption(identity, crypto);
   }
 
   /**
    * Assumes that `passportCrypto` has been initialized.
    */
-  private constructor(passportCrypto: PCDCrypto) {
+  private constructor(identity: Identity, passportCrypto: PCDCrypto) {
     this.passportCrypto = passportCrypto;
-    this.masterKey = this.passportCrypto.generateRandomKey(256);
+    this.encryptionKey = this.passportCrypto.generateRandomKey(256);
     this.serverPassword = this.passportCrypto.generateRandomKey(256);
+    this.identity = identity;
   }
 
   private encryptPCDs(pcds: SerializedPCD[]): EncryptedPacket {
@@ -28,7 +31,7 @@ class E2EE {
     const ciphertext = this.passportCrypto.xchacha20Encrypt(
       plaintext,
       nonce,
-      this.masterKey,
+      this.encryptionKey,
       ""
     );
     return {
@@ -43,7 +46,7 @@ class E2EE {
     const plaintext = this.passportCrypto.xchacha20Decrypt(
       encryptedPacket.ciphertext,
       encryptedPacket.nonce,
-      this.masterKey,
+      this.encryptionKey,
       ""
     );
 
@@ -75,7 +78,7 @@ class E2EE {
       PASSPORT_SERVER_URL +
         "/user/fetch/?" +
         new URLSearchParams({
-          identifier: this.identifier,
+          identifier: this.identity.commitment.toString(),
         })
     );
 
@@ -85,43 +88,5 @@ class E2EE {
 
     const pcds = await this.decryptPCDs(packet);
     return pcds;
-  }
-
-  public async testPCDRW() {
-    const pcds = [
-      {
-        type: "testtype",
-        claim: "testclaim",
-        proof: "testproof",
-      },
-      {
-        type: "test2type",
-        claim: "test2claim",
-        proof: "test2proof",
-      },
-    ];
-
-    // create test user
-    const response = await fetch(PASSPORT_SERVER_URL + "/user/create/", {
-      method: "POST",
-      body: JSON.stringify({
-        identifier: this.identifier,
-        status: UserStatus.REGULAR,
-        serverPassword: this.serverPassword,
-        encryptedBlob: "",
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-    const res = await response.json();
-    console.log("create test user response", res);
-
-    console.log("going to writePCDs", pcds);
-    const success = await this.writePCDs(pcds);
-    console.log("writePCDs success", success);
-    const readback = await this.readPCDs();
-    console.log("readback", readback);
   }
 }
