@@ -10,9 +10,10 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { CardDisplay } from "../../src/model/Card";
+import { ZuIdCard } from "../../src/model/Card";
 import { fetchParticipant } from "../../src/participant";
-import { Spacer } from "../core";
+import { BackgroundGlow, H3, Spacer, TextCenter } from "../core";
+import { LinkButton } from "../core/Button";
 import { CardElem } from "../shared/CardElem";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
@@ -52,52 +53,72 @@ export function VerifyScreen() {
       });
   }, [pcdStr, setResult]);
 
+  const [from, to] = result?.valid
+    ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)"]
+    : ["var(--bg-lite-gray)", "var(--bg-dark-gray)"];
+
+  const icon = {
+    true: "/assets/verify-valid.svg",
+    false: "/assets/verify-invalid.svg",
+    undefined: "/assets/verify-in-progress.svg",
+  }["" + result?.valid];
+
   return (
-    <VerifyWrap>
-      <Spacer h={24} />
-      {result == null && <H1Center>Verifying...</H1Center>}
-      {result?.valid === false && <H1Center>❌ &nbsp; Invalid</H1Center>}
-      {result?.valid === false && <Spacer h={32} />}
-      {result?.valid === false && <p>{result.message}</p>}
-      {result?.valid && <H1Center>✅ &nbsp; Valid</H1Center>}
-      {result?.valid && <Spacer h={32} />}
-      {result?.valid && <ValidResultCard result={result} />}
-    </VerifyWrap>
+    <BackgroundGlow y={96} {...{ from, to }}>
+      <Spacer h={48} />
+      <TextCenter>
+        <img width="90" height="90" src={icon} />
+        <Spacer h={24} />
+        {result == null && <H3>VERIFYING PROOF...</H3>}
+        {result?.valid && <H3 col="var(--accent-dark)">PROOF VERIFIED.</H3>}
+        {result?.valid === false && <H3>PROOF INVALID.</H3>}
+      </TextCenter>
+      <Spacer h={48} />
+      <Placeholder>
+        {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
+        {result?.valid === true && <CardElem card={getCard(result)} />}
+      </Placeholder>
+      {result != null && (
+        <TextCenter>
+          <LinkButton to="/">Back to Passport</LinkButton>
+        </TextCenter>
+      )}
+    </BackgroundGlow>
   );
 }
 
-const VerifyWrap = styled.div`
-  width: 100%;
+function getCard(result: VerifyResult): ZuIdCard {
+  if (!result.valid) throw new Error("Invalid proof");
+  if (result.type !== "identity-proof") throw new Error("Not an ID proof");
+  return {
+    id: "0x1234",
+    type: "zuzalu-id",
+    header: "VERIFIED ZUZALU PASSPORT",
+    participant: result.participant,
+  };
+}
+
+const Placeholder = styled.div`
+  width: 240px;
+  height: 160px;
+  margin: 0 auto;
 `;
 
 function ValidResultCard({ result }: { result: VerifyResult }) {
   if (!result.valid) return null;
 
-  const card = useMemo(() => {
-    let display: CardDisplay;
-    if (result.type === "identity-proof") {
-      display = {
-        icon: "🧑‍🦱",
-        header: "Zuzalu " + result.participant.role,
-        title: result.participant.name,
-        description: result.participant.email,
-        color: "#ddd",
-      };
-    } else {
-      display = {
-        icon: "🕶",
-        header: "Zuzalu " + result.role,
-        title: "Anonymous",
-        description: "Current Zuzalu " + result.role,
-        color: "#eee",
-      };
-    }
+  if (result.type === "anon-proof") {
+    console.error("Anon proof verification not implemented yet");
+    return null;
+  }
 
+  const card = useMemo(() => {
     return {
       id: "0x1234",
       type: "zuzalu-id",
-      display,
-    };
+      header: "VERIFIED ZUZALU PASSPORT",
+      participant: result.participant,
+    } as ZuIdCard;
   }, [result]);
 
   return <CardElem expanded card={card} />;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
-import { Card, CardZID } from "../../src/model/Card";
+import { Card, ZuIdCard } from "../../src/model/Card";
 import { TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
@@ -37,15 +37,16 @@ const CardContainer = styled.div<{ clickable: boolean; expanded: boolean }>`
   margin: 0 8px;
   cursor: ${(p) => (p.clickable ? "pointer" : "default")};
   border-radius: ${(p) => (p.expanded ? "12px" : "12px 12px 0 0")};
-  border: 1px solid ${(p) => (p.expanded ? "#FFE5A4" : "#325F57")};
+  border: 1px solid
+    ${(p) => (p.expanded ? "var(--accent-dark)" : "var(--primary-dark)")};
   ${(p) => (p.expanded ? "min-height: 280px;" : "")}
-  ${(p) => (p.expanded ? "background: #325F57;" : "")}
+  ${(p) => (p.expanded ? "background: var(--primary-dark);" : "")}
   ${(p) => (!p.expanded ? "border-bottom: none; margin-bottom: 8px;" : "")}
 `;
 
 const CardHeaderCollapsed = styled.div`
   text-align: center;
-  color: #325f57;
+  color: var(--primary-dark);
   font-size: 16px;
   padding: 8px;
 `;
@@ -53,7 +54,7 @@ const CardHeaderCollapsed = styled.div`
 const CardHeader = styled.div`
   font-size: 20px;
   text-align: center;
-  color: #ffe5a4;
+  color: var(--accent-lite);
   padding: 12px;
 `;
 
@@ -62,7 +63,7 @@ function CardBody({ card }: { card: Card }) {
 
   switch (type) {
     case "zuzalu-id":
-      return <ZuzaluCardBody card={card as CardZID} />;
+      return <ZuzaluCardBody card={card as ZuIdCard} />;
     default:
       return <TextCenter>{type}</TextCenter>;
   }

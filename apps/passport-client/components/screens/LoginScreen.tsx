@@ -35,7 +35,11 @@ export function LoginScreen() {
   );
 
   return (
-    <BackgroundGlow>
+    <BackgroundGlow
+      y={224}
+      from="var(--bg-lite-primary)"
+      to="var(--bg-dark-primary)"
+    >
       <Spacer h={64} />
       <TextCenter>
         <H1>PASSPORT</H1>

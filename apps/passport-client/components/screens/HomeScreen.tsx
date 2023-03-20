@@ -4,7 +4,7 @@ import * as React from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
-import { Card, CardZID } from "../../src/model/Card";
+import { Card, ZuIdCard } from "../../src/model/Card";
 import { Spacer } from "../core";
 import { AppHeader } from "../shared/AppHeader";
 import { CardElem } from "../shared/CardElem";
@@ -46,7 +46,7 @@ export function HomeScreen() {
 }
 
 function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
-  const c1: CardZID | undefined = self && {
+  const c1: ZuIdCard | undefined = self && {
     id: "0x1234",
     type: "zuzalu-id",
     header: "VERIFIED ZUZALU PASSPORT",

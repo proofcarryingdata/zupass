@@ -1,12 +1,28 @@
 html {
-  background: #2A3231;
-  color: #fff;
+  --bg-dark-primary: #19473F;
+  --bg-lite-primary: #297467;
+  --bg-dark-gray:    #2A3231;
+  --bg-lite-gray:    #374B49;
+  --primary-dark:    #325F57;
+  --primary-lite:    #468C80;
+  --accent-dark:     #fcd270;
+  --accent-dark-rbg: 252, 210, 112;
+  --accent-lite:     #ffe5a4;
+  --danger:          #A95940;
+  --danger-rgb:      169, 89, 64;
+  --white:           #FFFFFF;
+  --white-rgb:       255, 255, 255;
+  --black:           #000000;
+  --black-rgb:       0, 0, 0;
+
+  background: var(--bg-dark-primary);
+  color: var(--white);
   font: 16px PlexSans, system-ui, sans-serif;
   line-height: 1.5;
 }
 
 a, a:visited {
-  color: #fcd270;
+  color: var(--accent-dark);
   text-decoration: none;
 }
 

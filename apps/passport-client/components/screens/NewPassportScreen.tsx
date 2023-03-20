@@ -40,7 +40,11 @@ export function NewPassportScreen() {
   const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
 
   return (
-    <BackgroundGlow>
+    <BackgroundGlow
+      y={224}
+      from="var(--bg-lite-primary)"
+      to="var(--bg-dark-primary)"
+    >
       <Spacer h={64} />
       <TextCenter>
         <H1>PASSPORT</H1>
@@ -74,7 +78,7 @@ const PItalic = styled.p`
   font-size: 20px;
   font-weight: 300;
   font-style: italic;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(var(--white-rgb), 0.5);
   line-height: 2;
 `;
 
@@ -82,5 +86,5 @@ const PHeavy = styled.p`
   font-size: 20px;
   font-weight: 400;
   line-height: 2;
-  color: #ffe5a4;
+  color: var(--accent-lite);
 `;

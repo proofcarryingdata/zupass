@@ -14,10 +14,14 @@ export interface Card {
   header: string;
 }
 
-export interface CardZID extends Card {
+/**
+ * Represents an (owned or revealed) Zuzalu participant identity.
+ */
+export interface ZuIdCard extends Card {
   type: "zuzalu-id";
-  /** Identity, produces the displayed PCD. */
-  identity: Identity;
   /** Participant */
   participant: ZuParticipant;
+  /** Identity (for our own, owned card) produces the displayed PCD.
+   * For someone else's verified card, it's undefined and no QR is shown. */
+  identity?: Identity;
 }
