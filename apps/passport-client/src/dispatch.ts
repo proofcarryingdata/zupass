@@ -28,11 +28,7 @@ export type Action =
     }
   | {
       type: "reset-passport";
-    }
-  | {
-      type: "nav-scan-and-verify";
-    }
-  | { type: "testing-e2ee" };
+    };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -107,8 +103,6 @@ function doSaveSelf(
       },
     });
   }
-
-  let setState = (_: Partial<ZuState>) => {};
 
   // Save to local storage.
   saveSelf(participant);

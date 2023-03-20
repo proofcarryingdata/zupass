@@ -1,5 +1,5 @@
+import { EncryptedPacket } from "@pcd/passport-crypto";
 import { Identity } from "@semaphore-protocol/identity";
-import { EncryptedPacket } from "passport-crypto";
 import { PASSPORT_SERVER_URL } from "../urls";
 
 export async function downloadEncryptedPCDs(

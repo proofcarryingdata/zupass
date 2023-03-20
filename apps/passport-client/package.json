@@ -15,6 +15,7 @@
     "@pcd/pcd-types": "*",
     "@pcd/semaphore-group-pcd": "*",
     "@pcd/semaphore-identity-pcd": "*",
+    "@pcd/passport-crypto": "*",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",

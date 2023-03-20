@@ -1,5 +1,5 @@
+import { EncryptedPacket, PCDCrypto } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { EncryptedPacket, PCDCrypto } from "passport-crypto";
 
 const cryptoPromise = PCDCrypto.newInstance();
 
