@@ -24,10 +24,12 @@ export function SemaphoreSignatureProveScreen({
     setProving(true);
     console.log(req.args);
 
-    const pcd = await prove(state.identity!, req.args.signedMessage);
+    const serializedPCD = await prove(state.identity!, req.args.signedMessage);
 
     // Redirect back to requester
-    window.location.href = `${req.returnUrl}?signed=${JSON.stringify(pcd)}`;
+    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+      serializedPCD
+    )}`;
   }, []);
 
   const lines: ReactNode[] = [];

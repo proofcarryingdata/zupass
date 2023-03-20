@@ -2,6 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
+  SemaphoreGroupPCDTypeName,
   SerializedSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
@@ -54,12 +55,15 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
     const proofEnc = params.get("proof");
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      if (parsedPCD.type !== SemaphoreGroupPCDTypeName) {
+        return;
+      }
       SemaphoreGroupPCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
         setProof(pcd);
         window.history.replaceState(null, document.title, "/");
       });
     }
-  }, [setProof]);
+  }, []);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();

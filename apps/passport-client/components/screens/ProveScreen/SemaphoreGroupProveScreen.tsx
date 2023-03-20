@@ -37,10 +37,12 @@ export function SemaphoreGroupProveScreen({
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
     setProving(true);
-    const pcd = await prove(state.identity!, group);
+    const serializedPCD = await prove(state.identity!, group);
 
     // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(pcd)}`;
+    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+      serializedPCD
+    )}`;
   }, [group, setProving]);
 
   const lines: ReactNode[] = [];

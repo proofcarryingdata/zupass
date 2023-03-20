@@ -2,6 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName,
 } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
@@ -38,17 +39,20 @@ export function useSemaphoreSignatureProof() {
   const [signatureProof, setProof] = useState<SemaphoreSignaturePCD>();
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const proofEnc = params.get(`${SemaphoreSignaturePCDPackage.name}`);
+    const proofEnc = params.get("proof");
     console.log(proofEnc);
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      if (parsedPCD.type !== SemaphoreSignaturePCDTypeName) {
+        return;
+      }
       console.log(parsedPCD);
       SemaphoreSignaturePCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
         setProof(pcd);
         window.history.replaceState(null, document.title, "/");
       });
     }
-  }, [setProof]);
+  }, []);
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();
@@ -59,7 +63,7 @@ export function useSemaphoreSignatureProof() {
         setValid(verified);
       });
     }
-  }, [signatureProof, setValid]);
+  }, [signatureProof]);
 
   return {
     signatureProof,
