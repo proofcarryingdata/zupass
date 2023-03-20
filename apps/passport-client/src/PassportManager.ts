@@ -1,4 +1,4 @@
-import { EncryptedPacket, PCD, UserStatus } from "@pcd/pcd-types";
+import { PCD } from "@pcd/pcd-types";
 import { PassportCrypto } from "passport-crypto";
 
 // TODO: Replace with real one once it has serde

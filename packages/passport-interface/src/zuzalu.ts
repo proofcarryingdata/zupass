@@ -11,3 +11,21 @@ export interface ZuParticipant {
   role: string;
   residence: string;
 }
+
+export enum UserStatus {
+  REGULAR,
+  UNVERIFIED,
+}
+
+export interface BackendUser {
+  identifier: string;
+  status: number;
+  createdAt: Date;
+  encryptedBlob: string;
+  updatedAt: Date;
+}
+
+export interface ClientUser extends BackendUser {
+  masterKey: string;
+  serverPassword: string;
+}

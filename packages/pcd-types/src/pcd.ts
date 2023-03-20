@@ -91,30 +91,3 @@ export type PCDArgument<T extends PCD = PCD> = Argument<
 export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
   return arg.argumentType === ArgumentTypeName.PCD;
 }
-
-// TODO: actually check types?
-export type HexString = string;
-export type Utf8String = string;
-export type Base64String = string;
-export interface EncryptedPacket {
-  nonce: HexString;
-  ciphertext: Base64String;
-}
-
-export enum UserStatus {
-  REGULAR,
-  UNVERIFIED,
-}
-
-export interface BackendUser {
-  identifier: string;
-  status: number;
-  createdAt: Date;
-  encryptedBlob: string;
-  updatedAt: Date;
-}
-
-export interface ClientUser extends BackendUser {
-  masterKey: string;
-  serverPassword: string;
-}

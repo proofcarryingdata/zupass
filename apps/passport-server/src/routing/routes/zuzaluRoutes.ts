@@ -1,5 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
-import { BackendUser } from "@pcd/pcd-types";
+import { BackendUser, ZuParticipant } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
