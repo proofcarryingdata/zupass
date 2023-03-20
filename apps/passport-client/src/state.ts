@@ -4,7 +4,6 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { EndToEndEncryption } from "./endToEndEncryption";
 
 export type PendingAction = { type: "new-passport"; email: string };
 
@@ -12,7 +11,6 @@ export interface ZuState {
   // Zuzalu semaphore identity.
   identity?: Identity;
   pcds: PCDCollection;
-  endToEndEncryption: EndToEndEncryption;
   pendingAction?: PendingAction;
 
   // Participant metadata.
