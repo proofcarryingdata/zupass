@@ -29,9 +29,9 @@ export function ParameterizedProveScreen() {
   const onProveClick = useCallback(async () => {
     const pcd = await pcdPackage.prove(args);
     const serialized = await pcdPackage.serialize(pcd);
-    window.location.href = `${request.returnUrl}?${
-      request.pcdType
-    }=${JSON.stringify(serialized)}`;
+    window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
+      serialized
+    )}`;
   }, [args]);
 
   if (request.type !== PCDRequestType.Get) {

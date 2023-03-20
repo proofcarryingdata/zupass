@@ -90,7 +90,6 @@ describe("semaphore signature should work", function () {
 
     // make PCD with this proof
     const fakeClaim: SemaphoreSignaturePCDClaim = {
-      groupDepth: 16,
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
       signedMessage: args.signedMessage.value!,
     };
@@ -100,10 +99,7 @@ describe("semaphore signature should work", function () {
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 
     // verify just the proof
-    const validProof = await verifyProof(
-      fakePCD.proof.proof,
-      fakePCD.claim.groupDepth
-    );
+    const validProof = await verifyProof(fakePCD.proof.proof, 16);
     assert.equal(validProof, true);
 
     // attempt to verify the entire PCD
@@ -136,7 +132,6 @@ describe("semaphore signature should work", function () {
 
     // make PCD with this proof, but the same message as the original args
     const fakeClaim: SemaphoreSignaturePCDClaim = {
-      groupDepth: 16,
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
       signedMessage: args.signedMessage.value!,
     };
@@ -146,10 +141,7 @@ describe("semaphore signature should work", function () {
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 
     // verify just the proof
-    const validProof = await verifyProof(
-      fakePCD.proof.proof,
-      fakePCD.claim.groupDepth
-    );
+    const validProof = await verifyProof(fakePCD.proof.proof, 16);
     assert.equal(validProof, true);
 
     // attempt to verify the entire PCD
