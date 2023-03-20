@@ -1,13 +1,21 @@
-import { useContext, useEffect } from "react";
+import React from "react";
 import { useLocation } from "react-router-dom";
-import { DispatchContext } from "../../src/dispatch";
+import { CenterColumn, H1, Spacer, TextCenter } from "../core";
+import { LinkButton } from "../core/Button";
 
 export function MissingScreen() {
-  const [_, dispatch] = useContext(DispatchContext);
   const loc = useLocation();
-  const message = `Missing ${loc.pathname}`;
-  useEffect(() => {
-    dispatch({ type: "error", error: { title: "Page not found", message } });
-  }, []);
-  return null;
+
+  return (
+    <CenterColumn w={290}>
+      <TextCenter>
+        <Spacer h={64} />
+        <H1>Page not found</H1>
+        <Spacer h={24} />
+        <p>Missing {loc.pathname}</p>
+        <Spacer h={24} />
+        <LinkButton to="/">Return to Passport</LinkButton>
+      </TextCenter>
+    </CenterColumn>
+  );
 }
