@@ -59,8 +59,6 @@ export interface SemaphoreSignaturePCDArgs {
 }
 
 export interface SemaphoreSignaturePCDClaim {
-  groupDepth: number;
-
   /**
    * Pre-hashed message.
    */
@@ -147,7 +145,6 @@ export async function prove(
   );
 
   const claim: SemaphoreSignaturePCDClaim = {
-    groupDepth: group.depth,
     identityCommitment: identityPCD.claim.identity.commitment.toString(),
     signedMessage: args.signedMessage.value,
   };
@@ -161,7 +158,7 @@ export async function prove(
 
 export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
   // check if proof is valid
-  const validProof = await verifyProof(pcd.proof.proof, pcd.claim.groupDepth);
+  const validProof = await verifyProof(pcd.proof.proof, 16);
 
   // check proof is for the claimed message
   const proofMessageSameAsClaim =
@@ -169,7 +166,7 @@ export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
     generateMessageHash(pcd.claim.signedMessage).toString();
 
   // make sure proof is over a group with only your identity commitment
-  const group = new Group(1, pcd.claim.groupDepth);
+  const group = new Group(1, 16);
   group.addMember(pcd.claim.identityCommitment);
   const validSingletonGroup =
     group.root.toString() === pcd.proof.proof.merkleTreeRoot;
