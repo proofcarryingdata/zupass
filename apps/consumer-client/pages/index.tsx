@@ -34,6 +34,18 @@ export default function Web() {
   const [messageToSign, setMessageToSign] = useState<string>("");
   const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
 
+  // Remove proof from URL after we've used it
+  useEffect(() => {
+    if (
+      semaphoreProofValid !== undefined ||
+      signatureProofValid !== undefined
+    ) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("proof");
+      window.history.replaceState(null, "", url);
+    }
+  }, [semaphoreProofValid, signatureProofValid]);
+
   return (
     <Container>
       <h1>consumer-client</h1>
@@ -41,7 +53,7 @@ export default function Web() {
         <h2>Zuzalu Membership Proof (SemaphoreGroupPCD) </h2>
         <button
           onClick={() => {
-            const RETURN_URL = window && window.location.href;
+            const RETURN_URL = window.location.href;
             requestZuzaluMembershipProof(
               PASSPORT_URL,
               RETURN_URL,
@@ -80,7 +92,7 @@ export default function Web() {
         <br />
         <button
           onClick={() => {
-            const RETURN_URL = window && window.location.href;
+            const RETURN_URL = window.location.href;
             requestSemaphoreSignatureProof(
               PASSPORT_URL,
               RETURN_URL,

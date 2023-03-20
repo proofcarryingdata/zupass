@@ -33,9 +33,7 @@ export function requestSemaphoreSignatureProof(
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
 export function useSemaphoreSignatureProof() {
-  const [signatureProof, setProof] = retrieveProof(
-    SemaphoreSignaturePCDPackage
-  );
+  const signatureProof = retrieveProof(SemaphoreSignaturePCDPackage);
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();

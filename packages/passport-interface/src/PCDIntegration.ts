@@ -5,8 +5,8 @@ export function retrieveProof(proofPackage: PCDPackage) {
   const [proof, setProof] = useState<PCDOf<typeof proofPackage>>();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const proofEnc = params.get("proof");
+    const url = new URL(window.location.href);
+    const proofEnc = url.searchParams.get("proof");
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
       if (parsedPCD.type !== proofPackage.name) {
@@ -14,10 +14,9 @@ export function retrieveProof(proofPackage: PCDPackage) {
       }
       proofPackage.deserialize(parsedPCD.pcd).then((pcd) => {
         setProof(pcd);
-        window.history.replaceState({}, document.title, "/");
       });
     }
   }, []);
 
-  return [proof, setProof];
+  return proof;
 }

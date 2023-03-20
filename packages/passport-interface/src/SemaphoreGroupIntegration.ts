@@ -49,7 +49,7 @@ export function requestZuzaluMembershipProof(
  */
 export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   const [error, setError] = useState<Error | undefined>();
-  const [semaphoreProof, setProof] = retrieveProof(SemaphoreGroupPCDPackage);
+  const semaphoreProof = retrieveProof(SemaphoreGroupPCDPackage);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();

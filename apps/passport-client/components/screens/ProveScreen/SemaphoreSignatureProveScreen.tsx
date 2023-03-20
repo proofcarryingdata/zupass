@@ -22,7 +22,6 @@ export function SemaphoreSignatureProveScreen({
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
     setProving(true);
-    console.log(req.args);
 
     const serializedPCD = await prove(state.identity!, req.args.signedMessage);
 

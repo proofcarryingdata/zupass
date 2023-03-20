@@ -190,8 +190,9 @@ export async function deserialize(
 }
 
 /**
- * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
- * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
+ * PCD-conforming wrapper to sign messages using one's Semaphore public key. This is a small
+ * extension of the existing Semaphore protocol, which is mostly geared at group signatures.
+ * Find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
  */
 export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDClaim,
