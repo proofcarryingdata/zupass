@@ -20,8 +20,10 @@ import { PCDArgs } from "../../shared/PCDArgs";
 export function ParameterizedProveScreen() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
+
   const [state, dispatch] = useContext(DispatchContext);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
+
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(request.args)));
   const pcdPackage = state.pcds.getPackage(request.pcdType);
   const onProveClick = useCallback(async () => {

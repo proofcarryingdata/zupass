@@ -7,6 +7,7 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
+import { retrieveProof } from "./PCDIntegration";
 
 export function requestZuzaluMembershipProof(
   urlToPassportWebsite: string,
@@ -48,18 +49,7 @@ export function requestZuzaluMembershipProof(
  */
 export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
   const [error, setError] = useState<Error | undefined>();
-  const [semaphoreProof, setProof] = useState<SemaphoreGroupPCD>();
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const proofEnc = params.get("proof");
-    if (proofEnc) {
-      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
-      SemaphoreGroupPCDPackage.deserialize(parsedPCD.pcd).then((pcd) => {
-        setProof(pcd);
-        window.history.replaceState(null, document.title, "/");
-      });
-    }
-  }, [setProof]);
+  const semaphoreProof = retrieveProof(SemaphoreGroupPCDPackage);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
@@ -96,17 +86,16 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
 }
 
 async function verifyProof(
-  proof: SemaphoreGroupPCD,
+  pcd: SemaphoreGroupPCD,
   semaGroup: SerializedSemaphoreGroup
 ): Promise<boolean> {
-  const { deserialize, verify } = SemaphoreGroupPCDPackage;
-  const deserialized = await deserialize(JSON.stringify(proof));
-  const verified = await verify(deserialized);
+  const { verify } = SemaphoreGroupPCDPackage;
+  const verified = await verify(pcd);
   if (!verified) return false;
 
   const group = new Group(1, 16);
   group.addMembers(semaGroup.members);
-  const root = deserialized.proof.proof.merkleTreeRoot;
+  const root = pcd.proof.proof.merkleTreeRoot;
 
   return root.toString() === group.root.toString();
 }
