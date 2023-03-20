@@ -1,5 +1,5 @@
+import { EncryptedPacket, PCD, UserStatus } from "@pcd/pcd-types";
 import { PassportCrypto } from "passport-crypto";
-import { EncryptedPacket, PCD, UserStatus } from "pcd-types";
 
 // TODO: Replace with real one once it has serde
 export interface DummyPCD {
