@@ -6,15 +6,15 @@
     "dev": "ts-node build.ts dev",
     "build": "ts-node build.ts build",
     "start": "exit 0",
-    "lint": "tsc . --noEmit && eslint . --ext .ts,.tsx",
+    "lint": "tsc pages/index.tsx --noEmit && eslint . --ext .ts,.tsx",
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
     "@pcd/passport-interface": "*",
+    "@pcd/pcd-collection": "*",
     "@pcd/pcd-types": "*",
     "@pcd/semaphore-group-pcd": "*",
     "@pcd/semaphore-identity-pcd": "*",
-    "@pcd/pcd-collection": "*",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
@@ -23,6 +23,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.11",
+    "react-qr-reader": "^3.0.0-beta-1",
     "react-router-dom": "^6.9.0",
     "styled-components": "^5.3.6"
   },

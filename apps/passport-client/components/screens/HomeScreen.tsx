@@ -40,7 +40,7 @@ export function HomeScreen() {
       </Placeholder>
       <Spacer h={24} />
       {cards.map((c, i) => {
-        if (i === sel) return <Spacer h={48} />;
+        if (i === sel) return <Spacer key={i} h={48} />;
         return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
       })}
     </>

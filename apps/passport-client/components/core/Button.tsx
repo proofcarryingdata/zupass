@@ -56,5 +56,27 @@ export const LinkButton = styled(Link)`
   width: 100%;
   text-align: center;
   text-decoration: none;
-  color: var(--primary-dark) !important;
+  color: var(--bg-dark-primary) !important;
+`;
+
+export const CircleButton = styled.button<{
+  diameter: number;
+  padding: number;
+}>`
+  ${(p) => {
+    const size = p.diameter + 2 * p.padding + "px";
+    return `width: ${size};height: ${size};`;
+  }};
+  cursor: pointer;
+  border-radius: 99px;
+  border: none;
+  margin: 0;
+  padding: ${(p) => p.padding}px;
+  background: transparent;
+  &:hover {
+    background: rgba(var(--white-rgb), 0.05);
+  }
+  &:active {
+    background: rgba(var(--white-rgb), 0.1);
+  }
 `;

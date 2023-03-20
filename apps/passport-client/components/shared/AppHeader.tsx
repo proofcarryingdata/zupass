@@ -3,7 +3,7 @@ import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { CenterColumn, Spacer, TextCenter } from "../core";
-import { Button } from "../core/Button";
+import { Button, CircleButton, LinkButton } from "../core/Button";
 
 export function AppHeader() {
   const [modal, setModal] = useState("");
@@ -43,24 +43,6 @@ const AppHeaderWrap = styled.div`
   padding: 0;
   display: flex;
   justify-content: space-between;
-`;
-
-const CircleButton = styled.button<{ diameter: number; padding: number }>`
-  ${(p) => {
-    const size = p.diameter + 2 * p.padding + "px";
-    return `width: ${size};height: ${size};`;
-  }};
-  border-radius: 99px;
-  border: none;
-  margin: 0;
-  padding: ${(p) => p.padding}px;
-  background: transparent;
-  &:hover {
-    background: rgba(var(--white-rgb), 0.05);
-  }
-  &:active {
-    background: rgba(var(--white-rgb), 0.1);
-  }
 `;
 
 function Modal(props: { onClose: () => void; children: ReactNode }) {
@@ -132,10 +114,6 @@ function SettingsModal() {
     }
   }, []);
 
-  const comingSoon = useCallback(() => {
-    window.alert("Coming soon");
-  }, []);
-
   return (
     <>
       <Spacer h={32} />
@@ -144,7 +122,7 @@ function SettingsModal() {
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={280}>
-        <Button onClick={comingSoon}>Verify a Passport</Button>
+        <LinkButton to="/scan">Verify a Passport</LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>Copy Key for Sync</Button>
         <Spacer h={16} />
