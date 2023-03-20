@@ -1,4 +1,3 @@
-import { ZuzaluParticipant } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
@@ -9,7 +8,7 @@ import { sendEmail } from "../../util/email";
 const globalGroup = new Group("1", 16);
 
 // Zuzalu participants
-const participants = {} as Record<string, ZuzaluParticipant>;
+const participants = {} as Record<string, ZuParticipant>;
 
 // localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
 // example identity: ["da4e5656b0892923d30c0a8fa9e68a2ea5b8095c09a4198d066219d5b4e30a","651e367c40d65f65f38ba60f723feb2abcafddd1aa24e6de35a0d9189bca58"]
@@ -46,7 +45,7 @@ export function initZuzaluRoutes(
         globalGroup.addMember(bigIntCommitment);
 
         // TODO: save commitment, new Merkle root to DB
-        const participant: ZuzaluParticipant = {
+        const participant: ZuParticipant = {
           commitment,
           email,
           name,

@@ -1,4 +1,4 @@
-import { ZuzaluParticipant } from "@pcd/passport-interface";
+import { ZuParticipant } from "@pcd/passport-interface";
 import * as React from "react";
 import { useContext, useEffect } from "react";
 import { useLocation } from "react-router-dom";
@@ -10,7 +10,7 @@ export function SaveSelfScreen() {
   const [_, dispatch] = useContext(DispatchContext);
   const location = useLocation();
   const params = new URLSearchParams(location.search);
-  let participant: ZuzaluParticipant;
+  let participant: ZuParticipant;
   try {
     participant = JSON.parse(params.get("participant"));
   } catch (_) {}

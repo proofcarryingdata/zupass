@@ -1,4 +1,3 @@
-import { ZuzaluParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -17,7 +16,7 @@ export type Action =
     }
   | {
       type: "save-self";
-      participant: ZuzaluParticipant;
+      participant: ZuParticipant;
     }
   | {
       type: "error";
@@ -85,7 +84,7 @@ async function genPassport(email: string, update: ZuUpdate) {
 }
 
 function doSaveSelf(
-  participant: ZuzaluParticipant,
+  participant: ZuParticipant,
   state: ZuState,
   update: ZuUpdate
 ) {

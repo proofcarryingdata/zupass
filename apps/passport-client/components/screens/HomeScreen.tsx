@@ -1,4 +1,4 @@
-import { ZuzaluParticipant } from "@pcd/passport-interface";
+import { ZuParticipant } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -45,7 +45,7 @@ export function HomeScreen() {
   );
 }
 
-function getTestCards(identity: Identity, self?: ZuzaluParticipant): Card[] {
+function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
   const c1: CardZID | undefined = self && {
     id: "0x1234",
     type: "zuzalu-id",

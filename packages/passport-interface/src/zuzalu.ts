@@ -1,4 +1,4 @@
-export interface ZuzaluParticipant {
+export interface ZuParticipant {
   /** Semaphore public commitment */
   commitment: string;
 
