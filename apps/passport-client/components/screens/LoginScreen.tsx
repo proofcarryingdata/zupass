@@ -23,7 +23,7 @@ import {
 import { LinkButton } from "../core/Button";
 
 export function LoginScreen() {
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const [email, setEmail] = useState("");
 
   const onGenPass = useCallback(
@@ -33,6 +33,11 @@ export function LoginScreen() {
     },
     [dispatch, email]
   );
+
+  // Redirect to home if already logged in
+  if (state.self != null) {
+    window.location.hash = "#/";
+  }
 
   return (
     <BackgroundGlow

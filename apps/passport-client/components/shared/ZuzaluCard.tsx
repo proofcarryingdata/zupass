@@ -8,35 +8,40 @@ import styled from "styled-components";
 import { config } from "../../src/config";
 import { ZuIdCard } from "../../src/model/Card";
 import { createProof } from "../../src/proveSemaphore";
-import { H3, Spacer, TextCenter } from "../core";
+import { H3, H4, Spacer, TextCenter } from "../core";
 
 export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
   const { role, name, email, residence } = card.participant;
   return (
-    <>
+    <CardBody>
       {card.identity && (
         <>
-          <Spacer h={8} />
+          <Spacer h={32} />
           <ZuzaluQR card={card} />
-          <Spacer h={16} />
+          <Spacer h={24} />
         </>
       )}
       <TextCenter>
-        <H3>{name}</H3>
-        <Spacer h={8} />
-        <p>{email}</p>
-        <p>{residence}</p>
+        <H3 col="var(--primary-dark)">{name}</H3>
+        <H4 col="var(--primary-dark)">{email}</H4>
+        <H4 col="var(--primary-dark)">{residence}</H4>
       </TextCenter>
       <Spacer h={24} />
       <Footer role={role}>ZUZALU {role.toUpperCase()}</Footer>
-    </>
+    </CardBody>
   );
 }
+
+const CardBody = styled.div`
+  background: var(--white);
+  color: var(--primary-dark);
+  border-radius: 0 0 12px 12px;
+`;
 
 const Footer = styled.div<{ role: string }>`
   font-size: 20px;
   background: ${(p) =>
-    p.role === "resident" ? "var(--accent-dark)" : "var(--primary-dark)"};
+    p.role === "resident" ? "var(--accent-lite)" : "var(--primary-dark)"};
   color: ${(p) =>
     p.role === "resident" ? "var(--primary-dark)" : "var(--white)"};
   /* Must be slightly lower than the card's border-radius to nest correctly. */
@@ -79,8 +84,8 @@ const qrSize = "280px";
 const qrStyle = { width: qrSize, height: qrSize };
 const [qrBg, qrFg] = (() => {
   var style = getComputedStyle(document.body);
-  const bg = style.getPropertyValue("--primary-dark");
-  const fg = style.getPropertyValue("--white");
+  const bg = style.getPropertyValue("--white");
+  const fg = style.getPropertyValue("--primary-dark");
   return [bg, fg];
 })();
 

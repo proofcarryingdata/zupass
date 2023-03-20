@@ -9,3 +9,5 @@ export const config: Config = {
   devMode: process.env.NODE_ENV !== "production",
   passportServer: process.env.PASSPORT_SERVER,
 };
+
+console.log("Config: " + JSON.stringify(config));

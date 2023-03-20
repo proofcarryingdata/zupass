@@ -24,7 +24,14 @@ export const H3 = styled.h3<{ col?: string }>`
   color: ${(p) => p.col || "var(--white)"};
   letter-spacing: 0.5px;
   font-size: 22px;
-  font-weight: 400;
+  font-weight: 500;
+`;
+
+export const H4 = styled.h4<{ col?: string }>`
+  color: ${(p) => p.col || "var(--white)"};
+  letter-spacing: 0.5px;
+  font-size: 14px;
+  font-weight: 300;
 `;
 
 export const HR = styled.hr`
