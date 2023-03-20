@@ -37,5 +37,5 @@ const ErrorWrap = styled.div`
   right: 0;
   border-radius: 24px;
   padding: 24px;
-  background-color: #325f57;
+  background-color: var(--primary-dark);
 `;

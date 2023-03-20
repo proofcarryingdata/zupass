@@ -1,4 +1,7 @@
 export interface ZuParticipant {
+  /** Public UUID */
+  uuid: string;
+
   /** Semaphore public commitment */
   commitment: string;
 

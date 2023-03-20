@@ -5,11 +5,12 @@ import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
-import { CardZID } from "../../src/model/Card";
+import { config } from "../../src/config";
+import { ZuIdCard } from "../../src/model/Card";
 import { createProof } from "../../src/proveSemaphore";
 import { H3, Spacer, TextCenter } from "../core";
 
-export function ZuzaluCardBody({ card }: { card: CardZID }) {
+export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
   const { role, name } = card.participant;
   return (
     <>
@@ -35,20 +36,29 @@ const Placeholder = styled.div`
 
 const Footer = styled.div<{ role: string }>`
   font-size: 20px;
-  background: ${(p) => (p.role === "resident" ? "#FFE5A4" : "#325F57")};
-  color: ${(p) => (p.role === "resident" ? "#325F57" : "#fff")};
+  background: ${(p) =>
+    p.role === "resident" ? "var(--accent-dark)" : "var(--primary-dark)"};
+  color: ${(p) =>
+    p.role === "resident" ? "var(--primary-dark)" : "var(--white)"};
   border-radius: 0 0 12px 12px;
   padding: 8px;
   text-align: center;
 `;
 
-function ZuzaluQR({ card }: { card: CardZID }) {
+function ZuzaluQR({ card }: { card: ZuIdCard }) {
   const style = useMemo(() => ({ width: "280px", height: "280px" }), []);
   const { identity } = card;
-  if (!identity) return null;
+
+  const [bg, fg] = useMemo(() => {
+    var style = getComputedStyle(document.body);
+    const bg = style.getPropertyValue("--primary-dark");
+    const fg = style.getPropertyValue("--white");
+    return [bg, fg];
+  }, []);
 
   const [serialized, setSerialized] = useState<string>();
   useEffect(() => {
+    if (identity == null) return;
     const { serialize } = SemaphoreGroupPCDPackage;
     createProof(identity)
       .then(serialize)
@@ -61,10 +71,14 @@ function ZuzaluQR({ card }: { card: CardZID }) {
   const enc = encodeURIComponent(Buffer.from(compressed).toString("base64"));
   console.log(`Compressed: ${compressed.length}, base64: ${enc.length}`);
 
-  const link = `${window.location.origin}#/verify?pcd=${enc}`;
+  const { uuid } = card.participant;
+  const link = `${window.location.origin}#/verify?pcd=${enc}&uuid=${uuid}`;
   console.log(`Link, ${link.length} bytes: ${link}`);
 
   return (
-    <QRCode bgColor="#325F57" fgColor="#ffffff" value={link} style={style} />
+    <>
+      <QRCode bgColor={bg} fgColor={fg} value={link} style={style} />
+      {config.devMode && <a href={link}>dev link</a>}
+    </>
   );
 }

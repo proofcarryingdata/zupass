@@ -12,7 +12,7 @@ create table pretix_participants (
   -- role, resident or visitor
   role VARCHAR NOT NULL,
   -- where the participant is staying
-  residence VARCHAR NOT NULL
+  residence VARCHAR NOT NULL,
 );
 
 

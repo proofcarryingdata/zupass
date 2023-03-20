@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useCallback } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ErrorPopup } from "./ErrorPopup";
@@ -13,8 +13,8 @@ export function AppContainer() {
     [dispatch]
   );
 
-  const loc = useLocation();
-  const color = loc.pathname === "/" ? "#2a3231" : "#19473F";
+  // Hacky way to set the background color.
+  const color = state.self ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
 
   return (
     <Background color={color}>

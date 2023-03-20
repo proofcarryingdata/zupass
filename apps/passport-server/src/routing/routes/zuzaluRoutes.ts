@@ -2,6 +2,7 @@ import { ZuParticipant } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
+import { v4 as uuidv4 } from "uuid";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -47,6 +48,7 @@ export function initZuzaluRoutes(
 
         // TODO: save commitment, new Merkle root to DB
         const participant: ZuParticipant = {
+          uuid: uuidv4(),
           commitment,
           email,
           name,

@@ -6,22 +6,22 @@ import { Spacer } from "./Spacer";
 
 export { Button, BigInput, Spacer };
 
-export const H1 = styled.h1`
-  color: #fcd270;
+export const H1 = styled.h1<{ col?: string }>`
+  color: ${(p) => p.col || "var(--accent-dark)"};
   letter-spacing: 3.5px;
   font-size: 36px;
   font-weight: 200;
 `;
 
-export const H2 = styled.h2`
-  color: #fcd270;
+export const H2 = styled.h2<{ col?: string }>`
+  color: ${(p) => p.col || "var(--accent-dark)"};
   letter-spacing: 3.5px;
   font-size: 22px;
   font-weight: 300;
 `;
 
-export const H3 = styled.h3`
-  color: #fff;
+export const H3 = styled.h3<{ col?: string }>`
+  color: ${(p) => p.col || "var(--white)"};
   letter-spacing: 0.5px;
   font-size: 22px;
   font-weight: 400;
@@ -29,7 +29,7 @@ export const H3 = styled.h3`
 
 export const HR = styled.hr`
   border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(var(--white-rgb), 0.2);
   margin: 0 16px;
 `;
 
@@ -57,13 +57,17 @@ export const PreWrap = styled.pre`
   overflow: hidden;
 `;
 
-export const BackgroundGlow = styled.div`
+export const BackgroundGlow = styled.div<{
+  y: number;
+  from: string;
+  to: string;
+}>`
   width: 100%;
   min-height: 100vh;
   background: radial-gradient(
-    circle closest-side at center 224px,
-    #297474,
-    #19473f
+    circle 160px at center ${(p) => p.y}px,
+    ${(p) => p.from},
+    ${(p) => p.to}
   );
 `;
 

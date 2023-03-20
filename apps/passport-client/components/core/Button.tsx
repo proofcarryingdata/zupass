@@ -25,18 +25,19 @@ const buttonStyle = `
   width: 100%;
   height: 48px;
   padding: 12px;
-  color: #19473f;
+  color: var(--bg-dark-primary);
   border: none;
   border-radius: 99px;
   font-size: 16px;
   font-weight: 600;
-  background: rgba(252, 210, 112, 0.9);
+  background: var(--accent-dark);
+  opacity: 0.9;
   cursor: pointer;
   &:hover {
-    background: rgba(252, 210, 112, 0.95);
+    opacity: 0.95;
   }
   &:active {
-    background: rgba(252, 210, 112, 1);
+    opacity: 1;
   }
 `;
 
@@ -45,13 +46,8 @@ const BtnBase = styled.button`
 `;
 
 const BtnDanger = styled(BtnBase)`
-  background: rgba(169, 89, 64, 0.9);
-  &:hover {
-    background: rgba(169, 89, 64, 0.95);
-  }
-  &:active {
-    background: rgba(169, 89, 64, 1);
-  }
+  color: #fff;
+  background: var(--danger);
 `;
 
 export const LinkButton = styled(Link)`
@@ -60,4 +56,5 @@ export const LinkButton = styled(Link)`
   width: 100%;
   text-align: center;
   text-decoration: none;
+  color: var(--primary-dark) !important;
 `;
