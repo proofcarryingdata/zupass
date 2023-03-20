@@ -35,6 +35,7 @@ async function run(command: string) {
       const { host } = await ctx.serve({
         servedir: "public",
         port: 3000,
+        host: "0.0.0.0",
       });
       console.log(`Serving on ${host}`);
       break;

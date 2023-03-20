@@ -1,13 +1,13 @@
 import * as React from "react";
 
-import { passportReceiveRequest } from "@pcd/passport-interface";
+// import { passportReceiveRequest } from "@pcd/passport-interface";
 import { useEffect } from "react";
 import styled from "styled-components";
 
 export default function Receive() {
   useEffect(() => {
-    const req = passportReceiveRequest(window?.location?.href);
-    console.log("Received passport request", req);
+    // const req = passportReceiveRequest(window?.location?.href);
+    console.log("Received passport request", window.location.search);
   }, []);
 
   return (
