@@ -6,9 +6,8 @@ import {
 import { Buffer } from "buffer";
 import { ungzip } from "pako";
 import * as React from "react";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuIdCard } from "../../src/model/Card";
 import { fetchParticipant } from "../../src/participant";
@@ -32,6 +31,7 @@ type VerifyResult =
   | { valid: true; type: "identity-proof"; participant: ZuParticipant }
   | { valid: true; type: "anon-proof"; role: string };
 
+// Shows whether a proof is valid. On success, shows the PCD claim visually.
 export function VerifyScreen() {
   const location = useLocation();
   const [_, dispatch] = useContext(DispatchContext);
@@ -107,26 +107,6 @@ function getCard(result: VerifyResult): ZuIdCard {
   };
 }
 
-function ValidResultCard({ result }: { result: VerifyResult }) {
-  if (!result.valid) return null;
-
-  if (result.type === "anon-proof") {
-    console.error("Anon proof verification not implemented yet");
-    return null;
-  }
-
-  const card = useMemo(() => {
-    return {
-      id: "0x1234",
-      type: "zuzalu-id",
-      header: "VERIFIED ZUZALU PASSPORT",
-      participant: result.participant,
-    } as ZuIdCard;
-  }, [result]);
-
-  return <CardElem expanded card={card} />;
-}
-
 async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   const buf = Buffer.from(pcdStr, "base64");
   console.log(`Unzipping ${buf.length}b`);
@@ -163,7 +143,3 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   return { valid: true, type, participant };
 }
-
-export const H1Center = styled.h1`
-  font-size: 36px;
-`;
