@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { config } from "../../src/config";
 import { ZuIdCard } from "../../src/model/Card";
 import { createProof } from "../../src/proveSemaphore";
-import { H3, H4, Spacer, TextCenter } from "../core";
+import { H3, InfoLine, Spacer, TextCenter } from "../core";
 
 export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
   const { role, name, email, residence } = card.participant;
@@ -23,8 +23,8 @@ export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
       )}
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
-        <H4 col="var(--primary-dark)">{email}</H4>
-        <H4 col="var(--primary-dark)">{residence}</H4>
+        <InfoLine>{email}</InfoLine>
+        <InfoLine>{residence}</InfoLine>
       </TextCenter>
       <Spacer h={24} />
       <Footer role={role}>ZUZALU {role.toUpperCase()}</Footer>
@@ -40,6 +40,7 @@ const CardBody = styled.div`
 
 const Footer = styled.div<{ role: string }>`
   font-size: 20px;
+  letter-spacing: 1px;
   background: ${(p) =>
     p.role === "resident" ? "var(--accent-lite)" : "var(--primary-dark)"};
   color: ${(p) =>
