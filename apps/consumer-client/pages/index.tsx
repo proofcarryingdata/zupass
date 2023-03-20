@@ -1,8 +1,10 @@
 import {
+  requestSemaphoreSignatureProof,
   requestZuzaluMembershipProof,
   useSemaphorePassportProof,
+  useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { IS_PROD } from "../src/util";
 
@@ -15,45 +17,105 @@ const PASSPORT_URL = IS_PROD
   : "http://localhost:3000/";
 
 export default function Web() {
-  const { proof, group, valid, error } =
-    useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
-
+  // Semaphore Group PCD
+  const {
+    proof: semaphoreProof,
+    group: semaphoreGroup,
+    valid: semaphoreProofValid,
+    error: semaphoreError,
+  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
   useEffect(() => {
-    if (error) {
-      console.log("error using semaphore passport proof", error);
+    if (semaphoreError) {
+      console.log("error using semaphore passport proof", semaphoreError);
     }
-  }, [error]);
+  }, [semaphoreError]);
+
+  // Semaphore Signature PCD
+  const [messageToSign, setMessageToSign] = useState<string>("");
+  const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
+
+  // Remove proof from URL after we've used it
+  useEffect(() => {
+    if (
+      semaphoreProofValid !== undefined ||
+      signatureProofValid !== undefined
+    ) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("proof");
+      window.history.replaceState(null, "", url);
+    }
+  }, [semaphoreProofValid, signatureProofValid]);
 
   return (
     <Container>
-      <h1>Welcome to Zuzalu!</h1>
-      <button
-        onClick={() => {
-          const RETURN_URL = window && window.location.href;
-          requestZuzaluMembershipProof(
-            PASSPORT_URL,
-            RETURN_URL,
-            SEMAPHORE_GROUP_URL,
-            (url) => {
-              window.location.href = url;
-            }
-          );
-        }}
-      >
-        Prove Residency
-      </button>
-      {proof != null && (
-        <>
-          <h2>Got Zuzalu Membership Proof from Passport</h2>
-          <pre>{JSON.stringify(proof, null, 2)}</pre>
-          <h2>Verifying proof...</h2>
-          {group && <p>✅ Loaded group, {group.members.length} members</p>}
-          {valid === undefined && <p>❓ Proof verifying</p>}
-          {valid === false && <p>❌ Proof is invalid</p>}
-          {valid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
-      {valid && <h2>Welcome, anon</h2>}
+      <h1>consumer-client</h1>
+      <Container>
+        <h2>Zuzalu Membership Proof (SemaphoreGroupPCD) </h2>
+        <button
+          onClick={() => {
+            const RETURN_URL = window.location.href;
+            requestZuzaluMembershipProof(
+              PASSPORT_URL,
+              RETURN_URL,
+              SEMAPHORE_GROUP_URL,
+              (url) => {
+                window.location.href = url;
+              }
+            );
+          }}
+        >
+          Request Zuzalu Membership Proof
+        </button>
+        {semaphoreProof != null && (
+          <>
+            <h3>Got Zuzalu Membership Proof from Passport</h3>
+            <pre>{JSON.stringify(semaphoreProof, null, 2)}</pre>
+            {semaphoreGroup && (
+              <p>✅ Loaded group, {semaphoreGroup.members.length} members</p>
+            )}
+            {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
+            {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
+            {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+        {semaphoreProofValid && <h3>Welcome, anon</h3>}
+      </Container>
+      <Container>
+        <h2>Signature or Identity Reveal Proof (SemaphoreSignaturePCD)</h2>
+        <input
+          placeholder="Message to sign"
+          type="text"
+          value={messageToSign}
+          onChange={(e) => setMessageToSign(e.target.value)}
+        />
+        <br />
+        <br />
+        <button
+          onClick={() => {
+            const RETURN_URL = window.location.href;
+            requestSemaphoreSignatureProof(
+              PASSPORT_URL,
+              RETURN_URL,
+              messageToSign,
+              (url) => {
+                window.location.href = url;
+              }
+            );
+          }}
+        >
+          Request Semaphore Signature
+        </button>
+        {signatureProof != null && (
+          <>
+            <h3>Got Semaphore Signature Proof from Passport</h3>
+            <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
+            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+            {signatureProofValid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+      </Container>
     </Container>
   );
 }

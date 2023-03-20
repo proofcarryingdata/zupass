@@ -1,9 +1,11 @@
+import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { saveSelf, ZuParticipant } from "./participant";
+import { saveSelf } from "./participant";
 import { savePCDs, ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
@@ -69,7 +71,11 @@ async function genPassport(email: string, update: ZuUpdate) {
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(
-    [SemaphoreIdentityPCDPackage, SemaphoreGroupPCDPackage],
+    [
+      SemaphoreIdentityPCDPackage,
+      SemaphoreGroupPCDPackage,
+      SemaphoreSignaturePCDPackage,
+    ],
     [identityPCD]
   );
 

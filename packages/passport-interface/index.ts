@@ -1,4 +1,5 @@
 export * from "./src/PassportInterface";
 export * from "./src/RequestTypes";
-export * from "./src/SemaphoreIntegration";
+export * from "./src/SemaphoreGroupIntegration";
+export * from "./src/SemaphoreSignatureIntegration";
 export * from "./src/zuzalu";
