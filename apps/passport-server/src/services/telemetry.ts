@@ -3,7 +3,8 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ApplicationContext } from "../types";
 
-export function startTelemetry(context: ApplicationContext) {
+// Send
+export function startTelemetry(_: ApplicationContext) {
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
   });

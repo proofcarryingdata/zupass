@@ -4,7 +4,7 @@ import {
   useSemaphorePassportProof,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { IS_PROD } from "../src/util";
 
@@ -17,14 +17,21 @@ const PASSPORT_URL = IS_PROD
   : "http://localhost:3000/";
 
 export default function Web() {
-  const [messageToSign, setMessageToSign] = useState<string>("");
-
+  // Semaphore Group PCD
   const {
-    semaphoreProof: proof,
-    semaphoreGroup: group,
-    semaphoreProofValid: valid,
+    proof: semaphoreProof,
+    group: semaphoreGroup,
+    valid: semaphoreProofValid,
+    error: semaphoreError,
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
+  useEffect(() => {
+    if (semaphoreError) {
+      console.log("error using semaphore passport proof", semaphoreError);
+    }
+  }, [semaphoreError]);
 
+  // Semaphore Signature PCD
+  const [messageToSign, setMessageToSign] = useState<string>("");
   const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
 
   return (
@@ -47,17 +54,19 @@ export default function Web() {
         >
           Request Zuzalu Membership Proof
         </button>
-        {proof != null && (
+        {semaphoreProof != null && (
           <>
             <h3>Got Zuzalu Membership Proof from Passport</h3>
-            <pre>{JSON.stringify(proof, null, 2)}</pre>
-            {group && <p>✅ Loaded group, {group.members.length} members</p>}
-            {valid === undefined && <p>❓ Proof verifying</p>}
-            {valid === false && <p>❌ Proof is invalid</p>}
-            {valid === true && <p>✅ Proof is valid</p>}
+            <pre>{JSON.stringify(semaphoreProof, null, 2)}</pre>
+            {semaphoreGroup && (
+              <p>✅ Loaded group, {semaphoreGroup.members.length} members</p>
+            )}
+            {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
+            {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
+            {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
           </>
         )}
-        {valid && <h3>Welcome, anon</h3>}
+        {semaphoreProofValid && <h3>Welcome, anon</h3>}
       </Container>
       <Container>
         <h2>Signature or Identity Reveal Proof (SemaphoreSignaturePCD)</h2>
@@ -87,7 +96,7 @@ export default function Web() {
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
-            <pre>{JSON.stringify(proof, null, 2)}</pre>
+            <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
             <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
