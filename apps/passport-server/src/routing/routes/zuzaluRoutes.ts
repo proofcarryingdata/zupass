@@ -3,7 +3,7 @@ import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { createUser, fetchUser, writeUser } from "../../database/queries";
+import { fetchUser, writeUser } from "../../database/queries";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -103,21 +103,7 @@ export function initZuzaluRoutes(
     sendEmail("test@nibnalin.me", "testing123");
   });
 
-  app.post("/user/create", async (req: Request, res: Response) => {
-    console.log("req", req.body);
-    const { identifier, status, serverPassword, encryptedBlob } = req.body;
-
-    const write = await createUser(context.dbClient, {
-      identifier: identifier,
-      status: status,
-      server_password: serverPassword,
-      encrypted_blob: encryptedBlob,
-    });
-
-    res.json({ success: write });
-  });
-
-  app.get("/user/fetch/", async (req: Request, res: Response) => {
+  app.get("/sync/load/", async (req: Request, res: Response) => {
     const identifier = req.query.identifier;
 
     if (typeof identifier !== "string") {
@@ -135,7 +121,7 @@ export function initZuzaluRoutes(
     res.json(cleanDBUser(users[0]));
   });
 
-  app.post("/user/write", async (req: Request, res: Response) => {
+  app.post("/sync/save", async (req: Request, res: Response) => {
     const { identifier, serverPassword, encryptedBlob } = req.body;
 
     const writes = await writeUser(context.dbClient, {
