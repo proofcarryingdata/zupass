@@ -22,8 +22,6 @@ export function SyncExistingScreen() {
       const decrypted = await decryptStorage(storage, syncKey);
       console.log("decrypted encrypted storage");
 
-      console.log(decrypted);
-
       dispatch({
         type: "load-from-sync",
         storage: decrypted,
@@ -33,6 +31,7 @@ export function SyncExistingScreen() {
 
     load();
   }, [email, syncKey]);
+
   const onClose = useCallback(() => {
     window.location.href = "/#/";
   }, []);
