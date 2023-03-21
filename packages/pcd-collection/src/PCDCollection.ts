@@ -44,7 +44,8 @@ export class PCDCollection {
   public async deserializeAllAndAdd(
     serialized: SerializedPCD[]
   ): Promise<void> {
-    this.addAll(await this.deserializeAll(serialized));
+    const deserialized = await this.deserializeAll(serialized);
+    this.addAll(deserialized);
   }
 
   public async serializeAll(): Promise<SerializedPCD[]> {

@@ -21,8 +21,11 @@ export class PCDCrypto {
   public generateRandomKey(bits: number): HexString {
     const bytes = bits / 8;
     const arrayBuffer = utils
-      .getGlobalScope()
-      .crypto.getRandomValues(new Uint8Array(bytes));
+      .getCrypto()
+      .getRandomValues(new Uint8Array(bytes));
+
+    console.log(arrayBuffer);
+
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 

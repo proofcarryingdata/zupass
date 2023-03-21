@@ -1,9 +1,13 @@
-import { EncryptedPacket, PCDCrypto } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCDCrypto } from "./passport-crypto";
+import { EncryptedPacket } from "./types";
 
 const cryptoPromise = PCDCrypto.newInstance();
 
-export async function encryptPCDs(collection: PCDCollection) {
+export async function encryptPCDs(
+  collection: PCDCollection,
+  encryptionKey: string
+) {
   const crypto = await cryptoPromise;
   const serializedPCDs = JSON.stringify(await collection.serializeAll());
 
@@ -12,8 +16,8 @@ export async function encryptPCDs(collection: PCDCollection) {
   const ciphertext = crypto.xchacha20Encrypt(
     serializedPCDs,
     nonce,
-    this.encryptionKey,
-    ""
+    encryptionKey,
+    "abc"
   );
 
   return {
@@ -24,13 +28,16 @@ export async function encryptPCDs(collection: PCDCollection) {
 
 export async function decryptPCDsInto(
   encryptedPCDs: EncryptedPacket,
-  collection: PCDCollection
-) {
-  const plaintext = this.passportCrypto.xchacha20Decrypt(
+  collection: PCDCollection,
+  encryptionKey: string
+): Promise<void> {
+  const crypto = await cryptoPromise;
+
+  const plaintext = crypto.xchacha20Decrypt(
     encryptedPCDs.ciphertext,
     encryptedPCDs.nonce,
-    this.encryptionKey,
-    ""
+    encryptionKey,
+    "abc"
   );
 
   if (!plaintext) {
@@ -39,5 +46,5 @@ export async function decryptPCDsInto(
 
   const serializedPCDs = JSON.parse(plaintext);
 
-  collection.deserializeAllAndAdd(serializedPCDs);
+  await collection.deserializeAllAndAdd(serializedPCDs);
 }

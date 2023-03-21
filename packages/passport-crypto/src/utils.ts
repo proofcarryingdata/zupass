@@ -21,8 +21,13 @@ declare global {
 /**
  * Returns `window` if available, or `global` if supported in environment.
  */
-export function getGlobalScope(): Window & typeof globalThis {
-  return window;
+export function getCrypto(): any {
+  const g = globalThis as any;
+  if (g.crypto) {
+    return g.crypto;
+  } else {
+    return require("crypto");
+  }
 }
 
 /**
@@ -41,9 +46,7 @@ export function ieOrEdge(): boolean {
  * @access public
  */
 export function isWebCryptoAvailable(): boolean {
-  return (
-    !ieOrEdge() && getGlobalScope().crypto && !!getGlobalScope().crypto.subtle
-  );
+  return !ieOrEdge() && getCrypto().crypto && !!getCrypto().crypto.subtle;
 }
 
 /**
