@@ -87,8 +87,6 @@ async function loadInitialState(): Promise<ZuState> {
   const identityStr = window.localStorage["identity"];
   const identity = identityStr ? new Identity(identityStr) : undefined;
 
-  console.log(encryptionKey);
-
   return { self, encryptionKey, pcds, identity };
 }
 
