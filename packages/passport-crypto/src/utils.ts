@@ -27,7 +27,7 @@ export function getCrypto(): any {
  */
 export function ieOrEdge(): boolean {
   return (
-    (typeof document !== "undefined" && !!document.documentMode) ||
+    (typeof document !== "undefined" && !!(document as any).documentMode) ||
     /Edge/.test(navigator.userAgent)
   );
 }
