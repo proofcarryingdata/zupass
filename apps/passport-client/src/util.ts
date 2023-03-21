@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
 export function err(dispatch: Dispatcher, title: string, message: string) {
@@ -25,4 +26,9 @@ export function bigintToUuid(bigint: bigint): string {
     hex.slice(20)
   );
 }
+
 export const IS_PROD = process.env.NODE_ENV === "production";
+
+export function randomEmail() {
+  return uuid().slice(0, 8) + "@test.com";
+}

@@ -2,7 +2,6 @@ import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { loadEncryptionKey } from "../../src/localstorage";
 import { CenterColumn, Spacer, TextCenter } from "../core";
 import { Button, CircleButton, LinkButton } from "../core/Button";
 
@@ -105,10 +104,10 @@ function InfoModal() {
 
 function SettingsModal() {
   const copySyncKey = useCallback(() => {
-    loadEncryptionKey().then(console.log);
+    alert("coming soon");
   }, []);
 
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const clearPassport = useCallback(() => {
     if (window.confirm("Are you sure? This will delete your data.")) {
       dispatch({ type: "reset-passport" });
@@ -126,6 +125,12 @@ function SettingsModal() {
         <LinkButton to="/scan">Verify a Passport</LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>Copy Key for Sync</Button>
+        <div>
+          email: {state.self?.email}
+          <br />
+          key: {state.encryptionKey}
+          <br />
+        </div>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
           Clear Passport

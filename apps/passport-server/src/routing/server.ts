@@ -18,6 +18,7 @@ export async function startServer(
     const app = express();
     app.use(morgan("tiny"));
     app.use(express.json());
+    app.use(cors());
 
     routes.forEach((r) => r(app, context));
 
