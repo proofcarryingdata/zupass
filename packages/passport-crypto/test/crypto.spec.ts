@@ -5,8 +5,8 @@ import assert from "assert";
 import { decryptStorage, encryptStorage } from "../src/endToEndEncryption";
 import { PCDCrypto } from "../src/passportCrypto";
 
-describe("passport crypto", function () {
-  it("should work", async function () {
+describe("Passport encryption", function () {
+  it("Encryption and decryption works properly", async function () {
     const testToken = "abcdefg";
     const pcdCrypto = await PCDCrypto.newInstance();
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
@@ -26,5 +26,6 @@ describe("passport crypto", function () {
 
     assert.equal(destinationPCDs.getAll().length, 1);
     assert.equal(decrypted.serverToken, testToken);
+    assert.equal(destinationPCDs.getAll()[0].id, sourcePCDs.getAll()[0].id);
   });
 });
