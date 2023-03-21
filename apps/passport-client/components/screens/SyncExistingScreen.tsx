@@ -7,7 +7,9 @@ export function SyncExistingScreen() {
   const onSyncClick = useCallback(() => {
     alert(`syncing ${email}, ${syncKey}`);
   }, [email, syncKey]);
-
+  const onClose = useCallback(() => {
+    window.location.href = "/#/";
+  }, []);
   return (
     <>
       <Spacer h={64} />
@@ -22,7 +24,7 @@ export function SyncExistingScreen() {
             setEmail(e.target.value);
           }, [])}
         ></BigInput>
-        <Spacer h={16} />
+        <Spacer h={8} />
         <BigInput
           type="text"
           placeholder="sync key"
@@ -34,6 +36,10 @@ export function SyncExistingScreen() {
         <Spacer h={16} />
         <Button style="primary" type="submit" onClick={onSyncClick}>
           Sync
+        </Button>
+        <Spacer h={8} />
+        <Button style="danger" type="submit" onClick={onClose}>
+          Back
         </Button>
       </TextCenter>
     </>

@@ -13,8 +13,8 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
-import { loadSelf } from "../src/participant";
-import { loadPCDs, ZuState } from "../src/state";
+import { loadEncryptionKey, loadPCDs, loadSelf } from "../src/localstorage";
+import { ZuState } from "../src/state";
 
 class App extends React.Component<{}, ZuState | undefined> {
   state = undefined;
@@ -82,9 +82,14 @@ function Router() {
 async function loadInitialState(): Promise<ZuState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
+  const encryptionKey = await loadEncryptionKey();
+
   const identityStr = window.localStorage["identity"];
   const identity = identityStr ? new Identity(identityStr) : undefined;
-  return { self, pcds, identity };
+
+  console.log(encryptionKey);
+
+  return { self, encryptionKey, pcds, identity };
 }
 
 const root = createRoot(document.querySelector("#root"));

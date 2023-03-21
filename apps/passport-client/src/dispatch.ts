@@ -1,3 +1,4 @@
+import { PCDCrypto } from "@pcd/passport-crypto";
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -5,8 +6,8 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { saveSelf } from "./participant";
-import { savePCDs, ZuError, ZuState } from "./state";
+import { saveEncryptionKey, savePCDs, saveSelf } from "./localstorage";
+import { ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -79,9 +80,17 @@ async function genPassport(email: string, update: ZuUpdate) {
     [identityPCD]
   );
 
-  await savePCDs(pcds);
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = await crypto.generateRandomKey();
 
-  update({ pcds, pendingAction: { type: "new-passport", email } });
+  await savePCDs(pcds);
+  await saveEncryptionKey(encryptionKey);
+
+  update({
+    pcds,
+    encryptionKey,
+    pendingAction: { type: "new-passport", email },
+  });
 }
 
 function doSaveSelf(

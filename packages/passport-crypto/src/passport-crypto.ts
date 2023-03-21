@@ -18,7 +18,7 @@ export class PCDCrypto {
     this.sodium = sodium;
   }
 
-  public generateRandomKey(bits: number): HexString {
+  public generateRandomKey(bits: number = 256): HexString {
     const bytes = bits / 8;
     const arrayBuffer = utils
       .getCrypto()
