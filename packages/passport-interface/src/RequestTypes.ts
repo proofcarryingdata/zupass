@@ -31,6 +31,12 @@ export interface SaveE2EERequest {
   email: string;
 
   /**
+   * A server token unique for the given user which authenticates
+   * the user to overwrite the encrypted storage.
+   */
+  serverToken: string;
+
+  /**
    * An encrypted and stringified version of {@link EncryptedStorage}
    */
   encryptedBlob: string;
