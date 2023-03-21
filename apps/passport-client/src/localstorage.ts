@@ -3,6 +3,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 
 export async function savePCDs(pcds: PCDCollection) {
   const serialized = await pcds.serializeAll();
@@ -34,7 +35,7 @@ export async function loadPCDs() {
   );
 }
 
-export async function saveEncryptionKey(key: string): Promise<void> {
+export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
 }
 
@@ -51,4 +52,12 @@ export function loadSelf(): ZuParticipant | undefined {
 
 export function saveSelf(self: ZuParticipant): void {
   window.localStorage["self"] = JSON.stringify(self);
+}
+
+export function loadIdentity(): void {
+  return window.localStorage["identity"];
+}
+
+export function saveIdentity(identity: Identity): void {
+  window.localStorage["identity"] = identity.toString();
 }

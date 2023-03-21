@@ -1,4 +1,4 @@
-import { EncryptedStorage } from "@pcd/passport-interface";
+import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCDCrypto } from "./passportCrypto";
 import { EncryptedPacket } from "./types";
@@ -7,6 +7,7 @@ const cryptoPromise = PCDCrypto.newInstance();
 
 export async function encryptStorage(
   collection: PCDCollection,
+  self: ZuParticipant,
   serverToken: string,
   encryptionKey: string
 ): Promise<EncryptedPacket> {
@@ -15,6 +16,7 @@ export async function encryptStorage(
 
   const encryptedStorage: EncryptedStorage = {
     pcds: serializedPCDs,
+    self,
     serverToken,
   };
 

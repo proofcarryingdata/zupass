@@ -1,6 +1,7 @@
 import { decryptStorage } from "@pcd/passport-crypto";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
+import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
 
 /**
@@ -10,13 +11,24 @@ import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
  * on first login.
  */
 export function SyncExistingScreen() {
+  const [state, dispatch] = useContext(DispatchContext);
   const [email, setEmail] = useState("");
   const [syncKey, setSyncKey] = useState("");
+
   const onSyncClick = useCallback(() => {
     const load = async () => {
       const storage = await downloadEncryptedStorage(email);
+      console.log("downloaded encrypted storage");
       const decrypted = await decryptStorage(storage, syncKey);
+      console.log("decrypted encrypted storage");
+
       console.log(decrypted);
+
+      dispatch({
+        type: "load-from-sync",
+        storage: decrypted,
+        encryptionKey: syncKey,
+      });
     };
 
     load();

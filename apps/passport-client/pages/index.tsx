@@ -13,7 +13,12 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
-import { loadEncryptionKey, loadPCDs, loadSelf } from "../src/localstorage";
+import {
+  loadEncryptionKey,
+  loadIdentity,
+  loadPCDs,
+  loadSelf,
+} from "../src/localstorage";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<{}, ZuState | undefined> {
@@ -84,7 +89,7 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
 
-  const identityStr = window.localStorage["identity"];
+  const identityStr = loadIdentity();
   const identity = identityStr ? new Identity(identityStr) : undefined;
 
   return { self, encryptionKey, pcds, identity };

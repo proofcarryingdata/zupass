@@ -64,6 +64,10 @@ export class PCDCollection {
     return this.pcds.find((pcd) => pcd.id === id);
   }
 
+  public getPCDsByType(type: string) {
+    return this.pcds.filter((pcd) => pcd.type === type);
+  }
+
   public static async deserialize(
     packages: PCDPackage[],
     serializedPCDs: SerializedPCD[]

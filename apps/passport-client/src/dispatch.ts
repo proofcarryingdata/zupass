@@ -1,8 +1,12 @@
 import { encryptStorage, PCDCrypto } from "@pcd/passport-crypto";
-import { ZuParticipant } from "@pcd/passport-interface";
+import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDTypeName,
+} from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
@@ -11,6 +15,7 @@ import {
   loadEncryptionKey,
   loadPCDs,
   saveEncryptionKey,
+  saveIdentity,
   savePCDs,
   saveSelf,
 } from "./localstorage";
@@ -37,6 +42,11 @@ export type Action =
     }
   | {
       type: "reset-passport";
+    }
+  | {
+      type: "load-from-sync";
+      storage: EncryptedStorage;
+      encryptionKey: string;
     };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
@@ -61,6 +71,8 @@ export async function dispatch(
       return clearError(update);
     case "reset-passport":
       return resetPassport(update);
+    case "load-from-sync":
+      return loadFromSync(action.encryptionKey, action.storage, state, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -73,7 +85,7 @@ async function genPassport(email: string, update: ZuUpdate) {
   // Generate a fresh identity, save in local storage.
   const identity = new Identity();
   console.log("Created identity", identity.toString());
-  window.localStorage["identity"] = identity.toString();
+  saveIdentity(identity);
 
   update({ identity, pendingAction: { type: "new-passport", email } });
   window.location.hash = "#/new-passport";
@@ -135,6 +147,7 @@ async function doSaveSelf(
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await encryptStorage(
     pcds,
+    participant,
     participant.token,
     encryptionKey
   );
@@ -167,4 +180,49 @@ function resetPassport(update: ZuUpdate) {
   window.localStorage.clear();
   window.location.hash = "#/";
   update({ self: undefined });
+}
+
+async function loadFromSync(
+  encryptionKey: string,
+  storage: EncryptedStorage,
+  state: ZuState,
+  update: ZuUpdate
+) {
+  console.log("loading from sync", storage);
+
+  const pcds = new PCDCollection(
+    [
+      SemaphoreIdentityPCDPackage,
+      SemaphoreGroupPCDPackage,
+      SemaphoreSignaturePCDPackage,
+    ],
+    []
+  );
+
+  await pcds.deserializeAllAndAdd(storage.pcds);
+  // assumes that we only have one semaphore identity in the passport.
+  // todo: some metadata that identifies the zuzalu semaphore id as
+  // some sort of unique one
+  const identityPCD = pcds.getPCDsByType(
+    SemaphoreIdentityPCDTypeName
+  )[0] as SemaphoreIdentityPCD;
+
+  if (!identityPCD) {
+    // TODO: handle error gracefully
+    throw new Error("no identity found in encrypted storage");
+  }
+
+  await savePCDs(pcds);
+  saveEncryptionKey(encryptionKey);
+  saveSelf(storage.self);
+  saveIdentity(identityPCD.claim.identity);
+
+  update({
+    encryptionKey,
+    pcds,
+    identity: identityPCD.claim.identity,
+    self: storage.self,
+  });
+
+  window.location.hash = "#/";
 }
