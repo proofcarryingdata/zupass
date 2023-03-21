@@ -120,6 +120,7 @@ export function initZuzaluRoutes(
         const result: LoadE2EEResponse = {
           encryptedStorage: JSON.parse(storageModel.encrypted_blob),
         };
+
         res.json(result);
       } catch (e) {
         console.log(e);
@@ -140,12 +141,14 @@ export function initZuzaluRoutes(
             `cannot save encrypted storage for ${request.email}: already saved and incorrect token`
           );
         }
+
         await setEncryptedStorage(
           context,
           request.email,
           request.serverToken,
           request.encryptedBlob
         );
+
         res.send("ok");
       } catch (e) {
         next(e);
