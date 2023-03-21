@@ -101,7 +101,7 @@ export function initZuzaluRoutes(
     sendEmail("test@nibnalin.me", "testing123");
   });
 
-  app.get(
+  app.post(
     "/sync/load/",
     async (req: Request, res: Response, next: NextFunction) => {
       const request = req.body as LoadE2EERequest;

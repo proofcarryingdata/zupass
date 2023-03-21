@@ -33,14 +33,14 @@ export async function encryptStorage(
 }
 
 export async function decryptStorage(
-  encryptedPCDs: EncryptedPacket,
+  encryptedStorage: EncryptedPacket,
   encryptionKey: string
 ): Promise<EncryptedStorage> {
   const crypto = await cryptoPromise;
 
   const plaintext = crypto.xchacha20Decrypt(
-    encryptedPCDs.ciphertext,
-    encryptedPCDs.nonce,
+    encryptedStorage.ciphertext,
+    encryptedStorage.nonce,
     encryptionKey,
     "abc"
   );

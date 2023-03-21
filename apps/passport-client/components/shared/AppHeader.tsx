@@ -2,6 +2,7 @@ import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { loadEncryptionKey } from "../../src/localstorage";
 import { CenterColumn, Spacer, TextCenter } from "../core";
 import { Button, CircleButton, LinkButton } from "../core/Button";
 
@@ -104,7 +105,7 @@ function InfoModal() {
 
 function SettingsModal() {
   const copySyncKey = useCallback(() => {
-    window.alert("Coming soon");
+    loadEncryptionKey().then(console.log);
   }, []);
 
   const [_, dispatch] = useContext(DispatchContext);
