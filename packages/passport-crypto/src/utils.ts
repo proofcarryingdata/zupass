@@ -10,7 +10,7 @@ import {
 } from "libsodium-wrappers";
 
 /**
- * Returns `window` if available, or `global` if supported in environment.
+ * Returns built in crypto if available, otherwise polyfill
  */
 export function getCrypto(): any {
   const g = globalThis as any;
@@ -23,7 +23,6 @@ export function getCrypto(): any {
 
 /**
  * Determines whether we are in an Internet Explorer or Edge environment
- * @access public
  */
 export function ieOrEdge(): boolean {
   return (
@@ -34,7 +33,6 @@ export function ieOrEdge(): boolean {
 
 /**
  * Returns true if WebCrypto is available
- * @access public
  */
 export function isWebCryptoAvailable(): boolean {
   return !ieOrEdge() && getCrypto().crypto && !!getCrypto().crypto.subtle;
@@ -66,7 +64,6 @@ export function arrayBufferToHexString(arrayBuffer: ArrayBuffer): string {
 
 /**
  * Converts a hex string into an ArrayBuffer
- * @access public
  * @param hex - A hex string
  */
 export function hexStringToArrayBuffer(hex: string): Uint8Array {
