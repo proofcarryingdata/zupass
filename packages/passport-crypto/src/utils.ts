@@ -9,15 +9,6 @@ import {
   to_string,
 } from "libsodium-wrappers";
 
-declare global {
-  interface Document {
-    documentMode?: string;
-  }
-  interface Window {
-    msCrypto?: Crypto;
-  }
-}
-
 /**
  * Returns `window` if available, or `global` if supported in environment.
  */
