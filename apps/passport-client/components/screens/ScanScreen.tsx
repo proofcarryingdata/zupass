@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { CircleButton } from "../core/Button";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
-export default function ScanScreen() {
+export function ScanScreen() {
   const nav = useNavigate();
   return (
     <>

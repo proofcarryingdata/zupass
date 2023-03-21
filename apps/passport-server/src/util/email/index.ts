@@ -13,7 +13,8 @@ function getMailingClient(): MailService {
 
 async function composeMail(
   to: string,
-  challenge: string
+  name: string,
+  magicLink: string
 ): Promise<{ text: string; html: string }> {
   // Get this files path
   const basePath = __dirname;
@@ -22,11 +23,13 @@ async function composeMail(
   const htmlTemplate = (await readFile(basePath + "/email.html")).toString();
 
   const text = textTemplate
-    .replace("{{challenge}}", challenge)
+    .replace("{{name}}", name)
+    .replace("{{magicLink}}", magicLink)
     .replace("{{emailAddress}}", to);
 
   const html = htmlTemplate
-    .replace("{{challenge}}", challenge)
+    .replace("{{name}}", name)
+    .replace("{{magicLink}}", magicLink)
     .replace("{{emailAddress}}", to);
 
   return {
@@ -35,12 +38,16 @@ async function composeMail(
   };
 }
 
-export async function sendEmail(to: string, challenge: string): Promise<void> {
+export async function sendEmail(
+  to: string,
+  name: string,
+  magicLink: string
+): Promise<void> {
   const msg = {
     to: to,
     from: "nalin@0xparc.org", // TODO: Get better verified sender
-    subject: "Welcome to Zuzalu Passport!",
-    ...(await composeMail(to, challenge)),
+    subject: "Welcome to your Zuzalu Passport",
+    ...(await composeMail(to, name, magicLink)),
   };
 
   await getMailingClient().send(msg);

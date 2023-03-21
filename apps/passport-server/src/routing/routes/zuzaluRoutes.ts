@@ -2,73 +2,97 @@ import {
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
-  ZuParticipant,
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import {
   getEncryptedStorage,
   setEncryptedStorage,
 } from "../../database/manualQueries/e2ee";
+import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
+import { insertCommitment } from "../../database/queries/insertCommitment";
+import { setParticipantToken } from "../../database/queries/setParticipantToken";
+import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
-// Zuzalu residents group
-const globalGroup = new Group("1", 16);
-
-// Zuzalu participants by UUID
-const participants = {} as Record<string, ZuParticipant>;
-
-// localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
-// example identity: ["da4e5656b0892923d30c0a8fa9e68a2ea5b8095c09a4198d066219d5b4e30a","651e367c40d65f65f38ba60f723feb2abcafddd1aa24e6de35a0d9189bca58"]
+// API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
   app: express.Application,
   context: ApplicationContext
 ): void {
   console.log("[INIT] Initializing zuzalu routes");
+  const { dbClient } = context;
+
+  // Register a new user, send them an email with a magic link.
+  app.get("/zuzalu/register", async (req: Request, res: Response) => {
+    const email = decodeString(req.query.email, "email");
+    const commitment = decodeString(req.query.commitment, "commitment");
+
+    // Save a one-time token. This lets the user prove access to their email.
+    const token = uuidv4();
+    const participant = await setParticipantToken(dbClient, { email, token });
+    if (participant == null) {
+      throw new Error(`${email} doesn't have a ticket.`);
+    } else if (participant.commitment != null) {
+      throw new Error(`${email} either already registered.`);
+    }
+
+    // Send an email with the magic link.
+    const serverUrl = process.env.PASSPORT_SERVER_URL;
+    const query = new URLSearchParams({
+      token,
+      email,
+      commitment,
+    }).toString();
+    const magicLink = `${serverUrl}/zuzalu/new-participant?${query}`;
+
+    const { name } = participant;
+    console.log(`Sending magic link to ${email} ${name}: ${magicLink}`);
+    sendEmail(email, name, magicLink);
+
+    res.sendStatus(200);
+  });
 
   // Handle the email magic link, add a new participant.
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
-      const redirect = decodeString(req.query.redirect, "redirect");
+      const redirect = process.env.PASSPORT_CLIENT_URL + "/#/save-self";
       try {
-        // TODO: check this magic link was signed by the server
         const token = decodeString(req.query.token, "token");
-        // TODO: check this is a valid email
         const email = decodeString(req.query.email, "email");
         const commitment = decodeString(req.query.commitment, "commitment");
 
-        // TODO: look up participant record from Pretix
-        const name = "Alice Amber";
-        const role = "resident";
-        const residence = "Verkle Veranda";
-
-        const bigIntCommitment = BigInt(commitment);
-        if (globalGroup.indexOf(bigIntCommitment) >= 0) {
+        // Look up participant record from Pretix
+        const pretix = await fetchPretixParticipant(dbClient, { email });
+        if (pretix == null) {
+          throw new Error(`Ticket for ${email} not found`);
+        } else if (pretix.email_token !== token) {
           throw new Error(
-            `member ${bigIntCommitment} already in semaphore group`
+            `Wrong token. If you got more than one email, use the latest one.`
           );
+        } else if (pretix.email !== email) {
+          throw new Error(`Email mismatch.`);
         }
 
-        globalGroup.addMember(bigIntCommitment);
-
-        // TODO: save commitment, new Merkle root to DB
-        const participant: ZuParticipant = {
-          uuid: uuidv4(),
-          commitment,
+        // Save commitment to DB.
+        const uuid = uuidv4();
+        console.log(`Saving new committment: ${uuid}`);
+        await insertCommitment(dbClient, {
+          uuid,
           email,
-          name,
-          role,
-          residence,
-        };
-        const jsonP = JSON.stringify(participant);
-        console.log(`Adding new zuzalu participant: ${jsonP}`);
-        participants[participant.uuid] = participant;
-        console.log(`New group root: ${globalGroup.root}`);
+          commitment,
+        });
 
+        // Reload Merkle trees
+        await semaphoreService.reload(dbClient);
+        const participant = semaphoreService.getParticipant(uuid);
+
+        // Return participant, including UUID, back to Passport
+        const jsonP = JSON.stringify(participant);
+        console.log(`Added new Zuzalu participant: ${jsonP}`);
         res.redirect(`${redirect}?success=true&participant=${jsonP}`);
       } catch (e) {
         console.log("error adding new zuzalu participant: ", e);
@@ -82,24 +106,29 @@ export function initZuzaluRoutes(
     res.setHeader("Access-Control-Allow-Origin", "*");
     const uuid = req.params.uuid;
     console.log(`Fetching participant ${uuid}`);
-    const participant = participants[uuid];
+    const participant = semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
     res.json(participant || null);
   });
 
   // Fetch a semaphore group.
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
-    // TODO: check this group actually exists
-    const semaphoreId = req.params.id;
+    const semaphoreId = decodeString(req.params.id, "id");
+    if (semaphoreId !== "1") {
+      res.sendStatus(404);
+      res.json(`Missing semaphore group ${semaphoreId}`);
+      return;
+    }
+
+    // TODO: support visitor groups
+    const group = semaphoreService.groupResi;
+    const name = "Zuzalu Residents";
 
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.json(serializeSemaphoreGroup(globalGroup, "Zuzalu Residents"));
+    res.json(serializeSemaphoreGroup(group, name));
   });
 
-  app.get("/testEmail", async (req: Request, res: Response) => {
-    sendEmail("test@nibnalin.me", "testing123");
-  });
-
+  // Load E2EE storage for a given user.
   app.post(
     "/sync/load/",
     async (req: Request, res: Response, next: NextFunction) => {

@@ -6,8 +6,8 @@ export interface ZuParticipant {
   commitment: string;
 
   /** Participant metadata */
-  name: string;
   email: string;
+  name: string;
   role: string;
   residence: string;
 }

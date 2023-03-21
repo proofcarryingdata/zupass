@@ -1,5 +1,8 @@
-Hi {{emailAddress}},
+Hi {{name}},
 
-Welcome to Zuzalu Passport! Get started by verifying your email at http://localhost:3002/?challenge={{challenge}}.
+Welcome to the Zuzalu Passport.
 
-Thanks! See you in Zuzalu Passport. :)
+Let's verify your email:
+{{magicLink}}
+
+We look forward to seeing you soon.
