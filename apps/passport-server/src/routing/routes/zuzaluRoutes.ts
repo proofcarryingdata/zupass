@@ -1,9 +1,19 @@
-import { BackendUser, ZuParticipant } from "@pcd/passport-interface";
+import {
+  BackendUser,
+  LoadE2EERequest,
+  LoadE2EEResponse,
+  SaveE2EERequest,
+  ZuParticipant,
+} from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { fetchUser, writeUser } from "../../database/queries";
+import {
+  getEncryptedStorage,
+  setEncryptedStorage,
+} from "../../database/manualQueries/e2ee";
+import { fetchUser } from "../../database/queries";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -103,35 +113,47 @@ export function initZuzaluRoutes(
     sendEmail("test@nibnalin.me", "testing123");
   });
 
-  app.get("/sync/load/", async (req: Request, res: Response) => {
-    const identifier = req.query.identifier;
+  app.get(
+    "/sync/load/",
+    async (req: Request, res: Response, next: NextFunction) => {
+      const request = req.body as LoadE2EERequest;
 
-    if (typeof identifier !== "string") {
-      throw new Error(
-        "missing 'identifier' query string parameter - it should be a string"
-      );
+      if (request.email === undefined) {
+        throw new Error("can't load e2ee: missing email");
+      }
+
+      try {
+        const encryptedStorage = await getEncryptedStorage(
+          context,
+          request.email
+        );
+        const result: LoadE2EEResponse = {
+          encryptedStorage,
+        };
+        res.json(result);
+      } catch (e) {
+        console.log(e);
+        next(e);
+      }
     }
+  );
 
-    const users = await fetchUser(context.dbClient, {
-      searched_identifier: identifier,
-    });
-    if (users.length != 1) {
-      throw new Error("user not found");
+  app.post(
+    "/sync/save",
+    async (req: Request, res: Response, next: NextFunction) => {
+      const request = req.body as SaveE2EERequest;
+      try {
+        await setEncryptedStorage(
+          context,
+          request.email,
+          request.encryptedBlob
+        );
+        res.send("ok");
+      } catch (e) {
+        next(e);
+      }
     }
-    res.json(cleanDBUser(users[0]));
-  });
-
-  app.post("/sync/save", async (req: Request, res: Response) => {
-    const { identifier, serverPassword, encryptedBlob } = req.body;
-
-    const writes = await writeUser(context.dbClient, {
-      searched_identifier: identifier,
-      claimed_server_password: serverPassword,
-      new_encrypted_blob: encryptedBlob,
-    });
-
-    res.json({ success: writes });
-  });
+  );
 }
 
 function decodeString(
