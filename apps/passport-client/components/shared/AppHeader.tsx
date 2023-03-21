@@ -103,8 +103,12 @@ function InfoModal() {
 }
 
 function SettingsModal() {
-  const copySyncKey = useCallback(() => {
-    alert("coming soon");
+  const [justCopied, setJustCopied] = useState(false);
+  const copySyncKey = useCallback(async () => {
+    // Use the window clipboard API to copy the key
+    await window.navigator.clipboard.writeText(state.encryptionKey);
+    setJustCopied(true);
+    setTimeout(() => setJustCopied(false), 2000);
   }, []);
 
   const [state, dispatch] = useContext(DispatchContext);
@@ -124,11 +128,9 @@ function SettingsModal() {
       <CenterColumn w={280}>
         <LinkButton to="/scan">Verify a Passport</LinkButton>
         <Spacer h={16} />
-        <Button onClick={copySyncKey}>Copy Key for Sync</Button>
-        <div>
-          key: {state.encryptionKey}
-          <br />
-        </div>
+        <Button onClick={copySyncKey}>
+          {justCopied ? "Copied" : "Copy Key for Sync"}
+        </Button>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
           Clear Passport
