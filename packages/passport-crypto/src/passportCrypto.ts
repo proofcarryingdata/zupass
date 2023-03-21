@@ -1,6 +1,7 @@
 import { getSodium, Sodium } from "./libsodium";
 import { Base64String, HexString, Utf8String } from "./types";
 import * as utils from "./utils";
+import { arrayBufferToHexString } from "./utils";
 
 /**
  * This class contains cryptographic primitives that are used by the PCD
@@ -16,6 +17,10 @@ export class PCDCrypto {
 
   private constructor(sodium: Sodium) {
     this.sodium = sodium;
+  }
+
+  public cryptoHash(str: string) {
+    return arrayBufferToHexString(this.sodium.crypto_hash(str));
   }
 
   public generateRandomKey(bits: number = 256): HexString {

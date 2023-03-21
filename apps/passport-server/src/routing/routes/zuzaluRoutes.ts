@@ -63,7 +63,6 @@ export function initZuzaluRoutes(
           name,
           role,
           residence,
-          token,
         };
         const jsonP = JSON.stringify(participant);
         console.log(`Adding new zuzalu participant: ${jsonP}`);
@@ -106,12 +105,15 @@ export function initZuzaluRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       const request = req.body as LoadE2EERequest;
 
-      if (request.email === undefined) {
+      if (request.blobKey === undefined) {
         throw new Error("can't load e2ee: missing email");
       }
 
       try {
-        const storageModel = await getEncryptedStorage(context, request.email);
+        const storageModel = await getEncryptedStorage(
+          context,
+          request.blobKey
+        );
 
         if (!storageModel) {
           throw new Error("can't load e2ee: never saved");
@@ -134,18 +136,9 @@ export function initZuzaluRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       const request = req.body as SaveE2EERequest;
       try {
-        const storageModel = await getEncryptedStorage(context, request.email);
-
-        if (storageModel && storageModel.token !== request.serverToken) {
-          throw new Error(
-            `cannot save encrypted storage for ${request.email}: already saved and incorrect token`
-          );
-        }
-
         await setEncryptedStorage(
           context,
-          request.email,
-          request.serverToken,
+          request.blobKey,
           request.encryptedBlob
         );
 
