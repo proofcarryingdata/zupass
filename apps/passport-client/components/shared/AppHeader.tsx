@@ -126,8 +126,6 @@ function SettingsModal() {
         <Spacer h={16} />
         <Button onClick={copySyncKey}>Copy Key for Sync</Button>
         <div>
-          email: {state.self?.email}
-          <br />
           key: {state.encryptionKey}
           <br />
         </div>

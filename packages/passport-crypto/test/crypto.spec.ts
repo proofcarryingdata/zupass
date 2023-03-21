@@ -13,10 +13,8 @@ describe("Passport encryption", function () {
       name: "c",
       residence: "d",
       role: "e",
-      token: "f",
       uuid: "g",
     };
-    const testToken = "abcdefg";
     const pcdCrypto = await PCDCrypto.newInstance();
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
       identity: new Identity(),
@@ -27,7 +25,6 @@ describe("Passport encryption", function () {
     const encrypted = await encryptStorage(
       sourcePCDs,
       testParticipant,
-      testToken,
       encryptionKey
     );
     const destinationPCDs = new PCDCollection(packages, []);
@@ -35,7 +32,6 @@ describe("Passport encryption", function () {
     await destinationPCDs.deserializeAllAndAdd(decrypted.pcds);
 
     assert.equal(destinationPCDs.getAll().length, 1);
-    assert.equal(decrypted.serverToken, testToken);
     assert.equal(destinationPCDs.getAll()[0].id, sourcePCDs.getAll()[0].id);
     assert.deepEqual(decrypted.self, testParticipant);
   });

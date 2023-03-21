@@ -25,16 +25,10 @@ export interface SupportedPCDsResponse {
 
 export interface SaveE2EERequest {
   /**
-   * The email of the user for whom we are saving their
-   * end to end encrypted storage.
+   * On the server-side, encrypted storage is keyed by the hash of
+   * the encryption key.
    */
-  email: string;
-
-  /**
-   * A server token unique for the given user which authenticates
-   * the user to overwrite the encrypted storage.
-   */
-  serverToken: string;
+  blobKey: string;
 
   /**
    * An encrypted and stringified version of {@link EncryptedStorage}
@@ -46,10 +40,10 @@ export interface SaveE2EEResponse {}
 
 export interface LoadE2EERequest {
   /**
-   * The email of the user for whom we are loading their
-   * end to end encrypted storage.
+   * On the server-side, encrypted storage is keyed by the hash of
+   * the encryption key.
    */
-  email: string;
+  blobKey: string;
 }
 
 export interface LoadE2EEResponse {

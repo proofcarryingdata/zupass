@@ -1,18 +1,17 @@
 import { ApplicationContext } from "../../types";
 
 export interface EncryptedStorageModel {
-  email: string;
+  blob_key: string;
   encrypted_blob: string;
-  token: string;
 }
 
 export async function getEncryptedStorage(
   context: ApplicationContext,
-  email: string
+  blobKey: string
 ): Promise<EncryptedStorageModel | undefined> {
   const db = context.dbClient;
-  const results = await db.query("select * from e2ee where email = $1;", [
-    email,
+  const results = await db.query("select * from e2ee where blob_key = $1;", [
+    blobKey,
   ]);
 
   if (!results.rows[0]) {
@@ -24,14 +23,13 @@ export async function getEncryptedStorage(
 
 export async function setEncryptedStorage(
   context: ApplicationContext,
-  email: string,
-  token: string,
+  blobKey: string,
   encryptedBlob: string
 ) {
   const db = context.dbClient;
   await db.query(
-    "insert into e2ee(email, token, encrypted_blob) values " +
-      "($1, $2, $3) on conflict(email) do update set email = $1, encrypted_blob = $2",
-    [email, token, encryptedBlob]
+    "insert into e2ee(blob_key, encrypted_blob) values " +
+      "($1, $2) on conflict(blob_key) do update set encrypted_blob = $2;",
+    [blobKey, encryptedBlob]
   );
 }
