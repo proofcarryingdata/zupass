@@ -9,6 +9,7 @@ import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import ScanScreen from "../components/screens/ScanScreen";
+import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
@@ -70,6 +71,7 @@ function Router() {
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           <Route path="verify" element={<VerifyScreen />} />
+          <Route path="sync-existing" element={<SyncExistingScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
