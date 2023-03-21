@@ -5,16 +5,20 @@
   "types": "./index.tsx",
   "license": "MIT",
   "scripts": {
-    "lint": "TIMING=1 eslint \"**/*.ts*\""
+    "lint": "TIMING=1 eslint \"**/*.ts*\"",
+    "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "devDependencies": {
+    "@pcd/pcd-types": "*",
     "@types/libsodium-wrappers": "^0.7.10",
+    "@types/mocha": "^10.0.1",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
     "eslint": "^7.32.0",
     "eslint-config-custom": "*",
-    "@pcd/pcd-types": "*",
+    "mocha": "^10.2.0",
     "react": "^18.2.0",
+    "ts-mocha": "^10.0.0",
     "tsconfig": "*",
     "typescript": "^4.5.2"
   },
