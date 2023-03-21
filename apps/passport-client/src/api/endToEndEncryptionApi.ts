@@ -7,10 +7,10 @@ import {
 import { PASSPORT_SERVER_URL } from "../urls";
 
 export async function downloadEncryptedStorage(
-  email: string
+  blobKey: string
 ): Promise<EncryptedPacket> {
   const request: LoadE2EERequest = {
-    email,
+    blobKey,
   };
 
   const response = await fetch(PASSPORT_SERVER_URL + "/sync/load", {
@@ -27,13 +27,11 @@ export async function downloadEncryptedStorage(
 }
 
 export async function uploadEncryptedStorage(
-  email: string,
-  serverToken: string,
+  blobKey: string,
   encryptedStorage: EncryptedPacket
 ): Promise<void> {
   const request: SaveE2EERequest = {
-    email,
-    serverToken,
+    blobKey,
     encryptedBlob: JSON.stringify(encryptedStorage),
   };
 

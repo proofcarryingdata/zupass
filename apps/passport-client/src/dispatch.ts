@@ -1,4 +1,4 @@
-import { encryptStorage, PCDCrypto } from "@pcd/passport-crypto";
+import { encryptStorage, getHash, PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -118,8 +118,7 @@ async function genPassport(email: string, update: ZuUpdate) {
 async function doSaveSelf(
   participant: ZuParticipant,
   state: ZuState,
-  update: ZuUpdate,
-  upload: boolean
+  update: ZuUpdate
 ) {
   // Verify that the identity is correct.
   const { identity } = state;
@@ -147,11 +146,12 @@ async function doSaveSelf(
   const encryptedStorage = await encryptStorage(
     pcds,
     participant,
-    participant.token,
     encryptionKey
   );
 
-  uploadEncryptedStorage(participant.email, participant.token, encryptedStorage)
+  const blobKey = await getHash(encryptionKey);
+
+  uploadEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
       console.log("successfully saved encrypted storage to server");
       // Redirect to the home page.

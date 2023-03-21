@@ -5,10 +5,15 @@ import { EncryptedPacket } from "./types";
 
 const cryptoPromise = PCDCrypto.newInstance();
 
+export async function getHash(str: string) {
+  const crypto = await cryptoPromise;
+  const hashed = crypto.cryptoHash(str);
+  return hashed;
+}
+
 export async function encryptStorage(
   collection: PCDCollection,
   self: ZuParticipant,
-  serverToken: string,
   encryptionKey: string
 ): Promise<EncryptedPacket> {
   const crypto = await cryptoPromise;
@@ -17,7 +22,6 @@ export async function encryptStorage(
   const encryptedStorage: EncryptedStorage = {
     pcds: serializedPCDs,
     self,
-    serverToken,
   };
 
   const nonce = crypto.generateRandomKey(192);

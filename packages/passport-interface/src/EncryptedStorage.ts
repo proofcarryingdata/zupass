@@ -6,7 +6,6 @@ import { ZuParticipant } from "./zuzalu";
  * allows us to sync their data between devices.
  */
 export interface EncryptedStorage {
-  serverToken: string;
   self: ZuParticipant;
   pcds: SerializedPCD[];
 }
