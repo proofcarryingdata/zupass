@@ -43,7 +43,7 @@ export function NewPassportScreen() {
         if (res.ok) {
           setEmailSent(true);
         } else {
-          const message = await res.json();
+          const message = await res.text();
           dispatch({
             type: "error",
             error: { title: "Email failed", message },

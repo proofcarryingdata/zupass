@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PassportParticipant } from "../types";
+import { PassportParticipant } from "../models";
 import { fetchPassportParticipant } from "./fetchParticipant";
 
 // Saves a new commitment. Can only happen once per email address.
@@ -18,7 +18,7 @@ export async function insertCommitment(
   // already have a commitment) for this email--due to foreign + unique keys.
   const result = await client.query(
     `\
-insert into commitments (uuid, email, commitment)
+insert into commitments (uuid, participant_email, commitment)
 values ($1, $2, $3)`,
     [uuid, email, commitment]
   );

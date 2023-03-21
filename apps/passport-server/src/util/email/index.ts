@@ -50,5 +50,9 @@ export async function sendEmail(
     ...(await composeMail(to, name, magicLink)),
   };
 
-  await getMailingClient().send(msg);
+  try {
+    await getMailingClient().send(msg);
+  } catch (e) {
+    throw new Error(`Sendgrid error, failed to email ${to}`);
+  }
 }

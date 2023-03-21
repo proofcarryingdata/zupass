@@ -1,6 +1,6 @@
+import { PretixParticipant } from "../database/models";
 import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
-import { insertParticipants } from "../database/queries/insertParticipants";
-import { PretixParticipant } from "../database/types";
+import { insertParticipants } from "../database/queries/writePretix";
 import { ApplicationContext } from "../types";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
@@ -63,8 +63,7 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
   console.log(`Found ${participants.length} participants`);
 
   // Insert into database.
-  const existingEmails = await fetchParticipantEmails(dbClient);
-  const existingSet = new Set(existingEmails.map((e: any) => e.email));
+  const existingSet = new Set(await fetchParticipantEmails(dbClient));
   const newParticipants = participants.filter((p) => !existingSet.has(p.email));
 
   console.log(`Inserting ${newParticipants.length} new participants`);
@@ -87,6 +86,10 @@ async function fetchOrders(pretixConfig: PretixConfig, eventID: string) {
         Authorization: `Token ${pretixConfig.token}`,
       },
     });
+    if (!res.ok) {
+      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+      break;
+    }
     const page = await res.json();
     orders.push(...page.results);
     url = page.next;

@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PassportParticipant } from "../types";
+import { PretixParticipant } from "../models";
 
 // Sets the email auth token for a given Pretix participant.
 // Returns null if not found. Returns full participant info on success.
@@ -9,7 +9,7 @@ export async function setParticipantToken(
     email: string;
     token: string;
   }
-): Promise<PassportParticipant | null> {
+): Promise<(PretixParticipant & { commitment?: string }) | null> {
   const { email, token } = params;
 
   // Insert succeeds only if we already have a Pretix participant (but don't
@@ -17,7 +17,7 @@ export async function setParticipantToken(
   const result = await client.query(
     `\
 update pretix_participants
-set token = $2
+set email_token = $2
 where email = $1`,
     [email, token]
   );
@@ -25,9 +25,9 @@ where email = $1`,
 
   const pp = await client.query(
     `\
-select p.email, p.name, p.role, p.residence, p.token, c.commitment
+select p.email, p.name, p.role, p.residence, p.email_token, c.commitment
 from pretix_participants p
-left join commitments c on p.email = c.email
+left join commitments c on p.email = c.participant_email
 where p.email = $1`,
     [email]
   );

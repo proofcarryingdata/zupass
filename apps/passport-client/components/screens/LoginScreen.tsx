@@ -8,7 +8,6 @@ import {
 } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { IS_PROD, randomEmail } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -25,7 +24,7 @@ import { LinkButton } from "../core/Button";
 
 export function LoginScreen() {
   const [state, dispatch] = useContext(DispatchContext);
-  const [email, setEmail] = useState(IS_PROD ? "" : randomEmail());
+  const [email, setEmail] = useState("");
 
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {

@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PretixParticipant } from "../types";
+import { PretixParticipant } from "../models";
 
 export async function insertParticipants(
   client: ClientBase | Pool,

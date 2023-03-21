@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PassportParticipant, PretixParticipant } from "../types";
+import { PassportParticipant, PretixParticipant } from "../models";
 
 /** Fetch a ticketed participant, with or without Passport yet. */
 export async function fetchPretixParticipant(
@@ -32,7 +32,7 @@ export async function fetchPassportParticipant(
 select 
     c.uuid,
     c.commitment,
-    c.email,
+    p.email,
     p.name,
     p.role,
     p.residence,
@@ -54,7 +54,7 @@ export async function fetchPassportParticipants(
 select 
     c.uuid,
     c.commitment,
-    c.email,
+    p.email,
     p.name,
     p.role,
     p.residence,
