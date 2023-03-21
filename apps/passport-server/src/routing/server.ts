@@ -31,6 +31,7 @@ export async function startServer(
 
     app.use(
       (err: Error, req: express.Request, res: express.Response, next: any) => {
+        console.error(`[ERROR] ${req.method} ${req.url}`);
         console.error(err.stack);
         res.status(500).send(err.message);
       }

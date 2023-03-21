@@ -5,7 +5,6 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
-import { config } from "../../src/config";
 import { ZuIdCard } from "../../src/model/Card";
 import { createProof } from "../../src/proveSemaphore";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
@@ -75,7 +74,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
   return (
     <QRWrap>
       <QRCode bgColor={qrBg} fgColor={qrFg} value={link} style={qrStyle} />
-      {config.devMode && <a href={link}>dev link</a>}
+      {/* config.devMode && <a href={link}>dev link</a> */}
     </QRWrap>
   );
 }

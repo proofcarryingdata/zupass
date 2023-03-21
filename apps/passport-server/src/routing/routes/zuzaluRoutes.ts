@@ -2,6 +2,7 @@ import {
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
+  ZuParticipant,
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { NextFunction, Request, Response } from "express";
@@ -9,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   getEncryptedStorage,
   setEncryptedStorage,
-} from "../../database/manualQueries/e2ee";
+} from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
 import { insertCommitment } from "../../database/queries/insertCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
@@ -26,7 +27,7 @@ export function initZuzaluRoutes(
   const { dbClient } = context;
 
   // Register a new user, send them an email with a magic link.
-  app.get("/zuzalu/register", async (req: Request, res: Response) => {
+  app.post("/zuzalu/register", async (req: Request, res: Response) => {
     const email = decodeString(req.query.email, "email");
     const commitment = decodeString(req.query.commitment, "commitment");
 
@@ -50,7 +51,7 @@ export function initZuzaluRoutes(
 
     const { name } = participant;
     console.log(`Sending magic link to ${email} ${name}: ${magicLink}`);
-    sendEmail(email, name, magicLink);
+    await sendEmail(email, name, magicLink);
 
     res.sendStatus(200);
   });
@@ -59,7 +60,7 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
-      const redirect = process.env.PASSPORT_CLIENT_URL + "/#/save-self";
+      const redirect = process.env.PASSPORT_APP_URL + "/#/save-self";
       try {
         const token = decodeString(req.query.token, "token");
         const email = decodeString(req.query.email, "email");
@@ -79,7 +80,7 @@ export function initZuzaluRoutes(
 
         // Save commitment to DB.
         const uuid = uuidv4();
-        console.log(`Saving new committment: ${uuid}`);
+        console.log(`Saving new commitment: ${uuid}`);
         await insertCommitment(dbClient, {
           uuid,
           email,
@@ -89,14 +90,21 @@ export function initZuzaluRoutes(
         // Reload Merkle trees
         await semaphoreService.reload(dbClient);
         const participant = semaphoreService.getParticipant(uuid);
+        if (!participant) throw new Error(`${uuid} not found`);
+
+        // TEMP: set E2EE token
+        const zuParticipant: ZuParticipant = {
+          ...participant,
+          token: uuidv4(),
+        };
 
         // Return participant, including UUID, back to Passport
-        const jsonP = JSON.stringify(participant);
+        const jsonP = JSON.stringify(zuParticipant);
         console.log(`Added new Zuzalu participant: ${jsonP}`);
         res.redirect(`${redirect}?success=true&participant=${jsonP}`);
-      } catch (e) {
-        console.log("error adding new zuzalu participant: ", e);
-        res.redirect(redirect + "?success=false");
+      } catch (e: any) {
+        e.message = "Can't add Zuzalu Passport: " + e.message;
+        next(e);
       }
     }
   );

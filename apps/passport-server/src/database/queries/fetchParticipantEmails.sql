@@ -1,1 +1,0 @@
-select email from pretix_participants;
