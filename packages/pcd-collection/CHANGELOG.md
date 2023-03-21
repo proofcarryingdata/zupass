@@ -1,5 +1,13 @@
 # @pcd/pcd-types
 
+## 0.0.7
+
+### Patch Changes
+
+- new crypto packages
+- Updated dependencies
+  - @pcd/pcd-types@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

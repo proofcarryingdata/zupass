@@ -1,5 +1,16 @@
 # @pcd/passport-interface
 
+## 0.0.7
+
+### Patch Changes
+
+- new crypto packages
+- Updated dependencies
+  - @pcd/passport-crypto@0.0.1
+  - @pcd/pcd-types@0.0.7
+  - @pcd/semaphore-group-pcd@0.0.7
+  - @pcd/semaphore-signature-pcd@0.0.3
+
 ## 0.0.6
 
 ### Patch Changes
