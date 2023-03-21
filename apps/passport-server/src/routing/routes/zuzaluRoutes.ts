@@ -112,6 +112,11 @@ export function initZuzaluRoutes(
 
       try {
         const storageModel = await getEncryptedStorage(context, request.email);
+
+        if (!storageModel) {
+          throw new Error("can't load e2ee: never saved");
+        }
+
         const result: LoadE2EEResponse = {
           encryptedStorage: JSON.parse(storageModel.encrypted_blob),
         };
@@ -130,14 +135,15 @@ export function initZuzaluRoutes(
       try {
         const storageModel = await getEncryptedStorage(context, request.email);
 
-        if (storageModel.token !== request.serverToken) {
+        if (storageModel && storageModel.token !== request.serverToken) {
           throw new Error(
-            `cannot save encrypted storage for ${request.email}: incorrect token`
+            `cannot save encrypted storage for ${request.email}: already saved and incorrect token`
           );
         }
         await setEncryptedStorage(
           context,
           request.email,
+          request.serverToken,
           request.encryptedBlob
         );
         res.send("ok");
