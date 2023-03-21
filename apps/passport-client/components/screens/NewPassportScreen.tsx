@@ -1,7 +1,6 @@
 import * as React from "react";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { v4 as uuid } from "uuid";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import {
@@ -21,7 +20,7 @@ import { LinkButton } from "../core/Button";
  * verification link.
  */
 export function NewPassportScreen() {
-  const [state] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const { identity, pendingAction } = state;
   if (pendingAction == null || pendingAction.type !== "new-passport") {
     window.location.href = "#/";
@@ -30,17 +29,32 @@ export function NewPassportScreen() {
   }
   const { email } = pendingAction;
 
-  let saveSelfPage = encodeURIComponent(window.location.origin + "#/save-self");
-
-  // Create a magic link to the passport server.
-  // TODO: move this to server side, add a token/nonce.
-  const params = new URLSearchParams({
-    redirect: saveSelfPage,
-    email,
-    commitment: identity.commitment.toString(),
-    token: uuid(),
-  }).toString();
-  const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
+  // Request email verification from the server.
+  const [emailSent, setEmailSent] = useState(false);
+  useEffect(() => {
+    console.log(`Requesting email verification for ${email}...`);
+    const params = new URLSearchParams({
+      email,
+      commitment: identity.commitment.toString(),
+    }).toString();
+    const url = `${config.passportServer}/zuzalu/register?${params}`;
+    fetch(url, { method: "POST" })
+      .then(async (res) => {
+        if (res.ok) {
+          setEmailSent(true);
+        } else {
+          const message = await res.json();
+          dispatch({
+            type: "error",
+            error: { title: "Email failed", message },
+          });
+        }
+      })
+      .catch((err) => {
+        const { message } = err;
+        dispatch({ type: "error", error: { title: "Email failed", message } });
+      });
+  }, [email, setEmailSent]);
 
   return (
     <BackgroundGlow
@@ -58,9 +72,7 @@ export function NewPassportScreen() {
         <Spacer h={48} />
         <PItalic>Generating passport...</PItalic>
         <PItalic>Sending verification email...</PItalic>
-        <PHeavy>
-          Check your email. {magicLink && <a href={magicLink}>Dev link.</a>}
-        </PHeavy>
+        <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
       </TextCenter>
       <Spacer h={48} />
       <HR />

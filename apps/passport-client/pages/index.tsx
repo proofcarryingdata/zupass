@@ -8,7 +8,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
-import ScanScreen from "../components/screens/ScanScreen";
+import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";

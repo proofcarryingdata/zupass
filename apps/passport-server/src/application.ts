@@ -16,14 +16,15 @@ const services: ServiceInitializer[] = [
 
 export async function startApplication() {
   const dbClient = await getDBClient();
-  const honeyClient = await getHoneycombAPI();
+  const honeyClient = getHoneycombAPI();
 
   const context: ApplicationContext = {
     dbClient,
     honeyClient,
   };
 
+  // Run all services concurrently.
   for (const service of services) {
-    await service(context);
+    service(context);
   }
 }

@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Welcome to Zuzalu Passport!</title>
+    <title>Welcome to your Zuzalu Passport</title>
     <style>
       @media only screen and (max-width: 620px) {
         table.body h1 {
@@ -232,7 +232,7 @@
                             margin-bottom: 15px;
                           "
                         >
-                          Hi {{emailAddress}},
+                          Hi {{name}},
                         </p>
                         <p
                           style="
@@ -243,8 +243,8 @@
                             margin-bottom: 15px;
                           "
                         >
-                          Welcome to Zuzalu Passport! Let's verify your email so
-                          you can get started.
+                          Welcome to the Zuzalu Passport. Let's verify your
+                          email.
                         </p>
                         <table
                           role="presentation"
@@ -301,7 +301,7 @@
                                         bgcolor="#3498db"
                                       >
                                         <a
-                                          href="http://localhost:3002/?challenge={{challenge}}"
+                                          href="{{magicLink}}"
                                           target="_blank"
                                           style="
                                             border: solid 1px #3498db;
@@ -338,7 +338,7 @@
                             margin-bottom: 15px;
                           "
                         >
-                          Thanks! See you in Zuzalu Passport. :&#93;
+                          We look forward to seeing you soon.
                         </p>
                       </td>
                     </tr>

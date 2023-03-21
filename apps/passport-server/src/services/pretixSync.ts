@@ -1,7 +1,6 @@
-import {
-  fetchParticipantEmails,
-  insertParticipants,
-} from "../database/queries";
+import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
+import { insertParticipants } from "../database/queries/insertParticipants";
+import { PretixParticipant } from "../database/types";
 import { ApplicationContext } from "../types";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
@@ -40,14 +39,6 @@ interface PretixConfig {
   zuEventID: string;
 }
 
-interface PretixParticipant {
-  email: string;
-  name: string;
-  role: string;
-  residence: string;
-  orderId: string;
-}
-
 // Fetch tickets from Pretix. Insert new ones only into the database.
 // TODO: handle revoked/cancelled tickets.
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
@@ -66,7 +57,8 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
       email: o.email,
       name: o.positions[0].attendee_name,
       residence: "", // TODO: not in pretix yet
-      orderId: o.code,
+      order_id: o.code,
+      email_token: "",
     }));
   console.log(`Found ${participants.length} participants`);
 
