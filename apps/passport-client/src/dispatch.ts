@@ -1,4 +1,4 @@
-import { PCDCrypto } from "@pcd/passport-crypto";
+import { encryptStorage, PCDCrypto } from "@pcd/passport-crypto";
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -6,7 +6,14 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { saveEncryptionKey, savePCDs, saveSelf } from "./localstorage";
+import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
+import {
+  loadEncryptionKey,
+  loadPCDs,
+  saveEncryptionKey,
+  savePCDs,
+  saveSelf,
+} from "./localstorage";
 import { ZuError, ZuState } from "./state";
 
 export type Dispatcher = (action: Action) => void;
@@ -93,7 +100,10 @@ async function genPassport(email: string, update: ZuUpdate) {
   });
 }
 
-function doSaveSelf(
+/**
+ * Runs the first time the user logs in with their email
+ */
+async function doSaveSelf(
   participant: ZuParticipant,
   state: ZuState,
   update: ZuUpdate
@@ -119,8 +129,23 @@ function doSaveSelf(
   // Compute identity-revealing proof.
   update({ self: participant });
 
-  // Redirect to the home page.
-  window.location.hash = "#/";
+  const pcds = await loadPCDs();
+  const encryptionKey = await loadEncryptionKey();
+  const encryptedStorage = await encryptStorage(
+    pcds,
+    participant.token,
+    encryptionKey
+  );
+
+  uploadEncryptedStorage(participant.email, participant.token, encryptedStorage)
+    .then(() => {
+      console.log("successfully saved encrypted storage to server");
+      // Redirect to the home page.
+      window.location.hash = "#/";
+    })
+    .catch((e) => {
+      // TODO
+    });
 }
 
 function clearError(update: ZuUpdate) {

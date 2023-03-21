@@ -1,5 +1,4 @@
 import {
-  BackendUser,
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
@@ -13,7 +12,6 @@ import {
   getEncryptedStorage,
   setEncryptedStorage,
 } from "../../database/manualQueries/e2ee";
-import { fetchUser } from "../../database/queries";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -22,17 +20,6 @@ const globalGroup = new Group("1", 16);
 
 // Zuzalu participants by UUID
 const participants = {} as Record<string, ZuParticipant>;
-function cleanDBUser(
-  user: Awaited<ReturnType<typeof fetchUser>>[0]
-): BackendUser {
-  return {
-    identifier: user.identifier,
-    status: user.status,
-    createdAt: user.created_at,
-    encryptedBlob: user.encrypted_blob,
-    updatedAt: user.updated_at,
-  };
-}
 
 // localhost:3002/zuzalu/new-participant?redirect=https://google.com&commitment=5457595841026900857541504228783465546811548969738060765965868301945253125
 // example identity: ["da4e5656b0892923d30c0a8fa9e68a2ea5b8095c09a4198d066219d5b4e30a","651e367c40d65f65f38ba60f723feb2abcafddd1aa24e6de35a0d9189bca58"]
@@ -76,6 +63,7 @@ export function initZuzaluRoutes(
           name,
           role,
           residence,
+          token,
         };
         const jsonP = JSON.stringify(participant);
         console.log(`Adding new zuzalu participant: ${jsonP}`);
@@ -123,12 +111,9 @@ export function initZuzaluRoutes(
       }
 
       try {
-        const encryptedStorage = await getEncryptedStorage(
-          context,
-          request.email
-        );
+        const storageModel = await getEncryptedStorage(context, request.email);
         const result: LoadE2EEResponse = {
-          encryptedStorage,
+          encryptedStorage: JSON.parse(storageModel.encrypted_blob),
         };
         res.json(result);
       } catch (e) {
@@ -143,6 +128,13 @@ export function initZuzaluRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       const request = req.body as SaveE2EERequest;
       try {
+        const storageModel = await getEncryptedStorage(context, request.email);
+
+        if (storageModel.token !== request.serverToken) {
+          throw new Error(
+            `cannot save encrypted storage for ${request.email}: incorrect token`
+          );
+        }
         await setEncryptedStorage(
           context,
           request.email,

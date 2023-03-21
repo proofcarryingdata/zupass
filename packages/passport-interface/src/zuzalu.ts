@@ -10,6 +10,7 @@ export interface ZuParticipant {
   email: string;
   role: string;
   residence: string;
+  token: string;
 }
 
 export interface BackendUser {
