@@ -1,1 +1,0 @@
-select identifier, status, created_at, salt, encrypted_blob, updated_at from users where identifier = ${searched_identifier};

@@ -1,3 +1,6 @@
+import { EncryptedPacket } from "@pcd/passport-crypto";
+import { EncryptedStorage } from "@pcd/passport-interface";
+
 export interface ProveRequest {
   pcdType: string;
   args: any;
@@ -18,4 +21,40 @@ export interface VerifyResponse {
 
 export interface SupportedPCDsResponse {
   names: string[];
+}
+
+export interface SaveE2EERequest {
+  /**
+   * The email of the user for whom we are saving their
+   * end to end encrypted storage.
+   */
+  email: string;
+
+  /**
+   * A server token unique for the given user which authenticates
+   * the user to overwrite the encrypted storage.
+   */
+  serverToken: string;
+
+  /**
+   * An encrypted and stringified version of {@link EncryptedStorage}
+   */
+  encryptedBlob: string;
+}
+
+export interface SaveE2EEResponse {}
+
+export interface LoadE2EERequest {
+  /**
+   * The email of the user for whom we are loading their
+   * end to end encrypted storage.
+   */
+  email: string;
+}
+
+export interface LoadE2EEResponse {
+  /**
+   * The encrypted storage of all the user's PCDs.
+   */
+  encryptedStorage: EncryptedPacket;
 }

@@ -17,6 +17,8 @@ export async function startServer(
     const port = IS_PROD ? process.env.PORT : 3002;
     const app = express();
     app.use(morgan("tiny"));
+    app.use(express.json());
+    app.use(cors());
 
     routes.forEach((r) => r(app, context));
 

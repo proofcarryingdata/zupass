@@ -1,8 +1,17 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import {
+  LoadE2EERequest,
+  LoadE2EEResponse,
+  SaveE2EERequest,
+  ZuParticipant,
+} from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
+import {
+  getEncryptedStorage,
+  setEncryptedStorage,
+} from "../../database/manualQueries/e2ee";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 
@@ -54,6 +63,7 @@ export function initZuzaluRoutes(
           name,
           role,
           residence,
+          token,
         };
         const jsonP = JSON.stringify(participant);
         console.log(`Adding new zuzalu participant: ${jsonP}`);
@@ -90,6 +100,61 @@ export function initZuzaluRoutes(
   app.get("/testEmail", async (req: Request, res: Response) => {
     sendEmail("test@nibnalin.me", "testing123");
   });
+
+  app.post(
+    "/sync/load/",
+    async (req: Request, res: Response, next: NextFunction) => {
+      const request = req.body as LoadE2EERequest;
+
+      if (request.email === undefined) {
+        throw new Error("can't load e2ee: missing email");
+      }
+
+      try {
+        const storageModel = await getEncryptedStorage(context, request.email);
+
+        if (!storageModel) {
+          throw new Error("can't load e2ee: never saved");
+        }
+
+        const result: LoadE2EEResponse = {
+          encryptedStorage: JSON.parse(storageModel.encrypted_blob),
+        };
+
+        res.json(result);
+      } catch (e) {
+        console.log(e);
+        next(e);
+      }
+    }
+  );
+
+  app.post(
+    "/sync/save",
+    async (req: Request, res: Response, next: NextFunction) => {
+      const request = req.body as SaveE2EERequest;
+      try {
+        const storageModel = await getEncryptedStorage(context, request.email);
+
+        if (storageModel && storageModel.token !== request.serverToken) {
+          throw new Error(
+            `cannot save encrypted storage for ${request.email}: already saved and incorrect token`
+          );
+        }
+
+        await setEncryptedStorage(
+          context,
+          request.email,
+          request.serverToken,
+          request.encryptedBlob
+        );
+
+        res.send("ok");
+      } catch (e) {
+        next(e);
+      }
+    }
+  );
 }
 
 function decodeString(

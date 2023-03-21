@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useContext } from "react";
 import styled from "styled-components";
+import { v4 as uuid } from "uuid";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import {
@@ -37,7 +38,7 @@ export function NewPassportScreen() {
     redirect: saveSelfPage,
     email,
     commitment: identity.commitment.toString(),
-    token: "todo",
+    token: uuid(),
   }).toString();
   const magicLink = `${config.passportServer}/zuzalu/new-participant?${params}`;
 

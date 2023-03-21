@@ -1,17 +1,6 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { config } from "./config";
 
-export function loadSelf(): ZuParticipant | undefined {
-  const self = window.localStorage["self"];
-  if (self != null && self !== "") {
-    return JSON.parse(self);
-  }
-}
-
-export function saveSelf(self: ZuParticipant) {
-  window.localStorage["self"] = JSON.stringify(self);
-}
-
 export async function fetchParticipant(
   uuid: string
 ): Promise<ZuParticipant | null> {

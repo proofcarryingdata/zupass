@@ -104,10 +104,10 @@ function InfoModal() {
 
 function SettingsModal() {
   const copySyncKey = useCallback(() => {
-    window.alert("Coming soon");
+    alert("coming soon");
   }, []);
 
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const clearPassport = useCallback(() => {
     if (window.confirm("Are you sure? This will delete your data.")) {
       dispatch({ type: "reset-passport" });
@@ -125,6 +125,12 @@ function SettingsModal() {
         <LinkButton to="/scan">Verify a Passport</LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>Copy Key for Sync</Button>
+        <div>
+          email: {state.self?.email}
+          <br />
+          key: {state.encryptionKey}
+          <br />
+        </div>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
           Clear Passport
