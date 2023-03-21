@@ -27,8 +27,6 @@ export function bigintToUuid(bigint: bigint): string {
   );
 }
 
-export const IS_PROD = process.env.NODE_ENV === "production";
-
 export function randomEmail() {
   return uuid().slice(0, 8) + "@test.com";
 }
