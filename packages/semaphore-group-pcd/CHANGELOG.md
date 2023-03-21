@@ -1,5 +1,14 @@
 # @pcd/semaphore-group-pcd
 
+## 0.0.7
+
+### Patch Changes
+
+- new crypto packages
+- Updated dependencies
+  - @pcd/pcd-types@0.0.7
+  - @pcd/semaphore-identity-pcd@0.0.8
+
 ## 0.0.6
 
 ### Patch Changes
