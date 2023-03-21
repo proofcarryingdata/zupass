@@ -1,6 +1,6 @@
 import { EncryptedStorage } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { PCDCrypto } from "./passport-crypto";
+import { PCDCrypto } from "./passportCrypto";
 import { EncryptedPacket } from "./types";
 
 const cryptoPromise = PCDCrypto.newInstance();
