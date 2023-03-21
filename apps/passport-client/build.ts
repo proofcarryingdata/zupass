@@ -12,8 +12,8 @@ const opts: BuildOptions = {
     }),
   ],
   define: {
-    "process.env.PASSPORT_SERVER": JSON.stringify(
-      process.env.PASSPORT_SERVER || "http://localhost:3002"
+    "process.env.PASSPORT_SERVER_URL": JSON.stringify(
+      process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
     ),
   },
   outdir: "public/js",

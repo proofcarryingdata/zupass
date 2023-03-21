@@ -92,13 +92,8 @@ export function initZuzaluRoutes(
         const participant = semaphoreService.getParticipant(uuid);
         if (!participant) throw new Error(`${uuid} not found`);
 
-        // TEMP: set E2EE token
-        const zuParticipant: ZuParticipant = {
-          ...participant,
-          token: uuidv4(),
-        };
-
         // Return participant, including UUID, back to Passport
+        const zuParticipant = participant as ZuParticipant;
         const jsonP = JSON.stringify(zuParticipant);
         console.log(`Added new Zuzalu participant: ${jsonP}`);
         res.redirect(`${redirect}?success=true&participant=${jsonP}`);
