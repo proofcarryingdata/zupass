@@ -7,6 +7,15 @@ import { PCDCrypto } from "../src/passportCrypto";
 
 describe("Passport encryption", function () {
   it("Encryption and decryption works properly", async function () {
+    const testParticipant = {
+      commitment: "a",
+      email: "b",
+      name: "c",
+      residence: "d",
+      role: "e",
+      token: "f",
+      uuid: "g",
+    };
     const testToken = "abcdefg";
     const pcdCrypto = await PCDCrypto.newInstance();
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
@@ -17,6 +26,7 @@ describe("Passport encryption", function () {
     const encryptionKey = pcdCrypto.generateRandomKey(256);
     const encrypted = await encryptStorage(
       sourcePCDs,
+      testParticipant,
       testToken,
       encryptionKey
     );
@@ -27,5 +37,6 @@ describe("Passport encryption", function () {
     assert.equal(destinationPCDs.getAll().length, 1);
     assert.equal(decrypted.serverToken, testToken);
     assert.equal(destinationPCDs.getAll()[0].id, sourcePCDs.getAll()[0].id);
+    assert.deepEqual(decrypted.self, testParticipant);
   });
 });
