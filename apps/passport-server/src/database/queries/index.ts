@@ -1,6 +1,4 @@
-
-export { fetchParticipant } from './fetchParticipant';
-export { fetchParticipantEmails } from './fetchParticipantEmails';
-export { fetchUser } from './fetchUser';
-export { insertParticipants } from './insertParticipants';
-export { writeUser } from './writeUser';
+export { fetchParticipant } from "./fetchParticipant";
+export { fetchParticipantEmails } from "./fetchParticipantEmails";
+export { insertParticipants } from "./insertParticipants";
+export { writeUser } from "./writeUser";

@@ -37,6 +37,17 @@ export class PCDCollection {
     return deserialized;
   }
 
+  public async deserializeAll(serialized: SerializedPCD[]): Promise<PCD[]> {
+    return Promise.all(serialized.map(this.deserialize.bind(this)));
+  }
+
+  public async deserializeAllAndAdd(
+    serialized: SerializedPCD[]
+  ): Promise<void> {
+    const deserialized = await this.deserializeAll(serialized);
+    this.addAll(deserialized);
+  }
+
   public async serializeAll(): Promise<SerializedPCD[]> {
     return Promise.all(this.pcds.map(this.serialize.bind(this)));
   }
@@ -51,6 +62,10 @@ export class PCDCollection {
 
   public getById(id: string): PCD | undefined {
     return this.pcds.find((pcd) => pcd.id === id);
+  }
+
+  public getPCDsByType(type: string) {
+    return this.pcds.filter((pcd) => pcd.type === type);
   }
 
   public static async deserialize(

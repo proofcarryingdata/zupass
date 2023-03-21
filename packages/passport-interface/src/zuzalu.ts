@@ -10,4 +10,18 @@ export interface ZuParticipant {
   email: string;
   role: string;
   residence: string;
+  token: string;
+}
+
+export interface BackendUser {
+  identifier: string;
+  status: number;
+  createdAt: Date;
+  encryptedBlob: string;
+  updatedAt: Date;
+}
+
+export interface ClientUser extends BackendUser {
+  masterKey: string;
+  serverPassword: string;
 }
