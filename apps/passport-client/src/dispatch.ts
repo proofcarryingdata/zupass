@@ -26,6 +26,7 @@ export type Action =
   | {
       type: "save-self";
       participant: ZuParticipant;
+      upload: boolean;
     }
   | {
       type: "error";
@@ -53,7 +54,7 @@ export async function dispatch(
     case "new-passport":
       return genPassport(action.email, update);
     case "save-self":
-      return doSaveSelf(action.participant, state, update);
+      return doSaveSelf(action.participant, state, update, action.upload);
     case "error":
       return update({ error: action.error });
     case "clear-error":
@@ -106,7 +107,8 @@ async function genPassport(email: string, update: ZuUpdate) {
 async function doSaveSelf(
   participant: ZuParticipant,
   state: ZuState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  upload: boolean
 ) {
   // Verify that the identity is correct.
   const { identity } = state;
@@ -137,15 +139,23 @@ async function doSaveSelf(
     encryptionKey
   );
 
-  uploadEncryptedStorage(participant.email, participant.token, encryptedStorage)
-    .then(() => {
-      console.log("successfully saved encrypted storage to server");
-      // Redirect to the home page.
-      window.location.hash = "#/";
-    })
-    .catch((e) => {
-      // TODO
-    });
+  if (upload) {
+    uploadEncryptedStorage(
+      participant.email,
+      participant.token,
+      encryptedStorage
+    )
+      .then(() => {
+        console.log("successfully saved encrypted storage to server");
+        // Redirect to the home page.
+        window.location.hash = "#/";
+      })
+      .catch((e) => {
+        // TODO
+      });
+  } else {
+    window.location.hash = "#/";
+  }
 }
 
 function clearError(update: ZuUpdate) {
