@@ -1,25 +1,28 @@
 import * as React from "react";
-import { useCallback } from "react";
-import { Outlet } from "react-router-dom";
+import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ErrorPopup } from "./ErrorPopup";
 
 // Wrapper for all screens.
-export function AppContainer() {
+export function AppContainer({
+  bg,
+  children,
+}: {
+  bg: "primary" | "gray";
+  children?: ReactNode;
+}) {
   const [state, dispatch] = React.useContext(DispatchContext);
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),
     [dispatch]
   );
 
-  // Hacky way to set the background color.
-  const color = state.self ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
-
+  const col = bg === "gray" ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
   return (
-    <Background color={color}>
+    <Background color={col}>
       <Container>
-        <Outlet />
+        {children}
         {state.error && <ErrorPopup error={state.error} onClose={onClose} />}
       </Container>
     </Background>
@@ -42,4 +45,5 @@ const Container = styled.div`
   max-width: 400px;
   margin: 0 auto;
   position: relative;
+  padding-bottom: 24px;
 `;

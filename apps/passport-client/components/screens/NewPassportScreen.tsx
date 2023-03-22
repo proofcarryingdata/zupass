@@ -14,6 +14,7 @@ import {
   ZuLogo,
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { AppContainer } from "../shared/AppContainer";
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
@@ -23,7 +24,7 @@ export function NewPassportScreen() {
   const [state, dispatch] = useContext(DispatchContext);
   const { identity, pendingAction } = state;
   if (pendingAction == null || pendingAction.type !== "new-passport") {
-    window.location.href = "#/";
+    window.location.hash = "#/";
     window.location.reload();
     return null;
   }
@@ -57,33 +58,35 @@ export function NewPassportScreen() {
   }, [email, setEmailSent]);
 
   return (
-    <BackgroundGlow
-      y={224}
-      from="var(--bg-lite-primary)"
-      to="var(--bg-dark-primary)"
-    >
-      <Spacer h={64} />
-      <TextCenter>
-        <H1>PASSPORT</H1>
-        <Spacer h={24} />
-        <ZuLogo />
-        <Spacer h={24} />
-        <H2>ZUZALU</H2>
+    <AppContainer bg="primary">
+      <BackgroundGlow
+        y={224}
+        from="var(--bg-lite-primary)"
+        to="var(--bg-dark-primary)"
+      >
+        <Spacer h={64} />
+        <TextCenter>
+          <H1>PASSPORT</H1>
+          <Spacer h={24} />
+          <ZuLogo />
+          <Spacer h={24} />
+          <H2>ZUZALU</H2>
+          <Spacer h={48} />
+          <PItalic>Generating passport...</PItalic>
+          <PItalic>Sending verification email...</PItalic>
+          <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
+        </TextCenter>
         <Spacer h={48} />
-        <PItalic>Generating passport...</PItalic>
-        <PItalic>Sending verification email...</PItalic>
-        <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
-      </TextCenter>
-      <Spacer h={48} />
-      <HR />
-      <Spacer h={24} />
-      <CenterColumn w={280}>
-        <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
-        <Spacer h={8} />
-        <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
-      </CenterColumn>
-      <Spacer h={24} />
-    </BackgroundGlow>
+        <HR />
+        <Spacer h={24} />
+        <CenterColumn w={280}>
+          <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
+          <Spacer h={8} />
+          <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
+        </CenterColumn>
+        <Spacer h={24} />
+      </BackgroundGlow>
+    </AppContainer>
   );
 }
 

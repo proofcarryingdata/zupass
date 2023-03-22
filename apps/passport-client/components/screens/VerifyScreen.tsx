@@ -21,6 +21,7 @@ import {
   TextCenter,
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { AppContainer } from "../shared/AppContainer";
 import { CardElem } from "../shared/CardElem";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
@@ -61,9 +62,9 @@ export function VerifyScreen() {
       });
   }, [pcdStr, setResult]);
 
-  const [from, to] = result?.valid
-    ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)"]
-    : ["var(--bg-lite-gray)", "var(--bg-dark-gray)"];
+  const [from, to, bg]: [string, string, "primary" | "gray"] = result?.valid
+    ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
+    : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
 
   const icon = {
     true: "/assets/verify-valid.svg",
@@ -72,27 +73,31 @@ export function VerifyScreen() {
   }["" + result?.valid];
 
   return (
-    <BackgroundGlow y={96} {...{ from, to }}>
-      <Spacer h={48} />
-      <TextCenter>
-        <img width="90" height="90" src={icon} />
-        <Spacer h={24} />
-        {result == null && <H3>VERIFYING PROOF...</H3>}
-        {result?.valid && <H3 col="var(--accent-dark)">PROOF VERIFIED.</H3>}
-        {result?.valid === false && <H3>PROOF INVALID.</H3>}
-      </TextCenter>
-      <Spacer h={48} />
-      <Placeholder minH={160}>
-        {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-        {result?.valid === true && <CardElem expanded card={getCard(result)} />}
-      </Placeholder>
-      <Spacer h={96} />
-      {result != null && (
-        <CenterColumn w={280}>
-          <LinkButton to="/">Back to Passport</LinkButton>
-        </CenterColumn>
-      )}
-    </BackgroundGlow>
+    <AppContainer bg={bg}>
+      <BackgroundGlow y={96} {...{ from, to }}>
+        <Spacer h={48} />
+        <TextCenter>
+          <img width="90" height="90" src={icon} />
+          <Spacer h={24} />
+          {result == null && <H3>VERIFYING PROOF...</H3>}
+          {result?.valid && <H3 col="var(--accent-dark)">PROOF VERIFIED.</H3>}
+          {result?.valid === false && <H3>PROOF INVALID.</H3>}
+        </TextCenter>
+        <Spacer h={48} />
+        <Placeholder minH={160}>
+          {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
+          {result?.valid === true && (
+            <CardElem expanded card={getCard(result)} />
+          )}
+        </Placeholder>
+        <Spacer h={96} />
+        {result != null && (
+          <CenterColumn w={280}>
+            <LinkButton to="/">Back to Passport</LinkButton>
+          </CenterColumn>
+        )}
+      </BackgroundGlow>
+    </AppContainer>
   );
 }
 

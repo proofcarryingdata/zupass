@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useState } from "react";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
+import { AppContainer } from "../shared/AppContainer";
 
 /**
  * Users can navigate to this page in order to download
@@ -11,7 +12,7 @@ import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
  * on first login.
  */
 export function SyncExistingScreen() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const [_, dispatch] = useContext(DispatchContext);
 
   const [syncKey, setSyncKey] = useState("");
 
@@ -34,11 +35,11 @@ export function SyncExistingScreen() {
   }, [syncKey]);
 
   const onClose = useCallback(() => {
-    window.location.href = "/#/";
+    window.location.hash = "#/";
   }, []);
 
   return (
-    <>
+    <AppContainer bg="primary">
       <Spacer h={64} />
       <TextCenter>
         <H2>Sync Existing Passport</H2>
@@ -60,6 +61,6 @@ export function SyncExistingScreen() {
           Back
         </Button>
       </TextCenter>
-    </>
+    </AppContainer>
   );
 }
