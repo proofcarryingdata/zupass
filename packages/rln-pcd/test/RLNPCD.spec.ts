@@ -11,7 +11,6 @@ const TREE_DEPTH = 16
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.wasm`);
-const verificationKeyPath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.json`);
 
 
 describe("rln should work", function () {
@@ -21,7 +20,6 @@ describe("rln should work", function () {
     await RLNPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
-      verificationKeyPath,
     });
   });
 
