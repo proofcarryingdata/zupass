@@ -20,7 +20,7 @@ const opts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Success"))
+  .then(() => console.log("Built passport client"))
   .catch((err) => console.error(err));
 
 async function run(command: string) {
@@ -37,7 +37,7 @@ async function run(command: string) {
         port: 3000,
         host: "0.0.0.0",
       });
-      console.log(`Serving on ${host}`);
+      console.log(`Serving passport client on ${host}`);
       break;
     default:
       throw new Error(`Unknown command ${command}`);
