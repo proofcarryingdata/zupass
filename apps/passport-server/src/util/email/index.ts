@@ -24,13 +24,11 @@ async function composeMail(
 
   const text = textTemplate
     .replace("{{name}}", name)
-    .replace("{{magicLink}}", magicLink)
-    .replace("{{emailAddress}}", to);
+    .replace("{{magicLink}}", magicLink);
 
   const html = htmlTemplate
     .replace("{{name}}", name)
-    .replace("{{magicLink}}", magicLink)
-    .replace("{{emailAddress}}", to);
+    .replace("{{magicLink}}", magicLink);
 
   return {
     text,
@@ -45,7 +43,7 @@ export async function sendEmail(
 ): Promise<void> {
   const msg = {
     to: to,
-    from: "nalin@0xparc.org", // TODO: Get better verified sender
+    from: "passport@0xparc.org",
     subject: "Welcome to your Zuzalu Passport",
     ...(await composeMail(to, name, magicLink)),
   };

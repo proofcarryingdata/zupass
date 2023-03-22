@@ -15,7 +15,7 @@ import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
   CenterColumn,
-  H3,
+  H4,
   Placeholder,
   Spacer,
   TextCenter,
@@ -79,9 +79,9 @@ export function VerifyScreen() {
         <TextCenter>
           <img width="90" height="90" src={icon} />
           <Spacer h={24} />
-          {result == null && <H3>VERIFYING PROOF...</H3>}
-          {result?.valid && <H3 col="var(--accent-dark)">PROOF VERIFIED.</H3>}
-          {result?.valid === false && <H3>PROOF INVALID.</H3>}
+          {result == null && <H4>VERIFYING PROOF...</H4>}
+          {result?.valid && <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>}
+          {result?.valid === false && <H4>PROOF INVALID.</H4>}
         </TextCenter>
         <Spacer h={48} />
         <Placeholder minH={160}>
