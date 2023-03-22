@@ -58,18 +58,18 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
 }
 
 /**
- * Downloads the full list of visitors and residents from Pretix.
+ * Downloads the complete list of both visitors and residents from Pretix.
  */
 async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  const fullParticipants = await loadResidents(pretixConfig);
-  const visitors = await loadVisitors(pretixConfig, fullParticipants);
-  return [...fullParticipants, ...visitors];
+  const residents = await loadResidents(pretixConfig);
+  const visitors = await loadVisitors(pretixConfig, residents);
+  return [...residents, ...visitors];
 }
 
 /**
- * Loads those participants who are full residents of Zuzalu.
+ * Loads those participants who are residents (not visitors) of Zuzalu.
  */
 async function loadResidents(
   pretixConfig: PretixConfig
@@ -102,9 +102,9 @@ async function loadVisitors(
     ParticipantRole.Visitor
   );
 
-  const fullParticipantEmails = new Set(residents.map((p) => p.email));
+  const residentEmails = new Set(residents.map((p) => p.email));
   const visitors = subEventParticipants.filter(
-    (p) => !fullParticipantEmails.has(p.email)
+    (p) => !residentEmails.has(p.email)
   );
 
   console.log(`[PRETIX] loaded ${visitors.length} visitors`);
