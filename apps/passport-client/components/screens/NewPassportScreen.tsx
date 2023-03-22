@@ -82,6 +82,7 @@ export function NewPassportScreen() {
         <Spacer h={8} />
         <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
       </CenterColumn>
+      <Spacer h={24} />
     </BackgroundGlow>
   );
 }
