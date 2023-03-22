@@ -1,4 +1,4 @@
-import { PretixParticipant } from "../database/models";
+import { ParticipantRole, PretixParticipant } from "../database/models";
 import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
 import { insertParticipants } from "../database/queries/writePretix";
 import { ApplicationContext } from "../types";
@@ -15,19 +15,16 @@ export function startPretixSync(context: ApplicationContext) {
     };
   } catch (e) {
     console.error(e);
-    console.error("Missing Pretix config, skipping sync");
+    console.error("[PRETIX] Missing Pretix config, skipping sync");
     return;
   }
 
   // Sync periodically.
-  console.log("Starting Pretix sync: " + JSON.stringify(pretixConfig));
+  console.log("[PRETIX] Starting Pretix sync: " + JSON.stringify(pretixConfig));
   trySync();
   async function trySync() {
     try {
-      // await sync(context, pretixConfig);
-
-      const events = await fetchEvents(pretixConfig);
-      console.log(events);
+      await sync(context, pretixConfig);
     } catch (e) {
       console.error(e);
     }
@@ -47,33 +44,96 @@ interface PretixConfig {
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
   const { dbClient } = context;
 
-  // Load from Pretix, filter to valid tickets.
-  const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
-  console.log(`Fetched ${orders.length} orders`);
+  const participants = await loadAllParticipants(pretixConfig);
 
+  // Insert into database.
+  const existingSet = new Set(await fetchParticipantEmails(dbClient));
+  const newParticipants = participants.filter((p) => !existingSet.has(p.email));
+
+  console.log(`[PRETIX] Inserting ${newParticipants.length} new participants`);
+  for (const p of newParticipants) {
+    console.log(`[PRETIX] Inserting ${p.email} ${p.name} ${p.role}`);
+    await insertParticipants(dbClient, p);
+  }
+}
+
+/**
+ * Downloads the full list of visitors and residents from Pretix.
+ */
+async function loadAllParticipants(
+  pretixConfig: PretixConfig
+): Promise<PretixParticipant[]> {
+  const fullParticipants = await loadResidents(pretixConfig);
+  const visitors = await loadVisitors(pretixConfig, fullParticipants);
+  return [...fullParticipants, ...visitors];
+}
+
+/**
+ * Loads those participants who are full residents of Zuzalu.
+ */
+async function loadResidents(
+  pretixConfig: PretixConfig
+): Promise<PretixParticipant[]> {
+  const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
+  const participants = ordersToParticipants(orders, ParticipantRole.Resident);
+  console.log(`[PRETIX] loaded ${participants.length} residents`);
+  return participants;
+}
+
+/**
+ * Loads all visitors of Zuzalu. Visitors are defined as participants
+ * who are not members of the main Zuzalu event in pretix.
+ */
+async function loadVisitors(
+  pretixConfig: PretixConfig,
+  residents: PretixParticipant[]
+): Promise<PretixParticipant[]> {
+  const subEvents = await fetchSubEvents(pretixConfig);
+
+  const subEventOrders = [];
+
+  for (const event of subEvents) {
+    const participants = await fetchOrders(pretixConfig, event.slug);
+    subEventOrders.push(...participants);
+  }
+
+  const subEventParticipants = ordersToParticipants(
+    subEventOrders,
+    ParticipantRole.Visitor
+  );
+
+  const fullParticipantEmails = new Set(residents.map((p) => p.email));
+  const visitors = subEventParticipants.filter(
+    (p) => !fullParticipantEmails.has(p.email)
+  );
+
+  console.log(`[PRETIX] loaded ${visitors.length} visitors`);
+
+  return visitors;
+}
+
+/**
+ * Converts a given list of orders to participants, and sets
+ * all of their roles to equal the given role.
+ */
+function ordersToParticipants(
+  orders: PretixOrder[],
+  role: ParticipantRole
+): PretixParticipant[] {
   const participants: PretixParticipant[] = orders
     .filter((o) => o.status === "p")
     .filter((o) => o.positions.length === 1)
     .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
     .map((o) => ({
-      role: "resident",
+      role,
       email: o.email,
       name: o.positions[0].attendee_name,
       residence: "", // TODO: not in pretix yet
       order_id: o.code,
       email_token: "",
     }));
-  console.log(`Found ${participants.length} participants`);
 
-  // Insert into database.
-  const existingSet = new Set(await fetchParticipantEmails(dbClient));
-  const newParticipants = participants.filter((p) => !existingSet.has(p.email));
-
-  console.log(`Inserting ${newParticipants.length} new participants`);
-  for (const p of newParticipants) {
-    console.log(`Inserting ${p.email} ${p.name} ${p.role}`);
-    await insertParticipants(dbClient, p);
-  }
+  return participants;
 }
 
 // Fetch all orders for a given event.
@@ -86,7 +146,7 @@ async function fetchOrders(
   // Fetch orders from paginated API
   let url = `${pretixConfig.orgUrl}/events/${eventID}/orders/`;
   while (url != null) {
-    console.log(`Fetching ${url}`);
+    console.log(`[PRETIX] Fetching ${url}`);
     const res = await fetch(url, {
       headers: {
         Authorization: `Token ${pretixConfig.token}`,
@@ -104,20 +164,27 @@ async function fetchOrders(
   return orders;
 }
 
-async function fetchEvents(pretixConfig: PretixConfig): Promise<PretixEvent[]> {
+/**
+ * Loads details for all events that are *not* the main Zuzalu event.
+ */
+async function fetchSubEvents(
+  pretixConfig: PretixConfig
+): Promise<PretixEvent[]> {
   const events: PretixEvent[] = [];
 
   // Fetch orders from paginated API
   let url = `${pretixConfig.orgUrl}/events`;
   while (url != null) {
-    console.log(`Fetching ${url}`);
+    console.log(`[PRETIX] Fetching ${url}`);
     const res = await fetch(url, {
       headers: {
         Authorization: `Token ${pretixConfig.token}`,
       },
     });
     if (!res.ok) {
-      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+      console.error(
+        `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+      );
       break;
     }
     const page = await res.json();
@@ -125,10 +192,18 @@ async function fetchEvents(pretixConfig: PretixConfig): Promise<PretixEvent[]> {
     url = page.next;
   }
 
-  return events;
+  return events.filter((e) => e.slug !== pretixConfig.zuEventID);
 }
 
-interface PretixEvent {}
+interface PretixEvent {
+  /**
+   * Unique identifier for a Pretix event.
+   */
+  slug: string;
+
+  // This type actually has more stuff, but the only
+  // relevant one is `slug`.
+}
 
 // A Pretix order. For our purposes, each order contains one ticket.
 interface PretixOrder {
