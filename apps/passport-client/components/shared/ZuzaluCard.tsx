@@ -17,9 +17,9 @@ export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
         <>
           <Spacer h={32} />
           <ZuzaluQR card={card} />
-          <Spacer h={24} />
         </>
       )}
+      <Spacer h={24} />
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
         <InfoLine>{email}</InfoLine>

@@ -84,6 +84,7 @@ export function LoginScreen() {
         <Spacer h={8} />
         <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
       </CenterColumn>
+      <Spacer h={24} />
     </BackgroundGlow>
   );
 }
