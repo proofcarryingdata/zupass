@@ -18,7 +18,11 @@ export function SaveSelfScreen() {
       participant = JSON.parse(params.get("participant"));
     } catch (_) {}
 
-    if (participant && state.identity) {
+    if (
+      participant &&
+      state.identity &&
+      BigInt(participant.commitment) === state.identity.commitment
+    ) {
       // Save participant to local storage, then redirect to home screen.
       dispatch({ type: "save-self", participant });
     } else if (participant) {
