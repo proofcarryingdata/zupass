@@ -39,7 +39,20 @@ export function initZuzaluRoutes(
     if (token.length !== 6) throw new Error("Unreachable");
 
     // Save the token. This lets the user prove access to their email later.
+
+    // if (process.env.BYPASS_EMAIL_REGISTRATION === "true") {
+    //   await insertParticipants(dbClient, {
+    //     email: email,
+    //     email_token: "",
+    //     name: "test testerly",
+    //     order_id: "",
+    //     residence: "atlantis",
+    //     role: ParticipantRole.Resident,
+    //   });
+    // }
+
     const participant = await setParticipantToken(dbClient, { email, token });
+
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
     } else if (
