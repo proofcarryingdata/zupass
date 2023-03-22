@@ -14,10 +14,12 @@ export async function tryInsertCommitment(
 
   // Insert succeeds only if we already have a Pretix participant (but don't
   // already have a commitment) for this email--due to foreign + unique keys.
-  await client.query(
+  const result = await client.query(
     `\
-insert into commitments (uuid, participant_email, commitment)
-values ($1, $2, $3)`,
+INSERT INTO commitments (uuid, participant_email, commitment)
+VALUES ($1, $2, $3)
+ON CONFLICT (commitment) DO UPDATE SET uuid = $1`,
     [uuid, email, commitment]
   );
+  console.log(`Tried commitment insert. UUID ${uuid}, n ${result.rowCount}`);
 }
