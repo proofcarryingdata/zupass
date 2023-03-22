@@ -36,8 +36,11 @@ export function initZuzaluRoutes(
     const participant = await setParticipantToken(dbClient, { email, token });
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
-    } else if (participant.commitment != null) {
-      throw new Error(`${email} either already registered.`);
+    } else if (
+      participant.commitment != null &&
+      participant.commitment !== commitment
+    ) {
+      throw new Error(`${email} already registered.`);
     }
 
     // Send an email with the magic link.
