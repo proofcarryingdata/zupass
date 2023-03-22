@@ -12,7 +12,7 @@ import {
   setEncryptedStorage,
 } from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
-import { insertCommitment } from "../../database/queries/insertCommitment";
+import { tryInsertCommitment } from "../../database/queries/insertCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -40,7 +40,9 @@ export function initZuzaluRoutes(
       participant.commitment != null &&
       participant.commitment !== commitment
     ) {
-      throw new Error(`${email} already registered.`);
+      throw new Error(
+        `${email} already registered. You can sync from your existing device.`
+      );
     }
 
     // Send an email with the magic link.
@@ -84,7 +86,7 @@ export function initZuzaluRoutes(
         // Save commitment to DB.
         const uuid = uuidv4();
         console.log(`Saving new commitment: ${uuid}`);
-        await insertCommitment(dbClient, {
+        await tryInsertCommitment(dbClient, {
           uuid,
           email,
           commitment,
@@ -93,7 +95,11 @@ export function initZuzaluRoutes(
         // Reload Merkle trees
         await semaphoreService.reload(dbClient);
         const participant = semaphoreService.getParticipant(uuid);
-        if (!participant) throw new Error(`${uuid} not found`);
+        if (participant == null) {
+          throw new Error(`${uuid} not found`);
+        } else if (participant.commitment !== commitment) {
+          throw new Error(`Commitment mismatch`);
+        }
 
         // Return participant, including UUID, back to Passport
         const zuParticipant = participant as ZuParticipant;
