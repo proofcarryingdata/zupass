@@ -39,7 +39,7 @@ Each package and app which needs testing has a `test` script in its `package.jso
 
 ### Passport
 
-- static site is deployed to https://pcd-passport.com/
+- static site is deployed to https://zupass.eth.limo/
 - server is deployed to https://api.pcd-passport.com/
 
 ### Example PCD App

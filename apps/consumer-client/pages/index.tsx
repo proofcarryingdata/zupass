@@ -13,7 +13,7 @@ const SEMAPHORE_GROUP_URL = IS_PROD
   : "http://localhost:3002/semaphore/1";
 
 const PASSPORT_URL = IS_PROD
-  ? "https://pcd-passport.com/"
+  ? "https://zupass.eth.limo/"
   : "http://localhost:3000/";
 
 export default function Web() {

@@ -31,7 +31,9 @@ export function SaveSelfScreen() {
         type: "error",
         error: {
           title: "Save failed",
-          message: "Please verify on the same device you used to sign up.",
+          message:
+            "Please verify on the same device and browser you used to sign up. " +
+            "Make sure you're not in a webview.",
         },
       });
     } else {
