@@ -11,6 +11,9 @@ export interface ZuState {
   pendingAction?: PendingAction;
   encryptionKey?: string;
 
+  // Global background color
+  bgColor: "gray" | "primary";
+
   // Participant metadata.
   // TODO: reload from passport server on startup.
   self?: ZuParticipant;

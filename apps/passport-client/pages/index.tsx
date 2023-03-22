@@ -44,7 +44,7 @@ class App extends React.Component<{}, ZuState | undefined> {
         {hasStack && (
           <HashRouter>
             <Routes>
-              <Route path="*" element={<AppContainer />} />
+              <Route path="*" element={<AppContainer bg="gray" />} />
             </Routes>
           </HashRouter>
         )}
@@ -68,15 +68,15 @@ function Router() {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/" element={<AppContainer />}>
+        <Route path="/">
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route path="save-self" element={<SaveSelfScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          <Route path="verify" element={<VerifyScreen />} />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
+          <Route path="verify" element={<VerifyScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -92,7 +92,9 @@ async function loadInitialState(): Promise<ZuState> {
   const identityStr = loadIdentity();
   const identity = identityStr ? new Identity(identityStr) : undefined;
 
-  return { self, encryptionKey, pcds, identity };
+  const bgColor = self ? "gray" : "primary";
+
+  return { self, encryptionKey, pcds, identity, bgColor };
 }
 
 const root = createRoot(document.querySelector("#root"));

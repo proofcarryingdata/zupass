@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { Spacer } from "../core";
+import { AppContainer } from "../shared/AppContainer";
 
 export function SaveSelfScreen() {
   // Parse participant
@@ -36,9 +37,9 @@ export function SaveSelfScreen() {
   }, [participant]);
 
   return (
-    <div>
+    <AppContainer bg="gray">
       <Spacer h={24} />
       <p>Saving...</p>
-    </div>
+    </AppContainer>
   );
 }

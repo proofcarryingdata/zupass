@@ -4,12 +4,13 @@ import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CircleButton } from "../core/Button";
+import { AppContainer } from "../shared/AppContainer";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
   const nav = useNavigate();
   return (
-    <>
+    <AppContainer bg="gray">
       <QrReader
         onResult={(result, error) => {
           if (result != null) {
@@ -24,7 +25,7 @@ export function ScanScreen() {
         ViewFinder={ViewFinder}
         containerStyle={{ width: "360px", height: "360px" }}
       />
-    </>
+    </AppContainer>
   );
 }
 
