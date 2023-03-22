@@ -6,7 +6,7 @@ export type PendingAction = { type: "new-passport"; email: string };
 
 export interface ZuState {
   // Zuzalu semaphore identity.
-  identity?: Identity;
+  identity: Identity;
   pcds: PCDCollection;
   pendingAction?: PendingAction;
   encryptionKey?: string;

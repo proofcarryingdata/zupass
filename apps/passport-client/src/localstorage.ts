@@ -54,8 +54,9 @@ export function saveSelf(self: ZuParticipant): void {
   window.localStorage["self"] = JSON.stringify(self);
 }
 
-export function loadIdentity(): string {
-  return window.localStorage["identity"];
+export function loadIdentity(): Identity | null {
+  const str = window.localStorage["identity"];
+  return str ? new Identity(str) : null;
 }
 
 export function saveIdentity(identity: Identity): void {

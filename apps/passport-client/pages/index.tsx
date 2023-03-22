@@ -18,6 +18,7 @@ import {
   loadIdentity,
   loadPCDs,
   loadSelf,
+  saveIdentity,
 } from "../src/localstorage";
 import { ZuState } from "../src/state";
 
@@ -85,12 +86,16 @@ function Router() {
 }
 
 async function loadInitialState(): Promise<ZuState> {
+  let identity = loadIdentity();
+  if (identity == null) {
+    console.log("Generating a new Semaphore identity...");
+    identity = new Identity();
+    saveIdentity(identity);
+  }
+
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
-
-  const identityStr = loadIdentity();
-  const identity = identityStr ? new Identity(identityStr) : undefined;
 
   const bgColor = self ? "gray" : "primary";
 

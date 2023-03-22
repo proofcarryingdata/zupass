@@ -61,7 +61,7 @@ export async function dispatch(
 
   switch (action.type) {
     case "new-passport":
-      return genPassport(action.email, update);
+      return genPassport(state.identity, action.email, update);
     case "save-self":
       return doSaveSelf(action.participant, state, update);
     case "error":
@@ -77,16 +77,14 @@ export async function dispatch(
   }
 }
 
-async function genPassport(email: string, update: ZuUpdate) {
-  // Generate a semaphore identity, save it to the local store, generate an
-  // email magic link. In prod, send email, in dev, display the link.
-
-  // Generate a fresh identity, save in local storage.
-  const identity = new Identity();
-  console.log("Created identity", identity.toString());
-  saveIdentity(identity);
-
-  update({ identity, pendingAction: { type: "new-passport", email } });
+async function genPassport(
+  identity: Identity,
+  email: string,
+  update: ZuUpdate
+) {
+  // Show the NewPassportScreen.
+  // This will save the sema identity & request email verification.
+  update({ pendingAction: { type: "new-passport", email } });
   window.location.hash = "#/new-passport";
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
