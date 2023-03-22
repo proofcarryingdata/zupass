@@ -24,7 +24,10 @@ export function startPretixSync(context: ApplicationContext) {
   trySync();
   async function trySync() {
     try {
-      await sync(context, pretixConfig);
+      // await sync(context, pretixConfig);
+
+      const events = await fetchEvents(pretixConfig);
+      console.log(events);
     } catch (e) {
       console.error(e);
     }
@@ -74,7 +77,10 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
 }
 
 // Fetch all orders for a given event.
-async function fetchOrders(pretixConfig: PretixConfig, eventID: string) {
+async function fetchOrders(
+  pretixConfig: PretixConfig,
+  eventID: string
+): Promise<PretixOrder[]> {
   const orders: PretixOrder[] = [];
 
   // Fetch orders from paginated API
@@ -97,6 +103,32 @@ async function fetchOrders(pretixConfig: PretixConfig, eventID: string) {
 
   return orders;
 }
+
+async function fetchEvents(pretixConfig: PretixConfig): Promise<PretixEvent[]> {
+  const events: PretixEvent[] = [];
+
+  // Fetch orders from paginated API
+  let url = `${pretixConfig.orgUrl}/events`;
+  while (url != null) {
+    console.log(`Fetching ${url}`);
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Token ${pretixConfig.token}`,
+      },
+    });
+    if (!res.ok) {
+      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+      break;
+    }
+    const page = await res.json();
+    events.push(...page.results);
+    url = page.next;
+  }
+
+  return events;
+}
+
+interface PretixEvent {}
 
 // A Pretix order. For our purposes, each order contains one ticket.
 interface PretixOrder {
