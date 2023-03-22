@@ -121,8 +121,11 @@ function ordersToParticipants(
   role: ParticipantRole
 ): PretixParticipant[] {
   const participants: PretixParticipant[] = orders
+    // check that they paid
     .filter((o) => o.status === "p")
+    // not sure what this is
     .filter((o) => o.positions.length === 1)
+    // check that they have an email and a name
     .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
     .map((o) => ({
       role,
