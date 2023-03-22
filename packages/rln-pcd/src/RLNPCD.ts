@@ -1,5 +1,11 @@
-import * as fs from "fs"
 import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+import {
+    RLN,
+    RLNFullProof,
+} from "rlnjs";
+import { Identity } from '@semaphore-protocol/identity'
+import { MerkleProof } from '@zk-kit/incremental-merkle-tree'
 
 import {
     BigIntArgument,
@@ -11,16 +17,10 @@ import {
     StringArgument,
 } from "@pcd/pcd-types";
 import {
-    RLN,
-    RLNFullProof,
-} from "rlnjs";
-import { Identity } from '@semaphore-protocol/identity'
-import { v4 as uuid } from "uuid";
-import {
     SemaphoreIdentityPCD,
     SemaphoreIdentityPCDPackage,
 } from "@pcd/semaphore-identity-pcd";
-import { MerkleProof } from '@zk-kit/incremental-merkle-tree'
+import verificationKeyJSON from "../artifacts/16.json";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
 
@@ -29,7 +29,6 @@ export const RLNPCDTypeName = "rln-pcd";
 export interface RLNPCDInitArgs {
     zkeyFilePath: string;
     wasmFilePath: string;
-    verificationKeyPath: string;
 }
 
 export interface RLNPCDArgs {
@@ -121,9 +120,6 @@ function getRLNInstance(rlnIdentifier: bigint, identity?: Identity) {
     if (!initArgs) {
         throw new Error("cannot make proof: init has not been called yet");
     }
-    const verificationKeyJSON = JSON.parse(
-        fs.readFileSync(initArgs.verificationKeyPath, "utf-8")
-    )
     // NOTE: here we preprocess output from `Identity.toString` in order to make it accepted
     // by `Identity.constructor` in RLN. This is a temporary workaround since if the output
     // from `identity.toString()` is directly passed to `RLN` we'll get an error like this:
