@@ -12,5 +12,5 @@ export const PASSPORT_SERVER_URL = IS_PROD
 // Open the popup window under the current domain, let it redirect there:
 export function requestProofFromPassport(proofUrl: string) {
   const popupUrl = `/popup?proofUrl=${encodeURIComponent(proofUrl)}`;
-  window.open(popupUrl, "_blank", "width=400,height=700");
+  window.open(popupUrl, "_blank", "width=360,height=480,top=100,popup");
 }

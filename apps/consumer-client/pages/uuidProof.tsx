@@ -17,8 +17,9 @@ export default function Web() {
   useEffect(() => {
     window.addEventListener("message", receiveMessage, false);
     function receiveMessage(ev: MessageEvent<any>) {
+      if (!ev.data.encodedPcd) return;
       console.log("Received message", ev.data);
-      setPcdStr(ev.data);
+      setPcdStr(ev.data.encodedPcd);
     }
   }, []);
 
