@@ -1,12 +1,13 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
 
-export function retrieveProof<T extends PCDPackage>(proofPackage: T) {
+export function useProof<T extends PCDPackage>(
+  proofPackage: T,
+  proofEnc: string
+) {
   const [proof, setProof] = useState<PCDOf<T>>();
 
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const proofEnc = url.searchParams.get("proof");
     if (proofEnc) {
       const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
       if (parsedPCD.type !== proofPackage.name) {
@@ -16,7 +17,7 @@ export function retrieveProof<T extends PCDPackage>(proofPackage: T) {
         setProof(pcd as any);
       });
     }
-  }, []);
+  }, [proofPackage, proofEnc, setProof]);
 
   return proof;
 }

@@ -2,13 +2,12 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { retrieveProof } from "./PCDIntegration";
+import { useProof } from "./PCDIntegration";
 
-export function requestSemaphoreSignatureProof(
+export function requestSemaphoreSignatureUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
-  messageToSign: string,
-  navigate: (url: string) => void
+  messageToSign: string
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
@@ -25,7 +24,7 @@ export function requestSemaphoreSignatureProof(
     },
   });
 
-  navigate(url);
+  return url;
 }
 
 /**
@@ -33,10 +32,9 @@ export function requestSemaphoreSignatureProof(
  * PCD from the passport which contains the user's uuid, which can be used
  * to fetch user details from the passport server.
  */
-export function requestSignedZuzaluUUID(
+export function requestSignedZuzaluUUIDUrl(
   urlToPassportWebsite: string,
-  returnUrl: string,
-  navigate: (url: string) => void
+  returnUrl: string
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
@@ -52,18 +50,15 @@ export function requestSignedZuzaluUUID(
       value: undefined,
     },
   });
-
-  navigate(url);
+  return url;
 }
 
 /**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
-export function useSemaphoreSignatureProof() {
-  const signatureProof = retrieveProof<typeof SemaphoreSignaturePCDPackage>(
-    SemaphoreSignaturePCDPackage
-  );
+export function useSemaphoreSignatureProof(proofEnc: string) {
+  const signatureProof = useProof(SemaphoreSignaturePCDPackage, proofEnc);
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();

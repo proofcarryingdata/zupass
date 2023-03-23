@@ -7,13 +7,13 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { retrieveProof } from "./PCDIntegration";
+import { useProof } from "./PCDIntegration";
 
-export function requestZuzaluMembershipProof(
+/**  */
+export function requestZuzaluMembershipUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
-  urlToSemaphoreGroup: string,
-  navigate: (url: string) => void
+  urlToSemaphoreGroup: string
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -40,16 +40,19 @@ export function requestZuzaluMembershipProof(
     },
   });
 
-  navigate(url);
+  return url;
 }
 
 /**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore group membership proof.
  */
-export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
+export function useSemaphorePassportProof(
+  semaphoreGroupUrl: string,
+  proofStr: string
+) {
   const [error, setError] = useState<Error | undefined>();
-  const semaphoreProof = retrieveProof(SemaphoreGroupPCDPackage);
+  const semaphoreProof = useProof(SemaphoreGroupPCDPackage, proofStr);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
@@ -67,7 +70,7 @@ export function useSemaphorePassportProof(semaphoreGroupUrl: string) {
         setError(e as Error);
       }
     })();
-  }, [semaphoreProof]);
+  }, [semaphoreProof, semaphoreGroupUrl]);
 
   // Verify the proof
   const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
