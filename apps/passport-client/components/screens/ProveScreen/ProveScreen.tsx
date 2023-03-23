@@ -9,6 +9,7 @@ import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
+import { LoggedOutScreen } from "./LoggedOutScreen";
 import { ParameterizedProveScreen } from "./ParameterizedProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
@@ -22,6 +23,10 @@ export function ProveScreen() {
   if (request.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     return null;
+  }
+
+  if (!_.self) {
+    return <LoggedOutScreen />;
   }
 
   let title: string;
