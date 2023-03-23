@@ -25,7 +25,8 @@ import { v4 as uuid } from "uuid";
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
 function generateMessageHash(signal: string): bigint {
-  // right shift to fit into a field element
+  // right shift to fit into a field element, which is 254 bits long
+  // shift by 8 ensures we have a 253 bit element
   return BigInt("0x" + sha256(signal)) >> BigInt(8);
 }
 
