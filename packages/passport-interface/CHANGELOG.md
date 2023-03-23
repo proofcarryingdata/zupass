@@ -1,5 +1,16 @@
 # @pcd/passport-interface
 
+## 0.0.8
+
+### Patch Changes
+
+- New and improved passport interface - requests routed through message passing api rather than URLs. Also, new PCD request interface for requesting the Zuzalu UUID from a user.
+- Updated dependencies
+  - @pcd/passport-crypto@0.0.2
+  - @pcd/pcd-types@0.0.8
+  - @pcd/semaphore-group-pcd@0.0.8
+  - @pcd/semaphore-signature-pcd@0.0.4
+
 ## 0.0.7
 
 ### Patch Changes
