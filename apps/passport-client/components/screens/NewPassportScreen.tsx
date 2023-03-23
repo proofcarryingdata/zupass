@@ -51,6 +51,7 @@ export function NewPassportScreen() {
     const token = inRef.current?.value || "";
     if (token.length !== LOGIN_CODE_LENGTH || !/^\d+$/.test(token)) {
       window.alert(`Enter your ${LOGIN_CODE_LENGTH}-digit code.`);
+      return;
     }
     dispatch({ type: "login", email, token });
   }, []);
