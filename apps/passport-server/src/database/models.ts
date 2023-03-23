@@ -2,7 +2,7 @@
 export interface PretixParticipant {
   email: string;
   name: string;
-  role: string;
+  role: ParticipantRole;
   residence: string;
   order_id: string;
   email_token: string;
@@ -12,4 +12,9 @@ export interface PretixParticipant {
 export interface PassportParticipant extends PretixParticipant {
   uuid: string;
   commitment: string;
+}
+
+export enum ParticipantRole {
+  Visitor = "visitor",
+  Resident = "resident",
 }
