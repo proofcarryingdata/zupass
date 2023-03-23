@@ -142,8 +142,9 @@ export function initZuzaluRoutes(
       const request = req.body as LoadE2EERequest;
 
       if (request.blobKey === undefined) {
-        throw new Error("can't load e2ee: missing email");
+        throw new Error("can't load e2ee: missing blobKey");
       }
+      console.log(`[E2EE] Loading ${request.blobKey}`);
 
       try {
         const storageModel = await getEncryptedStorage(
@@ -171,6 +172,8 @@ export function initZuzaluRoutes(
     "/sync/save",
     async (req: Request, res: Response, next: NextFunction) => {
       const request = req.body as SaveE2EERequest;
+      console.log(`[E2EE] Saving ${request.blobKey}`);
+
       try {
         await setEncryptedStorage(
           context,
