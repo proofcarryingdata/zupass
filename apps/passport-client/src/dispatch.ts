@@ -11,6 +11,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
+import { config } from "./config";
 import {
   loadEncryptionKey,
   loadPCDs,
@@ -29,8 +30,9 @@ export type Action =
       email: string;
     }
   | {
-      type: "save-self";
-      participant: ZuParticipant;
+      type: "login";
+      email: string;
+      token: string;
     }
   | {
       type: "error";
@@ -62,12 +64,12 @@ export async function dispatch(
   switch (action.type) {
     case "new-passport":
       return genPassport(state.identity, action.email, update);
-    case "save-self":
-      return doSaveSelf(action.participant, state, update);
+    case "login":
+      return login(action.email, action.token, state, update);
     case "error":
       return update({ error: action.error });
     case "clear-error":
-      return clearError(update);
+      return clearError(state, update);
     case "reset-passport":
       return resetPassport(update);
     case "load-from-sync":
@@ -108,6 +110,38 @@ async function genPassport(
     encryptionKey,
     pendingAction: { type: "new-passport", email },
   });
+}
+
+async function login(
+  email: string,
+  token: string,
+  state: ZuState,
+  update: ZuUpdate
+) {
+  // Verify the token, save the participant to local storage, redirect to
+  // the home page.
+  const query = new URLSearchParams({
+    email,
+    token,
+    commitment: state.identity.commitment.toString(),
+  }).toString();
+  const loginUrl = `${config.passportServer}/zuzalu/new-participant?${query}`;
+
+  let participant: ZuParticipant;
+  try {
+    participant = await fetch(loginUrl).then((r) => r.json());
+  } catch (e) {
+    update({
+      error: {
+        title: "Login failed",
+        message: "Couldn't log in. " + e.message,
+        dismissToCurrentPage: true,
+      },
+    });
+    return;
+  }
+
+  doSaveSelf(participant, state, update);
 }
 
 /**
@@ -160,8 +194,10 @@ async function doSaveSelf(
     });
 }
 
-function clearError(update: ZuUpdate) {
-  window.location.hash = "#/";
+function clearError(state: ZuState, update: ZuUpdate) {
+  if (!state.error?.dismissToCurrentPage) {
+    window.location.hash = "#/";
+  }
   update({ error: undefined });
 }
 

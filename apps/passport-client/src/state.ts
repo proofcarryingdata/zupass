@@ -23,7 +23,12 @@ export interface ZuState {
 }
 
 export interface ZuError {
+  /** Big title, should be under 40 chars */
   title: string;
+  /** Useful explanation, avoid "Something went wrong." */
   message: string;
+  /** Optional stacktrace. */
   stack?: string;
+  /** By default, user dismisses an error and returns to home screen. */
+  dismissToCurrentPage?: boolean;
 }

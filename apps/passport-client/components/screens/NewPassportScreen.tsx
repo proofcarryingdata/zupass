@@ -1,10 +1,12 @@
+import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import {
   BackgroundGlow,
+  BigInput,
   CenterColumn,
   H1,
   H2,
@@ -13,8 +15,10 @@ import {
   TextCenter,
   ZuLogo,
 } from "../core";
-import { LinkButton } from "../core/Button";
+import { Button, LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
+
+const LOGIN_CODE_LENGTH = 6;
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
@@ -33,29 +37,23 @@ export function NewPassportScreen() {
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
   useEffect(() => {
-    console.log(`Requesting email verification for ${email}...`);
-    const params = new URLSearchParams({
-      email,
-      commitment: identity.commitment.toString(),
-    }).toString();
-    const url = `${config.passportServer}/zuzalu/register?${params}`;
-    fetch(url, { method: "POST" })
-      .then(async (res) => {
-        if (res.ok) {
-          setEmailSent(true);
-        } else {
-          const message = await res.text();
-          dispatch({
-            type: "error",
-            error: { title: "Email failed", message },
-          });
-        }
-      })
+    requestLoginCode(email, identity)
+      .then(() => setEmailSent(true))
       .catch((err) => {
         const { message } = err;
         dispatch({ type: "error", error: { title: "Email failed", message } });
       });
   }, [email, setEmailSent]);
+
+  // Verify the code the user entered.
+  const inRef = useRef<HTMLInputElement>();
+  const login = useCallback(() => {
+    const token = inRef.current?.value || "";
+    if (token.length !== LOGIN_CODE_LENGTH || !/^\d+$/.test(token)) {
+      window.alert(`Enter your ${LOGIN_CODE_LENGTH}-digit code.`);
+    }
+    dispatch({ type: "login", email, token });
+  }, []);
 
   return (
     <AppContainer bg="primary">
@@ -76,18 +74,35 @@ export function NewPassportScreen() {
           <PItalic>Sending verification email...</PItalic>
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
+        <Spacer h={24} />
+        <CenterColumn w={280}>
+          <BigInput ref={inRef} placeholder="code from email" />
+          <Spacer h={8} />
+          <Button onClick={login}>Verify</Button>
+        </CenterColumn>
         <Spacer h={48} />
         <HR />
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
-          <Spacer h={8} />
-          <LinkButton to={"/scan-and-verify"}>Verify a Passport</LinkButton>
+          <LinkButton to={"/"}>Cancel</LinkButton>
         </CenterColumn>
         <Spacer h={24} />
       </BackgroundGlow>
     </AppContainer>
   );
+}
+
+/** Server checks that email address is on the list, then sends the code. */
+async function requestLoginCode(email: string, identity: Identity) {
+  console.log(`Requesting email verification for ${email}...`);
+  const params = new URLSearchParams({
+    email,
+    commitment: identity.commitment.toString(),
+  }).toString();
+  const url = `${config.passportServer}/zuzalu/register?${params}`;
+  const res = await fetch(url, { method: "POST" });
+  if (res.ok) return;
+  throw new Error(await res.text());
 }
 
 const PItalic = styled.p`
