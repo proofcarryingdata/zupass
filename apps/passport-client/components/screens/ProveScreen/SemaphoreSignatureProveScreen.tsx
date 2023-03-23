@@ -11,7 +11,7 @@ import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
-import { Button } from "../../core";
+import { Button, CenterColumn, Spacer } from "../../core";
 
 export function SemaphoreSignatureProveScreen({
   req,
@@ -49,15 +49,14 @@ export function SemaphoreSignatureProveScreen({
 
   if (req.args.signedMessage.value === undefined) {
     lines.push(
-      <p>
+      <div>
         Revealing your Zuzalu Identity
-        <br />
-        <br />
+        <Spacer h={16} />
         <p>
           Make sure you trust this website. You are revealing your name and
           email as well as your public key.
         </p>
-      </p>
+      </div>
     );
   } else {
     lines.push(
@@ -74,11 +73,11 @@ export function SemaphoreSignatureProveScreen({
   }
 
   return (
-    <div>
+    <CenterColumn w={280}>
       {lines.map((line, i) => (
         <LineWrap key={i}>{line}</LineWrap>
       ))}
-    </div>
+    </CenterColumn>
   );
 }
 

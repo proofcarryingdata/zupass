@@ -1,65 +1,54 @@
 import {
-  requestSemaphoreSignatureProof,
-  requestZuzaluMembershipProof,
+  requestSemaphoreSignatureUrl,
+  requestZuzaluMembershipUrl,
   useSemaphorePassportProof,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { IS_PROD, PASSPORT_URL } from "../src/util";
+import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
   : "http://localhost:3002/semaphore/1";
 
 export default function Web() {
+  // Raw string-encoded PCD
+  const [pcdStr, setPcdStr] = useState("");
+
   // Semaphore Group PCD
   const {
     proof: semaphoreProof,
     group: semaphoreGroup,
     valid: semaphoreProofValid,
     error: semaphoreError,
-  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL);
+  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
   useEffect(() => {
     if (semaphoreError) {
-      console.log("error using semaphore passport proof", semaphoreError);
+      console.error("error using semaphore passport proof", semaphoreError);
     }
   }, [semaphoreError]);
 
   // Semaphore Signature PCD
   const [messageToSign, setMessageToSign] = useState<string>("");
-  const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
+  const { signatureProof, signatureProofValid } =
+    useSemaphoreSignatureProof(pcdStr);
 
-  // Remove proof from URL after we've used it
+  // Listen for PCDs coming back from the Passport popup
   useEffect(() => {
-    if (
-      semaphoreProofValid !== undefined ||
-      signatureProofValid !== undefined
-    ) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("proof");
-      window.history.replaceState(null, "", url);
+    window.addEventListener("message", receiveMessage, false);
+    function receiveMessage(ev: MessageEvent<any>) {
+      console.log("Received message", ev.data);
+      setPcdStr(ev.data);
     }
-  }, [semaphoreProofValid, signatureProofValid]);
+  }, []);
 
   return (
     <>
       <h1>Example PCD-Consuming Client Application</h1>
       <Container>
-        <h2>Zuzalu Membership Proof (SemaphoreGroupPCD) </h2>
-        <button
-          onClick={() => {
-            const RETURN_URL = window.location.href;
-            requestZuzaluMembershipProof(
-              PASSPORT_URL,
-              RETURN_URL,
-              SEMAPHORE_GROUP_URL,
-              (url) => {
-                window.location.href = url;
-              }
-            );
-          }}
-        >
+        <h2>Zuzalu Membership Proof (SemaphoreGroupPCD)</h2>
+        <button onClick={requestZuzaluMembershipProof}>
           Request Zuzalu Membership Proof
         </button>
         {semaphoreProof != null && (
@@ -87,17 +76,10 @@ export default function Web() {
         <br />
         <br />
         <button
-          onClick={() => {
-            const RETURN_URL = window.location.href;
-            requestSemaphoreSignatureProof(
-              PASSPORT_URL,
-              RETURN_URL,
-              messageToSign,
-              (url) => {
-                window.location.href = url;
-              }
-            );
-          }}
+          onClick={useCallback(
+            () => requestSemaphoreSignature(messageToSign),
+            [messageToSign]
+          )}
         >
           Request Semaphore Signature
         </button>
@@ -120,6 +102,26 @@ export default function Web() {
       </Container>
     </>
   );
+}
+
+// Show the Passport popup, ask the user to show anonymous membership.
+function requestZuzaluMembershipProof() {
+  const proofUrl = requestZuzaluMembershipUrl(
+    PASSPORT_URL,
+    window.location.origin + "/popup",
+    SEMAPHORE_GROUP_URL
+  );
+  requestProofFromPassport(proofUrl);
+}
+
+// Show the Passport popup, ask the user to sign a message with their sema key.
+function requestSemaphoreSignature(messageToSign: string) {
+  const proofUrl = requestSemaphoreSignatureUrl(
+    PASSPORT_URL,
+    window.location.origin + "/popup",
+    messageToSign
+  );
+  requestProofFromPassport(proofUrl);
 }
 
 const Container = styled.div`
