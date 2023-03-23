@@ -2,11 +2,19 @@ import {
   requestSignedZuzaluUUID,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
+import { useEffect } from "react";
 import styled from "styled-components";
 import { PASSPORT_URL } from "../src/util";
 
 export default function Web() {
   const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
+
+  useEffect(() => {
+    if (signatureProofValid && signatureProof) {
+      const userUuid = signatureProof.claim.signedMessage;
+      alert(userUuid);
+    }
+  }, [signatureProofValid, signatureProof]);
 
   return (
     <Container>

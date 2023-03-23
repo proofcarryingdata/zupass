@@ -60,7 +60,9 @@ export function requestSignedZuzaluUUID(
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
 export function useSemaphoreSignatureProof() {
-  const signatureProof = retrieveProof(SemaphoreSignaturePCDPackage);
+  const signatureProof = retrieveProof<typeof SemaphoreSignaturePCDPackage>(
+    SemaphoreSignaturePCDPackage
+  );
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();
