@@ -5,7 +5,9 @@ export async function fetchParticipant(
   passportServerUrl: string,
   uuid: string
 ): Promise<ZuParticipant | null> {
-  const url = passportServerUrl + "zuzalu/participant/" + uuid;
+  // TODO: use consistent environment variables.
+  const base = passportServerUrl + (passportServerUrl.endsWith("/") ? "" : "/");
+  const url = base + "zuzalu/participant/" + uuid;
   console.log(`Fetching ${url}`);
   const res = await fetch(url);
   if (!res.ok) return null;
