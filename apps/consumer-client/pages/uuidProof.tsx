@@ -1,20 +1,31 @@
 import {
   requestSignedZuzaluUUID,
+  useFetchParticipant,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { PASSPORT_URL } from "../src/util";
+import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../src/util";
 
 export default function Web() {
   const { signatureProof, signatureProofValid } = useSemaphoreSignatureProof();
+  const [uuid, setUuid] = useState<string | undefined>();
 
   useEffect(() => {
     if (signatureProofValid && signatureProof) {
       const userUuid = signatureProof.claim.signedMessage;
-      alert(userUuid);
+      setUuid(userUuid);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("proof");
+      window.history.replaceState(null, "", url);
     }
   }, [signatureProofValid, signatureProof]);
+
+  const { participant, error, loading } = useFetchParticipant(
+    PASSPORT_SERVER_URL,
+    uuid
+  );
 
   return (
     <Container>
@@ -41,6 +52,7 @@ export default function Web() {
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
           </>
         )}
+        {participant && <pre>{JSON.stringify(participant, null, 2)}</pre>}
       </Container>
     </Container>
   );

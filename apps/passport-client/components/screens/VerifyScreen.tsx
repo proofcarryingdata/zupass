@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { fetchParticipant, ZuParticipant } from "@pcd/passport-interface";
 import {
   SemaphoreGroupPCDPackage,
   SemaphoreGroupPCDTypeName,
@@ -8,9 +8,9 @@ import { ungzip } from "pako";
 import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuIdCard } from "../../src/model/Card";
-import { fetchParticipant } from "../../src/participant";
 import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
@@ -141,7 +141,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   // Verify identity proof
   const uuid = bigintToUuid(BigInt(pcd.claim.externalNullifier));
-  const participant = await fetchParticipant(uuid);
+  const participant = await fetchParticipant(config.passportServer, uuid);
   if (participant == null) {
     return { valid: false, type, message: "Participant not found" };
   }
