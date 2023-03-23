@@ -1,20 +1,17 @@
 import {
   requestSemaphoreSignatureProof,
+  requestSignedZuzaluUUID,
   requestZuzaluMembershipProof,
   useSemaphorePassportProof,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { IS_PROD } from "../src/util";
+import { IS_PROD, PASSPORT_URL } from "../src/util";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
   : "http://localhost:3002/semaphore/1";
-
-const PASSPORT_URL = IS_PROD
-  ? "https://zupass.eth.limo/"
-  : "http://localhost:3000/";
 
 export default function Web() {
   // Semaphore Group PCD
@@ -104,6 +101,30 @@ export default function Web() {
           }}
         >
           Request Semaphore Signature
+        </button>
+        {signatureProof != null && (
+          <>
+            <h3>Got Semaphore Signature Proof from Passport</h3>
+            <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
+            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+            {signatureProofValid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+      </Container>
+
+      <Container>
+        <h2>Zuzalu UUID-revealing proof (SemaphoreSignaturePCD)</h2>
+        <button
+          onClick={() => {
+            const RETURN_URL = window.location.href;
+            requestSignedZuzaluUUID(PASSPORT_URL, RETURN_URL, (url) => {
+              window.location.href = url;
+            });
+          }}
+        >
+          Request UUID
         </button>
         {signatureProof != null && (
           <>

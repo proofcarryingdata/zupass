@@ -27,6 +27,9 @@ import { v4 as uuid } from "uuid";
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
 function generateMessageHash(signal: string): bigint {
+  // TODO: make this work for real
+  signal = signal.substring(0, Math.min(signal.length, 16));
+
   if (!isHexString(signal, 32)) {
     signal = formatBytes32String(signal);
   }

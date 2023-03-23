@@ -48,7 +48,7 @@ export function requestSignedZuzaluUUID(
     },
     signedMessage: {
       argumentType: ArgumentTypeName.String,
-      userProvided: false,
+      userProvided: true,
     },
   });
 

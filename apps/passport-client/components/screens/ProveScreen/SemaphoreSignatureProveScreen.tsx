@@ -21,23 +21,44 @@ export function SemaphoreSignatureProveScreen({
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
-    setProving(true);
+    try {
+      setProving(true);
 
-    const serializedPCD = await prove(state.identity!, req.args.signedMessage);
+      const messageToSign = req.args.signedMessage;
 
-    // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-      serializedPCD
-    )}`;
-  }, []);
+      if (messageToSign.value === undefined) {
+        console.log(
+          "undefined message to sign, setting it to",
+          state.self.uuid
+        );
+        messageToSign.value = state.self.uuid;
+      }
+
+      const serializedPCD = await prove(state.identity!, messageToSign);
+      console.log("ASDF", serializedPCD);
+      // Redirect back to requester
+      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        serializedPCD
+      )}`;
+    } catch (e) {
+      console.log(e);
+    }
+  }, [prove, req]);
 
   const lines: ReactNode[] = [];
-  lines.push(
-    <p>
-      Signing message: <b>{req.args.signedMessage.value}</b>
-    </p>
-  );
+
+  if (req.args.signedMessage.value === undefined) {
+    lines.push(<p>Revealing your Zuzalu Identity</p>);
+  } else {
+    lines.push(
+      <p>
+        Signing message: <b>{req.args.signedMessage.value}</b>
+      </p>
+    );
+  }
+
   lines.push(<Button onClick={onProve}>Prove</Button>);
+
   if (proving) {
     lines.push(<p>Proving...</p>);
   }
