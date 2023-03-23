@@ -18,6 +18,7 @@ export function SyncExistingScreen() {
 
   const onSyncClick = useCallback(() => {
     const load = async () => {
+      console.log("downloading e2ee storage...");
       const blobHash = await getHash(syncKey);
       const storage = await downloadEncryptedStorage(blobHash);
       console.log("downloaded encrypted storage");
@@ -31,7 +32,14 @@ export function SyncExistingScreen() {
       });
     };
 
-    load();
+    load().catch((e) => {
+      const { message, stack } = e;
+      console.error(e);
+      dispatch({
+        type: "error",
+        error: { title: "Sync failed", message, stack },
+      });
+    });
   }, [syncKey]);
 
   const onClose = useCallback(() => {
