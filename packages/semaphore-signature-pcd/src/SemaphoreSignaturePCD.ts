@@ -1,6 +1,3 @@
-import { isHexString } from "@ethersproject/bytes";
-import { keccak256 } from "@ethersproject/solidity";
-import { formatBytes32String } from "@ethersproject/strings";
 import {
   PCD,
   PCDArgument,
@@ -18,6 +15,7 @@ import {
   generateProof,
   verifyProof,
 } from "@semaphore-protocol/proof";
+import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
@@ -27,12 +25,9 @@ import { v4 as uuid } from "uuid";
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
 function generateMessageHash(signal: string): bigint {
-  if (!isHexString(signal, 32)) {
-    signal = formatBytes32String(signal);
-  }
-
-  // right shift to fit into a field element
-  return BigInt(keccak256(["bytes32"], [signal])) >> BigInt(8);
+  // right shift to fit into a field element, which is 254 bits long
+  // shift by 8 ensures we have a 253 bit element
+  return BigInt("0x" + sha256(signal)) >> BigInt(8);
 }
 
 export const SemaphoreSignaturePCDTypeName = "semaphore-signature-pcd";
