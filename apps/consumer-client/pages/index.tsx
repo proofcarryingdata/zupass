@@ -38,8 +38,11 @@ export default function Web() {
   useEffect(() => {
     window.addEventListener("message", receiveMessage, false);
     function receiveMessage(ev: MessageEvent<any>) {
+      // This next line is important. Extensions including Metamask apparently
+      // send messages to every page. Ignore those.
+      if (!ev.data.encodedPcd) return;
       console.log("Received message", ev.data);
-      setPcdStr(ev.data);
+      setPcdStr(ev.data.encodedPcd);
     }
   }, []);
 
