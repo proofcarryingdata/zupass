@@ -6,6 +6,7 @@ import {
   SemaphoreSignaturePCDPackage,
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import _ from "lodash";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
@@ -21,23 +22,53 @@ export function SemaphoreSignatureProveScreen({
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
-    setProving(true);
+    try {
+      setProving(true);
+      const modifiedArgs = _.cloneDeep(req.args);
+      const messageToSign = modifiedArgs.signedMessage;
 
-    const serializedPCD = await prove(state.identity!, req.args.signedMessage);
+      if (messageToSign.value === undefined) {
+        console.log(
+          "undefined message to sign, setting it to",
+          state.self.uuid
+        );
+        messageToSign.value = state.self.uuid;
+      }
 
-    // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-      serializedPCD
-    )}`;
-  }, []);
+      const serializedPCD = await prove(state.identity!, messageToSign);
+      // Redirect back to requester
+      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        serializedPCD
+      )}`;
+    } catch (e) {
+      console.log(e);
+    }
+  }, [prove, req]);
 
   const lines: ReactNode[] = [];
-  lines.push(
-    <p>
-      Signing message: <b>{req.args.signedMessage.value}</b>
-    </p>
-  );
+
+  if (req.args.signedMessage.value === undefined) {
+    lines.push(
+      <p>
+        Revealing your Zuzalu Identity
+        <br />
+        <br />
+        <p>
+          Make sure you trust this website. You are revealing your name and
+          email as well as your public key.
+        </p>
+      </p>
+    );
+  } else {
+    lines.push(
+      <p>
+        Signing message: <b>{req.args.signedMessage.value}</b>
+      </p>
+    );
+  }
+
   lines.push(<Button onClick={onProve}>Prove</Button>);
+
   if (proving) {
     lines.push(<p>Proving...</p>);
   }
