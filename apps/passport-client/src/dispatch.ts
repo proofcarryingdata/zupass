@@ -129,7 +129,9 @@ async function login(
 
   let participant: ZuParticipant;
   try {
-    participant = await fetch(loginUrl).then((r) => r.json());
+    const res = await fetch(loginUrl);
+    if (!res.ok) throw new Error(await res.text());
+    participant = await res.json();
   } catch (e) {
     update({
       error: {
@@ -202,9 +204,11 @@ function clearError(state: ZuState, update: ZuUpdate) {
 }
 
 function resetPassport(update: ZuUpdate) {
+  // Clear saved state.
   window.localStorage.clear();
+  // Reload to clear in-memory state.
   window.location.hash = "#/";
-  update({ self: undefined });
+  window.location.reload();
 }
 
 async function loadFromSync(
