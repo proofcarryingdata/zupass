@@ -6,6 +6,7 @@ import {
   SemaphoreSignaturePCDPackage,
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import _ from "lodash";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
@@ -23,8 +24,8 @@ export function SemaphoreSignatureProveScreen({
   const onProve = useCallback(async () => {
     try {
       setProving(true);
-
-      const messageToSign = req.args.signedMessage;
+      const modifiedArgs = _.cloneDeep(req.args);
+      const messageToSign = modifiedArgs.signedMessage;
 
       if (messageToSign.value === undefined) {
         console.log(
@@ -48,7 +49,17 @@ export function SemaphoreSignatureProveScreen({
   const lines: ReactNode[] = [];
 
   if (req.args.signedMessage.value === undefined) {
-    lines.push(<p>Revealing your Zuzalu Identity</p>);
+    lines.push(
+      <p>
+        Revealing your Zuzalu Identity
+        <br />
+        <br />
+        <p>
+          Make sure you trust this website. You are revealing your name and
+          email as well as your public key.
+        </p>
+      </p>
+    );
   } else {
     lines.push(
       <p>
