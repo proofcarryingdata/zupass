@@ -243,8 +243,8 @@
                             margin-bottom: 15px;
                           "
                         >
-                          Welcome to the Zuzalu Passport. Let's verify your
-                          email.
+                          Welcome to the Zuzalu Passport. Here's your
+                          verification token.
                         </p>
                         <table
                           role="presentation"
@@ -300,9 +300,7 @@
                                         align="center"
                                         bgcolor="#3498db"
                                       >
-                                        <a
-                                          href="{{magicLink}}"
-                                          target="_blank"
+                                        <span
                                           style="
                                             border: solid 1px #3498db;
                                             border-radius: 5px;
@@ -314,12 +312,11 @@
                                             margin: 0;
                                             padding: 12px 25px;
                                             text-decoration: none;
-                                            text-transform: capitalize;
                                             background-color: #3498db;
                                             border-color: #3498db;
                                             color: #ffffff;
                                           "
-                                          >Verify Email</a
+                                          >{{token}}</span
                                         >
                                       </td>
                                     </tr>

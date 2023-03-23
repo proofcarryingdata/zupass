@@ -7,7 +7,6 @@ import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
-import { SaveSelfScreen } from "../components/screens/SaveSelfScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
@@ -73,7 +72,6 @@ function Router() {
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
-          <Route path="save-self" element={<SaveSelfScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           <Route path="sync-existing" element={<SyncExistingScreen />} />

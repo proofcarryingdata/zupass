@@ -12,9 +12,8 @@ function getMailingClient(): MailService {
 }
 
 async function composeMail(
-  to: string,
   name: string,
-  magicLink: string
+  token: string
 ): Promise<{ text: string; html: string }> {
   // Get this files path
   const basePath = __dirname;
@@ -24,11 +23,11 @@ async function composeMail(
 
   const text = textTemplate
     .replace("{{name}}", name)
-    .replace("{{magicLink}}", magicLink);
+    .replace("{{token}}", token);
 
   const html = htmlTemplate
     .replace("{{name}}", name)
-    .replace("{{magicLink}}", magicLink);
+    .replace("{{token}}", token);
 
   return {
     text,
@@ -39,13 +38,13 @@ async function composeMail(
 export async function sendEmail(
   to: string,
   name: string,
-  magicLink: string
+  token: string
 ): Promise<void> {
   const msg = {
     to: to,
     from: "passport@0xparc.org",
     subject: "Welcome to your Zuzalu Passport",
-    ...(await composeMail(to, name, magicLink)),
+    ...(await composeMail(name, token)),
   };
 
   try {

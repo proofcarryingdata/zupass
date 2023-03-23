@@ -31,8 +31,11 @@ export function initZuzaluRoutes(
     const email = decodeString(req.query.email, "email");
     const commitment = decodeString(req.query.commitment, "commitment");
 
-    // Save a one-time token. This lets the user prove access to their email.
-    const token = uuidv4();
+    // Generate a 6-digit random token.
+    const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
+    if (token.length !== 6) throw new Error("Unreachable");
+
+    // Save the token. This lets the user prove access to their email later.
     const participant = await setParticipantToken(dbClient, { email, token });
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
@@ -45,18 +48,10 @@ export function initZuzaluRoutes(
       );
     }
 
-    // Send an email with the magic link.
-    const serverUrl = process.env.PASSPORT_SERVER_URL;
-    const query = new URLSearchParams({
-      token,
-      email,
-      commitment,
-    }).toString();
-    const magicLink = `${serverUrl}/zuzalu/new-participant?${query}`;
-
+    // Send an email with the login token.
     const { name } = participant;
-    console.log(`Sending magic link to ${email} ${name}: ${magicLink}`);
-    await sendEmail(email, name, magicLink);
+    console.log(`Sending magic link to ${email} ${name}: ${token}`);
+    await sendEmail(email, name, token);
 
     res.sendStatus(200);
   });
@@ -65,7 +60,6 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
-      const redirect = process.env.PASSPORT_APP_URL + "/#/save-self";
       try {
         const token = decodeString(req.query.token, "token");
         const email = decodeString(req.query.email, "email");
@@ -105,7 +99,8 @@ export function initZuzaluRoutes(
         const zuParticipant = participant as ZuParticipant;
         const jsonP = JSON.stringify(zuParticipant);
         console.log(`Added new Zuzalu participant: ${jsonP}`);
-        res.redirect(`${redirect}?success=true&participant=${jsonP}`);
+
+        res.json(zuParticipant);
       } catch (e: any) {
         e.message = "Can't add Zuzalu Passport: " + e.message;
         next(e);
