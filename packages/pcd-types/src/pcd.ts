@@ -22,7 +22,9 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
 }
 
 export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
-export type PCDOf<T> = T extends PCDPackage<any, infer P, any, any> ? P : T;
+export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
+  ? PCD<C, P>
+  : T;
 
 export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
   type: T;

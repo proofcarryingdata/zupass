@@ -29,11 +29,41 @@ export function requestSemaphoreSignatureProof(
 }
 
 /**
+ * A function specifically for zuzalu apps - requests a sempahore signature
+ * PCD from the passport which contains the user's uuid, which can be used
+ * to fetch user details from the passport server.
+ */
+export function requestSignedZuzaluUUID(
+  urlToPassportWebsite: string,
+  returnUrl: string,
+  navigate: (url: string) => void
+) {
+  const url = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreSignaturePCDPackage
+  >(urlToPassportWebsite, returnUrl, SemaphoreSignaturePCDPackage.name, {
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: undefined,
+      userProvided: true,
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      userProvided: true,
+      value: undefined,
+    },
+  });
+
+  navigate(url);
+}
+
+/**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
 export function useSemaphoreSignatureProof() {
-  const signatureProof = retrieveProof(SemaphoreSignaturePCDPackage);
+  const signatureProof = retrieveProof<typeof SemaphoreSignaturePCDPackage>(
+    SemaphoreSignaturePCDPackage
+  );
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();

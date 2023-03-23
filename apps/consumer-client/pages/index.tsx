@@ -6,15 +6,11 @@ import {
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { IS_PROD } from "../src/util";
+import { IS_PROD, PASSPORT_URL } from "../src/util";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
   : "http://localhost:3002/semaphore/1";
-
-const PASSPORT_URL = IS_PROD
-  ? "https://zupass.eth.limo/"
-  : "http://localhost:3000/";
 
 export default function Web() {
   // Semaphore Group PCD
@@ -47,8 +43,8 @@ export default function Web() {
   }, [semaphoreProofValid, signatureProofValid]);
 
   return (
-    <Container>
-      <h1>consumer-client</h1>
+    <>
+      <h1>Example PCD-Consuming Client Application</h1>
       <Container>
         <h2>Zuzalu Membership Proof (SemaphoreGroupPCD) </h2>
         <button
@@ -116,10 +112,20 @@ export default function Web() {
           </>
         )}
       </Container>
-    </Container>
+
+      <Container>
+        <h2>Zuzalu UUID Proof</h2>
+        click <a href="/uuidProof">here</a> to navigate to the page that
+        demonstrates this one
+      </Container>
+    </>
   );
 }
 
 const Container = styled.div`
   font-family: system-ui, sans-serif;
+  border: 1px solid black;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
 `;
