@@ -36,7 +36,6 @@ export function SemaphoreSignatureProveScreen({
       }
 
       const serializedPCD = await prove(state.identity!, messageToSign);
-      console.log("ASDF", serializedPCD);
       // Redirect back to requester
       window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
         serializedPCD
