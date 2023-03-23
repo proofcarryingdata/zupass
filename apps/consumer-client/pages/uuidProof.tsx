@@ -52,7 +52,17 @@ export default function Web() {
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
           </>
         )}
-        {participant && <pre>{JSON.stringify(participant, null, 2)}</pre>}
+        {participant && (
+          <>
+            <pre>{JSON.stringify(participant, null, 2)}</pre>
+            {participant.commitment ===
+            signatureProof?.claim.identityCommitment ? (
+              <p>✅ Commitment matches</p>
+            ) : (
+              <p>❌ Commitment does not match</p>
+            )}
+          </>
+        )}
       </Container>
     </Container>
   );
