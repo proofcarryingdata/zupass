@@ -6,7 +6,7 @@ import { useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
-import { H2, Spacer } from "../../core";
+import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { ParameterizedProveScreen } from "./ParameterizedProveScreen";
@@ -43,7 +43,7 @@ export function ProveScreen() {
       <Spacer h={24} />
       <H2>{title}</H2>
       <Spacer h={24} />
-      {body}
+      <CenterColumn w={280}>{body}</CenterColumn>
     </AppContainer>
   );
 }

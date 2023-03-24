@@ -11,7 +11,7 @@ import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
-import { Button, CenterColumn, Spacer } from "../../core";
+import { Button, Spacer } from "../../core";
 
 export function SemaphoreSignatureProveScreen({
   req,
@@ -73,11 +73,11 @@ export function SemaphoreSignatureProveScreen({
   }
 
   return (
-    <CenterColumn w={280}>
+    <div>
       {lines.map((line, i) => (
         <LineWrap key={i}>{line}</LineWrap>
       ))}
-    </CenterColumn>
+    </div>
   );
 }
 
