@@ -6,7 +6,7 @@ import {
   SemaphoreSignaturePCDPackage,
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import _ from "lodash";
+import { cloneDeep } from "lodash";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
@@ -24,7 +24,7 @@ export function SemaphoreSignatureProveScreen({
   const onProve = useCallback(async () => {
     try {
       setProving(true);
-      const modifiedArgs = _.cloneDeep(req.args);
+      const modifiedArgs = cloneDeep(req.args);
       const messageToSign = modifiedArgs.signedMessage;
 
       if (messageToSign.value === undefined) {
