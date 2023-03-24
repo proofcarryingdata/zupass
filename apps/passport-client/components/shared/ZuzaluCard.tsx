@@ -57,21 +57,20 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
   const [generatedTimestamp, setGeneratedTimestamp] = useState<
     number | undefined
   >();
+  const { identity, participant } = card;
+  const { uuid } = participant;
+
   const [qrPayload, setQRPayload] = useState<string | undefined>();
-  const generateQr = useCallback(() => {
-    const { identity, participant } = card;
-    return createZuzaluQRProof(identity, participant.uuid)
-      .then(SemaphoreSignaturePCDPackage.serialize)
-      .then((serialized) => {
-        const stringified = JSON.stringify(serialized);
-        console.log(
-          `generated zuzalu QR proof with length ${stringified.length}`
-        );
-        const encodedProof = encodeQRPayload(stringified);
-        setQRPayload(encodedProof);
-        setGeneratedTimestamp(Date.now());
-      });
-  }, [card]);
+
+  const generateQr = useCallback(async () => {
+    const pcd = await createZuzaluQRProof(identity, uuid);
+    const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
+    const stringified = JSON.stringify(serialized);
+    console.log(`generated zuzalu QR proof with length ${stringified.length}`);
+    const encodedProof = encodeQRPayload(stringified);
+    setQRPayload(encodedProof);
+    setGeneratedTimestamp(Date.now());
+  }, [identity, uuid]);
 
   useEffect(() => {
     generateQr();
