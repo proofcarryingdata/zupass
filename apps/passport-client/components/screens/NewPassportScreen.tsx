@@ -59,7 +59,7 @@ export function NewPassportScreen() {
                   invite email again to open your logged in passport. Then,
                   click the gear icon in the top right, copy your sync key,
                   click 'Sync Existing Passport' on this page, and finally paste
-                  in your sync key .
+                  in your sync key.
                 </>
               ),
             },
