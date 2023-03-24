@@ -1,7 +1,7 @@
 import { ClientBase, Pool } from "pg";
 import { PretixParticipant } from "../models";
 
-export async function insertParticipants(
+export async function insertParticipant(
   client: ClientBase | Pool,
   params: PretixParticipant
 ): Promise<number> {
