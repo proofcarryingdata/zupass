@@ -35,6 +35,10 @@ export type Action =
       token: string;
     }
   | {
+      type: "set-self";
+      self: ZuParticipant;
+    }
+  | {
       type: "error";
       error: ZuError;
     }
@@ -66,6 +70,8 @@ export async function dispatch(
       return genPassport(state.identity, action.email, update);
     case "login":
       return login(action.email, action.token, state, update);
+    case "set-self":
+      return setSelf(action.self, state, update);
     case "error":
       return update({ error: action.error });
     case "clear-error":
@@ -143,13 +149,13 @@ async function login(
     return;
   }
 
-  doSaveSelf(participant, state, update);
+  finishLogin(participant, state, update);
 }
 
 /**
  * Runs the first time the user logs in with their email
  */
-async function doSaveSelf(
+async function finishLogin(
   participant: ZuParticipant,
   state: ZuState,
   update: ZuUpdate
@@ -170,11 +176,13 @@ async function doSaveSelf(
   }
 
   // Save to local storage.
-  saveSelf(participant);
+  setSelf(participant, state, update);
 
-  // Compute identity-revealing proof.
-  update({ self: participant });
+  // Save PCDs to E2EE storage.
+  await saveParticipantPCDs(participant);
+}
 
+async function saveParticipantPCDs(participant: ZuParticipant) {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await encryptStorage(
@@ -194,6 +202,17 @@ async function doSaveSelf(
     .catch((e) => {
       // TODO
     });
+}
+
+// Runs periodically, whenever we poll new participant info.
+async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
+  if (BigInt(self.commitment) !== state.identity.commitment) {
+    throw new Error("Identity commitment mismatch");
+  } else if (state.self && state.self.uuid !== self.uuid) {
+    throw new Error("Participant UUID mismatch");
+  }
+  saveSelf(self); // Save to local storage.
+  update({ self }); // Update in-memory state.
 }
 
 function clearError(state: ZuState, update: ZuUpdate) {

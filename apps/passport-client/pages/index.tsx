@@ -19,6 +19,7 @@ import {
   loadSelf,
   saveIdentity,
 } from "../src/localstorage";
+import { pollParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<{}, ZuState | undefined> {
@@ -27,7 +28,7 @@ class App extends React.Component<{}, ZuState | undefined> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
 
   componentDidMount() {
-    loadInitialState().then(this.setState.bind(this));
+    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
 
   render() {
@@ -62,6 +63,19 @@ class App extends React.Component<{}, ZuState | undefined> {
       error: { title: "Error", message, stack: shortStack },
     } as Partial<ZuState>;
   }
+
+  startBackgroundJobs = () => {
+    console.log("Starting background jobs...");
+    this.jobPollParticipant();
+  };
+
+  // Poll for participant updates
+  jobPollParticipant = async () => {
+    if (this.state?.self) {
+      await pollParticipant(this.state.self, this.dispatch);
+    }
+    setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
+  };
 }
 
 function Router() {

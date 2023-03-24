@@ -41,14 +41,17 @@ const Footer = styled.div<{ role: string }>`
   font-size: 20px;
   letter-spacing: 1px;
   background: ${(p) =>
-    p.role === "resident" ? "var(--accent-lite)" : "var(--primary-dark)"};
-  color: ${(p) =>
-    p.role === "resident" ? "var(--primary-dark)" : "var(--white)"};
+    highlight(p.role) ? "var(--accent-lite)" : "var(--primary-dark)"};
+  color: ${(p) => (highlight(p.role) ? "var(--primary-dark)" : "var(--white)")};
   /* Must be slightly lower than the card's border-radius to nest correctly. */
   border-radius: 0 0 10px 10px;
   padding: 8px;
   text-align: center;
 `;
+
+function highlight(role: string) {
+  return role === "resident" || role === "organizer";
+}
 
 function ZuzaluQR({ card }: { card: ZuIdCard }) {
   const [generatedTimestamp, setGeneratedTimestamp] = useState<
