@@ -1,6 +1,7 @@
 import {
+  hashRequest,
   ProveRequest,
-  ProveResponse,
+  StampStatus,
   SupportedPCDsResponse,
   VerifyRequest,
   VerifyResponse,
@@ -8,6 +9,7 @@ import {
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import path from "path";
+import { ApplicationContext } from "../types";
 
 /**
  * Each PCD type that the proving server supports has to go into this array,
@@ -35,15 +37,29 @@ function getPackage(name: string) {
 }
 
 export async function prove(
-  proveRequest: ProveRequest
-): Promise<ProveResponse> {
+  proveRequest: ProveRequest,
+  context: ApplicationContext
+): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
   const pcd = await pcdPackage.prove(proveRequest.args);
   const serializedPCD = await pcdPackage.serialize(pcd);
 
-  return {
+  // finish current job
+  context.queue.shift();
+  const currentHash = hashRequest(proveRequest);
+  context.stampStatus.set(currentHash, StampStatus.COMPLETE);
+  context.stampResult.set(currentHash, {
     serializedPCD: JSON.stringify(serializedPCD),
-  };
+  });
+
+  // check if there's another job
+  if (context.queue.length > 0) {
+    const topHash = hashRequest(context.queue[0]);
+    if (context.stampStatus.get(topHash) !== StampStatus.IN_PROGRESS) {
+      context.stampStatus.set(topHash, StampStatus.IN_PROGRESS);
+      prove(context.queue[0], context);
+    }
+  }
 }
 
 export async function verify(
