@@ -43,9 +43,7 @@ export function initZuzaluRoutes(
       participant.commitment != null &&
       participant.commitment !== commitment
     ) {
-      throw new Error(
-        `${email} already registered. You can sync from your existing device.`
-      );
+      throw new Error(`${email} already registered.`);
     }
 
     // Send an email with the login token.
