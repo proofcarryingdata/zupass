@@ -81,7 +81,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
   return (
     <QRWrap>
       <QRCode bgColor={qrBg} fgColor={qrFg} value={qrLink} style={qrStyle} />
-      {/* config.devMode && <a href={link}>dev link</a> */}
+      <QRLogoDone />
     </QRWrap>
   );
 }
