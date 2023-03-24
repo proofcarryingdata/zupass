@@ -24,6 +24,12 @@ export function ProveScreen() {
     return null;
   }
 
+  if (!_.self) {
+    window.location.href = "/#/login";
+    window.location.reload();
+    return;
+  }
+
   let title: string;
   let body: JSX.Element;
   if (request.pcdType === SemaphoreGroupPCDPackage.name) {
