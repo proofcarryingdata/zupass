@@ -5,8 +5,8 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
+import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { ZuIdCard } from "../../src/model/Card";
-import { createProof } from "../../src/proveSemaphore";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 
 export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
@@ -57,7 +57,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
     const { identity, participant } = card;
     if (identity == null) return;
     const { serialize } = SemaphoreGroupPCDPackage;
-    createProof(identity, participant.uuid)
+    createZuzaluQRProof(identity, participant.uuid)
       .then(serialize)
       .then((serialized) => setSerialized(JSON.stringify(serialized)));
   }, [card]);

@@ -11,7 +11,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { uuidToBigint } from "./util";
 
 // Create a PCD proving that we own a given semaphore identity.
-export async function createProof(
+export async function createZuzaluQRProof(
   identity: Identity,
   uuid: string
 ): Promise<SemaphoreGroupPCD> {
