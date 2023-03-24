@@ -78,7 +78,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
     const update = () => {
       if (
         generatedTimestamp !== undefined &&
-        Date.now() - generatedTimestamp >= config.proofExpirationDurationMS
+        Date.now() - generatedTimestamp >= config.maxProofAge
       ) {
         console.log("timestamp expired, generating new one");
         setQRPayload(undefined);
@@ -88,9 +88,9 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
       }
     };
 
-    const interval = setInterval(update, config.proofExpirationDurationMS / 3);
+    const interval = setInterval(update, config.maxProofAge / 3);
     return () => clearInterval(interval);
-  }, [generatedTimestamp]);
+  }, [generatedTimestamp, config]);
 
   if (qrPayload == null)
     return (

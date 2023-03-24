@@ -156,23 +156,13 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant doesn't match proof!",
+      message: "Participant doesn't match proof",
     };
   }
 
   const timeDifferenceMs = Date.now() - payload.timestamp;
 
-  if (timeDifferenceMs <= 0) {
-    return {
-      valid: false,
-      type: "identity-proof",
-      message: "Suspicious proof from the future!",
-    };
-  }
-
-  const maxProofAgeMs = 1000 * 60 * 10; // 10 minutes
-
-  if (timeDifferenceMs >= maxProofAgeMs) {
+  if (timeDifferenceMs >= config.maxProofAge) {
     return {
       valid: false,
       type: "identity-proof",
