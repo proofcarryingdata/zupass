@@ -17,4 +17,5 @@ export interface PassportParticipant extends PretixParticipant {
 export enum ParticipantRole {
   Visitor = "visitor",
   Resident = "resident",
+  Organizer = "organizer",
 }
