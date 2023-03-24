@@ -2,7 +2,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import styled from "styled-components";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -22,20 +21,6 @@ import {
 } from "../src/localstorage";
 import { pollParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
-const isWebview = require("is-ua-webview");
-
-const WebviewErrorContainer = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: var(--bg-dark-primary);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-`;
 
 class App extends React.Component<{}, ZuState | undefined> {
   state = undefined;
@@ -64,11 +49,6 @@ class App extends React.Component<{}, ZuState | undefined> {
             </Routes>
           </HashRouter>
         )}
-        {isWebview(window.navigator.userAgent) ? (
-          <WebviewErrorContainer>
-            Please open this link in a standalone browser
-          </WebviewErrorContainer>
-        ) : null}
       </DispatchContext.Provider>
     );
   }
