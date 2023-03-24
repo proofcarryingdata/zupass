@@ -1,6 +1,7 @@
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
-import { insertParticipants } from "../database/queries/writePretix";
+import { insertParticipant } from "../database/queries/insertParticipant";
+import { updateParticipant } from "../database/queries/updateParticipant";
 import { ApplicationContext } from "../types";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
@@ -47,16 +48,35 @@ interface PretixConfig {
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
   const { dbClient } = context;
 
+  // Load from pretix
   const participants = await loadAllParticipants(pretixConfig);
+  const participantEmails = new Set(participants.map((p) => p.email));
+  console.log(
+    `[PRETIX] loaded ${participants.length} Pretix participants, ${participantEmails.size} unique emails`
+  );
 
-  // Insert into database.
-  const existingSet = new Set(await fetchParticipantEmails(dbClient));
-  const newParticipants = participants.filter((p) => !existingSet.has(p.email));
+  // Query database to see what's changed
+  const existingPs = await fetchParticipantEmails(dbClient);
+  const existingMap = new Map(existingPs.map((p) => [p.email, p.role]));
 
+  // Insert new participants
+  const newParticipants = participants.filter((p) => !existingMap.has(p.email));
   console.log(`[PRETIX] Inserting ${newParticipants.length} new participants`);
   for (const p of newParticipants) {
     console.log(`[PRETIX] Inserting ${p.email} ${p.name} ${p.role}`);
-    await insertParticipants(dbClient, p);
+    await insertParticipant(dbClient, p);
+  }
+
+  // Update role on existing participants
+  const updatedParticipants = participants
+    .filter((p) => existingMap.has(p.email))
+    .filter((p) => existingMap.get(p.email) !== p.role);
+  for (const p of updatedParticipants) {
+    const oldRole = existingMap.get(p.email);
+    console.log(
+      `[PRETIX] Updating ${p.email} ${p.name} from ${oldRole} to ${p.role}`
+    );
+    await updateParticipant(dbClient, p);
   }
 }
 
@@ -173,9 +193,7 @@ async function fetchOrders(
   while (url != null) {
     console.log(`[PRETIX] Fetching ${url}`);
     const res = await fetch(url, {
-      headers: {
-        Authorization: `Token ${pretixConfig.token}`,
-      },
+      headers: { Authorization: `Token ${pretixConfig.token}` },
     });
     if (!res.ok) {
       console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
