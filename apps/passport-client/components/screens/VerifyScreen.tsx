@@ -7,6 +7,7 @@ import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { config } from "../../src/config";
+import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuIdCard } from "../../src/model/Card";
 import { decodeQRPayload } from "../../src/qr";
@@ -136,7 +137,11 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   }
 
   // Verify identity proof
-  const uuid = bigintToUuid(BigInt(deserializedPCD.claim.signedMessage));
+  const payload = JSON.parse(
+    deserializedPCD.claim.signedMessage
+  ) as ZuzaluQRPayload;
+
+  const uuid = bigintToUuid(BigInt(payload.uuid));
   const participant = await fetchParticipant(config.passportServer, uuid);
 
   if (participant == null) {
@@ -152,6 +157,26 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
       valid: false,
       type: "identity-proof",
       message: "Participant doesn't match proof",
+    };
+  }
+
+  const timeDifferenceMs = Date.now() - payload.timestamp;
+
+  if (timeDifferenceMs <= 0) {
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Suspicious proof from the future",
+    };
+  }
+
+  const maxProofAgeMs = 1000 * 60 * 10; // 10 minutes
+
+  if (timeDifferenceMs >= maxProofAgeMs) {
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Proof too old",
     };
   }
 
