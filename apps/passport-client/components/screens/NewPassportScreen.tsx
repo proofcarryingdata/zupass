@@ -121,7 +121,11 @@ export function NewPassportScreen() {
   );
 }
 
-/** Server checks that email address is on the list, then sends the code. */
+/**
+ * Server checks that email address is on the list, then sends the code. In the
+ * case that verification emails are disabled on the server, also returns the
+ * confirmation code, so the client can automatically 'verify' the user.
+ */
 async function requestLoginCode(
   email: string,
   identity: Identity
