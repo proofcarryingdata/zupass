@@ -4803,11 +4803,6 @@ is-typed-array@^1.1.10, is-typed-array@^1.1.9:
     gopd "^1.0.1"
     has-tostringtag "^1.0.0"
 
-is-ua-webview@^1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/is-ua-webview/-/is-ua-webview-1.1.2.tgz#20db1e21f0125dd0bd6422714e7de64a47a3cc4b"
-  integrity sha512-xX3WpvJGmT0EjmGRQxs4AgaBd4EWNr4lWCWGOgd40by6DWOQZN9RIOCsEaVp41crZqzWr8AsM+2x8UC2ZAuLPA==
-
 is-unicode-supported@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/is-unicode-supported/-/is-unicode-supported-0.1.0.tgz#3f26c76a809593b52bfa2ecb5710ed2779b522a7"
