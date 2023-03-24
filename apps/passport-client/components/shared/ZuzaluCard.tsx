@@ -1,8 +1,9 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
+import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { ZuIdCard } from "../../src/model/Card";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
@@ -50,13 +51,13 @@ const Footer = styled.div<{ role: string }>`
 `;
 
 function ZuzaluQR({ card }: { card: ZuIdCard }) {
+  const [generatedTimestamp, setGeneratedTimestamp] = useState<
+    number | undefined
+  >();
   const [qrPayload, setQRPayload] = useState<string | undefined>();
-
-  useEffect(() => {
+  const generateQr = useCallback(() => {
     const { identity, participant } = card;
-    if (identity == null) return;
-
-    createZuzaluQRProof(identity, participant.uuid)
+    return createZuzaluQRProof(identity, participant.uuid)
       .then(SemaphoreSignaturePCDPackage.serialize)
       .then((serialized) => {
         const stringified = JSON.stringify(serialized);
@@ -65,8 +66,31 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
         );
         const encodedProof = encodeQRPayload(stringified);
         setQRPayload(encodedProof);
+        setGeneratedTimestamp(Date.now());
       });
   }, [card]);
+
+  useEffect(() => {
+    generateQr();
+  }, [generateQr]);
+
+  useEffect(() => {
+    const update = () => {
+      if (
+        generatedTimestamp !== undefined &&
+        Date.now() - generatedTimestamp >= config.proofExpirationDurationMS
+      ) {
+        console.log("timestamp expired, generating new one");
+        setQRPayload(undefined);
+        generateQr().then(() => {
+          setGeneratedTimestamp(Date.now());
+        });
+      }
+    };
+
+    const interval = setInterval(update, config.proofExpirationDurationMS / 3);
+    return () => clearInterval(interval);
+  }, [generatedTimestamp]);
 
   if (qrPayload == null)
     return (
