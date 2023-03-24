@@ -30,7 +30,10 @@ export function LoginScreen() {
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      dispatch({ type: "new-passport", email });
+      dispatch({
+        type: "new-passport",
+        email: email.toLocaleLowerCase("en-US"),
+      });
     },
     [dispatch, email]
   );
