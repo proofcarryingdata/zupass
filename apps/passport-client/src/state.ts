@@ -1,6 +1,7 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
+import React from "react";
 
 export type PendingAction = { type: "new-passport"; email: string };
 
@@ -26,7 +27,7 @@ export interface ZuError {
   /** Big title, should be under 40 chars */
   title: string;
   /** Useful explanation, avoid "Something went wrong." */
-  message: string;
+  message: string | React.ReactNode;
   /** Optional stacktrace. */
   stack?: string;
   /** By default, user dismisses an error and returns to home screen. */
