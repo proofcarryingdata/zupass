@@ -1,16 +1,15 @@
 import { fetchParticipant, ZuParticipant } from "@pcd/passport-interface";
 import {
-  SemaphoreGroupPCDPackage,
-  SemaphoreGroupPCDTypeName,
-} from "@pcd/semaphore-group-pcd";
-import { Buffer } from "buffer";
-import { ungzip } from "pako";
+  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName,
+} from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuIdCard } from "../../src/model/Card";
+import { decodeQRPayload } from "../../src/qr";
 import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
@@ -38,13 +37,15 @@ export function VerifyScreen() {
   const [_, dispatch] = useContext(DispatchContext);
 
   const params = new URLSearchParams(location.search);
-  const pcdStr = params.get("pcd");
-  console.log(`Verifying Zuzalu ID proof, ${pcdStr.length}b gzip+base64`);
+  const encodedQRPayload = params.get("pcd");
+  console.log(
+    `Verifying Zuzalu ID proof, ${encodedQRPayload.length}b gzip+base64`
+  );
 
   const [result, setResult] = useState<VerifyResult>();
 
   useEffect(() => {
-    deserializeAndVerify(pcdStr)
+    deserializeAndVerify(encodedQRPayload)
       .then((res: VerifyResult) => {
         console.log("Verification result", res);
         setResult(res);
@@ -60,7 +61,7 @@ export function VerifyScreen() {
           },
         });
       });
-  }, [pcdStr, setResult]);
+  }, [encodedQRPayload, setResult]);
 
   const [from, to, bg]: [string, string, "primary" | "gray"] = result?.valid
     ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
@@ -113,38 +114,44 @@ function getCard(result: VerifyResult): ZuIdCard {
 }
 
 async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
-  const buf = Buffer.from(pcdStr, "base64");
-  console.log(`Unzipping ${buf.length}b`);
-  const unzipped = Buffer.from(ungzip(buf));
-  const { deserialize, verify } = SemaphoreGroupPCDPackage;
-  const pcd = await deserialize(JSON.parse(unzipped.toString("utf8")).pcd);
-  console.log(`Got PCD, should be a Zuzalu ID semaphore proof`, pcd);
+  const { deserialize, verify } = SemaphoreSignaturePCDPackage;
+  const decodedPCD = decodeQRPayload(pcdStr);
+  const deserializedPCD = await deserialize(JSON.parse(decodedPCD).pcd);
+  console.log(
+    `Got PCD, should be a Zuzalu ID semaphore proof`,
+    deserializedPCD
+  );
 
-  if (pcd.type !== SemaphoreGroupPCDTypeName) {
-    throw new Error(`PCD type '${pcd.type}' is not a Zuzalu ID proof`);
+  if (deserializedPCD.type !== SemaphoreSignaturePCDTypeName) {
+    throw new Error(
+      `PCD type '${deserializedPCD.type}' is not a Zuzalu ID proof`
+    );
   }
 
-  const groupSize = pcd.claim.group.members.length;
-  const type: VerifyType = groupSize === 1 ? "identity-proof" : "anon-proof";
-  console.log(`Verifying 1-of-${groupSize} Zuzalu ${type} proof`);
-
-  const valid = await verify(pcd);
+  const valid = await verify(deserializedPCD);
   if (!valid) {
     return { valid: false, type: "identity-proof", message: "Invalid proof" };
   }
 
-  // TODO: load semaphore group from server for verification
-  if (type === "anon-proof") {
-    // const group = fetchZuzaluGroup(pcd.claim.group.root)
-    return { valid: false, type, message: "🚧 Anon verification coming soon" };
-  }
-
   // Verify identity proof
-  const uuid = bigintToUuid(BigInt(pcd.claim.externalNullifier));
+  const uuid = bigintToUuid(BigInt(deserializedPCD.claim.signedMessage));
   const participant = await fetchParticipant(config.passportServer, uuid);
+
   if (participant == null) {
-    return { valid: false, type, message: "Participant not found" };
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Participant not found",
+    };
   }
 
-  return { valid: true, type, participant };
+  if (participant.commitment !== deserializedPCD.claim.identityCommitment) {
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Participant doesn't match proof",
+    };
+  }
+
+  return { valid: true, type: "identity-proof", participant };
 }

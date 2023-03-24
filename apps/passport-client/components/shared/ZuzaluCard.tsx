@@ -1,12 +1,11 @@
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { Buffer } from "buffer";
-import { gzip } from "pako";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
+import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { ZuIdCard } from "../../src/model/Card";
-import { createProof } from "../../src/proveSemaphore";
+import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 
 export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
@@ -51,43 +50,37 @@ const Footer = styled.div<{ role: string }>`
 `;
 
 function ZuzaluQR({ card }: { card: ZuIdCard }) {
-  // Create proof PCD
-  const [serialized, setSerialized] = useState<string>();
+  const [qrPayload, setQRPayload] = useState<string | undefined>();
+
   useEffect(() => {
     const { identity, participant } = card;
     if (identity == null) return;
-    const { serialize } = SemaphoreGroupPCDPackage;
-    createProof(identity, participant.uuid)
-      .then(serialize)
-      .then((serialized) => setSerialized(JSON.stringify(serialized)));
+
+    createZuzaluQRProof(identity, participant.uuid)
+      .then(SemaphoreSignaturePCDPackage.serialize)
+      .then((serialized) => {
+        const stringified = JSON.stringify(serialized);
+        console.log(
+          `generated zuzalu QR proof with length ${stringified.length}`
+        );
+        const encodedProof = encodeQRPayload(stringified);
+        setQRPayload(encodedProof);
+      });
   }, [card]);
 
-  // Compress it
-  const [link, setLink] = useState("");
-  useEffect(() => {
-    if (serialized == null) return;
-
-    console.log(`PCD size: ${serialized.length} bytes`);
-    const compressed = gzip(serialized);
-    const enc = encodeURIComponent(Buffer.from(compressed).toString("base64"));
-    console.log(`Compressed: ${compressed.length}, base64: ${enc.length}`);
-
-    const url = `${window.location.origin}#/verify?pcd=${enc}`;
-    console.log(`Link, ${url.length} bytes: ${url}`);
-    setLink(url);
-  }, [serialized]);
-
-  if (link === "") {
+  if (qrPayload == null)
     return (
       <QRWrap>
         <QRLogoLoading />
       </QRWrap>
     );
-  }
+
+  const qrLink = makeEncodedVerifyLink(qrPayload);
+  console.log(`Link, ${qrLink.length} bytes: ${qrLink}`);
 
   return (
     <QRWrap>
-      <QRCode bgColor={qrBg} fgColor={qrFg} value={link} style={qrStyle} />
+      <QRCode bgColor={qrBg} fgColor={qrFg} value={qrLink} style={qrStyle} />
       <QRLogoDone />
     </QRWrap>
   );
