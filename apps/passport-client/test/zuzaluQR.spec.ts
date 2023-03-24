@@ -13,7 +13,7 @@ function makeTestPayload(length: number): string {
 
 describe("Zuzalu QR Code", async function () {
   it("should encode and decode properly", async function () {
-    const testPayload = makeTestPayload(1000);
+    const testPayload = makeTestPayload(1500);
     const encodedPayload = encodeQRPayload(testPayload);
     const decodedPayload = decodeQRPayload(encodedPayload);
 
