@@ -18,8 +18,8 @@ In the root of this project, execute the following to start the servers and the 
 # installs dependencies for all apps and packages in this repository
 yarn
 
-# starts local postgres - you must have postgress installed for this
-# to work properly. in case you want to restart a postgres instance
+# starts local Postgres - you must have Postgres installed for this
+# to work properly. in case you want to restart a Postgres instance
 # you previously started in this project, you can also run the command
 # yarn localdb:restart
 yarn localdb:init && yarn localdb:up
@@ -28,7 +28,7 @@ yarn localdb:init && yarn localdb:up
 # repository.
 yarn dev
 
-#
+# open up the passport app in your browser.
 open http://localhost:3000
 ```
 
@@ -43,21 +43,12 @@ The passport has its own client and server. We also included an example applicat
 
 ## Packages
 
-This repository includes many packages. Some of these packages are used to share development
-configuration between the different apps. Others of these packages are intended to provide
-shared code that can be used on both a client and server. The third category of packages is
-PCD packages - those that implement the 'Proof Carrying Data' interface.
+This repository includes many packages. They are all [published on NPM](https://www.npmjs.com/search?q=%40pcd)!
 
-#### utility packages
-
-- [`@pcd/eslint-config-custom`](packages/eslint-config-custom): shared eslint configuration files
-- [`@pcd/tsconfig`](packages/tsconfig): shared tsconfig files
-
-#### shared code packages
-
-- [`@pcd/passport-crypto`](packages/passport-crypto): package that implements cryptographic primitives like encryption and hashing, to be used by the passport server and client.
-- [`@pcd/passport-interface`](packages/passport-interface): package that contains interfaces (both types and functions) that facilitate communication between the various components involved in a PCD application.
-- [`@pcd/pcd-types`](packages/pcd-types): package that defines what a PCD _is_.
+Some of these packages are used to share development configuration between the
+different apps. Others of these packages are intended to provide shared code that
+can be used on both a client and server. The third category of packages is PCD
+packages - those that implement the 'Proof Carrying Data' interface.
 
 #### pcd packages
 
@@ -65,6 +56,17 @@ PCD packages - those that implement the 'Proof Carrying Data' interface.
 - [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
 - [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
 - ... more to come!
+
+#### shared code packages
+
+- [`@pcd/passport-crypto`](packages/passport-crypto): package that implements cryptographic primitives like encryption and hashing, to be used by the passport server and client.
+- [`@pcd/passport-interface`](packages/passport-interface): package that contains interfaces (both types and functions) that facilitate communication between the various components involved in a PCD application.
+- [`@pcd/pcd-types`](packages/pcd-types): package that defines what a PCD _is_.
+
+#### utility packages
+
+- [`@pcd/eslint-config-custom`](packages/eslint-config-custom): shared eslint configuration files
+- [`@pcd/tsconfig`](packages/tsconfig): shared tsconfig files
 
 ## Testing
 
