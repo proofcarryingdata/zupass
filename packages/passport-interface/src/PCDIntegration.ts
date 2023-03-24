@@ -9,7 +9,7 @@ export function useProof<T extends PCDPackage>(
 
   useEffect(() => {
     if (proofEnc) {
-      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+      const parsedPCD = JSON.parse(proofEnc);
       if (parsedPCD.type !== proofPackage.name) {
         return;
       }
