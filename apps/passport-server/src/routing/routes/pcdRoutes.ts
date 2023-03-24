@@ -14,12 +14,6 @@ export function initPCDRoutes(
 ): void {
   initPackages();
 
-  // // TODO: determine if this is the best way to serve the artifacts
-  // app.use(
-  //   "/semaphore-artifacts",
-  //   express.static(path.join(__dirname, "../../semaphore-artifacts"))
-  // );
-
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -51,6 +45,16 @@ export function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         res.json(getSupportedPCDTypes());
+      } catch (e) {
+        next(e);
+      }
+    }
+  );
+
+  app.get(
+    "/pcds/status/:id",
+    async (req: Request, res: Response, next: NextFunction) => {
+      try {
       } catch (e) {
         next(e);
       }
