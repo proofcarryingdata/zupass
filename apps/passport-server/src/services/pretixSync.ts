@@ -75,6 +75,7 @@ async function loadResidents(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
   const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
+  console.log(`[PRETIX] found ${orders.length} residents`);
   const participants = ordersToParticipants(orders, ParticipantRole.Resident);
   console.log(`[PRETIX] loaded ${participants.length} residents`);
   return participants;
@@ -129,7 +130,7 @@ function ordersToParticipants(
     .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
     .map((o) => ({
       role,
-      email: o.email,
+      email: o.email.toLocaleLowerCase("en-US"),
       name: o.positions[0].attendee_name,
       residence: "", // TODO: not in pretix yet
       order_id: o.code,
