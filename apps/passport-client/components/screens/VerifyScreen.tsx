@@ -156,7 +156,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant doesn't match proof",
+      message: "Participant doesn't match proof!",
     };
   }
 
@@ -166,7 +166,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Suspicious proof from the future",
+      message: "Suspicious proof from the future!",
     };
   }
 
@@ -176,7 +176,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Proof too old",
+      message: "Proof expired!",
     };
   }
 
