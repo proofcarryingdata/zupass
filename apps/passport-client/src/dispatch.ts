@@ -116,8 +116,6 @@ async function genPassport(
     encryptionKey,
     pendingAction: { type: "new-passport", email },
   });
-
-  window.location.hash = "#/new-passport";
 }
 
 async function login(
