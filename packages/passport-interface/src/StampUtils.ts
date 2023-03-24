@@ -1,9 +1,9 @@
-import { createHash } from "crypto";
+import { sha256 } from "js-sha256";
 import { ProveRequest } from "./RequestTypes";
 
 export function hashRequest(req: ProveRequest): string {
   const reqString = JSON.stringify(req);
-  return createHash("sha256").update(reqString).digest("hex");
+  return sha256(reqString);
 }
 
 export interface PendingStamp {
@@ -14,7 +14,6 @@ export interface PendingStamp {
 
 export enum StampStatus {
   IN_QUEUE = "in queue",
-  NEXT_UP = "next up",
   IN_PROGRESS = "in progress",
   COMPLETE = "complete",
 }
