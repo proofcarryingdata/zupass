@@ -34,7 +34,7 @@ open http://localhost:3000
 
 ### Ports
 
-The passport has its own client and server, and we have an example application set up with its own client and server. After running `yarn dev` they will be loaded into the following ports:
+The passport has its own client and server. We also included an example application set up with its own client and server as well. After running `yarn dev` they will be available at the following ports:
 
 - `apps/passport-client`: http://localhost:3000/
 - `apps/consumer-client`: http://localhost:3001/
@@ -43,12 +43,28 @@ The passport has its own client and server, and we have an example application s
 
 ## Packages
 
-- `@pcd/pcd-types`: Typescript types for `PCD` and `PCDPackage`
-- `@pcd/semaphore-group-pcd`: Implementation of `@pcd/pcd-types` for Semaphore, wrapping the code from `@semaphore-protocol`. Additionally defines a serialization format for Semaphore groups
-- `@pcd/passport-interface`: Implements the glue code between different parties using the PCD SDK
-  - `@pcd/passport-interface.ts` is glue between third-party applications and `passport-client`
-  - `request-type.ts` is glue between `passport-client` and `passport-server`
-- `@pcd/eslint-config-custom` and `@pcd/tsconfig` are helper packages for turborepo
+This repository includes many packages. Some of these packages are used to share development
+configuration between the different apps. Others of these packages are intended to provide
+shared code that can be used on both a client and server. The third category of packages is
+PCD packages - those that implement the 'Proof Carrying Data' interface.
+
+#### utility packages
+
+- [`@pcd/eslint-config-custom`](packages/eslint-config-custom): shared eslint configuration files
+- [`@pcd/tsconfig`](packages/tsconfig): shared tsconfig files
+
+#### shared code packages
+
+- [`@pcd/passport-crypto`](packages/passport-crypto): package that implements cryptographic primitives like encryption and hashing, to be used by the passport server and client.
+- [`@pcd/passport-interface`](packages/passport-interface): package that contains interfaces (both types and functions) that facilitate communication between the various components involved in a PCD application.
+- [`@pcd/pcd-types`](packages/pcd-types): package that defines what a PCD _is_.
+
+#### pcd packages
+
+- [`@pcd/semaphore-group-pcd`](packages/semaphore-group-pcd): a pcd which wraps the [Semaphore](https://semaphore.appliedzkp.org/docs/introduction) protocol, which allows PCD-consuming applications to consume and generate Semaphore proofs.
+- [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
+- [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
+- ... more to come!
 
 ## Testing
 
