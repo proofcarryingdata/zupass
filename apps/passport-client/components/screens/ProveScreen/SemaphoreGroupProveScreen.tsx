@@ -1,4 +1,8 @@
-import { PCDGetRequest, ProveRequest } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  PendingStamp,
+  ProveRequest,
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDArgs,
@@ -92,12 +96,13 @@ export function SemaphoreGroupProveScreen({
       },
     });
 
-    const proofResponse = JSON.parse(await response.text());
-    const serializedPCD = proofResponse.serializedPCD;
-    console.log("Proof complete", serializedPCD);
+    const pendingStamp = (await response.json()) as PendingStamp;
+    console.log("Pending stamp received", pendingStamp);
 
     // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${serializedPCD}`;
+    window.location.href = `${req.returnUrl}?stamp=${JSON.stringify(
+      pendingStamp
+    )}`;
   }, [group, setProving, req.returnUrl, state.identity]);
 
   const lines: ReactNode[] = [];
