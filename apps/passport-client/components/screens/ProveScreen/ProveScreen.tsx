@@ -9,7 +9,6 @@ import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
-import { LoggedOutScreen } from "./LoggedOutScreen";
 import { ParameterizedProveScreen } from "./ParameterizedProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
@@ -26,7 +25,9 @@ export function ProveScreen() {
   }
 
   if (!_.self) {
-    return <LoggedOutScreen />;
+    window.location.href = "/#/login";
+    window.location.reload();
+    return;
   }
 
   let title: string;
