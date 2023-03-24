@@ -56,18 +56,5 @@ function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
     identity,
     participant: self,
   };
-
-  const c2 = {
-    id: "0x1111",
-    type: "zk-email",
-    header: "@MIT.EDU EMAIL",
-  };
-
-  const c3 = {
-    id: "0x2222",
-    type: "ed25519-keypair",
-    header: "Ed25519 KEY #1",
-  };
-
-  return [c1, c2, c3].filter((c) => c != null);
+  return [c1];
 }
