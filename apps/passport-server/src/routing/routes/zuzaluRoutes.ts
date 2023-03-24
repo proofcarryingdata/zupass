@@ -121,18 +121,16 @@ export function initZuzaluRoutes(
   // Fetch a semaphore group.
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
     const semaphoreId = decodeString(req.params.id, "id");
-    if (semaphoreId !== "1") {
+
+    const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
+    if (namedGroup == null) {
       res.sendStatus(404);
       res.json(`Missing semaphore group ${semaphoreId}`);
       return;
     }
 
-    // TODO: support visitor groups
-    const group = semaphoreService.groupResi;
-    const name = "Zuzalu Residents";
-
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.json(serializeSemaphoreGroup(group, name));
+    res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
   });
 
   // Load E2EE storage for a given user.

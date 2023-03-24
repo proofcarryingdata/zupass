@@ -10,6 +10,16 @@ export class SemaphoreService {
   // Zuzalu visitors group
   public groupVisitors = new Group("2", 16);
 
+  groups = [
+    { name: "Zuzalu Residents", group: this.groupResidents },
+    { name: "Zuzalu Visitors", group: this.groupVisitors },
+  ];
+  groupMap = new Map(this.groups.map((g) => [g.group.id.toString(), g]));
+
+  getNamedGroup(id: string): NamedGroup | undefined {
+    return this.groupMap.get(id);
+  }
+
   // Zuzalu participants by UUID
   participants = {} as Record<string, PassportParticipant>;
 
@@ -34,7 +44,7 @@ export class SemaphoreService {
 
   // Add a single participant to the semaphore group
   addParticipant(p: PassportParticipant) {
-    let group = this.getGroup(p.role);
+    let group = this.getGroupForRole(p.role);
     console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
 
     const bigIntCommitment = BigInt(p.commitment);
@@ -47,7 +57,7 @@ export class SemaphoreService {
   }
 
   // Get the semaphore group for a participant role
-  getGroup(role: ParticipantRole): Group {
+  getGroupForRole(role: ParticipantRole): Group {
     switch (role) {
       case ParticipantRole.Organizer:
       case ParticipantRole.Resident:
@@ -69,4 +79,9 @@ export function startSemaphoreService({ dbClient }: { dbClient: Client }) {
   setInterval(() => {
     semaphoreService.reload(dbClient);
   }, 60 * 1000);
+}
+
+export interface NamedGroup {
+  name: string;
+  group: Group;
 }
