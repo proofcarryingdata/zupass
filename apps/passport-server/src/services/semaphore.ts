@@ -18,19 +18,20 @@ export class SemaphoreService {
 
   // Load participants from DB, rebuild semaphore groups
   async reload(dbClient: Client) {
-    console.log(`Reloading semaphore service...`);
+    console.log(`[SEMA] Reloading semaphore service...`);
     const ps = await fetchPassportParticipants(dbClient);
-    console.log(`Rebuilding Merkle groups, ${ps.length} total participants.`);
+    console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
     this.groupResi = new Group("1", 16);
     for (const p of ps) {
       this.addParticipant(p);
     }
+    console.log(`[SEMA] Semaphore service reloaded.`);
   }
 
   // Add a single participant to the semaphore group
   addParticipant(p: PassportParticipant) {
-    console.log(`Adding ${p.role} ${p.email} to semaphore group: ${p.uuid}`);
+    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group: ${p.uuid}`);
 
     const group = this.groupResi;
     if (p.role !== "resident") {
@@ -52,4 +53,9 @@ export const semaphoreService = new SemaphoreService();
 
 export function startSemaphoreService({ dbClient }: { dbClient: Client }) {
   semaphoreService.reload(dbClient);
+
+  // Reload every minute
+  setInterval(() => {
+    semaphoreService.reload(dbClient);
+  }, 60 * 1000);
 }
