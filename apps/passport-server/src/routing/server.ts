@@ -5,14 +5,22 @@ import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+<<<<<<< HEAD
 import { initStaticRoutes } from "./routes/staticRoutes";
+=======
+import { initPCDRoutes } from "./routes/pcdRoutes";
+>>>>>>> a00ecd5 (working e2e server side proof)
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 import { RouteInitializer } from "./types";
 
 const routes: RouteInitializer[] = [
   initHealthcheckRoutes,
   initZuzaluRoutes,
+<<<<<<< HEAD
   initStaticRoutes,
+=======
+  initPCDRoutes,
+>>>>>>> a00ecd5 (working e2e server side proof)
 ];
 
 export async function startServer(

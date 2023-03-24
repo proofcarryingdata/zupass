@@ -1,12 +1,25 @@
 import { ProveRequest, VerifyRequest } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
-import { getSupportedPCDTypes, prove, verify } from "../../services/proving";
+import {
+  getSupportedPCDTypes,
+  initPackages,
+  prove,
+  verify,
+} from "../../services/proving";
 import { ApplicationContext } from "../../types";
 
 export function initPCDRoutes(
   app: express.Application,
   context: ApplicationContext
 ): void {
+  initPackages();
+
+  // // TODO: determine if this is the best way to serve the artifacts
+  // app.use(
+  //   "/semaphore-artifacts",
+  //   express.static(path.join(__dirname, "../../semaphore-artifacts"))
+  // );
+
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
