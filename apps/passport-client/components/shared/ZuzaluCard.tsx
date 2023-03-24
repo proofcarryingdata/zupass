@@ -1,6 +1,6 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
 import { config } from "../../src/config";
@@ -62,7 +62,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
 
   const [qrPayload, setQRPayload] = useState<string | undefined>();
 
-  const generateQr = useCallback(async () => {
+  async function generateQr() {
     const pcd = await createZuzaluQRProof(identity, uuid);
     const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
     const stringified = JSON.stringify(serialized);
@@ -70,35 +70,33 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
     const encodedProof = encodeQRPayload(stringified);
     setQRPayload(encodedProof);
     setGeneratedTimestamp(Date.now());
-  }, [identity, uuid]);
+  }
 
+  async function update() {
+    if (
+      generatedTimestamp !== undefined &&
+      Date.now() - generatedTimestamp >= config.maxProofAge / 2
+    ) {
+      console.log("timestamp expired, generating new one");
+      await generateQr();
+      setGeneratedTimestamp(Date.now());
+    }
+  }
+
+  // Generate QR code on mount, then regenerate periodically
   useEffect(() => {
     generateQr();
-  }, [generateQr]);
-
-  useEffect(() => {
-    const update = () => {
-      if (
-        generatedTimestamp !== undefined &&
-        Date.now() - generatedTimestamp >= config.maxProofAge / 2
-      ) {
-        console.log("timestamp expired, generating new one");
-        generateQr().then(() => {
-          setGeneratedTimestamp(Date.now());
-        });
-      }
-    };
-
     const interval = setInterval(update, config.maxProofAge / 3);
     return () => clearInterval(interval);
-  }, [generatedTimestamp, config]);
+  }, []);
 
-  if (qrPayload == null)
+  if (qrPayload == null) {
     return (
       <QRWrap>
         <QRLogoLoading />
       </QRWrap>
     );
+  }
 
   const qrLink = makeEncodedVerifyLink(qrPayload);
   console.log(`Link, ${qrLink.length} bytes: ${qrLink}`);
