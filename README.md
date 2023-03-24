@@ -1,5 +1,24 @@
 # 0xPARC PCD SDK
 
+## What is a PCD?
+
+'PCD' is short for 'Proof Carrying Data'. We use this term to mean any piece of data which has some cryptographic meaning that can be interpreted as a 'claim', and has a 'proof' component which is tied to the 'claim', and mathematically/cryptographically verifiable.
+
+An examle of a PCD is a [Zero Knowledge Proof](https://en.wikipedia.org/wiki/Zero-knowledge_proof), but not all PCDs are zero knowledge proofs. For example, one PCD that is not a zero knowledge proof is a piece of data signed by an RSA private key, and the corresponding public key:
+
+```
+{
+  "publicKey": "12345...",
+  "signature": "asdfg...",
+}
+```
+
+This is a PCD becaues anyone can verify that what it claims is true by running the RSA signature verification locally on their computer.
+
+## What is the PCD SDK?s
+
+The PCD SDK is a framework for developing applications that depend on PCDs for the proper functioning of their core feature set. It defines the set of interfaces necessary for correctly reasoning and processing PCDs. It defines the interfaces through which PCDs are produced and consumed. It also includes a 'passport' that lets a user manage their personal PCDs, and enables third party applications to request PCDs from the passport, and add new PCDs into it.
+
 ## Local Development
 
 ### Environment Variables
