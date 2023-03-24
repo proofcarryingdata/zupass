@@ -4,6 +4,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { config } from "./config";
 
 export async function savePCDs(pcds: PCDCollection) {
   const serialized = await pcds.serializeAll();
@@ -15,14 +16,16 @@ export async function loadPCDs() {
   const stringified = window.localStorage["pcds"];
   const serialized = JSON.parse(stringified ?? "[]");
 
+  const SERVER_STATIC_URL = config.passportServer + "/static/";
+
   await SemaphoreGroupPCDPackage.init({
-    wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
   });
 
   await SemaphoreSignaturePCDPackage.init({
-    wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
   });
 
   return await PCDCollection.deserialize(
