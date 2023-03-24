@@ -5,10 +5,15 @@ import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initStaticRoutes } from "./routes/staticRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 import { RouteInitializer } from "./types";
 
-const routes: RouteInitializer[] = [initHealthcheckRoutes, initZuzaluRoutes];
+const routes: RouteInitializer[] = [
+  initHealthcheckRoutes,
+  initZuzaluRoutes,
+  initStaticRoutes,
+];
 
 export async function startServer(
   context: ApplicationContext
