@@ -96,7 +96,10 @@ function InfoModal() {
           <a href="mailto:passport@0xparc.org">passport@0xparc.org</a>.
         </TextCenter>
         <Spacer h={16} />
-        <TextCenter>For event or venue support, contact [TBD].</TextCenter>
+        <TextCenter>
+          For event or venue support, contact{" "}
+          <a href="invites@zuzalu.org">invites@zuzalu.org</a>.
+        </TextCenter>
       </CenterColumn>
     </div>
   );
