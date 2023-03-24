@@ -12,6 +12,11 @@ export async function pollParticipant(
   console.log(`Polling ${url}`);
   try {
     const response = await fetch(url);
+    if (!response.ok) {
+      // TODO: show as "MISSING" or maybe "REMOVED"?
+      console.log("Participant not found, skipping update");
+      return;
+    }
     const participant = await response.json();
     dispatch({ type: "set-self", self: participant });
   } catch (e) {
