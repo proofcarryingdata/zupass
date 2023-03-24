@@ -2,16 +2,35 @@
 
 ## Local Development
 
+### Environment Variables
+
+In order to develop locally, you will need to set some environment variables. The only place
+where this needs to happen is in the `passport-server` project. We have included an example
+environment variable which allows you to start a minimal version of the passport application
+that depends on no external services. You can find this file here [apps/passport-server/.env.example](apps/passport-server/.env.example). In order to make the `passport-server` use these environment variables,
+all you need to do is copy the contents of that file into an adjacent file called `.env`.
+
+### Running the project
+
 In the root of this project, execute the following to start the servers and the static sites locally.
 
 ```bash
-yarn # installs dependencies
+# installs dependencies for all apps and packages in this repository
+yarn
+
+# starts local postgres - you must have postgress installed for this
+# to work properly. in case you want to restart a postgres instance
+# you previously started in this project, you can also run the command
+# yarn localdb:restart
+yarn localdb:init && yarn localdb:up
+
+# starts all the applications contained in the `/apps` directory of the
+# repository.
 yarn dev
+
+#
+open http://localhost:3000
 ```
-
-### Database
-
-If you don't have a Render DB, you can create one locally using "yarn localdb:init" followed by "yarn localdb:up". Copy over `.env.local` to `.env`. When you're done, use "yarn localdb:down" to stop the local DB.
 
 ### Ports
 
@@ -46,7 +65,3 @@ Each package and app which needs testing has a `test` script in its `package.jso
 
 - static site is deployed to https://consumer-client.onrender.com/
 - server is deployed to https://consumer-server.onrender.com
-
-## Other notes
-
-All are deployed on render.com. Their build settings are configured in the web UI. This means that if build scripts change for any of these 4 applications, those changes must be reflected in render.com's configurations for the changed application.
