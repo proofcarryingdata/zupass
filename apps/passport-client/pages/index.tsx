@@ -19,7 +19,7 @@ import {
   loadSelf,
   saveIdentity,
 } from "../src/localstorage";
-import { pollParticipant } from "../src/participant";
+import { fetchParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<{}, ZuState | undefined> {
@@ -28,7 +28,16 @@ class App extends React.Component<{}, ZuState | undefined> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
 
   componentDidMount() {
-    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    loadInitialState().then(async (s) => {
+      if (s?.self) {
+        const refreshedParticipant = await fetchParticipant(s.self.uuid);
+        console.log("fetched latest participant", refreshedParticipant);
+        s.self = refreshedParticipant;
+      }
+
+      this.setState(s);
+      this.startBackgroundJobs();
+    });
   }
 
   render() {
@@ -66,13 +75,23 @@ class App extends React.Component<{}, ZuState | undefined> {
 
   startBackgroundJobs = () => {
     console.log("Starting background jobs...");
-    this.jobPollParticipant();
+    setTimeout(() => {
+      this.jobPollParticipant();
+    }, 5 * 60 * 1000);
   };
 
   // Poll for participant updates
   jobPollParticipant = async () => {
+    console.log("job poll participant");
     if (this.state?.self) {
-      await pollParticipant(this.state.self, this.dispatch);
+      const refreshedParticipant = await fetchParticipant(this.state.self.uuid);
+      console.log("refreshed participant", refreshedParticipant);
+      this.dispatch({
+        type: "set-self",
+        self: refreshedParticipant,
+      });
+    } else {
+      console.log("no self - skipping participant poll");
     }
     setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
   };

@@ -1,19 +1,13 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { config } from "./config";
-import { Dispatcher } from "./dispatch";
 
-// Starts polling the participant record, in the background.
-export async function pollParticipant(
-  self: ZuParticipant,
-  dispatch: Dispatcher
-) {
-  const { uuid } = self;
+export async function fetchParticipant(uuid: string): Promise<ZuParticipant> {
   const url = `${config.passportServer}/zuzalu/participant/${uuid}`;
   console.log(`Polling ${url}`);
   try {
     const response = await fetch(url);
     const participant = await response.json();
-    dispatch({ type: "set-self", self: participant });
+    return participant;
   } catch (e) {
     console.error("Error polling participant", e);
   }
