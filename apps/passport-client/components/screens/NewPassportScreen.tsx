@@ -93,7 +93,7 @@ export function NewPassportScreen() {
 async function requestLoginCode(email: string, identity: Identity) {
   console.log(`Requesting email verification for ${email}...`);
   const params = new URLSearchParams({
-    email,
+    email: email.toLocaleLowerCase("en-US"),
     commitment: identity.commitment.toString(),
   }).toString();
   const url = `${config.passportServer}/zuzalu/register?${params}`;
