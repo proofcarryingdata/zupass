@@ -166,7 +166,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Proof expired!",
+      message: "Proof expired",
     };
   }
 
