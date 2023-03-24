@@ -91,9 +91,11 @@ export function VerifyScreen() {
             <CardElem expanded card={getCard(result)} />
           )}
         </Placeholder>
-        <Spacer h={96} />
+        <Spacer h={64} />
         {result != null && (
           <CenterColumn w={280}>
+            <LinkButton to="/scan">Verify another</LinkButton>
+            <Spacer h={8} />
             <LinkButton to="/">Back to Passport</LinkButton>
           </CenterColumn>
         )}
