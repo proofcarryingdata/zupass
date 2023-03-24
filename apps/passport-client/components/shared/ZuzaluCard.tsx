@@ -61,23 +61,52 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
       .then(serialize)
       .then((serialized) => setSerialized(JSON.stringify(serialized)));
   }, [card]);
-  if (serialized == null) return <QRWrap />;
 
-  console.log(`PCD size: ${serialized.length} bytes`);
-  const compressed = gzip(serialized);
-  const enc = encodeURIComponent(Buffer.from(compressed).toString("base64"));
-  console.log(`Compressed: ${compressed.length}, base64: ${enc.length}`);
+  // Compress it
+  const [link, setLink] = useState("");
+  useEffect(() => {
+    if (serialized == null) return;
 
-  const link = `${window.location.origin}#/verify?pcd=${enc}`;
-  console.log(`Link, ${link.length} bytes: ${link}`);
+    console.log(`PCD size: ${serialized.length} bytes`);
+    const compressed = gzip(serialized);
+    const enc = encodeURIComponent(Buffer.from(compressed).toString("base64"));
+    console.log(`Compressed: ${compressed.length}, base64: ${enc.length}`);
+
+    const url = `${window.location.origin}#/verify?pcd=${enc}`;
+    console.log(`Link, ${url.length} bytes: ${url}`);
+    setLink(url);
+  }, [serialized]);
+
+  if (link === "") {
+    return (
+      <QRWrap>
+        <QRLogoLoading />
+      </QRWrap>
+    );
+  }
 
   return (
     <QRWrap>
       <QRCode bgColor={qrBg} fgColor={qrFg} value={link} style={qrStyle} />
-      {/* config.devMode && <a href={link}>dev link</a> */}
+      <QRLogoDone />
     </QRWrap>
   );
 }
+
+function QRLogoLoading() {
+  return <QRLogo width="48" height="48" src="/assets/qr-center-loading.svg" />;
+}
+
+function QRLogoDone() {
+  return <QRLogo width="48" height="48" src="/assets/qr-center-logo.svg" />;
+}
+
+const QRLogo = styled.img`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+`;
 
 // Style constants
 const qrSize = "280px";
@@ -90,6 +119,7 @@ const [qrBg, qrFg] = (() => {
 })();
 
 const QRWrap = styled.div`
+  position: relative;
   width: ${qrSize};
   height: ${qrSize};
   margin: 0 auto;
