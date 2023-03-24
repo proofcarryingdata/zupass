@@ -15,7 +15,7 @@ import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function ProveScreen() {
   const location = useLocation();
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
 
@@ -24,7 +24,7 @@ export function ProveScreen() {
     return null;
   }
 
-  if (!_.self) {
+  if (state.self == null) {
     window.location.href = "/#/login";
     window.location.reload();
     return;
