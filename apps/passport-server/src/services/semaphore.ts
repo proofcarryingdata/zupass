@@ -1,12 +1,14 @@
 import { Group } from "@semaphore-protocol/group";
 import { Client } from "pg";
-import { PassportParticipant } from "../database/models";
+import { ParticipantRole, PassportParticipant } from "../database/models";
 import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {
   // Zuzalu residents group
-  public groupResi = new Group("1", 16);
+  public groupResidents = new Group("1", 16);
+  // Zuzalu visitors group
+  public groupVisitors = new Group("2", 16);
 
   // Zuzalu participants by UUID
   participants = {} as Record<string, PassportParticipant>;
@@ -22,7 +24,8 @@ export class SemaphoreService {
     const ps = await fetchPassportParticipants(dbClient);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
-    this.groupResi = new Group("1", 16);
+    this.groupResidents = new Group("1", 16);
+    this.groupVisitors = new Group("1", 16);
     for (const p of ps) {
       this.addParticipant(p);
     }
@@ -31,13 +34,8 @@ export class SemaphoreService {
 
   // Add a single participant to the semaphore group
   addParticipant(p: PassportParticipant) {
-    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group: ${p.uuid}`);
-
-    const group = this.groupResi;
-    if (p.role !== "resident") {
-      // TODO: support visitors
-      throw new Error(`unsupported role ${p.role}`);
-    }
+    let group = this.getGroup(p.role);
+    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
 
     const bigIntCommitment = BigInt(p.commitment);
     if (group.indexOf(bigIntCommitment) >= 0) {
@@ -46,6 +44,19 @@ export class SemaphoreService {
     group.addMember(bigIntCommitment);
 
     this.participants[p.uuid] = p;
+  }
+
+  // Get the semaphore group for a participant role
+  getGroup(role: ParticipantRole): Group {
+    switch (role) {
+      case ParticipantRole.Organizer:
+      case ParticipantRole.Resident:
+        return this.groupResidents;
+      case ParticipantRole.Visitor:
+        return this.groupVisitors;
+      default:
+        throw new Error(`unsupported role ${role}`);
+    }
   }
 }
 
