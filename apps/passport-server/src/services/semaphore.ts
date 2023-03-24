@@ -10,14 +10,11 @@ export class SemaphoreService {
   // Zuzalu visitors group
   public groupVisitors = new Group("2", 16);
 
-  groups = [
-    { name: "Zuzalu Residents", group: this.groupResidents },
-    { name: "Zuzalu Visitors", group: this.groupVisitors },
-  ];
-  groupMap = new Map(this.groups.map((g) => [g.group.id.toString(), g]));
-
   getNamedGroup(id: string): NamedGroup | undefined {
-    return this.groupMap.get(id);
+    return {
+      "1": { name: "Zuzalu Residents", group: this.groupResidents },
+      "2": { name: "Zuzalu Visitors", group: this.groupVisitors },
+    }[id];
   }
 
   // Zuzalu participants by UUID
