@@ -1,6 +1,6 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
 import { config } from "../../src/config";
@@ -54,41 +54,31 @@ function highlight(role: string) {
 }
 
 function ZuzaluQR({ card }: { card: ZuIdCard }) {
-  const [generatedTimestamp, setGeneratedTimestamp] = useState<
-    number | undefined
-  >();
   const { identity, participant } = card;
   const { uuid } = participant;
 
   const [qrPayload, setQRPayload] = useState<string | undefined>();
 
-  async function generateQr() {
-    const pcd = await createZuzaluQRProof(identity, uuid);
-    const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
-    const stringified = JSON.stringify(serialized);
-    console.log(`generated zuzalu QR proof with length ${stringified.length}`);
-    const encodedProof = encodeQRPayload(stringified);
-    setQRPayload(encodedProof);
-    setGeneratedTimestamp(Date.now());
-  }
-
-  async function update() {
-    if (
-      generatedTimestamp !== undefined &&
-      Date.now() - generatedTimestamp >= config.maxProofAge / 2
-    ) {
-      console.log("timestamp expired, generating new one");
-      await generateQr();
-      setGeneratedTimestamp(Date.now());
-    }
-  }
+  const generateQr = useCallback(
+    async function () {
+      const pcd = await createZuzaluQRProof(identity, uuid);
+      const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
+      const stringified = JSON.stringify(serialized);
+      console.log(
+        `generated zuzalu QR proof with length ${stringified.length}`
+      );
+      const encodedProof = encodeQRPayload(stringified);
+      setQRPayload(encodedProof);
+    },
+    [identity, uuid]
+  );
 
   // Generate QR code on mount, then regenerate periodically
   useEffect(() => {
     generateQr();
-    const interval = setInterval(update, config.maxProofAge / 3);
+    const interval = setInterval(generateQr, (config.maxProofAge * 2) / 3);
     return () => clearInterval(interval);
-  }, []);
+  }, [generateQr]);
 
   if (qrPayload == null) {
     return (
