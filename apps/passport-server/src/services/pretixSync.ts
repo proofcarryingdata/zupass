@@ -12,6 +12,8 @@ export function startPretixSync(context: ApplicationContext) {
       token: requireEnv("PRETIX_TOKEN"),
       orgUrl: requireEnv("PRETIX_ORG_URL"),
       zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
+      // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
+      zuEventOrganizersItemID: 151,
     };
   } catch (e) {
     console.error(e);
@@ -37,6 +39,7 @@ interface PretixConfig {
   token: string;
   orgUrl: string;
   zuEventID: string;
+  zuEventOrganizersItemID: number;
 }
 
 // Fetch tickets from Pretix. Insert new ones only into the database.
@@ -74,11 +77,30 @@ async function loadAllParticipants(
 async function loadResidents(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
+  // Fetch orders
   const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
-  console.log(`[PRETIX] found ${orders.length} residents`);
-  const participants = ordersToParticipants(orders, ParticipantRole.Resident);
-  console.log(`[PRETIX] loaded ${participants.length} residents`);
-  return participants;
+
+  // Extract organizers
+  const orgOrders = orders.filter(
+    (o) => o.positions[0].item === pretixConfig.zuEventOrganizersItemID
+  );
+  console.log(
+    `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
+  );
+  const organizers = ordersToParticipants(orgOrders, ParticipantRole.Organizer);
+  const orgEmails = new Set(organizers.map((p) => p.email));
+
+  // Extract other residents
+  const residents = ordersToParticipants(
+    orders,
+    ParticipantRole.Resident
+  ).filter((p) => !orgEmails.has(p.email));
+
+  // Return the combined list
+  console.log(
+    `[PRETIX] loaded ${organizers.length} organizers, ${residents.length} residents`
+  );
+  return [...organizers, ...residents];
 }
 
 /**
@@ -92,11 +114,11 @@ async function loadVisitors(
   const subEvents = await fetchSubEvents(pretixConfig);
 
   const subEventOrders = [];
-
   for (const event of subEvents) {
     const participants = await fetchOrders(pretixConfig, event.slug);
     subEventOrders.push(...participants);
   }
+  console.log(`[PRETIX] loaded ${subEventOrders.length} visitor orders`);
 
   const subEventParticipants = ordersToParticipants(
     subEventOrders,
@@ -107,7 +129,6 @@ async function loadVisitors(
   const visitors = subEventParticipants.filter(
     (p) => !residentEmails.has(p.email)
   );
-
   console.log(`[PRETIX] loaded ${visitors.length} visitors`);
 
   return visitors;
