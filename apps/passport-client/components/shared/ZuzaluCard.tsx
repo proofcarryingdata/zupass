@@ -81,7 +81,6 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
         Date.now() - generatedTimestamp >= config.maxProofAge / 2
       ) {
         console.log("timestamp expired, generating new one");
-        setQRPayload(undefined);
         generateQr().then(() => {
           setGeneratedTimestamp(Date.now());
         });
