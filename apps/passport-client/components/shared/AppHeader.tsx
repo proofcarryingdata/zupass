@@ -99,7 +99,7 @@ function InfoModal() {
         <Spacer h={16} />
         <TextCenter>
           For event or venue support, contact{" "}
-          <a href="invites@zuzalu.org">invites@zuzalu.org</a>.
+          <a href="mailto:invites@zuzalu.org">invites@zuzalu.org</a>.
         </TextCenter>
       </CenterColumn>
     </div>
