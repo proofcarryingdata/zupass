@@ -68,6 +68,7 @@ const ModalBg = styled.div`
   right: 0;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
+  z-index: 999;
 `;
 
 const ModalWrap = styled.div`
