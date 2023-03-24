@@ -1,6 +1,8 @@
+import { Buffer } from "buffer";
 import { gzip, ungzip } from "pako";
 
 export function encodeQRPayload(unencoded: string): string {
+  console.log(`encoding payload with length ${unencoded.length}`);
   const compressedData = gzip(unencoded);
   const base64CompressedData = Buffer.from(compressedData).toString("base64");
   console.log(
@@ -15,4 +17,11 @@ export function decodeQRPayload(encoded: string): string {
   const unzippedBuffer = Buffer.from(ungzip(buffer));
   const decodedBuffer = unzippedBuffer.toString("utf8");
   return decodedBuffer;
+}
+
+export function makeEncodedVerifyLink(encodedPCD: string): string {
+  const link = `${window.location.origin}#/verify?pcd=${encodeURIComponent(
+    encodedPCD
+  )}`;
+  return link;
 }
