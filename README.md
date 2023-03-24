@@ -32,14 +32,14 @@ yarn dev
 open http://localhost:3000
 ```
 
-### Ports
+### Apps
 
 The passport has its own client and server. We also included an example application set up with its own client and server as well. After running `yarn dev` they will be available at the following ports:
 
-- `apps/passport-client`: http://localhost:3000/
-- `apps/consumer-client`: http://localhost:3001/
-- `apps/passport-server`: http://localhost:3002/
-- `apps/consumer-server`: http://localhost:3003/
+- `apps/passport-client`: http://localhost:3000/ - this is the application that allows users to manage their PCDs, and 3rd party applications to save or load PCDs from
+- `apps/consumer-client`: http://localhost:3001/ - this is an example 3rd party application, which demonstrates the API by which other 3rd party applications might interface with the passport, and how it might use the PCDs it gets from the passport by importing the `@pcd/` family of packages from npm
+- `apps/passport-server`: http://localhost:3002/ - this is the server-side application which backs the passport client. currently it is used to manage Zuzalu participants, send confirmation emails, end-to-end encrypted backup of PCDs from the passport client, and serving some heavy assets for the client.
+- `apps/consumer-server`: http://localhost:3003/ 0 this is an example server application which would back an example 3rd party client app. currently this project is not useful as an example, but we have included it for completeness, and for future examples.
 
 ## Packages
 
