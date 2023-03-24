@@ -1,4 +1,4 @@
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
@@ -57,7 +57,7 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
     if (identity == null) return;
 
     createZuzaluQRProof(identity, participant.uuid)
-      .then(SemaphoreGroupPCDPackage.serialize)
+      .then(SemaphoreSignaturePCDPackage.serialize)
       .then((serialized) => {
         const stringified = JSON.stringify(serialized);
         console.log(
