@@ -19,25 +19,26 @@ function getMailingClient() {
       subject: string;
       text: string;
       html: string;
-    }) => {
-      request(
-        "https://api.mailgun.net/v3/0xparc.org/messages",
-        {
-          headers: {
-            Authorization: `Basic ${process.env.MAILGUN_API_KEY}`,
+    }): Promise<void> => {
+      return new Promise<void>((resolve, reject) => {
+        request(
+          "https://api.mailgun.net/v3/0xparc.org/messages",
+          {
+            headers: {
+              Authorization: `Basic ${process.env.MAILGUN_API_KEY}`,
+            },
+            method: "POST",
+            formData: { from, to, subject, text, html },
           },
-          method: "POST",
-          formData: { from, to, subject, text, html },
-        },
-        (err, res, body) => {
-          if (err) {
-            console.log(err);
+          (err, res, body) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
           }
-          if (body) {
-            console.log(body);
-          }
-        }
-      );
+        );
+      });
     },
   };
 }
