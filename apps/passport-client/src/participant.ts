@@ -16,7 +16,7 @@ export async function pollParticipant(state: ZuState, dispatch: Dispatcher) {
     },
     signedMessage: {
       argumentType: ArgumentTypeName.String,
-      value: "",
+      value: "proof",
     },
   });
   const serializedProof = JSON.stringify(

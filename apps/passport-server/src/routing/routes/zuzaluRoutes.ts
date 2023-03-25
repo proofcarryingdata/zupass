@@ -111,17 +111,13 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/participant/proved/:proof",
     async (req: Request, res: Response) => {
-      console.log("requesting user by proof");
       res.setHeader("Access-Control-Allow-Origin", "*");
       const proof = JSON.parse(decodeURIComponent(req.params.proof));
-      console.log(proof);
       const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
         proof.pcd
       );
-      console.log(deserialized);
       const valid = await SemaphoreSignaturePCDPackage.verify(deserialized);
-      console.log("valid", valid);
-      if (!valid) {
+      if (!valid || deserialized.claim.signedMessage !== "proof") {
         res.status(404);
         res.json(null);
       }
@@ -130,7 +126,7 @@ export function initZuzaluRoutes(
         deserialized.claim.identityCommitment
       );
 
-      if (!participant) res.json(participant || null);
+      if (!participant) res.json(null);
 
       res.json(participant);
     }
