@@ -17,6 +17,7 @@ import { tryInsertCommitment } from "../../database/queries/insertCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
+import { sendEmail } from "../../util/email";
 
 // API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
@@ -49,7 +50,7 @@ export function initZuzaluRoutes(
     // Send an email with the login token.
     const { name } = participant;
     console.log(`Sending magic link to ${email} ${name}: ${token}`);
-    // await sendEmail(email, name, token);
+    await sendEmail(email, name, token);
 
     res.sendStatus(200);
   });
