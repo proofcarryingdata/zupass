@@ -5,6 +5,7 @@ import {
   ZuParticipant,
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -16,7 +17,6 @@ import { tryInsertCommitment } from "../../database/queries/insertCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
-import { sendEmail } from "../../util/email";
 
 // API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
@@ -49,7 +49,7 @@ export function initZuzaluRoutes(
     // Send an email with the login token.
     const { name } = participant;
     console.log(`Sending magic link to ${email} ${name}: ${token}`);
-    await sendEmail(email, name, token);
+    // await sendEmail(email, name, token);
 
     res.sendStatus(200);
   });
@@ -103,6 +103,35 @@ export function initZuzaluRoutes(
         e.message = "Can't add Zuzalu Passport: " + e.message;
         next(e);
       }
+    }
+  );
+
+  // Fetch a specific participant, given their public semaphore commitment.
+  app.get(
+    "/zuzalu/participant/proved/:proof",
+    async (req: Request, res: Response) => {
+      console.log("requesting user by proof");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      const proof = JSON.parse(decodeURIComponent(req.params.proof));
+      console.log(proof);
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        proof.pcd
+      );
+      console.log(deserialized);
+      const valid = await SemaphoreSignaturePCDPackage.verify(deserialized);
+      console.log("valid", valid);
+      if (!valid) {
+        res.status(404);
+        res.json(null);
+      }
+
+      const participant = semaphoreService.getParticipantByCommitment(
+        deserialized.claim.identityCommitment
+      );
+
+      if (!participant) res.json(participant || null);
+
+      res.json(participant);
     }
   );
 
