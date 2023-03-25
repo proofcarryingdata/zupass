@@ -5,6 +5,7 @@ import {
   ZuParticipant,
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import express, { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -103,6 +104,31 @@ export function initZuzaluRoutes(
         e.message = "Can't add Zuzalu Passport: " + e.message;
         next(e);
       }
+    }
+  );
+
+  // Fetch a specific participant, given their public semaphore commitment.
+  app.get(
+    "/zuzalu/participant/proved/:proof",
+    async (req: Request, res: Response) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      const proof = JSON.parse(decodeURIComponent(req.params.proof));
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        proof.pcd
+      );
+      const valid = await SemaphoreSignaturePCDPackage.verify(deserialized);
+      if (!valid || deserialized.claim.signedMessage !== "proof") {
+        res.status(404);
+        res.json(null);
+      }
+
+      const participant = semaphoreService.getParticipantByCommitment(
+        deserialized.claim.identityCommitment
+      );
+
+      if (!participant) res.json(null);
+
+      res.json(participant);
     }
   );
 

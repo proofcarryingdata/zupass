@@ -25,6 +25,16 @@ export class SemaphoreService {
     return this.participants[uuid] || null;
   }
 
+  getParticipantByCommitment(commitment: string): PassportParticipant | null {
+    const participants = Object.values(this.participants);
+    for (const participant of participants) {
+      if (participant.commitment === commitment) {
+        return participant;
+      }
+    }
+    return null;
+  }
+
   // Load participants from DB, rebuild semaphore groups
   async reload(dbClient: Client) {
     console.log(`[SEMA] Reloading semaphore service...`);

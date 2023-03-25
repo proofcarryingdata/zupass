@@ -72,7 +72,7 @@ class App extends React.Component<{}, ZuState | undefined> {
   // Poll for participant updates
   jobPollParticipant = async () => {
     if (this.state?.self) {
-      await pollParticipant(this.state.self, this.dispatch);
+      await pollParticipant(this.state, this.dispatch);
     }
     setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
   };
