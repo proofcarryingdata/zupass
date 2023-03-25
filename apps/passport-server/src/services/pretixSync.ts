@@ -168,7 +168,10 @@ function ordersToParticipants(
     // each order is supposed to have exactly one "position" (ticket)
     .filter((o) => o.positions.length === 1)
     // check that they have an email and a name
-    .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
+    .filter(
+      (o) =>
+        o.email != null && o.email !== "" && o.positions[0].attendee_name !== ""
+    )
     .map((o) => ({
       role,
       email: o.email.toLocaleLowerCase("en-US"),
