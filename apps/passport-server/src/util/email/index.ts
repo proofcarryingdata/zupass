@@ -1,14 +1,46 @@
-import { MailService } from "@sendgrid/mail";
 import { readFile } from "fs/promises";
+import request from "request";
 
-function getMailingClient(): MailService {
-  const sgMail = new MailService();
-  if (process.env.SENDGRID_API_KEY === undefined) {
-    throw new Error("Missing environment variable: SENDGRID_API_KEY");
+function getMailingClient() {
+  if (process.env.MAILGUN_API_KEY === undefined) {
+    throw new Error("Missing environment variable: MAILGUN_API_KEY");
   }
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-  return sgMail;
+  return {
+    send: ({
+      from,
+      to,
+      subject,
+      text,
+      html,
+    }: {
+      from: string;
+      to: string;
+      subject: string;
+      text: string;
+      html: string;
+    }): Promise<void> => {
+      return new Promise<void>((resolve, reject) => {
+        request(
+          "https://api.mailgun.net/v3/0xparc.org/messages",
+          {
+            headers: {
+              Authorization: `Basic ${process.env.MAILGUN_API_KEY}`,
+            },
+            method: "POST",
+            formData: { from, to, subject, text, html },
+          },
+          (err, res, body) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          }
+        );
+      });
+    },
+  };
 }
 
 async function composeMail(
