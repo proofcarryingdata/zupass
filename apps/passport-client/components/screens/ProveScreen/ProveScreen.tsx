@@ -25,7 +25,7 @@ export function ProveScreen() {
   }
 
   if (state.self == null) {
-    localStorage.pendingProofRequest = JSON.stringify(request);
+    sessionStorage.pendingProofRequest = JSON.stringify(request);
     window.location.href = "/#/login";
     window.location.reload();
     return null;
