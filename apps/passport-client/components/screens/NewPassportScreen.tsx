@@ -18,8 +18,6 @@ import {
 import { Button, LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
-const LOGIN_CODE_LENGTH = 6;
-
 /**
  * Show the user that we're generating their passport. Direct them to the email
  * verification link.
@@ -49,16 +47,16 @@ export function NewPassportScreen() {
               message: (
                 <>
                   {message} <br /> <br />
-                  You have already logged in on another device or browser. In
-                  order to log here, you will need to copy the 'sync key' from
-                  the settings page of the browser you've already logged in on.
+                  You have already logged in on another device or browser. Copy
+                  the sync key from the settings page, using the browser you've
+                  already logged in on.
                   <br />
                   <br />
                   For example, if you generated a passport from inside an email
                   mobile app, you should click on the passport link in your
                   invite email again to open your logged in passport. Then,
                   click the gear icon in the top right, copy your sync key,
-                  click 'Sync Existing Passport' on this page, and finally paste
+                  click Sync Existing Passport on this page, and finally paste
                   in your sync key.
                 </>
               ),
