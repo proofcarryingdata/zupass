@@ -109,9 +109,12 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
 
-  const bgColor = self ? "gray" : "primary";
+  return { self, encryptionKey, pcds, identity };
+}
 
-  return { self, encryptionKey, pcds, identity, bgColor };
+// Redirect old site visitors to the correct site
+if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
+  window.location.replace("https://zupass.org");
 }
 
 const root = createRoot(document.querySelector("#root"));
