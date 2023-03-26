@@ -168,11 +168,11 @@ function ordersToParticipants(
     // each order is supposed to have exactly one "position" (ticket)
     .filter((o) => o.positions.length === 1)
     // check that they have an email and a name
-    .filter((o) => o.email != null && o.positions[0].attendee_name != null)
-    .filter((o) => o.email !== "" && o.positions[0].attendee_name !== "")
+    .filter((o) => !!o.positions[0].attendee_name)
+    .filter((o) => !!(o.email || o.positions[0].attendee_email))
     .map((o) => ({
       role,
-      email: o.email.toLocaleLowerCase("en-US"),
+      email: (o.email || o.positions[0].attendee_email).toLowerCase(),
       name: o.positions[0].attendee_name,
       residence: "", // TODO: not in pretix yet
       order_id: o.code,
@@ -267,6 +267,7 @@ interface PretixPosition {
   item: number;
   price: string;
   attendee_name: string; // "Danilo Kim"
+  attendee_email: string;
 }
 
 function requireEnv(str: string): string {
