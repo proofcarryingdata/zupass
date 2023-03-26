@@ -124,7 +124,7 @@ async function requestLoginCode(email: string, identity: Identity) {
     email,
     commitment: identity.commitment.toString(),
   }).toString();
-  const url = `${config.passportServer}/zuzalu/register?${params}`;
+  const url = `${config.passportServer}/zuzalu/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
   if (res.ok) return;
   throw new Error(await res.text());

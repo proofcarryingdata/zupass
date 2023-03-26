@@ -25,10 +25,14 @@ export function initZuzaluRoutes(
   console.log("[INIT] Initializing zuzalu routes");
   const { dbClient } = context;
 
-  // Register a new user, send them an email with a magic link.
-  app.post("/zuzalu/register", async (req: Request, res: Response) => {
+  // Check that email is on the list. Send email with the login code, allowing
+  // them to create their passport.
+  app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
     const email = decodeString(req.query.email, "email");
     const commitment = decodeString(req.query.commitment, "commitment");
+    console.log(
+      `[ZUID] Got login email request. email=${email} commitment=${commitment}`
+    );
 
     // Generate a 6-digit random token.
     const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
@@ -51,13 +55,13 @@ export function initZuzaluRoutes(
 
     // Send an email with the login token.
     const { name } = participant;
-    console.log(`Sending magic link to ${email} ${name}: ${token}`);
+    console.log(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
     await sendEmail(email, name, token);
 
     res.sendStatus(200);
   });
 
-  // Handle the email magic link, add a new participant.
+  // Check the token (sent to user's email), add a new participant.
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -65,6 +69,9 @@ export function initZuzaluRoutes(
         const token = decodeString(req.query.token, "token");
         const email = decodeString(req.query.email, "email");
         const commitment = decodeString(req.query.commitment, "commitment");
+        console.log(
+          `[ZUID] Got new participant request. email=${email} token=${token} commitment=${commitment}`
+        );
 
         // Look up participant record from Pretix
         const pretix = await fetchPretixParticipant(dbClient, { email });
@@ -79,7 +86,7 @@ export function initZuzaluRoutes(
         }
 
         // Save commitment to DB.
-        console.log(`Saving new commitment: ${commitment}`);
+        console.log(`[ZUID] Saving new commitment: ${commitment}`);
         const uuid = await findOrCreateCommitment(dbClient, {
           email,
           commitment,
@@ -97,7 +104,7 @@ export function initZuzaluRoutes(
         // Return participant, including UUID, back to Passport
         const zuParticipant = participant as ZuParticipant;
         const jsonP = JSON.stringify(zuParticipant);
-        console.log(`Added new Zuzalu participant: ${jsonP}`);
+        console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
 
         res.json(zuParticipant);
       } catch (e: any) {
@@ -111,7 +118,7 @@ export function initZuzaluRoutes(
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const uuid = req.params.uuid;
-    console.log(`Fetching participant ${uuid}`);
+    console.log(`[ZUID] Fetching participant ${uuid}`);
     const participant = semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
     res.json(participant || null);
