@@ -20,6 +20,11 @@ export function HomeScreen() {
     if (state.self == null) {
       console.log("Redirecting to login screen");
       navigate("/login");
+    } else if (localStorage.pendingProofRequest != null) {
+      console.log("Redirecting to prove screen");
+      const encReq = encodeURIComponent(localStorage.pendingProofRequest);
+      navigate("/prove?request=" + encReq);
+      delete localStorage.pendingProofRequest;
     }
   });
 

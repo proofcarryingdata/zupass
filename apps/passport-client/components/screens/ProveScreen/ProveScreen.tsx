@@ -28,7 +28,7 @@ export function ProveScreen() {
     localStorage.pendingProofRequest = JSON.stringify(request);
     window.location.href = "/#/login";
     window.location.reload();
-    return;
+    return null;
   }
 
   let title: string;
