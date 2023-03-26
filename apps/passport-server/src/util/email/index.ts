@@ -30,7 +30,7 @@ function getMailingClient() {
             method: "POST",
             formData: { from, to, subject, text, html },
           },
-          (err, res, body) => {
+          (err: any, res: any, body: any) => {
             if (err) {
               reject(err);
             } else {

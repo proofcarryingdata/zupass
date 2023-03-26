@@ -22,8 +22,8 @@ import {
 import { pollParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
 
-class App extends React.Component<{}, ZuState | undefined> {
-  state = undefined;
+class App extends React.Component<{}, ZuState> {
+  state = undefined as ZuState | undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
 
@@ -72,7 +72,7 @@ class App extends React.Component<{}, ZuState | undefined> {
   // Poll for participant updates
   jobPollParticipant = async () => {
     if (this.state?.self) {
-      await pollParticipant(this.state, this.dispatch);
+      await pollParticipant(this.state.self, this.dispatch);
     }
     setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
   };
