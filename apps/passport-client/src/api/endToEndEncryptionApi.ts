@@ -23,6 +23,9 @@ export async function downloadEncryptedStorage(
       Accept: "application/json",
     },
   });
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
 
   const res = (await response.json()) as LoadE2EEResponse;
   return res.encryptedStorage as EncryptedPacket;

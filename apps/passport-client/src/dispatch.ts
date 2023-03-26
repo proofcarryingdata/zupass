@@ -208,11 +208,9 @@ async function saveParticipantPCDs(participant: ZuParticipant) {
 async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
   if (BigInt(self.commitment) !== state.identity.commitment) {
     throw new Error("Identity commitment mismatch");
+  } else if (state.self && state.self.uuid !== self.uuid) {
+    throw new Error("Participant UUID mismatch");
   }
-
-  // else if (state.self && state.self.uuid !== self.uuid) {
-  //   throw new Error("Participant UUID mismatch");
-  // }
 
   saveSelf(self); // Save to local storage.
   update({ self }); // Update in-memory state.
