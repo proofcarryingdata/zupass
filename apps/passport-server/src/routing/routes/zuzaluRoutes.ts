@@ -146,7 +146,7 @@ export function initZuzaluRoutes(
       const request = req.body as LoadE2EERequest;
 
       if (request.blobKey === undefined) {
-        throw new Error("can't load e2ee: missing blobKey");
+        throw new Error("Can't load e2ee: missing blobKey");
       }
       console.log(`[E2EE] Loading ${request.blobKey}`);
 

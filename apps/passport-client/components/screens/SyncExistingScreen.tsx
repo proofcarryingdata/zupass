@@ -1,4 +1,4 @@
-import { decryptStorage, getHash } from "@pcd/passport-crypto";
+import { decryptStorage, EncryptedPacket, getHash } from "@pcd/passport-crypto";
 import React, { useCallback, useContext, useState } from "react";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { DispatchContext } from "../../src/dispatch";
@@ -18,9 +18,24 @@ export function SyncExistingScreen() {
 
   const onSyncClick = useCallback(() => {
     const load = async () => {
-      console.log("downloading e2ee storage...");
-      const blobHash = await getHash(syncKey);
-      const storage = await downloadEncryptedStorage(blobHash);
+      let storage: EncryptedPacket;
+      try {
+        console.log("downloading e2ee storage...");
+        const blobHash = await getHash(syncKey);
+        storage = await downloadEncryptedStorage(blobHash);
+      } catch (e: unknown) {
+        console.error(e);
+        dispatch({
+          type: "error",
+          error: {
+            title: "Sync failed",
+            message:
+              "Couldn't load end-to-end encrypted backup. " +
+              "If this is your first time using zupass.org, please generate a new passport instead.",
+          },
+        });
+        return;
+      }
       console.log("downloaded encrypted storage");
       const decrypted = await decryptStorage(storage, syncKey);
       console.log("decrypted encrypted storage");
