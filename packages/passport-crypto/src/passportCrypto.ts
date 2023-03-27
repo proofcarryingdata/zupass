@@ -23,7 +23,7 @@ export class PCDCrypto {
     return arrayBufferToHexString(this.sodium.crypto_hash(str));
   }
 
-  public generateRandomKey(bits: number = 256): HexString {
+  public generateRandomKey(bits = 256): HexString {
     const bytes = bits / 8;
     const arrayBuffer = utils
       .getCrypto()
@@ -39,13 +39,13 @@ export class PCDCrypto {
     bytes: number,
     length: number
   ): HexString {
-    const result = this.sodium!.crypto_pwhash(
+    const result = this.sodium.crypto_pwhash(
       length,
       utils.stringToArrayBuffer(password),
       utils.hexStringToArrayBuffer(salt),
       iterations,
       bytes,
-      this.sodium!.crypto_pwhash_ALG_DEFAULT,
+      this.sodium.crypto_pwhash_ALG_DEFAULT,
       "hex"
     );
     return result;
@@ -60,7 +60,7 @@ export class PCDCrypto {
     if (nonce.length !== 48) {
       throw Error("Nonce must be 24 bytes");
     }
-    const arrayBuffer = this.sodium!.crypto_aead_xchacha20poly1305_ietf_encrypt(
+    const arrayBuffer = this.sodium.crypto_aead_xchacha20poly1305_ietf_encrypt(
       plaintext,
       assocData || null,
       null,
@@ -80,7 +80,7 @@ export class PCDCrypto {
       throw Error("Nonce must be 24 bytes");
     }
     try {
-      return this.sodium!.crypto_aead_xchacha20poly1305_ietf_decrypt(
+      return this.sodium.crypto_aead_xchacha20poly1305_ietf_decrypt(
         null,
         utils.base64ToArrayBuffer(ciphertext),
         assocData || null,
