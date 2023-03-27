@@ -25,12 +25,14 @@ import { AppContainer } from "../shared/AppContainer";
 export function NewPassportScreen() {
   const [state, dispatch] = useContext(DispatchContext);
   const { identity, pendingAction } = state;
-  if (pendingAction == null || pendingAction.type !== "new-passport") {
-    window.location.hash = "#/";
-    window.location.reload();
-    return null;
-  }
   const { email } = pendingAction;
+
+  useEffect(() => {
+    if (pendingAction == null || pendingAction.type !== "new-passport") {
+      window.location.hash = "#/";
+      window.location.reload();
+    }
+  }, [pendingAction]);
 
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
@@ -75,14 +77,14 @@ export function NewPassportScreen() {
           });
         }
       });
-  }, [email, setEmailSent]);
+  }, [email, setEmailSent, dispatch, identity]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
   const login = useCallback(() => {
     const token = inRef.current?.value || "";
     dispatch({ type: "login", email, token });
-  }, []);
+  }, [dispatch, email]);
 
   return (
     <AppContainer bg="primary">

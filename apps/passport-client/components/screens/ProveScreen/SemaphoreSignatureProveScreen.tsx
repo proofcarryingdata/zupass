@@ -43,7 +43,7 @@ export function SemaphoreSignatureProveScreen({
     } catch (e) {
       console.log(e);
     }
-  }, [prove, req]);
+  }, [req, state.identity, state.self?.uuid]);
 
   const lines: ReactNode[] = [];
 
