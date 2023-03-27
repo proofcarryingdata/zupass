@@ -3,8 +3,14 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ApplicationContext } from "../types";
 
-// Send
-export function startTelemetry(_: ApplicationContext) {
+export function startTelemetry(context: ApplicationContext): void {
+  if (!context.honeyClient) {
+    console.log(
+      "[INIT] Not starting telemetry service - missing Honeycomb instance."
+    );
+    return;
+  }
+
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
   });

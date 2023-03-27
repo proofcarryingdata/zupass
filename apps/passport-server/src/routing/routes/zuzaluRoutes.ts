@@ -6,12 +6,14 @@ import {
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { NextFunction, Request, Response } from "express";
+import { ParticipantRole } from "../../database/models";
 import {
   getEncryptedStorage,
   setEncryptedStorage,
 } from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
 import { findOrCreateCommitment } from "../../database/queries/findOrCreateCommitment";
+import { insertParticipant } from "../../database/queries/insertParticipant";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -39,7 +41,23 @@ export function initZuzaluRoutes(
     if (token.length !== 6) throw new Error("Unreachable");
 
     // Save the token. This lets the user prove access to their email later.
+
+    if (
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      await insertParticipant(dbClient, {
+        email: email,
+        email_token: "",
+        name: "test testerly",
+        order_id: "",
+        residence: "atlantis",
+        role: ParticipantRole.Resident,
+      });
+    }
+
     const participant = await setParticipantToken(dbClient, { email, token });
+
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
     } else if (
@@ -54,11 +72,21 @@ export function initZuzaluRoutes(
     );
 
     // Send an email with the login token.
-    const { name } = participant;
-    console.log(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
-    await sendEmail(email, name, token);
 
-    res.sendStatus(200);
+    if (
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      console.log("[DEV] Bypassing email, returning token");
+      res.json({ token });
+    } else {
+      const { name } = participant;
+      console.log(
+        `[ZUID] Sending token=${token} to email=${email} name=${name}`
+      );
+      await sendEmail(email, name, token);
+      res.sendStatus(200);
+    }
   });
 
   // Check the token (sent to user's email), add a new participant.

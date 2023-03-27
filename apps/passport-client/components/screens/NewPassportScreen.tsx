@@ -36,7 +36,13 @@ export function NewPassportScreen() {
   const [emailSent, setEmailSent] = useState(false);
   useEffect(() => {
     requestLoginCode(email, identity)
-      .then(() => setEmailSent(true))
+      .then((devToken: string | undefined) => {
+        if (devToken === undefined) {
+          setEmailSent(true);
+        } else {
+          dispatch({ type: "login", email, token: devToken });
+        }
+      })
       .catch((err) => {
         const { message } = err;
         if ((message as string).includes("already registered")) {
@@ -115,8 +121,15 @@ export function NewPassportScreen() {
   );
 }
 
-/** Server checks that email address is on the list, then sends the code. */
-async function requestLoginCode(email: string, identity: Identity) {
+/**
+ * Server checks that email address is on the list, then sends the code. In the
+ * case that verification emails are disabled on the server, also returns the
+ * confirmation code, so the client can automatically 'verify' the user.
+ */
+async function requestLoginCode(
+  email: string,
+  identity: Identity
+): Promise<string | undefined> {
   console.log(`Requesting email verification for ${email}...`);
   const params = new URLSearchParams({
     email,
@@ -124,8 +137,20 @@ async function requestLoginCode(email: string, identity: Identity) {
   }).toString();
   const url = `${config.passportServer}/zuzalu/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
-  if (res.ok) return;
-  throw new Error(await res.text());
+  const responseText = await res.text();
+
+  try {
+    // in the case that email verification is disabled, we get back
+    // the token in the response to this request
+    const parsedResponse = JSON.parse(responseText);
+    if (parsedResponse.token) {
+      return parsedResponse.token;
+    }
+  } catch (e) {}
+
+  if (res.ok) return undefined;
+
+  throw new Error(responseText);
 }
 
 const PItalic = styled.p`

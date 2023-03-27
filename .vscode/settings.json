@@ -2,5 +2,10 @@
   "files.exclude": {
     "**/.next": true,
     "**/.turbo": true
+  },
+  "files.associations": {
+    "*.env": "properties",
+    "*.env.example": "properties",
+    "*.env.local.example": "properties"
   }
 }

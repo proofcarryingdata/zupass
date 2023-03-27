@@ -3,6 +3,7 @@ import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmai
 import { insertParticipant } from "../database/queries/insertParticipant";
 import { updateParticipant } from "../database/queries/updateParticipant";
 import { ApplicationContext } from "../types";
+import { requireEnv } from "../util/util";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
 export function startPretixSync(context: ApplicationContext) {
@@ -17,8 +18,9 @@ export function startPretixSync(context: ApplicationContext) {
       zuEventOrganizersItemID: 151,
     };
   } catch (e) {
-    console.error(e);
-    console.error("[PRETIX] Missing Pretix config, skipping sync");
+    console.error(
+      `[INIT] Missing environment variable ${e} - skipping starting Pretix sync`
+    );
     return;
   }
 
@@ -268,12 +270,4 @@ interface PretixPosition {
   price: string;
   attendee_name: string; // "Danilo Kim"
   attendee_email: string;
-}
-
-function requireEnv(str: string): string {
-  const val = process.env[str];
-  if (val == null || val === "") {
-    throw new Error(`Missing ${str}`);
-  }
-  return val;
 }
