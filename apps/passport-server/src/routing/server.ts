@@ -1,5 +1,5 @@
 import cors from "cors";
-import express from "express";
+import express, { NextFunction } from "express";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
@@ -35,7 +35,12 @@ export async function startServer(
     );
 
     app.use(
-      (err: Error, req: express.Request, res: express.Response, next: any) => {
+      (
+        err: Error,
+        req: express.Request,
+        res: express.Response,
+        _next: NextFunction
+      ) => {
         console.error(`[ERROR] ${req.method} ${req.url}`);
         console.error(err.stack);
         res.status(500).send(err.message);

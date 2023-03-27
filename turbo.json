@@ -22,6 +22,9 @@
     "DATABASE_DB_NAME",
     "DATABASE_SSL",
     "PASSPORT_SERVER_URL",
-    "NODE_ENV"
+    "NODE_ENV",
+    "PORT",
+    "HONEYCOMB_API_KEY",
+    "MAILGUN_API_KEY"
   ]
 }

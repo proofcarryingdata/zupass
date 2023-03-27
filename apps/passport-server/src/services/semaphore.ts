@@ -51,7 +51,7 @@ export class SemaphoreService {
 
   // Add a single participant to the semaphore group
   addParticipant(p: PassportParticipant) {
-    let group = this.getGroupForRole(p.role);
+    const group = this.getGroupForRole(p.role);
     console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
 
     const bigIntCommitment = BigInt(p.commitment);

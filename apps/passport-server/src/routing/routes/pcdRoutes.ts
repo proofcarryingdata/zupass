@@ -5,7 +5,7 @@ import { ApplicationContext } from "../../types";
 
 export function initPCDRoutes(
   app: express.Application,
-  context: ApplicationContext
+  _context: ApplicationContext
 ): void {
   app.post(
     "/pcds/prove",
