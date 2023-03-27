@@ -4,9 +4,9 @@ import { v4 as uuid } from "uuid";
 
 export const InputTestPCDTypeName = "input-test-pcd";
 
-export type InputTestPCDArgs = object;
+export interface InputTestPCDArgs {}
 
-export type InputTestPCDClaim = object;
+export interface InputTestPCDClaim {}
 
 export type InputTestPCDProof = undefined;
 
