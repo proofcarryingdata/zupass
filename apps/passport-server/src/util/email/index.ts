@@ -82,6 +82,7 @@ export async function sendEmail(
   try {
     await getMailingClient().send(msg);
   } catch (e) {
+    console.log(e);
     throw new Error(`Sendgrid error, failed to email ${to}`);
   }
 }

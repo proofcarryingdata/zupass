@@ -2,6 +2,7 @@
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
+import { requireEnv } from "../util/util";
 
 function getDatasetName() {
   const prefix = "zk-faucet";
@@ -14,13 +15,20 @@ function getDatasetName() {
 }
 
 export function getHoneycombAPI(): Libhoney | null {
-  console.log("[INIT] Loaded a Honeycomb API");
-  if (process.env.HONEYCOMB_API_KEY === undefined) {
+  try {
+    requireEnv("HONEYCOMB_API_KEY");
+    requireEnv("OTEL_SERVICE_NAME");
+  } catch (e) {
+    console.log(
+      `[INIT] Missing environment variable ${e} - skipping starting Honeycomb API`
+    );
     return null;
   }
 
+  console.log("[INIT] Loaded a Honeycomb API");
+
   return new Libhoney({
-    writeKey: process.env.HONEYCOMB_API_KEY,
+    writeKey: process.env.HONEYCOMB_API_KEY!,
     dataset: getDatasetName(),
   });
 }

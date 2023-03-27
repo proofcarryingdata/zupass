@@ -2,3 +2,5 @@
 .env.local
 .env.render
 envs
+db
+*.ignore
