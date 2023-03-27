@@ -1,5 +1,4 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { EncryptedStorage } from "@pcd/passport-interface";
 
 export interface ProveRequest {
   pcdType: string;

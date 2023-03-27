@@ -148,7 +148,9 @@ async function requestLoginCode(
     if (parsedResponse.token) {
       return parsedResponse.token;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log(e);
+  }
 
   if (res.ok) return undefined;
 

@@ -29,6 +29,7 @@ export function getHoneycombAPI(): Libhoney | null {
   console.log("[INIT] Loaded a Honeycomb API");
 
   return new Libhoney({
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     writeKey: process.env.HONEYCOMB_API_KEY!,
     dataset: getDatasetName(),
   });

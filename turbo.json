@@ -28,6 +28,7 @@
     "PORT",
     "HONEYCOMB_API_KEY",
     "MAILGUN_API_KEY",
-    "TIMING"
+    "TIMING",
+    "BYPASS_EMAIL_REGISTRATION"
   ]
 }
