@@ -79,6 +79,7 @@ export function initZuzaluRoutes(
         `[ZUID] Sending token=${token} to email=${email} name=${name}`
       );
       await sendEmail(email, name, token);
+      res.sendStatus(200);
     }
   });
 
