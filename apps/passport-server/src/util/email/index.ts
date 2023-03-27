@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import request from "request";
+import { ApplicationContext } from "../../types";
 
 function getMailingClient() {
   if (process.env.MAILGUN_API_KEY === undefined) {
@@ -68,6 +69,7 @@ async function composeMail(
 }
 
 export async function sendEmail(
+  context: ApplicationContext,
   to: string,
   name: string,
   token: string
@@ -81,8 +83,9 @@ export async function sendEmail(
 
   try {
     await getMailingClient().send(msg);
-  } catch (e) {
+  } catch (e: any) {
     console.log(e);
+    context.rollbar?.error(e);
     throw new Error(`Sendgrid error, failed to email ${to}`);
   }
 }

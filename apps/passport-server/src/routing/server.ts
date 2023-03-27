@@ -21,6 +21,11 @@ export async function startServer(
   return new Promise<express.Application>((resolve, reject) => {
     const port = IS_PROD ? process.env.PORT : 3002;
     const app = express();
+
+    if (context.rollbar) {
+      app.use(context.rollbar.errorHandler);
+    }
+
     app.use(morgan("tiny"));
     app.use(express.json());
     app.use(cors());
