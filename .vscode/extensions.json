@@ -2,6 +2,7 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "styled-components.vscode-styled-components",
-    "pomdtr.excalidraw-editor"
+    "pomdtr.excalidraw-editor",
+    "dbaeumer.vscode-eslint"
   ]
 }
