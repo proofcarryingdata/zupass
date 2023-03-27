@@ -118,7 +118,7 @@ const QRLogo = styled.img`
 const qrSize = "280px";
 const qrStyle = { width: qrSize, height: qrSize };
 const [qrBg, qrFg] = (() => {
-  var style = getComputedStyle(document.body);
+  const style = getComputedStyle(document.body);
   const bg = style.getPropertyValue("--white");
   const fg = style.getPropertyValue("--primary-dark");
   return [bg, fg];

@@ -35,7 +35,7 @@ export function SemaphoreSignatureProveScreen({
         messageToSign.value = state.self.uuid;
       }
 
-      const serializedPCD = await prove(state.identity!, messageToSign);
+      const serializedPCD = await prove(state.identity, messageToSign);
       // Redirect back to requester
       window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
         serializedPCD
