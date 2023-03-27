@@ -42,7 +42,10 @@ export function initZuzaluRoutes(
 
     // Save the token. This lets the user prove access to their email later.
 
-    if (process.env.BYPASS_EMAIL_REGISTRATION === "true") {
+    if (
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production"
+    ) {
       await insertParticipant(dbClient, {
         email: email,
         email_token: "",
@@ -70,7 +73,10 @@ export function initZuzaluRoutes(
 
     // Send an email with the login token.
 
-    if (process.env.BYPASS_EMAIL_REGISTRATION) {
+    if (
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production"
+    ) {
       console.log("[DEV] Bypassing email, returning token");
       res.json({ token });
     } else {
