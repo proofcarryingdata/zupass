@@ -15,7 +15,7 @@ An example of a PCD is a [Zero Knowledge Proof](https://en.wikipedia.org/wiki/Ze
 
 This is a PCD because anyone can verify that what it claims is true by running the RSA signature verification locally.
 
-## What is the PCD SDK?s
+## What is the PCD SDK?
 
 The PCD SDK is a framework for developing applications that use PCDs for the proper functioning of their core feature set. It defines the set of interfaces necessary for correctly reasoning about and processing PCDs. It defines the interfaces through which PCDs are produced and consumed. It also includes a 'passport' web application that lets a user manage their personal PCDs, and enables third party applications to request PCDs from the passport, and add new PCDs into it.
 
