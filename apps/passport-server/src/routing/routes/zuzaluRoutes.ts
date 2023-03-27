@@ -71,6 +71,7 @@ export function initZuzaluRoutes(
     // Send an email with the login token.
 
     if (process.env.BYPASS_EMAIL_REGISTRATION) {
+      console.log("[DEV] Bypassing email, returning token");
       res.json({ token });
     } else {
       const { name } = participant;

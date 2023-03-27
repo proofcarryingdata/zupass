@@ -150,7 +150,7 @@ async function requestLoginCode(
 
   if (res.ok) return undefined;
 
-  throw new Error(await res.text());
+  throw new Error(responseText);
 }
 
 const PItalic = styled.p`

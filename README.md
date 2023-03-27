@@ -4,7 +4,7 @@
 
 'PCD' is short for 'Proof Carrying Data'. We use this term to mean any piece of data which has some cryptographic meaning that can be interpreted as a 'claim', and has a 'proof' component which is tied to the 'claim', and mathematically/cryptographically verifiable.
 
-An examle of a PCD is a [Zero Knowledge Proof](https://en.wikipedia.org/wiki/Zero-knowledge_proof), but not all PCDs are zero knowledge proofs. For example, one PCD that is not a zero knowledge proof is a piece of data signed by an RSA private key, and the corresponding public key:
+An example of a PCD is a [Zero Knowledge Proof](https://en.wikipedia.org/wiki/Zero-knowledge_proof), but not all PCDs are zero knowledge proofs. For example, one PCD that is not a zero knowledge proof is a piece of data signed by an RSA private key, and the corresponding public key:
 
 ```
 {
@@ -13,7 +13,7 @@ An examle of a PCD is a [Zero Knowledge Proof](https://en.wikipedia.org/wiki/Zer
 }
 ```
 
-This is a PCD becaues anyone can verify that what it claims is true by running the RSA signature verification locally on their computer.
+This is a PCD because anyone can verify that what it claims is true by running the RSA signature verification locally.
 
 ## What is the PCD SDK?s
 
