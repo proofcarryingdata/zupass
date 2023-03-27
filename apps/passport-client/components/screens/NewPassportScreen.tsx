@@ -77,7 +77,7 @@ export function NewPassportScreen() {
           });
         }
       });
-  }, [email, setEmailSent, dispatch, identity]);
+  }, [email, setEmailSent, dispatch]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
