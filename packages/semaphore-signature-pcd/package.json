@@ -5,7 +5,7 @@
   "types": "./index.tsx",
   "license": "MIT",
   "scripts": {
-    "lint": "TIMING=1 eslint \"**/*.ts*\"",
+    "lint": "TIMING=1 eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
