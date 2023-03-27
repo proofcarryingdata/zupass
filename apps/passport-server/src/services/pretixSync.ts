@@ -18,7 +18,6 @@ export function startPretixSync(context: ApplicationContext) {
       zuEventOrganizersItemID: 151,
     };
   } catch (e) {
-    console.error(e);
     console.error(
       `[INIT] Missing environment variable ${e} - skipping starting Pretix sync`
     );
