@@ -4,9 +4,9 @@ import { v4 as uuid } from "uuid";
 
 export const InputTestPCDTypeName = "input-test-pcd";
 
-export interface InputTestPCDArgs {}
+export type InputTestPCDArgs = object;
 
-export interface InputTestPCDClaim {}
+export type InputTestPCDClaim = object;
 
 export type InputTestPCDProof = undefined;
 
@@ -23,11 +23,11 @@ export class InputTestPCD implements PCD<InputTestPCDClaim, InputTestPCDProof> {
   }
 }
 
-export async function prove(args: InputTestPCDArgs): Promise<InputTestPCD> {
+export async function prove(_args: InputTestPCDArgs): Promise<InputTestPCD> {
   return new InputTestPCD(uuid(), {});
 }
 
-export async function verify(pcd: InputTestPCD): Promise<boolean> {
+export async function verify(_pcd: InputTestPCD): Promise<boolean> {
   return true;
 }
 
