@@ -1,5 +1,4 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { EncryptedStorage } from "@pcd/passport-interface";
 
 export interface ProveRequest {
   pcdType: string;
@@ -36,7 +35,7 @@ export interface SaveE2EERequest {
   encryptedBlob: string;
 }
 
-export interface SaveE2EEResponse {}
+export type SaveE2EEResponse = object;
 
 export interface LoadE2EERequest {
   /**
