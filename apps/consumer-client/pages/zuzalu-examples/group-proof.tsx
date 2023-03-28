@@ -1,11 +1,9 @@
 import {
-  requestSemaphoreSignatureUrl,
   requestZuzaluMembershipUrl,
   useSemaphorePassportProof,
-  useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
+import { useEffect, useState } from "react";
+import { Container } from "../../components/Core";
 import {
   IS_PROD,
   PASSPORT_URL,
@@ -27,16 +25,12 @@ export default function Web() {
     valid: semaphoreProofValid,
     error: semaphoreError,
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
+
   useEffect(() => {
     if (semaphoreError) {
       console.error("error using semaphore passport proof", semaphoreError);
     }
   }, [semaphoreError]);
-
-  // Semaphore Signature PCD
-  const [messageToSign, setMessageToSign] = useState<string>("");
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
 
   // Listen for PCDs coming back from the Passport popup
   useEffect(() => {
@@ -72,41 +66,6 @@ export default function Web() {
         )}
         {semaphoreProofValid && <h3>Welcome, anon</h3>}
       </Container>
-      <Container>
-        <h2>Signature or Identity Reveal Proof (SemaphoreSignaturePCD)</h2>
-        <input
-          placeholder="Message to sign"
-          type="text"
-          value={messageToSign}
-          onChange={(e) => setMessageToSign(e.target.value)}
-        />
-        <br />
-        <br />
-        <button
-          onClick={useCallback(
-            () => requestSemaphoreSignature(messageToSign),
-            [messageToSign]
-          )}
-        >
-          Request Semaphore Signature
-        </button>
-        {signatureProof != null && (
-          <>
-            <h3>Got Semaphore Signature Proof from Passport</h3>
-            <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
-            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
-            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
-            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
-            {signatureProofValid === true && <p>✅ Proof is valid</p>}
-          </>
-        )}
-      </Container>
-
-      <Container>
-        <h2>Zuzalu UUID Proof</h2>
-        click <a href="/uuidProof">here</a> to navigate to the page that
-        demonstrates this one
-      </Container>
     </>
   );
 }
@@ -118,23 +77,6 @@ function requestZuzaluMembershipProof() {
     window.location.origin + "/popup",
     SEMAPHORE_GROUP_URL
   );
+
   requestProofFromPassport(proofUrl);
 }
-
-// Show the Passport popup, ask the user to sign a message with their sema key.
-function requestSemaphoreSignature(messageToSign: string) {
-  const proofUrl = requestSemaphoreSignatureUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    messageToSign
-  );
-  requestProofFromPassport(proofUrl);
-}
-
-const Container = styled.div`
-  font-family: system-ui, sans-serif;
-  border: 1px solid black;
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
-`;
