@@ -16,7 +16,6 @@ export function RollbarProvider({ children }: { children: React.ReactNode }) {
     payload: {
       client: {
         javascript: {
-          code_version: "1.0.0",
           source_map_enabled: true,
         },
       },
