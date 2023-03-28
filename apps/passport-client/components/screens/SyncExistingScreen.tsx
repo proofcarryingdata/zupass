@@ -65,7 +65,7 @@ export function SyncExistingScreen() {
     <AppContainer bg="primary">
       <Spacer h={64} />
       <TextCenter>
-        <H2>Sync Existing Passport</H2>
+        <H2>SYNC EXISTING PASSPORT</H2>
         <Spacer h={32} />
         <BigInput
           type="text"
