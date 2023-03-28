@@ -1,13 +1,14 @@
-import { Client } from "pg";
+import { Pool } from "pg";
 import { getDatabaseConfiguration } from "./postgresConfiguration";
 import { migrateDatabase } from "./postgresMigrations";
 
-export async function getDBClient(): Promise<Client> {
+export async function getDB(): Promise<Pool> {
   console.log("[INIT] Initializing Postgres client");
 
-  const client = new Client(getDatabaseConfiguration());
-  await client.connect();
+  const pool = new Pool(getDatabaseConfiguration());
+  const client = await pool.connect();
   await migrateDatabase(client);
+  client.release();
 
-  return client;
+  return pool;
 }

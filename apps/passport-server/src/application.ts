@@ -1,5 +1,5 @@
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getDBClient } from "./database/postgresClient";
+import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startMetrics } from "./services/metrics";
 import { startPretixSync } from "./services/pretixSync";
@@ -18,12 +18,12 @@ const services: ServiceInitializer[] = [
 ];
 
 export async function startApplication() {
-  const dbClient = await getDBClient();
+  const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
   const rollbar = getRollbar();
 
   const context: ApplicationContext = {
-    dbClient,
+    dbPool,
     honeyClient,
     rollbar,
   };

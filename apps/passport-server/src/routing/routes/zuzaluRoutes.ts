@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { NextFunction, Request, Response } from "express";
+import { PoolClient } from "pg";
 import { ParticipantRole } from "../../database/models";
 import {
   getEncryptedStorage,
@@ -26,7 +27,7 @@ export function initZuzaluRoutes(
   context: ApplicationContext
 ): void {
   console.log("[INIT] Initializing zuzalu routes");
-  const { dbClient } = context;
+  const { dbPool } = context;
 
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
@@ -42,12 +43,11 @@ export function initZuzaluRoutes(
     if (token.length !== 6) throw new Error("Unreachable");
 
     // Save the token. This lets the user prove access to their email later.
-
     if (
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production"
     ) {
-      await insertParticipant(dbClient, {
+      await insertParticipant(dbPool, {
         email: email,
         email_token: "",
         name: "test testerly",
@@ -57,7 +57,7 @@ export function initZuzaluRoutes(
       });
     }
 
-    const participant = await setParticipantToken(dbClient, { email, token });
+    const participant = await setParticipantToken(dbPool, { email, token });
 
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
@@ -73,7 +73,6 @@ export function initZuzaluRoutes(
     );
 
     // Send an email with the login token.
-
     if (
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production"
@@ -94,6 +93,7 @@ export function initZuzaluRoutes(
   app.get(
     "/zuzalu/new-participant",
     async (req: Request, res: Response, next: NextFunction) => {
+      let dbClient = undefined as PoolClient | undefined;
       try {
         const token = decodeString(req.query.token, "token");
         const email = decodeString(req.query.email, "email");
@@ -103,6 +103,7 @@ export function initZuzaluRoutes(
         );
 
         // Look up participant record from Pretix
+        dbClient = await dbPool.connect();
         const pretix = await fetchPretixParticipant(dbClient, { email });
         if (pretix == null) {
           throw new Error(`Ticket for ${email} not found`);
@@ -139,6 +140,8 @@ export function initZuzaluRoutes(
       } catch (e: any) {
         e.message = "Can't add Zuzalu Passport: " + e.message;
         next(e);
+      } finally {
+        if (dbClient != null) dbClient.release();
       }
     }
   );
@@ -146,7 +149,12 @@ export function initZuzaluRoutes(
   // Fetch service status.
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    const db = await fetchStatus(dbClient);
+    const db = await fetchStatus(dbPool);
+    const db_pool = {
+      total: dbPool.totalCount,
+      idle: dbPool.idleCount,
+      waiting: dbPool.waitingCount,
+    };
     const semaphore = {
       n_participants: Object.keys(semaphoreService.participants).length,
       n_residents: semaphoreService.groupResidents.members.length,
@@ -154,7 +162,7 @@ export function initZuzaluRoutes(
     };
     const time = new Date().toISOString();
 
-    const status = { time, db, semaphore };
+    const status = { time, db, db_pool, semaphore };
 
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(status, null, 2));

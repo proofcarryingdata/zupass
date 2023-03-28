@@ -1,3 +1,4 @@
+import { PoolClient } from "pg";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
 import { insertParticipant } from "../database/queries/insertParticipant";
@@ -46,11 +47,8 @@ interface PretixConfig {
   zuEventOrganizersItemID: number;
 }
 
-// Fetch tickets from Pretix. Insert new ones only into the database.
-// TODO: handle revoked/cancelled tickets.
+// Fetch tickets from Pretix, save to DB.
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
-  const { dbClient } = context;
-
   // Load from pretix
   const participants = await loadAllParticipants(pretixConfig);
   const participantEmails = new Set(participants.map((p) => p.email));
@@ -58,6 +56,23 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
     `[PRETIX] loaded ${participants.length} Pretix participants, ${participantEmails.size} unique emails`
   );
 
+  // Save to DB
+  const { dbPool } = context;
+  const dbClient = await dbPool.connect();
+  try {
+    await saveParticipants(dbClient, participants);
+  } finally {
+    dbClient.release();
+  }
+}
+
+// Insert new participants into the database.
+// Update role of existing participants.
+// TODO: handle revoked/cancelled tickets.
+async function saveParticipants(
+  dbClient: PoolClient,
+  participants: PretixParticipant[]
+) {
   // Query database to see what's changed
   const existingPs = await fetchParticipantEmails(dbClient);
   const existingMap = new Map(existingPs.map((p) => [p.email, p.role]));

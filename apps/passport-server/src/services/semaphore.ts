@@ -1,5 +1,5 @@
 import { Group } from "@semaphore-protocol/group";
-import { Client } from "pg";
+import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
 import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
 
@@ -36,9 +36,9 @@ export class SemaphoreService {
   }
 
   // Load participants from DB, rebuild semaphore groups
-  async reload(dbClient: Client) {
+  async reload(dbPool: ClientBase | Pool) {
     console.log(`[SEMA] Reloading semaphore service...`);
-    const ps = await fetchPassportParticipants(dbClient);
+    const ps = await fetchPassportParticipants(dbPool);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
     this.groupResidents = new Group("1", 16);
@@ -79,12 +79,12 @@ export class SemaphoreService {
 
 export const semaphoreService = new SemaphoreService();
 
-export function startSemaphoreService({ dbClient }: { dbClient: Client }) {
-  semaphoreService.reload(dbClient);
+export function startSemaphoreService({ dbPool }: { dbPool: Pool }) {
+  semaphoreService.reload(dbPool);
 
   // Reload every minute
   setInterval(() => {
-    semaphoreService.reload(dbClient);
+    semaphoreService.reload(dbPool);
   }, 60 * 1000);
 }
 
