@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -21,10 +22,12 @@ export function ScanScreen() {
             console.info(error);
           }
         }}
-        constraints={{ facingMode: "environment" }}
+        constraints={{ facingMode: "environment", aspectRatio: 1 }}
         ViewFinder={ViewFinder}
-        containerStyle={{ width: "360px", height: "360px" }}
+        containerStyle={{ width: "100%" }}
       />
+      <Spacer h={24} />
+      <TextCenter>Scan a passport to verify</TextCenter>
     </AppContainer>
   );
 }
@@ -72,8 +75,8 @@ const Guidebox = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 70%;
-  height: 70%;
+  width: 75%;
+  height: 75%;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 `;

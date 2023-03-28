@@ -76,7 +76,6 @@ const ModalWrap = styled.div`
   top: 64px;
   left: 0;
   width: 100%;
-  max-width: 400px;
   margin: 64px auto 0 auto;
   min-height: 480px;
   padding: 12px;
