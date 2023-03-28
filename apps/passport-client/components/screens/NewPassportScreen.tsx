@@ -24,6 +24,7 @@ import { AppContainer } from "../shared/AppContainer";
  */
 export function NewPassportScreen() {
   const [state, dispatch] = useContext(DispatchContext);
+  const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const { identity, pendingAction } = state;
   const { email } = pendingAction;
 
@@ -37,6 +38,9 @@ export function NewPassportScreen() {
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
   useEffect(() => {
+    if (triedSendingEmail) return;
+    setTriedSendingEmail(true);
+
     requestLoginCode(email, identity)
       .then((devToken: string | undefined) => {
         if (devToken === undefined) {
@@ -77,7 +81,7 @@ export function NewPassportScreen() {
           });
         }
       });
-  }, [email, setEmailSent, dispatch, identity]);
+  }, [email, setEmailSent, dispatch, identity, triedSendingEmail]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
