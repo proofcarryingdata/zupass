@@ -30,7 +30,8 @@ export function startPretixSync(context: ApplicationContext) {
   async function trySync() {
     try {
       await sync(context, pretixConfig);
-    } catch (e) {
+    } catch (e: any) {
+      context.rollbar?.error(e);
       console.error(e);
     }
     // TODO: write to honeycomb

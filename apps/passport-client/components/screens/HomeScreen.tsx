@@ -16,6 +16,7 @@ import { CardElem } from "../shared/CardElem";
 export function HomeScreen() {
   const [state] = useContext(DispatchContext);
   const navigate = useNavigate();
+
   useEffect(() => {
     if (state.self == null) {
       console.log("Redirecting to login screen");

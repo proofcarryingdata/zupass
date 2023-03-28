@@ -11,6 +11,7 @@ import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
+import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -118,4 +119,8 @@ if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
 }
 
 const root = createRoot(document.querySelector("#root"));
-root.render(<App />);
+root.render(
+  <RollbarProvider>
+    <App />
+  </RollbarProvider>
+);

@@ -3,6 +3,7 @@ import { getDBClient } from "./database/postgresClient";
 import { startServer } from "./routing/server";
 import { startMetrics } from "./services/metrics";
 import { startPretixSync } from "./services/pretixSync";
+import { getRollbar } from "./services/rollbar";
 import { startSemaphoreService } from "./services/semaphore";
 import { startTelemetry } from "./services/telemetry";
 import { ServiceInitializer } from "./services/types";
@@ -19,10 +20,12 @@ const services: ServiceInitializer[] = [
 export async function startApplication() {
   const dbClient = await getDBClient();
   const honeyClient = getHoneycombAPI();
+  const rollbar = getRollbar();
 
   const context: ApplicationContext = {
     dbClient,
     honeyClient,
+    rollbar,
   };
 
   // Run all services concurrently.

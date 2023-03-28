@@ -1,3 +1,4 @@
 
 # Esbuild generated output
 public/js
+.env
