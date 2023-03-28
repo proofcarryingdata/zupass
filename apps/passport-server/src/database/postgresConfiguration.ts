@@ -1,4 +1,4 @@
-import { ClientConfig } from "pg";
+import { ClientConfig, PoolConfig } from "pg";
 
 export interface DBConfiguration extends ClientConfig {
   user: string;
@@ -8,7 +8,7 @@ export interface DBConfiguration extends ClientConfig {
   port: number;
 }
 
-export function getDatabaseConfiguration(): DBConfiguration {
+export function getDatabaseConfiguration(): PoolConfig {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");
   }
@@ -26,12 +26,17 @@ export function getDatabaseConfiguration(): DBConfiguration {
   }
 
   return {
+    // DB connection configuration
     user: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
     host: process.env.DATABASE_HOST,
     database: process.env.DATABASE_DB_NAME,
     port: 5432,
     ssl: process.env.DATABASE_SSL === "true",
-    connectionTimeoutMillis: 0,
+
+    // Pool configuration
+    connectionTimeoutMillis: 1_000,
+    idleTimeoutMillis: 10_000,
+    max: 8,
   };
 }

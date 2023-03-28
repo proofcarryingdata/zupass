@@ -1,9 +1,9 @@
 import Libhoney from "libhoney";
-import { Client } from "pg";
+import { Pool } from "pg";
 import Rollbar from "rollbar";
 
 export interface ApplicationContext {
-  dbClient: Client;
+  dbPool: Pool;
   honeyClient: Libhoney | null;
   rollbar: Rollbar | null;
 }
