@@ -6,14 +6,12 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import * as path from "path";
 
-
-const TREE_DEPTH = 16
+const TREE_DEPTH = 16;
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.wasm`);
 
-
-describe("rln should work", function () {
+describe("rln-pcd should work", function () {
   this.timeout(1000 * 30);
 
   this.beforeAll(async function () {
@@ -58,7 +56,7 @@ describe("rln should work", function () {
       },
       epoch: {
         argumentType: ArgumentTypeName.BigInt,
-        value: String(epoch)
+        value: String(epoch),
       },
     };
   });
@@ -74,9 +72,19 @@ describe("rln should work", function () {
     const { prove, verify } = RLNPCDPackage;
     const pcd = await prove(args);
     // change merkle root to make it invalid
-    pcd.proof.proof.snarkProof.publicSignals.merkleRoot = "0";
+    pcd.claim.merkleRoot = BigInt(0);
     const verified = await verify(pcd);
     assert.equal(verified, false);
+  });
+
+  it("should throw when verifying if pcd claim and proof mismatch", async function () {
+    const { prove, verify } = RLNPCDPackage;
+    const pcd = await prove(args);
+    const wrongEpoch = BigInt(43);
+    pcd.claim.epoch = wrongEpoch;
+    await assert.rejects(async () => {
+      await verify(pcd);
+    }, /claim and proof mismatch/);
   });
 
   it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
