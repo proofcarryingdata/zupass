@@ -9,7 +9,7 @@ import {
   PASSPORT_SERVER_URL,
   PASSPORT_URL,
   requestProofFromPassport,
-} from "../src/util";
+} from "../../src/util";
 
 export default function Web() {
   // Listen for PCDs coming back from the Passport popup
