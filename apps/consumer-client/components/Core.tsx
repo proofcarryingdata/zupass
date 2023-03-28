@@ -25,14 +25,23 @@ export const CodeLink = ({
   return <Link href={PCD_GITHUB_URL + file}>{children}</Link>;
 };
 
-export const CollapsableCode = ({ code }: { code: string }) => {
+export const CollapsableCode = ({
+  code,
+  label,
+}: {
+  code: string;
+  label?: string;
+}) => {
   const [collapsed, setCollapsed] = useState(true);
 
   const toggle = useCallback(() => {
     setCollapsed((collapsed) => !collapsed);
   }, []);
 
-  const buttonText = collapsed ? "expand" : "collapse";
+  let buttonText = collapsed ? "Expand" : "Collapse";
+  if (label !== undefined) {
+    buttonText += " " + label;
+  }
 
   if (collapsed) {
     return <button onClick={toggle}>{buttonText}</button>;
@@ -49,6 +58,10 @@ export const CollapsableCode = ({ code }: { code: string }) => {
 };
 
 const CollapsableCodeContainer = styled.div`
+  background-color: #eee;
+  border-radius: 8px;
+  border: 1px solid grey;
+  overflow-y: scroll;
   max-width: 100%;
   padding: 8px;
 `;
