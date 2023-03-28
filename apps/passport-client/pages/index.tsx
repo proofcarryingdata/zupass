@@ -45,18 +45,16 @@ class App extends React.Component<object, ZuState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <RollbarProvider>
-        <DispatchContext.Provider value={[state, disp]}>
-          {!hasStack && <Router />}
-          {hasStack && (
-            <HashRouter>
-              <Routes>
-                <Route path="*" element={<AppContainer bg="gray" />} />
-              </Routes>
-            </HashRouter>
-          )}
-        </DispatchContext.Provider>
-      </RollbarProvider>
+      <DispatchContext.Provider value={[state, disp]}>
+        {!hasStack && <Router />}
+        {hasStack && (
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<AppContainer bg="gray" />} />
+            </Routes>
+          </HashRouter>
+        )}
+      </DispatchContext.Provider>
     );
   }
 
@@ -69,6 +67,13 @@ class App extends React.Component<object, ZuState> {
     return {
       error: { title: "Error", message, stack: shortStack },
     } as Partial<ZuState>;
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    if (this.rollbar) {
+      console.log("[ROLLBAR] captured error, uploading");
+      this.rollbar.error(error);
+    }
   }
 
   startBackgroundJobs = () => {
@@ -125,4 +130,8 @@ if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
 }
 
 const root = createRoot(document.querySelector("#root"));
-root.render(<App />);
+root.render(
+  <RollbarProvider>
+    <App />
+  </RollbarProvider>
+);
