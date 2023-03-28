@@ -4,7 +4,8 @@ import {
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import { HomeLink } from "../../components/Core";
+import { CollapsableCode, HomeLink } from "../../components/Core";
+import { ExampleContainer } from "../../components/ExamplePage";
 import {
   IS_PROD,
   PASSPORT_URL,
@@ -39,33 +40,48 @@ export default function Web() {
   return (
     <>
       <HomeLink />
-      <h2>Semaphore Signature Proof (SemaphoreSignaturePCD)</h2>
-      <input
-        placeholder="Message to sign"
-        type="text"
-        value={messageToSign}
-        onChange={(e) => setMessageToSign(e.target.value)}
-      />
-      <br />
-      <br />
-      <button
-        onClick={useCallback(
-          () => requestSemaphoreSignature(messageToSign),
-          [messageToSign]
+      <h2>Semaphore Signature Proof</h2>
+      <p>
+        This page shows a working example of an integration with the Zuzalu
+        Passport application which requests and verifies that a particular user
+        is a member of the Zuzalu Residents Semaphore Group. Although the data
+        that is returned is not specific for Zuzalu, this specific request shows
+        a specific screen within the passport which was specifically designed
+        for Zuzalu.
+      </p>
+      <ExampleContainer>
+        <input
+          style={{ marginBottom: "8px" }}
+          placeholder="Message to sign"
+          type="text"
+          value={messageToSign}
+          onChange={(e) => setMessageToSign(e.target.value)}
+        />
+        <br />
+        <button
+          disabled={signatureProofValid}
+          onClick={useCallback(
+            () => requestSemaphoreSignature(messageToSign),
+            [messageToSign]
+          )}
+        >
+          Request Semaphore Signature
+        </button>
+        {signatureProof != null && (
+          <>
+            <p>Got Semaphore Signature Proof from Passport</p>
+
+            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+            {signatureProofValid === true && <p>✅ Proof is valid</p>}
+            <CollapsableCode
+              label="PCD Response"
+              code={JSON.stringify(signatureProof, null, 2)}
+            />
+          </>
         )}
-      >
-        Request Semaphore Signature
-      </button>
-      {signatureProof != null && (
-        <>
-          <h3>Got Semaphore Signature Proof from Passport</h3>
-          <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
-          <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
-          {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
-          {signatureProofValid === false && <p>❌ Proof is invalid</p>}
-          {signatureProofValid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
+      </ExampleContainer>
     </>
   );
 }
