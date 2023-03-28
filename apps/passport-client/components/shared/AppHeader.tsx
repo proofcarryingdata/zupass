@@ -77,6 +77,7 @@ const ModalWrap = styled.div`
   top: 64px;
   left: 0;
   width: 100%;
+  max-width: 420px;
   margin: 64px auto 0 auto;
   min-height: 480px;
   padding: 12px;
@@ -118,7 +119,11 @@ function SettingsModal() {
   }, [state.encryptionKey]);
 
   const clearPassport = useCallback(() => {
-    if (window.confirm("Are you sure? This will delete your data.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear your passport? This will delete your passport data."
+      )
+    ) {
       dispatch({ type: "reset-passport" });
     }
   }, [dispatch]);

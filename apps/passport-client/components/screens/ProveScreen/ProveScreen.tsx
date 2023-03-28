@@ -48,7 +48,7 @@ export function ProveScreen() {
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
-      <H2>{title}</H2>
+      <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />
       <CenterColumn w={280}>{body}</CenterColumn>
       <Spacer h={24} />
