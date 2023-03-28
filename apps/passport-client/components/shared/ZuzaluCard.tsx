@@ -120,7 +120,7 @@ const qrStyle = { width: qrSize, height: qrSize };
 const [qrBg, qrFg] = (() => {
   const style = getComputedStyle(document.body);
   const bg = style.getPropertyValue("--white");
-  const fg = style.getPropertyValue("--primary-dark");
+  const fg = style.getPropertyValue("--bg-dark-primary");
   return [bg, fg];
 })();
 
