@@ -12,6 +12,7 @@ import {
   setEncryptedStorage,
 } from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
+import { fetchStatus } from "../../database/queries/fetchStatus";
 import { findOrCreateCommitment } from "../../database/queries/findOrCreateCommitment";
 import { insertParticipant } from "../../database/queries/insertParticipant";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
@@ -141,6 +142,23 @@ export function initZuzaluRoutes(
       }
     }
   );
+
+  // Fetch service status.
+  app.get("/zuzalu/status", async (req: Request, res: Response) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const db = await fetchStatus(dbClient);
+    const semaphore = {
+      n_participants: Object.keys(semaphoreService.participants).length,
+      n_residents: semaphoreService.groupResidents.members.length,
+      n_visitors: semaphoreService.groupVisitors.members.length,
+    };
+    const time = new Date().toISOString();
+
+    const status = { time, db, semaphore };
+
+    res.setHeader("Content-Type", "application/json");
+    res.end(JSON.stringify(status, null, 2));
+  });
 
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
