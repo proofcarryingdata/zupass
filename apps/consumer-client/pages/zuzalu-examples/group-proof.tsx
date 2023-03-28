@@ -3,6 +3,7 @@ import {
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
+import { HomeLink } from "../../components/Core";
 import {
   IS_PROD,
   PASSPORT_URL,
@@ -45,6 +46,7 @@ export default function Web() {
 
   return (
     <>
+      <HomeLink />
       <h2>Semaphore Group Membership Proof</h2>
       <p>
         This page shows a working example of an integration with the Zuzalu
