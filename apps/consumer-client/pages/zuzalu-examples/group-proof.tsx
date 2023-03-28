@@ -3,7 +3,8 @@ import {
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
-import { HomeLink } from "../../components/Core";
+import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
+import { ExampleContainer } from "../../components/ExamplePage";
 import {
   IS_PROD,
   PASSPORT_URL,
@@ -64,22 +65,36 @@ export default function Web() {
         variable set to <code>true</code>, which allows you to log in
         development mode without being a resident.
       </p>
-      <button onClick={requestZuzaluMembershipProof}>
-        Request Zuzalu Membership Proof
-      </button>
-      {semaphoreProof != null && (
-        <>
-          <h3>Got Zuzalu Membership Proof from Passport</h3>
-          <pre>{JSON.stringify(semaphoreProof, null, 2)}</pre>
-          {semaphoreGroup && (
-            <p>✅ Loaded group, {semaphoreGroup.members.length} members</p>
-          )}
-          {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
-          {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
-          {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
-      {semaphoreProofValid && <h3>Welcome, anon</h3>}
+      <p>
+        The underlying PCD that this example uses is{" "}
+        <code>SempahoreGroupPCD</code>. You can find more documentation
+        regarding this PCD{" "}
+        <CodeLink file="/tree/main/packages/semaphore-group-pcd">
+          here on GitHub
+        </CodeLink>{" "}
+        .
+      </p>
+      <ExampleContainer>
+        <button
+          onClick={requestZuzaluMembershipProof}
+          disabled={semaphoreProofValid}
+        >
+          Request Zuzalu Membership Proof
+        </button>
+        {semaphoreProof != null && (
+          <>
+            <p>Got Zuzalu Membership Proof from Passport</p>
+            <CollapsableCode code={JSON.stringify(semaphoreProof, null, 2)} />
+            {semaphoreGroup && (
+              <p>✅ Loaded group, {semaphoreGroup.members.length} members</p>
+            )}
+            {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
+            {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
+            {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+        {semaphoreProofValid && <p>Welcome, anon</p>}
+      </ExampleContainer>
     </>
   );
 }

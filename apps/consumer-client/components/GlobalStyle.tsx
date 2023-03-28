@@ -13,4 +13,8 @@ export const GlobalStyle = createGlobalStyle`
   p {
     max-width: 600px;
   }
+
+  button {
+    cursor: pointer;
+  }
 `;

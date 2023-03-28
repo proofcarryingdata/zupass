@@ -4,7 +4,7 @@ import {
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
-import styled from "styled-components";
+import { HomeLink } from "../../components/Core";
 import {
   PASSPORT_SERVER_URL,
   PASSPORT_URL,
@@ -43,34 +43,32 @@ export default function Page() {
   );
 
   return (
-    <Container>
-      <h1>consumer-client</h1>
-      <Container>
-        <h2>Zuzalu UUID-revealing proof (SemaphoreSignaturePCD)</h2>
-        <button onClick={requestSignedZuID}>Request UUID</button>
-        {signatureProof != null && (
-          <>
-            <h3>Got Semaphore Signature Proof from Passport</h3>
-            <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
-            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
-            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
-            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
-            {signatureProofValid === true && <p>✅ Proof is valid</p>}
-          </>
-        )}
-        {participant && (
-          <>
-            <pre>{JSON.stringify(participant, null, 2)}</pre>
-            {participant.commitment ===
-            signatureProof?.claim.identityCommitment ? (
-              <p>✅ Commitment matches</p>
-            ) : (
-              <p>❌ Commitment does not match</p>
-            )}
-          </>
-        )}
-      </Container>
-    </Container>
+    <>
+      <HomeLink />
+      <h2>Zuzalu UUID-revealing proof </h2>
+      <button onClick={requestSignedZuID}>Request UUID</button>
+      {signatureProof != null && (
+        <>
+          <h3>Got Semaphore Signature Proof from Passport</h3>
+          <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
+          <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+          {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+          {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+          {signatureProofValid === true && <p>✅ Proof is valid</p>}
+        </>
+      )}
+      {participant && (
+        <>
+          <pre>{JSON.stringify(participant, null, 2)}</pre>
+          {participant.commitment ===
+          signatureProof?.claim.identityCommitment ? (
+            <p>✅ Commitment matches</p>
+          ) : (
+            <p>❌ Commitment does not match</p>
+          )}
+        </>
+      )}
+    </>
   );
 }
 
@@ -82,7 +80,3 @@ function requestSignedZuID() {
   );
   requestProofFromPassport(proofUrl);
 }
-
-const Container = styled.div`
-  font-family: system-ui, sans-serif;
-`;

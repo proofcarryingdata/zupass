@@ -4,7 +4,7 @@ const App = ({ Component, pageProps }: { Component: any; pageProps: any }) => {
   return (
     <>
       <GlobalStyle />
-      <Component {...pageProps} />;
+      <Component {...pageProps} />
     </>
   );
 };
