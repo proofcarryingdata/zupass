@@ -12,9 +12,21 @@ export default function Page() {
       <div>
         <h2>zuzalu-specific examples</h2>
         <ol>
-          <li>Semaphore Group Membership Proof</li>
-          <li>Semaphore Signature Proof</li>
-          <li>Semaphore Identity-Revealing Proof</li>
+          <li>
+            <a href="/zuzalu-examples/group-proof">
+              Semaphore Group Membership Proof
+            </a>
+          </li>
+          <li>
+            <a href="/zuzalu-examples/signature-proof">
+              Semaphore Signature Proof
+            </a>
+          </li>
+          <li>
+            <a href="/zuzalu-examples/uuid-proof">
+              Semaphore Identity-Revealing Proof
+            </a>
+          </li>
         </ol>
       </div>
     </div>
