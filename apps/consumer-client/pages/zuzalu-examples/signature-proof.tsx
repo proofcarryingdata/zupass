@@ -1,11 +1,11 @@
 import {
   requestSemaphoreSignatureUrl,
   requestZuzaluMembershipUrl,
-  useSemaphorePassportProof,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
+import { HomeLink } from "../../components/Core";
 import {
   IS_PROD,
   PASSPORT_URL,
@@ -19,19 +19,6 @@ const SEMAPHORE_GROUP_URL = IS_PROD
 export default function Web() {
   // Raw string-encoded PCD
   const [pcdStr, setPcdStr] = useState("");
-
-  // Semaphore Group PCD
-  const {
-    proof: semaphoreProof,
-    group: semaphoreGroup,
-    valid: semaphoreProofValid,
-    error: semaphoreError,
-  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
-  useEffect(() => {
-    if (semaphoreError) {
-      console.error("error using semaphore passport proof", semaphoreError);
-    }
-  }, [semaphoreError]);
 
   // Semaphore Signature PCD
   const [messageToSign, setMessageToSign] = useState<string>("");
@@ -52,26 +39,34 @@ export default function Web() {
 
   return (
     <>
-      <h1>Example PCD-Consuming Client Application</h1>
-      <Container>
-        <h2>Zuzalu Membership Proof (SemaphoreGroupPCD)</h2>
-        <button onClick={requestZuzaluMembershipProof}>
-          Request Zuzalu Membership Proof
-        </button>
-        {semaphoreProof != null && (
-          <>
-            <h3>Got Zuzalu Membership Proof from Passport</h3>
-            <pre>{JSON.stringify(semaphoreProof, null, 2)}</pre>
-            {semaphoreGroup && (
-              <p>✅ Loaded group, {semaphoreGroup.members.length} members</p>
-            )}
-            {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
-            {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
-            {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
-          </>
+      <HomeLink />
+      <h2>Semaphore Signature Proof (SemaphoreSignaturePCD)</h2>
+      <input
+        placeholder="Message to sign"
+        type="text"
+        value={messageToSign}
+        onChange={(e) => setMessageToSign(e.target.value)}
+      />
+      <br />
+      <br />
+      <button
+        onClick={useCallback(
+          () => requestSemaphoreSignature(messageToSign),
+          [messageToSign]
         )}
-        {semaphoreProofValid && <h3>Welcome, anon</h3>}
-      </Container>
+      >
+        Request Semaphore Signature
+      </button>
+      {signatureProof != null && (
+        <>
+          <h3>Got Semaphore Signature Proof from Passport</h3>
+          <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
+          <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+          {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+          {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+          {signatureProofValid === true && <p>✅ Proof is valid</p>}
+        </>
+      )}
     </>
   );
 }
