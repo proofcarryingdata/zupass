@@ -6,7 +6,7 @@
 <path d="M79.8748 117.821C87.6477 117.82 95.2506 115.51 101.746 111.176C108.241 106.842 113.345 100.672 116.428 93.4287L112.097 90.8175V80.2392L101.808 74.8312V97.0845H97.443V106.702H95.8148V45.6842L85.688 55.9648V69.781L78.4524 77.1187V106.689H76.7907V92.0317L71.6 88.4255V106.689H69.9435V76.7584L61.8925 83.8506V106.689H59.292V97.672H57.7487V91.9038H53.1187V74.7163L46.8451 79.4166V95.2749L45.0111 96.9644C48.4545 103.288 53.5052 108.558 59.6371 112.226C65.7689 115.895 72.7575 117.826 79.8748 117.821Z" fill="url(#paint3_linear_125_1454)"/>
 </g>
 <defs>
-<filter id="filter0_i_125_1454" x="0" y="0" width="160" height="155.005" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<filter id="filter0_i_125_1454" x="0" y="0" width="160" height="155.005" filterUnits="userSpaceOnUse">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>
 <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
