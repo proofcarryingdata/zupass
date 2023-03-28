@@ -1,5 +1,6 @@
 import * as React from "react";
 import styled from "styled-components";
+import { icons } from "../icons";
 import { Button } from "./Button";
 import { BigInput } from "./Input";
 import { Spacer } from "./Spacer";
@@ -91,5 +92,5 @@ export const BackgroundGlow = styled.div<{
 `;
 
 export function ZuLogo() {
-  return <img src="/assets/logo.svg" width="160px" height="155px" />;
+  return <img src={icons.logo} width="160px" height="155px" />;
 }

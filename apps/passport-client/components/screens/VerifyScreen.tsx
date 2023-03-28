@@ -21,6 +21,7 @@ import {
   TextCenter,
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { CardElem } from "../shared/CardElem";
 
@@ -69,9 +70,9 @@ export function VerifyScreen() {
     : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
 
   const icon = {
-    true: "/assets/verify-valid.svg",
-    false: "/assets/verify-invalid.svg",
-    undefined: "/assets/verify-in-progress.svg",
+    true: icons.verifyValid,
+    false: icons.verifyInvalid,
+    undefined: icons.verifyInProgress,
   }["" + result?.valid];
 
   return (

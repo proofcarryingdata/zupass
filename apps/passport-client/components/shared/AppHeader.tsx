@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { CenterColumn, Spacer, TextCenter } from "../core";
 import { Button, CircleButton, LinkButton } from "../core/Button";
+import { icons } from "../icons";
 
 export function AppHeader() {
   const [modal, setModal] = useState("");
@@ -23,10 +24,10 @@ export function AppHeader() {
   return (
     <AppHeaderWrap>
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <img src="/assets/info-accent.svg" width={34} height={34} />
+        <img src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <img src="/assets/settings-accent.svg" width={34} height={34} />
+        <img src={icons.settingsAccent} width={34} height={34} />
       </CircleButton>
       {modal !== "" && (
         <Modal onClose={close}>
@@ -51,7 +52,7 @@ function Modal(props: { onClose: () => void; children: ReactNode }) {
     <ModalBg onClick={props.onClose}>
       <ModalWrap onClick={ignore}>
         <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-          <img src="/assets/close-white.svg" width={20} height={20} />
+          <img src={icons.closeWhite} width={20} height={20} />
         </CircleButton>
         <Spacer h={32} />
         {props.children}
@@ -87,7 +88,7 @@ function InfoModal() {
     <div>
       <Spacer h={32} />
       <TextCenter>
-        <img src="/assets/info-primary.svg" width={34} height={34} />
+        <img src={icons.infoPrimary} width={34} height={34} />
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={240}>
@@ -126,7 +127,7 @@ function SettingsModal() {
     <>
       <Spacer h={32} />
       <TextCenter>
-        <img src="/assets/settings-primary.svg" width={34} height={34} />
+        <img src={icons.settingsPrimary} width={34} height={34} />
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={280}>

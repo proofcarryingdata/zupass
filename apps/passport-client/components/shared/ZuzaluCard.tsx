@@ -8,6 +8,7 @@ import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { ZuIdCard } from "../../src/model/Card";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
+import { icons } from "../icons";
 
 export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
   const { role, name, email, residence } = card.participant;
@@ -100,11 +101,11 @@ function ZuzaluQR({ card }: { card: ZuIdCard }) {
 }
 
 function QRLogoLoading() {
-  return <QRLogo width="48" height="48" src="/assets/qr-center-loading.svg" />;
+  return <QRLogo width="48" height="48" src={icons.qrCenterLoading} />;
 }
 
 function QRLogoDone() {
-  return <QRLogo width="48" height="48" src="/assets/qr-center-logo.svg" />;
+  return <QRLogo width="48" height="48" src={icons.qrCenter} />;
 }
 
 const QRLogo = styled.img`

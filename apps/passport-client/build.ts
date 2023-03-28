@@ -14,6 +14,9 @@ const opts: BuildOptions = {
       process: true,
     }),
   ],
+  loader: {
+    ".svg": "dataurl",
+  },
   define: {
     "process.env.PASSPORT_SERVER_URL": JSON.stringify(
       process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
