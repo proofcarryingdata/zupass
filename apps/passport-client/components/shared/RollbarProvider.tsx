@@ -1,5 +1,6 @@
 import { Provider } from "@rollbar/react";
 import React from "react";
+import { Configuration } from "rollbar";
 
 export function RollbarProvider({ children }: { children: React.ReactNode }) {
   if (process.env.ROLLBAR_TOKEN === undefined) {
@@ -7,8 +8,9 @@ export function RollbarProvider({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  const rollbarConfig = {
+  const rollbarConfig: Configuration = {
     accessToken: process.env.ROLLBAR_TOKEN,
+    environment: process.env.NODE_ENV,
     captureUncaught: true,
     captureUnhandledRejections: true,
     payload: {

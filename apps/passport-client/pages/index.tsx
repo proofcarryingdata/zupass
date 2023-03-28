@@ -1,9 +1,7 @@
-import { Context, getRollbarFromContext } from "@rollbar/react";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import Rollbar from "rollbar";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -26,15 +24,12 @@ import { pollParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<object, ZuState> {
-  declare context: typeof Context;
   state = undefined as ZuState | undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
-  rollbar: Rollbar | undefined;
 
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
-    this.rollbar = getRollbarFromContext(this.context);
   }
 
   render() {
@@ -68,13 +63,6 @@ class App extends React.Component<object, ZuState> {
     return {
       error: { title: "Error", message, stack: shortStack },
     } as Partial<ZuState>;
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    if (this.rollbar) {
-      console.log("[ROLLBAR] captured error, uploading");
-      this.rollbar.error(error);
-    }
   }
 
   startBackgroundJobs = () => {
