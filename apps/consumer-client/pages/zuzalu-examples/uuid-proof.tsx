@@ -11,7 +11,7 @@ import {
   requestProofFromPassport,
 } from "../../src/util";
 
-export default function Web() {
+export default function Page() {
   // Listen for PCDs coming back from the Passport popup
   const [pcdStr, setPcdStr] = useState("");
   useEffect(() => {
