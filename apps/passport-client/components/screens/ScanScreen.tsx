@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
+import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
@@ -49,7 +50,7 @@ function ViewFinder() {
   return (
     <ScanOverlayWrap>
       <CircleButton diameter={20} padding={16} onClick={onClose}>
-        <img src="/assets/close-white.svg" width={20} height={20} />
+        <img src={icons.closeWhite} width={20} height={20} />
       </CircleButton>
       <Guidebox>
         <Corner top left />

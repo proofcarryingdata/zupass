@@ -77,7 +77,7 @@ const CardHeaderCollapsed = styled.div`
 
 const CardHeader = styled(H4)`
   text-align: center;
-  padding: 12px;
+  padding: 10px;
 `;
 
 function CardBody({ card }: { card: Card }) {
