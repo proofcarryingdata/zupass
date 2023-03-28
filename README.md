@@ -94,7 +94,7 @@ Each package and app which needs testing has a `test` script in its `package.jso
 
 ### Linting
 
-All the packages and apps are linted using [eslint](https://eslint.org/).
+All the packages and apps are linted using [eslint](https://eslint.org/). The linting runs in GitHub Actions, and your branch must pass all the linting rules before it is merged. To run the linter locally, you can run the command `yarn lint` in the root of this project to lint all the packages and apps in the repository. If you want to run the linter on a particular project or package, navigate to its directory, and execute `yarn lint` from there.
 
 ## Production Deployment
 

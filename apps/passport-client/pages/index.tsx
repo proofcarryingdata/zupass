@@ -22,7 +22,7 @@ import {
 import { pollParticipant } from "../src/participant";
 import { ZuState } from "../src/state";
 
-class App extends React.Component<{}, ZuState> {
+class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
   dispatch = (action: Action) => dispatch(action, this.state, this.update);

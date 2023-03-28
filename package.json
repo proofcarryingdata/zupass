@@ -13,7 +13,7 @@
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "lint": "exit 0",
+    "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test"
   },
   "devDependencies": {

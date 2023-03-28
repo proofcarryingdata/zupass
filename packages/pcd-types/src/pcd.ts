@@ -6,7 +6,7 @@ export interface PCD<C = unknown, P = unknown> {
 }
 
 declare const tag: unique symbol;
-export interface SerializedPCD<T extends PCD = PCD> {
+export interface SerializedPCD<_T extends PCD = PCD> {
   [tag]: "SerializedPcd";
   type: string;
   pcd: string;

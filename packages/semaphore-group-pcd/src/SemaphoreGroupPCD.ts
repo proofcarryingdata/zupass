@@ -123,8 +123,8 @@ export async function prove(
   const fullProof = await generateProof(
     identityPCD.claim.identity,
     deserializedGroup,
-    args.externalNullifier.value!,
-    args.signal.value!,
+    args.externalNullifier.value,
+    args.signal.value,
     {
       zkeyFilePath: initArgs.zkeyFilePath,
       wasmFilePath: initArgs.wasmFilePath,

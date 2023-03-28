@@ -6,7 +6,7 @@
     "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev src/main.ts",
     "build": "tsc --noEmit",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "lint": "exit 0",
+    "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
