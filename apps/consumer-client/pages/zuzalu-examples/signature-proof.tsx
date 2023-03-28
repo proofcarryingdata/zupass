@@ -4,7 +4,6 @@ import {
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 import { HomeLink } from "../../components/Core";
 import {
   IS_PROD,
@@ -90,11 +89,3 @@ function requestSemaphoreSignature(messageToSign: string) {
   );
   requestProofFromPassport(proofUrl);
 }
-
-const Container = styled.div`
-  font-family: system-ui, sans-serif;
-  border: 1px solid black;
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
-`;
