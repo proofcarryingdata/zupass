@@ -10,11 +10,16 @@ export interface PCDRequest {
   type: PCDRequestType;
 }
 
+export interface GetRequestOptions {
+  fancyProvingScreen?: boolean;
+}
+
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   extends PCDRequest {
   type: PCDRequestType.Get;
   pcdType: T["name"];
   args: ArgsOf<T>;
+  options?: GetRequestOptions;
 }
 
 export interface PCDAddRequest extends PCDRequest {

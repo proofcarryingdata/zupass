@@ -33,7 +33,10 @@ export function ProveScreen() {
 
   let title: string;
   let body: JSX.Element;
-  if (request.pcdType === SemaphoreGroupPCDPackage.name) {
+
+  if (request.options?.fancyProvingScreen) {
+    return <ParameterizedProveScreen />;
+  } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
     title = "Prove membership";
     body = <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
