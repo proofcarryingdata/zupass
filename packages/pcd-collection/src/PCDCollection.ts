@@ -8,7 +8,7 @@ import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
  */
 export class PCDCollection {
   private packages: PCDPackage[];
-  private pcds: PCD[];
+  private pcds: PCD<any, any>[];
 
   public constructor(packages: PCDPackage[], pcds: PCD[]) {
     this.packages = packages;
@@ -73,7 +73,7 @@ export class PCDCollection {
     serializedPCDs: SerializedPCD[]
   ): Promise<PCDCollection> {
     const collection = new PCDCollection(packages, []);
-    const pcds = await Promise.all(
+    const pcds: PCD[] = await Promise.all(
       serializedPCDs.map(collection.deserialize.bind(collection))
     );
     collection.addAll(pcds);

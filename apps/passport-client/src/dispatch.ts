@@ -77,7 +77,7 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport(update);
+      return resetPassport();
     case "load-from-sync":
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     default:
@@ -199,7 +199,7 @@ async function saveParticipantPCDs(participant: ZuParticipant) {
       // Redirect to the home page.
       window.location.hash = "#/";
     })
-    .catch((e) => {
+    .catch((_e) => {
       // TODO
     });
 }
@@ -223,7 +223,7 @@ function clearError(state: ZuState, update: ZuUpdate) {
   update({ error: undefined });
 }
 
-function resetPassport(update: ZuUpdate) {
+function resetPassport() {
   // Clear saved state.
   window.localStorage.clear();
   // Reload to clear in-memory state.

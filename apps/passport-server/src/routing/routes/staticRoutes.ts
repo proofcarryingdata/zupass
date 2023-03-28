@@ -12,14 +12,14 @@ const semaphoreResourcesPath = path.join(
 
 export function initStaticRoutes(
   app: express.Application,
-  context: ApplicationContext
+  _context: ApplicationContext
 ): void {
   console.log("[INIT] Initializing static routes");
 
   app.use(
     "/static",
     express.static(staticResourcesPath, {
-      setHeaders(res, path, stat) {
+      setHeaders(res, path, _stat) {
         if (path.startsWith(semaphoreResourcesPath)) {
           res.setHeader("Cache-Control", "max-age=31536000"); // one year
         }

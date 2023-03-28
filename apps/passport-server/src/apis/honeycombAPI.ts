@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
@@ -28,6 +29,7 @@ export function getHoneycombAPI(): Libhoney | null {
   console.log("[INIT] Loaded a Honeycomb API");
 
   return new Libhoney({
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     writeKey: process.env.HONEYCOMB_API_KEY!,
     dataset: getDatasetName(),
   });

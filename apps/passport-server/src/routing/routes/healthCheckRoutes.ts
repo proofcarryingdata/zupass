@@ -3,7 +3,7 @@ import { ApplicationContext } from "../../types";
 
 export function initHealthcheckRoutes(
   app: express.Application,
-  context: ApplicationContext
+  _context: ApplicationContext
 ): void {
   console.log("[INIT] Initializing health check routes");
 

@@ -24,17 +24,23 @@ import { AppContainer } from "../shared/AppContainer";
  */
 export function NewPassportScreen() {
   const [state, dispatch] = useContext(DispatchContext);
+  const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const { identity, pendingAction } = state;
-  if (pendingAction == null || pendingAction.type !== "new-passport") {
-    window.location.hash = "#/";
-    window.location.reload();
-    return null;
-  }
   const { email } = pendingAction;
+
+  useEffect(() => {
+    if (pendingAction == null || pendingAction.type !== "new-passport") {
+      window.location.hash = "#/";
+      window.location.reload();
+    }
+  }, [pendingAction]);
 
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
   useEffect(() => {
+    if (triedSendingEmail) return;
+    setTriedSendingEmail(true);
+
     requestLoginCode(email, identity)
       .then((devToken: string | undefined) => {
         if (devToken === undefined) {
@@ -75,14 +81,14 @@ export function NewPassportScreen() {
           });
         }
       });
-  }, [email, setEmailSent]);
+  }, [email, setEmailSent, dispatch, identity, triedSendingEmail]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
   const login = useCallback(() => {
     const token = inRef.current?.value || "";
     dispatch({ type: "login", email, token });
-  }, []);
+  }, [dispatch, email]);
 
   return (
     <AppContainer bg="primary">
@@ -146,7 +152,9 @@ async function requestLoginCode(
     if (parsedResponse.token) {
       return parsedResponse.token;
     }
-  } catch (e) {}
+  } catch (e) {
+    console.log(e);
+  }
 
   if (res.ok) return undefined;
 

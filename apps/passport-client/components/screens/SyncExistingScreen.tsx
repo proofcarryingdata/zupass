@@ -55,7 +55,7 @@ export function SyncExistingScreen() {
         error: { title: "Sync failed", message, stack },
       });
     });
-  }, [syncKey]);
+  }, [syncKey, dispatch]);
 
   const onClose = useCallback(() => {
     window.location.hash = "#/";

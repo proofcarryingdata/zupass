@@ -1,8 +1,7 @@
-import { ArgsOf } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
+  ArgsOf,
   Argument,
-  ArgumentTypeName,
   BigIntArgument,
   BooleanArgument,
   isBigIntArgument,
@@ -46,7 +45,7 @@ export function PCDArgs<T extends PCDPackage>({
           pcdCollection={pcdCollection}
           key={i}
           argName={key}
-          arg={value}
+          arg={value as any}
           args={args}
           setArgs={setArgs}
         />
@@ -142,7 +141,7 @@ export function StringArgInput<T extends PCDPackage>({
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
-    [args, setArgs]
+    [args, setArgs, argName]
   );
 
   return (
@@ -173,7 +172,7 @@ export function NumberArgInput<T extends PCDPackage>({
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
-    [args, setArgs]
+    [args, setArgs, argName]
   );
 
   return (
@@ -204,7 +203,7 @@ export function BigIntArgInput<T extends PCDPackage>({
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
-    [args, setArgs]
+    [args, setArgs, argName]
   );
 
   return (
@@ -235,7 +234,7 @@ export function BooleanArgInput<T extends PCDPackage>({
       args[argName].value = e.target.value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
-    [args, setArgs]
+    [args, setArgs, argName]
   );
 
   return (
@@ -261,7 +260,7 @@ export function ObjectArgInput<T extends PCDPackage>({
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
 }) {
-  const [loading, setLoading] = useState(arg.remoteUrl !== undefined);
+  const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
 
   // TODO: implement remote loading for all types, not just
   // objects.
@@ -279,19 +278,16 @@ export function ObjectArgInput<T extends PCDPackage>({
           args[argName].value = obj;
           setArgs(JSON.parse(JSON.stringify(args)));
         })
-        .catch((e) => {
+        .catch((_e) => {
           setLoading(false);
           // todo: good error handling
         });
     }
-  }, [arg.remoteUrl]);
+  }, [arg.remoteUrl, argName, args, load, setArgs]);
 
-  const onChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      // TODO: parse JSON object, validate it
-    },
-    [args, setArgs]
-  );
+  const onChange = useCallback((_e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // TODO: parse JSON object, validate it
+  }, []);
 
   return (
     <ArgContainer>
@@ -331,7 +327,7 @@ export function PCDArgInput<T extends PCDPackage>({
         setArgs(JSON.parse(JSON.stringify(args)));
       }
     },
-    [args, setArgs]
+    [argName, args, setArgs, pcdCollection]
   );
 
   useEffect(() => {
@@ -343,7 +339,7 @@ export function PCDArgInput<T extends PCDPackage>({
     }
 
     deserialize();
-  }, [arg.value]);
+  }, [arg.value, pcdCollection]);
 
   return (
     <ArgContainer>

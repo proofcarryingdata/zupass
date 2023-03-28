@@ -62,7 +62,7 @@ export function VerifyScreen() {
           },
         });
       });
-  }, [encodedQRPayload, setResult]);
+  }, [encodedQRPayload, setResult, dispatch]);
 
   const [from, to, bg]: [string, string, "primary" | "gray"] = result?.valid
     ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]

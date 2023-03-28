@@ -13,4 +13,5 @@ jobs:
           node-version: 18.x
       - run: "yarn --prefer-offline"
       - run: "yarn build"
+      - run: "yarn lint"
       - run: "yarn test"

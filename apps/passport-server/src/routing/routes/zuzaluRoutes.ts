@@ -224,7 +224,7 @@ export function initZuzaluRoutes(
 function decodeString(
   s: any,
   name: string,
-  predicate?: (s: String) => boolean
+  predicate?: (s: string) => boolean
 ): string {
   if (s == null) {
     throw new Error(`Missing ${name}`);

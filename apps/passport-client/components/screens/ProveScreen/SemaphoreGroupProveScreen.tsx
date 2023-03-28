@@ -30,20 +30,20 @@ export function SemaphoreGroupProveScreen({
       setGroup(group);
     };
     fetchGroup().catch(console.error);
-  }, []);
+  }, [req.args.group.remoteUrl]);
 
   // Once that's done & user clicks Prove, create a zero-knowledge proof
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
     setProving(true);
-    const serializedPCD = await prove(state.identity!, group);
+    const serializedPCD = await prove(state.identity, group);
 
     // Redirect back to requester
     window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
       serializedPCD
     )}`;
-  }, [group, setProving]);
+  }, [group, setProving, req.returnUrl, state.identity]);
 
   const lines: ReactNode[] = [];
   lines.push(<p>Loading {req.args.group.remoteUrl}</p>);

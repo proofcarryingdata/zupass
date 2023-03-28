@@ -19,6 +19,7 @@ describe("semaphore group identity should work", function () {
   // sets up shared Semaphore args across test cases
   let args: SemaphoreGroupPCDArgs;
   this.beforeAll(async function () {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreGroupPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,

@@ -108,19 +108,20 @@ function InfoModal() {
 
 function SettingsModal() {
   const [justCopied, setJustCopied] = useState(false);
+  const [state, dispatch] = useContext(DispatchContext);
+
   const copySyncKey = useCallback(async () => {
     // Use the window clipboard API to copy the key
     await window.navigator.clipboard.writeText(state.encryptionKey);
     setJustCopied(true);
     setTimeout(() => setJustCopied(false), 2000);
-  }, []);
+  }, [state.encryptionKey]);
 
-  const [state, dispatch] = useContext(DispatchContext);
   const clearPassport = useCallback(() => {
     if (window.confirm("Are you sure? This will delete your data.")) {
       dispatch({ type: "reset-passport" });
     }
-  }, []);
+  }, [dispatch]);
 
   return (
     <>

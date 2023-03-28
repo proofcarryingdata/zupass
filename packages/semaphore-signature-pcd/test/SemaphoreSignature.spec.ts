@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
@@ -22,6 +23,7 @@ describe("semaphore signature should work", function () {
   // sets up shared Semaphore args across test cases
   let args: SemaphoreSignaturePCDArgs;
   this.beforeAll(async function () {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreSignaturePCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,

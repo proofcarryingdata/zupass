@@ -35,7 +35,7 @@ export function SemaphoreSignatureProveScreen({
         messageToSign.value = state.self.uuid;
       }
 
-      const serializedPCD = await prove(state.identity!, messageToSign);
+      const serializedPCD = await prove(state.identity, messageToSign);
       // Redirect back to requester
       window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
         serializedPCD
@@ -43,7 +43,7 @@ export function SemaphoreSignatureProveScreen({
     } catch (e) {
       console.log(e);
     }
-  }, [prove, req]);
+  }, [req, state.identity, state.self?.uuid]);
 
   const lines: ReactNode[] = [];
 

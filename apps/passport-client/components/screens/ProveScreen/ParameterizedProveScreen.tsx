@@ -32,7 +32,7 @@ export function ParameterizedProveScreen() {
     window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
       serialized
     )}`;
-  }, [args]);
+  }, [args, pcdPackage, request.returnUrl]);
 
   if (request.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
