@@ -1,7 +1,9 @@
+import { getRollbarFromContext } from "@rollbar/react";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import Rollbar from "rollbar";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -11,6 +13,7 @@ import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
+import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -26,9 +29,11 @@ class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
+  rollbar: Rollbar | undefined;
 
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    this.rollbar = getRollbarFromContext(this.context as any);
   }
 
   render() {
@@ -40,16 +45,18 @@ class App extends React.Component<object, ZuState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <DispatchContext.Provider value={[state, disp]}>
-        {!hasStack && <Router />}
-        {hasStack && (
-          <HashRouter>
-            <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
-            </Routes>
-          </HashRouter>
-        )}
-      </DispatchContext.Provider>
+      <RollbarProvider>
+        <DispatchContext.Provider value={[state, disp]}>
+          {!hasStack && <Router />}
+          {hasStack && (
+            <HashRouter>
+              <Routes>
+                <Route path="*" element={<AppContainer bg="gray" />} />
+              </Routes>
+            </HashRouter>
+          )}
+        </DispatchContext.Provider>
+      </RollbarProvider>
     );
   }
 

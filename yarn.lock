@@ -1792,6 +1792,13 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.4.0.tgz#74935d538e4df8893e47831a7aea362f295bcd39"
   integrity sha512-BJ9SxXux8zAg991UmT8slpwpsd31K1dHHbD3Ba4VzD+liLQ4WAMSxQp2d2ZPRPfN0jN2NPRowcSSoM7lCaF08Q==
 
+"@rollbar/react@^0.11.1":
+  version "0.11.1"
+  resolved "https://registry.yarnpkg.com/@rollbar/react/-/react-0.11.1.tgz#91cfa39fe54f4c1939233c1f63e27d2f89abb20e"
+  integrity sha512-QwI8wPjX1xc/AuX39TSJx/tEtjmf8macRqYgX+R/uRh7Y3+4ilZX9OMwLg/4Je8+NN+9y7PFNKkQa9adn58d/g==
+  dependencies:
+    tiny-invariant "^1.1.0"
+
 "@rushstack/eslint-patch@^1.1.3":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.2.0.tgz#8be36a1f66f3265389e90b5f9c9962146758f728"
@@ -7385,6 +7392,11 @@ thriftrw@^3.5.0:
     bufrw "^1.3.0"
     error "7.0.2"
     long "^2.4.0"
+
+tiny-invariant@^1.1.0:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/tiny-invariant/-/tiny-invariant-1.3.1.tgz#8560808c916ef02ecfd55e66090df23a4b7aa642"
+  integrity sha512-AD5ih2NlSssTCwsMznbvwMZpJ1cbhkGd2uueNxzv2jDlEeZdU04JQfRnggJQ8DrcVBGjAsCKwFBbDlVNtEMlzw==
 
 tmp@^0.0.33:
   version "0.0.33"
