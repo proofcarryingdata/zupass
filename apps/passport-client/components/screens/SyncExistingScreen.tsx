@@ -83,6 +83,7 @@ export function SyncExistingScreen() {
         <Button style="danger" type="submit" onClick={onClose}>
           Back
         </Button>
+        <Spacer h={32} />
       </TextCenter>
     </AppContainer>
   );

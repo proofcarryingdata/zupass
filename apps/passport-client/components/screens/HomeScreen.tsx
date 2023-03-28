@@ -50,6 +50,7 @@ export function HomeScreen() {
         if (i === sel) return <Spacer key={i} h={48} />;
         return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
       })}
+      <Spacer h={24} />
     </AppContainer>
   );
 }

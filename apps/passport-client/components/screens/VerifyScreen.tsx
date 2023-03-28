@@ -98,6 +98,7 @@ export function VerifyScreen() {
             <LinkButton to="/scan">Verify another</LinkButton>
             <Spacer h={8} />
             <LinkButton to="/">Back to Passport</LinkButton>
+            <Spacer h={24} />
           </CenterColumn>
         )}
       </BackgroundGlow>

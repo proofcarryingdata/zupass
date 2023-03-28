@@ -17,6 +17,7 @@ export function MissingScreen() {
           <p>Missing {loc.pathname}</p>
           <Spacer h={24} />
           <LinkButton to="/">Return to Passport</LinkButton>
+          <Spacer h={24} />
         </TextCenter>
       </CenterColumn>
     </AppContainer>

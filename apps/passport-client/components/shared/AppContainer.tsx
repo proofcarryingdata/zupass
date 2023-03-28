@@ -42,8 +42,7 @@ const Container = styled.div`
   align-items: center;
   flex-direction: column;
   height: 100%;
-  max-width: 400px;
+  max-width: 420px;
   margin: 0 auto;
   position: relative;
-  padding-bottom: 24px;
 `;
