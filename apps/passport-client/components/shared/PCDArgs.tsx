@@ -180,12 +180,28 @@ export function NumberArgInput<T extends PCDPackage>({
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
 }) {
+  const [valid, setValid] = useState(true);
+  const validator = useCallback((arg: string): boolean => {
+    try {
+      const integer = parseInt(arg);
+      if (isNaN(integer)) return false;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }, []);
+
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      args[argName].value = e.target.value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+      if (validator(e.target.value)) {
+        args[argName].value = e.target.value;
+        setArgs(JSON.parse(JSON.stringify(args)));
+        setValid(true);
+      } else {
+        setValid(false);
+      }
     },
-    [args, setArgs, argName]
+    [args, setArgs, argName, validator]
   );
 
   return (
@@ -207,6 +223,9 @@ export function NumberArgInput<T extends PCDPackage>({
             disabled={!arg.userProvided}
           />
         </InputContainer>
+      </Row>
+      <Row>
+        {!valid && <ErrorContainer>Error parsing your input</ErrorContainer>}
       </Row>
     </ArgContainer>
   );
@@ -223,12 +242,28 @@ export function BigIntArgInput<T extends PCDPackage>({
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
 }) {
+  const [valid, setValid] = useState(true);
+  const validator = useCallback((arg: string): boolean => {
+    try {
+      BigInt(arg);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }, []);
+
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      args[argName].value = e.target.value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+      if (validator(e.target.value)) {
+        args[argName].value = e.target.value;
+        setArgs(JSON.parse(JSON.stringify(args)));
+        console.log("changing argument");
+        setValid(true);
+      } else {
+        setValid(false);
+      }
     },
-    [args, setArgs, argName]
+    [args, setArgs, argName, validator]
   );
 
   return (
@@ -245,11 +280,14 @@ export function BigIntArgInput<T extends PCDPackage>({
       <Row>
         <InputContainer>
           <input
-            value={arg.value}
+            value={arg.value ?? ""}
             onChange={onChange}
             disabled={!arg.userProvided}
           />
         </InputContainer>
+      </Row>
+      <Row>
+        {!valid && <ErrorContainer>Error parsing your input</ErrorContainer>}
       </Row>
     </ArgContainer>
   );
@@ -441,7 +479,7 @@ const Row = styled.div`
 `;
 
 const Description = styled.div`
-  padding: 10px;
+  padding: 10px 10px 0px 10px;
 `;
 
 const InputContainer = styled.div`
@@ -499,4 +537,8 @@ const ArgTypeNameContainer = styled.span`
   border-radius: 4px;
   background-color: var(--accent-lite);
   font-size: 0.8em;
+`;
+
+const ErrorContainer = styled.div`
+  padding: 0px 10px 10px 10px;
 `;
