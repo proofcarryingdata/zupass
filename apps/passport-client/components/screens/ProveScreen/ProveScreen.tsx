@@ -35,15 +35,17 @@ export function ProveScreen() {
   let body: JSX.Element;
 
   if (request.options?.fancyProvingScreen) {
-    return <ParameterizedProveScreen />;
+    return <ParameterizedProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
+    return <ParameterizedProveScreen req={request} />;
+
     title = "Prove membership";
     body = <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
     title = "Sign a message";
     body = <SemaphoreSignatureProveScreen req={request} />;
   } else {
-    return <ParameterizedProveScreen />;
+    return <ParameterizedProveScreen req={request} />;
   }
 
   return (
