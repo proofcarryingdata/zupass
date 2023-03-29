@@ -1,6 +1,7 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import * as React from "react";
 import { useCallback, useContext, useState } from "react";
+import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
@@ -35,7 +36,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   const pageTitle = req.options?.title ?? "Prove " + req.pcdType;
 
   return (
-    <div>
+    <Container>
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
@@ -53,6 +54,12 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
       <Spacer h={16} />
       <Button onClick={onProveClick}>PROVE</Button>
       <Spacer h={64} />
-    </div>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  background-color: var(--bg-dark-gray);
+  width: 100vw;
+  min-height: 100vh;
+`;

@@ -150,11 +150,13 @@ export function StringArgInput<T extends PCDPackage>({
         <ArgName>{argName}</ArgName>
       </Row>
       <Row>
-        <input
-          value={arg.value}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <InputContainer>
+          <input
+            value={arg.value}
+            onChange={onChange}
+            disabled={!arg.userProvided}
+          />
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -185,11 +187,13 @@ export function NumberArgInput<T extends PCDPackage>({
         <ArgName>{argName}</ArgName>
       </Row>
       <Row>
-        <input
-          value={arg.value}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <InputContainer>
+          <input
+            value={arg.value}
+            onChange={onChange}
+            disabled={!arg.userProvided}
+          />
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -220,11 +224,13 @@ export function BigIntArgInput<T extends PCDPackage>({
         <ArgName>{argName}</ArgName>
       </Row>
       <Row>
-        <input
-          value={arg.value}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <InputContainer>
+          <input
+            value={arg.value}
+            onChange={onChange}
+            disabled={!arg.userProvided}
+          />
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -255,11 +261,13 @@ export function BooleanArgInput<T extends PCDPackage>({
         <ArgName>{argName}</ArgName>
       </Row>
       <Row>
-        <input
-          value={arg.value}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <InputContainer>
+          <input
+            value={arg.value}
+            onChange={onChange}
+            disabled={!arg.userProvided}
+          />
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -315,11 +323,13 @@ export function ObjectArgInput<T extends PCDPackage>({
         <ArgName>{argName}</ArgName>
       </Row>
       <Row>
-        <textarea
-          value={JSON.stringify(arg.value)}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <InputContainer>
+          <textarea
+            value={JSON.stringify(arg.value)}
+            onChange={onChange}
+            disabled={!arg.userProvided}
+          />
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -369,21 +379,25 @@ export function PCDArgInput<T extends PCDPackage>({
     <ArgContainer>
       <Row>
         <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
         <Description>{arg.description}</Description>
       </Row>
       <Row>
-        <select value={value?.id} onChange={onChange}>
-          <option key="none" value={"none"}>
-            select
-          </option>
-          {pcdCollection.getAll().map((pcd) => {
-            return (
-              <option key={pcd.id} value={pcd.id}>
-                {pcd.type}
-              </option>
-            );
-          })}
-        </select>
+        <InputContainer>
+          <select value={value?.id} onChange={onChange}>
+            <option key="none" value={"none"}>
+              select
+            </option>
+            {pcdCollection.getAll().map((pcd) => {
+              return (
+                <option key={pcd.id} value={pcd.id}>
+                  {pcd.type}
+                </option>
+              );
+            })}
+          </select>
+        </InputContainer>
       </Row>
     </ArgContainer>
   );
@@ -395,15 +409,23 @@ const Row = styled.div`
 
 const Description = styled.span``;
 
-const ArgName = styled.span`
+const InputContainer = styled.div`
+  padding: 10px;
+`;
+
+const ArgName = styled.div`
   padding: 2px 4px;
-  border-radius: 2px;
   font-weight: bold;
+  width: 100%;
+  background-color: var(--primary-dark);
+  color: var(--accent-lite);
+  font-weight: 300;
+  padding: 10px;
+  font-family: monospace;
 `;
 
 const ArgContainer = styled.div`
-  padding: 16px;
-  background-color: #efefef;
+  background-color: white;
   border: 1px solid grey;
   border-radius: 8px;
   width: 100%;
@@ -411,7 +433,8 @@ const ArgContainer = styled.div`
   justify-content: center;
   align-items: stretch;
   flex-direction: column;
-  gap: 8px;
+  border: 1px solid var(--accent-lite);
+  overflow: hidden;
 `;
 
 const ArgsContainer = styled.div`
@@ -422,5 +445,6 @@ const ArgsContainer = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 8px;
+  gap: 16px;
+  color: var(--primary-dark);
 `;
