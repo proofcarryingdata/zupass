@@ -62,4 +62,5 @@ const Container = styled.div`
   background-color: var(--bg-dark-gray);
   width: 100vw;
   min-height: 100vh;
+  padding: 16px;
 `;
