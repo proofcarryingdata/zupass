@@ -261,30 +261,33 @@ export function ObjectArgInput<T extends PCDPackage>({
   setArgs: (args: ArgsOf<T>) => void;
 }) {
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
+  const [loaded, setLoaded] = useState(false);
 
-  // TODO: implement remote loading for all types, not just
-  // objects.
   const load = useCallback(async () => {
+    console.log(`loading ${arg.remoteUrl}`);
     const res = await fetch(arg.remoteUrl);
-    const remoteObject = JSON.parse(await res.json());
-    return remoteObject;
+    const result = await res.json();
+    console.log(`loaded ${arg.remoteUrl}:`, result);
+    return result;
   }, [arg.remoteUrl]);
 
   useEffect(() => {
-    if (arg.remoteUrl) {
+    if (arg.remoteUrl && !loaded) {
       setLoading(true);
       load()
         .then((obj) => {
           setLoading(false);
+          setLoaded(true);
           args[argName].value = obj;
           setArgs(JSON.parse(JSON.stringify(args)));
         })
         .catch((_e) => {
           setLoading(false);
-          // todo: good error handling
+          setLoaded(true);
+          console.log(`failed to load ${arg.remoteUrl}`);
         });
     }
-  }, [arg.remoteUrl, argName, args, load, setArgs]);
+  }, [arg.remoteUrl, argName, args, load, setArgs, loaded]);
 
   const onChange = useCallback((_e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // TODO: parse JSON object, validate it
