@@ -394,6 +394,10 @@ export function ObjectArgInput<T extends PCDPackage>({
       <Row>
         <InputContainer>
           <textarea
+            style={{
+              width: "100%",
+              height: "4em",
+            }}
             value={JSON.stringify(arg.value)}
             onChange={onChange}
             disabled={!arg.userProvided}
