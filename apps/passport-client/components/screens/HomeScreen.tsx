@@ -33,7 +33,7 @@ export function HomeScreen() {
     () => getTestCards(state.identity, state.self),
     [state]
   );
-  const [sel, setSel] = useState(0);
+  const [sel, _setSel] = useState(0);
 
   if (state.self == null) return null;
 

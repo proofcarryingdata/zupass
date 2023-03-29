@@ -5,7 +5,7 @@ import {
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL } from "../../src/constants";
+import { IS_PROD, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
 const SEMAPHORE_GROUP_URL = IS_PROD

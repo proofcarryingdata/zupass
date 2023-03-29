@@ -265,16 +265,14 @@ export function ObjectArgInput<T extends PCDPackage>({
   // TODO: implement remote loading for all types, not just
   // objects.
   const load = useCallback(async () => {
-    console.log(`loading ${arg.remoteUrl}`);
-    try {
-      const res = await fetch(arg.remoteUrl);
-      const remoteObject = JSON.parse(await res.json());
-      return remoteObject;
-    } catch (e) {}
+    const res = await fetch(arg.remoteUrl);
+    const remoteObject = JSON.parse(await res.json());
+    return remoteObject;
   }, [arg.remoteUrl]);
 
   useEffect(() => {
     if (arg.remoteUrl) {
+      setLoading(true);
       load()
         .then((obj) => {
           setLoading(false);
