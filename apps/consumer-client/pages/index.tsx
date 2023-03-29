@@ -16,7 +16,9 @@ export default function Page() {
           <li>
             <a href="/examples/group-proof">Semaphore Group Membership Proof</a>
           </li>
-          <li>Semaphore Signature Proof (coming soon) </li>
+          <li>
+            <a href="/examples/signature-proof">Semaphore Signature Proof</a>
+          </li>
         </ol>
       </div>
       <div>
