@@ -2,6 +2,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import {
   ArgsOf,
   Argument,
+  ArgumentTypeName,
   BigIntArgument,
   BooleanArgument,
   isBigIntArgument,
@@ -147,7 +148,10 @@ export function StringArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <InputContainer>
@@ -184,7 +188,10 @@ export function NumberArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <InputContainer>
@@ -221,7 +228,10 @@ export function BigIntArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <InputContainer>
@@ -258,7 +268,10 @@ export function BooleanArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <InputContainer>
@@ -320,7 +333,10 @@ export function ObjectArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <InputContainer>
@@ -378,7 +394,9 @@ export function PCDArgInput<T extends PCDPackage>({
   return (
     <ArgContainer>
       <Row>
-        <ArgName>{argName}</ArgName>
+        <ArgName>
+          {argName} <ArgTypeLabel argType={arg.argumentType} />
+        </ArgName>
       </Row>
       <Row>
         <Description>{arg.description}</Description>
@@ -420,8 +438,11 @@ const ArgName = styled.div`
   background-color: var(--primary-dark);
   color: var(--accent-lite);
   font-weight: 300;
-  padding: 10px;
+  padding: 10px 20px;
   font-family: monospace;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const ArgContainer = styled.div`
@@ -447,4 +468,18 @@ const ArgsContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   color: var(--primary-dark);
+`;
+
+export function ArgTypeLabel({ argType }: { argType: ArgumentTypeName }) {
+  return <ArgTypeNameContainer>{argType}</ArgTypeNameContainer>;
+}
+
+const ArgTypeNameContainer = styled.span`
+  font-family: monospace;
+  padding: 2px 8px;
+  border: 2px solid var(--bg-dark-primary);
+  color: var(--bg-dark-primary);
+  border-radius: 4px;
+  background-color: var(--accent-lite);
+  font-size: 0.8em;
 `;
