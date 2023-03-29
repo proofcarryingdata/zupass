@@ -526,7 +526,6 @@ const ArgContainer = styled.div`
 `;
 
 const ArgsContainer = styled.div`
-  margin: 8px;
   border-radius: 16px;
   color: black;
   display: flex;
@@ -546,7 +545,7 @@ const ArgTypeNameContainer = styled.span`
   padding: 2px 8px;
   border: 2px solid var(--bg-dark-primary);
   color: var(--bg-dark-primary);
-  border-radius: 4px;
+  border-radius: 8px;
   background-color: var(--accent-lite);
   font-size: 0.8em;
 `;

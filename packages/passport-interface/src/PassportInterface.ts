@@ -34,13 +34,15 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
   passportOrigin: string,
   returnUrl: string,
   pcdType: T["name"],
-  args: ArgsOf<T>
+  args: ArgsOf<T>,
+  options?: GetRequestOptions
 ) {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
     returnUrl: returnUrl,
     args: args,
     pcdType,
+    options,
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/prove?request=${encReq}`;

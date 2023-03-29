@@ -43,7 +43,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
       <H1>🔑 &nbsp; {pageTitle}</H1>
       {req.options?.description && (
         <>
-          <Spacer h={8} />
+          <Spacer h={16} />
           <p>{req.options.description}</p>
         </>
       )}

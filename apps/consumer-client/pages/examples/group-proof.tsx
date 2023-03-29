@@ -125,6 +125,11 @@ function requestMembershipProof() {
         description:
           "The message you are signing with your Semaphore identity.",
       },
+    },
+    {
+      description:
+        "Generate a group membership proof using your passport's Semaphore Identity.",
+      title: "Group Membership Proof",
     }
   );
 
