@@ -146,12 +146,16 @@ export function StringArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <Row>
+        <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
+        <input
+          value={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </Row>
     </ArgContainer>
   );
 }
@@ -177,12 +181,16 @@ export function NumberArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <Row>
+        <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
+        <input
+          value={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </Row>
     </ArgContainer>
   );
 }
@@ -208,12 +216,16 @@ export function BigIntArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <Row>
+        <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
+        <input
+          value={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </Row>
     </ArgContainer>
   );
 }
@@ -239,12 +251,16 @@ export function BooleanArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <Row>
+        <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
+        <input
+          value={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </Row>
     </ArgContainer>
   );
 }
@@ -295,12 +311,16 @@ export function ObjectArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <textarea
-        value={JSON.stringify(arg.value)}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <Row>
+        <ArgName>{argName}</ArgName>
+      </Row>
+      <Row>
+        <textarea
+          value={JSON.stringify(arg.value)}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </Row>
     </ArgContainer>
   );
 }
@@ -347,32 +367,60 @@ export function PCDArgInput<T extends PCDPackage>({
 
   return (
     <ArgContainer>
-      {argName}:
-      <select value={value?.id} onChange={onChange}>
-        <option key="none" value={"none"}>
-          select
-        </option>
-        {pcdCollection.getAll().map((pcd) => {
-          return (
-            <option key={pcd.id} value={pcd.id}>
-              {pcd.type}
-            </option>
-          );
-        })}
-      </select>
+      <Row>
+        <ArgName>{argName}</ArgName>
+        <Description>{arg.description}</Description>
+      </Row>
+      <Row>
+        <select value={value?.id} onChange={onChange}>
+          <option key="none" value={"none"}>
+            select
+          </option>
+          {pcdCollection.getAll().map((pcd) => {
+            return (
+              <option key={pcd.id} value={pcd.id}>
+                {pcd.type}
+              </option>
+            );
+          })}
+        </select>
+      </Row>
     </ArgContainer>
   );
 }
 
+const Row = styled.div`
+  width: 100%;
+`;
+
+const Description = styled.span``;
+
+const ArgName = styled.span`
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-weight: bold;
+`;
+
 const ArgContainer = styled.div`
-  padding: 4px;
-  border: 1px solid black;
+  padding: 16px;
+  background-color: #efefef;
+  border: 1px solid grey;
+  border-radius: 8px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 const ArgsContainer = styled.div`
-  margin: 16px;
-  padding: 16px;
+  margin: 8px;
   border-radius: 16px;
-  background-color: white;
   color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 8px;
 `;
