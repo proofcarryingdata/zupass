@@ -104,25 +104,26 @@ function requestMembershipProof() {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
         description:
-          "You can choose a nullifier here to prevent this message from being used across domains.",
+          "You can choose a nullifier to prevent this signed message from being used across domains.",
       },
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
         remoteUrl: SEMAPHORE_GROUP_URL,
-        description: "The which you are proving you belong to.",
+        description: "The Semaphore group which you are proving you belong to.",
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
         value: undefined,
         userProvided: true,
-        description: "The PCD which represents your identity.",
+        description:
+          "The Semaphore Identity which you are signing the message on behalf of.",
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
         description:
-          "This is the message you are 'signing' with your Semaphore identity.",
+          "The message you are signing with your Semaphore identity.",
       },
     }
   );

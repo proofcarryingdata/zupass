@@ -154,6 +154,9 @@ export function StringArgInput<T extends PCDPackage>({
         </ArgName>
       </Row>
       <Row>
+        <Description>{arg.description}</Description>
+      </Row>
+      <Row>
         <InputContainer>
           <input
             value={arg.value}
@@ -192,6 +195,9 @@ export function NumberArgInput<T extends PCDPackage>({
           {argName}
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
+      </Row>
+      <Row>
+        <Description>{arg.description}</Description>
       </Row>
       <Row>
         <InputContainer>
@@ -234,6 +240,9 @@ export function BigIntArgInput<T extends PCDPackage>({
         </ArgName>
       </Row>
       <Row>
+        <Description>{arg.description}</Description>
+      </Row>
+      <Row>
         <InputContainer>
           <input
             value={arg.value}
@@ -272,6 +281,9 @@ export function BooleanArgInput<T extends PCDPackage>({
           {argName}
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
+      </Row>
+      <Row>
+        <Description>{arg.description}</Description>
       </Row>
       <Row>
         <InputContainer>
@@ -337,6 +349,9 @@ export function ObjectArgInput<T extends PCDPackage>({
           {argName}
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
+      </Row>
+      <Row>
+        <Description>{arg.description}</Description>
       </Row>
       <Row>
         <InputContainer>
@@ -425,7 +440,9 @@ const Row = styled.div`
   width: 100%;
 `;
 
-const Description = styled.span``;
+const Description = styled.div`
+  padding: 10px;
+`;
 
 const InputContainer = styled.div`
   padding: 10px;
@@ -467,7 +484,7 @@ const ArgsContainer = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 16px;
-  color: var(--primary-dark);
+  color: var(--bg-dark-primary);
 `;
 
 export function ArgTypeLabel({ argType }: { argType: ArgumentTypeName }) {
