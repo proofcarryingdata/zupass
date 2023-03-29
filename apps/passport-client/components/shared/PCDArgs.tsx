@@ -428,9 +428,14 @@ export function PCDArgInput<T extends PCDPackage>({
       const id = e.target.value;
       const pcd = pcdCollection.getById(id);
 
+      console.log(id, pcd);
+
       if (pcd) {
         const serialized = await pcdCollection.serialize(pcd);
         args[argName].value = serialized;
+        setArgs(JSON.parse(JSON.stringify(args)));
+      } else {
+        args[argName].value = undefined;
         setArgs(JSON.parse(JSON.stringify(args)));
       }
     },
@@ -439,9 +444,12 @@ export function PCDArgInput<T extends PCDPackage>({
 
   useEffect(() => {
     async function deserialize() {
-      if (arg.value !== undefined) {
+      console.log("deserializing");
+      try {
         const parsed = await pcdCollection.deserialize(arg.value);
         setValue(parsed);
+      } catch (e) {
+        setValue({ id: "none" } as any);
       }
     }
 
