@@ -16,7 +16,7 @@ import { PCDArgs } from "../../shared/PCDArgs";
  * HTML input fields that users will fill in by hand. For arguments that
  * are objects, supports loading from a URL.
  */
-export function ParameterizedProveScreen({ req }: { req: PCDGetRequest }) {
+export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   const [state, dispatch] = useContext(DispatchContext);
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(req.args)));
   const pcdPackage = state.pcds.getPackage(req.pcdType);
