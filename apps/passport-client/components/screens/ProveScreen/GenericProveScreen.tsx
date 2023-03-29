@@ -19,13 +19,20 @@ import { PCDArgs } from "../../shared/PCDArgs";
 export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   const [state, dispatch] = useContext(DispatchContext);
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(req.args)));
+  const [error, setError] = useState<Error | undefined>();
+
   const pcdPackage = state.pcds.getPackage(req.pcdType);
+
   const onProveClick = useCallback(async () => {
-    const pcd = await pcdPackage.prove(args);
-    const serialized = await pcdPackage.serialize(pcd);
-    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-      serialized
-    )}`;
+    try {
+      const pcd = await pcdPackage.prove(args);
+      const serialized = await pcdPackage.serialize(pcd);
+      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        serialized
+      )}`;
+    } catch (e) {
+      setError(e);
+    }
   }, [args, pcdPackage, req.returnUrl]);
 
   if (req.type !== PCDRequestType.Get) {
@@ -52,6 +59,12 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
       {req.options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
       <PCDArgs args={args} setArgs={setArgs} pcdCollection={state.pcds} />
       <Spacer h={16} />
+      {error && (
+        <>
+          <ErrorContainer>{error.message}</ErrorContainer>
+          <Spacer h={16} />
+        </>
+      )}
       <Button onClick={onProveClick}>PROVE</Button>
       <Spacer h={64} />
     </Container>
@@ -63,4 +76,12 @@ const Container = styled.div`
   width: 100vw;
   min-height: 100vh;
   padding: 16px;
+`;
+
+const ErrorContainer = styled.div`
+  padding: 16px;
+  background-color: white;
+  color: red;
+  border-radius: 16px;
+  border: 1px solid red;
 `;
