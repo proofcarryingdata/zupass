@@ -1,7 +1,9 @@
 import {
-  requestSemaphoreSignatureUrl,
+  constructPassportPcdGetRequestUrl,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -13,7 +15,6 @@ export default function Web() {
   const [pcdStr, setPcdStr] = useState("");
 
   // Semaphore Signature PCD
-  const [messageToSign, setMessageToSign] = useState<string>("");
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -42,20 +43,9 @@ export default function Web() {
         for Zuzalu.
       </p>
       <ExampleContainer>
-        <input
-          style={{ marginBottom: "8px" }}
-          placeholder="Message to sign"
-          type="text"
-          value={messageToSign}
-          onChange={(e) => setMessageToSign(e.target.value)}
-        />
-        <br />
         <button
           disabled={signatureProofValid}
-          onClick={useCallback(
-            () => requestSemaphoreSignature(messageToSign),
-            [messageToSign]
-          )}
+          onClick={useCallback(() => requestSemaphoreSignature(), [])}
         >
           Request Semaphore Signature
         </button>
@@ -78,12 +68,31 @@ export default function Web() {
   );
 }
 
-// Show the Passport popup, ask the user to sign a message with their sema key.
-function requestSemaphoreSignature(messageToSign: string) {
-  const proofUrl = requestSemaphoreSignatureUrl(
+function requestSemaphoreSignature() {
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreSignaturePCDPackage
+  >(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    messageToSign
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+        description: "The identity with which to sign a message.",
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: undefined,
+        userProvided: true,
+        description: "The message you want to sign.",
+      },
+    },
+    {
+      genericProveScreen: true,
+    }
   );
+
   requestProofFromPassport(proofUrl);
 }
