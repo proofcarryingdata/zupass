@@ -1,5 +1,4 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
-import { title } from "process";
 import * as React from "react";
 import { useCallback, useContext, useState } from "react";
 import { DispatchContext } from "../../../src/dispatch";
@@ -33,15 +32,23 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
     return null;
   }
 
+  const pageTitle = req.options?.title ?? "Prove " + req.pcdType;
+
   return (
     <div>
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
-      <H1>🔑 &nbsp; {title}</H1>
+      <H1>🔑 &nbsp; {pageTitle}</H1>
+      {req.options?.description && (
+        <>
+          <Spacer h={8} />
+          <p>{req.options.description}</p>
+        </>
+      )}
+
       <Spacer h={24} />
-      {req.pcdType}
-      <pre>{JSON.stringify(args, null, 2)}</pre>
+      {req.options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
       <PCDArgs args={args} setArgs={setArgs} pcdCollection={state.pcds} />
       <Spacer h={16} />
       <Button onClick={onProveClick}>PROVE</Button>
