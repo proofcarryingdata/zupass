@@ -1,6 +1,6 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { RLNPCDArgs, RLNPCDPackage } from "@pcd/rln-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { RLNPCDPackage, RLNPCDArgs } from "@pcd/rln-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
@@ -15,7 +15,8 @@ describe("rln-pcd should work", function () {
   this.timeout(1000 * 30);
 
   this.beforeAll(async function () {
-    await RLNPCDPackage.init!({
+    if (!RLNPCDPackage.init) return;
+    await RLNPCDPackage.init({
       zkeyFilePath,
       wasmFilePath,
     });
