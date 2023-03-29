@@ -103,20 +103,26 @@ function requestMembershipProof() {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
+        description:
+          "You can choose a nullifier here to prevent this message from being used across domains.",
       },
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
         remoteUrl: SEMAPHORE_GROUP_URL,
+        description: "The which you are proving you belong to.",
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
         value: undefined,
         userProvided: true,
+        description: "The PCD which represents your identity.",
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
+        description:
+          "This is the message you are 'signing' with your Semaphore identity.",
       },
     }
   );
