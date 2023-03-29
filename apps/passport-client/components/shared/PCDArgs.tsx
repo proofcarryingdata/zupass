@@ -345,9 +345,15 @@ export function PCDArgInput<T extends PCDPackage>({
     <ArgContainer>
       {argName}:
       <select value={value?.id} onChange={onChange}>
-        <option value={"none"}>select</option>
+        <option key="none" value={"none"}>
+          select
+        </option>
         {pcdCollection.getAll().map((pcd) => {
-          return <option value={pcd.id}>{pcd.type}</option>;
+          return (
+            <option key={pcd.id} value={pcd.id}>
+              {pcd.type}
+            </option>
+          );
         })}
       </select>
     </ArgContainer>
