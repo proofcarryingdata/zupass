@@ -34,7 +34,7 @@ export function ProveScreen() {
   let title: string;
   let body: JSX.Element;
 
-  if (request.options?.fancyProvingScreen) {
+  if (request.options?.genericProveScreen) {
     return <ParameterizedProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
     return <ParameterizedProveScreen req={request} />;

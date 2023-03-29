@@ -11,7 +11,10 @@ export interface PCDRequest {
 }
 
 export interface GetRequestOptions {
-  fancyProvingScreen?: boolean;
+  genericProveScreen?: boolean;
+  title?: string;
+  description?: string;
+  debug?: boolean;
 }
 
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
