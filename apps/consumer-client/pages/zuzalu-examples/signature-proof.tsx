@@ -1,20 +1,12 @@
 import {
   requestSemaphoreSignatureUrl,
-  requestZuzaluMembershipUrl,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import {
-  IS_PROD,
-  PASSPORT_URL,
-  requestProofFromPassport,
-} from "../../src/util";
-
-const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
-  : "http://localhost:3002/semaphore/1";
+import { PASSPORT_URL } from "../../src/constants";
+import { requestProofFromPassport } from "../../src/util";
 
 export default function Web() {
   // Raw string-encoded PCD
@@ -84,16 +76,6 @@ export default function Web() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof() {
-  const proofUrl = requestZuzaluMembershipUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL
-  );
-  requestProofFromPassport(proofUrl);
 }
 
 // Show the Passport popup, ask the user to sign a message with their sema key.
