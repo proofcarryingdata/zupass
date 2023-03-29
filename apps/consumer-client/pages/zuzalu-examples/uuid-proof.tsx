@@ -5,11 +5,8 @@ import {
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { HomeLink } from "../../components/Core";
-import {
-  PASSPORT_SERVER_URL,
-  PASSPORT_URL,
-  requestProofFromPassport,
-} from "../../src/util";
+import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { requestProofFromPassport } from "../../src/util";
 
 export default function Page() {
   // Listen for PCDs coming back from the Passport popup

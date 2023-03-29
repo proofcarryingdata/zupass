@@ -13,7 +13,9 @@ export default function Page() {
       <div>
         <h2>Generic Examples</h2>
         <ol>
-          <li>Semaphore Group Membership Proof (coming soon)</li>
+          <li>
+            <a href="/examples/group-proof">Semaphore Group Membership Proof</a>
+          </li>
           <li>Semaphore Signature Proof (coming soon) </li>
         </ol>
       </div>

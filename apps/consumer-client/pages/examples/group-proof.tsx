@@ -1,15 +1,14 @@
 import {
-  requestZuzaluMembershipUrl,
+  constructPassportPcdGetRequestUrl,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import {
-  IS_PROD,
-  PASSPORT_URL,
-  requestProofFromPassport,
-} from "../../src/util";
+import { PASSPORT_URL } from "../../src/constants";
+import { IS_PROD, requestProofFromPassport } from "../../src/util";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -73,7 +72,7 @@ export default function Web() {
         .
       </p>
       <ExampleContainer>
-        <button onClick={requestZuzaluMembershipProof} disabled={valid}>
+        <button onClick={requestMembershipProof} disabled={valid}>
           Request Zuzalu Membership Proof
         </button>
         {proof != null && (
@@ -93,11 +92,33 @@ export default function Web() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof() {
-  const proofUrl = requestZuzaluMembershipUrl(
+function requestMembershipProof() {
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreGroupPCDPackage
+  >(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL
+    SemaphoreGroupPCDPackage.name,
+    {
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        userProvided: true,
+      },
+      group: {
+        argumentType: ArgumentTypeName.Object,
+        userProvided: false,
+        remoteUrl: SEMAPHORE_GROUP_URL,
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signal: {
+        argumentType: ArgumentTypeName.BigInt,
+        userProvided: true,
+      },
+    }
   );
 
   requestProofFromPassport(proofUrl);
