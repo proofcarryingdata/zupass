@@ -1,5 +1,6 @@
 module.exports = {
   reactStrictMode: true,
+  transpilePackages: [],
   compiler: {
     styledComponents: true,
   },
