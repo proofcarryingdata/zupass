@@ -9,7 +9,7 @@ import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
-import { ParameterizedProveScreen } from "./ParameterizedProveScreen";
+import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
@@ -35,9 +35,9 @@ export function ProveScreen() {
   let body: JSX.Element;
 
   if (request.options?.genericProveScreen) {
-    return <ParameterizedProveScreen req={request} />;
+    return <GenericProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
-    return <ParameterizedProveScreen req={request} />;
+    return <GenericProveScreen req={request} />;
 
     title = "Prove membership";
     body = <SemaphoreGroupProveScreen req={request} />;
@@ -45,7 +45,7 @@ export function ProveScreen() {
     title = "Sign a message";
     body = <SemaphoreSignatureProveScreen req={request} />;
   } else {
-    return <ParameterizedProveScreen req={request} />;
+    return <GenericProveScreen req={request} />;
   }
 
   return (
