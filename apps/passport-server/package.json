@@ -36,7 +36,6 @@
     "request": "^2.88.2",
     "rollbar": "^2.26.1",
     "ts-node": "^10.9.1",
-    "ui": "*",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
 {
   "name": "@pcd/tsconfig",
   "version": "0.0.7",
+  "license": "MIT",
   "private": false,
   "files": [
     "base.json",
