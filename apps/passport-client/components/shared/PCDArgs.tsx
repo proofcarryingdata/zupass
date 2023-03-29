@@ -39,7 +39,7 @@ export function PCDArgs<T extends PCDPackage>({
   const entries = Object.entries(args);
 
   return (
-    <div>
+    <ArgsContainer>
       {entries.map(([key, value], i) => (
         <ArgInput
           pcdCollection={pcdCollection}
@@ -50,7 +50,7 @@ export function PCDArgs<T extends PCDPackage>({
           setArgs={setArgs}
         />
       ))}
-    </div>
+    </ArgsContainer>
   );
 }
 
@@ -363,4 +363,12 @@ export function PCDArgInput<T extends PCDPackage>({
 const ArgContainer = styled.div`
   padding: 4px;
   border: 1px solid black;
+`;
+
+const ArgsContainer = styled.div`
+  margin: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  background-color: white;
+  color: black;
 `;
