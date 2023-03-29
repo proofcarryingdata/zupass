@@ -1,0 +1,36 @@
+{
+  "name": "confessions-client",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3004",
+    "build": "next build",
+    "export": "next export",
+    "start": "next start -p 3004",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@semaphore-protocol/group": "^3.2.3",
+    "@semaphore-protocol/identity": "^3.2.3",
+    "next": "^13.1.1",
+    "@pcd/passport-interface": "*",
+    "@pcd/pcd-types": "*",
+    "@pcd/semaphore-group-pcd": "*",
+    "@pcd/semaphore-identity-pcd": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "styled-components": "^5.3.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@types/expect": "^24.3.0",
+    "@types/node": "^17.0.12",
+    "@types/react": "^18.0.22",
+    "@types/react-dom": "^18.0.7",
+    "@types/styled-components": "^5.1.26",
+    "eslint": "7.32.0",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
+    "typescript": "^4.5.3"
+  }
+}
