@@ -91,6 +91,8 @@ function requestSemaphoreSignature() {
     },
     {
       genericProveScreen: true,
+      title: "Semaphore Signature Proof",
+      description: "Sign any message with your Semaphore identity.",
     }
   );
 
