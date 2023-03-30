@@ -1,8 +1,4 @@
-import {
-  PCDGetRequest,
-  PendingStamp,
-  ProveRequest,
-} from "@pcd/passport-interface";
+import { PCDGetRequest, ProveRequest } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDArgs,
@@ -16,7 +12,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { config } from "../../../src/config";
+import { requestStamp } from "../../../src/api/requestStamp";
 import { DispatchContext } from "../../../src/dispatch";
 import { Button } from "../../core";
 
@@ -86,17 +82,8 @@ export function SemaphoreGroupProveScreen({
       pcdType: SemaphoreGroupPCDPackage.name,
       args: await makeArgs(state.identity!, group),
     };
-    const url = `${config.passportServer}/pcds/prove`;
-    const response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(serverReq),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
+    const pendingStamp = await requestStamp(serverReq);
 
-    const pendingStamp = (await response.json()) as PendingStamp;
     console.log("Pending stamp received", pendingStamp);
 
     // Redirect back to requester
