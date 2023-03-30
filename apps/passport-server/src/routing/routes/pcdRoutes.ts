@@ -14,11 +14,11 @@ import {
 } from "../../services/proving";
 import { ServerProvingContext } from "../../types";
 
-export function initPCDRoutes(
+export async function initPCDRoutes(
   app: express.Application,
   _provingContext: ServerProvingContext
-): void {
-  initPackages();
+): Promise<void> {
+  await initPackages();
 
   app.post(
     "/pcds/prove",
