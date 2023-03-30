@@ -41,7 +41,7 @@ export function SemaphoreGroupProveScreen({
     const { prove, serialize } = SemaphoreGroupPCDPackage;
 
     setProving(true);
-    const args = await makeArgs(state.identity!, group);
+    const args = await fillArgs(state.identity!, group, req.args);
     const pcd = await prove(args);
     const serializedPCD = await serialize(pcd);
     console.log("Proof complete", serializedPCD);
@@ -56,31 +56,7 @@ export function SemaphoreGroupProveScreen({
     setProving(true);
     const serverReq: ProveRequest = {
       pcdType: SemaphoreGroupPCDPackage.name,
-      args: await makeArgs(state.identity!, group),
-    };
-    const url = `${config.passportServer}/pcds/prove`;
-    const response = await fetch(url, {
-      method: "POST",
-      body: JSON.stringify(serverReq),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-
-    const proofResponse = JSON.parse(await response.text());
-    const serializedPCD = proofResponse.serializedPCD;
-    console.log("Proof complete", serializedPCD);
-
-    // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${serializedPCD}`;
-  }, [group, setProving, req.returnUrl, state.identity]);
-
-  const onProveServer = useCallback(async () => {
-    setProving(true);
-    const serverReq: ProveRequest = {
-      pcdType: SemaphoreGroupPCDPackage.name,
-      args: await makeArgs(state.identity!, group),
+      args: await fillArgs(state.identity!, group, req.args),
     };
     const pendingStamp = await requestStamp(serverReq);
 
@@ -90,7 +66,7 @@ export function SemaphoreGroupProveScreen({
     window.location.href = `${req.returnUrl}?stamp=${JSON.stringify(
       pendingStamp
     )}`;
-  }, [group, setProving, req.returnUrl, state.identity]);
+  }, [group, setProving, req.returnUrl, state.identity, req.args]);
 
   const lines: ReactNode[] = [];
   lines.push(<p>Loading {req.args.group.remoteUrl}</p>);
@@ -115,7 +91,7 @@ export function SemaphoreGroupProveScreen({
   );
 }
 
-async function makeArgs(
+async function fillArgs(
   identity: Identity,
   semaphoreGroup: SerializedSemaphoreGroup,
   reqArgs: SemaphoreGroupPCDArgs
@@ -164,11 +140,7 @@ async function makeArgs(
   console.log("Group first member", group.members[0]);
   console.log("Identity", identity.commitment.toString());
 
-  const pcd = await prove(args);
-  const serialized = await serialize(pcd);
-  console.log("Proof complete", serialized);
-
-  return serialized;
+  return args;
 }
 
 const LineWrap = styled.div`
