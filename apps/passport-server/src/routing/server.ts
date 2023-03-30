@@ -41,9 +41,12 @@ export async function startServer(
       stampStatus,
       stampResult,
     };
+
+    // TODO: should this use an await? doesn't quite work within the
+    // current structure of `startServer`
     initPCDRoutes(app, provingContext);
 
-    // set up remaining contexts
+    // set up remaining routes
     routes.forEach((r) => r(app, context));
 
     app.use(
