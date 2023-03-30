@@ -49,6 +49,7 @@ export interface Argument<
   value?: ValueType;
   remoteUrl?: string;
   userProvided?: boolean;
+  description?: string;
 }
 
 export type StringArgument = Argument<ArgumentTypeName.String, string>;

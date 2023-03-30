@@ -1,9 +1,9 @@
 {
   "name": "@pcd/pcd-types",
-  "version": "0.0.8",
+  "version": "0.0.9",
+  "license": "MIT",
   "main": "./index.ts",
   "types": "./index.ts",
-  "license": "MIT",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc --noEmit"

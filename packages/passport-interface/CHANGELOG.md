@@ -1,5 +1,16 @@
 # @pcd/passport-interface
 
+## 0.0.9
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+- Updated dependencies
+  - @pcd/passport-crypto@0.0.3
+  - @pcd/pcd-types@0.0.9
+  - @pcd/semaphore-group-pcd@0.0.9
+  - @pcd/semaphore-signature-pcd@0.0.5
+
 ## 0.0.8
 
 ### Patch Changes

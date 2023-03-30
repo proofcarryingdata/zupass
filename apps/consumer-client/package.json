@@ -1,6 +1,7 @@
 {
   "name": "consumer-client",
   "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",

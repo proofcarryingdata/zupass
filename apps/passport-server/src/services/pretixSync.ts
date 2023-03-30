@@ -183,8 +183,9 @@ function ordersToParticipants(
   const participants: PretixParticipant[] = orders
     // check that they paid
     .filter((o) => o.status === "p")
-    // each order is supposed to have exactly one "position" (ticket)
-    .filter((o) => o.positions.length === 1)
+    // an order can have more than one "position" (ticket)
+    // for visitor orders--eg, paying for 3 individual 1-week tickets
+    .filter((o) => o.positions.length >= 1)
     // check that they have an email and a name
     .filter((o) => !!o.positions[0].attendee_name)
     .filter((o) => !!(o.email || o.positions[0].attendee_email))

@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.0.8
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+
 ## 0.0.7
 
 ### Patch Changes

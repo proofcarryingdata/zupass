@@ -1,9 +1,9 @@
 {
   "name": "@pcd/semaphore-identity-pcd",
-  "version": "0.0.9",
+  "version": "0.0.10",
+  "license": "GPL-3.0-or-later",
   "main": "./index.ts",
   "types": "./index.ts",
-  "license": "MIT",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
