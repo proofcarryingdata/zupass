@@ -15,6 +15,12 @@
     },
     "test": {
       "outputs": []
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
     }
   },
   "globalEnv": [
@@ -30,11 +36,6 @@
     "MAILGUN_API_KEY",
     "TIMING",
     "BYPASS_EMAIL_REGISTRATION",
-    "ROLLBAR_TOKEN",
-    "CONFESSION_DATABASE_USERNAME",
-    "CONFESSION_DATABASE_PASSWORD",
-    "CONFESSION_DATABASE_HOST",
-    "CONFESSION_DATABASE_DB_NAME",
-    "CONFESSION_DATABASE_SSL"
+    "ROLLBAR_TOKEN"
   ]
 }
