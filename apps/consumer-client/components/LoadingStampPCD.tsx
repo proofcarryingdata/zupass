@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
 
-const LoadingStampPCD = ({
+export const LoadingStampPCD = ({
   pendingStampPCD,
   setPcdStr,
 }: {
@@ -15,11 +15,15 @@ const LoadingStampPCD = ({
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
 
+    // TODO: not sure if this is the best way to ping the server repeatedly,
+    // or if this leads to weird sitautions where this interval continues to run
+    // after people navigate away from the page?
     const getStatus = () => {
       if (pendingStampPCD !== undefined) {
-        fetch(`${PASSPORT_SERVER_URL}/pcds/status/${pendingStampPCD.hash}`)
+        fetch(`${PASSPORT_SERVER_URL}pcds/status/${pendingStampPCD.hash}`)
           .then((response) => response.json())
           .then((data) => {
+            console.log(data);
             setStatus(data.status);
             if (data.status === StampPCDStatus.COMPLETE) {
               setPcdStr(data.proof);
@@ -54,13 +58,11 @@ const LoadingStampPCD = ({
   }
 
   const StyledDiv = styled.div`
-    margin: 10px;
+    margin: 10px 0 10px 0;
     border: 1px solid ${statusColor};
     padding: 5px;
     color: ${statusColor};
   `;
 
-  return <StyledDiv>Status: {status}</StyledDiv>;
+  return <StyledDiv>Stamp Status: {status}</StyledDiv>;
 };
-
-export default LoadingStampPCD;
