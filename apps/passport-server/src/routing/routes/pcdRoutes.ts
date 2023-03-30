@@ -1,8 +1,8 @@
 import {
   hashRequest,
-  PendingStamp,
+  PendingStampPCD,
   ProveRequest,
-  StampStatus,
+  StampPCDStatus,
   VerifyRequest,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
@@ -32,14 +32,14 @@ export async function initPCDRoutes(
         if (!_provingContext.stampStatus.has(hash)) {
           _provingContext.queue.push(proveRequest);
           if (_provingContext.queue.length == 1) {
-            _provingContext.stampStatus.set(hash, StampStatus.PROVING);
+            _provingContext.stampStatus.set(hash, StampPCDStatus.PROVING);
             prove(proveRequest, _provingContext);
           } else {
-            _provingContext.stampStatus.set(hash, StampStatus.IN_QUEUE);
+            _provingContext.stampStatus.set(hash, StampPCDStatus.IN_QUEUE);
           }
         }
 
-        const pending: PendingStamp = {
+        const pending: PendingStampPCD = {
           pcdType: proveRequest.pcdType,
           hash: hash,
           status: _provingContext.stampStatus.get(hash)!,
@@ -81,7 +81,7 @@ export async function initPCDRoutes(
       try {
         const hash = req.params.hash;
         const status = _provingContext.stampStatus.get(hash);
-        if (status === StampStatus.COMPLETE) {
+        if (status === StampPCDStatus.COMPLETE) {
           res.status(200).json(_provingContext.stampResult.get(hash));
         } else {
           res.status(400).send(status);

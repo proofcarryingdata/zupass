@@ -16,7 +16,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, _pendingStamp] = usePassportPCD();
+  const [pcdStr, _pendingStampPCD] = usePassportPCD();
   const [debugChecked, setDebugChecked] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
