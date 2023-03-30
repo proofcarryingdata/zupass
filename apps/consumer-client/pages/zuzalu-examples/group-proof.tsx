@@ -14,7 +14,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, _pendingStampPCD] = usePassportPCD();
+  const [pcdStr, pendingStampPCD] = usePassportPCD();
   const [serverProving, setServerProving] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
@@ -75,6 +75,12 @@ export default function Page() {
             {valid === undefined && <p>❓ Proof verifying</p>}
             {valid === false && <p>❌ Proof is invalid</p>}
             {valid === true && <p>✅ Proof is valid</p>}
+          </>
+        )}
+        {pendingStampPCD != null && (
+          <>
+            <p>Got a PendingStampPCD from Passport</p>
+            <CollapsableCode code={JSON.stringify(pendingStampPCD, null, 2)} />
           </>
         )}
         {valid && <p>Welcome, anon</p>}
