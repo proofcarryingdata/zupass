@@ -24,11 +24,33 @@ export function useProof<T extends PCDPackage>(
 }
 
 /**
+ * React hook that listens for PCDs returned by the passport to the application.
+ */
+export function usePassportPCD() {
+  const [pcdStr, setPcdStr] = useState("");
+
+  // Listen for PCDs coming back from the Passport popup
+  useEffect(() => {
+    function receiveMessage(ev: MessageEvent<any>) {
+      // This next line is important. Extensions including Metamask apparently
+      // send messages to every page. Ignore those.
+      if (!ev.data.encodedPCD) return;
+      console.log("Received message", ev.data);
+      setPcdStr(ev.data.encodedPCD);
+    }
+    window.addEventListener("message", receiveMessage, false);
+    return () => window.removeEventListener("message", receiveMessage);
+  }, []);
+
+  return pcdStr;
+}
+
+/**
  * React hook that listens for PCDs and/or PendingStampPCDs returned by the passport
  * to the application. The former is returned if client-side proofs are selected, the
  * latter if server-side proofs are selected.
  */
-export function usePassportPCD(): [string, PendingStampPCD | undefined] {
+export function usePassportPCDOrStamp(): [string, PendingStampPCD | undefined] {
   const [pcdStr, setPcdStr] = useState("");
   const [pendingStampPCD, setPendingStampPCD] = useState<
     PendingStampPCD | undefined
