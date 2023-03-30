@@ -37,8 +37,6 @@ export function ProveScreen() {
   if (request.options?.genericProveScreen) {
     return <GenericProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
-    return <GenericProveScreen req={request} />;
-
     title = "Prove membership";
     body = <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
