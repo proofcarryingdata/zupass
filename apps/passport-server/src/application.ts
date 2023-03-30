@@ -1,8 +1,3 @@
-import {
-  ProveRequest,
-  ProveResponse,
-  StampStatus,
-} from "@pcd/passport-interface";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
@@ -26,17 +21,11 @@ export async function startApplication() {
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
   const rollbar = getRollbar();
-  const queue: Array<ProveRequest> = [];
-  const stampStatus: Map<string, StampStatus> = new Map();
-  const stampResult: Map<string, ProveResponse> = new Map();
 
   const context: ApplicationContext = {
     dbPool,
     honeyClient,
     rollbar,
-    queue,
-    stampStatus,
-    stampResult,
   };
 
   // Run all services concurrently.

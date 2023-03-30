@@ -9,7 +9,7 @@ import {
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import path from "path";
-import { ApplicationContext } from "../types";
+import { ServerProvingContext } from "../types";
 
 /**
  * Each PCD type that the proving server supports has to go into this array,
@@ -38,26 +38,26 @@ function getPackage(name: string) {
 
 export async function prove(
   proveRequest: ProveRequest,
-  context: ApplicationContext
+  provingContext: ServerProvingContext
 ): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
   const pcd = await pcdPackage.prove(proveRequest.args);
   const serializedPCD = await pcdPackage.serialize(pcd);
 
   // finish current job
-  context.queue.shift();
+  provingContext.queue.shift();
   const currentHash = hashRequest(proveRequest);
-  context.stampStatus.set(currentHash, StampStatus.COMPLETE);
-  context.stampResult.set(currentHash, {
+  provingContext.stampStatus.set(currentHash, StampStatus.COMPLETE);
+  provingContext.stampResult.set(currentHash, {
     serializedPCD: JSON.stringify(serializedPCD),
   });
 
   // check if there's another job
-  if (context.queue.length > 0) {
-    const topHash = hashRequest(context.queue[0]);
-    if (context.stampStatus.get(topHash) !== StampStatus.PROVING) {
-      context.stampStatus.set(topHash, StampStatus.PROVING);
-      prove(context.queue[0], context);
+  if (provingContext.queue.length > 0) {
+    const topHash = hashRequest(provingContext.queue[0]);
+    if (provingContext.stampStatus.get(topHash) !== StampStatus.PROVING) {
+      provingContext.stampStatus.set(topHash, StampStatus.PROVING);
+      prove(provingContext.queue[0], provingContext);
     }
   }
 }
