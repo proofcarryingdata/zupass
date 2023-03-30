@@ -17,6 +17,7 @@ const SEMAPHORE_GROUP_URL = IS_PROD
 export default function Web() {
   // Raw string-encoded PCD
   const [pcdStr, setPcdStr] = useState("");
+  const [debugChecked, setDebugChecked] = useState(true);
 
   // Semaphore Group PCD
   const { proof, group, valid, error } = useSemaphorePassportProof(
@@ -70,9 +71,23 @@ export default function Web() {
         .
       </p>
       <ExampleContainer>
-        <button onClick={requestMembershipProof} disabled={valid}>
+        <button
+          onClick={() => requestMembershipProof(debugChecked)}
+          disabled={valid}
+        >
           Request Group Membership Proof
         </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={debugChecked}
+            onChange={(e) => {
+              setDebugChecked((checked) => !checked);
+            }}
+          />
+          debug view
+        </label>
+
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>
@@ -90,7 +105,7 @@ export default function Web() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestMembershipProof() {
+function requestMembershipProof(debug: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -128,6 +143,7 @@ function requestMembershipProof() {
       description:
         "Generate a group membership proof using your passport's Semaphore Identity.",
       title: "Group Membership Proof",
+      debug,
     }
   );
 
