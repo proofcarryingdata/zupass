@@ -78,8 +78,6 @@ async function prove(
   for (const member of semaGroup.members) {
     group.addMember(BigInt(member));
   }
-  const externalNullifier = 1;
-  const signal = 1;
 
   let args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
@@ -102,12 +100,15 @@ async function prove(
     },
   };
 
+  // in the case the requesting application actually submitted some
+  // nullifier, use that instead of the hard-coded one
   if (reqArgs.externalNullifier.value !== undefined) {
     args = {
       ...args,
       externalNullifier: reqArgs.externalNullifier,
     };
   }
+  // same, but for signal
   if (reqArgs.signal.value !== undefined) {
     args = { ...args, signal: reqArgs.signal };
   }

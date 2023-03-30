@@ -22,7 +22,7 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Semaphore Signature Proof</h2>
+      <h2>Zuzalu Semaphore Signature Proof</h2>
       <p>
         This page shows a working example of an integration with the Zuzalu
         Passport application which requests and verifies that a particular user
