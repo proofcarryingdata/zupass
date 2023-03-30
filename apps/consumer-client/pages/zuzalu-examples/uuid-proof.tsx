@@ -31,7 +31,13 @@ export default function Page() {
     <>
       <HomeLink />
       <h2>Zuzalu UUID-revealing proof </h2>
-
+      <p>
+        This proof type is almost the same as <code>SempahoreSignaturePCD</code>
+        , except one key feature: the message that is 'signed' within this PCD
+        is the user's unique identifier according the the Zuzalu application.
+        This uuid can be used to download information about the user from the
+        Passport Server, including their name, email, and role.
+      </p>
       <ExampleContainer>
         <button onClick={requestSignedZuID}>Request UUID</button>
         {signatureProof != null && (
