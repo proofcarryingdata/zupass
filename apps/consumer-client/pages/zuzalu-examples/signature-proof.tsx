@@ -14,7 +14,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, _pendingStampPCD] = usePassportPCD();
+  const pcdStr = usePassportPCD();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
   const [messageToSign, setMessageToSign] = useState<string>("");
