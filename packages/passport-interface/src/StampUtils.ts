@@ -14,6 +14,6 @@ export interface PendingStamp {
 
 export enum StampStatus {
   IN_QUEUE = "in queue",
-  IN_PROGRESS = "in progress",
+  PROVING = "proving",
   COMPLETE = "complete",
 }

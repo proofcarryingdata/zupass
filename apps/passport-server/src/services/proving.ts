@@ -55,8 +55,8 @@ export async function prove(
   // check if there's another job
   if (context.queue.length > 0) {
     const topHash = hashRequest(context.queue[0]);
-    if (context.stampStatus.get(topHash) !== StampStatus.IN_PROGRESS) {
-      context.stampStatus.set(topHash, StampStatus.IN_PROGRESS);
+    if (context.stampStatus.get(topHash) !== StampStatus.PROVING) {
+      context.stampStatus.set(topHash, StampStatus.PROVING);
       prove(context.queue[0], context);
     }
   }
