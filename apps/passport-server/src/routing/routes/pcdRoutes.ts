@@ -12,11 +12,11 @@ import {
   prove,
   verify,
 } from "../../services/proving";
-import { ApplicationContext } from "../../types";
+import { ServerProvingContext } from "../../types";
 
 export function initPCDRoutes(
   app: express.Application,
-  _context: ApplicationContext
+  _provingContext: ServerProvingContext
 ): void {
   initPackages();
 
@@ -26,18 +26,23 @@ export function initPCDRoutes(
       try {
         const proveRequest: ProveRequest = req.body;
         const hash = hashRequest(proveRequest);
-        _context.queue.push(proveRequest);
-        if (_context.queue.length == 1) {
-          _context.stampStatus.set(hash, StampStatus.PROVING);
-          prove(proveRequest, _context);
-        } else {
-          _context.stampStatus.set(hash, StampStatus.IN_QUEUE);
+
+        // don't add identical proof requests to queue to prevent accidental or
+        // malicious DoS attacks on the proving queue
+        if (!_provingContext.stampStatus.has(hash)) {
+          _provingContext.queue.push(proveRequest);
+          if (_provingContext.queue.length == 1) {
+            _provingContext.stampStatus.set(hash, StampStatus.PROVING);
+            prove(proveRequest, _provingContext);
+          } else {
+            _provingContext.stampStatus.set(hash, StampStatus.IN_QUEUE);
+          }
         }
 
         const pending: PendingStamp = {
           pcdType: proveRequest.pcdType,
           hash: hash,
-          status: _context.stampStatus.get(hash)!,
+          status: _provingContext.stampStatus.get(hash)!,
         };
         res.status(200).json(pending);
       } catch (e) {
@@ -75,9 +80,9 @@ export function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const hash = req.params.hash;
-        const status = _context.stampStatus.get(hash);
+        const status = _provingContext.stampStatus.get(hash);
         if (status === StampStatus.COMPLETE) {
-          res.status(200).json(_context.stampResult.get(hash));
+          res.status(200).json(_provingContext.stampResult.get(hash));
         } else {
           res.status(400).send(status);
         }

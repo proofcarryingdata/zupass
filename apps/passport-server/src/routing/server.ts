@@ -1,8 +1,13 @@
+import {
+  ProveRequest,
+  ProveResponse,
+  StampStatus,
+} from "@pcd/passport-interface";
 import cors from "cors";
 import express, { NextFunction } from "express";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerProvingContext } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";
@@ -14,7 +19,6 @@ const routes: RouteInitializer[] = [
   initHealthcheckRoutes,
   initZuzaluRoutes,
   initStaticRoutes,
-  initPCDRoutes,
 ];
 
 export async function startServer(
@@ -28,6 +32,18 @@ export async function startServer(
     app.use(express.json());
     app.use(cors());
 
+    // set up server-side proving contexts
+    const queue: Array<ProveRequest> = [];
+    const stampStatus: Map<string, StampStatus> = new Map();
+    const stampResult: Map<string, ProveResponse> = new Map();
+    const provingContext: ServerProvingContext = {
+      queue,
+      stampStatus,
+      stampResult,
+    };
+    initPCDRoutes(app, provingContext);
+
+    // set up remaining contexts
     routes.forEach((r) => r(app, context));
 
     app.use(
