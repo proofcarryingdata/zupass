@@ -82,9 +82,18 @@ export async function initPCDRoutes(
         const hash = req.params.hash;
         const status = _provingContext.stampStatus.get(hash);
         if (status === StampPCDStatus.COMPLETE) {
-          res.status(200).json(_provingContext.stampResult.get(hash));
+          res.status(200).json({
+            status: StampPCDStatus.COMPLETE,
+            proof: _provingContext.stampResult.get(hash)?.serializedPCD,
+          });
+        } else if (status === StampPCDStatus.ERROR) {
+          res.status(500).json({
+            status: StampPCDStatus.ERROR,
+          });
         } else {
-          res.status(400).send(status);
+          res.status(400).send({
+            status,
+          });
         }
       } catch (e) {
         next(e);

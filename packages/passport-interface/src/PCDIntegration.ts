@@ -50,7 +50,11 @@ export function usePassportPCD() {
  * to the application. The former is returned if client-side proofs are selected, the
  * latter if server-side proofs are selected.
  */
-export function usePassportPCDOrStamp(): [string, PendingStampPCD | undefined] {
+export function usePassportPCDOrStamp(): [
+  string,
+  any,
+  PendingStampPCD | undefined
+] {
   const [pcdStr, setPcdStr] = useState("");
   const [pendingStampPCD, setPendingStampPCD] = useState<
     PendingStampPCD | undefined
@@ -73,5 +77,5 @@ export function usePassportPCDOrStamp(): [string, PendingStampPCD | undefined] {
     return () => window.removeEventListener("message", receiveMessage);
   }, []);
 
-  return [pcdStr, pendingStampPCD];
+  return [pcdStr, setPcdStr, pendingStampPCD];
 }
