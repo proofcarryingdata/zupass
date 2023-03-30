@@ -38,35 +38,27 @@ export function SemaphoreGroupProveScreen({
   const [proving, setProving] = useState(false);
 
   const onProve = useCallback(async () => {
-    const { prove, serialize } = SemaphoreGroupPCDPackage;
-
     setProving(true);
     const args = await fillArgs(state.identity!, group, req.args);
-    const pcd = await prove(args);
-    const serializedPCD = await serialize(pcd);
-    console.log("Proof complete", serializedPCD);
 
-    // Redirect back to requester
-    window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-      serializedPCD
-    )}`;
-  }, [group, setProving, req.returnUrl, state.identity, req.args]);
-
-  const onProveServer = useCallback(async () => {
-    setProving(true);
-    const serverReq: ProveRequest = {
-      pcdType: SemaphoreGroupPCDPackage.name,
-      args: await fillArgs(state.identity!, group, req.args),
-    };
-    const pendingStamp = await requestStamp(serverReq);
-
-    console.log("Pending stamp received", pendingStamp);
-
-    // Redirect back to requester
-    window.location.href = `${req.returnUrl}?stamp=${JSON.stringify(
-      pendingStamp
-    )}`;
-  }, [group, setProving, req.returnUrl, state.identity, req.args]);
+    if (req.options?.server === true) {
+      const serverReq: ProveRequest = {
+        pcdType: SemaphoreGroupPCDPackage.name,
+        args: args,
+      };
+      const pendingStamp = await requestStamp(serverReq);
+      window.location.href = `${req.returnUrl}?stamp=${JSON.stringify(
+        pendingStamp
+      )}`;
+    } else {
+      const { prove, serialize } = SemaphoreGroupPCDPackage;
+      const pcd = await prove(args);
+      const serializedPCD = await serialize(pcd);
+      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        serializedPCD
+      )}`;
+    }
+  }, [group, req.returnUrl, state.identity, req.args, req.options?.server]);
 
   const lines: ReactNode[] = [];
   lines.push(<p>Loading {req.args.group.remoteUrl}</p>);
@@ -76,7 +68,6 @@ export function SemaphoreGroupProveScreen({
       <p>You're proving that you're one of {group.members.length} members</p>
     );
     lines.push(<Button onClick={onProve}>Prove</Button>);
-    lines.push(<Button onClick={onProveServer}>Prove on Server</Button>);
   }
   if (proving) {
     lines.push(<p>Proving...</p>);
