@@ -8,7 +8,11 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
-export default function Web() {
+/**
+ * Example page which shows how to use a Zuzalu-specific prove screen to
+ * request a Semaphore Group Membership PCD as a third party developer.
+ */
+export default function Page() {
   const pcdStr = useListenToPCDMessage();
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,

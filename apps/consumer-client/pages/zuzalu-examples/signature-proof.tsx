@@ -9,7 +9,11 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
-export default function Web() {
+/**
+ * Example page which shows how to use a Zuzalu-specific prove screen to
+ * request a Semaphore Signature PCD as a third party developer.
+ */
+export default function Page() {
   const pcdStr = useListenToPCDMessage();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);

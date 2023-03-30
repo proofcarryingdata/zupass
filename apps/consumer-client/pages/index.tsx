@@ -1,5 +1,10 @@
 import { PCD_GITHUB_URL } from "../src/constants";
 
+/**
+ * Landing page of the example 'consumer client' application, which is a
+ * directory of examples for how to use the PCD SDK and integrate with
+ * the passport.
+ */
 export default function Page() {
   return (
     <div>
