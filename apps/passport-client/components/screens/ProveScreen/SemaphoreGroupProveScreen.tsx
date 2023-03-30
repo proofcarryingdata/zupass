@@ -37,13 +37,13 @@ export function SemaphoreGroupProveScreen({
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
     setProving(true);
-    const serializedPCD = await prove(state.identity, group);
+    const serializedPCD = await prove(state.identity, group, req.args);
 
     // Redirect back to requester
     window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
       serializedPCD
     )}`;
-  }, [group, setProving, req.returnUrl, state.identity]);
+  }, [group, setProving, req.returnUrl, state.identity, req.args]);
 
   const lines: ReactNode[] = [];
   lines.push(<p>Loading {req.args.group.remoteUrl}</p>);
@@ -67,24 +67,26 @@ export function SemaphoreGroupProveScreen({
   );
 }
 
-async function prove(identity: Identity, semaGroup: SerializedSemaphoreGroup) {
+async function prove(
+  identity: Identity,
+  semaGroup: SerializedSemaphoreGroup,
+  reqArgs: SemaphoreGroupPCDArgs
+) {
   const { prove, serialize } = SemaphoreGroupPCDPackage;
 
   const group = new Group(BigInt(semaGroup.id), semaGroup.depth);
   for (const member of semaGroup.members) {
     group.addMember(BigInt(member));
   }
-  const externalNullifier = 1; // group.root;
-  const signal = 1;
 
-  const args: SemaphoreGroupPCDArgs = {
+  let args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: externalNullifier + "",
+      value: 23 + "",
     },
     signal: {
       argumentType: ArgumentTypeName.BigInt,
-      value: signal + "",
+      value: 34 + "",
     },
     group: {
       argumentType: ArgumentTypeName.Object,
@@ -97,6 +99,19 @@ async function prove(identity: Identity, semaGroup: SerializedSemaphoreGroup) {
       ),
     },
   };
+
+  // in the case the requesting application actually submitted some
+  // nullifier, use that instead of the hard-coded one
+  if (reqArgs.externalNullifier.value !== undefined) {
+    args = {
+      ...args,
+      externalNullifier: reqArgs.externalNullifier,
+    };
+  }
+  // same, but for signal
+  if (reqArgs.signal.value !== undefined) {
+    args = { ...args, signal: reqArgs.signal };
+  }
 
   console.log("Proving semaphore membership", args);
   console.log("Group root", group.root.toString());
