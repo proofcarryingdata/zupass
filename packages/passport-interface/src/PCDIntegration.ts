@@ -43,7 +43,7 @@ export function usePassportPCD(): [string, PendingStampPCD | undefined] {
         console.log("Received PCD", ev.data.encodedPCD);
         setPcdStr(ev.data.encodedPCD);
       } else if (ev.data.pendingStampPCD) {
-        console.log("Received PendingStampPCD", ev.data.pendingStampPCD);
+        console.log(ev.data);
         setPendingStampPCD(ev.data.pendingStampPCD);
       }
     }

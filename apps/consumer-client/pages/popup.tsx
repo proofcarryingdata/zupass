@@ -23,9 +23,9 @@ export default function AuthPopup() {
       window.opener.postMessage({ encodedPCD: params.get("proof")! }, "*");
       window.close();
     } else if (params.get("pendingStampPCD") != null) {
-      // Later, the Passport redirects back with a proof. Send it to our parent.
+      // Later, the Passport redirects back with a pendingStampPCD. Send it to our parent.
       window.opener.postMessage(
-        { pendingStamp: params.get("pendingStampPCD")! },
+        { pendingStampPCD: params.get("pendingStampPCD")! },
         "*"
       );
       window.close();
