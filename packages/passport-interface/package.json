@@ -2,12 +2,13 @@
   "name": "@pcd/passport-interface",
   "version": "0.0.9",
   "license": "GPL-3.0-or-later",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "prepublish": "tsc"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",

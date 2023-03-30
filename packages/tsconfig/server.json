@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "display": "Next.js",
+  "display": "Server",
   "extends": "./base.json",
   "compilerOptions": {
     "target": "es6",
@@ -8,14 +8,11 @@
     "skipLibCheck": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
     "incremental": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "isolatedModules": false,
+    "moduleResolution": "node",
     "jsx": "react"
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  }
 }
