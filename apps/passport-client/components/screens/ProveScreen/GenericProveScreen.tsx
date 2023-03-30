@@ -81,7 +81,7 @@ const Container = styled.div`
 const ErrorContainer = styled.div`
   padding: 16px;
   background-color: white;
-  color: red;
+  color: var(--danger);
   border-radius: 16px;
-  border: 1px solid red;
+  border: 1px solid var(--danger);
 `;
