@@ -12,7 +12,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { requestStamp } from "../../../src/api/requestStamp";
+import { requestStampPCD } from "../../../src/api/requestStamp";
 import { DispatchContext } from "../../../src/dispatch";
 import { Button } from "../../core";
 
@@ -46,9 +46,9 @@ export function SemaphoreGroupProveScreen({
         pcdType: SemaphoreGroupPCDPackage.name,
         args: args,
       };
-      const pendingStamp = await requestStamp(serverReq);
-      window.location.href = `${req.returnUrl}?pendingStamp=${JSON.stringify(
-        pendingStamp
+      const pendingStampPCD = await requestStampPCD(serverReq);
+      window.location.href = `${req.returnUrl}?pendingStampPCD=${JSON.stringify(
+        pendingStampPCD
       )}`;
     } else {
       const { prove, serialize } = SemaphoreGroupPCDPackage;

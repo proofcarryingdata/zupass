@@ -1,9 +1,9 @@
-import { PendingStamp, ProveRequest } from "@pcd/passport-interface";
+import { PendingStampPCD, ProveRequest } from "@pcd/passport-interface";
 import { config } from "../../src/config";
 
-export async function requestStamp(
+export async function requestStampPCD(
   serverReq: ProveRequest
-): Promise<PendingStamp> {
+): Promise<PendingStampPCD> {
   const url = `${config.passportServer}/pcds/prove`;
   const response = await fetch(url, {
     method: "POST",
@@ -13,6 +13,6 @@ export async function requestStamp(
       Accept: "application/json",
     },
   });
-  const pendingStamp = (await response.json()) as PendingStamp;
-  return pendingStamp;
+  const pendingStampPCD = (await response.json()) as PendingStampPCD;
+  return pendingStampPCD;
 }
