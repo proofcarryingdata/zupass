@@ -16,7 +16,7 @@ import { requestProofFromPassport } from "../../src/util";
  * party developer.
  */
 export default function Page() {
-  const pcdStr = usePassportPCD();
+  const [pcdStr, _pendingStamp] = usePassportPCD();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 

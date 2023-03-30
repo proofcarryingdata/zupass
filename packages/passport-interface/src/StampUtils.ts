@@ -26,4 +26,5 @@ export enum StampStatus {
   IN_QUEUE = "in queue",
   PROVING = "proving",
   COMPLETE = "complete",
+  ERROR = "error",
 }
