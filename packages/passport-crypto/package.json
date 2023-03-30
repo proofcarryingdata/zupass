@@ -3,7 +3,7 @@
   "version": "0.0.2",
   "main": "./index.tsx",
   "types": "./index.tsx",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
