@@ -5,7 +5,8 @@ import {
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
-import { HomeLink } from "../../components/Core";
+import { CollapsableCode, HomeLink } from "../../components/Core";
+import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -30,28 +31,37 @@ export default function Page() {
     <>
       <HomeLink />
       <h2>Zuzalu UUID-revealing proof </h2>
-      <button onClick={requestSignedZuID}>Request UUID</button>
-      {signatureProof != null && (
-        <>
-          <h3>Got Semaphore Signature Proof from Passport</h3>
-          <pre>{JSON.stringify(signatureProof, null, 2)}</pre>
-          <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
-          {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
-          {signatureProofValid === false && <p>❌ Proof is invalid</p>}
-          {signatureProofValid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
-      {participant && (
-        <>
-          <pre>{JSON.stringify(participant, null, 2)}</pre>
-          {participant.commitment ===
-          signatureProof?.claim.identityCommitment ? (
-            <p>✅ Commitment matches</p>
-          ) : (
-            <p>❌ Commitment does not match</p>
-          )}
-        </>
-      )}
+
+      <ExampleContainer>
+        <button onClick={requestSignedZuID}>Request UUID</button>
+        {signatureProof != null && (
+          <>
+            <h3>Got Semaphore Signature Proof from Passport</h3>
+            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
+            {signatureProofValid === false && <p>❌ Proof is invalid</p>}
+            {signatureProofValid === true && <p>✅ Proof is valid</p>}
+            <CollapsableCode
+              label="PCD Response"
+              code={JSON.stringify(signatureProof, null, 2)}
+            />
+          </>
+        )}
+        {participant && (
+          <>
+            {participant.commitment ===
+            signatureProof?.claim.identityCommitment ? (
+              <p>✅ Commitment matches</p>
+            ) : (
+              <p>❌ Commitment does not match</p>
+            )}
+            <CollapsableCode
+              label="Participant Response"
+              code={JSON.stringify(participant, null, 2)}
+            />
+          </>
+        )}
+      </ExampleContainer>
     </>
   );
 }
