@@ -20,7 +20,7 @@ export default function AuthPopup() {
       window.location.href = decodeURIComponent(params.get("proofUrl")!);
     } else if (params.get("proof") != null) {
       // Later, the Passport redirects back with a proof. Send it to our parent.
-      window.opener.postMessage({ encodedPcd: params.get("proof")! }, "*");
+      window.opener.postMessage({ encodedPCD: params.get("proof")! }, "*");
       window.close();
     } else if (params.get("pendingStampPCD") != null) {
       // Later, the Passport redirects back with a proof. Send it to our parent.
