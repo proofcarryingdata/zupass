@@ -9,11 +9,12 @@ import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { useProof } from "./PCDIntegration";
 
-/**  */
 export function requestZuzaluMembershipUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
-  urlToSemaphoreGroup: string
+  urlToSemaphoreGroup: string,
+  externalNullifier?: string,
+  signal?: string
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -21,7 +22,7 @@ export function requestZuzaluMembershipUrl(
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
       userProvided: false,
-      value: "1",
+      value: externalNullifier ?? "1",
     },
     group: {
       argumentType: ArgumentTypeName.Object,
@@ -35,8 +36,8 @@ export function requestZuzaluMembershipUrl(
     },
     signal: {
       argumentType: ArgumentTypeName.BigInt,
-      value: "1",
       userProvided: false,
+      value: signal ?? "1",
     },
   });
 

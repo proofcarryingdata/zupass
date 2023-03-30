@@ -73,7 +73,9 @@ function requestZuzaluMembershipProof() {
   const proofUrl = requestZuzaluMembershipUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL
+    SEMAPHORE_GROUP_URL,
+    "1337",
+    "12345"
   );
 
   requestProofFromPassport(proofUrl);
