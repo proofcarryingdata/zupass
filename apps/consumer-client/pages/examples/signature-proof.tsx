@@ -70,7 +70,7 @@ function requestSemaphoreSignature() {
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
+        value: "1",
         userProvided: true,
         description: "The message you want to sign.",
       },

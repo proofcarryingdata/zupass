@@ -122,6 +122,7 @@ function requestMembershipProof(debug: boolean) {
       },
     },
     {
+      genericProveScreen: true,
       description:
         "Generate a group membership proof using your passport's Semaphore Identity.",
       title: "Group Membership Proof",
