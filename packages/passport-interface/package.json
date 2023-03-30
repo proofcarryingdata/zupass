@@ -4,11 +4,16 @@
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsc --noEmit",
-    "prepublish": "tsc"
+    "prepublishOnly": "rm -rf ./dist && tsc"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",
