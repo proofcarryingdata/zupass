@@ -26,18 +26,18 @@ export function initPCDRoutes(
       try {
         const proveRequest: ProveRequest = req.body;
         const hash = hashRequest(proveRequest);
-        context.queue.push(proveRequest);
-        if (context.queue.length == 1) {
-          context.stampStatus.set(hash, StampStatus.IN_PROGRESS);
-          prove(proveRequest, context);
+        _context.queue.push(proveRequest);
+        if (_context.queue.length == 1) {
+          _context.stampStatus.set(hash, StampStatus.PROVING);
+          prove(proveRequest, _context);
         } else {
-          context.stampStatus.set(hash, StampStatus.IN_QUEUE);
+          _context.stampStatus.set(hash, StampStatus.IN_QUEUE);
         }
 
         const pending: PendingStamp = {
           pcdType: proveRequest.pcdType,
           hash: hash,
-          status: context.stampStatus.get(hash)!,
+          status: _context.stampStatus.get(hash)!,
         };
         res.status(200).json(pending);
       } catch (e) {
@@ -75,9 +75,9 @@ export function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const hash = req.params.hash;
-        const status = context.stampStatus.get(hash);
+        const status = _context.stampStatus.get(hash);
         if (status === StampStatus.COMPLETE) {
-          res.status(200).json(context.stampResult.get(hash));
+          res.status(200).json(_context.stampResult.get(hash));
         } else {
           res.status(400).send(status);
         }
