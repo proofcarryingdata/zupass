@@ -7,9 +7,6 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.5em;
   }
 
-  ul, ol {
-  }
-
   p {
     max-width: 600px;
   }

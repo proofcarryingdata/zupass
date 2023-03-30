@@ -5,12 +5,8 @@ import {
 } from "@pcd/passport-interface";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { IS_PROD, PASSPORT_URL } from "../../src/constants";
+import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
-
-const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
-  : "http://localhost:3002/semaphore/1";
 
 export default function Web() {
   const pcdStr = useListenToPCDMessage();
