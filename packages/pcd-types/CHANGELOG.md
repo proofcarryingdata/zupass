@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.0.9
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+
 ## 0.0.8
 
 ### Patch Changes

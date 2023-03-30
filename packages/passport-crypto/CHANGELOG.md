@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.0.3
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+
 ## 0.0.2
 
 ### Patch Changes

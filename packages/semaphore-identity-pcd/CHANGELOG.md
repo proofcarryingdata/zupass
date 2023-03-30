@@ -1,5 +1,13 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.0.10
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+- Updated dependencies
+  - @pcd/pcd-types@0.0.9
+
 ## 0.0.9
 
 ### Patch Changes

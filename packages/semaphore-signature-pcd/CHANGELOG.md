@@ -1,5 +1,13 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.0.5
+
+### Patch Changes
+
+- Implemented ProofOptions interface.
+- Updated dependencies
+  - @pcd/pcd-types@0.0.9
+
 ## 0.0.4
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-crypto",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "./index.tsx",
   "types": "./index.tsx",
   "license": "GPL-3.0-or-later",
