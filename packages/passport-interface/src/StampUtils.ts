@@ -7,9 +7,17 @@ export function hashRequest(req: ProveRequest): string {
 }
 
 export interface PendingStamp {
-  pcdType: string;
-  hash: string;
   status: StampStatus;
+
+  /**
+   * The type of PCD that a server is producing a stamp for.
+   */
+  pcdType: string;
+
+  /**
+   * A hash of the ProveRequest using hashRequest
+   */
+  hash: string;
 }
 
 export enum StampStatus {
