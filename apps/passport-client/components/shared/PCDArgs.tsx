@@ -460,7 +460,8 @@ export function PCDArgInput<T extends PCDPackage>({
     <ArgContainer>
       <Row>
         <ArgName>
-          {argName} <ArgTypeLabel argType={arg.argumentType} />
+          {argName}
+          <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
       <Row>
@@ -502,26 +503,20 @@ const ArgName = styled.div`
   padding: 2px 4px;
   font-weight: bold;
   width: 100%;
-  background-color: var(--primary-dark);
-  color: var(--accent-lite);
-  font-weight: 300;
-  padding: 10px 20px;
-  font-family: monospace;
+  padding: 10px 10px 0px 10px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 `;
 
 const ArgContainer = styled.div`
   background-color: white;
-  border: 1px solid grey;
   border-radius: 8px;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: stretch;
   flex-direction: column;
-  border: 1px solid var(--accent-lite);
   overflow: hidden;
 `;
 
@@ -534,6 +529,10 @@ const ArgsContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   color: var(--bg-dark-primary);
+  background-color: white;
+  border: 1px solid var(--accent-lite);
+  overflow: hidden;
+  padding: 16px 0px 16px 0px;
 `;
 
 export function ArgTypeLabel({ argType }: { argType: ArgumentTypeName }) {
@@ -541,15 +540,15 @@ export function ArgTypeLabel({ argType }: { argType: ArgumentTypeName }) {
 }
 
 const ArgTypeNameContainer = styled.span`
-  font-family: monospace;
-  padding: 2px 8px;
-  border: 2px solid var(--bg-dark-primary);
-  color: var(--bg-dark-primary);
+  padding: 0px 5px;
   border-radius: 8px;
-  background-color: var(--accent-lite);
+  /* background-color: var(--accent-/lite); */
+  border: 1px solid black;
   font-size: 0.8em;
+  margin-left: 0.5em;
 `;
 
 const ErrorContainer = styled.div`
-  padding: 0px 10px 10px 10px;
+  padding: 0px 10px 0px 10px;
+  color: var(--danger);
 `;
