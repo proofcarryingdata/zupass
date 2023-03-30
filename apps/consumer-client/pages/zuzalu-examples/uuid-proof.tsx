@@ -1,7 +1,7 @@
 import {
   requestSignedZuzaluUUIDUrl,
   useFetchParticipant,
-  useListenToPCDMessage,
+  usePassportPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ import { requestProofFromPassport } from "../../src/util";
  * party developer.
  */
 export default function Page() {
-  const pcdStr = useListenToPCDMessage();
+  const pcdStr = usePassportPCD();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 

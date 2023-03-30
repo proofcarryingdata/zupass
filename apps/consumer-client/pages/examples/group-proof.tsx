@@ -1,6 +1,6 @@
 import {
   constructPassportPcdGetRequestUrl,
-  useListenToPCDMessage,
+  usePassportPCD,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -16,7 +16,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const pcdStr = useListenToPCDMessage();
+  const pcdStr = usePassportPCD();
   const [debugChecked, setDebugChecked] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,

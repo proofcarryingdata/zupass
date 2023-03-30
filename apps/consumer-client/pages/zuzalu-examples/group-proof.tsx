@@ -1,6 +1,6 @@
 import {
   requestZuzaluMembershipUrl,
-  useListenToPCDMessage,
+  usePassportPCD,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
@@ -13,7 +13,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const pcdStr = useListenToPCDMessage();
+  const pcdStr = usePassportPCD();
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
