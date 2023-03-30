@@ -41,16 +41,22 @@ export async function prove(
   provingContext: ServerProvingContext
 ): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
-  const pcd = await pcdPackage.prove(proveRequest.args);
-  const serializedPCD = await pcdPackage.serialize(pcd);
+  const currentHash = hashRequest(proveRequest);
+
+  try {
+    const pcd = await pcdPackage.prove(proveRequest.args);
+    const serializedPCD = await pcdPackage.serialize(pcd);
+    console.log(`finished PCD request ${currentHash}`, serializedPCD);
+    provingContext.stampStatus.set(currentHash, StampStatus.COMPLETE);
+    provingContext.stampResult.set(currentHash, {
+      serializedPCD: JSON.stringify(serializedPCD),
+    });
+  } catch (e) {
+    provingContext.stampStatus.set(currentHash, StampStatus.ERROR);
+  }
 
   // finish current job
   provingContext.queue.shift();
-  const currentHash = hashRequest(proveRequest);
-  provingContext.stampStatus.set(currentHash, StampStatus.COMPLETE);
-  provingContext.stampResult.set(currentHash, {
-    serializedPCD: JSON.stringify(serializedPCD),
-  });
 
   // check if there's another job
   if (provingContext.queue.length > 0) {

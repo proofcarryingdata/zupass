@@ -3,6 +3,7 @@ import {
   usePassportPCD,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
+import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
@@ -13,7 +14,8 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const pcdStr = usePassportPCD();
+  const [pcdStr, _pendingStamp] = usePassportPCD();
+  const [serverProving, setServerProving] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
@@ -49,9 +51,22 @@ export default function Page() {
         .
       </p>
       <ExampleContainer>
-        <button onClick={requestZuzaluMembershipProof} disabled={valid}>
+        <button
+          onClick={() => requestZuzaluMembershipProof(serverProving)}
+          disabled={valid}
+        >
           Request Zuzalu Membership Proof
         </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={serverProving}
+            onChange={() => {
+              setServerProving((checked: boolean) => !checked);
+            }}
+          />
+          server-side proof
+        </label>
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>
@@ -69,13 +84,14 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof() {
+function requestZuzaluMembershipProof(serverProving: boolean) {
   const proofUrl = requestZuzaluMembershipUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
     SEMAPHORE_GROUP_URL,
     "1337",
-    "12345"
+    "12345",
+    serverProving
   );
 
   requestProofFromPassport(proofUrl);

@@ -1,5 +1,6 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
+import { PendingStamp } from "./StampUtils";
 
 export function useProof<T extends PCDPackage>(
   proofPackage: T,
@@ -23,23 +24,30 @@ export function useProof<T extends PCDPackage>(
 }
 
 /**
- * React hook that listens for PCDs returned by the passport to the application.
+ * React hook that listens for PCDs and/or PendingStamps returned by the passport
+ * to the application. The former is returned if client-side proofs are selected, the
+ * latter if server-side proofs are selected.
  */
-export function usePassportPCD() {
+export function usePassportPCD(): [string, PendingStamp | undefined] {
   const [pcdStr, setPcdStr] = useState("");
+  const [pendingStamp, setPendingStamp] = useState<PendingStamp | undefined>();
 
   // Listen for PCDs coming back from the Passport popup
   useEffect(() => {
     function receiveMessage(ev: MessageEvent<any>) {
-      // This next line is important. Extensions including Metamask apparently
-      // send messages to every page. Ignore those.
-      if (!ev.data.encodedPcd) return;
-      console.log("Received message", ev.data);
-      setPcdStr(ev.data.encodedPcd);
+      // Need to only listen for our intended messages; extensions including MetaMask
+      // apparently send messages to every page.
+      if (ev.data.encodedPcd) {
+        console.log("Received PCD", ev.data.encodedPcd);
+        setPcdStr(ev.data.encodedPcd);
+      } else if (ev.data.pendingStamp) {
+        console.log("Received pending stamp", ev.data.pendingStamp);
+        setPendingStamp(ev.data.pendingStamp);
+      }
     }
     window.addEventListener("message", receiveMessage, false);
     return () => window.removeEventListener("message", receiveMessage);
   }, []);
 
-  return pcdStr;
+  return [pcdStr, pendingStamp];
 }

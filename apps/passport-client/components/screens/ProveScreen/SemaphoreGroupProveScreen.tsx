@@ -47,7 +47,7 @@ export function SemaphoreGroupProveScreen({
         args: args,
       };
       const pendingStamp = await requestStamp(serverReq);
-      window.location.href = `${req.returnUrl}?stamp=${JSON.stringify(
+      window.location.href = `${req.returnUrl}?pendingStamp=${JSON.stringify(
         pendingStamp
       )}`;
     } else {

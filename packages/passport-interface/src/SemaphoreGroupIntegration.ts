@@ -14,32 +14,41 @@ export function requestZuzaluMembershipUrl(
   returnUrl: string,
   urlToSemaphoreGroup: string,
   externalNullifier?: string,
-  signal?: string
+  signal?: string,
+  serverProving?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
-  >(urlToPassportWebsite, returnUrl, SemaphoreGroupPCDPackage.name, {
-    externalNullifier: {
-      argumentType: ArgumentTypeName.BigInt,
-      userProvided: false,
-      value: externalNullifier ?? "1",
+  >(
+    urlToPassportWebsite,
+    returnUrl,
+    SemaphoreGroupPCDPackage.name,
+    {
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        userProvided: false,
+        value: externalNullifier ?? "1",
+      },
+      group: {
+        argumentType: ArgumentTypeName.Object,
+        userProvided: false,
+        remoteUrl: urlToSemaphoreGroup,
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signal: {
+        argumentType: ArgumentTypeName.BigInt,
+        userProvided: false,
+        value: signal ?? "1",
+      },
     },
-    group: {
-      argumentType: ArgumentTypeName.Object,
-      userProvided: false,
-      remoteUrl: urlToSemaphoreGroup,
-    },
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: undefined,
-      userProvided: true,
-    },
-    signal: {
-      argumentType: ArgumentTypeName.BigInt,
-      userProvided: false,
-      value: signal ?? "1",
-    },
-  });
+    {
+      server: serverProving,
+    }
+  );
 
   return url;
 }
