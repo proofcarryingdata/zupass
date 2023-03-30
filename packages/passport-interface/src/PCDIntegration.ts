@@ -1,6 +1,6 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
-import { PendingStampPCD } from "./StampUtils";
+import { PendingStampPCD } from "./StampPCDUtils";
 
 export function useProof<T extends PCDPackage>(
   proofPackage: T,
@@ -70,7 +70,7 @@ export function usePassportPCDOrStamp(): [
         setPcdStr(ev.data.encodedPCD);
       } else if (ev.data.pendingStampPCD) {
         console.log(ev.data);
-        setPendingStampPCD(ev.data.pendingStampPCD);
+        setPendingStampPCD(JSON.parse(ev.data.pendingStampPCD));
       }
     }
     window.addEventListener("message", receiveMessage, false);

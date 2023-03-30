@@ -6,6 +6,7 @@ import {
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
+import { LoadingStampPCD } from "../../components/LoadingStampPCD";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -67,6 +68,14 @@ export default function Page() {
           />
           server-side proof
         </label>
+        {pendingStampPCD != null && (
+          <>
+            <LoadingStampPCD
+              pendingStampPCD={pendingStampPCD}
+              setPcdStr={setPcdStr}
+            />
+          </>
+        )}
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>
@@ -75,12 +84,6 @@ export default function Page() {
             {valid === undefined && <p>❓ Proof verifying</p>}
             {valid === false && <p>❌ Proof is invalid</p>}
             {valid === true && <p>✅ Proof is valid</p>}
-          </>
-        )}
-        {pendingStampPCD != null && (
-          <>
-            <p>Got a PendingStampPCD from Passport</p>
-            <CollapsableCode code={JSON.stringify(pendingStampPCD, null, 2)} />
           </>
         )}
         {valid && <p>Welcome, anon</p>}
