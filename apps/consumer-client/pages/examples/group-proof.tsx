@@ -1,10 +1,11 @@
 import {
   constructPassportPcdGetRequestUrl,
+  useListenToPCDMessage,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { IS_PROD, PASSPORT_URL } from "../../src/constants";
@@ -15,33 +16,12 @@ const SEMAPHORE_GROUP_URL = IS_PROD
   : "http://localhost:3002/semaphore/1";
 
 export default function Web() {
-  // Raw string-encoded PCD
-  const [pcdStr, setPcdStr] = useState("");
-  const [debugChecked, setDebugChecked] = useState(true);
-
-  // Semaphore Group PCD
-  const { proof, group, valid, error } = useSemaphorePassportProof(
+  const pcdStr = useListenToPCDMessage();
+  const [debugChecked, setDebugChecked] = useState(false);
+  const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
   );
-
-  useEffect(() => {
-    if (error) {
-      console.error("error using semaphore passport proof", error);
-    }
-  }, [error]);
-
-  // Listen for PCDs coming back from the Passport popup
-  useEffect(() => {
-    window.addEventListener("message", receiveMessage, false);
-    function receiveMessage(ev: MessageEvent<any>) {
-      // This next line is important. Extensions including Metamask apparently
-      // send messages to every page. Ignore those.
-      if (!ev.data.encodedPcd) return;
-      console.log("Received message", ev.data);
-      setPcdStr(ev.data.encodedPcd);
-    }
-  }, []);
 
   return (
     <>
@@ -81,7 +61,7 @@ export default function Web() {
           <input
             type="checkbox"
             checked={debugChecked}
-            onChange={(e) => {
+            onChange={() => {
               setDebugChecked((checked) => !checked);
             }}
           />
@@ -116,6 +96,7 @@ function requestMembershipProof(debug: boolean) {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
+        value: "1",
         description:
           "You can choose a nullifier to prevent this signed message from being used across domains.",
       },
@@ -135,6 +116,7 @@ function requestMembershipProof(debug: boolean) {
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
+        value: "1",
         description:
           "The message you are signing with your Semaphore identity.",
       },

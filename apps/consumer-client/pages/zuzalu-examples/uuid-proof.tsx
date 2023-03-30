@@ -1,6 +1,7 @@
 import {
   requestSignedZuzaluUUIDUrl,
   useFetchParticipant,
+  useListenToPCDMessage,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
@@ -9,18 +10,7 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
 export default function Page() {
-  // Listen for PCDs coming back from the Passport popup
-  const [pcdStr, setPcdStr] = useState("");
-  useEffect(() => {
-    window.addEventListener("message", receiveMessage, false);
-    function receiveMessage(ev: MessageEvent<any>) {
-      if (!ev.data.encodedPcd) return;
-      console.log("Received message", ev.data);
-      setPcdStr(ev.data.encodedPcd);
-    }
-  }, []);
-
-  // Request a Zuzalu UUID-revealing proof from Passport
+  const pcdStr = useListenToPCDMessage();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -34,10 +24,7 @@ export default function Page() {
   }, [signatureProofValid, signatureProof]);
 
   // Finally, once we have the UUID, fetch the participant data from Passport.
-  const { participant, error, loading } = useFetchParticipant(
-    PASSPORT_SERVER_URL,
-    uuid
-  );
+  const { participant } = useFetchParticipant(PASSPORT_SERVER_URL, uuid);
 
   return (
     <>

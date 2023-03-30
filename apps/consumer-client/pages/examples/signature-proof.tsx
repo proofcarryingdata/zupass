@@ -1,34 +1,20 @@
 import {
   constructPassportPcdGetRequestUrl,
+  useListenToPCDMessage,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
 export default function Web() {
-  // Raw string-encoded PCD
-  const [pcdStr, setPcdStr] = useState("");
-
-  // Semaphore Signature PCD
+  const pcdStr = useListenToPCDMessage();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
-
-  // Listen for PCDs coming back from the Passport popup
-  useEffect(() => {
-    window.addEventListener("message", receiveMessage, false);
-    function receiveMessage(ev: MessageEvent<any>) {
-      // This next line is important. Extensions including Metamask apparently
-      // send messages to every page. Ignore those.
-      if (!ev.data.encodedPcd) return;
-      console.log("Received message", ev.data);
-      setPcdStr(ev.data.encodedPcd);
-    }
-  }, []);
 
   return (
     <>
