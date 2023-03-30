@@ -15,7 +15,9 @@ export interface PendingStamp {
   pcdType: string;
 
   /**
-   * A hash of the ProveRequest using hashRequest
+   * A hash of the ProveRequest using hashRequest. Stored to avoid
+   * people re-sending the same request many times and clogging
+   * the proving queue.
    */
   hash: string;
 }
