@@ -47,20 +47,18 @@ export default function Web() {
       <HomeLink />
       <h2>Semaphore Group Membership Proof</h2>
       <p>
-        This page shows a working example of an integration with the Zuzalu
+        This page shows a working example of an integration with the PCD
         Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Residents Semaphore Group.
+        is a member of a particular Semaphore Group.
       </p>
       <p>
-        The Zuzalu Residents Semaphore Group is maintained by the Passport
-        Server application. To be able to use this flow in production, to be
-        able to generate this proof, you have to have signed in on{" "}
-        <a href={"https://zupass.org"}>zupass.org</a>. To use this flow locally,
-        you either have to sign in as a valid Zuzalu Resident which was synced
-        from Pretix, or you have to have started the local development
-        environment with the <code>BYPASS_EMAIL_REGISTRATION</code> environment
-        variable set to <code>true</code>, which allows you to log in
-        development mode without being a resident.
+        The group we are using for demonstration purposes is the Zuzalu
+        Residents group, however this example is intended to be a more generic
+        example and to be able to be used for groups and purposes other than
+        Zuzalu. To test this flow locally, you should start the local
+        development environment with the <code>BYPASS_EMAIL_REGISTRATION</code>{" "}
+        environment variable set to <code>true</code>, which allows you to log
+        with any string as the email.
       </p>
       <p>
         The underlying PCD that this example uses is{" "}
@@ -73,7 +71,7 @@ export default function Web() {
       </p>
       <ExampleContainer>
         <button onClick={requestMembershipProof} disabled={valid}>
-          Request Zuzalu Membership Proof
+          Request Group Membership Proof
         </button>
         {proof != null && (
           <>
