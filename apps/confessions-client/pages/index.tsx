@@ -7,8 +7,8 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
 import styled from "styled-components";
-import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
-import { TransformStreamDefaultController } from "stream/web";
+import { IS_PROD, PASSPORT_URL, CONFESSIONS_SERVER_URL, requestProofFromPassport } from "../src/util";
+import { resourceGone } from "@hapi/boom";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -40,6 +40,18 @@ export default function Web() {
 
     setSemaphoreProofValid(proofValid);
   }, [semaphoreError, semaphoreProof, groupProofValid]);
+
+  useEffect(() =>  {
+    if (!semaphoreProofValid) return;
+
+    // TODO: send real proof
+    const res = sendConfession(SEMAPHORE_GROUP_URL, confession, "proofasdfasdfs");
+    console.log(res);
+    // TODO: handle error
+    // if (!res.ok) {
+    //   console.error("error sending confession to the server");
+    // }
+  }, [semaphoreProofValid]);
 
   // Semaphore Grorup PCD
   const [confession, setConfession] = useState<string>("");
@@ -91,6 +103,10 @@ export default function Web() {
   );
 }
 
+function generateMessageHashStr(message: string): string {
+  return (BigInt("0x" + sha256(message)) >> BigInt(8)).toString();
+}
+
 // Show the Passport popup
 function requestSemaphoreProof(confession: string) {
   const proofUrl = constructPassportPcdGetRequestUrl<
@@ -131,9 +147,28 @@ function requestSemaphoreProof(confession: string) {
   requestProofFromPassport(proofUrl);
 }
 
-function generateMessageHashStr(message: string): string {
-  return (BigInt("0x" + sha256(message)) >> BigInt(8)).toString();
+async function sendConfession(
+  semaphoreGroupUrl: string,
+  confession: string,
+  proof: string
+): Promise<void> {
+  const request = {
+    semaphoreGroupUrl,
+    confession,
+    proof
+  };
+  const url = `${CONFESSIONS_SERVER_URL}confessions`;
+
+  await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
 }
+
 const Container = styled.div`
   font-family: system-ui, sans-serif;
   border: 1px solid black;

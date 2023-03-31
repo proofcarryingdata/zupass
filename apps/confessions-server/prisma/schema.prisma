@@ -16,5 +16,5 @@ model Confession {
   updatedAt DateTime @default(now()) @updatedAt
   semaphoreGroupUrl String
   body String
-  proof Json
+  proof Json @unique
 }

@@ -8,6 +8,9 @@ export const PASSPORT_SERVER_URL = IS_PROD
   ? "https://api.pcd-passport.com/"
   : "http://localhost:3002/";
 
+export const CONFESSIONS_SERVER_URL =
+  "http://localhost:3005/";
+
 // Popup window will redirect to the passport to request a proof.
 // Open the popup window under the current domain, let it redirect there:
 export function requestProofFromPassport(proofUrl: string) {

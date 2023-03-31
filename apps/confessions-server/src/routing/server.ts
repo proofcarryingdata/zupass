@@ -1,10 +1,15 @@
-import express from "express";
+import cors from "cors";
+import express, { NextFunction } from "express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initConfessionRoutes } from "./routes/confessionRoutes";
 import { RouteInitializer } from "./types";
 
-const routes: RouteInitializer[] = [initHealthcheckRoutes];
+const routes: RouteInitializer[] = [
+  initHealthcheckRoutes,
+  initConfessionRoutes,
+];
 
 export async function startServer(
   context: ApplicationContext
@@ -12,9 +17,32 @@ export async function startServer(
   return new Promise<express.Application>((resolve, reject) => {
     const port = process.env.PORT;
     const app = express();
+
     app.use(morgan("tiny"));
+    app.use(express.json());
+    app.use(cors());
 
     routes.forEach((r) => r(app, context));
+
+    app.use(
+      cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+      })
+    );
+
+    app.use(
+      (
+        err: Error,
+        req: express.Request,
+        res: express.Response,
+        _next: NextFunction
+      ) => {
+        console.error(`[ERROR] ${req.method} ${req.url}`);
+        console.error(err.stack);
+        res.status(500).send(err.message);
+      }
+    );
 
     app
       .listen(port, () => {
