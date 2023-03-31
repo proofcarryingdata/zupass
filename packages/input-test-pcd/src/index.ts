@@ -1,1 +1,1 @@
-export * from "./src/InputTestPCD";
+export * from "./InputTestPCD";
