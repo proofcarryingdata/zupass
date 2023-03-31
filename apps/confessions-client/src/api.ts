@@ -3,12 +3,14 @@ import { CONFESSIONS_SERVER_URL } from "../src/util";
 export async function postConfession(
     semaphoreGroupUrl: string,
     confession: string,
-    proof: string
+    pcdStr: string
 ): Promise<void> {
+  const parsedPcd = JSON.parse(decodeURIComponent(pcdStr));
+
   const request = {
     semaphoreGroupUrl,
     confession,
-    proof
+    proof: parsedPcd.pcd
   };
   const url = `${CONFESSIONS_SERVER_URL}confessions`;
 

@@ -44,9 +44,10 @@ export default function Web() {
   useEffect(() =>  {
     if (!semaphoreProofValid) return;
 
-    // TODO: send real proof
-    const res = postConfession(SEMAPHORE_GROUP_URL, confession, "proofasdfasdfs");
+    // TODO: handle error
+    const res = postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
     console.log(res);
+
     // TODO: handle error
     // if (!res.ok) {
     //   console.error("error sending confession to the server");
