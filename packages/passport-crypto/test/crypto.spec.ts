@@ -21,14 +21,18 @@ describe("Passport encryption", function () {
     });
     const packages = [SemaphoreIdentityPCDPackage];
     const sourcePCDs = new PCDCollection(packages, [identityPCD]);
+    const encryptedStorage = {
+      self: testParticipant,
+      pcds: await sourcePCDs.serializeAll(),
+    };
+
     const encryptionKey = pcdCrypto.generateRandomKey(256);
-    const encrypted = await encryptStorage(
-      sourcePCDs,
-      testParticipant,
+    const encrypted = await encryptStorage(encryptedStorage, encryptionKey);
+    const destinationPCDs = new PCDCollection(packages, []);
+    const decrypted = await decryptStorage<typeof encryptedStorage>(
+      encrypted,
       encryptionKey
     );
-    const destinationPCDs = new PCDCollection(packages, []);
-    const decrypted = await decryptStorage(encrypted, encryptionKey);
     await destinationPCDs.deserializeAllAndAdd(decrypted.pcds);
 
     assert.equal(destinationPCDs.getAll().length, 1);
