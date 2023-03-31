@@ -1,5 +1,9 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [".", "test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": ["./src/**/*"],
+  "exclude": ["./dist", "./node_modules"],
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true
+  }
 }

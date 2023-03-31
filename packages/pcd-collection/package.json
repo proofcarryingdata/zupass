@@ -2,11 +2,12 @@
   "name": "@pcd/pcd-collection",
   "version": "0.0.9",
   "license": "MIT",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "prepublishOnly": "rm -rf ./dist && yarn tsc"
   },
   "devDependencies": {
     "eslint": "^7.32.0",
