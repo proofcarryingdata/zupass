@@ -1,4 +1,5 @@
 import { decryptStorage, EncryptedPacket, getHash } from "@pcd/passport-crypto";
+import { EncryptedStorage } from "@pcd/passport-interface";
 import React, { useCallback, useContext, useState } from "react";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { DispatchContext } from "../../src/dispatch";
@@ -37,7 +38,10 @@ export function SyncExistingScreen() {
         return;
       }
       console.log("downloaded encrypted storage");
-      const decrypted = await decryptStorage(storage, syncKey);
+      const decrypted = await decryptStorage<EncryptedStorage>(
+        storage,
+        syncKey
+      );
       console.log("decrypted encrypted storage");
 
       dispatch({

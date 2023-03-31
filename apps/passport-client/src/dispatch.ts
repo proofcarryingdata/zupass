@@ -185,9 +185,8 @@ async function finishLogin(
 async function saveParticipantPCDs(participant: ZuParticipant) {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
-  const encryptedStorage = await encryptStorage(
-    pcds,
-    participant,
+  const encryptedStorage = await encryptStorage<EncryptedStorage>(
+    { pcds: await pcds.serializeAll(), self: participant },
     encryptionKey
   );
 
