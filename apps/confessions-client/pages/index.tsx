@@ -21,15 +21,25 @@ export default function Web() {
   // Semaphore Group PCD
   const {
     proof: semaphoreProof,
-    group: semaphoreGroup,
-    valid: semaphoreProofValid,
+    valid: groupProofValid,
     error: semaphoreError,
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
+
+  const [semaphoreProofValid, setSemaphoreProofValid] = useState<boolean | undefined>();
+
   useEffect(() => {
     if (semaphoreError) {
       console.error("error using semaphore passport proof", semaphoreError);
     }
-  }, [semaphoreError]);
+
+    // Also check whether the proof signal matches the confession string
+    const proofValid = groupProofValid &&
+      semaphoreProof &&
+      semaphoreProof.proof.proof.signal.toString() ===
+      generateMessageHashStr(confession);
+
+    setSemaphoreProofValid(proofValid);
+  }, [semaphoreError, semaphoreProof, groupProofValid]);
 
   // Semaphore Grorup PCD
   const [confession, setConfession] = useState<string>("");
@@ -83,8 +93,6 @@ export default function Web() {
 
 // Show the Passport popup
 function requestSemaphoreProof(confession: string) {
-  const confessionMessageHash = BigInt("0x" + sha256(confession)) >> BigInt(8);
-
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -109,7 +117,7 @@ function requestSemaphoreProof(confession: string) {
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
-        value: confessionMessageHash.toString(),
+        value: generateMessageHashStr(confession),
         userProvided: false,
       }
     },
@@ -123,6 +131,9 @@ function requestSemaphoreProof(confession: string) {
   requestProofFromPassport(proofUrl);
 }
 
+function generateMessageHashStr(message: string): string {
+  return (BigInt("0x" + sha256(message)) >> BigInt(8)).toString();
+}
 const Container = styled.div`
   font-family: system-ui, sans-serif;
   border: 1px solid black;
