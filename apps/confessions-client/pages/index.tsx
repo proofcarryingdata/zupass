@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
 import styled from "styled-components";
 import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
-import { postConfession, listConfessions, useListConfessions } from "../src/api";
+import { postConfession, listConfessions } from "../src/api";
 import loadConfig from "next/dist/server/config";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
