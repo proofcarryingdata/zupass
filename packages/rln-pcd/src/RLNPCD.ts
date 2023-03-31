@@ -50,7 +50,7 @@ export interface RLNPCDClaim {
   epoch: bigint;
   // Identifier of the app. Every app using RLN should use a unique identifier.
   rlnIdentifier: bigint;
-  // The y value calculated from the polynomial from (x, )
+  // The y value calculated from the polynomial of x
   yShare: bigint;
   // The merkle root of the identity commitment tree
   merkleRoot: bigint;
@@ -163,14 +163,9 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
 }
 
 export async function verify(pcd: RLNPCD): Promise<boolean> {
-  if (!initArgs) {
-    throw new Error("cannot verify proof: init has not been called yet");
-  }
   checkClaimProofMatching(pcd.claim, pcd.proof);
   const fullProof = pcd.toRLNFullProof();
-  const rlnIdentifier = BigInt(fullProof.rlnIdentifier);
-  const rln = getRLNInstance(rlnIdentifier);
-  return await rln.verifyProof(fullProof);
+  return await RLN.verifySNARKProof(verificationKeyJSON, fullProof.snarkProof);
 }
 
 function getRLNInstance(rlnIdentifier: bigint, identity?: Identity) {
