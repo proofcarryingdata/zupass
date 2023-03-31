@@ -8,12 +8,16 @@ export function initConfessionRoutes(
 ): void {
   app.post("/confessions", async (req: Request, res: Response, next: NextFunction) => {
     // TODO: verify confession proof
-    // Check if already saved
     const request = req.body as PostConfessionRequest;
   
     try {
-      await prisma.confession.create({
-        data: {
+      // proof should be unique
+      await prisma.confession.upsert({
+        where: {
+          proof: request.proof
+        },
+        update: {},
+        create: {
           semaphoreGroupUrl: request.semaphoreGroupUrl,
           body: request.confession,
           proof: request.proof

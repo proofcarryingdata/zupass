@@ -7,8 +7,8 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
 import styled from "styled-components";
-import { IS_PROD, PASSPORT_URL, CONFESSIONS_SERVER_URL, requestProofFromPassport } from "../src/util";
-import { resourceGone } from "@hapi/boom";
+import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
+import { postConfession, listConfessions } from "../src/api";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -45,12 +45,14 @@ export default function Web() {
     if (!semaphoreProofValid) return;
 
     // TODO: send real proof
-    const res = sendConfession(SEMAPHORE_GROUP_URL, confession, "proofasdfasdfs");
+    const res = postConfession(SEMAPHORE_GROUP_URL, confession, "proofasdfasdfs");
     console.log(res);
     // TODO: handle error
     // if (!res.ok) {
     //   console.error("error sending confession to the server");
     // }
+    const response = listConfessions(1, 20);
+    console.log(response);
   }, [semaphoreProofValid]);
 
   // Semaphore Grorup PCD
@@ -145,28 +147,6 @@ function requestSemaphoreProof(confession: string) {
   );
 
   requestProofFromPassport(proofUrl);
-}
-
-async function sendConfession(
-  semaphoreGroupUrl: string,
-  confession: string,
-  proof: string
-): Promise<void> {
-  const request = {
-    semaphoreGroupUrl,
-    confession,
-    proof
-  };
-  const url = `${CONFESSIONS_SERVER_URL}confessions`;
-
-  await fetch(url, {
-    method: "POST",
-    body: JSON.stringify(request),
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
 }
 
 const Container = styled.div`
