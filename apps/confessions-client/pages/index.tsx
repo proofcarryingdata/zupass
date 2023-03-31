@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import { sha256 } from "js-sha256";
 import styled from "styled-components";
 import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
-import { postConfession, listConfessions } from "../src/api";
+import { postConfession, listConfessions, useListConfessions } from "../src/api";
+import loadConfig from "next/dist/server/config";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -44,16 +45,19 @@ export default function Web() {
   useEffect(() =>  {
     if (!semaphoreProofValid) return;
 
-    // TODO: handle error
-    const res = postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
-    console.log(res);
+    // TODO: display error to the user
+    const post = async () => {
+      const res = await postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
+      if (!res.ok) {
+        const err = await res.text();
+        console.error("error posting confession to the server:", err);
+      }
+    }
+    post().catch((e) => {
+      console.error(e);
+    })
 
-    // TODO: handle error
-    // if (!res.ok) {
-    //   console.error("error sending confession to the server");
-    // }
-    const response = listConfessions(1, 20);
-    console.log(response);
+    // TODO: refresh the confessions
   }, [semaphoreProofValid]);
 
   // Semaphore Grorup PCD
@@ -70,6 +74,9 @@ export default function Web() {
       setPcdStr(ev.data.encodedPcd);
     }
   }, []);
+
+  // TODO: paging
+  const { confessions } = useListConfessions(1, 20);
 
   return (
     <>
@@ -100,6 +107,12 @@ export default function Web() {
             {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
             {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
           </>
+        )}
+      </Container>
+      <Container>
+        <h2>Confessions</h2>
+        {confessions != null && (
+          <p>{JSON.stringify(confessions, null, 2)}</p>
         )}
       </Container>
     </>
