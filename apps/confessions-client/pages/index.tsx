@@ -1,11 +1,14 @@
 import {
-  requestSemaphoreUrl,
+  constructPassportPcdGetRequestUrl,
   useSemaphorePassportProof,
-  useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useCallback, useEffect, useState } from "react";
+import { sha256 } from "js-sha256";
 import styled from "styled-components";
 import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
+import { TransformStreamDefaultController } from "stream/web";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -45,7 +48,7 @@ export default function Web() {
 
   return (
     <>
-      <h1>Confessions board</h1>
+      <h1>Confessions Board</h1>
       <Container>
         <h2>Publish confession</h2>
         <input
@@ -62,7 +65,7 @@ export default function Web() {
             [confession]
           )}
         >
-          Publish confession
+          Publish
         </button>
         {semaphoreProof != null && (
           <>
@@ -80,13 +83,43 @@ export default function Web() {
 
 // Show the Passport popup
 function requestSemaphoreProof(confession: string) {
-  const proofUrl = requestSemaphoreUrl(
+  const confessionMessageHash = BigInt("0x" + sha256(confession)) >> BigInt(8);
+
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreGroupPCDPackage
+  >(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL,
-    "1",
-    confession,
+    SemaphoreGroupPCDPackage.name,
+    {
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: "1",
+        userProvided: false,
+      },
+      group: {
+        argumentType: ArgumentTypeName.Object,
+        remoteUrl: SEMAPHORE_GROUP_URL,
+        userProvided: false,
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signal: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: confessionMessageHash.toString(),
+        userProvided: false,
+      }
+    },
+    {
+      genericProveScreen: true,
+      title: "Zuzalu Member Confession Group",
+      debug: false,
+    }
   );
+
   requestProofFromPassport(proofUrl);
 }
 
