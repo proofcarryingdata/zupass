@@ -27,6 +27,7 @@ export default function Web() {
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
 
   const [semaphoreProofValid, setSemaphoreProofValid] = useState<boolean | undefined>();
+  const [confessions, setConfessions] = useState<any>(null);
 
   useEffect(() => {
     if (semaphoreError) {
@@ -53,11 +54,20 @@ export default function Web() {
         console.error("error posting confession to the server:", err);
       }
     }
-    post().catch((e) => {
-      console.error(e);
-    })
-
-    // TODO: refresh the confessions
+    post()
+      .then(() => {
+         // TODO: paging
+        const list = async () => {
+          const conf = await listConfessions(1, 30);
+          setConfessions(conf);
+        };
+        list().catch((e) => {
+          console.error(e);
+        })
+      })
+      .catch((e) => {
+        console.error(e);
+      })
   }, [semaphoreProofValid]);
 
   // Semaphore Grorup PCD
@@ -73,10 +83,14 @@ export default function Web() {
       console.log("Received message", ev.data);
       setPcdStr(ev.data.encodedPcd);
     }
+    const list = async () => {
+      const conf = await listConfessions(1, 30);
+      setConfessions(conf);
+    }
+    list().catch((e) => {
+      console.error(e);
+    })
   }, []);
-
-  // TODO: paging
-  const { confessions } = useListConfessions(1, 20);
 
   return (
     <>
@@ -112,7 +126,7 @@ export default function Web() {
       <Container>
         <h2>Confessions</h2>
         {confessions != null && (
-          <p>{JSON.stringify(confessions, null, 2)}</p>
+          <pre>{JSON.stringify(confessions, null, 2)}</pre>
         )}
       </Container>
     </>

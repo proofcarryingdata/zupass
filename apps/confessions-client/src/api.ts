@@ -39,27 +39,3 @@ export async function listConfessions(
   if (!res.ok) return null;
   return await res.json();
 }
-
-export function useListConfessions(page: number, limit: number) {
-  const [confessions, setConfessions] = useState<any | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const doLoad = async () => {
-      try {
-        setLoading(true);
-        const confessions = await listConfessions(page, limit);
-        setConfessions(confessions);
-      } catch (e) {
-        setError(e as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    doLoad();
-  }, [page, limit]);
-
-  return { confessions, error, loading };
-}
