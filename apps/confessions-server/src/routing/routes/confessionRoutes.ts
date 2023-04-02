@@ -1,7 +1,17 @@
 import express, { Request, Response, NextFunction } from "express";
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import {
+  SemaphoreGroupPCDPackage,
+  SerializedSemaphoreGroup
+} from "@pcd/semaphore-group-pcd";
+import { Group } from "@semaphore-protocol/group";
+import { sha256 } from "js-sha256";
 import { ApplicationContext } from "../../types";
 import { prisma } from "../../util/prisma";
+import { IS_PROD } from "../../util/isProd";
+
+const SEMAPHORE_GROUP_URL = IS_PROD
+  ? "https://api.pcd-passport.com/semaphore/1"
+  : "http://localhost:3002/semaphore/1";
 
 export function initConfessionRoutes(
   app: express.Application,
@@ -11,13 +21,33 @@ export function initConfessionRoutes(
     const request = req.body as PostConfessionRequest;
 
     try {
+      // only allow Zuzalu group for now
+      if (request.semaphoreGroupUrl !== SEMAPHORE_GROUP_URL) {
+        throw new Error("only Zuzalu group is allowed");
+      }
+
       // verify confession proof
-      const deserialized = await SemaphoreGroupPCDPackage.deserialize(
+      const pcd = await SemaphoreGroupPCDPackage.deserialize(
         request.proof
       );
-      const verified = await SemaphoreGroupPCDPackage.verify(deserialized);
+
+      const verified = await SemaphoreGroupPCDPackage.verify(pcd);
       if (!verified) {
         throw new Error("invalid proof");
+      }
+
+      // check semaphoreGoupUrl and confession in the request matches the proof
+      const response = await fetch(request.semaphoreGroupUrl);
+      const json = await response.text();
+      const serializedGroup = JSON.parse(json) as SerializedSemaphoreGroup;
+      const group = new Group(1, 16);
+      group.addMembers(serializedGroup.members);
+      if (pcd.proof.proof.merkleTreeRoot !== group.root.toString()) {
+        throw new Error("semaphoreGroupUrl doesn't match proof merkleTreeRoot")
+      }
+
+      if (pcd.proof.proof.signal.toString() !== generateMessageHashStr(request.confession)) {
+        throw new Error("confession doesn't match proof signal")
       }
 
       // proof should be unique
@@ -80,4 +110,8 @@ function queryStrToInt(
   if (isNaN(parsed)) return defaultValue;
 
   return ((predicate && !predicate(parsed))) ? defaultValue : parsed;
+}
+
+function generateMessageHashStr(message: string): string {
+  return (BigInt("0x" + sha256(message)) >> BigInt(8)).toString();
 }
