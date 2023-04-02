@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc --noEmit",
-    "prepublishOnly": "rm -rf ./dist && yarn tsc"
+    "prepublishOnly": "rm -rf ./dist && yarn tsc --build"
   },
   "devDependencies": {
     "eslint": "^7.32.0",

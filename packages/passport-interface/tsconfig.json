@@ -2,9 +2,24 @@
   "extends": "@pcd/tsconfig/server.json",
   "exclude": ["./dist", "./dist/**/*", "./node_modules/**/*"],
   "include": ["./src/**/*"],
+  "references": [
+    {
+      "path": "../pcd-types"
+    },
+    {
+      "path": "../semaphore-group-pcd"
+    },
+    {
+      "path": "../semaphore-signature-pcd"
+    },
+    {
+      "path": "../passport-crypto"
+    }
+  ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   }
 }

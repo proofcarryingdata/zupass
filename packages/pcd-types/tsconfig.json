@@ -4,6 +4,7 @@
   "exclude": ["./dist", "./node_modules"],
   "compilerOptions": {
     "outDir": "./dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   }
 }

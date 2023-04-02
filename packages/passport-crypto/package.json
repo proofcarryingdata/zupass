@@ -13,7 +13,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsc --noEmit",
-    "prepublishOnly": "rm -rf ./dist && tsc"
+    "prepublishOnly": "rm -rf ./dist && yarn tsc --build"
   },
   "devDependencies": {
     "@pcd/pcd-types": "*",

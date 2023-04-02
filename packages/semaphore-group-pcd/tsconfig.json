@@ -2,8 +2,17 @@
   "extends": "@pcd/tsconfig/server.json",
   "include": ["./src/**/*"],
   "exclude": ["./dist", "./node_modules"],
+  "references": [
+    {
+      "path": "../pcd-types"
+    },
+    {
+      "path": "../semaphore-identity-pcd"
+    }
+  ],
   "compilerOptions": {
     "outDir": "./dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   }
 }

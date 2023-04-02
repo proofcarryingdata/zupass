@@ -12,7 +12,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "prepublishOnly": "rm -rf ./dist && yarn tsc"
+    "prepublishOnly": "rm -rf ./dist && yarn tsc --build"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",

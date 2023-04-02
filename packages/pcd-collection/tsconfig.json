@@ -2,9 +2,15 @@
   "extends": "@pcd/tsconfig/server.json",
   "exclude": ["./dist", "./dist/*", "./dist/**/*", "./node_modules/**/*"],
   "include": ["./src/**/*"],
+  "references": [
+    {
+      "path": "../pcd-types"
+    }
+  ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   }
 }

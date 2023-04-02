@@ -2,9 +2,15 @@
   "extends": "@pcd/tsconfig/server.json",
   "include": ["./src/**/*", "src/index.ts"],
   "exclude": ["./dist"],
+  "references": [
+    { "path": "../pcd-types" },
+    { "path": "../pcd-collection" },
+    { "path": "../semaphore-identity-pcd" }
+  ],
   "compilerOptions": {
     "lib": ["dom"],
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   }
 }

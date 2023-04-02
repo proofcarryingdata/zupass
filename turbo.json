@@ -1,6 +1,10 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
+    "prepublishOnly": {
+      "cache": false,
+      "outputs": []
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
