@@ -16,41 +16,29 @@ const SEMAPHORE_GROUP_URL = IS_PROD
   : "http://localhost:3002/semaphore/1";
 
 export default function Web() {
-  // Raw string-encoded PCD
-  const pcdStr = usePassportPCD()
-
-  // Semaphore Group PCD
-  const {
-    proof: semaphoreProof,
-    valid: groupProofValid,
-    error: semaphoreError,
-  } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
-
-  const [semaphoreProofValid, setSemaphoreProofValid] = useState<boolean | undefined>();
   const [confession, setConfession] = useState<string>("");
   const [confessions, setConfessions] = useState<any>(null);
 
-  useEffect(() => {
-    if (semaphoreError) {
-      console.error("error using semaphore passport proof", semaphoreError);
-    }
-
-    // Also check whether the proof signal matches the confession string
-    const proofValid = groupProofValid &&
-      semaphoreProof &&
-      semaphoreProof.proof.proof.signal.toString() ===
-      generateMessageHashStr(confession);
-
-    setSemaphoreProofValid(proofValid);
-  }, [semaphoreError, semaphoreProof, groupProofValid, confession]);
+  const pcdStr = usePassportPCD()
+  const { proof, valid, error } = useSemaphoreProof(
+    SEMAPHORE_GROUP_URL,
+    confession,
+    pcdStr
+  )
 
   useEffect(() =>  {
-    if (!semaphoreProofValid) return;
+    if (error) {
+      // TODO: display error to the user
+      console.error("error using semaphore passport proof", error);
+      return;
+    }
 
-    // TODO: display error to the user
+    if (!valid) return;
+
     const post = async () => {
       const res = await postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
       if (!res.ok) {
+        // TODO: display error to the user
         const err = await res.text();
         console.error("error posting confession to the server:", err);
       }
@@ -69,7 +57,7 @@ export default function Web() {
       .catch((e) => {
         console.error(e);
       })
-  }, [semaphoreProofValid, confession, pcdStr]);
+  }, [valid, error, confession, pcdStr]);
 
   return (
     <>
@@ -92,13 +80,13 @@ export default function Web() {
         >
           Publish
         </button>
-        {semaphoreProof != null && (
+        {proof != null && (
           <>
             <h3>Got Zuzalu Member Confession Proof from Passport</h3>
-            <pre>{JSON.stringify(semaphoreProof, null, 2)}</pre>
-            {semaphoreProofValid === undefined && <p>❓ Proof verifying</p>}
-            {semaphoreProofValid === false && <p>❌ Proof is invalid</p>}
-            {semaphoreProofValid === true && <p>✅ Proof is valid</p>}
+            <pre>{JSON.stringify(proof, null, 2)}</pre>
+            {valid === undefined && <p>❓ Proof verifying</p>}
+            {valid === false && <p>❌ Proof is invalid</p>}
+            {valid === true && <p>✅ Proof is valid</p>}
           </>
         )}
       </Container>
@@ -154,6 +142,26 @@ function requestSemaphoreProof(confession: string) {
   );
 
   requestProofFromPassport(proofUrl);
+}
+
+function useSemaphoreProof(
+  semaphoreGroupUrl: string,
+  confession: string,
+  proofStr: string
+){
+  const { proof, valid: proofValid, error }
+    = useSemaphorePassportProof(semaphoreGroupUrl, proofStr);
+
+  // Also check whether the proof signal matches the confession string
+  const [valid, setValid] = useState<boolean | undefined>();
+  useEffect(() => {
+    const valid = proofValid &&
+      proof &&
+      proof.proof.proof.signal.toString() ===
+      generateMessageHashStr(confession);
+    setValid(valid);
+  }, [proof, confession, proofValid, setValid])
+  return { proof, valid, error };
 }
 
 const Container = styled.div`
