@@ -6,6 +6,7 @@ import {
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
 import { sha256 } from "js-sha256";
 import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
 import { postConfession } from "../src/api";
@@ -50,7 +51,7 @@ export function PublishConfession({
   return (
     <>
       <h2>Publish confession</h2>
-      <input
+      <BigInput
         placeholder="Confession"
         type="text"
         value={confession}
@@ -142,3 +143,11 @@ function useSemaphoreProof(
   }, [proof, confession, proofValid, setValid])
   return { proof, valid, error };
 }
+
+const BigInput = styled.input`
+  width: 80%;
+  height: 46px;
+  padding: 8px;
+  font-size: 16px;
+  font-weight: 300;
+`;
