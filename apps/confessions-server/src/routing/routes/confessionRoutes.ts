@@ -46,7 +46,7 @@ export function initConfessionRoutes(
         throw new Error("semaphoreGroupUrl doesn't match proof merkleTreeRoot")
       }
 
-      if (pcd.proof.proof.signal.toString() !== generateMessageHashStr(request.confession)) {
+      if (pcd.claim.signal.toString() !== generateMessageHashStr(request.confession)) {
         throw new Error("confession doesn't match proof signal")
       }
 
