@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { CONFESSIONS_SERVER_URL } from "../src/util";
 
 export async function postConfession(

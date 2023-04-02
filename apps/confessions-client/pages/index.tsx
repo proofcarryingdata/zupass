@@ -1,5 +1,6 @@
 import {
   constructPassportPcdGetRequestUrl,
+  usePassportPCD,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -9,7 +10,6 @@ import { sha256 } from "js-sha256";
 import styled from "styled-components";
 import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
 import { postConfession, listConfessions } from "../src/api";
-import loadConfig from "next/dist/server/config";
 
 const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
@@ -17,7 +17,7 @@ const SEMAPHORE_GROUP_URL = IS_PROD
 
 export default function Web() {
   // Raw string-encoded PCD
-  const [pcdStr, setPcdStr] = useState("");
+  const pcdStr = usePassportPCD()
 
   // Semaphore Group PCD
   const {
@@ -27,6 +27,7 @@ export default function Web() {
   } = useSemaphorePassportProof(SEMAPHORE_GROUP_URL, pcdStr);
 
   const [semaphoreProofValid, setSemaphoreProofValid] = useState<boolean | undefined>();
+  const [confession, setConfession] = useState<string>("");
   const [confessions, setConfessions] = useState<any>(null);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function Web() {
       generateMessageHashStr(confession);
 
     setSemaphoreProofValid(proofValid);
-  }, [semaphoreError, semaphoreProof, groupProofValid]);
+  }, [semaphoreError, semaphoreProof, groupProofValid, confession]);
 
   useEffect(() =>  {
     if (!semaphoreProofValid) return;
@@ -68,29 +69,7 @@ export default function Web() {
       .catch((e) => {
         console.error(e);
       })
-  }, [semaphoreProofValid]);
-
-  // Semaphore Grorup PCD
-  const [confession, setConfession] = useState<string>("");
-
-  // Listen for PCDs coming back from the Passport popup
-  useEffect(() => {
-    window.addEventListener("message", receiveMessage, false);
-    function receiveMessage(ev: MessageEvent<any>) {
-      // This next line is important. Extensions including Metamask apparently
-      // send messages to every page. Ignore those.
-      if (!ev.data.encodedPcd) return;
-      console.log("Received message", ev.data);
-      setPcdStr(ev.data.encodedPcd);
-    }
-    const list = async () => {
-      const conf = await listConfessions(1, 30);
-      setConfessions(conf);
-    }
-    list().catch((e) => {
-      console.error(e);
-    })
-  }, []);
+  }, [semaphoreProofValid, confession, pcdStr]);
 
   return (
     <>
