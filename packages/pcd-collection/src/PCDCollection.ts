@@ -25,6 +25,10 @@ export class PCDCollection {
     return matching;
   }
 
+  public hasPackage(name: string): boolean {
+    return this.packages.find((p) => p.name === name) !== undefined;
+  }
+
   public async serialize(pcd: PCD): Promise<SerializedPCD> {
     const pcdPackage = this.getPackage(pcd.type);
     const serialized = await pcdPackage.serialize(pcd);
@@ -46,6 +50,10 @@ export class PCDCollection {
   ): Promise<void> {
     const deserialized = await this.deserializeAll(serialized);
     this.addAll(deserialized);
+  }
+
+  public async deserializeAndAdd(serialized: SerializedPCD): Promise<void> {
+    await this.deserializeAllAndAdd([serialized]);
   }
 
   public async serializeAll(): Promise<SerializedPCD[]> {
