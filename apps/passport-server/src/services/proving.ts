@@ -8,6 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import path from "path";
 import { sleep } from "../util/util";
 
@@ -22,12 +23,20 @@ const pendingPCDResult: Map<string, string> = new Map<string, string>();
  * Each PCD type that the proving server supports has to go into this array,
  * and be initialized properly based on where its artifacts live.
  */
-const packages: PCDPackage[] = [SemaphoreGroupPCDPackage];
+const packages: PCDPackage[] = [
+  SemaphoreGroupPCDPackage,
+  SemaphoreSignaturePCDPackage,
+];
 
 export async function initPackages() {
   const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
 
   await SemaphoreGroupPCDPackage.init!({
+    wasmFilePath: fullPath + "/16.wasm",
+    zkeyFilePath: fullPath + "/16.zkey",
+  });
+
+  await SemaphoreSignaturePCDPackage.init!({
     wasmFilePath: fullPath + "/16.wasm",
     zkeyFilePath: fullPath + "/16.zkey",
   });

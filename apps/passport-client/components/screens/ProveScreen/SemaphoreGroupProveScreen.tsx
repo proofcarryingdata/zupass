@@ -38,25 +38,29 @@ export function SemaphoreGroupProveScreen({
   const [proving, setProving] = useState(false);
 
   const onProve = useCallback(async () => {
-    setProving(true);
-    const args = await fillArgs(state.identity, group, req.args);
+    try {
+      setProving(true);
+      const args = await fillArgs(state.identity, group, req.args);
 
-    if (req.options?.server === true) {
-      const serverReq: ProveRequest = {
-        pcdType: SemaphoreGroupPCDPackage.name,
-        args: args,
-      };
-      const pendingPCD = await requestPendingPCD(serverReq);
-      window.location.href = `${
-        req.returnUrl
-      }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
-    } else {
-      const { prove, serialize } = SemaphoreGroupPCDPackage;
-      const pcd = await prove(args);
-      const serializedPCD = await serialize(pcd);
-      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-        serializedPCD
-      )}`;
+      if (req.options?.server === true) {
+        const serverReq: ProveRequest = {
+          pcdType: SemaphoreGroupPCDPackage.name,
+          args: args,
+        };
+        const pendingPCD = await requestPendingPCD(serverReq);
+        window.location.href = `${
+          req.returnUrl
+        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+      } else {
+        const { prove, serialize } = SemaphoreGroupPCDPackage;
+        const pcd = await prove(args);
+        const serializedPCD = await serialize(pcd);
+        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+          serializedPCD
+        )}`;
+      }
+    } catch (e) {
+      console.log(e);
     }
   }, [group, req.returnUrl, state.identity, req.args, req.options?.server]);
 
