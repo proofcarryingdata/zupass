@@ -35,7 +35,7 @@ export async function initPCDRoutes(
             _provingContext.stampStatus.set(hash, StampPCDStatus.PROVING);
             prove(proveRequest, _provingContext);
           } else {
-            _provingContext.stampStatus.set(hash, StampPCDStatus.IN_QUEUE);
+            _provingContext.stampStatus.set(hash, StampPCDStatus.QUEUED);
           }
         }
 
