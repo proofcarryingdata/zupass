@@ -57,7 +57,7 @@ describe("semaphore signature should work", function () {
     const { prove, verify } = SemaphoreSignaturePCDPackage;
     // change merkle root to make it invalid
     const pcd = await prove(args);
-    pcd.proof.proof[0] = "1";
+    pcd.proof[0] = "1";
     const verified = await verify(pcd);
     assert.equal(verified, false);
   });
@@ -99,9 +99,7 @@ describe("semaphore signature should work", function () {
       signal: pcd.claim.signal,
     };
 
-    const fakeProof: SemaphoreSignaturePCDProof = {
-      proof: fullProof.proof,
-    };
+    const fakeProof: SemaphoreSignaturePCDProof = fullProof.proof;
 
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 
@@ -145,9 +143,7 @@ describe("semaphore signature should work", function () {
       externalNullifier: fullProof.externalNullifier + "",
       signal: fullProof.signal + "",
     };
-    const fakeProof: SemaphoreSignaturePCDProof = {
-      proof: fullProof.proof,
-    };
+    const fakeProof: SemaphoreSignaturePCDProof = fullProof.proof;
 
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 

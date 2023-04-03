@@ -14,7 +14,8 @@
       "cache": false
     },
     "test": {
-      "outputs": []
+      "outputs": [],
+      "cache": false
     }
   },
   "globalEnv": [

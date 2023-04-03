@@ -81,10 +81,7 @@ export interface SemaphoreSignaturePCDClaim {
   signal: string;
 }
 
-export interface SemaphoreSignaturePCDProof {
-  proof: Proof;
-}
-
+export type SemaphoreSignaturePCDProof = Proof;
 export class SemaphoreSignaturePCD
   implements PCD<SemaphoreSignaturePCDClaim, SemaphoreSignaturePCDProof>
 {
@@ -163,9 +160,7 @@ export async function prove(
     signal: fullProof.signal + "",
   };
 
-  const proof: SemaphoreSignaturePCDProof = {
-    proof: fullProof.proof,
-  };
+  const proof: SemaphoreSignaturePCDProof = fullProof.proof;
 
   return new SemaphoreSignaturePCD(uuid(), claim, proof);
 }
@@ -180,7 +175,7 @@ export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
     externalNullifier: pcd.claim.externalNullifier,
     merkleTreeRoot: group.root + "",
     nullifierHash: pcd.claim.nullifierHash,
-    proof: pcd.proof.proof,
+    proof: pcd.proof,
     signal: pcd.claim.signal,
   };
 

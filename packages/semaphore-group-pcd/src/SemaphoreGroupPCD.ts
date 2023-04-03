@@ -67,9 +67,7 @@ export interface SemaphoreGroupPCDClaim {
   nullifierHash: string;
 }
 
-export interface SemaphoreGroupPCDProof {
-  proof: Proof;
-}
+export type SemaphoreGroupPCDProof = Proof;
 
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
@@ -142,9 +140,7 @@ export async function prove(
     signal: args.signal.value.toString(),
   };
 
-  const proof: SemaphoreGroupPCDProof = {
-    proof: fullProof.proof,
-  };
+  const proof: SemaphoreGroupPCDProof = fullProof.proof;
 
   return new SemaphoreGroupPCD(uuid(), claim, proof);
 }
@@ -157,7 +153,7 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
     merkleTreeRoot: deserializedGroup.root + "",
     nullifierHash: pcd.claim.nullifierHash,
     signal: pcd.claim.signal,
-    proof: pcd.proof.proof,
+    proof: pcd.proof,
   };
 
   const valid = await verifyProof(fullProof, pcd.claim.group.depth);
