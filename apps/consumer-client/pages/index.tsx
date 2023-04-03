@@ -24,6 +24,9 @@ export default function Page() {
           <li>
             <a href="/examples/signature-proof">Semaphore Signature Proof</a>
           </li>
+          <li>
+            <a href="/examples/add-pcd">Add A PCD to Passport</a>
+          </li>
         </ol>
       </div>
       <div>
