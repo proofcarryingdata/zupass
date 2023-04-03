@@ -8,6 +8,13 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
 
+/**
+ * PendingPCDLoader
+ * ----------------
+ * Component that pings the Passport Server for the status of a specific ProveRequest,
+ * inputting a stringified PendingPCD object. Can be imported into any page that
+ * is okay with accepting server-side proofs.
+ */
 export const PendingPCDLoader = ({
   pendingPCDStr,
 }: {
