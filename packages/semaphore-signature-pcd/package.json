@@ -6,6 +6,7 @@
   "types": "./index.tsx",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {

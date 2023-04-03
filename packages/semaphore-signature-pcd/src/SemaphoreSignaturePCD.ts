@@ -13,6 +13,7 @@ import { Group } from "@semaphore-protocol/group";
 import {
   FullProof,
   generateProof,
+  Proof,
   verifyProof,
 } from "@semaphore-protocol/proof";
 import { sha256 } from "js-sha256";
@@ -63,10 +64,25 @@ export interface SemaphoreSignaturePCDClaim {
    * Stringified `BigInt`.
    */
   identityCommitment: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  nullifierHash: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  externalNullifier: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  signal: string;
 }
 
 export interface SemaphoreSignaturePCDProof {
-  proof: FullProof;
+  proof: Proof;
 }
 
 export class SemaphoreSignaturePCD
@@ -119,7 +135,7 @@ export async function prove(
 
   // Set up singleton group
   const group = new Group(1, 16);
-  group.addMember(identityPCD.claim.identity.commitment);
+  group.addMember(identityPCD.claim.identity.commitment + "");
 
   // Get Keccak256 hashed version of message for input into Semaphore
   const signal = generateMessageHash(args.signedMessage.value);
@@ -142,31 +158,41 @@ export async function prove(
   const claim: SemaphoreSignaturePCDClaim = {
     identityCommitment: identityPCD.claim.identity.commitment.toString(),
     signedMessage: args.signedMessage.value,
+    nullifierHash: fullProof.nullifierHash + "",
+    externalNullifier: fullProof.externalNullifier + "",
+    signal: fullProof.signal + "",
   };
 
   const proof: SemaphoreSignaturePCDProof = {
-    proof: fullProof,
+    proof: fullProof.proof,
   };
 
   return new SemaphoreSignaturePCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
+  // Set up singleton group
+  const group = new Group(1, 16);
+  group.addMember(pcd.claim.identityCommitment);
+
+  // Convert PCD into Semaphore FullProof
+  const fullProof: FullProof = {
+    externalNullifier: pcd.claim.externalNullifier,
+    merkleTreeRoot: group.root + "",
+    nullifierHash: pcd.claim.nullifierHash,
+    proof: pcd.proof.proof,
+    signal: pcd.claim.signal,
+  };
+
   // check if proof is valid
-  const validProof = await verifyProof(pcd.proof.proof, 16);
+  const validProof = await verifyProof(fullProof, 16);
 
   // check proof is for the claimed message
   const proofMessageSameAsClaim =
-    pcd.proof.proof.signal.toString() ===
+    pcd.claim.signal.toString() ===
     generateMessageHash(pcd.claim.signedMessage).toString();
 
-  // make sure proof is over a group with only your identity commitment
-  const group = new Group(1, 16);
-  group.addMember(pcd.claim.identityCommitment);
-  const validSingletonGroup =
-    group.root.toString() === pcd.proof.proof.merkleTreeRoot;
-
-  return validProof && validSingletonGroup && proofMessageSameAsClaim;
+  return validProof && proofMessageSameAsClaim;
 }
 
 export async function serialize(

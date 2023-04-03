@@ -57,7 +57,7 @@ describe("semaphore signature should work", function () {
     const { prove, verify } = SemaphoreSignaturePCDPackage;
     // change merkle root to make it invalid
     const pcd = await prove(args);
-    pcd.proof.proof.merkleTreeRoot = "0";
+    pcd.proof.proof[0] = "1";
     const verified = await verify(pcd);
     assert.equal(verified, false);
   });
@@ -83,7 +83,7 @@ describe("semaphore signature should work", function () {
       identityPCD.claim.identity,
       group,
       identityPCD.claim.identity.commitment,
-      pcd.proof.proof.signal,
+      pcd.claim.signal,
       {
         zkeyFilePath: zkeyFilePath,
         wasmFilePath: wasmFilePath,
@@ -93,15 +93,20 @@ describe("semaphore signature should work", function () {
     // make PCD with this proof
     const fakeClaim: SemaphoreSignaturePCDClaim = {
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
-      signedMessage: args.signedMessage.value!,
+      signedMessage: pcd.claim.signedMessage,
+      nullifierHash: pcd.claim.nullifierHash,
+      externalNullifier: pcd.claim.externalNullifier,
+      signal: pcd.claim.signal,
     };
+
     const fakeProof: SemaphoreSignaturePCDProof = {
-      proof: fullProof,
+      proof: fullProof.proof,
     };
+
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 
     // verify just the proof
-    const validProof = await verifyProof(fakePCD.proof.proof, 16);
+    const validProof = await verifyProof(fullProof, 16);
     assert.equal(validProof, true);
 
     // attempt to verify the entire PCD
@@ -136,14 +141,18 @@ describe("semaphore signature should work", function () {
     const fakeClaim: SemaphoreSignaturePCDClaim = {
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
       signedMessage: args.signedMessage.value!,
+      nullifierHash: fullProof.nullifierHash + "",
+      externalNullifier: fullProof.externalNullifier + "",
+      signal: fullProof.signal + "",
     };
     const fakeProof: SemaphoreSignaturePCDProof = {
-      proof: fullProof,
+      proof: fullProof.proof,
     };
+
     const fakePCD = new SemaphoreSignaturePCD("0", fakeClaim, fakeProof);
 
     // verify just the proof
-    const validProof = await verifyProof(fakePCD.proof.proof, 16);
+    const validProof = await verifyProof(fullProof, 16);
     assert.equal(validProof, true);
 
     // attempt to verify the entire PCD
