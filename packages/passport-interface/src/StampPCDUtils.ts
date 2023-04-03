@@ -13,7 +13,7 @@ export interface PendingPCD {
   status: PendingPCDStatus;
 
   /**
-   * The type of PCD that a server is producing a stamp for.
+   * The type of PCD that a server is producing a proof for.
    */
   pcdType: string;
 
