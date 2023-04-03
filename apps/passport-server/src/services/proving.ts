@@ -5,8 +5,6 @@ import {
   ProveRequest,
   StatusResponse,
   SupportedPCDsResponse,
-  VerifyRequest,
-  VerifyResponse,
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -121,17 +119,6 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
       serverProve(queue[0]);
     }
   }
-}
-
-export async function serverVerify(
-  verifyRequest: VerifyRequest
-): Promise<VerifyResponse> {
-  const pcdPackage = getPackage(verifyRequest.pcdType);
-  const deserializedPCD = await pcdPackage.deserialize(
-    verifyRequest.serializedPCD
-  );
-  const verified = await pcdPackage.verify(deserializedPCD);
-  return { verified };
 }
 
 export function getSupportedPCDTypes(): SupportedPCDsResponse {

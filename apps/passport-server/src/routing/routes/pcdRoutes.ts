@@ -3,7 +3,6 @@ import {
   ProveRequest,
   StatusRequest,
   StatusResponse,
-  VerifyRequest,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import {
@@ -11,7 +10,6 @@ import {
   getPendingPCDStatus,
   getSupportedPCDTypes,
   initPackages,
-  serverVerify,
 } from "../../services/proving";
 import { ApplicationContext } from "../../types";
 
@@ -28,19 +26,6 @@ export async function initPCDRoutes(
         const request: ProveRequest = req.body;
         const pending = await enqueueProofRequest(request);
         res.status(200).json(pending);
-      } catch (e) {
-        next(e);
-      }
-    }
-  );
-
-  app.post(
-    "/pcds/verify",
-    async (req: Request, res: Response, next: NextFunction) => {
-      try {
-        const verifyRequest: VerifyRequest = req.body;
-        const response = await serverVerify(verifyRequest);
-        res.status(200).json(response);
       } catch (e) {
         next(e);
       }
