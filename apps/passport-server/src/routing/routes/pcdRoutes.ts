@@ -1,22 +1,22 @@
 import {
-  hashProveRequest,
-  PendingPCD,
   PendingPCDStatus,
   ProveRequest,
   VerifyRequest,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import {
+  enqueueProofRequest,
+  getPendingPCDResult,
+  getPendingPCDStatus,
   getSupportedPCDTypes,
   initPackages,
-  prove,
-  verify,
+  serverVerify,
 } from "../../services/proving";
-import { ServerProvingContext } from "../../types";
+import { ApplicationContext } from "../../types";
 
 export async function initPCDRoutes(
   app: express.Application,
-  provingContext: ServerProvingContext
+  _context: ApplicationContext
 ): Promise<void> {
   await initPackages();
 
@@ -24,31 +24,8 @@ export async function initPCDRoutes(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const proveRequest: ProveRequest = req.body;
-        const hash = hashProveRequest(proveRequest);
-
-        // don't add identical proof requests to queue to prevent accidental or
-        // malicious DoS attacks on the proving queue
-        if (!provingContext.stampStatus.has(hash)) {
-          provingContext.queue.push(proveRequest);
-          if (provingContext.queue.length == 1) {
-            provingContext.stampStatus.set(hash, PendingPCDStatus.PROVING);
-            prove(proveRequest, provingContext);
-          } else {
-            provingContext.stampStatus.set(hash, PendingPCDStatus.QUEUED);
-          }
-        }
-
-        const proveRequestStatus = provingContext.stampStatus.get(hash);
-        if (proveRequestStatus === undefined) {
-          throw new Error();
-        }
-
-        const pending: PendingPCD = {
-          pcdType: proveRequest.pcdType,
-          hash: hash,
-          status: proveRequestStatus,
-        };
+        const request: ProveRequest = req.body;
+        const pending = await enqueueProofRequest(request);
         res.status(200).json(pending);
       } catch (e) {
         next(e);
@@ -61,7 +38,7 @@ export async function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const verifyRequest: VerifyRequest = req.body;
-        const response = await verify(verifyRequest);
+        const response = await serverVerify(verifyRequest);
         res.status(200).json(response);
       } catch (e) {
         next(e);
@@ -85,18 +62,18 @@ export async function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const hash = req.params.hash;
-        const status = provingContext.stampStatus.get(hash);
+        const status = getPendingPCDStatus(hash);
         if (status === PendingPCDStatus.COMPLETE) {
           res.status(200).json({
             status: PendingPCDStatus.COMPLETE,
-            proof: provingContext.stampResult.get(hash)?.serializedPCD,
+            proof: getPendingPCDResult(hash).serializedPCD,
           });
         } else if (status === PendingPCDStatus.ERROR) {
           res.status(500).json({
             status: PendingPCDStatus.ERROR,
           });
         } else {
-          res.status(400).send({
+          res.status(400).json({
             status,
           });
         }
