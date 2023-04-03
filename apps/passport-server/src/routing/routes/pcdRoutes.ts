@@ -39,10 +39,15 @@ export async function initPCDRoutes(
           }
         }
 
+        const proveRequestStatus = provingContext.stampStatus.get(hash);
+        if (proveRequestStatus === undefined) {
+          throw new Error();
+        }
+
         const pending: PendingPCD = {
           pcdType: proveRequest.pcdType,
           hash: hash,
-          status: provingContext.stampStatus.get(hash)!,
+          status: proveRequestStatus,
         };
         res.status(200).json(pending);
       } catch (e) {
