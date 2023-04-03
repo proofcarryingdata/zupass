@@ -18,7 +18,7 @@ import { ServerProvingContext } from "../types";
 const packages: PCDPackage[] = [SemaphoreGroupPCDPackage];
 
 export async function initPackages() {
-  const fullPath = path.join(__dirname, "../semaphore-artifacts");
+  const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
 
   await SemaphoreGroupPCDPackage.init!({
     wasmFilePath: fullPath + "/16.wasm",

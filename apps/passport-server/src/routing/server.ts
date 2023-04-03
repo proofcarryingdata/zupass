@@ -42,8 +42,6 @@ export async function startServer(
       stampResult,
     };
 
-    // TODO: should this use an await? doesn't quite work within the
-    // current structure of `startServer`
     initPCDRoutes(app, provingContext);
 
     // set up remaining routes
