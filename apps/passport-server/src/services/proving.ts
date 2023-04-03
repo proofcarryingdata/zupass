@@ -10,7 +10,6 @@ import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import path from "path";
-import { sleep } from "../util/util";
 
 const queue: Array<ProveRequest> = [];
 const pendingPCDStatus: Map<string, PendingPCDStatus> = new Map<
@@ -112,7 +111,7 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     const serializedPCD = await pcdPackage.serialize(pcd);
 
     // artificial lengthen to test multiple incoming requests
-    await sleep(5000);
+    // await sleep(5000);
 
     console.log(`finished PCD request ${currentHash}`, serializedPCD);
     pendingPCDStatus.set(currentHash, PendingPCDStatus.COMPLETE);
