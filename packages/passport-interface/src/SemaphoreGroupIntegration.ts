@@ -73,7 +73,6 @@ export function useSemaphorePassportProof(
       try {
         const res = await fetch(semaphoreGroupUrl);
         const json = await res.text();
-
         const group = JSON.parse(json) as SerializedSemaphoreGroup;
         setGroup(group);
       } catch (e) {

@@ -1,4 +1,5 @@
 import {
+  PendingPCD,
   PendingPCDStatus,
   ProveRequest,
   StatusRequest,
@@ -24,7 +25,7 @@ export async function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const request: ProveRequest = req.body;
-        const pending = await enqueueProofRequest(request);
+        const pending: PendingPCD = await enqueueProofRequest(request);
         res.status(200).json(pending);
       } catch (e) {
         next(e);
