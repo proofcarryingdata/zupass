@@ -9,11 +9,9 @@ import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
 
 export const PendingPCDLoader = ({
-  pendingStampPCD,
-  setPcdStr,
+  pendingPCDStr,
 }: {
-  pendingStampPCD: PendingPCD | undefined;
-  setPcdStr: any;
+  pendingPCDStr: string;
 }) => {
   const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
 
@@ -21,12 +19,14 @@ export const PendingPCDLoader = ({
     let interval: NodeJS.Timeout | undefined = undefined;
 
     // TODO: not sure if this is the best way to ping the server repeatedly,
-    // or if this leads to weird sitautions where this interval continues to run
+    // or if this leads to weird situations where this interval continues to run
     // after people navigate away from the page?
     const getStatus = () => {
-      if (pendingStampPCD !== undefined) {
+      if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
+        const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
+
         const request: StatusRequest = {
-          hash: pendingStampPCD.hash,
+          hash: pendingPCD.hash,
         };
 
         fetch(`${PASSPORT_SERVER_URL}pcds/status`, {
@@ -42,7 +42,7 @@ export const PendingPCDLoader = ({
             console.log(data);
             setStatus(data.status);
             if (data.status === PendingPCDStatus.COMPLETE) {
-              setPcdStr(data.serializedPCD);
+              window.postMessage({ encodedPCD: data.serializedPCD }, "*");
               clearInterval(interval);
             }
           })
@@ -53,7 +53,7 @@ export const PendingPCDLoader = ({
     interval = setInterval(getStatus, 1000);
 
     return () => clearInterval(interval);
-  }, [pendingStampPCD, setPcdStr]);
+  }, [pendingPCDStr]);
 
   const StyledDiv = styled.div`
     margin: 10px 0 10px 0;
@@ -69,6 +69,6 @@ const statusColor: Record<PendingPCDStatus, string> = {
   [PendingPCDStatus.ERROR]: "#f44336",
   [PendingPCDStatus.COMPLETE]: "#4caf50",
   [PendingPCDStatus.PROVING]: "#2196f3",
-  [PendingPCDStatus.QUEUED]: "ff9800",
-  [PendingPCDStatus.NONE]: "00000",
+  [PendingPCDStatus.QUEUED]: "#ff9800",
+  [PendingPCDStatus.NONE]: "#00000",
 };
