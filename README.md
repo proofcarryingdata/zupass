@@ -56,7 +56,7 @@ Many PCDs are [zkSNARKs](https://learn.0xparc.org/materials/circom/prereq-materi
 
 This is a PCD because anyone can verify that what it claims is true by running the RSA signature verification locally.
 
-**This "PCD" software abstraction is partially inspired by a spiritually similar academic cryptography concept of [the same name](https://dspace.mit.edu/handle/1721.1/61151). Note that the academic term has a slightly different technical definition.*
+**Our "PCD" abstraction is partially inspired by a spiritually similar academic cryptography concept of [the same name](https://dspace.mit.edu/handle/1721.1/61151). Note that the academic term has a slightly different technical definition.*
 
 ### What is the PCD SDK?
 
