@@ -67,7 +67,7 @@ describe("semaphore group identity should work", function () {
 
     // change merkle root to make it invalid
     const pcd = await prove(args);
-    pcd.proof.proof.merkleTreeRoot = "0";
+    pcd.proof.proof[0] = "1";
 
     const verified = await verify(pcd);
     assert.equal(verified, false);
