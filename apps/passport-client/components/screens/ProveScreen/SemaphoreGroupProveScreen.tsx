@@ -39,7 +39,7 @@ export function SemaphoreGroupProveScreen({
 
   const onProve = useCallback(async () => {
     setProving(true);
-    const args = await fillArgs(state.identity!, group, req.args);
+    const args = await fillArgs(state.identity, group, req.args);
 
     if (req.options?.server === true) {
       const serverReq: ProveRequest = {
