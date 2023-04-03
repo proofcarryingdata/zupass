@@ -12,11 +12,11 @@ import path from "path";
 import { sleep } from "../util/util";
 
 const queue: Array<ProveRequest> = [];
-const stampStatus: Map<string, PendingPCDStatus> = new Map<
+const pendingPCDStatus: Map<string, PendingPCDStatus> = new Map<
   string,
   PendingPCDStatus
 >();
-const stampSerializedPCD: Map<string, string> = new Map<string, string>();
+const pendingPCDResult: Map<string, string> = new Map<string, string>();
 
 /**
  * Each PCD type that the proving server supports has to go into this array,
@@ -50,21 +50,21 @@ export async function enqueueProofRequest(
 
   // don't add identical proof requests to queue to prevent accidental or
   // malicious DoS attacks on the proving queue
-  if (!stampStatus.has(hash)) {
+  if (!pendingPCDStatus.has(hash)) {
     queue.push(request);
     if (queue.length == 1) {
-      stampStatus.set(hash, PendingPCDStatus.PROVING);
+      pendingPCDStatus.set(hash, PendingPCDStatus.PROVING);
 
       // we don't wait for this to end; we let it work in the background
       serverProve(request);
     } else {
-      stampStatus.set(hash, PendingPCDStatus.QUEUED);
+      pendingPCDStatus.set(hash, PendingPCDStatus.QUEUED);
     }
   }
 
-  const requestStatus = stampStatus.get(hash);
+  const requestStatus = pendingPCDStatus.get(hash);
   if (requestStatus === undefined) {
-    throw new Error("Stamp status not defined");
+    throw new Error("PCD status not defined");
   }
 
   const pending: PendingPCD = {
@@ -77,14 +77,13 @@ export async function enqueueProofRequest(
 }
 
 export function getPendingPCDStatus(hash: string): StatusResponse {
-  console.log(stampStatus);
   const response: StatusResponse = {
     serializedPCD: "",
     status: PendingPCDStatus.NONE,
   };
 
-  const status = stampStatus.get(hash);
-  const serializedPCD = stampSerializedPCD.get(hash);
+  const status = pendingPCDStatus.get(hash);
+  const serializedPCD = pendingPCDResult.get(hash);
   if (status !== undefined) {
     response.status = status;
     if (status === PendingPCDStatus.COMPLETE && serializedPCD !== undefined) {
@@ -107,10 +106,10 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     await sleep(5000);
 
     console.log(`finished PCD request ${currentHash}`, serializedPCD);
-    stampStatus.set(currentHash, PendingPCDStatus.COMPLETE);
-    stampSerializedPCD.set(currentHash, JSON.stringify(serializedPCD));
+    pendingPCDStatus.set(currentHash, PendingPCDStatus.COMPLETE);
+    pendingPCDResult.set(currentHash, JSON.stringify(serializedPCD));
   } catch (e) {
-    stampStatus.set(currentHash, PendingPCDStatus.ERROR);
+    pendingPCDStatus.set(currentHash, PendingPCDStatus.ERROR);
   }
 
   // finish current job
@@ -119,8 +118,8 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
   // check if there's another job
   if (queue.length > 0) {
     const topHash = hashProveRequest(queue[0]);
-    if (stampStatus.get(topHash) !== PendingPCDStatus.PROVING) {
-      stampStatus.set(topHash, PendingPCDStatus.PROVING);
+    if (pendingPCDStatus.get(topHash) !== PendingPCDStatus.PROVING) {
+      pendingPCDStatus.set(topHash, PendingPCDStatus.PROVING);
       serverProve(queue[0]);
     }
   }

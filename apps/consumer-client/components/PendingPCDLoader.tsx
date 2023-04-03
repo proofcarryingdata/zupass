@@ -62,7 +62,7 @@ export const PendingPCDLoader = ({
     color: ${statusColor[status]};
   `;
 
-  return <StyledDiv>Stamp Status: {status}</StyledDiv>;
+  return <StyledDiv>Pending PCD Status: {status}</StyledDiv>;
 };
 
 const statusColor: Record<PendingPCDStatus, string> = {
@@ -70,5 +70,5 @@ const statusColor: Record<PendingPCDStatus, string> = {
   [PendingPCDStatus.COMPLETE]: "#4caf50",
   [PendingPCDStatus.PROVING]: "#2196f3",
   [PendingPCDStatus.QUEUED]: "#ff9800",
-  [PendingPCDStatus.NONE]: "#00000",
+  [PendingPCDStatus.NONE]: "#000000",
 };

@@ -1,7 +1,7 @@
 import { PendingPCD, ProveRequest } from "@pcd/passport-interface";
-import { config } from "../../src/config";
+import { config } from "../config";
 
-export async function requestStampPCD(
+export async function requestPendingPCD(
   serverReq: ProveRequest
 ): Promise<PendingPCD> {
   const url = `${config.passportServer}/pcds/prove`;
@@ -13,6 +13,6 @@ export async function requestStampPCD(
       Accept: "application/json",
     },
   });
-  const pendingStampPCD = (await response.json()) as PendingPCD;
-  return pendingStampPCD;
+  const pendingPCD = (await response.json()) as PendingPCD;
+  return pendingPCD;
 }
