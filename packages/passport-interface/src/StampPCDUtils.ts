@@ -7,7 +7,10 @@ export function hashProveRequest(req: ProveRequest): string {
 }
 
 export interface PendingPCD {
-  status: StampPCDStatus;
+  /**
+   * Current status of the pending PCD using PendingPCDStatus enum.
+   */
+  status: PendingPCDStatus;
 
   /**
    * The type of PCD that a server is producing a stamp for.
@@ -22,7 +25,7 @@ export interface PendingPCD {
   hash: string;
 }
 
-export enum StampPCDStatus {
+export enum PendingPCDStatus {
   QUEUED = "queued",
   PROVING = "proving",
   COMPLETE = "complete",
