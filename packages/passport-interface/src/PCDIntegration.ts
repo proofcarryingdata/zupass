@@ -68,9 +68,9 @@ export function usePassportPCDOrStamp(): [
       if (ev.data.encodedPCD) {
         console.log("Received PCD", ev.data.encodedPCD);
         setPcdStr(ev.data.encodedPCD);
-      } else if (ev.data.pendingStampPCD) {
+      } else if (ev.data.encodedPendingPCD) {
         console.log(ev.data);
-        setPendingStampPCD(JSON.parse(ev.data.pendingStampPCD));
+        setPendingStampPCD(JSON.parse(ev.data.encodedPendingPCD));
       }
     }
     window.addEventListener("message", receiveMessage, false);
