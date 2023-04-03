@@ -1842,6 +1842,18 @@
     "@zk-kit/incremental-merkle-tree" "0.4.3"
     snarkjs "0.4.13"
 
+"@semaphore-protocol/proof@^3.2.3":
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.5.0.tgz#c6a2ae3789c9ab39588998f75663cfa524956f4d"
+  integrity sha512-N69UbRafobbJ0Btk2sVfYieoo1RTXwR+hwUmsXda0I2Us+bX0gXbl2fAvECpIBpI8edCQuN/p5Rsdn5K/V/slg==
+  dependencies:
+    "@ethersproject/bignumber" "^5.5.0"
+    "@ethersproject/bytes" "^5.7.0"
+    "@ethersproject/keccak256" "^5.7.0"
+    "@ethersproject/strings" "^5.5.0"
+    "@zk-kit/incremental-merkle-tree" "0.4.3"
+    snarkjs "0.4.13"
+
 "@sendgrid/client@^7.7.0":
   version "7.7.0"
   resolved "https://registry.yarnpkg.com/@sendgrid/client/-/client-7.7.0.tgz#f8f67abd604205a0d0b1af091b61517ef465fdbf"

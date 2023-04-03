@@ -10,6 +10,11 @@ export interface PCDRequest {
   type: PCDRequestType;
 }
 
+export interface PCDResponse {
+  request: PCDRequest;
+  success: boolean;
+}
+
 export interface GetRequestOptions {
   genericProveScreen?: boolean;
   title?: string;
