@@ -16,7 +16,7 @@ import { ServerProvingContext } from "../../types";
 
 export async function initPCDRoutes(
   app: express.Application,
-  _provingContext: ServerProvingContext
+  provingContext: ServerProvingContext
 ): Promise<void> {
   await initPackages();
 
@@ -29,20 +29,20 @@ export async function initPCDRoutes(
 
         // don't add identical proof requests to queue to prevent accidental or
         // malicious DoS attacks on the proving queue
-        if (!_provingContext.stampStatus.has(hash)) {
-          _provingContext.queue.push(proveRequest);
-          if (_provingContext.queue.length == 1) {
-            _provingContext.stampStatus.set(hash, StampPCDStatus.PROVING);
-            prove(proveRequest, _provingContext);
+        if (!provingContext.stampStatus.has(hash)) {
+          provingContext.queue.push(proveRequest);
+          if (provingContext.queue.length == 1) {
+            provingContext.stampStatus.set(hash, StampPCDStatus.PROVING);
+            prove(proveRequest, provingContext);
           } else {
-            _provingContext.stampStatus.set(hash, StampPCDStatus.QUEUED);
+            provingContext.stampStatus.set(hash, StampPCDStatus.QUEUED);
           }
         }
 
         const pending: PendingStampPCD = {
           pcdType: proveRequest.pcdType,
           hash: hash,
-          status: _provingContext.stampStatus.get(hash)!,
+          status: provingContext.stampStatus.get(hash)!,
         };
         res.status(200).json(pending);
       } catch (e) {
@@ -80,11 +80,11 @@ export async function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const hash = req.params.hash;
-        const status = _provingContext.stampStatus.get(hash);
+        const status = provingContext.stampStatus.get(hash);
         if (status === StampPCDStatus.COMPLETE) {
           res.status(200).json({
             status: StampPCDStatus.COMPLETE,
-            proof: _provingContext.stampResult.get(hash)?.serializedPCD,
+            proof: provingContext.stampResult.get(hash)?.serializedPCD,
           });
         } else if (status === StampPCDStatus.ERROR) {
           res.status(500).json({
