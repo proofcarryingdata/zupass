@@ -1,4 +1,9 @@
-import { PendingPCD, PendingPCDStatus } from "@pcd/passport-interface";
+import {
+  PendingPCD,
+  PendingPCDStatus,
+  StatusRequest,
+  StatusResponse,
+} from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
@@ -20,13 +25,24 @@ export const PendingPCDLoader = ({
     // after people navigate away from the page?
     const getStatus = () => {
       if (pendingStampPCD !== undefined) {
-        fetch(`${PASSPORT_SERVER_URL}pcds/status/${pendingStampPCD.hash}`)
+        const request: StatusRequest = {
+          hash: pendingStampPCD.hash,
+        };
+
+        fetch(`${PASSPORT_SERVER_URL}pcds/status`, {
+          method: "POST",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        })
           .then((response) => response.json())
-          .then((data) => {
+          .then((data: StatusResponse) => {
             console.log(data);
             setStatus(data.status);
             if (data.status === PendingPCDStatus.COMPLETE) {
-              setPcdStr(data.proof);
+              setPcdStr(data.serializedPCD);
               clearInterval(interval);
             }
           })
@@ -34,7 +50,7 @@ export const PendingPCDLoader = ({
       }
     };
 
-    interval = setInterval(getStatus, 5000);
+    interval = setInterval(getStatus, 1000);
 
     return () => clearInterval(interval);
   }, [pendingStampPCD, setPcdStr]);

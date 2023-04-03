@@ -1,12 +1,13 @@
 import {
   PendingPCDStatus,
   ProveRequest,
+  StatusRequest,
+  StatusResponse,
   VerifyRequest,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import {
   enqueueProofRequest,
-  getPendingPCDResult,
   getPendingPCDStatus,
   getSupportedPCDTypes,
   initPackages,
@@ -57,25 +58,20 @@ export async function initPCDRoutes(
     }
   );
 
-  app.get(
-    "/pcds/status/:hash",
+  app.post(
+    "/pcds/status",
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const hash = req.params.hash;
-        const status = getPendingPCDStatus(hash);
-        if (status === PendingPCDStatus.COMPLETE) {
-          res.status(200).json({
-            status: PendingPCDStatus.COMPLETE,
-            proof: getPendingPCDResult(hash).serializedPCD,
-          });
-        } else if (status === PendingPCDStatus.ERROR) {
-          res.status(500).json({
-            status: PendingPCDStatus.ERROR,
-          });
+        const statusRequest: StatusRequest = req.body;
+        const statusResponse: StatusResponse = getPendingPCDStatus(
+          statusRequest.hash
+        );
+        if (statusResponse.status === PendingPCDStatus.COMPLETE) {
+          res.status(200).json(statusResponse);
+        } else if (statusResponse.status === PendingPCDStatus.ERROR) {
+          res.status(500).json(statusResponse);
         } else {
-          res.status(400).json({
-            status,
-          });
+          res.status(400).json(statusResponse);
         }
       } catch (e) {
         next(e);
