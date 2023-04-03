@@ -1,8 +1,8 @@
 import {
   hashProveRequest,
   PendingPCD,
+  PendingPCDStatus,
   ProveRequest,
-  StampPCDStatus,
   VerifyRequest,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
@@ -32,10 +32,10 @@ export async function initPCDRoutes(
         if (!provingContext.stampStatus.has(hash)) {
           provingContext.queue.push(proveRequest);
           if (provingContext.queue.length == 1) {
-            provingContext.stampStatus.set(hash, StampPCDStatus.PROVING);
+            provingContext.stampStatus.set(hash, PendingPCDStatus.PROVING);
             prove(proveRequest, provingContext);
           } else {
-            provingContext.stampStatus.set(hash, StampPCDStatus.QUEUED);
+            provingContext.stampStatus.set(hash, PendingPCDStatus.QUEUED);
           }
         }
 
@@ -86,14 +86,14 @@ export async function initPCDRoutes(
       try {
         const hash = req.params.hash;
         const status = provingContext.stampStatus.get(hash);
-        if (status === StampPCDStatus.COMPLETE) {
+        if (status === PendingPCDStatus.COMPLETE) {
           res.status(200).json({
-            status: StampPCDStatus.COMPLETE,
+            status: PendingPCDStatus.COMPLETE,
             proof: provingContext.stampResult.get(hash)?.serializedPCD,
           });
-        } else if (status === StampPCDStatus.ERROR) {
+        } else if (status === PendingPCDStatus.ERROR) {
           res.status(500).json({
-            status: StampPCDStatus.ERROR,
+            status: PendingPCDStatus.ERROR,
           });
         } else {
           res.status(400).send({

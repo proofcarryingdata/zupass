@@ -1,7 +1,7 @@
 import {
+  PendingPCDStatus,
   ProveRequest,
   ProveResponse,
-  StampPCDStatus,
 } from "@pcd/passport-interface";
 import cors from "cors";
 import express, { NextFunction } from "express";
@@ -34,7 +34,7 @@ export async function startServer(
 
     // set up server-side proving contexts
     const queue: Array<ProveRequest> = [];
-    const stampStatus: Map<string, StampPCDStatus> = new Map();
+    const stampStatus: Map<string, PendingPCDStatus> = new Map();
     const stampResult: Map<string, ProveResponse> = new Map();
     const provingContext: ServerProvingContext = {
       queue,

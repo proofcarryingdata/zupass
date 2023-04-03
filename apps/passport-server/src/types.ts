@@ -1,7 +1,7 @@
 import {
+  PendingPCDStatus,
   ProveRequest,
   ProveResponse,
-  StampPCDStatus,
 } from "@pcd/passport-interface";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
@@ -15,6 +15,6 @@ export interface ApplicationContext {
 
 export interface ServerProvingContext {
   queue: Array<ProveRequest>;
-  stampStatus: Map<string, StampPCDStatus>;
+  stampStatus: Map<string, PendingPCDStatus>;
   stampResult: Map<string, ProveResponse>;
 }

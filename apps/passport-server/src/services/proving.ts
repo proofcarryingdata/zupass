@@ -1,7 +1,7 @@
 import {
   hashProveRequest,
+  PendingPCDStatus,
   ProveRequest,
-  StampPCDStatus,
   SupportedPCDsResponse,
   VerifyRequest,
   VerifyResponse,
@@ -47,12 +47,12 @@ export async function prove(
     const pcd = await pcdPackage.prove(proveRequest.args);
     const serializedPCD = await pcdPackage.serialize(pcd);
     console.log(`finished PCD request ${currentHash}`, serializedPCD);
-    provingContext.stampStatus.set(currentHash, StampPCDStatus.COMPLETE);
+    provingContext.stampStatus.set(currentHash, PendingPCDStatus.COMPLETE);
     provingContext.stampResult.set(currentHash, {
       serializedPCD: JSON.stringify(serializedPCD),
     });
   } catch (e) {
-    provingContext.stampStatus.set(currentHash, StampPCDStatus.ERROR);
+    provingContext.stampStatus.set(currentHash, PendingPCDStatus.ERROR);
   }
 
   // finish current job
@@ -61,8 +61,8 @@ export async function prove(
   // check if there's another job
   if (provingContext.queue.length > 0) {
     const topHash = hashProveRequest(provingContext.queue[0]);
-    if (provingContext.stampStatus.get(topHash) !== StampPCDStatus.PROVING) {
-      provingContext.stampStatus.set(topHash, StampPCDStatus.PROVING);
+    if (provingContext.stampStatus.get(topHash) !== PendingPCDStatus.PROVING) {
+      provingContext.stampStatus.set(topHash, PendingPCDStatus.PROVING);
       prove(provingContext.queue[0], provingContext);
     }
   }
