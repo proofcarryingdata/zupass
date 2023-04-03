@@ -34,7 +34,12 @@ However, anyone can create new types of cards, and publish a flow to allow other
 - An [ETHdos](https://ethdos.xyz/)-style recursive ZK proof, certifying that you are 2 degrees of connection away from Vitalik.
 - A ZKML proof composed with a timestamp server signature, certifying that you visited the Lustica Bay lighthouse on Sunday, April 2nd.
 
-Any third-party service--for example, a Zuzalu voting app--can request a card, multiple cards, or some claim about one or multiple cards (i.e. "I have X card OR I have Y card") from the Zuzalu Passport ([live examples](https://consumer-client.onrender.com/)). For those who have used Ethereum apps before, this is a similar flow to how a dapp website might ask you to sign a message or a transaction by popping up Metamask.
+Any third-party service--for example, a Zuzalu voting app--can request a card, multiple cards, or some claim about one or multiple cards from the Zuzalu Passport ([live examples](https://consumer-client.onrender.com/)). For those who have used Ethereum apps before, this is a similar flow to how a dapp website might ask you to sign a message or a transaction by popping up Metamask. A few more concrete examples of card requests that a third-party app could make:
+
+- You have a valid Semaphore keypair card such that the public key is in the latest Zuzalu Residents Merkle root.
+- You have either attended a subevent (i.e. have a signature from a subevent host certifying that you attended a subevent), OR you're within 2 degrees of connection away from Vitalik.
+- According to a public "Zuzalu Citizen Score" formula that takes into account subevents you've participated in, posts you've made on the Zuzalu anonymous messaging forum, and your contributions to open-source Zuzalu infrastructure on Github, you have a voting weight of at least 500 in the next Zuzalu election.
+- You participated in the Zuzalu ZKML scavenger hunt, and took pictures of all eight of the Zuzalu Artifacts in the last week.
 
 ### Cards and Card Requests as "PCDs"
 
