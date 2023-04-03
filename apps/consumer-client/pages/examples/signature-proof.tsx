@@ -5,9 +5,10 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
+import { PendingPCDLoader } from "../../components/PendingPCDLoader";
 import { PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -17,6 +18,7 @@ import { requestProofFromPassport } from "../../src/util";
  */
 export default function Page() {
   const [pcdStr, pendingPCDStr] = usePassportOutput();
+  const [serverProving, setServerProving] = useState(false);
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -35,10 +37,28 @@ export default function Page() {
       <ExampleContainer>
         <button
           disabled={signatureProofValid}
-          onClick={useCallback(() => requestSemaphoreSignature(), [])}
+          onClick={useCallback(
+            () => requestSemaphoreSignature(serverProving),
+            [serverProving]
+          )}
         >
           Request Semaphore Signature
         </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={serverProving}
+            onChange={() => {
+              setServerProving((checked: boolean) => !checked);
+            }}
+          />
+          server-side proof
+        </label>
+        {pendingPCDStr != "" && (
+          <>
+            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+          </>
+        )}
         {signatureProof != null && (
           <>
             <p>Got Semaphore Signature Proof from Passport</p>
@@ -58,7 +78,7 @@ export default function Page() {
   );
 }
 
-function requestSemaphoreSignature() {
+function requestSemaphoreSignature(serverProving: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -83,6 +103,8 @@ function requestSemaphoreSignature() {
       genericProveScreen: true,
       title: "Semaphore Signature Proof",
       description: "Sign any message with your Semaphore identity.",
+      debug: undefined,
+      server: serverProving,
     }
   );
 

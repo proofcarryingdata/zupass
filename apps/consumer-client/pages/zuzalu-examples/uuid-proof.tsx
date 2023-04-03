@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
+import { PendingPCDLoader } from "../../components/PendingPCDLoader";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -17,6 +18,8 @@ import { requestProofFromPassport } from "../../src/util";
  */
 export default function Page() {
   const [pcdStr, pendingPCDStr] = usePassportOutput();
+  const [serverProving, setServerProving] = useState(false);
+
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -44,7 +47,24 @@ export default function Page() {
         Passport Server, including their name, email, and role.
       </p>
       <ExampleContainer>
-        <button onClick={requestSignedZuID}>Request UUID</button>
+        <button onClick={() => requestSignedZuID(serverProving)}>
+          Request UUID
+        </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={serverProving}
+            onChange={() => {
+              setServerProving((checked: boolean) => !checked);
+            }}
+          />
+          server-side proof
+        </label>
+        {pendingPCDStr != "" && (
+          <>
+            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+          </>
+        )}
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
@@ -78,10 +98,11 @@ export default function Page() {
 }
 
 // Show the Passport popup. Ask for the user's Zuzalu ID.
-function requestSignedZuID() {
+function requestSignedZuID(serverProving: boolean) {
   const proofUrl = requestSignedZuzaluUUIDUrl(
     PASSPORT_URL,
-    window.location.origin + "/popup"
+    window.location.origin + "/popup",
+    serverProving
   );
   requestProofFromPassport(proofUrl);
 }

@@ -1,5 +1,5 @@
-import { PCDGetRequest } from "@pcd/passport-interface";
-import { ArgumentTypeName, StringArgument } from "@pcd/pcd-types";
+import { PCDGetRequest, ProveRequest } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCDArgs,
@@ -10,6 +10,7 @@ import { cloneDeep } from "lodash";
 import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
+import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
 import { Button, Spacer } from "../../core";
 
@@ -25,21 +26,29 @@ export function SemaphoreSignatureProveScreen({
     try {
       setProving(true);
       const modifiedArgs = cloneDeep(req.args);
-      const messageToSign = modifiedArgs.signedMessage;
+      const args = await fillArgs(
+        state.identity,
+        state.self.uuid,
+        modifiedArgs
+      );
 
-      if (messageToSign.value === undefined) {
-        console.log(
-          "undefined message to sign, setting it to",
-          state.self.uuid
-        );
-        messageToSign.value = state.self.uuid;
+      if (req.options?.server === true) {
+        const serverReq: ProveRequest = {
+          pcdType: SemaphoreSignaturePCDPackage.name,
+          args: args,
+        };
+        const pendingPCD = await requestPendingPCD(serverReq);
+        window.location.href = `${
+          req.returnUrl
+        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+      } else {
+        const { prove, serialize } = SemaphoreSignaturePCDPackage;
+        const pcd = await prove(args);
+        const serializedPCD = await serialize(pcd);
+        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+          serializedPCD
+        )}`;
       }
-
-      const serializedPCD = await prove(state.identity, messageToSign);
-      // Redirect back to requester
-      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-        serializedPCD
-      )}`;
     } catch (e) {
       console.log(e);
     }
@@ -81,8 +90,17 @@ export function SemaphoreSignatureProveScreen({
   );
 }
 
-async function prove(identity: Identity, signedMessage: StringArgument) {
-  const { prove, serialize } = SemaphoreSignaturePCDPackage;
+async function fillArgs(
+  identity: Identity,
+  uuid: string,
+  modifiedArgs: SemaphoreSignaturePCDArgs
+): Promise<SemaphoreSignaturePCDArgs> {
+  const signedMessage = modifiedArgs.signedMessage;
+
+  if (signedMessage.value === undefined) {
+    console.log("undefined message to sign, setting it to", uuid);
+    signedMessage.value = uuid;
+  }
 
   const args: SemaphoreSignaturePCDArgs = {
     signedMessage,
@@ -94,15 +112,7 @@ async function prove(identity: Identity, signedMessage: StringArgument) {
     },
   };
 
-  console.log("Proving semaphore signature", args);
-  console.log("Message", signedMessage.value);
-  console.log("Identity", identity.commitment.toString());
-
-  const pcd = await prove(args);
-  const serialized = await serialize(pcd);
-  console.log("Proof complete", serialized);
-
-  return serialized;
+  return args;
 }
 
 const LineWrap = styled.div`

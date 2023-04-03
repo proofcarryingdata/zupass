@@ -1,7 +1,12 @@
-import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  PCDRequestType,
+  ProveRequest,
+} from "@pcd/passport-interface";
 import * as React from "react";
 import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
+import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
@@ -25,15 +30,26 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
 
   const onProveClick = useCallback(async () => {
     try {
-      const pcd = await pcdPackage.prove(args);
-      const serialized = await pcdPackage.serialize(pcd);
-      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-        serialized
-      )}`;
+      if (req.options?.server === true) {
+        const serverReq: ProveRequest = {
+          pcdType: req.pcdType,
+          args: args,
+        };
+        const pendingPCD = await requestPendingPCD(serverReq);
+        window.location.href = `${
+          req.returnUrl
+        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+      } else {
+        const pcd = await pcdPackage.prove(args);
+        const serialized = await pcdPackage.serialize(pcd);
+        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+          serialized
+        )}`;
+      }
     } catch (e) {
       setError(e);
     }
-  }, [args, pcdPackage, req.returnUrl]);
+  }, [args, pcdPackage, req.returnUrl, req.options?.server, req.pcdType]);
 
   if (req.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);

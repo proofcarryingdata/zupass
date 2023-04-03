@@ -8,6 +8,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
+import { PendingPCDLoader } from "../../components/PendingPCDLoader";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -18,6 +19,7 @@ import { requestProofFromPassport } from "../../src/util";
 export default function Page() {
   const [pcdStr, pendingPCDStr] = usePassportOutput();
   const [debugChecked, setDebugChecked] = useState(false);
+  const [serverProving, setServerProving] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
@@ -52,7 +54,7 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestMembershipProof(debugChecked)}
+          onClick={() => requestMembershipProof(debugChecked, serverProving)}
           disabled={valid}
         >
           Request Group Membership Proof
@@ -67,7 +69,22 @@ export default function Page() {
           />
           debug view
         </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={serverProving}
+            onChange={() => {
+              setServerProving((checked: boolean) => !checked);
+            }}
+          />
+          server-side proof
+        </label>
 
+        {pendingPCDStr != "" && (
+          <>
+            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+          </>
+        )}
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>
@@ -85,7 +102,7 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestMembershipProof(debug: boolean) {
+function requestMembershipProof(debug: boolean, serverProving: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -126,7 +143,8 @@ function requestMembershipProof(debug: boolean) {
       description:
         "Generate a group membership proof using your passport's Semaphore Identity.",
       title: "Group Membership Proof",
-      debug,
+      debug: debug,
+      server: serverProving,
     }
   );
 

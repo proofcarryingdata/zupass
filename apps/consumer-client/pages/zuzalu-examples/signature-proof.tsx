@@ -6,6 +6,7 @@ import {
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
+import { PendingPCDLoader } from "../../components/PendingPCDLoader";
 import { PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -15,6 +16,7 @@ import { requestProofFromPassport } from "../../src/util";
  */
 export default function Page() {
   const [pcdStr, pendingPCDStr] = usePassportOutput();
+  const [serverProving, setServerProving] = useState(false);
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
   const [messageToSign, setMessageToSign] = useState<string>("");
@@ -43,12 +45,27 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={useCallback(
-            () => requestSemaphoreSignature(messageToSign),
-            [messageToSign]
+            () => requestSemaphoreSignature(messageToSign, serverProving),
+            [messageToSign, serverProving]
           )}
         >
           Request Semaphore Signature
         </button>
+        <label>
+          <input
+            type="checkbox"
+            checked={serverProving}
+            onChange={() => {
+              setServerProving((checked: boolean) => !checked);
+            }}
+          />
+          server-side proof
+        </label>
+        {pendingPCDStr != "" && (
+          <>
+            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+          </>
+        )}
         {signatureProof != null && (
           <>
             <p>Got Semaphore Signature Proof from Passport</p>
@@ -69,11 +86,15 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to sign a message with their sema key.
-function requestSemaphoreSignature(messageToSign: string) {
+function requestSemaphoreSignature(
+  messageToSign: string,
+  serverProving: boolean
+) {
   const proofUrl = requestSemaphoreSignatureUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    messageToSign
+    messageToSign,
+    serverProving
   );
   requestProofFromPassport(proofUrl);
 }

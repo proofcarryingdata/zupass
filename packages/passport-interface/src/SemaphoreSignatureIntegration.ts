@@ -7,22 +7,31 @@ import { useProof } from "./PCDIntegration";
 export function requestSemaphoreSignatureUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
-  messageToSign: string
+  messageToSign: string,
+  serverProving?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
-  >(urlToPassportWebsite, returnUrl, SemaphoreSignaturePCDPackage.name, {
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: undefined,
-      userProvided: true,
+  >(
+    urlToPassportWebsite,
+    returnUrl,
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: messageToSign,
+        userProvided: false,
+      },
     },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      value: messageToSign,
-      userProvided: false,
-    },
-  });
+    {
+      server: serverProving,
+    }
+  );
 
   return url;
 }
@@ -34,22 +43,31 @@ export function requestSemaphoreSignatureUrl(
  */
 export function requestSignedZuzaluUUIDUrl(
   urlToPassportWebsite: string,
-  returnUrl: string
+  returnUrl: string,
+  serverProving?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
-  >(urlToPassportWebsite, returnUrl, SemaphoreSignaturePCDPackage.name, {
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: undefined,
-      userProvided: true,
+  >(
+    urlToPassportWebsite,
+    returnUrl,
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        userProvided: true,
+        value: undefined,
+      },
     },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      userProvided: true,
-      value: undefined,
-    },
-  });
+    {
+      server: serverProving,
+    }
+  );
   return url;
 }
 
