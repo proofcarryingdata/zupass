@@ -3,7 +3,7 @@ import {
   PendingPCD,
   PendingPCDStatus,
   ProveRequest,
-  ProveResponse,
+  StatusResponse,
   SupportedPCDsResponse,
   VerifyRequest,
   VerifyResponse,
@@ -17,10 +17,7 @@ const stampStatus: Map<string, PendingPCDStatus> = new Map<
   string,
   PendingPCDStatus
 >();
-const stampResult: Map<string, ProveResponse> = new Map<
-  string,
-  ProveResponse
->();
+const stampSerializedPCD: Map<string, string> = new Map<string, string>();
 
 /**
  * Each PCD type that the proving server supports has to go into this array,
@@ -80,29 +77,26 @@ export async function enqueueProofRequest(
   return pending;
 }
 
-export function getPendingPCDStatus(hash: string): PendingPCDStatus {
-  const status = stampStatus.get(hash);
-  if (status !== undefined) {
-    return status;
-  }
-  return PendingPCDStatus.NONE;
-}
-
-export function getPendingPCDResult(hash: string): ProveResponse {
-  const result = stampResult.get(hash);
-  if (
-    result !== undefined &&
-    stampStatus.get(hash) === PendingPCDStatus.COMPLETE
-  ) {
-    return result;
-  }
-  const empty: ProveResponse = {
+export function getPendingPCDStatus(hash: string): StatusResponse {
+  console.log(stampStatus);
+  const response: StatusResponse = {
     serializedPCD: "",
+    status: PendingPCDStatus.NONE,
   };
-  return empty;
+
+  const status = stampStatus.get(hash);
+  const serializedPCD = stampSerializedPCD.get(hash);
+  if (status !== undefined) {
+    response.status = status;
+    if (status === PendingPCDStatus.COMPLETE && serializedPCD !== undefined) {
+      response.serializedPCD = serializedPCD;
+    }
+  }
+
+  return response;
 }
 
-export async function serverProve(proveRequest: ProveRequest): Promise<void> {
+async function serverProve(proveRequest: ProveRequest): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
   const currentHash = hashProveRequest(proveRequest);
 
@@ -111,9 +105,7 @@ export async function serverProve(proveRequest: ProveRequest): Promise<void> {
     const serializedPCD = await pcdPackage.serialize(pcd);
     console.log(`finished PCD request ${currentHash}`, serializedPCD);
     stampStatus.set(currentHash, PendingPCDStatus.COMPLETE);
-    stampResult.set(currentHash, {
-      serializedPCD: JSON.stringify(serializedPCD),
-    });
+    stampSerializedPCD.set(currentHash, JSON.stringify(serializedPCD));
   } catch (e) {
     stampStatus.set(currentHash, PendingPCDStatus.ERROR);
   }

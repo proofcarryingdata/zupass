@@ -1,4 +1,5 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
+import { PendingPCDStatus } from "./StampPCDUtils";
 
 export interface ProveRequest {
   pcdType: string;
@@ -6,16 +7,36 @@ export interface ProveRequest {
 }
 
 export interface ProveResponse {
+  /**
+   * JSON.stringify(SerializedPCD)
+   */
   serializedPCD: string;
 }
 
 export interface VerifyRequest {
   pcdType: string;
+
+  /**
+   * JSON.stringify(SerializedPCD)
+   */
   serializedPCD: string;
 }
 
 export interface VerifyResponse {
   verified: boolean;
+}
+
+export interface StatusRequest {
+  hash: string;
+}
+
+export interface StatusResponse {
+  status: PendingPCDStatus;
+
+  /**
+   * JSON.stringify(SerializedPCD)
+   */
+  serializedPCD: string;
 }
 
 export interface SupportedPCDsResponse {
