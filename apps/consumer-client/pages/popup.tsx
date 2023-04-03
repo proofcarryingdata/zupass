@@ -22,10 +22,10 @@ export default function AuthPopup() {
       // Later, the Passport redirects back with a proof. Send it to our parent.
       window.opener.postMessage({ encodedPCD: params.get("proof")! }, "*");
       window.close();
-    } else if (params.get("pendingStampPCD") != null) {
-      // Later, the Passport redirects back with a pendingStampPCD. Send it to our parent.
+    } else if (params.get("encodedPendingPCD") != null) {
+      // Later, the Passport redirects back with a encodedPendingPCD. Send it to our parent.
       window.opener.postMessage(
-        { pendingStampPCD: params.get("pendingStampPCD")! },
+        { encodedPendingPCD: params.get("encodedPendingPCD")! },
         "*"
       );
       window.close();

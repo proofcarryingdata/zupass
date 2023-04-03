@@ -47,9 +47,9 @@ export function SemaphoreGroupProveScreen({
         args: args,
       };
       const pendingStampPCD = await requestStampPCD(serverReq);
-      window.location.href = `${req.returnUrl}?pendingStampPCD=${JSON.stringify(
-        pendingStampPCD
-      )}`;
+      window.location.href = `${
+        req.returnUrl
+      }?encodedPendingPCD=${JSON.stringify(pendingStampPCD)}`;
     } else {
       const { prove, serialize } = SemaphoreGroupPCDPackage;
       const pcd = await prove(args);
