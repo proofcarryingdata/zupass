@@ -1,5 +1,5 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { PendingPCDStatus } from "./StampPCDUtils";
+import { PendingPCDStatus } from "./PendingPCDUtils";
 
 export interface ProveRequest {
   pcdType: string;
