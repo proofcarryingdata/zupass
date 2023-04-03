@@ -64,5 +64,6 @@ export function constructPassportPcdAddRequestUrl(
     returnUrl: returnUrl,
     pcd,
   };
-  return `${passportOrigin}?request=${JSON.stringify(req)}`;
+  const eqReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/add?request=${eqReq}`;
 }
