@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
 
-export const LoadingStampPCD = ({
+export const PendingPCDLoader = ({
   pendingStampPCD,
   setPcdStr,
 }: {
   pendingStampPCD: PendingStampPCD | undefined;
   setPcdStr: any;
 }) => {
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState<StampPCDStatus>(StampPCDStatus.NONE);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
@@ -39,30 +39,20 @@ export const LoadingStampPCD = ({
     return () => clearInterval(interval);
   }, [pendingStampPCD, setPcdStr]);
 
-  let statusColor = "#000";
-  switch (status) {
-    case StampPCDStatus.IN_QUEUE:
-      statusColor = "#ff9800";
-      break;
-    case StampPCDStatus.PROVING:
-      statusColor = "#2196f3";
-      break;
-    case StampPCDStatus.COMPLETE:
-      statusColor = "#4caf50";
-      break;
-    case StampPCDStatus.ERROR:
-      statusColor = "#f44336";
-      break;
-    default:
-      break;
-  }
-
   const StyledDiv = styled.div`
     margin: 10px 0 10px 0;
-    border: 1px solid ${statusColor};
+    border: 1px solid ${statusColor[status]};
     padding: 5px;
-    color: ${statusColor};
+    color: ${statusColor[status]};
   `;
 
   return <StyledDiv>Stamp Status: {status}</StyledDiv>;
+};
+
+const statusColor: Record<StampPCDStatus, string> = {
+  [StampPCDStatus.ERROR]: "#f44336",
+  [StampPCDStatus.COMPLETE]: "#4caf50",
+  [StampPCDStatus.PROVING]: "#2196f3",
+  [StampPCDStatus.QUEUED]: "ff9800",
+  [StampPCDStatus.NONE]: "00000",
 };

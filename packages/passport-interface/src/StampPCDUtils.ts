@@ -23,8 +23,9 @@ export interface PendingStampPCD {
 }
 
 export enum StampPCDStatus {
-  IN_QUEUE = "in queue",
+  QUEUED = "queued",
   PROVING = "proving",
   COMPLETE = "complete",
   ERROR = "error",
+  NONE = "none",
 }

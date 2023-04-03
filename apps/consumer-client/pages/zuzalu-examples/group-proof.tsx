@@ -6,7 +6,7 @@ import {
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { LoadingStampPCD } from "../../components/LoadingStampPCD";
+import { PendingPCDLoader } from "../../components/PendingPCDLoader";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -70,7 +70,7 @@ export default function Page() {
         </label>
         {pendingStampPCD != null && (
           <>
-            <LoadingStampPCD
+            <PendingPCDLoader
               pendingStampPCD={pendingStampPCD}
               setPcdStr={setPcdStr}
             />
