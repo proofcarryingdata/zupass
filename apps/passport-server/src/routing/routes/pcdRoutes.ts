@@ -1,6 +1,6 @@
 import {
-  hashRequest,
-  PendingStampPCD,
+  hashProveRequest,
+  PendingPCD,
   ProveRequest,
   StampPCDStatus,
   VerifyRequest,
@@ -25,7 +25,7 @@ export async function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       try {
         const proveRequest: ProveRequest = req.body;
-        const hash = hashRequest(proveRequest);
+        const hash = hashProveRequest(proveRequest);
 
         // don't add identical proof requests to queue to prevent accidental or
         // malicious DoS attacks on the proving queue
@@ -39,7 +39,7 @@ export async function initPCDRoutes(
           }
         }
 
-        const pending: PendingStampPCD = {
+        const pending: PendingPCD = {
           pcdType: proveRequest.pcdType,
           hash: hash,
           status: provingContext.stampStatus.get(hash)!,

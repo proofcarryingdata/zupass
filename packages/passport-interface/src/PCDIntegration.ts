@@ -1,6 +1,6 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
-import { PendingStampPCD } from "./StampPCDUtils";
+import { PendingPCD } from "./StampPCDUtils";
 
 export function useProof<T extends PCDPackage>(
   proofPackage: T,
@@ -46,19 +46,13 @@ export function usePassportPCD() {
 }
 
 /**
- * React hook that listens for PCDs and/or PendingStampPCDs returned by the passport
+ * React hook that listens for PCDs and/or PendingPCDs returned by the passport
  * to the application. The former is returned if client-side proofs are selected, the
  * latter if server-side proofs are selected.
  */
-export function usePassportPCDOrStamp(): [
-  string,
-  any,
-  PendingStampPCD | undefined
-] {
+export function usePassportPCDOrStamp(): [string, any, PendingPCD | undefined] {
   const [pcdStr, setPcdStr] = useState("");
-  const [pendingStampPCD, setPendingStampPCD] = useState<
-    PendingStampPCD | undefined
-  >();
+  const [pendingStampPCD, setPendingPCD] = useState<PendingPCD | undefined>();
 
   // Listen for PCDs coming back from the Passport popup
   useEffect(() => {
@@ -70,7 +64,7 @@ export function usePassportPCDOrStamp(): [
         setPcdStr(ev.data.encodedPCD);
       } else if (ev.data.encodedPendingPCD) {
         console.log(ev.data);
-        setPendingStampPCD(JSON.parse(ev.data.encodedPendingPCD));
+        setPendingPCD(JSON.parse(ev.data.encodedPendingPCD));
       }
     }
     window.addEventListener("message", receiveMessage, false);
