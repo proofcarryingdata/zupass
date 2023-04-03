@@ -1,4 +1,4 @@
-import { PendingStampPCD, StampPCDStatus } from "@pcd/passport-interface";
+import { PendingPCD, StampPCDStatus } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
@@ -7,7 +7,7 @@ export const PendingPCDLoader = ({
   pendingStampPCD,
   setPcdStr,
 }: {
-  pendingStampPCD: PendingStampPCD | undefined;
+  pendingStampPCD: PendingPCD | undefined;
   setPcdStr: any;
 }) => {
   const [status, setStatus] = useState<StampPCDStatus>(StampPCDStatus.NONE);

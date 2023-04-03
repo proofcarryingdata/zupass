@@ -1,12 +1,12 @@
 import { sha256 } from "js-sha256";
 import { ProveRequest } from "./RequestTypes";
 
-export function hashRequest(req: ProveRequest): string {
+export function hashProveRequest(req: ProveRequest): string {
   const reqString = JSON.stringify(req);
   return sha256(reqString);
 }
 
-export interface PendingStampPCD {
+export interface PendingPCD {
   status: StampPCDStatus;
 
   /**
@@ -15,7 +15,7 @@ export interface PendingStampPCD {
   pcdType: string;
 
   /**
-   * A hash of the ProveRequest using hashRequest. Stored to avoid
+   * A hash of the ProveRequest using hashProveRequest. Stored to avoid
    * people re-sending the same request many times and clogging
    * the proving queue.
    */

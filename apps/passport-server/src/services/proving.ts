@@ -1,5 +1,5 @@
 import {
-  hashRequest,
+  hashProveRequest,
   ProveRequest,
   StampPCDStatus,
   SupportedPCDsResponse,
@@ -41,7 +41,7 @@ export async function prove(
   provingContext: ServerProvingContext
 ): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
-  const currentHash = hashRequest(proveRequest);
+  const currentHash = hashProveRequest(proveRequest);
 
   try {
     const pcd = await pcdPackage.prove(proveRequest.args);
@@ -60,7 +60,7 @@ export async function prove(
 
   // check if there's another job
   if (provingContext.queue.length > 0) {
-    const topHash = hashRequest(provingContext.queue[0]);
+    const topHash = hashProveRequest(provingContext.queue[0]);
     if (provingContext.stampStatus.get(topHash) !== StampPCDStatus.PROVING) {
       provingContext.stampStatus.set(topHash, StampPCDStatus.PROVING);
       prove(provingContext.queue[0], provingContext);
