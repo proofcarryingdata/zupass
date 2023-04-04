@@ -55,9 +55,9 @@ describe("semaphore signature should work", function () {
 
   it("should not verify an incorrect proof", async function () {
     const { prove, verify } = SemaphoreSignaturePCDPackage;
-    // change merkle root to make it invalid
     const pcd = await prove(args);
-    pcd.proof[0] = "1";
+    // make the pcd invalid by updating its claim
+    pcd.claim.signal += "1";
     const verified = await verify(pcd);
     assert.equal(verified, false);
   });
