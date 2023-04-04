@@ -32,9 +32,7 @@ export function Login({
 
     if (!valid) {
       // TODO: display error to the user
-      console.log("proof is invalid");
-      console.log(valid);
-      console.log(proof);
+      console.error("proof is invalid");
       setLoggingIn(false);
       return;
     }

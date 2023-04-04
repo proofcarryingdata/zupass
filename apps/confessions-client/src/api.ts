@@ -47,15 +47,20 @@ export async function login(
 }
 
 export async function listConfessions(
+  accessToken: string | undefined,
   page: number,
   limit: number
 ): Promise<any> {
+  if (accessToken === undefined) return null;
+
   const query = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString()
   }).toString();
   const url = `${CONFESSIONS_SERVER_URL}confessions?${query}`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
 
   if (!res.ok) return null;
   return await res.json();

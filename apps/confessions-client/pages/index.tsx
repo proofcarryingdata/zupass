@@ -8,17 +8,22 @@ export default function Page() {
   const [accessToken, setAccessToken] = useState<string | undefined>();
   const [confessions, setConfessions] = useState<any>(null);
 
-  const loadConfessions = () => {
-    if (accessToken === undefined) return;
+  const loadConfessions = (accessToken: string | undefined) => {
+    if (accessToken === undefined) {
+      setConfessions(null)
+      return;
+    }
 
     (async () => {
       // TODO: paging
-      const conf = await listConfessions(1, 30);
+      const conf = await listConfessions(accessToken, 1, 30);
       setConfessions(conf);
     })();
   }
 
-  useEffect(loadConfessions, [accessToken]);
+  useEffect(() => {
+    loadConfessions(accessToken);
+  }, [accessToken]);
 
   return (
     <>

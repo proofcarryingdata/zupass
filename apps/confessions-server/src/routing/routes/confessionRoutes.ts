@@ -7,19 +7,16 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import { sha256 } from "js-sha256";
 import { ApplicationContext } from "../../types";
+import { SEMAPHORE_GROUP_URL, ACCESS_TOKEN_SECRET, authenticateJWT } from "../../util/auth";
 import { prisma } from "../../util/prisma";
-import { IS_PROD } from "../../util/isProd";
-
-const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
-  : "http://localhost:3002/semaphore/1";
-
-const ACCESS_TOKEN_SECRET = "secret";
 
 export function initConfessionRoutes(
   app: express.Application,
   _context: ApplicationContext
 ): void {
+  // this endpoint verifies the proof is valid,
+  // and the proof claim matches the semaphoreGroupUrl and the confession in the request
+  // before saving the confession to the database.
   app.post("/confessions", async (req: Request, res: Response, next: NextFunction) => {
     const request = req.body as PostConfessionRequest;
 
@@ -47,6 +44,10 @@ export function initConfessionRoutes(
     }
   });
 
+  // this login endpoint and the get confessions endpoint below shows how an auth flow could work.
+  // this endpoint verfies the proof and returns a jwt if succeed.
+  // the client can then use this jwt in its future requests.
+  // the get confessions endpoint uses the middleware authenticateJWT to authenticate jwt.
   app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
     const request = req.body as LoginRequest;
 
@@ -54,7 +55,7 @@ export function initConfessionRoutes(
       const err = await verifyGroupProof(request.semaphoreGroupUrl, request.proof)
       if (err != null) throw err;
 
-      const accessToken = sign({groupUrl: request.semaphoreGroupUrl}, ACCESS_TOKEN_SECRET)
+      const accessToken = sign({ groupUrl: request.semaphoreGroupUrl }, ACCESS_TOKEN_SECRET)
 
       res.status(200).json({ accessToken });
     } catch (e) {
@@ -63,9 +64,7 @@ export function initConfessionRoutes(
     }
   });
 
-  app.get("/confessions", async (req: Request, res: Response) => {
-    // TODO: only Zuzalu members can see the confessions???
-
+  app.get("/confessions", authenticateJWT, async (req: Request, res: Response) => {
     const page = queryStrToInt(
       req.query.page,
       1,
