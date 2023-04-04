@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
+import { sign } from "jsonwebtoken";
 import {
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup
@@ -13,6 +14,8 @@ const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
   : "http://localhost:3002/semaphore/1";
 
+const ACCESS_TOKEN_SECRET = "secret";
+
 export function initConfessionRoutes(
   app: express.Application,
   _context: ApplicationContext
@@ -21,34 +24,8 @@ export function initConfessionRoutes(
     const request = req.body as PostConfessionRequest;
 
     try {
-      // only allow Zuzalu group for now
-      if (request.semaphoreGroupUrl !== SEMAPHORE_GROUP_URL) {
-        throw new Error("only Zuzalu group is allowed");
-      }
-
-      // verify confession proof
-      const pcd = await SemaphoreGroupPCDPackage.deserialize(
-        request.proof
-      );
-
-      const verified = await SemaphoreGroupPCDPackage.verify(pcd);
-      if (!verified) {
-        throw new Error("invalid proof");
-      }
-
-      // check semaphoreGoupUrl and confession in the request matches the proof
-      const response = await fetch(request.semaphoreGroupUrl);
-      const json = await response.text();
-      const serializedGroup = JSON.parse(json) as SerializedSemaphoreGroup;
-      const group = new Group(1, 16);
-      group.addMembers(serializedGroup.members);
-      if (pcd.proof.proof.merkleTreeRoot !== group.root.toString()) {
-        throw new Error("semaphoreGroupUrl doesn't match proof merkleTreeRoot")
-      }
-
-      if (pcd.claim.signal.toString() !== generateMessageHashStr(request.confession)) {
-        throw new Error("confession doesn't match proof signal")
-      }
+     const err = await verifyGroupProof(request.semaphoreGroupUrl, request.proof, request.confession)
+     if (err != null) throw err;
 
       // proof should be unique
       await prisma.confession.upsert({
@@ -64,6 +41,22 @@ export function initConfessionRoutes(
       });
 
       res.send("ok");
+    } catch (e) {
+      console.error(e);
+      next(e);
+    }
+  });
+
+  app.post("/login", async (req: Request, res: Response, next: NextFunction) => {
+    const request = req.body as LoginRequest;
+
+    try {
+      const err = await verifyGroupProof(request.semaphoreGroupUrl, request.proof)
+      if (err != null) throw err;
+
+      const accessToken = sign({groupUrl: request.semaphoreGroupUrl}, ACCESS_TOKEN_SECRET)
+
+      res.status(200).json({ accessToken });
     } catch (e) {
       console.error(e);
       next(e);
@@ -93,10 +86,53 @@ export function initConfessionRoutes(
   });
 }
 
+export interface LoginRequest {
+  semaphoreGroupUrl: string;
+  proof: string;
+}
+
 export interface PostConfessionRequest {
   semaphoreGroupUrl: string;
   confession: string;
   proof: string;
+}
+
+async function verifyGroupProof(
+  semaphoreGroupUrl: string,
+  proof: string,
+  signal?: string
+): Promise<Error | null> {
+  // only allow Zuzalu group for now
+  if (semaphoreGroupUrl !== SEMAPHORE_GROUP_URL) {
+    return new Error("only Zuzalu group is allowed");
+  }
+
+  const pcd = await SemaphoreGroupPCDPackage.deserialize(
+    proof
+  );
+
+  const verified = await SemaphoreGroupPCDPackage.verify(pcd);
+  if (!verified) {
+    return new Error("invalid proof");
+  }
+
+  // check semaphoreGoupUrl matches the claim
+  const response = await fetch(semaphoreGroupUrl);
+  const json = await response.text();
+  const serializedGroup = JSON.parse(json) as SerializedSemaphoreGroup;
+  const group = new Group(1, 16);
+  group.addMembers(serializedGroup.members);
+  // TODO: wait for the PR to merge, and use the pcd.claim.group here instead
+  if (pcd.proof.proof.merkleTreeRoot !== group.root.toString()) {
+    return new Error("semaphoreGroupUrl doesn't match proof merkleTreeRoot")
+  }
+
+  if (signal &&
+    pcd.claim.signal.toString() !== generateMessageHashStr(signal)) {
+    throw new Error("signal doesn't match claim")
+  }
+
+  return null;
 }
 
 function queryStrToInt(

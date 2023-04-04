@@ -1,13 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { listConfessions } from "../src/api";
 import { Login } from "../components/Login";
 import { PublishConfession } from "../components/PublishConfession";
 
 export default function Page() {
+  const [accessToken, setAccessToken] = useState<string | undefined>();
   const [confessions, setConfessions] = useState<any>(null);
 
   const loadConfessions = () => {
+    if (accessToken === undefined) return;
+
     (async () => {
       // TODO: paging
       const conf = await listConfessions(1, 30);
@@ -15,15 +18,29 @@ export default function Page() {
     })();
   }
 
-  useEffect(loadConfessions, []);
+  useEffect(loadConfessions, [accessToken]);
 
   return (
     <>
       <h1>Confessions Board</h1>
-      <Login onLoggedIn={() => {console.log("login")}}/>
-      <Container>
-        <PublishConfession onPublished={loadConfessions}/>
-      </Container>
+      {accessToken?
+        <>
+          <button
+            onClick={
+              () => setAccessToken(undefined)
+            }
+          >
+            Logout
+          </button>
+          <br/>
+          <br/>
+          <Container>
+            <PublishConfession onPublished={loadConfessions}/>
+          </Container>
+        </>
+        :
+        <Login onLoggedIn={setAccessToken}/>
+      }
       <Container>
         <h2>Confessions</h2>
         {confessions != null && (
@@ -39,5 +56,5 @@ const Container = styled.div`
   border: 1px solid black;
   border-radius: 8px;
   padding: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 `;

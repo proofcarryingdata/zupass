@@ -24,6 +24,28 @@ export async function postConfession(
   });
 }
 
+export async function login(
+  semaphoreGroupUrl: string,
+  pcdStr: string
+): Promise<any> {
+  const parsedPcd = JSON.parse(decodeURIComponent(pcdStr));
+
+  const request = {
+    semaphoreGroupUrl,
+    proof: parsedPcd.pcd
+  };
+  const url = `${CONFESSIONS_SERVER_URL}login`;
+
+  return await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+  });
+}
+
 export async function listConfessions(
   page: number,
   limit: number

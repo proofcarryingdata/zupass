@@ -26,13 +26,19 @@ export function PublishConfession({
   )
 
   useEffect(() =>  {
+    if (valid === undefined) return; // verifying
+
     if (error) {
       // TODO: display error to the user
       console.error("error using semaphore passport proof", error);
       return;
     }
 
-    if (!valid) return;
+    if (!valid) {
+      // TODO: display error to the user
+      console.error("proof is invalid");
+      return;
+    }
 
     (async () => {
       const res = await postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
