@@ -1,29 +1,28 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { listConfessions } from "../src/api";
+import { Confessions } from "../components/Confessions";
 import { Login } from "../components/Login";
 import { PublishConfession } from "../components/PublishConfession";
 
 export default function Page() {
-  const [accessToken, setAccessToken] = useState<string | undefined>();
-  const [confessions, setConfessions] = useState<any>(null);
-
-  const loadConfessions = (accessToken: string | undefined) => {
-    if (accessToken === undefined) {
-      setConfessions(null)
-      return;
-    }
-
-    (async () => {
-      // TODO: paging
-      const conf = await listConfessions(accessToken, 1, 30);
-      setConfessions(conf);
-    })();
-  }
+  const [accessToken, setAccessToken] = useState<string | null>(null);
 
   useEffect(() => {
-    loadConfessions(accessToken);
+    console.log("load accessToken");
+    if (accessToken) return;
+
+    const token = window.localStorage.getItem("access_token");
+    setAccessToken(token);
   }, [accessToken]);
+
+  const handleAccessToken = (token: string | null) => {
+    setAccessToken(token)
+    if (!token) {
+      window.localStorage.removeItem("access_token");
+    } else {
+      window.localStorage.setItem("access_token", token!);
+    }
+  }
 
   return (
     <>
@@ -32,25 +31,25 @@ export default function Page() {
         <>
           <button
             onClick={
-              () => setAccessToken(undefined)
+              () => handleAccessToken(null)
             }
           >
             Logout
           </button>
           <br/>
           <br/>
-          <Container>
-            <PublishConfession onPublished={loadConfessions}/>
-          </Container>
         </>
         :
-        <Login onLoggedIn={setAccessToken}/>
+        <Login onLoggedIn={handleAccessToken}/>
       }
       <Container>
-        <h2>Confessions</h2>
-        {confessions != null && (
-          <pre>{JSON.stringify(confessions, null, 2)}</pre>
-        )}
+        <PublishConfession onPublished={() => {
+            // loadConfessions(accessToken);
+          }}
+        />
+      </Container>
+      <Container>
+        <Confessions accessToken={accessToken} />
       </Container>
     </>
   );

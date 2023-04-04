@@ -47,11 +47,11 @@ export async function login(
 }
 
 export async function listConfessions(
-  accessToken: string | undefined,
+  accessToken: string | null,
   page: number,
   limit: number
 ): Promise<any> {
-  if (accessToken === undefined) return null;
+  if (!accessToken) return null;
 
   const query = new URLSearchParams({
     page: page.toString(),

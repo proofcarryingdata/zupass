@@ -52,7 +52,7 @@ export function Login({
       setLoggingIn(false);
       onLoggedIn(accessToken);
     })
-  }, [proof, valid, error, pcdStr, setLoggingIn, onLoggedIn]);
+  }, [proof, valid, error, pcdStr, onLoggedIn]);
 
   return (
     <>
