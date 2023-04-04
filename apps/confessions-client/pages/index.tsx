@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styled from "styled-components";
 import { listConfessions } from "../src/api";
+import { Login } from "../components/Login";
 import { PublishConfession } from "../components/PublishConfession";
 
 export default function Page() {
@@ -19,6 +20,7 @@ export default function Page() {
   return (
     <>
       <h1>Confessions Board</h1>
+      <Login onLoggedIn={() => {console.log("login")}}/>
       <Container>
         <PublishConfession onPublished={loadConfessions}/>
       </Container>

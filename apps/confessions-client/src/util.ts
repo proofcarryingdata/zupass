@@ -12,6 +12,11 @@ export const CONFESSIONS_SERVER_URL = IS_PROD
   ? process.env.CONFESSIONS_SERVER_URL
   : "http://localhost:3005/";
 
+export const SEMAPHORE_GROUP_URL = IS_PROD
+  ? "https://api.pcd-passport.com/semaphore/1"
+  : "http://localhost:3002/semaphore/1";
+
+
 // Popup window will redirect to the passport to request a proof.
 // Open the popup window under the current domain, let it redirect there:
 export function requestProofFromPassport(proofUrl: string) {

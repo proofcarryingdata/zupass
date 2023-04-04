@@ -8,12 +8,8 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { sha256 } from "js-sha256";
-import { IS_PROD, PASSPORT_URL, requestProofFromPassport } from "../src/util";
+import { PASSPORT_URL, SEMAPHORE_GROUP_URL, requestProofFromPassport } from "../src/util";
 import { postConfession } from "../src/api";
-
-const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
-  : "http://localhost:3002/semaphore/1";
 
 export function PublishConfession({
   onPublished,
