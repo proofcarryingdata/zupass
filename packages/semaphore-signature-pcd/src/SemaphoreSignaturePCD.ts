@@ -20,12 +20,16 @@ import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
+const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
+  "hardcoded-nullifier"
+);
+
 /**
  * Hashes a message to be signed with Keccak and fits it into a baby jub jub field element.
  * @param signal The initial message.
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
-function generateMessageHash(signal: string): bigint {
+export function generateMessageHash(signal: string): bigint {
   // right shift to fit into a field element, which is 254 bits long
   // shift by 8 ensures we have a 253 bit element
   return BigInt("0x" + sha256(signal)) >> BigInt(8);
@@ -69,16 +73,6 @@ export interface SemaphoreSignaturePCDClaim {
    * Stringified `BigInt`.
    */
   nullifierHash: string;
-
-  /**
-   * Stringified `BigInt`.
-   */
-  externalNullifier: string;
-
-  /**
-   * Stringified `BigInt`.
-   */
-  signal: string;
 }
 
 export type SemaphoreSignaturePCDProof = Proof;
@@ -144,7 +138,7 @@ export async function prove(
   const fullProof = await generateProof(
     identityPCD.claim.identity,
     group,
-    identityPCD.claim.identity.commitment,
+    STATIC_SIGNATURE_PCD_NULLIFIER,
     signal,
     {
       zkeyFilePath: initArgs.zkeyFilePath,
@@ -156,8 +150,6 @@ export async function prove(
     identityCommitment: identityPCD.claim.identity.commitment.toString(),
     signedMessage: args.signedMessage.value,
     nullifierHash: fullProof.nullifierHash + "",
-    externalNullifier: fullProof.externalNullifier + "",
-    signal: fullProof.signal + "",
   };
 
   const proof: SemaphoreSignaturePCDProof = fullProof.proof;
@@ -172,22 +164,17 @@ export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
 
   // Convert PCD into Semaphore FullProof
   const fullProof: FullProof = {
-    externalNullifier: pcd.claim.externalNullifier,
+    externalNullifier: STATIC_SIGNATURE_PCD_NULLIFIER,
     merkleTreeRoot: group.root + "",
     nullifierHash: pcd.claim.nullifierHash,
     proof: pcd.proof,
-    signal: pcd.claim.signal,
+    signal: generateMessageHash(pcd.claim.signedMessage),
   };
 
   // check if proof is valid
   const validProof = await verifyProof(fullProof, 16);
 
-  // check proof is for the claimed message
-  const proofMessageSameAsClaim =
-    pcd.claim.signal.toString() ===
-    generateMessageHash(pcd.claim.signedMessage).toString();
-
-  return validProof && proofMessageSameAsClaim;
+  return validProof;
 }
 
 export async function serialize(

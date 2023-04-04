@@ -7,6 +7,7 @@ import { generateProof, verifyProof } from "@semaphore-protocol/proof";
 import assert from "assert";
 import * as path from "path";
 import {
+  generateMessageHash,
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDClaim,
@@ -57,7 +58,7 @@ describe("semaphore signature should work", function () {
     const { prove, verify } = SemaphoreSignaturePCDPackage;
     const pcd = await prove(args);
     // make the pcd invalid by updating its claim
-    pcd.claim.signal += "1";
+    pcd.claim.signedMessage += "1";
     const verified = await verify(pcd);
     assert.equal(verified, false);
   });
@@ -83,7 +84,7 @@ describe("semaphore signature should work", function () {
       identityPCD.claim.identity,
       group,
       identityPCD.claim.identity.commitment,
-      pcd.claim.signal,
+      generateMessageHash(pcd.claim.signedMessage),
       {
         zkeyFilePath: zkeyFilePath,
         wasmFilePath: wasmFilePath,
@@ -95,8 +96,6 @@ describe("semaphore signature should work", function () {
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
       signedMessage: pcd.claim.signedMessage,
       nullifierHash: pcd.claim.nullifierHash,
-      externalNullifier: pcd.claim.externalNullifier,
-      signal: pcd.claim.signal,
     };
 
     const fakeProof: SemaphoreSignaturePCDProof = fullProof.proof;
@@ -140,8 +139,6 @@ describe("semaphore signature should work", function () {
       identityCommitment: identityPCD.claim.identity.commitment.toString(),
       signedMessage: args.signedMessage.value!,
       nullifierHash: fullProof.nullifierHash + "",
-      externalNullifier: fullProof.externalNullifier + "",
-      signal: fullProof.signal + "",
     };
     const fakeProof: SemaphoreSignaturePCDProof = fullProof.proof;
 
