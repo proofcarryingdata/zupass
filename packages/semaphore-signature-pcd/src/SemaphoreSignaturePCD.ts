@@ -20,6 +20,11 @@ import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
+/**
+ * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
+ * so that they cannot be reused by malicious actors across different
+ * applications.
+ */
 const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
   "hardcoded-nullifier"
 );
