@@ -132,7 +132,7 @@ export async function prove(
 
   // Set up singleton group
   const group = new Group(1, 16);
-  group.addMember(identityPCD.claim.identity.commitment + "");
+  group.addMember(identityPCD.claim.identity.commitment);
 
   // Get Keccak256 hashed version of message for input into Semaphore
   const signal = generateMessageHash(args.signedMessage.value);
