@@ -6,9 +6,9 @@ import { PublishConfession } from "../components/PublishConfession";
 
 export default function Page() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [newConfession, setNewConfession] = useState<string | undefined>();
 
   useEffect(() => {
-    console.log("load accessToken");
     if (accessToken) return;
 
     const token = window.localStorage.getItem("access_token");
@@ -38,18 +38,15 @@ export default function Page() {
           </button>
           <br/>
           <br/>
+          <Container>
+            <PublishConfession onPublished={setNewConfession}/>
+          </Container>
         </>
         :
         <Login onLoggedIn={handleAccessToken}/>
       }
       <Container>
-        <PublishConfession onPublished={() => {
-            // loadConfessions(accessToken);
-          }}
-        />
-      </Container>
-      <Container>
-        <Confessions accessToken={accessToken} />
+        <Confessions accessToken={accessToken} newConfession={newConfession} />
       </Container>
     </>
   );

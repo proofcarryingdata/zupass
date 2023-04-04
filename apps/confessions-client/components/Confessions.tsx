@@ -3,13 +3,14 @@ import { listConfessions } from "../src/api";
   
 export function Confessions({
     accessToken,
+    newConfession,
 }: {
     accessToken: string | null;
+    newConfession: string | undefined;
 }) {
   const [confessions, setConfessions] = useState<any>(null);
 
   useEffect(() => {
-    console.log("load confessions");
     if (!accessToken) {
       setConfessions(null)
       return;
@@ -20,7 +21,7 @@ export function Confessions({
       const conf = await listConfessions(accessToken, 1, 30);
       setConfessions(conf);
     })();
-  }, [accessToken]);
+  }, [accessToken, newConfession]);
   
   return (
     <>

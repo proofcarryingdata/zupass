@@ -14,7 +14,7 @@ import { postConfession } from "../src/api";
 export function PublishConfession({
   onPublished,
 }: {
-  onPublished: () => void;
+  onPublished: (newConfession: string) => void;
 }) {
   const [confession, setConfession] = useState<string>("");
 
@@ -47,7 +47,11 @@ export function PublishConfession({
         const err = await res.text();
         console.error("error posting confession to the server:", err);
       }
-    })().then(onPublished)
+    })().then(
+      () => {
+        onPublished(confession)
+      }
+    )
   }, [valid, error, confession, pcdStr, onPublished]);
 
   return (
