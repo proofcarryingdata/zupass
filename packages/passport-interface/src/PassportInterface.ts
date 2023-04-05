@@ -3,6 +3,7 @@ import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 export enum PCDRequestType {
   Get = "Get",
   Add = "Add",
+  ProveAndAdd = "ProveAndAdd",
 }
 
 export interface PCDRequest {
@@ -34,6 +35,13 @@ export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
 export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
   pcd: SerializedPCD;
+}
+
+export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
+  extends PCDRequest {
+  type: PCDRequestType.Add;
+  pcdType: string;
+  args: ArgsOf<T>;
 }
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
