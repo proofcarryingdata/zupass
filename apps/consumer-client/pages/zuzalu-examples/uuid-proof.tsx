@@ -2,12 +2,13 @@ import {
   requestSignedZuzaluUUIDUrl,
   useFetchParticipant,
   usePassportResponse,
+  usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDLoader } from "../../components/PendingPCDLoader";
+import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
@@ -17,11 +18,26 @@ import { requestProofFromPassport } from "../../src/util";
  * party developer.
  */
 export default function Page() {
-  const [pcdStr, pendingPCDStr] = usePassportResponse();
+  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
 
+  const [pcdStr, setPCDStr] = useState("");
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
+  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+    passportPendingPCDStr,
+    PASSPORT_SERVER_URL
+  );
+
+  // multiplexer for client-side PCD vs server-side PendingPCD
+  useEffect(() => {
+    console.log(passportPCDStr);
+    if (passportPCDStr) {
+      setPCDStr(passportPCDStr);
+    } else if (serverPCDStr) {
+      setPCDStr(serverPCDStr);
+    }
+  }, [passportPCDStr, passportPendingPCDStr, serverPCDStr]);
 
   // Extract UUID, the signed message of the returned PCD
   const [uuid, setUuid] = useState<string | undefined>();
@@ -60,9 +76,9 @@ export default function Page() {
           />
           server-side proof
         </label>
-        {pendingPCDStr != "" && (
+        {passportPendingPCDStr && (
           <>
-            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+            <PendingPCDStatusDisplay status={pendingPCDStatus} />
           </>
         )}
         {signatureProof != null && (

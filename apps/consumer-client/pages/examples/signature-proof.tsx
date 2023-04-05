@@ -1,15 +1,16 @@
 import {
   constructPassportPcdGetRequestUrl,
   usePassportResponse,
+  usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDLoader } from "../../components/PendingPCDLoader";
-import { PASSPORT_URL } from "../../src/constants";
+import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
+import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
 /**
@@ -17,10 +18,26 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, pendingPCDStr] = usePassportResponse();
+  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
+
+  const [pcdStr, setPCDStr] = useState("");
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
+  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+    passportPendingPCDStr,
+    PASSPORT_SERVER_URL
+  );
+
+  // multiplexer for client-side PCD vs server-side PendingPCD
+  useEffect(() => {
+    console.log(passportPCDStr);
+    if (passportPCDStr) {
+      setPCDStr(passportPCDStr);
+    } else if (serverPCDStr) {
+      setPCDStr(serverPCDStr);
+    }
+  }, [passportPCDStr, passportPendingPCDStr, serverPCDStr]);
 
   return (
     <>
@@ -54,9 +71,9 @@ export default function Page() {
           />
           server-side proof
         </label>
-        {pendingPCDStr != "" && (
+        {passportPendingPCDStr && (
           <>
-            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+            <PendingPCDStatusDisplay status={pendingPCDStatus} />
           </>
         )}
         {signatureProof != null && (
