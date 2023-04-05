@@ -15,7 +15,7 @@ export function requestZuzaluMembershipUrl(
   urlToSemaphoreGroup: string,
   externalNullifier?: string,
   signal?: string,
-  serverProving?: boolean
+  proveOnServer?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -46,7 +46,7 @@ export function requestZuzaluMembershipUrl(
       },
     },
     {
-      server: serverProving,
+      proveOnServer: proveOnServer,
     }
   );
 

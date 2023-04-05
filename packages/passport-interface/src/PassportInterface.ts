@@ -15,7 +15,7 @@ export interface GetRequestOptions {
   title?: string;
   description?: string;
   debug?: boolean;
-  server?: boolean;
+  proveOnServer?: boolean;
 }
 
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>

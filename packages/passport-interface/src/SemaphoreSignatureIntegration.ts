@@ -8,7 +8,7 @@ export function requestSemaphoreSignatureUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
   messageToSign: string,
-  serverProving?: boolean
+  proveOnServer?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
@@ -29,7 +29,7 @@ export function requestSemaphoreSignatureUrl(
       },
     },
     {
-      server: serverProving,
+      proveOnServer: proveOnServer,
     }
   );
 
@@ -44,7 +44,7 @@ export function requestSemaphoreSignatureUrl(
 export function requestSignedZuzaluUUIDUrl(
   urlToPassportWebsite: string,
   returnUrl: string,
-  serverProving?: boolean
+  proveOnServer?: boolean
 ) {
   const url = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
@@ -65,7 +65,7 @@ export function requestSignedZuzaluUUIDUrl(
       },
     },
     {
-      server: serverProving,
+      proveOnServer: proveOnServer,
     }
   );
   return url;

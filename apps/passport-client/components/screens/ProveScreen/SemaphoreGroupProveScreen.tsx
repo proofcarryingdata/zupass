@@ -42,7 +42,7 @@ export function SemaphoreGroupProveScreen({
       setProving(true);
       const args = await fillArgs(state.identity, group, req.args);
 
-      if (req.options?.server === true) {
+      if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: SemaphoreGroupPCDPackage.name,
           args: args,
@@ -62,7 +62,13 @@ export function SemaphoreGroupProveScreen({
     } catch (e) {
       console.log(e);
     }
-  }, [group, req.returnUrl, state.identity, req.args, req.options?.server]);
+  }, [
+    group,
+    req.returnUrl,
+    state.identity,
+    req.args,
+    req.options?.proveOnServer,
+  ]);
 
   const lines: ReactNode[] = [];
   lines.push(<p>Loading {req.args.group.remoteUrl}</p>);

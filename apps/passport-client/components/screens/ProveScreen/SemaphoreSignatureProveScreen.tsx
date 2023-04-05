@@ -32,7 +32,7 @@ export function SemaphoreSignatureProveScreen({
         modifiedArgs
       );
 
-      if (req.options?.server === true) {
+      if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: SemaphoreSignaturePCDPackage.name,
           args: args,

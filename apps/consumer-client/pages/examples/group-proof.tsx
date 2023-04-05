@@ -102,7 +102,7 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestMembershipProof(debug: boolean, serverProving: boolean) {
+function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -144,7 +144,7 @@ function requestMembershipProof(debug: boolean, serverProving: boolean) {
         "Generate a group membership proof using your passport's Semaphore Identity.",
       title: "Group Membership Proof",
       debug: debug,
-      server: serverProving,
+      proveOnServer: proveOnServer,
     }
   );
 
