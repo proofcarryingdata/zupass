@@ -14,9 +14,9 @@ export function PCDCard({
   expanded,
   onClick,
 }: {
-  isZuzaluIdentity: boolean;
   pcd: PCD;
   expanded?: boolean;
+  isZuzaluIdentity?: boolean;
   onClick?: () => void;
 }) {
   // Show either a full card slot or the entire (expanded) card
