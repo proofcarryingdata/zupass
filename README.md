@@ -34,7 +34,7 @@ However, the Passport data model allows anyone to create new types of cards, and
 - An [ETHdos](https://ethdos.xyz/)-style recursive ZK proof, certifying that you are 2 degrees of connection away from Vitalik.
 - A ZKML proof composed with a timestamp server signature, certifying that you visited the Lustica Bay lighthouse on Sunday, April 2nd.
 
-(Note that this feature is currently ⚠️[under construction]()⚠️ and should be complete in the next few days!)
+(Note that this feature is currently ⚠️[under construction](https://github.com/proofcarryingdata/zupass/pull/125)⚠️ and should be complete in the next few days!)
 
 Any third-party service--for example, a Zuzalu voting app--can request a card, multiple cards, or some claim about one or multiple cards from the Zuzalu Passport ([live examples](https://consumer-client.onrender.com/)). For those who have used Ethereum apps before, this is a similar flow to how a dapp website might ask you to sign a message or a transaction by popping up Metamask. A few more concrete examples of card requests that a third-party app could make:
 
