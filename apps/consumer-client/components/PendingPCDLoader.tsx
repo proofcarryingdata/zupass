@@ -9,11 +9,9 @@ import styled from "styled-components";
 import { PASSPORT_SERVER_URL } from "../src/constants";
 
 /**
- * PendingPCDLoader
- * ----------------
  * Component that pings the Passport Server for the status of a specific ProveRequest,
- * inputting a stringified PendingPCD object. Can be imported into any page that
- * is okay with accepting server-side proofs.
+ * inputting a stringified PendingPCD object. Its logic be imported into any page that
+ * would like to accept server-side proofs.
  */
 export const PendingPCDLoader = ({
   pendingPCDStr,
@@ -21,13 +19,11 @@ export const PendingPCDLoader = ({
   pendingPCDStr: string;
 }) => {
   const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
 
-    // TODO: not sure if this is the best way to ping the server repeatedly,
-    // or if this leads to weird situations where this interval continues to run
-    // after people navigate away from the page?
     const getStatus = () => {
       if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
         const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
@@ -53,7 +49,11 @@ export const PendingPCDLoader = ({
               clearInterval(interval);
             }
           })
-          .catch((error) => console.error(error));
+          .catch((error) => {
+            setStatus(PendingPCDStatus.ERROR);
+            setError(error.toString());
+            console.error(error);
+          });
       }
     };
 
@@ -69,7 +69,12 @@ export const PendingPCDLoader = ({
     color: ${statusColor[status]};
   `;
 
-  return <StyledDiv>Pending PCD Status: {status}</StyledDiv>;
+  return (
+    <StyledDiv>
+      Pending PCD Status: {status}
+      {status === PendingPCDStatus.ERROR && error !== "" && <div>{error}</div>}
+    </StyledDiv>
+  );
 };
 
 const statusColor: Record<PendingPCDStatus, string> = {
