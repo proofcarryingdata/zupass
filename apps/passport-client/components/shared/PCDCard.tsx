@@ -96,6 +96,7 @@ const CardOutlineCollapsed = styled.div`
 `;
 
 const CardHeaderCollapsed = styled.div`
+  user-select: none;
   text-align: center;
   font-size: 16px;
   padding: 8px;

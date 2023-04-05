@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { Placeholder, Spacer } from "../core";
@@ -27,29 +27,45 @@ export function HomeScreen() {
     }
   });
 
-  const [selectedPCD, setSelectedPCD] = useState(0);
+  const zuzaluPCDId = useMemo(() => {
+    return state.pcds.getAll()[0].id;
+  }, [state.pcds]);
+  const [selectedPCDID, setSelectedPCDID] = useState(() => zuzaluPCDId);
+  const selectedPCD = useMemo(() => {
+    return state.pcds.getAll().find((pcd) => pcd.id === selectedPCDID);
+  }, [state.pcds, selectedPCDID]);
+  const allButSelectedPcd = useMemo(() => {
+    return state.pcds.getAll().filter((pcd) => selectedPCDID !== pcd.id);
+  }, [selectedPCDID, state.pcds]);
 
   if (state.self == null) return null;
 
   return (
     <>
       <MaybeModal />
-
       <AppContainer bg="gray">
         <Spacer h={24} />
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {state.pcds.getAll().map((pcd, i) => {
+          <PCDCard
+            pcd={selectedPCD}
+            expanded={true}
+            isZuzaluIdentity={zuzaluPCDId === selectedPCD.id}
+          />
+          {allButSelectedPcd.map((pcd) => {
             return (
-              // 1st card is the zuzalu identity pcd
               <>
+                <Spacer h={8} />
                 <PCDCard
                   pcd={pcd}
-                  expanded={i === 0}
-                  isZuzaluIdentity={i === 0}
+                  expanded={false}
+                  isZuzaluIdentity={pcd.id === selectedPCD.id}
+                  onClick={() => {
+                    console.log("CLICKED");
+                    setSelectedPCDID(pcd.id);
+                  }}
                 />
-                <Spacer h={8} />
               </>
             );
           })}
