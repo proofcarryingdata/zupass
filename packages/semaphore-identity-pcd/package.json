@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-identity-pcd",
-  "version": "0.0.10",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.ts",
   "types": "./index.ts",

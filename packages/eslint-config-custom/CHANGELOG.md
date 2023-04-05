@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
 ## 0.0.8
 
 ### Patch Changes

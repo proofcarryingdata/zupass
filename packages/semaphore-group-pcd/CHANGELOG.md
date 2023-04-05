@@ -1,5 +1,17 @@
 # @pcd/semaphore-group-pcd
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.1.0
+  - @pcd/semaphore-identity-pcd@0.1.0
+
 ## 0.0.9
 
 ### Patch Changes

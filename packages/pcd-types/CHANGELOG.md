@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
 ## 0.0.9
 
 ### Patch Changes
