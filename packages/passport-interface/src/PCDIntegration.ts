@@ -9,7 +9,7 @@ export function useProof<T extends PCDPackage>(
 
   useEffect(() => {
     if (proofEnc) {
-      const parsedPCD = JSON.parse(proofEnc);
+      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
       if (parsedPCD.type !== proofPackage.name) {
         return;
       }
@@ -23,7 +23,8 @@ export function useProof<T extends PCDPackage>(
 }
 
 /**
- * React hook that listens for PCDs returned by the passport to the application.
+ * React hook that listens for PCDs and PendingPCDs from a passport popup window
+ * using message passing and event listeners.
  */
 export function usePassportResponse() {
   const [pcdStr, setPCDStr] = useState("");
