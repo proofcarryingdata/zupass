@@ -56,7 +56,7 @@ export function initConfessionRoutes(
       const err = await verifyGroupProof(request.semaphoreGroupUrl, request.proof)
       if (err != null) throw err;
 
-      const accessToken = sign({ groupUrl: request.semaphoreGroupUrl }, ACCESS_TOKEN_SECRET)
+      const accessToken = sign({ groupUrl: request.semaphoreGroupUrl }, ACCESS_TOKEN_SECRET!)
 
       res.status(200).json({ accessToken });
     } catch (e) {

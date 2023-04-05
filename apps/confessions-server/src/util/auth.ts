@@ -2,10 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { verify, JwtPayload } from "jsonwebtoken";
 import { IS_PROD } from "./isProd";
 
-export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "secret";
+export const ACCESS_TOKEN_SECRET = IS_PROD
+  ? process.env.ACCESS_TOKEN_SECRET
+  : "secret";
 
 export const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
+  ? process.env.SEMAPHORE_GROUP_URL
   : "http://localhost:3002/semaphore/1";
 
 export interface GroupJwtPayload extends JwtPayload {
@@ -18,7 +20,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   if (authHeader) {
     const token = authHeader.split(' ')[1];
 
-    verify(token, ACCESS_TOKEN_SECRET, (err, group) => {
+    verify(token, ACCESS_TOKEN_SECRET!, (err, group) => {
       if (err) {
         return res.sendStatus(403);
       }
