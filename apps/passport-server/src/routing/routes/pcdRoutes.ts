@@ -1,6 +1,5 @@
 import {
   PendingPCD,
-  PendingPCDStatus,
   ProveRequest,
   StatusRequest,
   StatusResponse,
@@ -52,13 +51,7 @@ export async function initPCDRoutes(
         const statusResponse: StatusResponse = getPendingPCDStatus(
           statusRequest.hash
         );
-        if (statusResponse.status === PendingPCDStatus.COMPLETE) {
-          res.status(200).json(statusResponse);
-        } else if (statusResponse.status === PendingPCDStatus.ERROR) {
-          res.status(500).json(statusResponse);
-        } else {
-          res.status(400).json(statusResponse);
-        }
+        res.status(200).json(statusResponse);
       } catch (e) {
         next(e);
       }
