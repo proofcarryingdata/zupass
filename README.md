@@ -123,6 +123,7 @@ Some of these packages are used to share development configuration between the d
 - [`@pcd/semaphore-group-pcd`](packages/semaphore-group-pcd): a pcd which wraps the [Semaphore](https://semaphore.appliedzkp.org/docs/introduction) protocol, which allows PCD-consuming applications to consume and generate Semaphore proofs.
 - [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
 - [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
+- [`@pcd/webauthn-pcd`](packages/webauthn-pcd): a pcd that can be used to attest to a valid attestatinos from [WebAuthn](https://webauthn.guide/) hardware devices, such as facial scanners, fingerprints, Yubikeys, and more.
 - ... more to come!
 
 #### shared code packages

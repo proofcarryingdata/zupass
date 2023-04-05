@@ -1,0 +1,5 @@
+{
+  "extends": "@pcd/tsconfig/server.json",
+  "include": [".", "test"],
+  "exclude": ["dist", "build", "node_modules"]
+}
