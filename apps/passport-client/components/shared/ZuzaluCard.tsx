@@ -1,23 +1,25 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
-import { ZuIdCard } from "../../src/model/Card";
+import { DispatchContext } from "../../src/dispatch";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
 
-export function ZuzaluCardBody({ card }: { card: ZuIdCard }) {
-  const { role, name, email, residence } = card.participant;
+export function ZuzaluCardBody() {
+  const [state, _] = useContext(DispatchContext);
+  const { role, name, email, residence } = state.self;
+
   return (
     <CardBody>
-      {card.identity && (
+      {state.identity && (
         <>
           <Spacer h={32} />
-          <ZuzaluQR card={card} />
+          <ZuzaluQR />
         </>
       )}
       <Spacer h={24} />
@@ -54,9 +56,10 @@ function highlight(role: string) {
   return role === "resident" || role === "organizer";
 }
 
-function ZuzaluQR({ card }: { card: ZuIdCard }) {
-  const { identity, participant } = card;
-  const { uuid } = participant;
+function ZuzaluQR() {
+  const [state] = useContext(DispatchContext);
+  const { identity, self } = state;
+  const { uuid } = self;
 
   const [qrPayload, setQRPayload] = useState<string | undefined>();
 

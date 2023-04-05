@@ -1,15 +1,12 @@
-import { ZuParticipant } from "@pcd/passport-interface";
-import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
-import { Card, ZuIdCard } from "../../src/model/Card";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
-import { CardElem } from "../shared/CardElem";
+import { PCDCard } from "../shared/PCDCard";
 
 /**
  * Show the user their passport, an overview of cards / PCDs.
@@ -30,11 +27,7 @@ export function HomeScreen() {
     }
   });
 
-  const cards = useMemo(
-    () => getTestCards(state.identity, state.self),
-    [state]
-  );
-  const [sel, _setSel] = useState(0);
+  const [selectedPCD, setSelectedPCD] = useState(0);
 
   if (state.self == null) return null;
 
@@ -46,25 +39,15 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <CardElem card={cards[sel]} expanded />
+          {state.pcds.getAll().map((pcd, i) => {
+            return (
+              // 1st card is the zuzalu identity pcd
+              <PCDCard pcd={pcd} expanded isZuzaluIdentity={i === 0} />
+            );
+          })}
         </Placeholder>
         <Spacer h={24} />
-        {/*cards.map((c, i) => {
-        if (i === sel) return <Spacer key={i} h={48} />;
-        return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
-      })*/}
       </AppContainer>
     </>
   );
-}
-
-function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
-  const c1: ZuIdCard | undefined = self && {
-    id: "0x1234",
-    type: "zuzalu-id",
-    header: "VERIFIED ZUZALU PASSPORT",
-    identity,
-    participant: self,
-  };
-  return [c1];
 }

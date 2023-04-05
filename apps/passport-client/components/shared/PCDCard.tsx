@@ -1,6 +1,6 @@
+import { PCD } from "@pcd/pcd-types";
 import * as React from "react";
 import styled from "styled-components";
-import { Card, ZuIdCard } from "../../src/model/Card";
 import { H4, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
@@ -8,23 +8,26 @@ import { ZuzaluCardBody } from "./ZuzaluCard";
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
  * just the top of the card to allow stacking.
  */
-export function CardElem({
-  card,
+export function PCDCard({
+  isZuzaluIdentity,
+  pcd,
   expanded,
   onClick,
 }: {
-  card: Card;
+  isZuzaluIdentity: boolean;
+  pcd: PCD;
   expanded?: boolean;
   onClick?: () => void;
 }) {
   // Show either a full card slot or the entire (expanded) card
-  const { header } = card;
+  const header = "HEADER";
+
   if (expanded) {
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
           <CardHeader col="var(--accent-lite)">{header}</CardHeader>
-          <CardBody card={card} />
+          <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
         </CardOutlineExpanded>
       </CardContainerExpanded>
     );
@@ -37,6 +40,20 @@ export function CardElem({
       </CardOutlineCollapsed>
     </CardContainerCollapsed>
   );
+}
+
+function CardBody({
+  pcd,
+  isZuzaluIdentity,
+}: {
+  pcd: PCD;
+  isZuzaluIdentity: boolean;
+}) {
+  if (isZuzaluIdentity) {
+    return <ZuzaluCardBody />;
+  }
+
+  return <TextCenter>{pcd.type}</TextCenter>;
 }
 
 const CardContainerExpanded = styled.div`
@@ -79,14 +96,3 @@ const CardHeader = styled(H4)`
   text-align: center;
   padding: 10px;
 `;
-
-function CardBody({ card }: { card: Card }) {
-  const { type } = card;
-
-  switch (type) {
-    case "zuzalu-id":
-      return <ZuzaluCardBody card={card as ZuIdCard} />;
-    default:
-      return <TextCenter>{type}</TextCenter>;
-  }
-}

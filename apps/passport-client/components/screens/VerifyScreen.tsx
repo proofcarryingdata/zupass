@@ -23,7 +23,7 @@ import {
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
-import { CardElem } from "../shared/CardElem";
+import { PCDCard } from "../shared/PCDCard";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
 type VerifyType = "identity-proof" | "anon-proof";
@@ -89,9 +89,7 @@ export function VerifyScreen() {
         <Spacer h={48} />
         <Placeholder minH={160}>
           {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-          {result?.valid === true && (
-            <CardElem expanded card={getCard(result)} />
-          )}
+          {result?.valid === true && <PCDCard expanded pcd={getCard(result)} />}
         </Placeholder>
         <Spacer h={64} />
         {result != null && (
