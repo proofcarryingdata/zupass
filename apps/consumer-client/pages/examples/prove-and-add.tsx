@@ -4,7 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { CollapsableCode } from "../../components/Core";
+import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
@@ -14,7 +14,8 @@ export default function Page() {
 
   return (
     <div>
-      add a pcd <br />
+      <HomeLink />
+      <h2>Prove and Add</h2>
       <ExampleContainer>
         <button onClick={onAddClick}>
           add a new semaphore identity to the passport
