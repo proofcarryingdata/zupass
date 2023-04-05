@@ -10,13 +10,21 @@ import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import path from "path";
+import { sleep } from "../util/util";
 
+/**
+ * In-memory queue of ProveRequests that requested server-side proving.
+ */
 const queue: Array<ProveRequest> = [];
-const pendingPCDStatus: Map<string, PendingPCDStatus> = new Map<
+
+/**
+ * Stores the current StatusResponse of a specific hashed request, which will
+ * also include the a full SerialziedPCD if status === COMPLETE
+ */
+const pendingPCDResponse: Map<string, StatusResponse> = new Map<
   string,
-  PendingPCDStatus
+  StatusResponse
 >();
-const pendingPCDResult: Map<string, string> = new Map<string, string>();
 
 /**
  * Each PCD type that the proving server supports has to go into this array,
@@ -58,48 +66,45 @@ export async function enqueueProofRequest(
 
   // don't add identical proof requests to queue to prevent accidental or
   // malicious DoS attacks on the proving queue
-  if (!pendingPCDStatus.has(hash)) {
+  if (!pendingPCDResponse.has(hash)) {
     queue.push(request);
     if (queue.length == 1) {
-      pendingPCDStatus.set(hash, PendingPCDStatus.PROVING);
+      pendingPCDResponse.set(hash, {
+        status: PendingPCDStatus.PROVING,
+        serializedPCD: "",
+      });
 
       // we don't wait for this to end; we let it work in the background
       serverProve(request);
     } else {
-      pendingPCDStatus.set(hash, PendingPCDStatus.QUEUED);
+      pendingPCDResponse.set(hash, {
+        status: PendingPCDStatus.QUEUED,
+        serializedPCD: "",
+      });
     }
   }
 
-  const requestStatus = pendingPCDStatus.get(hash);
-  if (requestStatus === undefined) {
+  const requestResponse = pendingPCDResponse.get(hash);
+  if (requestResponse === undefined) {
     throw new Error("PCD status not defined");
   }
 
   const pending: PendingPCD = {
     pcdType: request.pcdType,
     hash: hash,
-    status: requestStatus,
+    status: requestResponse.status,
   };
 
   return pending;
 }
 
 export function getPendingPCDStatus(hash: string): StatusResponse {
-  const response: StatusResponse = {
+  const response = pendingPCDResponse.get(hash);
+  if (response !== undefined) return response;
+  return {
     serializedPCD: "",
     status: PendingPCDStatus.NONE,
   };
-
-  const status = pendingPCDStatus.get(hash);
-  const serializedPCD = pendingPCDResult.get(hash);
-  if (status !== undefined) {
-    response.status = status;
-    if (status === PendingPCDStatus.COMPLETE && serializedPCD !== undefined) {
-      response.serializedPCD = serializedPCD;
-    }
-  }
-
-  return response;
 }
 
 async function serverProve(proveRequest: ProveRequest): Promise<void> {
@@ -111,13 +116,18 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     const serializedPCD = await pcdPackage.serialize(pcd);
 
     // artificial lengthen to test multiple incoming requests
-    // await sleep(5000);
+    await sleep(5000);
 
     console.log(`finished PCD request ${currentHash}`, serializedPCD);
-    pendingPCDStatus.set(currentHash, PendingPCDStatus.COMPLETE);
-    pendingPCDResult.set(currentHash, JSON.stringify(serializedPCD));
+    pendingPCDResponse.set(currentHash, {
+      status: PendingPCDStatus.COMPLETE,
+      serializedPCD: JSON.stringify(serializedPCD),
+    });
   } catch (e) {
-    pendingPCDStatus.set(currentHash, PendingPCDStatus.ERROR);
+    pendingPCDResponse.set(currentHash, {
+      status: PendingPCDStatus.ERROR,
+      serializedPCD: "",
+    });
   }
 
   // finish current job
@@ -126,8 +136,15 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
   // check if there's another job
   if (queue.length > 0) {
     const topHash = hashProveRequest(queue[0]);
-    if (pendingPCDStatus.get(topHash) !== PendingPCDStatus.PROVING) {
-      pendingPCDStatus.set(topHash, PendingPCDStatus.PROVING);
+    const topResponse = pendingPCDResponse.get(topHash);
+    if (
+      topResponse !== undefined &&
+      topResponse.status !== PendingPCDStatus.PROVING
+    ) {
+      pendingPCDResponse.set(topHash, {
+        status: PendingPCDStatus.PROVING,
+        serializedPCD: "",
+      });
       serverProve(queue[0]);
     }
   }
