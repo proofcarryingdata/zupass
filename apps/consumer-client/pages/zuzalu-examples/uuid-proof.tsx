@@ -2,6 +2,7 @@ import {
   requestSignedZuzaluUUIDUrl,
   useFetchParticipant,
   usePassportResponse,
+  usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
@@ -20,24 +21,13 @@ import { requestProofFromPassport } from "../../src/util";
 export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
-
-  const [pcdStr, setPCDStr] = useState("");
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
   const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );
-
-  // multiplexer for client-side PCD vs server-side PendingPCD
-  useEffect(() => {
-    console.log(passportPCDStr);
-    if (passportPCDStr) {
-      setPCDStr(passportPCDStr);
-    } else if (serverPCDStr) {
-      setPCDStr(serverPCDStr);
-    }
-  }, [passportPCDStr, passportPendingPCDStr, serverPCDStr]);
+  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
+  const { signatureProof, signatureProofValid } =
+    useSemaphoreSignatureProof(pcdStr);
 
   // Extract UUID, the signed message of the returned PCD
   const [uuid, setUuid] = useState<string | undefined>();
