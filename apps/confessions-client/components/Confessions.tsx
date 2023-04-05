@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { listConfessions } from "../src/api";
-  
+
+/**
+ * Shows the user with access token a list of confessions.
+ * @param accessToken jwt used to authenticate to the server
+ * @param newConfession the new confession string
+ */
 export function Confessions({
     accessToken,
     newConfession,

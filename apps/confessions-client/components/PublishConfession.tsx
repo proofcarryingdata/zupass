@@ -11,6 +11,15 @@ import { sha256 } from "js-sha256";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL, requestProofFromPassport } from "../src/util";
 import { postConfession } from "../src/api";
 
+/**
+ * The use input a new confession, generate a semaphore proof for the confession.
+ * Post the semaphore group url, confession and the proof to the /new-confession
+ * endpoint on the server.
+ * Because the proof already claims that the user belongs to the specified semaphore grorup,
+ * jwt is not needed in this case.
+ * @param onPublished a callback function which will be called after the new confession is
+ * published to the server.
+ */
 export function PublishConfession({
   onPublished,
 }: {
@@ -20,7 +29,7 @@ export function PublishConfession({
 
   const pcdStr = usePassportPCD()
   const { proof, valid, error } = useSemaphoreProof(
-    SEMAPHORE_GROUP_URL,
+    SEMAPHORE_GROUP_URL!,
     confession,
     pcdStr
   )
@@ -41,7 +50,7 @@ export function PublishConfession({
     }
 
     (async () => {
-      const res = await postConfession(SEMAPHORE_GROUP_URL, confession, pcdStr);
+      const res = await postConfession(SEMAPHORE_GROUP_URL!, confession, pcdStr);
       if (!res.ok) {
         // TODO: display error to the user
         const err = await res.text();

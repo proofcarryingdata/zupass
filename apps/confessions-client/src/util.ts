@@ -13,7 +13,7 @@ export const CONFESSIONS_SERVER_URL = IS_PROD
   : "http://localhost:3005/";
 
 export const SEMAPHORE_GROUP_URL = IS_PROD
-  ? "https://api.pcd-passport.com/semaphore/1"
+  ? process.env.SEMAPHORE_GROUP_URL
   : "http://localhost:3002/semaphore/1";
 
 

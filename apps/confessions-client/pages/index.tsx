@@ -15,7 +15,7 @@ export default function Page() {
     setAccessToken(token);
   }, [accessToken]);
 
-  const handleAccessToken = (token: string | null) => {
+  const updateAccessToken = (token: string | null) => {
     setAccessToken(token)
     if (!token) {
       window.localStorage.removeItem("access_token");
@@ -31,7 +31,7 @@ export default function Page() {
         <>
           <button
             onClick={
-              () => handleAccessToken(null)
+              () => updateAccessToken(null)
             }
           >
             Logout
@@ -43,7 +43,7 @@ export default function Page() {
           </Container>
         </>
         :
-        <Login onLoggedIn={handleAccessToken}/>
+        <Login onLoggedIn={updateAccessToken}/>
       }
       <Container>
         <Confessions accessToken={accessToken} newConfession={newConfession} />

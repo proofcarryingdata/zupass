@@ -7,6 +7,13 @@ import { useEffect, useState } from "react";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL, requestProofFromPassport } from "../src/util";
 import { login } from "../src/api";
 
+/**
+ * Login for the user who belongs to the specified semaphore group.
+ * Generate a semaphore proof, calls the /login endpoint on the server, and
+ * gets a jwt. The jwt can be used to make other requests to the server.
+ * @param onLoggedIn a callback function which will be called after the user logged in
+ * with the jwt
+ */
 export function Login({
   onLoggedIn,
 }: {
@@ -16,7 +23,7 @@ export function Login({
 
   const pcdStr = usePassportPCD();
   const { proof, valid, error } = useSemaphorePassportProof(
-    SEMAPHORE_GROUP_URL,
+    SEMAPHORE_GROUP_URL!,
     pcdStr
   )
 
@@ -38,7 +45,7 @@ export function Login({
     }
 
     (async () => {
-      const res = await login(SEMAPHORE_GROUP_URL, pcdStr);
+      const res = await login(SEMAPHORE_GROUP_URL!, pcdStr);
       if (!res.ok) {
         // TODO: display error to the user
         const err = await res.text();
@@ -81,7 +88,7 @@ function requestZuzaluMembershipProof() {
   const proofUrl = requestZuzaluMembershipUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL
+    SEMAPHORE_GROUP_URL!
   );
 
   requestProofFromPassport(proofUrl);
