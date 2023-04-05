@@ -34,6 +34,7 @@ export function HomeScreen() {
   return (
     <>
       <MaybeModal />
+
       <AppContainer bg="gray">
         <Spacer h={24} />
         <AppHeader />
@@ -42,7 +43,14 @@ export function HomeScreen() {
           {state.pcds.getAll().map((pcd, i) => {
             return (
               // 1st card is the zuzalu identity pcd
-              <PCDCard pcd={pcd} expanded isZuzaluIdentity={i === 0} />
+              <>
+                <PCDCard
+                  pcd={pcd}
+                  expanded={i === 0}
+                  isZuzaluIdentity={i === 0}
+                />
+                <Spacer h={8} />
+              </>
             );
           })}
         </Placeholder>

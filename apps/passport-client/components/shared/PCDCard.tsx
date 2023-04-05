@@ -1,6 +1,8 @@
 import { PCD } from "@pcd/pcd-types";
 import * as React from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
+import { usePackage } from "../../src/usePackage";
 import { H4, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
@@ -19,8 +21,15 @@ export function PCDCard({
   isZuzaluIdentity?: boolean;
   onClick?: () => void;
 }) {
-  // Show either a full card slot or the entire (expanded) card
-  const header = "HEADER";
+  const pcdPackage = usePackage(pcd);
+  const displayOptions = useMemo(() => {
+    if (pcdPackage?.getDisplayOptions) {
+      return pcdPackage?.getDisplayOptions(pcd);
+    }
+  }, [pcd, pcdPackage]);
+  const header = isZuzaluIdentity
+    ? "VERIFIED ZUZALU PASSPORT"
+    : displayOptions?.header ?? "PCD";
 
   if (expanded) {
     return (
