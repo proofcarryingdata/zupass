@@ -1,5 +1,16 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.1.0
+
 ## 0.0.5
 
 ### Patch Changes

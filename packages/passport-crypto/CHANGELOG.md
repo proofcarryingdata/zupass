@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
 ## 0.0.3
 
 ### Patch Changes

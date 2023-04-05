@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-interface",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.ts",
   "types": "./index.ts",

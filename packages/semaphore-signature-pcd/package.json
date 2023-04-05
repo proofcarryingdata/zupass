@@ -1,11 +1,12 @@
 {
   "name": "@pcd/semaphore-signature-pcd",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.tsx",
   "types": "./index.tsx",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {

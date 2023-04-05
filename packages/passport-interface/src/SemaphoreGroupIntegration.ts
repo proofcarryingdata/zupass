@@ -1,10 +1,10 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
+  deserializeSemaphoreGroup,
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
-import { Group } from "@semaphore-protocol/group";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { useProof } from "./PCDIntegration";
@@ -91,15 +91,14 @@ export function useSemaphorePassportProof(
 
 async function verifyProof(
   pcd: SemaphoreGroupPCD,
-  semaGroup: SerializedSemaphoreGroup
+  serializedExpectedGroup: SerializedSemaphoreGroup
 ): Promise<boolean> {
   const { verify } = SemaphoreGroupPCDPackage;
   const verified = await verify(pcd);
   if (!verified) return false;
 
-  const group = new Group(1, 16);
-  group.addMembers(semaGroup.members);
-  const root = pcd.proof.proof.merkleTreeRoot;
+  const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
+  const pcdGroup = deserializeSemaphoreGroup(pcd.claim.group);
 
-  return root.toString() === group.root.toString();
+  return expectedGroup.root.toString() === pcdGroup.root.toString();
 }

@@ -13,6 +13,7 @@ import { Group } from "@semaphore-protocol/group";
 import {
   FullProof,
   generateProof,
+  Proof,
   verifyProof,
 } from "@semaphore-protocol/proof";
 import { sha256 } from "js-sha256";
@@ -20,11 +21,20 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
 /**
+ * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
+ * so that they cannot be reused by malicious actors across different
+ * applications.
+ */
+const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
+  "hardcoded-nullifier"
+);
+
+/**
  * Hashes a message to be signed with Keccak and fits it into a baby jub jub field element.
  * @param signal The initial message.
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
-function generateMessageHash(signal: string): bigint {
+export function generateMessageHash(signal: string): bigint {
   // right shift to fit into a field element, which is 254 bits long
   // shift by 8 ensures we have a 253 bit element
   return BigInt("0x" + sha256(signal)) >> BigInt(8);
@@ -63,12 +73,14 @@ export interface SemaphoreSignaturePCDClaim {
    * Stringified `BigInt`.
    */
   identityCommitment: string;
+
+  /**
+   * Stringified `BigInt`.
+   */
+  nullifierHash: string;
 }
 
-export interface SemaphoreSignaturePCDProof {
-  proof: FullProof;
-}
-
+export type SemaphoreSignaturePCDProof = Proof;
 export class SemaphoreSignaturePCD
   implements PCD<SemaphoreSignaturePCDClaim, SemaphoreSignaturePCDProof>
 {
@@ -131,7 +143,7 @@ export async function prove(
   const fullProof = await generateProof(
     identityPCD.claim.identity,
     group,
-    identityPCD.claim.identity.commitment,
+    STATIC_SIGNATURE_PCD_NULLIFIER,
     signal,
     {
       zkeyFilePath: initArgs.zkeyFilePath,
@@ -142,31 +154,32 @@ export async function prove(
   const claim: SemaphoreSignaturePCDClaim = {
     identityCommitment: identityPCD.claim.identity.commitment.toString(),
     signedMessage: args.signedMessage.value,
+    nullifierHash: fullProof.nullifierHash + "",
   };
 
-  const proof: SemaphoreSignaturePCDProof = {
-    proof: fullProof,
-  };
+  const proof: SemaphoreSignaturePCDProof = fullProof.proof;
 
   return new SemaphoreSignaturePCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
-  // check if proof is valid
-  const validProof = await verifyProof(pcd.proof.proof, 16);
-
-  // check proof is for the claimed message
-  const proofMessageSameAsClaim =
-    pcd.proof.proof.signal.toString() ===
-    generateMessageHash(pcd.claim.signedMessage).toString();
-
-  // make sure proof is over a group with only your identity commitment
+  // Set up singleton group
   const group = new Group(1, 16);
   group.addMember(pcd.claim.identityCommitment);
-  const validSingletonGroup =
-    group.root.toString() === pcd.proof.proof.merkleTreeRoot;
 
-  return validProof && validSingletonGroup && proofMessageSameAsClaim;
+  // Convert PCD into Semaphore FullProof
+  const fullProof: FullProof = {
+    externalNullifier: STATIC_SIGNATURE_PCD_NULLIFIER,
+    merkleTreeRoot: group.root + "",
+    nullifierHash: pcd.claim.nullifierHash,
+    proof: pcd.proof,
+    signal: generateMessageHash(pcd.claim.signedMessage),
+  };
+
+  // check if proof is valid
+  const validProof = await verifyProof(fullProof, 16);
+
+  return validProof;
 }
 
 export async function serialize(

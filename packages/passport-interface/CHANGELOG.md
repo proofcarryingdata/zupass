@@ -1,5 +1,19 @@
 # @pcd/passport-interface
 
+## 0.1.0
+
+### Minor Changes
+
+- Breaking change regarding the contents of the existing Semaphore-based PCDs.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.1.0
+  - @pcd/pcd-types@0.1.0
+  - @pcd/semaphore-group-pcd@0.1.0
+  - @pcd/semaphore-signature-pcd@0.1.0
+
 ## 0.0.9
 
 ### Patch Changes
