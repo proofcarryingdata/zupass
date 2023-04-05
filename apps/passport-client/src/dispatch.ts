@@ -249,6 +249,7 @@ function resetPassport() {
 async function addPcd(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
   if (state.pcds.hasPackage(pcd.type)) {
     await state.pcds.deserializeAndAdd(pcd);
+    await savePCDs(state.pcds);
     update({ pcds: state.pcds });
   } else {
     console.log("ERROR");
