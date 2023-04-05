@@ -34,7 +34,7 @@ export interface StatusResponse {
   status: PendingPCDStatus;
 
   /**
-   * JSON.stringify(SerializedPCD)
+   * If status === COMPLETE, JSON.stringify(SerializedPCD), else ""
    */
   serializedPCD: string;
 }
