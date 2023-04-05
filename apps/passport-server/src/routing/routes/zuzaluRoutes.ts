@@ -156,9 +156,9 @@ export function initZuzaluRoutes(
       waiting: dbPool.waitingCount,
     };
     const semaphore = {
-      n_participants: Object.keys(semaphoreService.participants).length,
-      n_residents: semaphoreService.groupResidents.members.length,
-      n_visitors: semaphoreService.groupVisitors.members.length,
+      n_participants: semaphoreService.groupParticipants().members.length,
+      n_residents: semaphoreService.groupResidents().members.length,
+      n_visitors: semaphoreService.groupVisitors().members.length,
     };
     const time = new Date().toISOString();
 

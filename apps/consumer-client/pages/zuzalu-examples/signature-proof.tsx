@@ -36,10 +36,10 @@ export default function Page() {
       <p>
         This page shows a working example of an integration with the Zuzalu
         Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Residents Semaphore Group. Although the data
-        that is returned is not specific for Zuzalu, this specific request shows
-        a specific screen within the passport which was specifically designed
-        for Zuzalu.
+        is a member of the Zuzalu Participants Semaphore Group. Although the
+        data that is returned is not specific for Zuzalu, this specific request
+        shows a specific screen within the passport which was specifically
+        designed for Zuzalu.
       </p>
       <ExampleContainer>
         <input

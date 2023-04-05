@@ -5,16 +5,25 @@ import { fetchPassportParticipants } from "../database/queries/fetchParticipant"
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {
-  // Zuzalu residents group
-  public groupResidents = new Group("1", 16);
-  // Zuzalu visitors group
-  public groupVisitors = new Group("2", 16);
+  // Groups by ID
+  groups = SemaphoreService.createGroups();
 
-  getNamedGroup(id: string): NamedGroup | undefined {
-    return {
-      "1": { name: "Zuzalu Residents", group: this.groupResidents },
-      "2": { name: "Zuzalu Visitors", group: this.groupVisitors },
-    }[id];
+  static createGroups(): NamedGroup[] {
+    return [
+      { name: "Zuzalu Participants", group: new Group("1", 16) },
+      { name: "Zuzalu Residents", group: new Group("2", 16) },
+      { name: "Zuzalu Visitors", group: new Group("3", 16) },
+    ];
+  }
+
+  groupParticipants = () => this.getNamedGroup("1").group;
+  groupResidents = () => this.getNamedGroup("2").group;
+  groupVisitors = () => this.getNamedGroup("3").group;
+
+  getNamedGroup(id: string): NamedGroup {
+    const ret = this.groups.find((g) => g.group.id === id);
+    if (!ret) throw new Error("Missing group " + id);
+    return ret;
   }
 
   // Zuzalu participants by UUID
@@ -41,8 +50,7 @@ export class SemaphoreService {
     const ps = await fetchPassportParticipants(dbPool);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
-    this.groupResidents = new Group("1", 16);
-    this.groupVisitors = new Group("1", 16);
+    this.groups = SemaphoreService.createGroups();
     for (const p of ps) {
       this.addParticipant(p);
     }
@@ -51,16 +59,21 @@ export class SemaphoreService {
 
   // Add a single participant to the semaphore group
   addParticipant(p: PassportParticipant) {
-    const group = this.getGroupForRole(p.role);
-    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
+    this.addParticipantToGroup(p, this.groupParticipants());
 
+    const group = this.getGroupForRole(p.role);
+    this.addParticipantToGroup(p, group);
+
+    this.participants[p.uuid] = p;
+  }
+
+  addParticipantToGroup(p: PassportParticipant, group: Group) {
+    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
     const bigIntCommitment = BigInt(p.commitment);
     if (group.indexOf(bigIntCommitment) >= 0) {
       throw new Error(`member ${bigIntCommitment} already in semaphore group`);
     }
     group.addMember(bigIntCommitment);
-
-    this.participants[p.uuid] = p;
   }
 
   // Get the semaphore group for a participant role
@@ -68,9 +81,9 @@ export class SemaphoreService {
     switch (role) {
       case ParticipantRole.Organizer:
       case ParticipantRole.Resident:
-        return this.groupResidents;
+        return this.groupResidents();
       case ParticipantRole.Visitor:
-        return this.groupVisitors;
+        return this.groupVisitors();
       default:
         throw new Error(`unsupported role ${role}`);
     }
