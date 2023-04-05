@@ -59,13 +59,13 @@ function CardBody({
   isZuzaluIdentity: boolean;
 }) {
   if (isZuzaluIdentity) {
-    return <ZuzaluCardBody />;
+    return <ZuzaluCardBody showQrCode={true} />;
   }
 
   return <TextCenter>{pcd.type}</TextCenter>;
 }
 
-const CardContainerExpanded = styled.div`
+export const CardContainerExpanded = styled.div`
   width: 100%;
   padding: 0 8px;
 `;
@@ -75,7 +75,7 @@ const CardContainerCollapsed = styled(CardContainerExpanded)`
   padding: 12px 8px;
 `;
 
-const CardOutlineExpanded = styled.div`
+export const CardOutlineExpanded = styled.div`
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--accent-dark);
@@ -102,7 +102,7 @@ const CardHeaderCollapsed = styled.div`
   padding: 8px;
 `;
 
-const CardHeader = styled(H4)`
+export const CardHeader = styled(H4)`
   text-align: center;
   padding: 10px;
 `;

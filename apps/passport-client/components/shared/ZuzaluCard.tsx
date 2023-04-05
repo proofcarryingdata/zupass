@@ -1,3 +1,4 @@
+import { ZuParticipant } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import * as React from "react";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -10,13 +11,19 @@ import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
 
-export function ZuzaluCardBody() {
+export function ZuzaluCardBody({
+  showQrCode,
+  participant,
+}: {
+  showQrCode?: boolean;
+  participant?: ZuParticipant;
+}) {
   const [state, _] = useContext(DispatchContext);
-  const { role, name, email, residence } = state.self;
+  const { role, name, email, residence } = participant ?? state.self;
 
   return (
     <CardBody>
-      {state.identity && (
+      {showQrCode && (
         <>
           <Spacer h={32} />
           <ZuzaluQR />
