@@ -11,8 +11,9 @@ import { PCDCard } from "../../shared/PCDCard";
 export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const [_, dispatch] = useContext(DispatchContext);
 
-  const onAddClick = useCallback(() => {
-    dispatch({ type: "add-pcd", pcd: request.pcd });
+  const onAddClick = useCallback(async () => {
+    await dispatch({ type: "add-pcd", pcd: request.pcd });
+    window.location.hash = "#/";
   }, [dispatch, request.pcd]);
 
   const { error, pcd } = useDeserialized(request.pcd);
