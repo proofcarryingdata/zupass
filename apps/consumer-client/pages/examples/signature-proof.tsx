@@ -103,7 +103,6 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
       genericProveScreen: true,
       title: "Semaphore Signature Proof",
       description: "Sign any message with your Semaphore identity.",
-      debug: undefined,
       proveOnServer: proveOnServer,
     }
   );
