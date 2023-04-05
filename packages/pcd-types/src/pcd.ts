@@ -12,8 +12,14 @@ export interface SerializedPCD<_T extends PCD = PCD> {
   pcd: string;
 }
 
+export interface DisplayOptions {
+  backgroundColor?: string;
+  header?: string;
+}
+
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
+  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;

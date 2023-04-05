@@ -1,5 +1,6 @@
 import {
   BigIntArgument,
+  DisplayOptions,
   ObjectArgument,
   PCD,
   PCDArgument,
@@ -209,6 +210,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(_pcd: SemaphoreGroupPCD): DisplayOptions {
+  return {
+    backgroundColor: "#ff00ff",
+    header: "Semaphore Group Signal",
+  };
+}
+
 /**
  * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
  * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
@@ -220,6 +228,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SempahoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
+  getDisplayOptions,
   init,
   prove,
   verify,

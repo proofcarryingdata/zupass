@@ -1,4 +1,5 @@
 import {
+  DisplayOptions,
   PCD,
   PCDArgument,
   PCDPackage,
@@ -197,6 +198,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(_pcd: SemaphoreSignaturePCD): DisplayOptions {
+  return {
+    backgroundColor: "#00ffff",
+    header: "Semaphore Signature",
+  };
+}
+
 /**
  * PCD-conforming wrapper to sign messages using one's Semaphore public key. This is a small
  * extension of the existing Semaphore protocol, which is mostly geared at group signatures.
@@ -209,6 +217,7 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDInitArgs
 > = {
   name: SemaphoreSignaturePCDTypeName,
+  getDisplayOptions,
   init,
   prove,
   verify,
