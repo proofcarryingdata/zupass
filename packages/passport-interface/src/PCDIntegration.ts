@@ -25,7 +25,7 @@ export function useProof<T extends PCDPackage>(
 /**
  * React hook that listens for PCDs returned by the passport to the application.
  */
-export function usePassportOutput() {
+export function usePassportResponse() {
   const [pcdStr, setPCDStr] = useState("");
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 

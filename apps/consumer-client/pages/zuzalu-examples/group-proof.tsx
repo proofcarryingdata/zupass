@@ -1,6 +1,6 @@
 import {
   requestZuzaluMembershipUrl,
-  usePassportOutput,
+  usePassportResponse,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { useState } from "react";
@@ -15,7 +15,7 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, pendingPCDStr] = usePassportOutput();
+  const [pcdStr, pendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
