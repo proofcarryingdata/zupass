@@ -1,10 +1,11 @@
 import {
   requestSemaphoreSignatureUrl,
   usePassportResponse,
+  usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
@@ -20,24 +21,13 @@ export default function Page() {
 
   const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
-
-  const [pcdStr, setPCDStr] = useState("");
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
   const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );
-
-  // multiplexer for client-side PCD vs server-side PendingPCD
-  useEffect(() => {
-    console.log(passportPCDStr);
-    if (passportPCDStr) {
-      setPCDStr(passportPCDStr);
-    } else if (serverPCDStr) {
-      setPCDStr(serverPCDStr);
-    }
-  }, [passportPCDStr, passportPendingPCDStr, serverPCDStr]);
+  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
+  const { signatureProof, signatureProofValid } =
+    useSemaphoreSignatureProof(pcdStr);
 
   return (
     <>

@@ -103,3 +103,24 @@ export function usePendingPCD(
 
   return [status, pcdStr];
 }
+
+/**
+ * Multiplexer hook to choose between client-side and server-side PCDs.
+ */
+export function usePCDMultiplexer(
+  passportPCDStr: string,
+  serverPCDStr: string
+): string {
+  const [pcdStr, setPCDStr] = useState("");
+
+  useEffect(() => {
+    console.log(passportPCDStr);
+    if (passportPCDStr) {
+      setPCDStr(passportPCDStr);
+    } else if (serverPCDStr) {
+      setPCDStr(serverPCDStr);
+    }
+  }, [passportPCDStr, serverPCDStr]);
+
+  return pcdStr;
+}
