@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { sign } from "jsonwebtoken";
 import {
+  deserializeSemaphoreGroup,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
@@ -121,9 +122,8 @@ async function verifyGroupProof(
   const serializedGroup = JSON.parse(json) as SerializedSemaphoreGroup;
   const group = new Group(1, 16);
   group.addMembers(serializedGroup.members);
-  // TODO: wait for the PR to merge, and use the pcd.claim.group here instead
-  if (pcd.proof.proof.merkleTreeRoot !== group.root.toString()) {
-    return new Error("semaphoreGroupUrl doesn't match proof merkleTreeRoot")
+  if (deserializeSemaphoreGroup(pcd.claim.group).root.toString() !== group.root.toString()) {
+    return new Error("semaphoreGroupUrl doesn't match claim group merkletree root")
   }
 
   if (signal &&

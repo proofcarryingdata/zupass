@@ -143,7 +143,7 @@ function useSemaphoreProof(
   useEffect(() => {
     const valid = proofValid &&
       proof &&
-      proof.proof.proof.signal.toString() ===
+      proof.claim.signal.toString() ===
       generateMessageHashStr(confession);
     setValid(valid);
   }, [proof, confession, proofValid, setValid])
