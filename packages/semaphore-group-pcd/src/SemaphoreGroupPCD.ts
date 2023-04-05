@@ -13,6 +13,7 @@ import {
 import {
   FullProof,
   generateProof,
+  Proof,
   verifyProof,
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
@@ -45,6 +46,9 @@ export interface SemaphoreGroupPCDArgs {
 }
 
 export interface SemaphoreGroupPCDClaim {
+  /**
+   * A serialized version of the group to which this PCD is referring.
+   */
   group: SerializedSemaphoreGroup;
 
   /**
@@ -63,9 +67,7 @@ export interface SemaphoreGroupPCDClaim {
   nullifierHash: string;
 }
 
-export interface SemaphoreGroupPCDProof {
-  proof: FullProof;
-}
+export type SemaphoreGroupPCDProof = Proof;
 
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
@@ -138,15 +140,23 @@ export async function prove(
     signal: args.signal.value.toString(),
   };
 
-  const proof: SemaphoreGroupPCDProof = {
-    proof: fullProof,
-  };
+  const proof: SemaphoreGroupPCDProof = fullProof.proof;
 
   return new SemaphoreGroupPCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
-  const valid = await verifyProof(pcd.proof.proof, pcd.claim.group.depth);
+  const deserializedGroup = deserializeSemaphoreGroup(pcd.claim.group);
+
+  const fullProof: FullProof = {
+    externalNullifier: pcd.claim.externalNullifier,
+    merkleTreeRoot: deserializedGroup.root + "",
+    nullifierHash: pcd.claim.nullifierHash,
+    signal: pcd.claim.signal,
+    proof: pcd.proof,
+  };
+
+  const valid = await verifyProof(fullProof, pcd.claim.group.depth);
 
   return valid;
 }
