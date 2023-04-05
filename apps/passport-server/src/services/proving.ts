@@ -107,6 +107,10 @@ export function getPendingPCDStatus(hash: string): StatusResponse {
   };
 }
 
+/**
+ * Performs proof of current ProveRequest, and then checks if there are any other
+ * proofs in the queue waiting to start.
+ */
 async function serverProve(proveRequest: ProveRequest): Promise<void> {
   const pcdPackage = getPackage(proveRequest.pcdType);
   const currentHash = hashProveRequest(proveRequest);

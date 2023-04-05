@@ -1,5 +1,7 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
+import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
+import { StatusRequest, StatusResponse } from "./RequestTypes";
 
 export function useProof<T extends PCDPackage>(
   proofPackage: T,
@@ -47,4 +49,57 @@ export function usePassportResponse() {
   }, []);
 
   return [pcdStr, pendingPCDStr];
+}
+
+/**
+ * React hook that pings server on status of a PendingPCD. Returns a serialized
+ * PCD when a completed PCD is returned, or the current status.
+ */
+export function usePendingPCD(
+  pendingPCDStr: string,
+  passportURL: string
+): [PendingPCDStatus, string] {
+  const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
+  const [pcdStr, setPCDStr] = useState("");
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined = undefined;
+
+    const getStatus = () => {
+      if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
+        const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
+
+        const request: StatusRequest = {
+          hash: pendingPCD.hash,
+        };
+
+        fetch(`${passportURL}pcds/status`, {
+          method: "POST",
+          body: JSON.stringify(request),
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        })
+          .then((response) => response.json())
+          .then((data: StatusResponse) => {
+            setStatus(data.status);
+            if (data.status === PendingPCDStatus.COMPLETE) {
+              setPCDStr(data.serializedPCD);
+              clearInterval(interval);
+            }
+          })
+          .catch((error) => {
+            setStatus(PendingPCDStatus.ERROR);
+            console.error(error);
+          });
+      }
+    };
+
+    interval = setInterval(getStatus, 1000);
+
+    return () => clearInterval(interval);
+  }, [pendingPCDStr, passportURL]);
+
+  return [status, pcdStr];
 }

@@ -1,15 +1,20 @@
 import {
   constructPassportPcdGetRequestUrl,
   usePassportResponse,
+  usePendingPCD,
   useSemaphorePassportProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDLoader } from "../../components/PendingPCDLoader";
-import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
+import {
+  PASSPORT_SERVER_URL,
+  PASSPORT_URL,
+  SEMAPHORE_GROUP_URL,
+} from "../../src/constants";
 import { requestProofFromPassport } from "../../src/util";
 
 /**
@@ -17,13 +22,30 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [pcdStr, pendingPCDStr] = usePassportResponse();
-  const [debugChecked, setDebugChecked] = useState(false);
+  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
+
+  const [pcdStr, setPCDStr] = useState("");
   const { proof, group, valid } = useSemaphorePassportProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
   );
+  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+    passportPendingPCDStr,
+    PASSPORT_SERVER_URL
+  );
+
+  // multiplexer for client-side PCD vs server-side PendingPCD
+  useEffect(() => {
+    console.log(passportPCDStr);
+    if (passportPCDStr) {
+      setPCDStr(passportPCDStr);
+    } else if (serverPCDStr) {
+      setPCDStr(serverPCDStr);
+    }
+  }, [passportPCDStr, passportPendingPCDStr, serverPCDStr]);
+
+  const [debugChecked, setDebugChecked] = useState(false);
 
   return (
     <>
@@ -79,10 +101,9 @@ export default function Page() {
           />
           server-side proof
         </label>
-
-        {pendingPCDStr != "" && (
+        {passportPendingPCDStr && (
           <>
-            <PendingPCDLoader pendingPCDStr={pendingPCDStr} />
+            <PendingPCDStatusDisplay status={pendingPCDStatus} />
           </>
         )}
         {proof != null && (
