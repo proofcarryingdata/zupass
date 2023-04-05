@@ -10,7 +10,7 @@ The [Zuzalu Passport](https://zupass.org) allows Zuzalu residents to store perso
 
 Under the hood, the Zuzalu Passport stores cryptographically-manipulable data such as keypairs, credentials, attestations, and more, and uses a very lightweight standard for arbitrary zero-knowledge proofs to pass along this data to applications. ZKPs enable three critical features in the Passport system:
 
-- **Any Zuzalu resident can build applications that use into the Passport system**, without needing permission from Zuzalu organizers or Passport maintainers. There are no API keys, centralized servers, proprietary standards, special tokens, or gated endpoints* that you need approval for in order to build an experimental governance project that anyone with a Zuzalu Passport can participate in. With the Passport architecture, application developers can simply give or request data from users directly.
+- **Any Zuzalu resident can build applications that use the Passport system**, without needing permission from Zuzalu organizers or Passport maintainers. There are no API keys, centralized servers, proprietary standards, special tokens, or gated endpoints* that you need approval for in order to build an experimental community governance project that anyone with a Zuzalu Passport can participate in. With the Passport architecture, application developers can simply give or request data from users directly.
 - **Zuzalu applications are interoperable by default, and can understand and "talk to" one another without the need for special permissioning.** For example, one resident could build a message board where posters can accumulate "Zuzalu karma" for posting high-quality content, another resident can build a "private POAPs" service allowing Zuzalu event attendees to prove participation in community events, and a third resident could build a private polling app where users with either more "Zuzalu karma" OR provably high community event participation can cast votes carrying more voting weight--without the three application builders having to coordinate at all!
 - **Users store and control their own data.** Zuzalu user data is by default only accessible by the user on their own devices--not by the Zuzalu organizers, the Passport maintainers, or the developers of any Zuzalu applications. Additionally, thanks to ZKPs, users have total control over who they share this data with, and how.
 
@@ -24,15 +24,17 @@ As mentioned above, we hope for the Zuzalu Passport to enable more permissionles
 
 The Zuzalu Passport holds a collection of *cards*. UX-wise, the Zuzalu Passport interface is similar in concept to the [Apple Wallet](https://help.apple.com/assets/63BCA8F46048E91596771871/63BCA8F56048E9159677187F/en_US/36d4991d06798f24f230e7282a911222.png).
 
-Initially, the only card in the Zuzalu Passport wallet is a [Semaphore keypair](https://semaphore.appliedzkp.org/) that acts as your primary identifier as a resident or visitor. This is a special card: it displays a QR code in one of two modes (identity-hiding or identity-revealing), which you can use to prove that you are indeed a Zuzalu resident.
+Initially, the only card in the Zuzalu Passport wallet is a [Semaphore keypair](https://semaphore.appliedzkp.org/) that acts as your primary identifier as a resident or visitor. This is a special card: it displays a QR code which you can use to prove that you are indeed a Zuzalu resident.
 
-However, anyone can create new types of cards, and publish a flow to allow others to a card of a new type into their passport. The flow for adding a new type of card to your Passport is similar to the Apple Wallet's "Add to Wallet" button. Examples of other cards you could potentially build, and allow others to add to their Passports in the future, include:
+However, the Passport data model allows anyone to create new types of cards, and to publish a flow to allow others to add a card of this new type into their passport. The flow for adding a new type of card to your Passport will be similar to the Apple Wallet's "Add to Wallet" button. Examples of other cards you could potentially build, and allow others to add to their Passports in the future, include:
 
 - An Ethereum signature proving that you are `janedoe.eth` on Ethereum.
 - A signature from a Synthetic Biology subevent host, certifying that you attended the subevent.
 - An email you've received from invites@zuzalu.org identifying the apartment number you're staying in.
 - An [ETHdos](https://ethdos.xyz/)-style recursive ZK proof, certifying that you are 2 degrees of connection away from Vitalik.
 - A ZKML proof composed with a timestamp server signature, certifying that you visited the Lustica Bay lighthouse on Sunday, April 2nd.
+
+(Note that this feature is currently ⚠️[under construction]()⚠️ and should be complete in the next few days!)
 
 Any third-party service--for example, a Zuzalu voting app--can request a card, multiple cards, or some claim about one or multiple cards from the Zuzalu Passport ([live examples](https://consumer-client.onrender.com/)). For those who have used Ethereum apps before, this is a similar flow to how a dapp website might ask you to sign a message or a transaction by popping up Metamask. A few more concrete examples of card requests that a third-party app could make:
 
@@ -45,7 +47,7 @@ Any third-party service--for example, a Zuzalu voting app--can request a card, m
 
 As a developer, if you are interested in working with the Zuzalu Passport and with Zuzalu Passport Cards, you'll need to understand the "PCD" abstraction.
 
-"PCD" is short for "Proof-Carrying Data"*. In this repository, we use this term to refer to any is any claim about the world that is attached to a proof of its own correctness, without the need for external context to verify--such as a user card, or a response to a third-party request for information about user cards.
+"PCD" is short for "Proof-Carrying Data"*. In this repository, we use this term to refer to any claim about the world that is attached to a proof of its own correctness, without the need for external context to verify--such as a user card, or a response to a third-party request for information about user cards.
 
 All PCDs consist of a "claim", which is the human-interpretable statement that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached to the "claim," which is a cryptographic or mathematical proof of the claim. All PCDs within this SDK also expose a `prove` and `verify` function, which allow you to instantiate them, and verify that they are indeed correct.
 
