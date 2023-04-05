@@ -16,7 +16,7 @@ export interface PCDResponse {
   success: boolean;
 }
 
-export interface GetRequestOptions {
+export interface ProveOptions {
   genericProveScreen?: boolean;
   title?: string;
   description?: string;
@@ -29,7 +29,7 @@ export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   type: PCDRequestType.Get;
   pcdType: T["name"];
   args: ArgsOf<T>;
-  options?: GetRequestOptions;
+  options?: ProveOptions;
 }
 
 export interface PCDAddRequest extends PCDRequest {
@@ -39,9 +39,10 @@ export interface PCDAddRequest extends PCDRequest {
 
 export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
   extends PCDRequest {
-  type: PCDRequestType.Add;
+  type: PCDRequestType.ProveAndAdd;
   pcdType: string;
   args: ArgsOf<T>;
+  options?: ProveOptions;
 }
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
@@ -49,7 +50,7 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
   returnUrl: string,
   pcdType: T["name"],
   args: ArgsOf<T>,
-  options?: GetRequestOptions
+  options?: ProveOptions
 ) {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
@@ -71,6 +72,26 @@ export function constructPassportPcdAddRequestUrl(
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
     pcd,
+  };
+  const eqReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/add?request=${eqReq}`;
+}
+
+export function constructPassportPcdProveAndAddRequestUrl<
+  T extends PCDPackage = PCDPackage
+>(
+  passportOrigin: string,
+  returnUrl: string,
+  pcdType: string,
+  args: ArgsOf<T>,
+  options?: ProveOptions
+) {
+  const req: PCDProveAndAddRequest = {
+    type: PCDRequestType.ProveAndAdd,
+    returnUrl: returnUrl,
+    pcdType,
+    args,
+    options,
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/add?request=${eqReq}`;
