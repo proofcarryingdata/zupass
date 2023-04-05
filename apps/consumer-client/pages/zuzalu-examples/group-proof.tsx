@@ -90,14 +90,14 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof(serverProving: boolean) {
+function requestZuzaluMembershipProof(proveOnServer: boolean) {
   const proofUrl = requestZuzaluMembershipUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
     SEMAPHORE_GROUP_URL,
     "1337",
     "12345",
-    serverProving
+    proveOnServer
   );
 
   requestProofFromPassport(proofUrl);

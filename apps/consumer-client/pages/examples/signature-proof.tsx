@@ -78,7 +78,7 @@ export default function Page() {
   );
 }
 
-function requestSemaphoreSignature(serverProving: boolean) {
+function requestSemaphoreSignature(proveOnServer: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -104,7 +104,7 @@ function requestSemaphoreSignature(serverProving: boolean) {
       title: "Semaphore Signature Proof",
       description: "Sign any message with your Semaphore identity.",
       debug: undefined,
-      server: serverProving,
+      proveOnServer: proveOnServer,
     }
   );
 

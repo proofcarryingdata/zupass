@@ -88,13 +88,13 @@ export default function Page() {
 // Show the Passport popup, ask the user to sign a message with their sema key.
 function requestSemaphoreSignature(
   messageToSign: string,
-  serverProving: boolean
+  proveOnServer: boolean
 ) {
   const proofUrl = requestSemaphoreSignatureUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
     messageToSign,
-    serverProving
+    proveOnServer
   );
   requestProofFromPassport(proofUrl);
 }

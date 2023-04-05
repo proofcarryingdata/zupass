@@ -30,7 +30,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
 
   const onProveClick = useCallback(async () => {
     try {
-      if (req.options?.server === true) {
+      if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: req.pcdType,
           args: args,
@@ -49,7 +49,13 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
     } catch (e) {
       setError(e);
     }
-  }, [args, pcdPackage, req.returnUrl, req.options?.server, req.pcdType]);
+  }, [
+    args,
+    pcdPackage,
+    req.returnUrl,
+    req.options?.proveOnServer,
+    req.pcdType,
+  ]);
 
   if (req.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
