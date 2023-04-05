@@ -2,9 +2,7 @@ import { PendingPCDStatus } from "@pcd/passport-interface";
 import styled from "styled-components";
 
 /**
- * Component that pings the Passport Server for the status of a specific ProveRequest,
- * inputting a stringified PendingPCD object. Its logic be imported into any page that
- * would like to accept server-side proofs.
+ * Component that displays the status of a PendingPCD.
  */
 export const PendingPCDStatusDisplay = ({
   status,
