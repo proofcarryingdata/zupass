@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { verify, JwtPayload } from "jsonwebtoken";
 import { IS_PROD } from "./isProd";
 
-export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "secrect";
+export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "secret";
 
 export const SEMAPHORE_GROUP_URL = IS_PROD
   ? "https://api.pcd-passport.com/semaphore/1"
