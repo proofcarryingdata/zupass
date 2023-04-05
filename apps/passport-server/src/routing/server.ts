@@ -28,7 +28,6 @@ export async function startServer(
     app.use(express.json());
     app.use(cors());
 
-    // set up remaining routes
     routes.forEach((r) => r(app, context));
 
     app.use(
