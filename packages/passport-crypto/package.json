@@ -16,7 +16,7 @@
     "@pcd/pcd-types": "0.4.0",
     "@pcd/semaphore-identity-pcd": "0.4.0",
     "@pcd/tsconfig": "0.4.0",
-    "@semaphore-protocol/identity": "^3.1.0",
+    "@semaphore-protocol/identity": "^3.2.3",
     "@types/libsodium-wrappers": "^0.7.10",
     "@types/mocha": "^10.0.1",
     "@types/react": "^17.0.37",
