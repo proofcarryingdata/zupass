@@ -1,5 +1,14 @@
 # @pcd/input-test-pcd
 
+## 0.1.1-next.2
+
+### Patch Changes
+
+- CommonJS
+- Updated dependencies
+  - @pcd/pcd-types@0.1.1-next.2
+  - @pcd/tsconfig@0.1.1-next.0
+
 ## 0.1.1-next.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @pcd/passport-crypto
 
+## 0.1.1-next.2
+
+### Patch Changes
+
+- CommonJS
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.2
+  - @pcd/pcd-collection@0.1.1-next.2
+  - @pcd/pcd-types@0.1.1-next.2
+  - @pcd/tsconfig@0.1.1-next.0
+
 ## 0.1.1-next.1
 
 ### Patch Changes
