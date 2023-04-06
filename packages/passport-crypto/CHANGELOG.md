@@ -1,5 +1,19 @@
 # @pcd/passport-crypto
 
+## 0.2.0-next.1
+
+### Minor Changes
+
+- Back to postinstall
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.2.0-next.1
+  - @pcd/pcd-collection@0.2.0-next.1
+  - @pcd/pcd-types@0.2.0-next.1
+  - @pcd/tsconfig@0.2.0-next.1
+
 ## 0.1.2-next.0
 
 ### Patch Changes

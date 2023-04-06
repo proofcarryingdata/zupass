@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.2.0-next.1
+
+### Minor Changes
+
+- Back to postinstall
+
 ## 0.1.2-next.0
 
 ### Patch Changes

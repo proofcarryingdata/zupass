@@ -19,6 +19,7 @@
     "@pcd/tsconfig": "0.1.1"
   },
   "changesets": [
-    "five-steaks-sip"
+    "five-steaks-sip",
+    "spicy-spies-accept"
   ]
 }

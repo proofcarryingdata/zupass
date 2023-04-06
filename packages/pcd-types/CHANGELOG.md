@@ -1,5 +1,16 @@
 # @pcd/pcd-types
 
+## 0.2.0-next.1
+
+### Minor Changes
+
+- Back to postinstall
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/tsconfig@0.2.0-next.1
+
 ## 0.1.2-next.0
 
 ### Patch Changes

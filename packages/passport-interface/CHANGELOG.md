@@ -1,5 +1,20 @@
 # @pcd/passport-interface
 
+## 0.2.0-next.1
+
+### Minor Changes
+
+- Back to postinstall
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.2.0-next.1
+  - @pcd/semaphore-group-pcd@0.2.0-next.1
+  - @pcd/passport-crypto@0.2.0-next.1
+  - @pcd/pcd-types@0.2.0-next.1
+  - @pcd/tsconfig@0.2.0-next.1
+
 ## 0.1.2-next.0
 
 ### Patch Changes
