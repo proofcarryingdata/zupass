@@ -16,6 +16,10 @@
     "test": {
       "outputs": [],
       "cache": false
+    },
+    "clean": {
+      "outputs": [],
+      "cache": false
     }
   },
   "globalEnv": [

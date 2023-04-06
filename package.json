@@ -15,7 +15,8 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint --concurrency=1",
-    "test": "turbo run test --concurrency=1"
+    "test": "turbo run test --concurrency=1",
+    "clean": "turbo run clean --parallel"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

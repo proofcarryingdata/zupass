@@ -8,6 +8,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsc --noEmit",
+    "clean": "tsc --build --clean",
     "postinstall": "tsc"
   },
   "dependencies": {
