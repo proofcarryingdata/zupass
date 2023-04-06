@@ -57,14 +57,7 @@ export async function startServer(
       app.use(context.rollbar.errorHandler);
     }
 
-    // 404 for routes we don't have
-    app.use(function (
-      err: Error,
-      _req: express.Request,
-      res: express.Response,
-      _next: NextFunction
-    ) {
-      console.error(err.stack);
+    app.use((_req, res, _next) => {
       res.status(404).render("404.ejs");
     });
 
