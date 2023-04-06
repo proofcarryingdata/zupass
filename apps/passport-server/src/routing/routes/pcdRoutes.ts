@@ -18,15 +18,7 @@ export function initPCDRoutes(
   _context: ApplicationContext
 ): void {
   initPackages();
-  console.log("initPCDRoutes finished initPackages()");
 
-  // TODO: remove test route
-  console.log("initPCDRoutes setting up /pcds/test");
-  app.get("/pcds/test", async (req: Request, res: Response) => {
-    res.send("Zuzalu route testing - OK!");
-  });
-
-  console.log("initPCDRoutes setting up /pcds/prove");
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -42,7 +34,6 @@ export function initPCDRoutes(
     }
   );
 
-  console.log("initPCDRoutes setting up /pcds/supported");
   app.get(
     "/pcds/supported",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +47,6 @@ export function initPCDRoutes(
     }
   );
 
-  console.log("initPCDRoutes setting up /pcds/status");
   app.post(
     "/pcds/status",
     async (req: Request, res: Response, next: NextFunction) => {

@@ -28,10 +28,7 @@ export async function startServer(
     app.use(express.json());
     app.use(cors());
 
-    routes.forEach((r) => {
-      console.log("startServer initializing:", r);
-      r(app, context);
-    });
+    routes.forEach((r) => r(app, context));
 
     app.use(
       cors({
@@ -57,15 +54,8 @@ export async function startServer(
       app.use(context.rollbar.errorHandler);
     }
 
-    // 404 for routes we don't have
-    app.use(function (
-      err: Error,
-      _req: express.Request,
-      res: express.Response,
-      _next: NextFunction
-    ) {
-      console.error(err.stack);
-      res.status(404).render("404.ejs");
+    app.use((_req, res, _next) => {
+      res.status(404).send("Not a valid API route, refer to documentation.");
     });
 
     app

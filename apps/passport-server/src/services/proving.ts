@@ -36,24 +36,16 @@ const packages: PCDPackage[] = [
 
 export async function initPackages() {
   const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
-  console.log("initPackages __dirname:", __dirname);
-  console.log("initPackages current working directory:", process.cwd());
-  console.log("initPackages fullPath:", fullPath);
-  console.log("initPackages fullPath with zkey: ", fullPath + "/16.zkey");
 
-  try {
-    await SemaphoreGroupPCDPackage.init!({
-      wasmFilePath: fullPath + "/16.wasm",
-      zkeyFilePath: fullPath + "/16.zkey",
-    });
+  await SemaphoreGroupPCDPackage.init!({
+    wasmFilePath: fullPath + "/16.wasm",
+    zkeyFilePath: fullPath + "/16.zkey",
+  });
 
-    await SemaphoreSignaturePCDPackage.init!({
-      wasmFilePath: fullPath + "/16.wasm",
-      zkeyFilePath: fullPath + "/16.zkey",
-    });
-  } catch (e) {
-    console.error("initPackages error during init:", e);
-  }
+  await SemaphoreSignaturePCDPackage.init!({
+    wasmFilePath: fullPath + "/16.wasm",
+    zkeyFilePath: fullPath + "/16.zkey",
+  });
 }
 
 function getPackage(name: string) {
