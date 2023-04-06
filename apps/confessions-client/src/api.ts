@@ -12,7 +12,7 @@ export async function postConfession(
     confession,
     proof: parsedPcd.pcd
   };
-  const url = `${CONFESSIONS_SERVER_URL}confessions`;
+  const url = `${CONFESSIONS_SERVER_URL}new-confession`;
 
   return await fetch(url, {
     method: "POST",

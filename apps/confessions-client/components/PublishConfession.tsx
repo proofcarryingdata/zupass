@@ -5,6 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { generateMessageHash } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { sha256 } from "js-sha256";
@@ -49,6 +50,8 @@ export function PublishConfession({
       return;
     }
 
+    console.log(proof);
+
     (async () => {
       const res = await postConfession(SEMAPHORE_GROUP_URL!, confession, pcdStr);
       if (!res.ok) {
@@ -61,7 +64,7 @@ export function PublishConfession({
         onPublished(confession)
       }
     )
-  }, [valid, error, confession, pcdStr, onPublished]);
+  }, [proof, valid, error, confession, pcdStr, onPublished]);
 
   return (
     <>
@@ -82,22 +85,10 @@ export function PublishConfession({
       >
         Publish
       </button>
-      {proof != null && (
-        <>
-          <h3>Got Zuzalu Member Confession Proof from Passport</h3>
-          <pre>{JSON.stringify(proof, null, 2)}</pre>
-          {valid === undefined && <p>❓ Proof verifying</p>}
-          {valid === false && <p>❌ Proof is invalid</p>}
-          {valid === true && <p>✅ Proof is valid</p>}
-        </>
-      )}
     </>
   );
 }
 
-function generateMessageHashStr(message: string): string {
-  return (BigInt("0x" + sha256(message)) >> BigInt(8)).toString();
-}
 
 // Show the Passport popup
 function requestSemaphoreProof(confession: string) {
@@ -125,7 +116,7 @@ function requestSemaphoreProof(confession: string) {
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
-        value: generateMessageHashStr(confession),
+        value: generateMessageHash(confession).toString(),
         userProvided: false,
       }
     },
@@ -152,8 +143,8 @@ function useSemaphoreProof(
   useEffect(() => {
     const valid = proofValid &&
       proof &&
-      proof.claim.signal.toString() ===
-      generateMessageHashStr(confession);
+      proof.claim.signal ===
+      generateMessageHash(confession).toString();
     setValid(valid);
   }, [proof, confession, proofValid, setValid])
   return { proof, valid, error };

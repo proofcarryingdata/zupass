@@ -3,12 +3,14 @@ import express, { NextFunction } from "express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
-import { initConfessionRoutes } from "./routes/confessionRoutes";
+import { initAuthedRoutes } from "./routes/authedRoutes";
+import { initPCDRoutes } from "./routes/pcdRoutes";
 import { RouteInitializer } from "./types";
 
 const routes: RouteInitializer[] = [
   initHealthcheckRoutes,
-  initConfessionRoutes,
+  initAuthedRoutes,
+  initPCDRoutes,
 ];
 
 export async function startServer(
