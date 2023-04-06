@@ -9,11 +9,13 @@
     "build": "tsc --noEmit",
     "postinstall": "tsc"
   },
-  "devDependencies": {
-    "eslint": "^7.32.0",
-    "@pcd/eslint-config-custom": "*",
+  "dependencies": {
     "@pcd/tsconfig": "*",
     "typescript": "^4.5.2"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "@pcd/eslint-config-custom": "*"
   },
   "publishConfig": {
     "access": "public"
