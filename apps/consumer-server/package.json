@@ -1,6 +1,6 @@
 {
   "name": "consumer-server",
-  "version": "0.0.2-next.3",
+  "version": "0.0.2-next.4",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -14,7 +14,7 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
-    "@pcd/pcd-types": "0.1.1-next.3",
+    "@pcd/pcd-types": "0.1.1-next.4",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
     "express": "^4.18.2",
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "0.1.1-next.1",
+    "@pcd/tsconfig": "0.1.1-next.2",
     "@types/expect": "^24.3.0",
     "@types/express": "^4.17.16",
     "@types/mocha": "^10.0.1",

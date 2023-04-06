@@ -1,5 +1,17 @@
 # @pcd/passport-crypto
 
+## 0.1.1-next.4
+
+### Patch Changes
+
+- Install missing dependency
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.4
+  - @pcd/passport-interface@0.1.1-next.4
+  - @pcd/pcd-collection@0.1.1-next.4
+  - @pcd/pcd-types@0.1.1-next.4
+  - @pcd/tsconfig@0.1.1-next.2
+
 ## 0.1.1-next.3
 
 ### Patch Changes

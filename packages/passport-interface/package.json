@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-interface",
-  "version": "0.1.1-next.3",
+  "version": "0.1.1-next.4",
   "license": "GPL-3.0-or-later",
   "main": "./index.js",
   "types": "./index.ts",
@@ -11,15 +11,15 @@
     "postinstall": "tsc"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.1.1-next.3",
-    "@pcd/semaphore-group-pcd": "0.1.1-next.3",
-    "@pcd/semaphore-signature-pcd": "0.1.1-next.3",
-    "@pcd/passport-crypto": "0.1.1-next.3",
+    "@pcd/pcd-types": "0.1.1-next.4",
+    "@pcd/semaphore-group-pcd": "0.1.1-next.4",
+    "@pcd/semaphore-signature-pcd": "0.1.1-next.4",
+    "@pcd/passport-crypto": "0.1.1-next.4",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
     "react": "^18.2.0",
-    "@pcd/tsconfig": "0.1.1-next.1",
+    "@pcd/tsconfig": "0.1.1-next.2",
     "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.28",

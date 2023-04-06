@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.1.1-next.2
+
+### Patch Changes
+
+- Install missing dependency
+
 ## 0.1.1-next.1
 
 ### Patch Changes

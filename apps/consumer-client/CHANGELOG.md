@@ -1,5 +1,15 @@
 # consumer-client
 
+## 0.0.2-next.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.4
+  - @pcd/semaphore-group-pcd@0.1.1-next.4
+  - @pcd/passport-interface@0.1.1-next.4
+  - @pcd/pcd-types@0.1.1-next.4
+
 ## 0.0.2-next.3
 
 ### Patch Changes
