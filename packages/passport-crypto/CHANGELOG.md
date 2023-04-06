@@ -1,5 +1,15 @@
 # @pcd/passport-crypto
 
+## 0.1.1-next.1
+
+### Patch Changes
+
+- Include proper dependencies.
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.1
+  - @pcd/pcd-collection@0.1.1-next.1
+  - @pcd/pcd-types@0.1.1-next.1
+
 ## 0.1.1-next.0
 
 ### Patch Changes

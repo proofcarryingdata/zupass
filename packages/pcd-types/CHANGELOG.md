@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.1.1-next.1
+
+### Patch Changes
+
+- Include proper dependencies.
+
 ## 0.1.1-next.0
 
 ### Patch Changes

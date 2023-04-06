@@ -19,6 +19,7 @@
     "@pcd/tsconfig": "0.1.0"
   },
   "changesets": [
-    "chilly-tables-begin"
+    "chilly-tables-begin",
+    "soft-seas-pretend"
   ]
 }
