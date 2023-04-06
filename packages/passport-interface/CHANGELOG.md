@@ -1,5 +1,16 @@
 # @pcd/passport-interface
 
+## 0.1.1-next.0
+
+### Patch Changes
+
+- Testing javascript build
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.1.1-next.0
+  - @pcd/semaphore-group-pcd@0.1.1-next.0
+  - @pcd/passport-crypto@0.1.1-next.0
+  - @pcd/pcd-types@0.1.1-next.0
+
 ## 0.1.0
 
 ### Minor Changes

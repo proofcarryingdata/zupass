@@ -1,5 +1,14 @@
 # @pcd/semaphore-group-pcd
 
+## 0.1.1-next.0
+
+### Patch Changes
+
+- Testing javascript build
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.0
+  - @pcd/pcd-types@0.1.1-next.0
+
 ## 0.1.0
 
 ### Minor Changes

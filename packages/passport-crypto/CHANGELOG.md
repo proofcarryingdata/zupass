@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.1.1-next.0
+
+### Patch Changes
+
+- Testing javascript build
+
 ## 0.1.0
 
 ### Minor Changes
