@@ -13,7 +13,7 @@
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "yarn postinstall && turbo run dev --parallel",
     "lint": "turbo run lint --concurrency=1",
     "test": "yarn postinstall && turbo run test --concurrency=1 && yarn clean",
     "postinstall": "turbo run postinstall --parallel",
