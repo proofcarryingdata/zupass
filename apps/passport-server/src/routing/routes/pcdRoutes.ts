@@ -18,17 +18,19 @@ export async function initPCDRoutes(
   _context: ApplicationContext
 ): Promise<void> {
   await initPackages();
+  console.log("initPCDRoutes finished initPackages()");
 
   console.log("initPCDRoutes setting up /pcds/prove");
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
+      console.log("/pcds/prove received:", req.body);
+      const request = req.body as ProveRequest;
       try {
-        console.log("/pcds/prove received:", req.body);
-        const request: ProveRequest = req.body;
         const pending: PendingPCD = await enqueueProofRequest(request);
-        res.status(200).json(pending);
+        res.json(pending);
       } catch (e) {
+        console.error("/pcds/prove error: ", e);
         next(e);
       }
     }
@@ -38,9 +40,11 @@ export async function initPCDRoutes(
   app.get(
     "/pcds/supported",
     async (req: Request, res: Response, next: NextFunction) => {
+      res.setHeader("Access-Control-Allow-Origin", "*");
       try {
         res.json(getSupportedPCDTypes());
       } catch (e) {
+        console.error("/pcds/supported error: ", e);
         next(e);
       }
     }
@@ -50,14 +54,15 @@ export async function initPCDRoutes(
   app.post(
     "/pcds/status",
     async (req: Request, res: Response, next: NextFunction) => {
+      console.log("/pcds/status received:", req.body);
+      const statusRequest = req.body as StatusRequest;
       try {
-        console.log("/pcds/status received:", req.body);
-        const statusRequest: StatusRequest = req.body;
         const statusResponse: StatusResponse = getPendingPCDStatus(
           statusRequest.hash
         );
-        res.status(200).json(statusResponse);
+        res.json(statusResponse);
       } catch (e) {
+        console.error("/pcds/status error:", e);
         next(e);
       }
     }
