@@ -57,6 +57,17 @@ export async function startServer(
       app.use(context.rollbar.errorHandler);
     }
 
+    // 404 for routes we don't have
+    app.use(function (
+      err: Error,
+      _req: express.Request,
+      res: express.Response,
+      _next: NextFunction
+    ) {
+      console.error(err.stack);
+      res.status(404).render("404.ejs");
+    });
+
     app
       .listen(port, () => {
         console.log(`[INIT] HTTP server listening on port ${port}`);
