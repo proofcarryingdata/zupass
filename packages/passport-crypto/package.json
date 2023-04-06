@@ -14,7 +14,6 @@
     "libsodium-wrappers": "^0.7.11",
     "@pcd/pcd-types": "0.1.1",
     "@pcd/pcd-collection": "0.1.1",
-    "@pcd/passport-interface": "0.1.1",
     "@pcd/semaphore-identity-pcd": "0.1.1",
     "@semaphore-protocol/identity": "^3.1.0",
     "@types/libsodium-wrappers": "^0.7.10",
