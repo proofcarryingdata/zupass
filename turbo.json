@@ -20,6 +20,10 @@
     "clean": {
       "outputs": [],
       "cache": false
+    },
+    "postinstall": {
+      "outputs": [],
+      "cache": false
     }
   },
   "globalEnv": [
