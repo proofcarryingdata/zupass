@@ -13,12 +13,18 @@ import {
 } from "../../services/proving";
 import { ApplicationContext } from "../../types";
 
-export async function initPCDRoutes(
+export function initPCDRoutes(
   app: express.Application,
   _context: ApplicationContext
-): Promise<void> {
-  await initPackages();
+): void {
+  initPackages();
   console.log("initPCDRoutes finished initPackages()");
+
+  // TODO: remove test route
+  console.log("initPCDRoutes setting up /pcds/test");
+  app.get("/pcds/test", async (req: Request, res: Response) => {
+    res.send("Zuzalu route testing - OK!");
+  });
 
   console.log("initPCDRoutes setting up /pcds/prove");
   app.post(
