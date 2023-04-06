@@ -13,11 +13,11 @@ import {
 } from "../../services/proving";
 import { ApplicationContext } from "../../types";
 
-export async function initPCDRoutes(
+export function initPCDRoutes(
   app: express.Application,
   _context: ApplicationContext
-): Promise<void> {
-  await initPackages();
+): void {
+  initPackages();
   console.log("initPCDRoutes finished initPackages()");
 
   console.log("initPCDRoutes setting up /pcds/prove");
