@@ -1,6 +1,6 @@
 {
   "name": "@pcd/input-test-pcd",
-  "version": "0.1.1-next.2",
+  "version": "0.1.1-next.3",
   "main": "./index.js",
   "types": "./index.ts",
   "license": "GPL-3.0-or-later",
@@ -11,13 +11,13 @@
     "postinstall": "tsc"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.1.1-next.2",
+    "@pcd/pcd-types": "0.1.1-next.3",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0",
-    "@pcd/tsconfig": "0.1.1-next.0",
+    "@pcd/tsconfig": "0.1.1-next.1",
     "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",

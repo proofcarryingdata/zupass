@@ -1,5 +1,14 @@
 # @pcd/input-test-pcd
 
+## 0.1.1-next.3
+
+### Patch Changes
+
+- Fix compilation error.
+- Updated dependencies
+  - @pcd/pcd-types@0.1.1-next.3
+  - @pcd/tsconfig@0.1.1-next.1
+
 ## 0.1.1-next.2
 
 ### Patch Changes

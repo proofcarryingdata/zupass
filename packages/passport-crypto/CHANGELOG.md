@@ -1,5 +1,16 @@
 # @pcd/passport-crypto
 
+## 0.1.1-next.3
+
+### Patch Changes
+
+- Fix compilation error.
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.1-next.3
+  - @pcd/pcd-collection@0.1.1-next.3
+  - @pcd/pcd-types@0.1.1-next.3
+  - @pcd/tsconfig@0.1.1-next.1
+
 ## 0.1.1-next.2
 
 ### Patch Changes

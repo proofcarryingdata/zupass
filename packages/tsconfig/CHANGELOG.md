@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.1.1-next.1
+
+### Patch Changes
+
+- Fix compilation error.
+
 ## 0.1.1-next.0
 
 ### Patch Changes
