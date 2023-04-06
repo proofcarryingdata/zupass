@@ -1,5 +1,13 @@
 # @pcd/tsconfig
 
+## 0.1.1
+
+### Patch Changes
+
+- b0486ee: CommonJS
+- d64f99a: Fix compilation error.
+- 87b7e2b: Install missing dependency
+
 ## 0.1.1-next.2
 
 ### Patch Changes

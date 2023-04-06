@@ -1,5 +1,25 @@
 # @pcd/passport-interface
 
+## 0.1.1
+
+### Patch Changes
+
+- bb51a55: Testing javascript build
+- b0486ee: CommonJS
+- d64f99a: Fix compilation error.
+- d46a364: Include proper dependencies.
+- 87b7e2b: Install missing dependency
+- Updated dependencies [bb51a55]
+- Updated dependencies [b0486ee]
+- Updated dependencies [d64f99a]
+- Updated dependencies [d46a364]
+- Updated dependencies [87b7e2b]
+  - @pcd/semaphore-signature-pcd@0.1.1
+  - @pcd/semaphore-group-pcd@0.1.1
+  - @pcd/passport-crypto@0.1.1
+  - @pcd/pcd-types@0.1.1
+  - @pcd/tsconfig@0.1.1
+
 ## 0.1.1-next.4
 
 ### Patch Changes
