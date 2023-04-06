@@ -29,11 +29,6 @@ export function initZuzaluRoutes(
   console.log("[INIT] Initializing zuzalu routes");
   const { dbPool } = context;
 
-  // TODO: remove test route
-  app.get("/zuzalu/test", async (req: Request, res: Response) => {
-    res.send("Zuzalu route testing - OK!");
-  });
-
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
   app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
