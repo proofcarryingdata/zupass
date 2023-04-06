@@ -1,5 +1,15 @@
 # @pcd/semaphore-group-pcd
 
+## 0.1.2-next.0
+
+### Patch Changes
+
+- Fixed circuluar dependency
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.1.2-next.0
+  - @pcd/pcd-types@0.1.2-next.0
+  - @pcd/tsconfig@0.1.2-next.0
+
 ## 0.1.1
 
 ### Patch Changes

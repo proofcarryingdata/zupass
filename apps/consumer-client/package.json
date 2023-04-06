@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.2",
+  "version": "0.0.3-next.0",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -14,10 +14,10 @@
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "next": "^13.1.1",
-    "@pcd/passport-interface": "0.1.1",
-    "@pcd/pcd-types": "0.1.1",
-    "@pcd/semaphore-group-pcd": "0.1.1",
-    "@pcd/semaphore-identity-pcd": "0.1.1",
+    "@pcd/passport-interface": "0.1.2-next.0",
+    "@pcd/pcd-types": "0.1.2-next.0",
+    "@pcd/semaphore-group-pcd": "0.1.2-next.0",
+    "@pcd/semaphore-identity-pcd": "0.1.2-next.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "styled-components": "^5.3.6"
@@ -31,7 +31,7 @@
     "@types/styled-components": "^5.1.26",
     "eslint": "7.32.0",
     "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "0.1.1",
+    "@pcd/tsconfig": "0.1.2-next.0",
     "typescript": "^4.5.3"
   }
 }

@@ -1,5 +1,14 @@
 # @pcd/pcd-types
 
+## 0.1.2-next.0
+
+### Patch Changes
+
+- Fixed circuluar dependency
+- Updated dependencies
+  - @pcd/pcd-types@0.1.2-next.0
+  - @pcd/tsconfig@0.1.2-next.0
+
 ## 0.1.1
 
 ### Patch Changes

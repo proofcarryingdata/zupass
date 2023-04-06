@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.1.1",
+  "version": "0.1.2-next.0",
   "license": "MIT",
   "main": "./index.js",
   "types": "./index.ts",
@@ -10,8 +10,8 @@
     "postinstall": "tsc"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.1.1",
-    "@pcd/tsconfig": "0.1.1",
+    "@pcd/pcd-types": "0.1.2-next.0",
+    "@pcd/tsconfig": "0.1.2-next.0",
     "typescript": "^4.5.2"
   },
   "devDependencies": {

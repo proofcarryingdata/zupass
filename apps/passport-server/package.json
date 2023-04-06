@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.2",
+  "version": "0.0.3-next.0",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -14,9 +14,9 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
-    "@pcd/passport-interface": "0.1.1",
-    "@pcd/pcd-types": "0.1.1",
-    "@pcd/semaphore-group-pcd": "0.1.1",
+    "@pcd/passport-interface": "0.1.2-next.0",
+    "@pcd/pcd-types": "0.1.2-next.0",
+    "@pcd/semaphore-group-pcd": "0.1.2-next.0",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@babel/core": "^7.0.0",
     "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "0.1.1",
+    "@pcd/tsconfig": "0.1.2-next.0",
     "@types/cors": "^2.8.13",
     "@types/expect": "^24.3.0",
     "@types/express": "^4.17.16",
