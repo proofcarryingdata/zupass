@@ -2,12 +2,13 @@
   "name": "@pcd/semaphore-group-pcd",
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
-  "main": "./index.ts",
+  "main": "./index.js",
   "types": "./index.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "postinstall": "tsc"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",
