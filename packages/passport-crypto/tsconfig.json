@@ -1,5 +1,5 @@
 {
-  "extends": "@pcd/tsconfig/react-library.json",
+  "extends": "@pcd/tsconfig/ts-library.json",
   "include": [".", "./test"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {

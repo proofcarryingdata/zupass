@@ -6,7 +6,7 @@
   "files": [
     "base.json",
     "nextjs.json",
-    "react-library.json"
+    "ts-library.json"
   ],
   "publishConfig": {
     "access": "public"
