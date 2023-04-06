@@ -19,10 +19,12 @@ export async function initPCDRoutes(
 ): Promise<void> {
   await initPackages();
 
+  console.log("initPCDRoutes setting up /pcds/prove");
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        console.log("/pcds/prove received:", req.body);
         const request: ProveRequest = req.body;
         const pending: PendingPCD = await enqueueProofRequest(request);
         res.status(200).json(pending);
@@ -32,6 +34,7 @@ export async function initPCDRoutes(
     }
   );
 
+  console.log("initPCDRoutes setting up /pcds/supported");
   app.get(
     "/pcds/supported",
     async (req: Request, res: Response, next: NextFunction) => {
@@ -43,10 +46,12 @@ export async function initPCDRoutes(
     }
   );
 
+  console.log("initPCDRoutes setting up /pcds/status");
   app.post(
     "/pcds/status",
     async (req: Request, res: Response, next: NextFunction) => {
       try {
+        console.log("/pcds/status received:", req.body);
         const statusRequest: StatusRequest = req.body;
         const statusResponse: StatusResponse = getPendingPCDStatus(
           statusRequest.hash
