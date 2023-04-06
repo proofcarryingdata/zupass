@@ -18,6 +18,7 @@
     "@semaphore-protocol/proof": "^3.1.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0",
+    "@types/uuid": "^9.0.0",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "0.1.1-next.0",
     "@types/expect": "^24.3.0",
