@@ -28,7 +28,10 @@ export async function startServer(
     app.use(express.json());
     app.use(cors());
 
-    routes.forEach((r) => r(app, context));
+    routes.forEach((r) => {
+      console.log("startServer initializing:", r);
+      r(app, context);
+    });
 
     app.use(
       cors({
