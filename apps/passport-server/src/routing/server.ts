@@ -55,7 +55,7 @@ export async function startServer(
     }
 
     app.use((_req, res, _next) => {
-      res.status(404).render("404.ejs");
+      res.status(404).send("Not a valid API route, refer to documentation.");
     });
 
     app
