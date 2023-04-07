@@ -1,5 +1,53 @@
 # @pcd/tsconfig
 
+## 0.2.0
+
+### Minor Changes
+
+- ea46c31: Back to postinstall
+
+### Patch Changes
+
+- b589756: Fixed circuluar dependency
+
+## 0.2.0-next.1
+
+### Minor Changes
+
+- Back to postinstall
+
+## 0.1.2-next.0
+
+### Patch Changes
+
+- Fixed circuluar dependency
+
+## 0.1.1
+
+### Patch Changes
+
+- b0486ee: CommonJS
+- d64f99a: Fix compilation error.
+- 87b7e2b: Install missing dependency
+
+## 0.1.1-next.2
+
+### Patch Changes
+
+- Install missing dependency
+
+## 0.1.1-next.1
+
+### Patch Changes
+
+- Fix compilation error.
+
+## 0.1.1-next.0
+
+### Patch Changes
+
+- CommonJS
+
 ## 0.1.0
 
 ### Minor Changes

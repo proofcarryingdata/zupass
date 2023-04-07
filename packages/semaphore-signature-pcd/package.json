@@ -1,35 +1,37 @@
 {
   "name": "@pcd/semaphore-signature-pcd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
-  "main": "./index.tsx",
-  "types": "./index.tsx",
+  "main": "./index.js",
+  "types": "./index.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc --noEmit",
-    "test": "ts-mocha --exit test/**/*.spec.ts"
+    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "postinstall": "tsc",
+    "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/pcd-types": "*",
+    "@pcd/pcd-types": "0.2.0",
+    "@pcd/tsconfig": "0.2.0",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
-    "js-sha256": "^0.9.0",
-    "json-bigint": "^1.0.0"
-  },
-  "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
     "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.11",
+    "js-sha256": "^0.9.0",
+    "json-bigint": "^1.0.0",
+    "react": "^18.2.0",
+    "typescript": "^4.5.2"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.2.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
-    "react": "^18.2.0",
-    "ts-mocha": "^10.0.0",
-    "typescript": "^4.5.2"
+    "ts-mocha": "^10.0.0"
   },
   "publishConfig": {
     "access": "public"

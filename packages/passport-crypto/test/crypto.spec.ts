@@ -2,7 +2,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
-import { decryptStorage, encryptStorage } from "../src/endToEndEncryption";
+import { passportDecrypt, passportEncrypt } from "../src/endToEndEncryption";
 import { PCDCrypto } from "../src/passportCrypto";
 
 describe("Passport encryption", function () {
@@ -22,13 +22,15 @@ describe("Passport encryption", function () {
     const packages = [SemaphoreIdentityPCDPackage];
     const sourcePCDs = new PCDCollection(packages, [identityPCD]);
     const encryptionKey = pcdCrypto.generateRandomKey(256);
-    const encrypted = await encryptStorage(
-      sourcePCDs,
-      testParticipant,
+    const encrypted = await passportEncrypt(
+      JSON.stringify({
+        pcds: await sourcePCDs.serializeAll(),
+        self: testParticipant,
+      }),
       encryptionKey
     );
     const destinationPCDs = new PCDCollection(packages, []);
-    const decrypted = await decryptStorage(encrypted, encryptionKey);
+    const decrypted = await passportDecrypt(encrypted, encryptionKey);
     await destinationPCDs.deserializeAllAndAdd(decrypted.pcds);
 
     assert.equal(destinationPCDs.getAll().length, 1);

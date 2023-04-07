@@ -1,21 +1,23 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
-  "main": "./index.ts",
+  "main": "./index.js",
   "types": "./index.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsc --noEmit"
-  },
-  "devDependencies": {
-    "eslint": "^7.32.0",
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
-    "typescript": "^4.5.2"
+    "build": "tsc --noEmit",
+    "postinstall": "tsc",
+    "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/pcd-types": "*"
+    "@pcd/pcd-types": "0.2.0",
+    "@pcd/tsconfig": "0.2.0",
+    "typescript": "^4.5.2"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.2.0",
+    "eslint": "^7.32.0"
   },
   "publishConfig": {
     "access": "public"

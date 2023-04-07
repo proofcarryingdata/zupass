@@ -1,5 +1,3 @@
-import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
-import { PCDCollection } from "@pcd/pcd-collection";
 import { PCDCrypto } from "./passportCrypto";
 import { EncryptedPacket } from "./types";
 
@@ -11,26 +9,14 @@ export async function getHash(str: string) {
   return hashed;
 }
 
-export async function encryptStorage(
-  collection: PCDCollection,
-  self: ZuParticipant,
+export async function passportEncrypt(
+  data: string,
   encryptionKey: string
 ): Promise<EncryptedPacket> {
   const crypto = await cryptoPromise;
-  const serializedPCDs = await collection.serializeAll();
-
-  const encryptedStorage: EncryptedStorage = {
-    pcds: serializedPCDs,
-    self,
-  };
 
   const nonce = crypto.generateRandomKey(192);
-  const ciphertext = crypto.xchacha20Encrypt(
-    JSON.stringify(encryptedStorage),
-    nonce,
-    encryptionKey,
-    "abc"
-  );
+  const ciphertext = crypto.xchacha20Encrypt(data, nonce, encryptionKey, "abc");
 
   return {
     nonce,
@@ -38,10 +24,10 @@ export async function encryptStorage(
   };
 }
 
-export async function decryptStorage(
+export async function passportDecrypt(
   encryptedStorage: EncryptedPacket,
   encryptionKey: string
-): Promise<EncryptedStorage> {
+): Promise<any> {
   const crypto = await cryptoPromise;
 
   const plaintext = crypto.xchacha20Decrypt(
@@ -55,5 +41,5 @@ export async function decryptStorage(
     throw new Error("could not decrypt storage");
   }
 
-  return JSON.parse(plaintext) as EncryptedStorage;
+  return JSON.parse(plaintext);
 }

@@ -1,4 +1,4 @@
-import { encryptStorage, getHash, PCDCrypto } from "@pcd/passport-crypto";
+import { getHash, passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -185,9 +185,11 @@ async function finishLogin(
 async function saveParticipantPCDs(participant: ZuParticipant) {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
-  const encryptedStorage = await encryptStorage(
-    pcds,
-    participant,
+  const encryptedStorage = await passportEncrypt(
+    JSON.stringify({
+      pcds: await pcds.serializeAll(),
+      self: participant,
+    }),
     encryptionKey
   );
 
