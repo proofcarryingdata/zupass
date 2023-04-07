@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.2.0
+
+### Minor Changes
+
+- ea46c31: Back to postinstall
+
 ## 0.2.0-next.0
 
 ### Minor Changes

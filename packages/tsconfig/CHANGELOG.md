@@ -1,5 +1,15 @@
 # @pcd/tsconfig
 
+## 0.2.0
+
+### Minor Changes
+
+- ea46c31: Back to postinstall
+
+### Patch Changes
+
+- b589756: Fixed circuluar dependency
+
 ## 0.2.0-next.1
 
 ### Minor Changes

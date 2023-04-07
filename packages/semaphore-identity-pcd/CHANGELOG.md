@@ -1,5 +1,19 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.2.0
+
+### Minor Changes
+
+- ea46c31: Back to postinstall
+
+### Patch Changes
+
+- b589756: Fixed circuluar dependency
+- Updated dependencies [b589756]
+- Updated dependencies [ea46c31]
+  - @pcd/pcd-types@0.2.0
+  - @pcd/tsconfig@0.2.0
+
 ## 0.2.0-next.1
 
 ### Minor Changes
