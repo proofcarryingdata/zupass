@@ -16,8 +16,8 @@
     "typescript": "^4.5.2"
   },
   "devDependencies": {
-    "eslint": "^7.32.0",
-    "@pcd/eslint-config-custom": "0.2.0-next.0"
+    "@pcd/eslint-config-custom": "0.2.0-next.0",
+    "eslint": "^7.32.0"
   },
   "publishConfig": {
     "access": "public"
