@@ -1,5 +1,19 @@
 # @pcd/passport-crypto
 
+## 0.3.0
+
+### Minor Changes
+
+- Publish javascript versions of the packages.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-collection@0.3.0
+  - @pcd/pcd-types@0.3.0
+  - @pcd/semaphore-identity-pcd@0.3.0
+  - @pcd/tsconfig@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

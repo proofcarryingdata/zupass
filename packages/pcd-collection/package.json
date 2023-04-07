@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "main": "./index.js",
   "types": "./index.ts",
@@ -11,12 +11,12 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.2.0",
-    "@pcd/tsconfig": "0.2.0",
+    "@pcd/pcd-types": "0.3.0",
+    "@pcd/tsconfig": "0.3.0",
     "typescript": "^4.5.2"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.2.0",
+    "@pcd/eslint-config-custom": "0.3.0",
     "eslint": "^7.32.0"
   },
   "publishConfig": {

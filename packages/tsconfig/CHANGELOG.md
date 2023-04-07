@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.3.0
+
+### Minor Changes
+
+- Publish javascript versions of the packages.
+
 ## 0.2.0
 
 ### Minor Changes

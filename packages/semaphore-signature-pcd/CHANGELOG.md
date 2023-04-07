@@ -1,5 +1,17 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.3.0
+
+### Minor Changes
+
+- Publish javascript versions of the packages.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.3.0
+  - @pcd/tsconfig@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
