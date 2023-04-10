@@ -49,7 +49,7 @@ export function ProveScreen() {
   return (
     <AppContainer bg="gray">
       <Spacer h={24} />
-      <AppHeader />
+      <AppHeader showSettings={false} />
       <Spacer h={24} />
       <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />
