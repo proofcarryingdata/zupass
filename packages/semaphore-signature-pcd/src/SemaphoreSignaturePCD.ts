@@ -25,7 +25,7 @@ import { v4 as uuid } from "uuid";
  * so that they cannot be reused by malicious actors across different
  * applications.
  */
-const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
+export const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
   "hardcoded-nullifier"
 );
 

@@ -6,17 +6,24 @@ import styled from "styled-components";
  */
 export const PendingPCDStatusDisplay = ({
   status,
+  pendingPCDError,
 }: {
   status: PendingPCDStatus;
+  pendingPCDError: string;
 }) => {
   const StyledDiv = styled.div`
-    margin: 10px 0 10px 0;
+    margin: 10px 0 5px 0;
     border: 1px solid ${statusColor[status]};
     padding: 5px;
     color: ${statusColor[status]};
   `;
 
-  return <StyledDiv>Pending PCD Status: {status}</StyledDiv>;
+  return (
+    <>
+      <StyledDiv>Pending PCD Status: {status}</StyledDiv>
+      {pendingPCDError && <StyledDiv>{pendingPCDError}</StyledDiv>}
+    </>
+  );
 };
 
 const statusColor: Record<PendingPCDStatus, string> = {

@@ -58,9 +58,10 @@ export function usePassportResponse() {
 export function usePendingPCD(
   pendingPCDStr: string,
   passportURL: string
-): [PendingPCDStatus, string] {
+): [PendingPCDStatus, string, string] {
   const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
   const [pcdStr, setPCDStr] = useState("");
+  const [pendingPCDError, setPendingPCDError] = useState("");
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
@@ -84,14 +85,24 @@ export function usePendingPCD(
           .then((response) => response.json())
           .then((data: StatusResponse) => {
             setStatus(data.status);
-            if (data.status === PendingPCDStatus.COMPLETE) {
+            if (
+              data.status === PendingPCDStatus.COMPLETE &&
+              data.serializedPCD !== undefined
+            ) {
               setPCDStr(data.serializedPCD);
+              clearInterval(interval);
+            } else if (
+              data.status === PendingPCDStatus.ERROR &&
+              data.error !== undefined
+            ) {
+              setPendingPCDError(data.error);
               clearInterval(interval);
             }
           })
           .catch((error) => {
             setStatus(PendingPCDStatus.ERROR);
-            console.error(error);
+            setPendingPCDError(error);
+            clearInterval(interval);
           });
       }
     };
@@ -101,7 +112,7 @@ export function usePendingPCD(
     return () => clearInterval(interval);
   }, [pendingPCDStr, passportURL]);
 
-  return [status, pcdStr];
+  return [status, pcdStr, pendingPCDError];
 }
 
 /**

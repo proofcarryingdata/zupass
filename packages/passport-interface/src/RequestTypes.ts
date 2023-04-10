@@ -34,9 +34,14 @@ export interface StatusResponse {
   status: PendingPCDStatus;
 
   /**
-   * If status === COMPLETE, JSON.stringify(SerializedPCD), else ""
+   * If status === COMPLETE, JSON.stringify(SerializedPCD), else undefined
    */
-  serializedPCD: string;
+  serializedPCD: string | undefined;
+
+  /**
+   * If status === ERROR, error string from server, else undefined;
+   */
+  error: string | undefined;
 }
 
 export interface SupportedPCDsResponse {

@@ -10,6 +10,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
 } from "@pcd/semaphore-identity-pcd";
+import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   FullProof,
   generateProof,
@@ -96,12 +97,12 @@ export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
   if (!initArgs) {
-    throw new Error("cannot make group proof: init has not been called yet");
+    throw new Error("Cannot make group proof: init has not been called yet");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
-    throw new Error("cannot make group proof: missing semaphore identity PCD");
+    throw new Error("Cannot make group proof: missing semaphore identity PCD");
   }
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -109,15 +110,24 @@ export async function prove(
 
   const serializedGroup = args.group.value;
   if (!serializedGroup) {
-    throw new Error("cannot make group proof: missing semaphore group");
+    throw new Error("Cannot make group proof: missing semaphore group");
   }
 
   if (!args.externalNullifier.value) {
-    throw new Error("cannot make group proof: missing externalNullifier");
+    throw new Error("Cannot make group proof: missing externalNullifier");
   }
 
   if (!args.signal.value) {
-    throw new Error("cannot make group proof: missing signal");
+    throw new Error("Cannot make group proof: missing signal");
+  }
+
+  // restrict the group signature from having the same nullifier as the static
+  // signature CPD externalNullifier, which would break anonymity of users if the
+  // adversary also has access to a specific signature
+  if (BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER) {
+    throw new Error(
+      "Cannot make group proof: same externalNullifier as SignaturePCD, which would break anonymity"
+    );
   }
 
   const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
