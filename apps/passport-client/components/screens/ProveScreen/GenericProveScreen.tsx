@@ -10,6 +10,7 @@ import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDArgs } from "../../shared/PCDArgs";
 
@@ -25,11 +26,13 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   const [state, dispatch] = useContext(DispatchContext);
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(req.args)));
   const [error, setError] = useState<Error | undefined>();
+  const [proving, setProving] = useState(false);
 
   const pcdPackage = state.pcds.getPackage(req.pcdType);
 
   const onProveClick = useCallback(async () => {
     try {
+      setProving(true);
       if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: req.pcdType,
@@ -48,6 +51,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
       }
     } catch (e) {
       setError(e);
+      setProving(false);
     }
   }, [
     args,
@@ -87,7 +91,11 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
           <Spacer h={16} />
         </>
       )}
-      <Button onClick={onProveClick}>PROVE</Button>
+      {proving ? (
+        <RippleLoader />
+      ) : (
+        <Button onClick={onProveClick}>Prove</Button>
+      )}
       <Spacer h={64} />
     </Container>
   );

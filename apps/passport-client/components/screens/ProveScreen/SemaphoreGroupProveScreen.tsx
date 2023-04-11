@@ -15,6 +15,7 @@ import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
 import { Button } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreGroupProveScreen({
   req,
@@ -77,10 +78,12 @@ export function SemaphoreGroupProveScreen({
     lines.push(
       <p>You're proving that you're one of {group.members.length} members</p>
     );
-    lines.push(<Button onClick={onProve}>Prove</Button>);
   }
-  if (proving) {
-    lines.push(<p>Proving...</p>);
+
+  if (!proving) {
+    lines.push(<Button onClick={onProve}>Prove</Button>);
+  } else {
+    lines.push(<RippleLoader />);
   }
 
   return (
