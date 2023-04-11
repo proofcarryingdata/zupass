@@ -134,7 +134,7 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     pendingPCDResponse.set(currentHash, {
       status: PendingPCDStatus.ERROR,
       serializedPCD: undefined,
-      error: e.toString(),
+      error: e.message,
     });
   }
 
