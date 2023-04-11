@@ -12,6 +12,7 @@ const opts: BuildOptions = {
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
       process: true,
+      buffer: true,
     }),
   ],
   loader: {
