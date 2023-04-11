@@ -90,6 +90,7 @@ export function usePendingPCD(
               data.serializedPCD !== undefined
             ) {
               setPCDStr(data.serializedPCD);
+              setPendingPCDError("");
               clearInterval(interval);
             } else if (
               data.status === PendingPCDStatus.ERROR &&
