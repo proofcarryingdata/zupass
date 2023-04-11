@@ -56,7 +56,6 @@ export function initPCDRoutes(
         const statusResponse: StatusResponse = getPendingPCDStatus(
           statusRequest.hash
         );
-        console.log("Status Response", statusResponse);
         res.json(statusResponse);
       } catch (e) {
         console.error("/pcds/status error:", e);
