@@ -25,7 +25,7 @@ import { requestProofFromPassport } from "../../src/util";
 export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, serverPCDStr, pendingPCDError] = usePendingPCD(
+  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );

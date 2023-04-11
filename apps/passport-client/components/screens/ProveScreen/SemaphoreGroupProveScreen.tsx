@@ -36,6 +36,7 @@ export function SemaphoreGroupProveScreen({
   // Once that's done & user clicks Prove, create a zero-knowledge proof
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
+  const [error, setError] = useState<Error | undefined>();
 
   const onProve = useCallback(async () => {
     try {
