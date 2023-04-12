@@ -1,5 +1,5 @@
 import {
-  requestZuzaluMembershipUrl,
+  openZuzaluMembershipPopup,
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
@@ -14,7 +14,6 @@ import {
   PASSPORT_URL,
   SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -66,7 +65,16 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestZuzaluMembershipProof(serverProving)}
+          onClick={() =>
+            openZuzaluMembershipPopup(
+              PASSPORT_URL,
+              window.location.origin + "/popup",
+              SEMAPHORE_GROUP_URL,
+              "1337",
+              "12345",
+              serverProving
+            )
+          }
           disabled={valid}
         >
           Request Zuzalu Membership Proof
@@ -103,18 +111,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof(proveOnServer: boolean) {
-  const proofUrl = requestZuzaluMembershipUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL,
-    "1337",
-    "12345",
-    proveOnServer
-  );
-
-  requestProofFromPassport(proofUrl);
 }

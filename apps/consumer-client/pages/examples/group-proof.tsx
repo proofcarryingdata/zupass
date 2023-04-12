@@ -1,5 +1,6 @@
 import {
   constructPassportPcdGetRequestUrl,
+  openPassportPopup,
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
@@ -16,7 +17,6 @@ import {
   PASSPORT_URL,
   SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use the generic prove screen to
@@ -118,11 +118,12 @@ export default function Page() {
 
 // Show the Passport popup, ask the user to show anonymous membership.
 function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
+  const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
     PASSPORT_URL,
-    window.location.origin + "/popup",
+    popupUrl,
     SemaphoreGroupPCDPackage.name,
     {
       externalNullifier: {
@@ -163,5 +164,5 @@ function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
     }
   );
 
-  requestProofFromPassport(proofUrl);
+  openPassportPopup(popupUrl, proofUrl);
 }

@@ -1,5 +1,5 @@
 import {
-  requestSignedZuzaluUUIDUrl,
+  openSignedZuzaluUUIDPopup,
   useFetchParticipant,
   usePassportPopupMessages,
   usePCDMultiplexer,
@@ -11,7 +11,6 @@ import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -55,7 +54,16 @@ export default function Page() {
         Passport Server, including their name, email, and role.
       </p>
       <ExampleContainer>
-        <button onClick={() => requestSignedZuID(serverProving)}>
+        <button
+          disabled={signatureProofValid}
+          onClick={() =>
+            openSignedZuzaluUUIDPopup(
+              PASSPORT_URL,
+              window.location.origin + "/popup",
+              serverProving
+            )
+          }
+        >
           Request UUID
         </button>
         <label>
@@ -106,14 +114,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup. Ask for the user's Zuzalu ID.
-function requestSignedZuID(serverProving: boolean) {
-  const proofUrl = requestSignedZuzaluUUIDUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    serverProving
-  );
-  requestProofFromPassport(proofUrl);
 }

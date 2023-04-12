@@ -7,21 +7,22 @@ import {
 } from "@pcd/semaphore-group-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
+import { openPassportPopup } from "./PassportPopup";
 import { useProof } from "./PCDIntegration";
 
-export function requestZuzaluMembershipUrl(
+export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
+  popupUrl: string,
   urlToSemaphoreGroup: string,
   externalNullifier?: string,
   signal?: string,
   proveOnServer?: boolean
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreGroupPCDPackage.name,
     {
       externalNullifier: {
@@ -50,7 +51,7 @@ export function requestZuzaluMembershipUrl(
     }
   );
 
-  return url;
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**

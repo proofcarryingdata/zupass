@@ -1,5 +1,5 @@
 import {
-  requestSemaphoreSignatureUrl,
+  openSemaphoreSignaturePopup,
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
@@ -10,7 +10,6 @@ import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -54,7 +53,13 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={useCallback(
-            () => requestSemaphoreSignature(messageToSign, serverProving),
+            () =>
+              openSemaphoreSignaturePopup(
+                PASSPORT_URL,
+                window.location.origin + "/popup",
+                messageToSign,
+                serverProving
+              ),
             [messageToSign, serverProving]
           )}
         >
@@ -95,18 +100,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to sign a message with their sema key.
-function requestSemaphoreSignature(
-  messageToSign: string,
-  proveOnServer: boolean
-) {
-  const proofUrl = requestSemaphoreSignatureUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    messageToSign,
-    proveOnServer
-  );
-  requestProofFromPassport(proofUrl);
 }

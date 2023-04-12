@@ -2,19 +2,20 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
+import { openPassportPopup } from "./PassportPopup";
 import { useProof } from "./PCDIntegration";
 
-export function requestSemaphoreSignatureUrl(
+export function openSemaphoreSignaturePopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
+  popupUrl: string,
   messageToSign: string,
   proveOnServer?: boolean
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -33,24 +34,24 @@ export function requestSemaphoreSignatureUrl(
     }
   );
 
-  return url;
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**
- * A function specifically for zuzalu apps - requests a sempahore signature
+ * A function specifically for Zuzalu apps - requests a sempahore signature
  * PCD from the passport which contains the user's uuid, which can be used
  * to fetch user details from the passport server.
  */
-export function requestSignedZuzaluUUIDUrl(
+export function openSignedZuzaluUUIDPopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
+  popupUrl: string,
   proveOnServer?: boolean
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -68,7 +69,8 @@ export function requestSignedZuzaluUUIDUrl(
       proveOnServer: proveOnServer,
     }
   );
-  return url;
+
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**

@@ -1,5 +1,6 @@
 import {
   constructPassportPcdGetRequestUrl,
+  openPassportPopup,
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
@@ -12,7 +13,6 @@ import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use the generic prove screen to
@@ -91,11 +91,12 @@ export default function Page() {
 }
 
 function requestSemaphoreSignature(proveOnServer: boolean) {
+  const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     PASSPORT_URL,
-    window.location.origin + "/popup",
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -119,5 +120,5 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
     }
   );
 
-  requestProofFromPassport(proofUrl);
+  openPassportPopup(popupUrl, proofUrl);
 }
