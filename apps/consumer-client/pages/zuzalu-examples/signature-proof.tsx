@@ -1,6 +1,6 @@
 import {
   requestSemaphoreSignatureUrl,
-  usePassportResponse,
+  usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
@@ -17,10 +17,8 @@ import { requestProofFromPassport } from "../../src/util";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
-  const [messageToSign, setMessageToSign] = useState<string>("");
-
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -28,6 +26,9 @@ export default function Page() {
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
+
+  const [messageToSign, setMessageToSign] = useState<string>("");
+  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
