@@ -54,6 +54,12 @@ export function SemaphoreGroupProveScreen({
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
+
+        // We remove the group from the claim; we already loaded the
+        // group from a URL and can do it again on the consumer-client side to
+        // avoid sending a large group over
+        pcd.claim.group.members = [];
+
         const serializedPCD = await serialize(pcd);
         window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
           serializedPCD

@@ -1,6 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
-  deserializeSemaphoreGroup,
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -55,7 +54,8 @@ export function requestZuzaluMembershipUrl(
 
 /**
  * React hook which can be used on 3rd party application websites that
- * parses and verifies a PCD representing a Semaphore group membership proof.
+ * parses and verifies a PCD representing a Semaphore group membership proof from
+ * a specific semaphoreGroupUrl.
  */
 export function useSemaphorePassportProof(
   semaphoreGroupUrl: string,
@@ -102,11 +102,11 @@ async function verifyProof(
   serializedExpectedGroup: SerializedSemaphoreGroup
 ): Promise<boolean> {
   const { verify } = SemaphoreGroupPCDPackage;
+
+  // We add the group back to the claim; for client-side proofs the list of
+  // members is not sent to avoid long URL redirects from the passport
+  pcd.claim.group = serializedExpectedGroup;
+
   const verified = await verify(pcd);
-  if (!verified) return false;
-
-  const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
-  const pcdGroup = deserializeSemaphoreGroup(pcd.claim.group);
-
-  return expectedGroup.root.toString() === pcdGroup.root.toString();
+  return verified;
 }
