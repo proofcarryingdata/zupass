@@ -3,15 +3,15 @@ import { useEffect, useState } from "react";
 import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
 import { StatusRequest, StatusResponse } from "./RequestTypes";
 
-export function useProof<T extends PCDPackage>(
+export function useDeserializedPCD<T extends PCDPackage>(
   proofPackage: T,
-  proofEnc: string
+  serializedPCD: string
 ) {
   const [proof, setProof] = useState<PCDOf<T>>();
 
   useEffect(() => {
-    if (proofEnc) {
-      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
+    if (serializedPCD) {
+      const parsedPCD = JSON.parse(decodeURIComponent(serializedPCD));
       if (parsedPCD.type !== proofPackage.name) {
         return;
       }
@@ -19,7 +19,7 @@ export function useProof<T extends PCDPackage>(
         setProof(pcd as any);
       });
     }
-  }, [proofPackage, proofEnc, setProof]);
+  }, [proofPackage, serializedPCD, setProof]);
 
   return proof;
 }

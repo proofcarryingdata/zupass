@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
-import { useProof } from "./PCDIntegration";
+import { useDeserializedPCD } from "./PCDIntegration";
 
 /**
  * Opens a passport popup to generate a Zuzalu membership proof. popUrl must be
@@ -64,16 +64,19 @@ export function openZuzaluMembershipPopup(
  */
 export function useSemaphorePassportProof(
   semaphoreGroupUrl: string,
-  proofStr: string
+  pcdStr: string
 ) {
   const [error, setError] = useState<Error | undefined>();
-  const semaphoreProof = useProof(SemaphoreGroupPCDPackage, proofStr);
+  const semaphoreGroupPCD = useDeserializedPCD(
+    SemaphoreGroupPCDPackage,
+    pcdStr
+  );
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
   useEffect(() => {
     (async () => {
-      if (!semaphoreProof) return;
+      if (!semaphoreGroupPCD) return;
 
       try {
         const res = await fetch(semaphoreGroupUrl);
@@ -84,18 +87,18 @@ export function useSemaphorePassportProof(
         setError(e as Error);
       }
     })();
-  }, [semaphoreProof, semaphoreGroupUrl]);
+  }, [semaphoreGroupPCD, semaphoreGroupUrl]);
 
   // Verify the proof
   const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
   useEffect(() => {
-    if (semaphoreProof && semaphoreGroup) {
-      verifyProof(semaphoreProof, semaphoreGroup).then(setValid);
+    if (semaphoreGroupPCD && semaphoreGroup) {
+      verifyProof(semaphoreGroupPCD, semaphoreGroup).then(setValid);
     }
-  }, [semaphoreProof, semaphoreGroup, setValid]);
+  }, [semaphoreGroupPCD, semaphoreGroup, setValid]);
 
   return {
-    proof: semaphoreProof,
+    proof: semaphoreGroupPCD,
     group: semaphoreGroup,
     valid: semaphoreProofValid,
     error,
