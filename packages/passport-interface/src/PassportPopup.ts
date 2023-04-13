@@ -31,14 +31,14 @@ export function usePassportPopupMessages() {
  * React hook to be used on whatever route the passport popup is redirected from.
  * Sends messages back to original page to be processed by `usePassportPopupMessages`.
  */
-export function usePassportPopupRedirect() {
+export function usePassportPopupSetup() {
   // In the happy case, this page redirects immediately.
   // If not, show an error.
-  const [err, setErr] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (window.opener == null) {
-      setErr("Not a popup window");
+      setError("Not a popup window");
       return;
     }
 
@@ -66,12 +66,12 @@ export function usePassportPopupRedirect() {
     }
   }, []);
 
-  return err;
+  return error;
 }
 
 /**
  * Open up a passport popup window using proofUrl from specific PCD integrations
- * and popupUrl, which is the route where the usePassportPopupRedirect hook is being
+ * and popupUrl, which is the route where the usePassportPopupSetup hook is being
  * served from.
  */
 export function openPassportPopup(popupUrl: string, proofUrl: string) {

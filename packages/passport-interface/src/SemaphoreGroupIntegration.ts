@@ -10,6 +10,10 @@ import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
 import { useProof } from "./PCDIntegration";
 
+/**
+ * Opens a passport popup to generate a Zuzalu membership proof. popUrl must be
+ * the route where the usePassportPopupSetup hook is being served from.
+ */
 export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
   popupUrl: string,

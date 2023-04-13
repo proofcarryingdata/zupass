@@ -5,6 +5,10 @@ import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
 import { useProof } from "./PCDIntegration";
 
+/**
+ * Opens a passport popup to generate a Semaphore signature proof. popUrl must be
+ * the route where the usePassportPopupSetup hook is being served from.
+ */
 export function openSemaphoreSignaturePopup(
   urlToPassportWebsite: string,
   popupUrl: string,
@@ -38,9 +42,10 @@ export function openSemaphoreSignaturePopup(
 }
 
 /**
- * A function specifically for Zuzalu apps - requests a sempahore signature
- * PCD from the passport which contains the user's uuid, which can be used
- * to fetch user details from the passport server.
+ * Opens a passport popup to generate a Semaphore signature proof on the user's
+ * Zuzalu DB uuid, which can then be used to fetch user details from the passport
+ * server. Built specifically for Zuzalu apps. popUrl must be the route where the
+ * usePassportPopupSetup hook is being served from.
  */
 export function openSignedZuzaluUUIDPopup(
   urlToPassportWebsite: string,
