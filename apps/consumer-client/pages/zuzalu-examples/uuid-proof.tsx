@@ -2,14 +2,11 @@ import {
   openSignedZuzaluUUIDPopup,
   useFetchParticipant,
   usePassportPopupMessages,
-  usePCDMultiplexer,
-  usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 
 /**
@@ -18,13 +15,9 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
  * party developer.
  */
 export default function Page() {
-  // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
-  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
-    passportPendingPCDStr,
-    PASSPORT_SERVER_URL
-  );
-  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
+  // We only do client-side proofs for Zuzalu UUID proofs, which means we can
+  // ignore any PendingPCDs that would result from server-side proving
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -39,8 +32,6 @@ export default function Page() {
 
   // Finally, once we have the UUID, fetch the participant data from Passport.
   const { participant } = useFetchParticipant(PASSPORT_SERVER_URL, uuid);
-
-  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -60,30 +51,12 @@ export default function Page() {
             openSignedZuzaluUUIDPopup(
               PASSPORT_URL,
               window.location.origin + "/popup",
-              serverProving
+              "consumer-client"
             )
           }
         >
           Request UUID
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={serverProving}
-            onChange={() => {
-              setServerProving((checked: boolean) => !checked);
-            }}
-          />
-          server-side proof
-        </label>
-        {passportPendingPCDStr && (
-          <>
-            <PendingPCDStatusDisplay
-              status={pendingPCDStatus}
-              pendingPCDError={pendingPCDError}
-            />
-          </>
-        )}
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
