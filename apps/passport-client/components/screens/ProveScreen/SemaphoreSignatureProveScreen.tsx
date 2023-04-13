@@ -70,10 +70,8 @@ export function SemaphoreSignatureProveScreen({
         : "This website";
     lines.push(
       <p>
-        <b>
-          <u>{websiteName}</u>
-        </b>{" "}
-        will receive: your name, your email, and your Semaphore public key.
+        <b>{websiteName}</b> will receive: your name, your email, and your
+        Semaphore public key.
       </p>
     );
     lines.push("Make sure you trust this website!");
