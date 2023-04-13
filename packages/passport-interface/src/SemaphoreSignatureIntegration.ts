@@ -100,7 +100,7 @@ export function useSemaphoreSignatureProof(pcdStr: string) {
   }, [semaphoreSignaturePCD]);
 
   return {
-    semaphoreSignaturePCD,
+    signatureProof: semaphoreSignaturePCD,
     signatureProofValid,
   };
 }
