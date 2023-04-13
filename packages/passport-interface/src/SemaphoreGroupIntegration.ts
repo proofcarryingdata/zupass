@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
-import { useDeserializedPCD } from "./PCDIntegration";
+import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
  * Opens a passport popup to generate a Zuzalu membership proof. popUrl must be
@@ -67,10 +67,7 @@ export function useSemaphorePassportProof(
   pcdStr: string
 ) {
   const [error, setError] = useState<Error | undefined>();
-  const semaphoreGroupPCD = useDeserializedPCD(
-    SemaphoreGroupPCDPackage,
-    pcdStr
-  );
+  const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();

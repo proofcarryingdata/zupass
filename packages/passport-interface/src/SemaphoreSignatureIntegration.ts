@@ -3,7 +3,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
-import { useDeserializedPCD } from "./PCDIntegration";
+import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
  * Opens a passport popup to generate a Semaphore signature proof. popUrl must be
@@ -83,7 +83,7 @@ export function openSignedZuzaluUUIDPopup(
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
 export function useSemaphoreSignatureProof(pcdStr: string) {
-  const semaphoreSignaturePCD = useDeserializedPCD(
+  const semaphoreSignaturePCD = useSerializedPCD(
     SemaphoreSignaturePCDPackage,
     pcdStr
   );

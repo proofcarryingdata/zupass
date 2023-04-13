@@ -1,11 +1,11 @@
 import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
 
-export function useDeserializedPCD<T extends PCDPackage>(
+export function useSerializedPCD<T extends PCDPackage>(
   proofPackage: T,
   serializedPCD: string
 ) {
-  const [proof, setProof] = useState<PCDOf<T>>();
+  const [pcd, setPCD] = useState<PCDOf<T>>();
 
   useEffect(() => {
     if (serializedPCD) {
@@ -14,10 +14,10 @@ export function useDeserializedPCD<T extends PCDPackage>(
         return;
       }
       proofPackage.deserialize(parsedPCD.pcd).then((pcd) => {
-        setProof(pcd as any);
+        setPCD(pcd as any);
       });
     }
-  }, [proofPackage, serializedPCD, setProof]);
+  }, [proofPackage, serializedPCD, setPCD]);
 
-  return proof;
+  return pcd;
 }
