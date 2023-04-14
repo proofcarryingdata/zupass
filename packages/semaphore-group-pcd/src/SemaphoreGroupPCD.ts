@@ -10,6 +10,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
 } from "@pcd/semaphore-identity-pcd";
+import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   FullProof,
   generateProof,
@@ -96,12 +97,12 @@ export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
   if (!initArgs) {
-    throw new Error("cannot make group proof: init has not been called yet");
+    throw new Error("Cannot make group proof: init has not been called yet");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
-    throw new Error("cannot make group proof: missing semaphore identity PCD");
+    throw new Error("Cannot make group proof: missing semaphore identity PCD");
   }
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -109,15 +110,30 @@ export async function prove(
 
   const serializedGroup = args.group.value;
   if (!serializedGroup) {
-    throw new Error("cannot make group proof: missing semaphore group");
+    throw new Error("Cannot make group proof: missing semaphore group");
   }
 
   if (!args.externalNullifier.value) {
-    throw new Error("cannot make group proof: missing externalNullifier");
+    throw new Error("Cannot make group proof: missing externalNullifier");
   }
 
   if (!args.signal.value) {
-    throw new Error("cannot make group proof: missing signal");
+    throw new Error("Cannot make group proof: missing signal");
+  }
+
+  // Restrict the SemaphoreGroupPCD from having the same externalNullifier as the
+  // SemaphoreSignaturePCD. The nullifierHash in a SemaphoreGroupPCD is supposed
+  // to be a unique string that is one-to-one with a specific member of the group,
+  // but unlinkable to any specific member. However, if an adversarial SemaphoreGroupPCD
+  // is set up with the same externalNullifier as the SemaphoreSignaturePCD, then the
+  // outputted nullifierHash for a user will be the same as the nullifierHash outputted
+  // from the same user's SemaphoreSignaturePCD. Thus, an adversary could link a
+  // nullifierHash back to a user if they also have access to a signature from them,
+  // which is unintended behavior that would break their anonymity.
+  if (BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER) {
+    throw new Error(
+      "Cannot make group proof: same externalNullifier as SemaphoreSignaturePCD, which would break anonymity"
+    );
   }
 
   const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);

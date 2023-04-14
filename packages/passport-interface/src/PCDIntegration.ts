@@ -58,8 +58,11 @@ export function usePassportResponse() {
 export function usePendingPCD(
   pendingPCDStr: string,
   passportURL: string
-): [PendingPCDStatus, string] {
-  const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
+): [PendingPCDStatus, string, string] {
+  const [pendingPCDStatus, setPendingPCDStatus] = useState<PendingPCDStatus>(
+    PendingPCDStatus.NONE
+  );
+  const [pendingPCDError, setPendingPCDError] = useState("");
   const [pcdStr, setPCDStr] = useState("");
 
   useEffect(() => {
@@ -83,15 +86,26 @@ export function usePendingPCD(
         })
           .then((response) => response.json())
           .then((data: StatusResponse) => {
-            setStatus(data.status);
-            if (data.status === PendingPCDStatus.COMPLETE) {
+            setPendingPCDStatus(data.status);
+            if (
+              data.status === PendingPCDStatus.COMPLETE &&
+              data.serializedPCD !== undefined
+            ) {
               setPCDStr(data.serializedPCD);
+              setPendingPCDError("");
+              clearInterval(interval);
+            } else if (
+              data.status === PendingPCDStatus.ERROR &&
+              data.error !== undefined
+            ) {
+              setPendingPCDError(data.error);
               clearInterval(interval);
             }
           })
           .catch((error) => {
-            setStatus(PendingPCDStatus.ERROR);
-            console.error(error);
+            setPendingPCDStatus(PendingPCDStatus.ERROR);
+            setPendingPCDError(error);
+            clearInterval(interval);
           });
       }
     };
@@ -101,7 +115,7 @@ export function usePendingPCD(
     return () => clearInterval(interval);
   }, [pendingPCDStr, passportURL]);
 
-  return [status, pcdStr];
+  return [pendingPCDStatus, pendingPCDError, pcdStr];
 }
 
 /**

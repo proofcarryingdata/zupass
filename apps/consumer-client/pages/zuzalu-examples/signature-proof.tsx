@@ -21,7 +21,7 @@ export default function Page() {
 
   const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
   const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );
@@ -71,7 +71,10 @@ export default function Page() {
         </label>
         {passportPendingPCDStr && (
           <>
-            <PendingPCDStatusDisplay status={pendingPCDStatus} />
+            <PendingPCDStatusDisplay
+              status={pendingPCDStatus}
+              pendingPCDError={pendingPCDError}
+            />
           </>
         )}
         {signatureProof != null && (
