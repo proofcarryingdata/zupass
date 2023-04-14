@@ -19,7 +19,7 @@
     "@semaphore-protocol/identity": "^3.2.3",
     "@types/libsodium-wrappers": "^0.7.10",
     "@types/mocha": "^10.0.1",
-    "@types/react": "^17.0.37",
+    "@types/react": "^18.0.22",
     "@types/react-dom": "^17.0.11",
     "libsodium-wrappers": "^0.7.11",
     "react": "^18.2.0",

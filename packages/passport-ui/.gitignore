@@ -1,3 +1,4 @@
 *.d.ts
 *.d.ts.map
 *.js
+!.eslintrc.js
