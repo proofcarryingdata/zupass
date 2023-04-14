@@ -13,7 +13,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   const onAddClick = useCallback(async () => {
     await dispatch({ type: "add-pcd", pcd: request.pcd });
-    window.location.hash = "#/";
+    window.close();
   }, [dispatch, request.pcd]);
 
   const { error, pcd } = useDeserialized(request.pcd);
