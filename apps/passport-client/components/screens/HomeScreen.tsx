@@ -40,7 +40,7 @@ export function HomeScreen() {
   return (
     <AppContainer bg="gray">
       <Spacer h={24} />
-      <AppHeader />
+      <AppHeader showSettings={true} />
       <Spacer h={24} />
       <Placeholder minH={540}>
         <CardElem card={cards[sel]} expanded />

@@ -6,7 +6,7 @@ import { CenterColumn, Spacer, TextCenter } from "../core";
 import { Button, CircleButton, LinkButton } from "../core/Button";
 import { icons } from "../icons";
 
-export function AppHeader() {
+export function AppHeader({ showSettings }: { showSettings: boolean }) {
   const [modal, setModal] = useState("");
   const openInfo = useCallback(() => setModal("info"), [setModal]);
   const openSettings = useCallback(() => setModal("settings"), [setModal]);
@@ -26,9 +26,11 @@ export function AppHeader() {
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
         <img src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
-      <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <img src={icons.settingsAccent} width={34} height={34} />
-      </CircleButton>
+      {showSettings && (
+        <CircleButton diameter={34} padding={8} onClick={openSettings}>
+          <img src={icons.settingsAccent} width={34} height={34} />
+        </CircleButton>
+      )}
       {modal !== "" && (
         <Modal onClose={close}>
           {modal === "info" && <InfoModal />}

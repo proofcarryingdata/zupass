@@ -67,7 +67,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   return (
     <Container>
       <Spacer h={24} />
-      <AppHeader />
+      <AppHeader showSettings={false} />
       <Spacer h={24} />
       <H1>🔑 &nbsp; {pageTitle}</H1>
       {req.options?.description && (
