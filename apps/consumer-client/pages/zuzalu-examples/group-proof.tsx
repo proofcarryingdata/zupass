@@ -1,6 +1,6 @@
 import {
-  requestZuzaluMembershipUrl,
-  usePassportResponse,
+  openZuzaluMembershipPopup,
+  usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
   useSemaphorePassportProof,
@@ -14,15 +14,14 @@ import {
   PASSPORT_URL,
   SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -32,6 +31,8 @@ export default function Page() {
     SEMAPHORE_GROUP_URL,
     pcdStr
   );
+
+  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -64,7 +65,16 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestZuzaluMembershipProof(serverProving)}
+          onClick={() =>
+            openZuzaluMembershipPopup(
+              PASSPORT_URL,
+              window.location.origin + "/popup",
+              SEMAPHORE_GROUP_URL,
+              "1337",
+              "12345",
+              serverProving
+            )
+          }
           disabled={valid}
         >
           Request Zuzalu Membership Proof
@@ -101,18 +111,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof(proveOnServer: boolean) {
-  const proofUrl = requestZuzaluMembershipUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL,
-    "1337",
-    "12345",
-    proveOnServer
-  );
-
-  requestProofFromPassport(proofUrl);
 }

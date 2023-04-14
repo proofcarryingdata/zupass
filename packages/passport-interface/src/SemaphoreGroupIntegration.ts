@@ -7,21 +7,27 @@ import {
 } from "@pcd/semaphore-group-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { useProof } from "./PCDIntegration";
+import { openPassportPopup } from "./PassportPopup";
+import { useSerializedPCD } from "./SerializedPCDIntegration";
 
-export function requestZuzaluMembershipUrl(
+/**
+ * Opens a passport popup to generate a Zuzalu membership proof.
+ *
+ * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ */
+export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
+  popupUrl: string,
   urlToSemaphoreGroup: string,
   externalNullifier?: string,
   signal?: string,
   proveOnServer?: boolean
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreGroupPCDPackage.name,
     {
       externalNullifier: {
@@ -50,7 +56,7 @@ export function requestZuzaluMembershipUrl(
     }
   );
 
-  return url;
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**
@@ -59,16 +65,16 @@ export function requestZuzaluMembershipUrl(
  */
 export function useSemaphorePassportProof(
   semaphoreGroupUrl: string,
-  proofStr: string
+  pcdStr: string
 ) {
   const [error, setError] = useState<Error | undefined>();
-  const semaphoreProof = useProof(SemaphoreGroupPCDPackage, proofStr);
+  const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
 
   // Meanwhile, load the group so that we can verify against it
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
   useEffect(() => {
     (async () => {
-      if (!semaphoreProof) return;
+      if (!semaphoreGroupPCD) return;
 
       try {
         const res = await fetch(semaphoreGroupUrl);
@@ -79,18 +85,18 @@ export function useSemaphorePassportProof(
         setError(e as Error);
       }
     })();
-  }, [semaphoreProof, semaphoreGroupUrl]);
+  }, [semaphoreGroupPCD, semaphoreGroupUrl]);
 
   // Verify the proof
   const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
   useEffect(() => {
-    if (semaphoreProof && semaphoreGroup) {
-      verifyProof(semaphoreProof, semaphoreGroup).then(setValid);
+    if (semaphoreGroupPCD && semaphoreGroup) {
+      verifyProof(semaphoreGroupPCD, semaphoreGroup).then(setValid);
     }
-  }, [semaphoreProof, semaphoreGroup, setValid]);
+  }, [semaphoreGroupPCD, semaphoreGroup, setValid]);
 
   return {
-    proof: semaphoreProof,
+    proof: semaphoreGroupPCD,
     group: semaphoreGroup,
     valid: semaphoreProofValid,
     error,

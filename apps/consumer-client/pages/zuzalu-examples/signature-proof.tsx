@@ -1,6 +1,6 @@
 import {
-  requestSemaphoreSignatureUrl,
-  usePassportResponse,
+  openSemaphoreSignaturePopup,
+  usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
@@ -10,17 +10,14 @@ import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
-  const [messageToSign, setMessageToSign] = useState<string>("");
-
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -28,6 +25,9 @@ export default function Page() {
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
+
+  const [messageToSign, setMessageToSign] = useState<string>("");
+  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -53,7 +53,13 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={useCallback(
-            () => requestSemaphoreSignature(messageToSign, serverProving),
+            () =>
+              openSemaphoreSignaturePopup(
+                PASSPORT_URL,
+                window.location.origin + "/popup",
+                messageToSign,
+                serverProving
+              ),
             [messageToSign, serverProving]
           )}
         >
@@ -94,18 +100,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to sign a message with their sema key.
-function requestSemaphoreSignature(
-  messageToSign: string,
-  proveOnServer: boolean
-) {
-  const proofUrl = requestSemaphoreSignatureUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    messageToSign,
-    proveOnServer
-  );
-  requestProofFromPassport(proofUrl);
 }

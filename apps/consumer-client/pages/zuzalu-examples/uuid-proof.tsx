@@ -1,17 +1,13 @@
 import {
-  requestSignedZuzaluUUIDUrl,
+  openSignedZuzaluUUIDPopup,
   useFetchParticipant,
-  usePassportResponse,
-  usePCDMultiplexer,
-  usePendingPCD,
+  usePassportPopupMessages,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -19,13 +15,9 @@ import { requestProofFromPassport } from "../../src/util";
  * party developer.
  */
 export default function Page() {
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
-    passportPendingPCDStr,
-    PASSPORT_SERVER_URL
-  );
-  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
+  // We only do client-side proofs for Zuzalu UUID proofs, which means we can
+  // ignore any PendingPCDs that would result from server-side proving
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
   const { signatureProof, signatureProofValid } =
     useSemaphoreSignatureProof(pcdStr);
 
@@ -53,27 +45,18 @@ export default function Page() {
         Passport Server, including their name, email, and role.
       </p>
       <ExampleContainer>
-        <button onClick={() => requestSignedZuID(serverProving)}>
+        <button
+          disabled={signatureProofValid}
+          onClick={() =>
+            openSignedZuzaluUUIDPopup(
+              PASSPORT_URL,
+              window.location.origin + "/popup",
+              "consumer-client"
+            )
+          }
+        >
           Request UUID
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={serverProving}
-            onChange={() => {
-              setServerProving((checked: boolean) => !checked);
-            }}
-          />
-          server-side proof
-        </label>
-        {passportPendingPCDStr && (
-          <>
-            <PendingPCDStatusDisplay
-              status={pendingPCDStatus}
-              pendingPCDError={pendingPCDError}
-            />
-          </>
-        )}
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
@@ -104,14 +87,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup. Ask for the user's Zuzalu ID.
-function requestSignedZuID(serverProving: boolean) {
-  const proofUrl = requestSignedZuzaluUUIDUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    serverProving
-  );
-  requestProofFromPassport(proofUrl);
 }

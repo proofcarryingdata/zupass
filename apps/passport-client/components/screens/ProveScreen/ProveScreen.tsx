@@ -40,7 +40,11 @@ export function ProveScreen() {
     title = "Prove membership";
     body = <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
-    title = "Sign a message";
+    if (request.options?.title !== undefined) {
+      title = request.options?.title;
+    } else {
+      title = "Sign a message";
+    }
     body = <SemaphoreSignatureProveScreen req={request} />;
   } else {
     return <GenericProveScreen req={request} />;

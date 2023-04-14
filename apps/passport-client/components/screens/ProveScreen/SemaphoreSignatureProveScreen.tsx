@@ -13,7 +13,7 @@ import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
 import { sleep } from "../../../src/util";
-import { Button, Spacer } from "../../core";
+import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreSignatureProveScreen({
@@ -64,22 +64,25 @@ export function SemaphoreSignatureProveScreen({
   const lines: ReactNode[] = [];
 
   if (req.args.signedMessage.value === undefined) {
+    const websiteName =
+      req.options?.description !== undefined
+        ? req.options?.description
+        : "This website";
     lines.push(
-      <div>
-        Revealing your Zuzalu Identity
-        <Spacer h={16} />
-        <p>
-          Make sure you trust this website. You are revealing your name and
-          email as well as your public key.
-        </p>
-      </div>
+      <p>
+        <b>{websiteName}</b> will receive: your name, your email, and your
+        Semaphore public key.
+      </p>
     );
+    lines.push("Make sure you trust this website!");
+    lines.push(<Button onClick={onProve}>Continue</Button>);
   } else {
     lines.push(
       <p>
         Signing message: <b>{req.args.signedMessage.value}</b>
       </p>
     );
+    lines.push(<Button onClick={onProve}>Prove</Button>);
   }
 
   if (!proving) {

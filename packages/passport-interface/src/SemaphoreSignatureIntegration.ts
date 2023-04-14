@@ -2,19 +2,25 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { useProof } from "./PCDIntegration";
+import { openPassportPopup } from "./PassportPopup";
+import { useSerializedPCD } from "./SerializedPCDIntegration";
 
-export function requestSemaphoreSignatureUrl(
+/**
+ * Opens a passport popup to generate a Semaphore signature proof.
+ *
+ * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ */
+export function openSemaphoreSignaturePopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
+  popupUrl: string,
   messageToSign: string,
   proveOnServer?: boolean
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -33,24 +39,27 @@ export function requestSemaphoreSignatureUrl(
     }
   );
 
-  return url;
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**
- * A function specifically for zuzalu apps - requests a sempahore signature
- * PCD from the passport which contains the user's uuid, which can be used
- * to fetch user details from the passport server.
+ * Opens a passport popup to generate a Semaphore signature proof on the user's
+ * Zuzalu DB uuid, which can then be used to fetch user details from the passport
+ * server. Built specifically for Zuzalu apps.
+ *
+ * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ * originalSiteName should be the name of your service, to be displayed on the popup.
  */
-export function requestSignedZuzaluUUIDUrl(
+export function openSignedZuzaluUUIDPopup(
   urlToPassportWebsite: string,
-  returnUrl: string,
-  proveOnServer?: boolean
+  popupUrl: string,
+  originalSiteName: string
 ) {
-  const url = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
-    returnUrl,
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -65,32 +74,37 @@ export function requestSignedZuzaluUUIDUrl(
       },
     },
     {
-      proveOnServer: proveOnServer,
+      title: "Zuzalu Auth",
+      description: originalSiteName,
     }
   );
-  return url;
+
+  openPassportPopup(popupUrl, proofUrl);
 }
 
 /**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
-export function useSemaphoreSignatureProof(proofEnc: string) {
-  const signatureProof = useProof(SemaphoreSignaturePCDPackage, proofEnc);
+export function useSemaphoreSignatureProof(pcdStr: string) {
+  const semaphoreSignaturePCD = useSerializedPCD(
+    SemaphoreSignaturePCDPackage,
+    pcdStr
+  );
 
   // verify proof
   const [signatureProofValid, setValid] = useState<boolean | undefined>();
   useEffect(() => {
-    if (signatureProof) {
+    if (semaphoreSignaturePCD) {
       const { verify } = SemaphoreSignaturePCDPackage;
-      verify(signatureProof).then((verified) => {
+      verify(semaphoreSignaturePCD).then((verified) => {
         setValid(verified);
       });
     }
-  }, [signatureProof]);
+  }, [semaphoreSignaturePCD]);
 
   return {
-    signatureProof,
+    signatureProof: semaphoreSignaturePCD,
     signatureProofValid,
   };
 }
