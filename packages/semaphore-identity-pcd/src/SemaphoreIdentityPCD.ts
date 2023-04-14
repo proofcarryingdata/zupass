@@ -2,6 +2,7 @@ import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreIdentityCardBody } from "./CardBody";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
@@ -79,6 +80,7 @@ export const SemaphoreIdentityPCDPackage: PCDPackage<
   SemaphoreIdentityPCDArgs
 > = {
   name: SemaphoreIdentityPCDTypeName,
+  renderCardBody: SemaphoreIdentityCardBody,
   getDisplayOptions,
   prove,
   verify,

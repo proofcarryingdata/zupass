@@ -20,6 +20,7 @@ export interface DisplayOptions {
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+  renderCardBody?: ({ pcd }: { pcd: PCD<C, P> }) => React.ReactElement;
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;

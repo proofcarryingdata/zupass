@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@pcd/tsconfig": "0.4.0",
-    "typescript": "^4.5.2"
+    "@types/react": "^18.0.35",
+    "typescript": "^4.9.5"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.4.0",

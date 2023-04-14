@@ -13,7 +13,7 @@
   "dependencies": {
     "@pcd/pcd-types": "0.4.0",
     "@pcd/tsconfig": "0.4.0",
-    "typescript": "^4.5.2"
+    "typescript": "^4.9.5"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.4.0",

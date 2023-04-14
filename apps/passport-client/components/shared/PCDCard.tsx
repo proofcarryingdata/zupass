@@ -1,20 +1,10 @@
 import { PCD } from "@pcd/pcd-types";
-import {
-  SemaphoreGroupPCD,
-  SemaphoreGroupPCDTypeName,
-} from "@pcd/semaphore-group-pcd";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDTypeName,
-} from "@pcd/semaphore-identity-pcd";
 import * as React from "react";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
-import { SemaphoreGroupCardBody } from "../pcd/SemaphoreGroupCardBody";
-import { SemaphoreIdentityCardBody } from "../pcd/SemaphoreIdentityCardBody";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
 /**
@@ -102,22 +92,28 @@ function CardBody({
   pcd: PCD;
   isZuzaluIdentity: boolean;
 }) {
+  const [state] = useContext(DispatchContext);
+
   if (isZuzaluIdentity) {
     return <ZuzaluCardBody showQrCode={true} />;
   }
 
-  switch (pcd.type) {
-    case SemaphoreIdentityPCDTypeName:
-      return <SemaphoreIdentityCardBody pcd={pcd as SemaphoreIdentityPCD} />;
-    case SemaphoreGroupPCDTypeName:
-      return <SemaphoreGroupCardBody pcd={pcd as SemaphoreGroupPCD} />;
+  if (state.pcds.hasPackage(pcd.type)) {
+    const pcdPackage = state.pcds.getPackage(pcd.type);
+    if (pcdPackage.renderCardBody) {
+      const Component = pcdPackage.renderCardBody;
+      return <Component pcd={pcd} />;
+    }
   }
 
-  console.log("no implementation of a ui for this type of card found");
+  console.log("");
 
   return (
     <>
-      <TextCenter>{pcd.type}</TextCenter>
+      <TextCenter>
+        {pcd.type} <br />
+        no implementation of a ui for this type of card found
+      </TextCenter>
       <Spacer h={16} />
     </>
   );
