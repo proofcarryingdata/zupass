@@ -17,6 +17,7 @@
     "@pcd/passport-ui": "0.4.1",
     "@pcd/pcd-collection": "0.4.1",
     "@pcd/pcd-types": "0.4.1",
+    "@pcd/rln-pcd": "0.3.0",
     "@pcd/semaphore-group-pcd": "0.4.1",
     "@pcd/semaphore-identity-pcd": "0.4.1",
     "@rollbar/react": "^0.11.1",
