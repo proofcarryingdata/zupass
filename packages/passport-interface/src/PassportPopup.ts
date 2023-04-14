@@ -28,12 +28,15 @@ export function usePassportPopupMessages() {
 }
 
 /**
- * React hook to be used on whatever route the passport popup is redirected from.
- * Sends messages back to original page to be processed by `usePassportPopupMessages`.
+ * A react hook that sets up necessary passport popup logic on a specific route.
+ * A popup page must be hosted on the website using the passport, as data can't
+ * be passed between a website and a popup on a different origin like zupass.org.
+ * This hook sends messages with a full client-side PCD or a server-side PendingPCD
+ * that can be processed by the `usePassportPopupMessages` hook. PendingPCD requests
+ * can further be processed by `usePendingPCD` and `usePCDMultiplexer`.
  */
 export function usePassportPopupSetup() {
-  // In the happy case, this page redirects immediately.
-  // If not, show an error.
+  // Usually this page redirects immediately. If not, show an error.
   const [error, setError] = useState("");
 
   useEffect(() => {
