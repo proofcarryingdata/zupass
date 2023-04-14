@@ -23,12 +23,13 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <AppHeader />
-        <Spacer h={24} />
+        <Spacer h={16} />
         <H2>{"ADD PCD".toUpperCase()}</H2>
+        <Spacer h={16} />
         <CenterColumn w={280}>
           {pcd && <PCDCard pcd={pcd} expanded={true} />}
           {error && JSON.stringify(error)}
-          <Spacer h={8} />
+          <Spacer h={16} />
           <Button onClick={onAddClick}>Add</Button>
         </CenterColumn>
       </AppContainer>
