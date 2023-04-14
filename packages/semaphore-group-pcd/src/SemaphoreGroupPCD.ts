@@ -121,12 +121,18 @@ export async function prove(
     throw new Error("Cannot make group proof: missing signal");
   }
 
-  // restrict the group signature from having the same nullifier as the static
-  // signature CPD externalNullifier, which would break anonymity of users if the
-  // adversary also has access to a specific signature
+  // Restrict the SemaphoreGroupPCD from having the same externalNullifier as the
+  // SemaphoreSignaturePCD. The nullifierHash in a SemaphoreGroupPCD is supposed
+  // to be a unique string that is one-to-one with a specific member of the group,
+  // but unlinkable to any specific member. However, if an adversarial SemaphoreGroupPCD
+  // is set up with the same externalNullifier as the SemaphoreSignaturePCD, then the
+  // outputted nullifierHash for a user will be the same as the nullifierHash outputted
+  // from the same user's SemaphoreSignaturePCD. Thus, an adversary could link a
+  // nullifierHash back to a user if they also have access to a signature from them,
+  // which is unintended behavior that would break their anonymity.
   if (BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER) {
     throw new Error(
-      "Cannot make group proof: same externalNullifier as SignaturePCD, which would break anonymity"
+      "Cannot make group proof: same externalNullifier as SemaphoreSignaturePCD, which would break anonymity"
     );
   }
 
