@@ -18,10 +18,6 @@ export function SemaphoreIdentityCardBody({
   );
 }
 
-const Header = styled.div`
-  font-weight: bold;
-`;
-
 const Container = styled.div`
   padding: 0px 16px 16px 16px;
   overflow: hidden;

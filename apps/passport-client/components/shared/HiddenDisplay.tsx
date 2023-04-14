@@ -20,10 +20,14 @@ export function HiddenText({ text, label }: { text: string; label: string }) {
 }
 
 export const TextContainer = styled.div`
-  border: 1px solid var(--accent-lite);
+  border: 2px solid var(--bg-dark-primary);
   overflow: hidden;
   padding: 4px 8px;
   border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.2);
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.21);
+  }
 `;
 
 export const HiddenTextContainer = styled(TextContainer)`
@@ -32,4 +36,8 @@ export const HiddenTextContainer = styled(TextContainer)`
   align-items: center;
   user-select: none;
   cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.2);
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.18);
+  }
 `;
