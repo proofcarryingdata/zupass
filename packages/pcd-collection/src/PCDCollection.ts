@@ -52,6 +52,10 @@ export class PCDCollection {
     this.addAll(deserialized);
   }
 
+  public async remove(id: string) {
+    this.pcds = this.pcds.filter((pcd) => pcd.id !== id);
+  }
+
   public async deserializeAndAdd(serialized: SerializedPCD): Promise<void> {
     await this.deserializeAllAndAdd([serialized]);
   }

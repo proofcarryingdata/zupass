@@ -92,7 +92,7 @@ export async function dispatch(
     case "add-pcd":
       return addPCD(state, update, action.pcd);
     case "remove-pcd":
-      return removePcd(state, update, action.id);
+      return removePCD(state, update, action.id);
     default:
       console.error("Unknown action type", action);
   }
@@ -259,8 +259,10 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
   }
 }
 
-async function removePcd(state: ZuState, update: ZuUpdate, pcdId: string) {
-  console.log("REMOVING PCD", pcdId);
+async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
+  state.pcds.remove(pcdId);
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
 }
 
 async function loadFromSync(
