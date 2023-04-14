@@ -14,6 +14,7 @@ import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
+import { sleep } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -41,6 +42,11 @@ export function SemaphoreGroupProveScreen({
   const onProve = useCallback(async () => {
     try {
       setProving(true);
+
+      // Give the UI has a chance to update to the 'loading' state before the
+      // potentially blocking proving operation kicks off
+      sleep(200);
+
       const args = await fillArgs(state.identity, group, req.args);
 
       if (req.options?.proveOnServer === true) {
