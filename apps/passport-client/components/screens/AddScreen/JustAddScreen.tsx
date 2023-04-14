@@ -1,9 +1,10 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
 import React, { useCallback, useContext } from "react";
+import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { useDeserialized } from "../../../src/useDeserialized";
 
-import { Button, CenterColumn, H2, Spacer } from "../../core";
+import { Button, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
@@ -19,20 +20,24 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const { error, pcd } = useDeserialized(request.pcd);
 
   return (
-    <div>
-      <AppContainer bg="gray">
-        <Spacer h={24} />
+    <AppContainer bg="gray">
+      <Container>
+        <Spacer h={16} />
         <AppHeader />
         <Spacer h={16} />
         <H2>{"ADD PCD".toUpperCase()}</H2>
         <Spacer h={16} />
-        <CenterColumn w={280}>
-          {pcd && <PCDCard pcd={pcd} expanded={true} />}
-          {error && JSON.stringify(error)}
-          <Spacer h={16} />
-          <Button onClick={onAddClick}>Add</Button>
-        </CenterColumn>
-      </AppContainer>
-    </div>
+        {pcd && <PCDCard pcd={pcd} expanded={true} />}
+        {error && JSON.stringify(error)}
+        <Spacer h={16} />
+        <Button onClick={onAddClick}>Add</Button>
+      </Container>
+    </AppContainer>
   );
 }
+
+const Container = styled.div`
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+`;

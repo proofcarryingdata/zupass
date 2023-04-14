@@ -15,7 +15,7 @@ export default function Page() {
       <h2>Prove and Add</h2>
       <ExampleContainer>
         <button onClick={onAddClick}>
-          add a new semaphore identity to the passport
+          prove and add a group membership proof
         </button>
         {/* TODO: implement response and error */}
         {/* {response && (
