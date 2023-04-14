@@ -1,9 +1,19 @@
 import { PCD } from "@pcd/pcd-types";
+import {
+  SemaphoreGroupPCD,
+  SemaphoreGroupPCDTypeName,
+} from "@pcd/semaphore-group-pcd";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDTypeName,
+} from "@pcd/semaphore-identity-pcd";
 import * as React from "react";
 import { useMemo } from "react";
 import styled from "styled-components";
 import { usePackage } from "../../src/usePackage";
 import { H4, Spacer, TextCenter } from "../core";
+import { SemaphoreGroupCardBody } from "../pcd/SemaphoreGroupCardBody";
+import { SemaphoreIdentityCardBody } from "../pcd/SemaphoreIdentityCardBody";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
 /**
@@ -61,6 +71,15 @@ function CardBody({
   if (isZuzaluIdentity) {
     return <ZuzaluCardBody showQrCode={true} />;
   }
+
+  switch (pcd.type) {
+    case SemaphoreIdentityPCDTypeName:
+      return <SemaphoreIdentityCardBody pcd={pcd as SemaphoreIdentityPCD} />;
+    case SemaphoreGroupPCDTypeName:
+      return <SemaphoreGroupCardBody pcd={pcd as SemaphoreGroupPCD} />;
+  }
+
+  console.log("no implementation of a ui for this type of card found");
 
   return (
     <>
