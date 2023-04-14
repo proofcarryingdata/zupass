@@ -3,7 +3,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import styled from "styled-components";
 import { usePackage } from "../../src/usePackage";
-import { H4, TextCenter } from "../core";
+import { H4, Spacer, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 
 /**
@@ -62,7 +62,12 @@ function CardBody({
     return <ZuzaluCardBody showQrCode={true} />;
   }
 
-  return <TextCenter>{pcd.type}</TextCenter>;
+  return (
+    <>
+      <TextCenter>{pcd.type}</TextCenter>
+      <Spacer h={16} />
+    </>
+  );
 }
 
 export const CardContainerExpanded = styled.div`
@@ -80,7 +85,6 @@ export const CardOutlineExpanded = styled.div`
   border-radius: 12px;
   border: 1px solid var(--accent-dark);
   background: var(--primary-dark);
-  min-height: 160px;
 `;
 
 const CardOutlineCollapsed = styled.div`
