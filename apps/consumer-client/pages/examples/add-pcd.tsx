@@ -1,16 +1,13 @@
-import {
-  constructPassportPcdAddRequestUrl,
-  usePassportResponse,
-} from "@pcd/passport-interface";
+import { constructPassportPcdAddRequestUrl } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { CollapsableCode, HomeLink } from "../../components/Core";
+import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 export default function Page() {
-  const { response, error } = usePassportResponse();
+  // const { response, error } = usePassportResponse();
 
   return (
     <>
@@ -20,7 +17,9 @@ export default function Page() {
         <button onClick={onAddClick}>
           add a new semaphore identity to the passport
         </button>
-        {response && (
+        {/* TODO: implement a response which indicates whether the PCD was
+        added successfully or not */}
+        {/* {response && (
           <>
             <CollapsableCode code={JSON.stringify(response, null, 2)} />
           </>
@@ -29,7 +28,7 @@ export default function Page() {
           <>
             <CollapsableCode code={error.message} />
           </>
-        )}
+        )} */}
       </ExampleContainer>
     </>
   );
