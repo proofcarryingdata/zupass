@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 
 export function HiddenText({ text, label }: { text: string; label: string }) {

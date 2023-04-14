@@ -1,7 +1,7 @@
+import { HiddenText } from "@pcd/passport-ui";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import React from "react";
 import styled from "styled-components";
-import { HiddenText } from "../shared/HiddenDisplay";
 
 export function SemaphoreIdentityCardBody({
   pcd,
