@@ -5,10 +5,11 @@
   "types": "./index.ts",
   "license": "MIT",
   "scripts": {
-    "lint": "TIMING=1 eslint \"**/*.ts\"",
+    "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsc --noEmit",
-    "prettier": "prettier --write \"{src,test}/**/*.ts\""
+    "postinstall": "tsc",
+    "clean": "tsc --build --clean"
   },
   "dependencies": {
     "@pcd/pcd-types": "*",
