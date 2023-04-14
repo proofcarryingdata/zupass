@@ -11,7 +11,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import styled from "styled-components";
 import { usePackage } from "../../src/usePackage";
-import { H4, Spacer, TextCenter } from "../core";
+import { Button, H4, Spacer, TextCenter } from "../core";
 import { SemaphoreGroupCardBody } from "../pcd/SemaphoreGroupCardBody";
 import { SemaphoreIdentityCardBody } from "../pcd/SemaphoreIdentityCardBody";
 import { ZuzaluCardBody } from "./ZuzaluCard";
@@ -47,6 +47,7 @@ export function PCDCard({
         <CardOutlineExpanded>
           <CardHeader col="var(--accent-lite)">{header}</CardHeader>
           <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+          <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
         </CardOutlineExpanded>
       </CardContainerExpanded>
     );
@@ -58,6 +59,26 @@ export function PCDCard({
         <CardHeaderCollapsed>{header}</CardHeaderCollapsed>
       </CardOutlineCollapsed>
     </CardContainerCollapsed>
+  );
+}
+
+function CardFooter({
+  pcd,
+  isZuzaluIdentity,
+}: {
+  pcd: PCD;
+  isZuzaluIdentity: boolean;
+}) {
+  if (isZuzaluIdentity) {
+    return null;
+  }
+
+  return (
+    <FooterContainer>
+      <Button style="danger" size="small">
+        Remove
+      </Button>
+    </FooterContainer>
   );
 }
 
@@ -128,4 +149,11 @@ const CardHeaderCollapsed = styled.div`
 export const CardHeader = styled(H4)`
   text-align: center;
   padding: 10px;
+`;
+
+const FooterContainer = styled.div`
+  padding: 0px 16px 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 `;

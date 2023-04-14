@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 
-export function HiddenText({ text }: { text: string }) {
+export function HiddenText({ text, label }: { text: string; label: string }) {
   const [visible, setVisible] = useState(false);
 
   const onRevealClick = useCallback(() => {
@@ -14,7 +14,7 @@ export function HiddenText({ text }: { text: string }) {
 
   return (
     <HiddenTextContainer onClick={onRevealClick}>
-      tap to reveal
+      tap to reveal {label}
     </HiddenTextContainer>
   );
 }

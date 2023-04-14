@@ -10,8 +10,10 @@ export function SemaphoreIdentityCardBody({
 }) {
   return (
     <Container>
-      <Header>commitment</Header>
-      <HiddenText text={pcd.claim.identity.commitment.toString()} />
+      <HiddenText
+        text={pcd.claim.identity.commitment.toString()}
+        label="commitment"
+      />
     </Container>
   );
 }
