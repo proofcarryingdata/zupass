@@ -58,7 +58,8 @@ export type Action =
       storage: EncryptedStorage;
       encryptionKey: string;
     }
-  | { type: "add-pcd"; pcd: SerializedPCD };
+  | { type: "add-pcd"; pcd: SerializedPCD }
+  | { type: "remove-pcd"; id: string };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -89,7 +90,9 @@ export async function dispatch(
     case "set-modal":
       return update({ modal: action.modal });
     case "add-pcd":
-      return addPcd(state, update, action.pcd);
+      return addPCD(state, update, action.pcd);
+    case "remove-pcd":
+      return removePcd(state, update, action.id);
     default:
       console.error("Unknown action type", action);
   }
@@ -246,7 +249,7 @@ function resetPassport() {
   window.location.reload();
 }
 
-async function addPcd(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
+async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
   if (state.pcds.hasPackage(pcd.type)) {
     await state.pcds.deserializeAndAdd(pcd);
     await savePCDs(state.pcds);
@@ -254,6 +257,10 @@ async function addPcd(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
   } else {
     console.log("ERROR");
   }
+}
+
+async function removePcd(state: ZuState, update: ZuUpdate, pcdId: string) {
+  console.log("REMOVING PCD", pcdId);
 }
 
 async function loadFromSync(

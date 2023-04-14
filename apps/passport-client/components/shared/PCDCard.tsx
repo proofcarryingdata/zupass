@@ -8,8 +8,9 @@ import {
   SemaphoreIdentityPCDTypeName,
 } from "@pcd/semaphore-identity-pcd";
 import * as React from "react";
-import { useMemo } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
+import { DispatchContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { SemaphoreGroupCardBody } from "../pcd/SemaphoreGroupCardBody";
@@ -69,13 +70,25 @@ function CardFooter({
   pcd: PCD;
   isZuzaluIdentity: boolean;
 }) {
+  const [_, dispatch] = useContext(DispatchContext);
+
+  const onRemoveClick = useCallback(() => {
+    if (
+      window.confirm(
+        "Are you sure you want to remove this PCD? It will be permanently deleted!"
+      )
+    ) {
+      dispatch({ type: "remove-pcd", id: pcd.id });
+    }
+  }, [pcd, dispatch]);
+
   if (isZuzaluIdentity) {
     return null;
   }
 
   return (
     <FooterContainer>
-      <Button style="danger" size="small">
+      <Button style="danger" size="small" onClick={onRemoveClick}>
         Remove
       </Button>
     </FooterContainer>
