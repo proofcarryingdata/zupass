@@ -12,7 +12,9 @@ import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
+import { sleep } from "../../../src/util";
 import { Button, Spacer } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreSignatureProveScreen({
   req,
@@ -25,6 +27,11 @@ export function SemaphoreSignatureProveScreen({
   const onProve = useCallback(async () => {
     try {
       setProving(true);
+
+      // Give the UI has a chance to update to the 'loading' state before the
+      // potentially blocking proving operation kicks off
+      sleep(200);
+
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
         state.identity,
@@ -75,10 +82,10 @@ export function SemaphoreSignatureProveScreen({
     );
   }
 
-  lines.push(<Button onClick={onProve}>Prove</Button>);
-
-  if (proving) {
-    lines.push(<p>Proving...</p>);
+  if (!proving) {
+    lines.push(<Button onClick={onProve}>Prove</Button>);
+  } else {
+    lines.push(<RippleLoader />);
   }
 
   return (
