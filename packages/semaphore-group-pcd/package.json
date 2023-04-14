@@ -15,6 +15,7 @@
     "@pcd/eslint-config-custom": "0.3.0",
     "@pcd/pcd-types": "0.3.0",
     "@pcd/semaphore-identity-pcd": "0.3.0",
+    "@pcd/semaphore-signature-pcd": "0.3.0",
     "@pcd/tsconfig": "0.3.0",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
