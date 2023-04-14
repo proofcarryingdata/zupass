@@ -34,9 +34,6 @@ export function HomeScreen() {
   const selectedPCD = useMemo(() => {
     return state.pcds.getAll().find((pcd) => pcd.id === selectedPCDID);
   }, [state.pcds, selectedPCDID]);
-  const allButSelectedPcd = useMemo(() => {
-    return state.pcds.getAll().filter((pcd) => selectedPCDID !== pcd.id);
-  }, [selectedPCDID, state.pcds]);
 
   if (state.self == null) return null;
 
@@ -48,19 +45,14 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <PCDCard
-            pcd={selectedPCD}
-            expanded={true}
-            isZuzaluIdentity={zuzaluPCDId === selectedPCD.id}
-          />
-          {allButSelectedPcd.map((pcd) => {
+          {state.pcds.getAll().map((pcd) => {
             return (
               <>
                 <Spacer h={8} />
                 <PCDCard
                   pcd={pcd}
-                  expanded={false}
-                  isZuzaluIdentity={pcd.id === selectedPCD.id}
+                  expanded={pcd.id === selectedPCD.id}
+                  isZuzaluIdentity={pcd.id === zuzaluPCDId}
                   onClick={() => {
                     console.log("CLICKED");
                     setSelectedPCDID(pcd.id);
