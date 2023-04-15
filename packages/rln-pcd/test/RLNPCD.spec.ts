@@ -1,5 +1,6 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RLNPCDArgs, RLNPCDPackage } from "@pcd/rln-pcd";
+import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
@@ -28,7 +29,6 @@ describe("rln-pcd should work", function () {
     const identity = new Identity();
     const group = new Group(1, TREE_DEPTH);
     group.addMember(identity.commitment);
-    const merkleProof = group.generateMerkleProof(0);
     const signal = "hey hey";
     const rlnIdentifier = BigInt(5566);
     const epoch = BigInt(42);
@@ -47,9 +47,9 @@ describe("rln-pcd should work", function () {
         argumentType: ArgumentTypeName.PCD,
         value: identityPCD,
       },
-      merkleProof: {
+      group: {
         argumentType: ArgumentTypeName.Object,
-        value: merkleProof,
+        value: serializeSemaphoreGroup(group, "test name"),
       },
       signal: {
         argumentType: ArgumentTypeName.String,
