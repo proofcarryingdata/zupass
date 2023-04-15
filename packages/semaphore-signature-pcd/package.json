@@ -25,6 +25,7 @@
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
     "react": "^18.2.0",
+    "styled-components": "^5.3.9",
     "typescript": "^4.9.5"
   },
   "devDependencies": {

@@ -8,7 +8,6 @@ import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 export default function Page() {
-
   return (
     <div>
       <HomeLink />
@@ -76,27 +75,27 @@ async function addGroupMembershipProof() {
 
 async function addSignatureProof() {
   const proofUrl = constructPassportPcdProveAndAddRequestUrl<
-  typeof SemaphoreSignaturePCDPackage
->(
-  PASSPORT_URL,
-  window.location.origin + "/popup",
-  SemaphoreSignaturePCDPackage.name,
-  {
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: undefined,
-      userProvided: true,
+    typeof SemaphoreSignaturePCDPackage
+  >(
+    PASSPORT_URL,
+    window.location.origin + "/popup",
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: undefined,
+        userProvided: true,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: "1",
+        userProvided: false,
+      },
     },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      value: "1",
-      userProvided: false,
-    },
-  },
-  {
-    title: "Semaphore Signature Proof",
-  }
-);
+    {
+      title: "Semaphore Signature Proof",
+    }
+  );
 
-sendPassportRequest(proofUrl);
+  sendPassportRequest(proofUrl);
 }

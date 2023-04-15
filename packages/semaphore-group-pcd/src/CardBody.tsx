@@ -1,19 +1,11 @@
 import { HiddenText, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
-import React from "react";
 import { SemaphoreGroupPCD } from "./SemaphoreGroupPCD";
 
-export function SemaphoreGroupCardBody({
-  pcd,
-}: {
-  pcd: SemaphoreGroupPCD;
-}) {
+export function SemaphoreGroupCardBody({ pcd }: { pcd: SemaphoreGroupPCD }) {
   return (
     <Container>
-      <HiddenText
-        text={pcd.claim.nullifierHash}
-        label="commitment"
-      />
+      <HiddenText text={pcd.claim.nullifierHash} label="commitment" />
       <span>Nullifier Hash</span>
       <TextContainer>{pcd.claim.nullifierHash}</TextContainer>
       <span>Signal</span>
