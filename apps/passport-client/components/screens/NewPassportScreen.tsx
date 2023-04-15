@@ -23,10 +23,8 @@ import { AppContainer } from "../shared/AppContainer";
  * verification link.
  */
 export function NewPassportScreen() {
-  const [state, dispatch] = useContext(DispatchContext);
-  const [triedSendingEmail, setTriedSendingEmail] = useState(false);
-  const { identity, pendingAction } = state;
-  const { email } = pendingAction;
+  const [state] = useContext(DispatchContext);
+  const { pendingAction } = state;
 
   useEffect(() => {
     if (pendingAction == null || pendingAction.type !== "new-passport") {
@@ -34,6 +32,17 @@ export function NewPassportScreen() {
       window.location.reload();
     }
   }, [pendingAction]);
+
+  if (pendingAction == null || pendingAction.type !== "new-passport") {
+    return null;
+  }
+  return <SendEmailVerification email={pendingAction.email} />;
+}
+
+function SendEmailVerification({ email }: { email: string }) {
+  const [state, dispatch] = useContext(DispatchContext);
+  const { identity } = state;
+  const [triedSendingEmail, setTriedSendingEmail] = useState(false);
 
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
@@ -81,7 +90,7 @@ export function NewPassportScreen() {
           });
         }
       });
-  }, [email, setEmailSent, dispatch, identity, triedSendingEmail]);
+  }, [setEmailSent, dispatch, identity, triedSendingEmail, email]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();

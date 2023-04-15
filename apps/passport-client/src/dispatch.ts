@@ -39,6 +39,10 @@ export type Action =
       self: ZuParticipant;
     }
   | {
+      type: "set-modal";
+      modal: string;
+    }
+  | {
       type: "error";
       error: ZuError;
     }
@@ -80,6 +84,8 @@ export async function dispatch(
       return resetPassport();
     case "load-from-sync":
       return loadFromSync(action.encryptionKey, action.storage, state, update);
+    case "set-modal":
+      return update({ modal: action.modal });
     default:
       console.error("Unknown action type", action);
   }
@@ -180,6 +186,9 @@ async function finishLogin(
 
   // Save PCDs to E2EE storage.
   await saveParticipantPCDs(participant);
+
+  // Ask user to save their sync key
+  update({ modal: "save-sync" });
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {

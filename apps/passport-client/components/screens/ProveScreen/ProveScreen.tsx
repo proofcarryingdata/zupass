@@ -8,7 +8,6 @@ import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
@@ -56,8 +55,6 @@ export function ProveScreen() {
 
   return (
     <AppContainer bg="gray">
-      <Spacer h={24} />
-      <AppHeader showSettings={false} />
       <Spacer h={24} />
       <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />

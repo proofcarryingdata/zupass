@@ -11,7 +11,6 @@ import { DispatchContext } from "../../../src/dispatch";
 import { err, sleep } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
-import { AppHeader } from "../../shared/AppHeader";
 import { PCDArgs } from "../../shared/PCDArgs";
 
 /**
@@ -75,8 +74,6 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
 
   return (
     <Container>
-      <Spacer h={24} />
-      <AppHeader showSettings={false} />
       <Spacer h={24} />
       <H1>🔑 &nbsp; {pageTitle}</H1>
       {req.options?.description && (

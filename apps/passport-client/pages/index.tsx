@@ -25,9 +25,11 @@ import { ZuState } from "../src/state";
 
 class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
-  update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
+  update = (diff: Pick<ZuState, keyof ZuState>) => {
+    console.log("App.update", diff);
+    this.setState(diff);
+  };
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
-
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
