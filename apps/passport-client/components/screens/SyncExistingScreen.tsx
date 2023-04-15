@@ -71,6 +71,12 @@ export function SyncExistingScreen() {
       <TextCenter>
         <H2>SYNC EXISTING PASSPORT</H2>
         <Spacer h={32} />
+        <TextCenter>
+          If you've already created your passport on another device, you can
+          sync it here. You can find your sync key on your existing device by
+          clicking on the settings icon.
+        </TextCenter>
+        <Spacer h={32} />
         <BigInput
           type="text"
           placeholder="sync key"
