@@ -27,7 +27,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
         <Spacer h={16} />
         <H2>{"ADD PCD".toUpperCase()}</H2>
         <Spacer h={16} />
-        {pcd && <PCDCard pcd={pcd} expanded={true} />}
+        {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
         <Button onClick={onAddClick}>Add</Button>

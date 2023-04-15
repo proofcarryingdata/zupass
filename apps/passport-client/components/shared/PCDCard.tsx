@@ -16,11 +16,13 @@ export function PCDCard({
   pcd,
   expanded,
   onClick,
+  hideRemoveButton,
 }: {
   pcd: PCD;
   expanded?: boolean;
   isZuzaluIdentity?: boolean;
   onClick?: () => void;
+  hideRemoveButton?: boolean;
 }) {
   const pcdPackage = usePackage(pcd);
   const displayOptions = useMemo(() => {
@@ -39,7 +41,9 @@ export function PCDCard({
           <CardHeader col="var(--accent-lite)">{header}</CardHeader>
           <CardBodyContainer>
             <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
-            <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+            {!hideRemoveButton && (
+              <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+            )}
           </CardBodyContainer>
         </CardOutlineExpanded>
       </CardContainerExpanded>
