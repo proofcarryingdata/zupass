@@ -2,7 +2,6 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { Proof, RLN, RLNFullProof } from "rlnjs";
 import { Identity } from "@semaphore-protocol/identity";
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
 
 import {
   BigIntArgument,
@@ -17,6 +16,11 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
 } from "@pcd/semaphore-identity-pcd";
+import {
+  deserializeSemaphoreGroup,
+  SerializedSemaphoreGroup,
+} from "@pcd/semaphore-group-pcd";
+
 import verificationKeyJSON from "../artifacts/16.json";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
@@ -34,8 +38,8 @@ export interface RLNPCDArgs {
   rlnIdentifier: BigIntArgument;
   // The semaphore keypair for a user
   identity: PCDArgument<SemaphoreIdentityPCD>;
-  // The merkle proof of the user's identity commitment
-  merkleProof: ObjectArgument<MerkleProof>;
+  // The semaphore group
+  group: ObjectArgument<SerializedSemaphoreGroup>;
   // The message that the user is sending
   signal: StringArgument;
   // The timestamp the message is sent
@@ -145,9 +149,9 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
   );
-  const merkleProof = args.merkleProof.value;
-  if (!merkleProof) {
-    throw new Error("cannot make proof: merkleProof is not provided");
+  const serializedGroup = args.group.value;
+  if (!serializedGroup) {
+    throw new Error("cannot make proof: group is not provided");
   }
   const epoch = args.epoch.value;
   if (!epoch) {
@@ -157,7 +161,11 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
   if (!signal) {
     throw new Error("cannot make proof: signal is not provided");
   }
-  const rln = getRLNInstance(BigInt(rlnIdentifier), identityPCD.claim.identity);
+  const identity = identityPCD.claim.identity;
+  const rln = getRLNInstance(BigInt(rlnIdentifier), identity);
+  const group = deserializeSemaphoreGroup(serializedGroup);
+  const leafIndex = group.indexOf(identity.getCommitment());
+  const merkleProof = group.generateMerkleProof(leafIndex);
   const fullProof = await rln.generateProof(signal, merkleProof, epoch);
   return RLNPCD.fromRLNFullProof(fullProof);
 }
