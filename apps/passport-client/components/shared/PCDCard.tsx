@@ -37,8 +37,10 @@ export function PCDCard({
       <CardContainerExpanded>
         <CardOutlineExpanded>
           <CardHeader col="var(--accent-lite)">{header}</CardHeader>
-          <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
-          <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+          <CardBodyContainer>
+            <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+            <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+          </CardBodyContainer>
         </CardOutlineExpanded>
       </CardContainerExpanded>
     );
@@ -165,4 +167,9 @@ const FooterContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
+`;
+
+const CardBodyContainer = styled.div`
+  background-color: white;
+  color: var(--bg-dark-primary);
 `;
