@@ -1739,113 +1739,6 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.9.1.tgz#ad3367684a57879392513479e0a436cb2ac46dad"
   integrity sha512-oPQdbFDmZvjXk5ZDoBGXG8B4tSB/qW5vQunJWQMFUBp7Xe8O1ByPANueJ+Jzg58esEBegyyxZ7LRmfJr7kFcFg==
 
-"@pcd/eslint-config-custom@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.3.0.tgz#fb2135ab6bcfa9e57e27f5387a447f01e5df8155"
-  integrity sha512-4/7/xxKSzA+1YU8H49GrRAF/cIIRsyhUtnM/W9AoI5kmm4aVSBQ7XWpxqjS/En1fMxmObfKXjvLO+OcZMrmZzg==
-  dependencies:
-    eslint "^7.23.0"
-    eslint-config-next "13.0.0"
-    eslint-config-prettier "^8.3.0"
-    eslint-config-turbo latest
-    eslint-plugin-react "7.31.8"
-
-"@pcd/passport-crypto@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/passport-crypto/-/passport-crypto-0.3.0.tgz#f69c9a14f7044072f69a41e0f0a7db4a9b0084d4"
-  integrity sha512-geRqNsXmw8P+BEBVZ0Uc08eMRq+B6u9Vv6JZT655lLBl3vQhoA5uztcB7qjNJx1QrtBWnRNPiL4M4Xxr9wEY3Q==
-  dependencies:
-    "@pcd/pcd-collection" "0.3.0"
-    "@pcd/pcd-types" "0.3.0"
-    "@pcd/semaphore-identity-pcd" "0.3.0"
-    "@pcd/tsconfig" "0.3.0"
-    "@semaphore-protocol/identity" "^3.1.0"
-    "@types/libsodium-wrappers" "^0.7.10"
-    "@types/mocha" "^10.0.1"
-    "@types/react" "^17.0.37"
-    "@types/react-dom" "^17.0.11"
-    libsodium-wrappers "^0.7.11"
-    react "^18.2.0"
-    typescript "^4.5.2"
-
-"@pcd/pcd-collection@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/pcd-collection/-/pcd-collection-0.3.0.tgz#552a0e96e770a92e60256e430e5a5167e8ff7dbc"
-  integrity sha512-wEsZzPayAtAFNF3alH6Hgr0JygnAUyiUT2YyLY+wEKcrHSI/8lm7vGfXmiTQe7OxZJXfvnI7OxH6/l9l75MZtQ==
-  dependencies:
-    "@pcd/pcd-types" "0.3.0"
-    "@pcd/tsconfig" "0.3.0"
-    typescript "^4.5.2"
-
-"@pcd/pcd-types@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.3.0.tgz#aab61e98a823ced6244ddb8c7bf3d30039ce4dd2"
-  integrity sha512-VUoKjVAlAv6C6gJ9viwGBubsbNJUyCHzgWq/NPD1MmEmHRfufeFFAemTrqwZnLqhLy7VvvDUkoIqsodv/h/gVQ==
-  dependencies:
-    "@pcd/tsconfig" "0.3.0"
-    typescript "^4.5.2"
-
-"@pcd/semaphore-group-pcd@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-group-pcd/-/semaphore-group-pcd-0.3.0.tgz#ab77d5ace33759e9a148a272ba91f649240022de"
-  integrity sha512-qTWvsT7QgWqmRfHN7nyuTvKr+zBgtdDz0Z7/jHOkH08RycjY3bxC9c8z/FcLwQLFtlBqsNKCU1mfHnTC7PR85w==
-  dependencies:
-    "@pcd/eslint-config-custom" "0.3.0"
-    "@pcd/pcd-types" "0.3.0"
-    "@pcd/semaphore-identity-pcd" "0.3.0"
-    "@pcd/tsconfig" "0.3.0"
-    "@semaphore-protocol/group" "^3.1.0"
-    "@semaphore-protocol/identity" "^3.1.0"
-    "@semaphore-protocol/proof" "^3.1.0"
-    "@types/expect" "^24.3.0"
-    "@types/json-bigint" "^1.0.1"
-    "@types/mocha" "^10.0.1"
-    "@types/uuid" "^9.0.0"
-    json-bigint "^1.0.0"
-    typescript "^4.9.5"
-    uuid "^9.0.0"
-
-"@pcd/semaphore-identity-pcd@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.3.0.tgz#6305535e35c184a7a026478139d906c29221ad08"
-  integrity sha512-EzNts+77c6QPihYx9M1PcJjDSztw+HIR9O73/vlXWlal8ckSRe5Lir//ls+mAJNCnuGsE2iwpDma8522wCzZFA==
-  dependencies:
-    "@pcd/pcd-types" "0.3.0"
-    "@pcd/tsconfig" "0.3.0"
-    "@semaphore-protocol/group" "^3.1.0"
-    "@semaphore-protocol/identity" "^3.1.0"
-    "@semaphore-protocol/proof" "^3.1.0"
-    "@types/json-bigint" "^1.0.1"
-    "@types/uuid" "^9.0.0"
-    json-bigint "^1.0.0"
-    typescript "^4.5.2"
-    uuid "^9.0.0"
-
-"@pcd/semaphore-signature-pcd@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-signature-pcd/-/semaphore-signature-pcd-0.3.0.tgz#5a025a5a74f5918efb4f08595128cee79ec9368f"
-  integrity sha512-TMhJrM2ES6yEnMN5c4e0aTH8fRkZWp3aNGS9qR1h+IEPl2x8W1QocxmDZetbxlHXaosToZGSN3dxjthoHjgADQ==
-  dependencies:
-    "@pcd/pcd-types" "0.3.0"
-    "@pcd/tsconfig" "0.3.0"
-    "@semaphore-protocol/group" "^3.1.0"
-    "@semaphore-protocol/identity" "^3.1.0"
-    "@semaphore-protocol/proof" "^3.1.0"
-    "@types/expect" "^24.3.0"
-    "@types/json-bigint" "^1.0.1"
-    "@types/mocha" "^10.0.1"
-    "@types/react" "^17.0.37"
-    "@types/react-dom" "^17.0.11"
-    js-sha256 "^0.9.0"
-    json-bigint "^1.0.0"
-    react "^18.2.0"
-    typescript "^4.5.2"
-
-"@pcd/tsconfig@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.3.0.tgz#5e0db2400ca5730420bd9e95b75708dac7babab8"
-  integrity sha512-o6y/V+lv7ojquj7v8ewb+dzJv1cqNx27GRJBeQcGVJnBjDfQK7l1HsAPyZ7cIZagqUXfrjNJYNuz3tvy5EmPeQ==
-
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@protobufjs/aspromise/-/aspromise-1.1.2.tgz#9b8b0cc663d669a7d8f6f5d0893a14d348f30fbf"
@@ -1916,7 +1809,7 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.2.0.tgz#8be36a1f66f3265389e90b5f9c9962146758f728"
   integrity sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==
 
-"@semaphore-protocol/group@^3.1.0", "@semaphore-protocol/group@^3.2.3":
+"@semaphore-protocol/group@^3.2.3":
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.4.0.tgz#48173487e15df3441c02941859822cbfc62b0a51"
   integrity sha512-6PvcFXqw9HMrpvk6nAtTd/H/DAiOxqiysYmlu8bIVPd0D1Gwd1gWhevMsxpmUpnP/zTqHjjFr5CoBUBSxcHtdg==
@@ -1926,7 +1819,7 @@
     "@ethersproject/keccak256" "^5.7.0"
     "@zk-kit/incremental-merkle-tree" "1.0.0"
 
-"@semaphore-protocol/identity@^3.1.0", "@semaphore-protocol/identity@^3.2.3":
+"@semaphore-protocol/identity@^3.2.3":
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.4.0.tgz#9b9cf2c4128831d1b4e0fe2ccbb2632b0505a4d0"
   integrity sha512-qjV4yjz7rX+DFbUhuy6WdDCOhq2JK7fmeGm8bVA7HY/ddSBdjXqIt7BwuWMWVzxzaCiDQK5QUa6S4ojgSA3cMg==
@@ -1936,18 +1829,6 @@
     "@ethersproject/random" "^5.5.1"
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
-
-"@semaphore-protocol/proof@^3.1.0":
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.4.0.tgz#be41d6695e1a63f543c885e9cd0d3ee29222974b"
-  integrity sha512-rWsQ4jRik99h0tMptk1bIlp9UVEAyhl3vHfZb9gSb1EjOMUJhCVc3J8Pb47M0OmZHdCOF/ERq27f5BdYY7D16A==
-  dependencies:
-    "@ethersproject/bignumber" "^5.5.0"
-    "@ethersproject/bytes" "^5.7.0"
-    "@ethersproject/keccak256" "^5.7.0"
-    "@ethersproject/strings" "^5.5.0"
-    "@zk-kit/incremental-merkle-tree" "0.4.3"
-    snarkjs "0.4.13"
 
 "@semaphore-protocol/proof@^3.2.3":
   version "3.5.0"
@@ -2409,13 +2290,6 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.4.tgz#cd667bcfdd025213aafb7ca5915a932590acdcdc"
   integrity sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==
 
-"@types/react-dom@^17.0.11":
-  version "17.0.19"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-17.0.19.tgz#36feef3aa35d045cacd5ed60fe0eef5272f19492"
-  integrity sha512-PiYG40pnQRdPHnlf7tZnp0aQ6q9tspYr72vD61saO6zFCybLfMqwUCN0va1/P+86DXn18ZWeW30Bk7xlC5eEAQ==
-  dependencies:
-    "@types/react" "^17"
-
 "@types/react-dom@^18.0.7":
   version "18.0.11"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.0.11.tgz#321351c1459bc9ca3d216aefc8a167beec334e33"
@@ -2423,37 +2297,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^18.0.22":
+"@types/react@*", "@types/react@18.0.22", "@types/react@^18.0.22":
   version "18.0.28"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.28.tgz#accaeb8b86f4908057ad629a26635fe641480065"
   integrity sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@18.0.22":
-  version "18.0.22"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.22.tgz#97782d995d999617de116cf61f437f1351036fc7"
-  integrity sha512-4yWc5PyCkZN8ke8K9rQHkTXxHIWHxLzzW6RI1kXVoepkD3vULpKzC2sDtAMKn78h92BRYuzf+7b/ms7ajE6hFw==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^17":
-  version "17.0.53"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.53.tgz#10d4d5999b8af3d6bc6a9369d7eb953da82442ab"
-  integrity sha512-1yIpQR2zdYu1Z/dc1OxC+MA6GR240u3gcnP4l6mvj/PJiVaqHsQPmWttsvHsfnhfPbU2FuGmo0wSITPygjBmsw==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@^17.0.37":
-  version "17.0.58"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.58.tgz#c8bbc82114e5c29001548ebe8ed6c4ba4d3c9fb0"
-  integrity sha512-c1GzVY97P0fGxwGxhYq989j4XwlcHQoto6wQISOC2v6wm3h0PORRWJFHlkRjfGsiG3y1609WdQ+J+tKxvrEd6A==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -7712,7 +7559,7 @@ typescript@>=3.8:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.0.2.tgz#891e1a90c5189d8506af64b9ef929fca99ba1ee5"
   integrity sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==
 
-typescript@^4.5.2, typescript@^4.9.5:
+typescript@^4.9.5:
   version "4.9.5"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.5.tgz#095979f9bcc0d09da324d58d03ce8f8374cbe65a"
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==

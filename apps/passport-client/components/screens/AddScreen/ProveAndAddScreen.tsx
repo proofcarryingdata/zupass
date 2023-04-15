@@ -25,7 +25,7 @@ export function ProveAndAddScreen({
     <AppContainer bg="gray">
       <Container>
         <Spacer h={24} />
-        <AppHeader />
+        <AppHeader showSettings={false} />
         <Spacer h={16} />
         <GenericProveSection
           initialArgs={request.args}

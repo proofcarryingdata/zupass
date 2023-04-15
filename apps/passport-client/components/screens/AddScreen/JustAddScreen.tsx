@@ -23,7 +23,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
     <AppContainer bg="gray">
       <Container>
         <Spacer h={16} />
-        <AppHeader />
+        <AppHeader showSettings={false} />
         <Spacer h={16} />
         <H2>{"ADD PCD".toUpperCase()}</H2>
         <Spacer h={16} />
