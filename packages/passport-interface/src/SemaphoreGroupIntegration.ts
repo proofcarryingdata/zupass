@@ -66,7 +66,7 @@ export function openZuzaluMembershipPopup(
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore group membership proof.
  */
-export function useSemaphorePassportProof(
+export function useSemaphoreGroupProof(
   semaphoreGroupUrl: string,
   pcdStr: string
 ) {

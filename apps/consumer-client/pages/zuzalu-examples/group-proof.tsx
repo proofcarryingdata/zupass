@@ -1,7 +1,7 @@
 import {
   openZuzaluMembershipPopup,
   usePassportPopupMessages,
-  useSemaphorePassportProof,
+  useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -14,7 +14,7 @@ import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 export default function Page() {
   // Populate PCD from either client-side or server-side proving using passport popup
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
-  const { proof, group, valid } = useSemaphorePassportProof(
+  const { proof, group, valid } = useSemaphoreGroupProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
   );

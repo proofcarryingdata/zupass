@@ -4,7 +4,7 @@ import {
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphorePassportProof,
+  useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -30,7 +30,7 @@ export default function Page() {
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { proof, group, valid } = useSemaphorePassportProof(
+  const { proof, group, valid } = useSemaphoreGroupProof(
     SEMAPHORE_GROUP_URL,
     pcdStr
   );
