@@ -136,6 +136,7 @@ export const CardOutlineExpanded = styled.div`
   border-radius: 12px;
   border: 1px solid var(--accent-dark);
   background: var(--primary-dark);
+  overflow: hidden;
 `;
 
 const CardOutlineCollapsed = styled.div`
