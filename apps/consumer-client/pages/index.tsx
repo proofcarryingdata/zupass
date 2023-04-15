@@ -31,17 +31,17 @@ export default function Page() {
         <ol>
           <li>
             <a href="/zuzalu-examples/group-proof">
-              Semaphore Group Membership Proof
+              Zuzalu Group Membership Proof
+            </a>
+          </li>
+          <li>
+            <a href="/zuzalu-examples/uuid-proof">
+              Zuzalu Identity-Revealing Proof
             </a>
           </li>
           <li>
             <a href="/zuzalu-examples/signature-proof">
               Semaphore Signature Proof
-            </a>
-          </li>
-          <li>
-            <a href="/zuzalu-examples/uuid-proof">
-              Semaphore Identity-Revealing Proof
             </a>
           </li>
         </ol>

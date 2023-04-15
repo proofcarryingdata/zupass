@@ -1,19 +1,11 @@
 import {
   openZuzaluMembershipPopup,
   usePassportPopupMessages,
-  usePCDMultiplexer,
-  usePendingPCD,
-  useSemaphorePassportProof,
+  useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
-import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import {
-  PASSPORT_SERVER_URL,
-  PASSPORT_URL,
-  SEMAPHORE_GROUP_URL,
-} from "../../src/constants";
+import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -21,18 +13,12 @@ import {
  */
 export default function Page() {
   // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
-  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
-    passportPendingPCDStr,
-    PASSPORT_SERVER_URL
-  );
-  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { proof, group, valid } = useSemaphorePassportProof(
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+  const { proof, group, valid } = useSemaphoreGroupProof(
+    pcdStr,
     SEMAPHORE_GROUP_URL,
-    pcdStr
+    "consumer-client"
   );
-
-  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -70,33 +56,13 @@ export default function Page() {
               PASSPORT_URL,
               window.location.origin + "/popup",
               SEMAPHORE_GROUP_URL,
-              "1337",
-              "12345",
-              serverProving
+              "consumer-client"
             )
           }
           disabled={valid}
         >
           Request Zuzalu Membership Proof
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={serverProving}
-            onChange={() => {
-              setServerProving((checked: boolean) => !checked);
-            }}
-          />
-          server-side proof
-        </label>
-        {passportPendingPCDStr && (
-          <>
-            <PendingPCDStatusDisplay
-              status={pendingPCDStatus}
-              pendingPCDError={pendingPCDError}
-            />
-          </>
-        )}
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>

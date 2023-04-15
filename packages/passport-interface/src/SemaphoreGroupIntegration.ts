@@ -1,6 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   deserializeSemaphoreGroup,
+  generateMessageHash,
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -13,15 +14,20 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
 /**
  * Opens a passport popup to generate a Zuzalu membership proof.
  *
- * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ * @param urlToPassportWebsite URL of passport website
+ * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param urlToSemaphoreGroup URL where Zuzalu semaphore group is being served from
+ * @param originalSiteName Name of site requesting proof
+ * @param signal Optional signal that user is anonymously attesting to
+ * @param externalNullifier Optional unique identifier for this SemaphoreGroupPCD
  */
 export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
   popupUrl: string,
   urlToSemaphoreGroup: string,
-  externalNullifier?: string,
+  originalSiteName: string,
   signal?: string,
-  proveOnServer?: boolean
+  externalNullifier?: string
 ) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -33,7 +39,8 @@ export function openZuzaluMembershipPopup(
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: false,
-        value: externalNullifier ?? "1",
+        value:
+          externalNullifier ?? generateMessageHash(originalSiteName).toString(),
       },
       group: {
         argumentType: ArgumentTypeName.Object,
@@ -52,7 +59,8 @@ export function openZuzaluMembershipPopup(
       },
     },
     {
-      proveOnServer: proveOnServer,
+      title: "Zuzalu Anon Auth",
+      description: originalSiteName,
     }
   );
 
@@ -62,10 +70,13 @@ export function openZuzaluMembershipPopup(
 /**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore group membership proof.
+ * Params match those used in openZuzaluMembershipPopup.
  */
-export function useSemaphorePassportProof(
+export function useSemaphoreGroupProof(
+  pcdStr: string,
   semaphoreGroupUrl: string,
-  pcdStr: string
+  originalSiteName: string,
+  externalNullifier?: string
 ) {
   const [error, setError] = useState<Error | undefined>();
   const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
@@ -91,9 +102,22 @@ export function useSemaphorePassportProof(
   const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
   useEffect(() => {
     if (semaphoreGroupPCD && semaphoreGroup) {
-      verifyProof(semaphoreGroupPCD, semaphoreGroup).then(setValid);
+      const proofExternalNullifier =
+        externalNullifier ?? generateMessageHash(originalSiteName).toString();
+
+      verifyProof(
+        semaphoreGroupPCD,
+        semaphoreGroup,
+        proofExternalNullifier
+      ).then(setValid);
     }
-  }, [semaphoreGroupPCD, semaphoreGroup, setValid]);
+  }, [
+    semaphoreGroupPCD,
+    semaphoreGroup,
+    externalNullifier,
+    originalSiteName,
+    setValid,
+  ]);
 
   return {
     proof: semaphoreGroupPCD,
@@ -105,13 +129,19 @@ export function useSemaphorePassportProof(
 
 async function verifyProof(
   pcd: SemaphoreGroupPCD,
-  serializedExpectedGroup: SerializedSemaphoreGroup
+  serializedExpectedGroup: SerializedSemaphoreGroup,
+  externalNullifier: string
 ): Promise<boolean> {
   const { verify } = SemaphoreGroupPCDPackage;
   const verified = await verify(pcd);
   if (!verified) return false;
 
-  const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
+  // verify the claim is for the correct externalNullifier and group
+  const sameExternalNullifier =
+    pcd.claim.externalNullifier === externalNullifier;
 
-  return expectedGroup.root.toString() === pcd.claim.merkleRoot;
+  const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
+  const sameRoot = expectedGroup.root.toString() === pcd.claim.merkleRoot;
+
+  return sameExternalNullifier && sameRoot;
 }

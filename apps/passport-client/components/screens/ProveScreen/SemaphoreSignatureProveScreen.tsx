@@ -64,6 +64,7 @@ export function SemaphoreSignatureProveScreen({
   const lines: ReactNode[] = [];
 
   if (req.args.signedMessage.value === undefined) {
+    // Website is asking for a signature of the Zuzalu UUID for auth
     const websiteName =
       req.options?.description !== undefined
         ? req.options?.description
@@ -75,20 +76,24 @@ export function SemaphoreSignatureProveScreen({
       </p>
     );
     lines.push("Make sure you trust this website!");
-    lines.push(<Button onClick={onProve}>Continue</Button>);
+
+    if (!proving) {
+      lines.push(<Button onClick={onProve}>Continue</Button>);
+    } else {
+      lines.push(<RippleLoader />);
+    }
   } else {
+    // Website is asking for a signature of a custom message
     lines.push(
       <p>
         Signing message: <b>{req.args.signedMessage.value}</b>
       </p>
     );
-    lines.push(<Button onClick={onProve}>Prove</Button>);
-  }
-
-  if (!proving) {
-    lines.push(<Button onClick={onProve}>Prove</Button>);
-  } else {
-    lines.push(<RippleLoader />);
+    if (!proving) {
+      lines.push(<Button onClick={onProve}>Prove</Button>);
+    } else {
+      lines.push(<RippleLoader />);
+    }
   }
 
   return (
