@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-identity-pcd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.js",
   "types": "./index.ts",
@@ -12,8 +12,8 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.3.0",
-    "@pcd/tsconfig": "0.3.0",
+    "@pcd/pcd-types": "0.4.0",
+    "@pcd/tsconfig": "0.4.0",
     "@semaphore-protocol/group": "^3.1.0",
     "@semaphore-protocol/identity": "^3.1.0",
     "@semaphore-protocol/proof": "^3.1.0",
@@ -24,7 +24,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.3.0",
+    "@pcd/eslint-config-custom": "0.4.0",
     "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.1",
     "eslint": "^7.32.0",

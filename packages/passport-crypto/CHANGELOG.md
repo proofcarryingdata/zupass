@@ -1,5 +1,19 @@
 # @pcd/passport-crypto
 
+## 0.4.0
+
+### Minor Changes
+
+- Updated passport interface and related packages to simplify and make more explicit the APIs that allow developers to request PCDs from the passport.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-collection@0.4.0
+  - @pcd/pcd-types@0.4.0
+  - @pcd/semaphore-identity-pcd@0.4.0
+  - @pcd/tsconfig@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @pcd/semaphore-group-pcd
 
+## 0.4.0
+
+### Minor Changes
+
+- Updated passport interface and related packages to simplify and make more explicit the APIs that allow developers to request PCDs from the passport.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eslint-config-custom@0.4.0
+  - @pcd/pcd-types@0.4.0
+  - @pcd/semaphore-identity-pcd@0.4.0
+  - @pcd/semaphore-signature-pcd@0.4.0
+  - @pcd/tsconfig@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
