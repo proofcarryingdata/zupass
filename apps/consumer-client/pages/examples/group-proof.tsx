@@ -7,7 +7,10 @@ import {
   useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import {
+  generateMessageHash,
+  SemaphoreGroupPCDPackage,
+} from "@pcd/semaphore-group-pcd";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -31,8 +34,9 @@ export default function Page() {
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
   const { proof, group, valid } = useSemaphoreGroupProof(
+    pcdStr,
     SEMAPHORE_GROUP_URL,
-    pcdStr
+    "consumer-client"
   );
 
   const [debugChecked, setDebugChecked] = useState(false);
@@ -67,7 +71,13 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestMembershipProof(debugChecked, serverProving)}
+          onClick={() =>
+            requestMembershipProof(
+              debugChecked,
+              serverProving,
+              "consumer-client"
+            )
+          }
           disabled={valid}
         >
           Request Group Membership Proof
@@ -117,7 +127,11 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
+function requestMembershipProof(
+  debug: boolean,
+  proveOnServer: boolean,
+  originalSiteName: string
+) {
   const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -129,7 +143,7 @@ function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
-        value: "1",
+        value: generateMessageHash(originalSiteName).toString(),
         description:
           "You can choose a nullifier to prevent this signed message from being used across domains.",
       },

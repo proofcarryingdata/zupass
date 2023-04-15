@@ -15,8 +15,9 @@ export default function Page() {
   // Populate PCD from either client-side or server-side proving using passport popup
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
   const { proof, group, valid } = useSemaphoreGroupProof(
+    pcdStr,
     SEMAPHORE_GROUP_URL,
-    pcdStr
+    "consumer-client"
   );
 
   return (
