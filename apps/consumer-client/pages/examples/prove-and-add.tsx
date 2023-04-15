@@ -1,39 +1,33 @@
 import { constructPassportPcdProveAndAddRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 export default function Page() {
-  // const { response, error } = usePassportResponse();
 
   return (
     <div>
       <HomeLink />
       <h2>Prove and Add</h2>
       <ExampleContainer>
-        <button onClick={onAddClick}>
+        <button onClick={addGroupMembershipProof}>
           prove and add a group membership proof
         </button>
-        {/* TODO: implement response and error */}
-        {/* {response && (
-          <>
-            <CollapsableCode code={JSON.stringify(response, null, 2)} />
-          </>
-        )}
-        {error && (
-          <>
-            <CollapsableCode code={error.message} />
-          </>
-        )} */}
+        <br />
+        <br />
+        <button onClick={addSignatureProof}>
+          prove and add a signature proof
+        </button>
       </ExampleContainer>
     </div>
   );
 }
 
-async function onAddClick() {
+async function addGroupMembershipProof() {
   const url = constructPassportPcdProveAndAddRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -78,4 +72,31 @@ async function onAddClick() {
   );
 
   sendPassportRequest(url);
+}
+
+async function addSignatureProof() {
+  const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+  typeof SemaphoreSignaturePCDPackage
+>(
+  PASSPORT_URL,
+  window.location.origin + "/popup",
+  SemaphoreSignaturePCDPackage.name,
+  {
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: undefined,
+      userProvided: true,
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: "1",
+      userProvided: false,
+    },
+  },
+  {
+    title: "Semaphore Signature Proof",
+  }
+);
+
+sendPassportRequest(proofUrl);
 }
