@@ -78,11 +78,19 @@ export function SemaphoreGroupProveScreen({
   ]);
 
   const lines: ReactNode[] = [];
-  lines.push(<p>Loading {req.args.group.remoteUrl}</p>);
-  if (group != null) {
-    lines.push(<p>Loaded {group.name}</p>);
+  if (group === null) {
+    lines.push(<p>Loading the group...</p>);
+  } else {
+    const websiteName =
+      req.options?.description !== undefined
+        ? req.options?.description
+        : "This website";
+
     lines.push(
-      <p>You're proving that you're one of {group.members.length} members</p>
+      <p>
+        <b>{websiteName}</b> is requesting a proof that you're one of{" "}
+        {group.members.length} members of {group.name}.
+      </p>
     );
   }
 

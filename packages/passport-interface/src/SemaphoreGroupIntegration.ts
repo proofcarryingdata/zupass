@@ -1,6 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   deserializeSemaphoreGroup,
+  generateMessageHash,
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
@@ -13,15 +14,15 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
 /**
  * Opens a passport popup to generate a Zuzalu membership proof.
  *
- * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ * popupUrl must be the route where the usePassportPopupSetup hook is being served from.
  */
 export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
   popupUrl: string,
   urlToSemaphoreGroup: string,
-  externalNullifier?: string,
+  originalSiteName: string,
   signal?: string,
-  proveOnServer?: boolean
+  uniqueProofId?: string
 ) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -33,7 +34,8 @@ export function openZuzaluMembershipPopup(
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: false,
-        value: externalNullifier ?? "1",
+        value:
+          uniqueProofId ?? generateMessageHash(originalSiteName).toString(),
       },
       group: {
         argumentType: ArgumentTypeName.Object,
@@ -52,7 +54,8 @@ export function openZuzaluMembershipPopup(
       },
     },
     {
-      proveOnServer: proveOnServer,
+      title: "Zuzalu Anon Auth",
+      description: originalSiteName,
     }
   );
 

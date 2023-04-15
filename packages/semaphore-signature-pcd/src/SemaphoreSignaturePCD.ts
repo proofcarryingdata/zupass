@@ -30,7 +30,7 @@ export const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
 );
 
 /**
- * Hashes a message to be signed with Keccak and fits it into a baby jub jub field element.
+ * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
  * @param signal The initial message.
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
