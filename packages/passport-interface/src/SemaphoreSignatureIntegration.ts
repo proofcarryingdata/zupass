@@ -8,7 +8,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
 /**
  * Opens a passport popup to generate a Semaphore signature proof.
  *
- * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ * popupUrl must be the route where the usePassportPopupSetup hook is being served from.
  */
 export function openSemaphoreSignaturePopup(
   urlToPassportWebsite: string,
@@ -47,7 +47,7 @@ export function openSemaphoreSignaturePopup(
  * Zuzalu DB uuid, which can then be used to fetch user details from the passport
  * server. Built specifically for Zuzalu apps.
  *
- * popUrl must be the route where the usePassportPopupSetup hook is being served from.
+ * popupUrl must be the route where the usePassportPopupSetup hook is being served from.
  * originalSiteName should be the name of your service, to be displayed on the popup.
  */
 export function openSignedZuzaluUUIDPopup(
