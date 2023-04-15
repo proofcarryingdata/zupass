@@ -21,6 +21,7 @@ import {
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreGroupCardBody } from "./CardBody";
 import {
   deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
@@ -229,6 +230,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
 > = {
   name: SemaphoreGroupPCDTypeName,
   getDisplayOptions,
+  renderCardBody: SemaphoreGroupCardBody,
   init,
   prove,
   verify,
