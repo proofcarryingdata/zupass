@@ -9,16 +9,14 @@ export function SemaphoreIdentityCardBody({
 }) {
   return (
     <Container>
-      <HiddenText
-        text={pcd.claim.identity.commitment.toString()}
-        label="commitment"
-      />
+      <span>Commitment</span>
+      <HiddenText text={pcd.claim.identity.commitment.toString()} />
     </Container>
   );
 }
 
 const Container = styled.div`
-  padding: 0px 16px 16px 16px;
+  padding: 16px;
   overflow: hidden;
   width: 100%;
 `;

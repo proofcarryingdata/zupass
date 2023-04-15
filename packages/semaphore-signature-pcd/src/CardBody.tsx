@@ -1,4 +1,4 @@
-import { HiddenText, TextContainer } from "@pcd/passport-ui";
+import { HiddenText, Spacer, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { SemaphoreSignaturePCD } from "./SemaphoreSignaturePCD";
 
@@ -9,15 +9,18 @@ export function SemaphoreIdentityCardBody({
 }) {
   return (
     <Container>
-      <HiddenText text={pcd.claim.identityCommitment} label="commitment" />
-      <span>signed message</span>
+      <span>Commitment</span>
+      <HiddenText text={pcd.claim.identityCommitment} />
+      <Spacer h={8} />
+
+      <span>Signed Message</span>
       <TextContainer>{pcd.claim.signedMessage}</TextContainer>
     </Container>
   );
 }
 
 const Container = styled.div`
-  padding: 0px 16px 16px 16px;
+  padding: 16px;
   overflow: hidden;
   width: 100%;
 `;

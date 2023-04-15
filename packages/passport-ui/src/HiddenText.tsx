@@ -1,8 +1,7 @@
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import React from "react";
 
-export function HiddenText({ text, label }: { text: string; label: string }) {
+export function HiddenText({ text }: { text: string }) {
   const [visible, setVisible] = useState(false);
 
   const onRevealClick = useCallback(() => {
@@ -15,24 +14,20 @@ export function HiddenText({ text, label }: { text: string; label: string }) {
 
   return (
     <HiddenTextContainer onClick={onRevealClick}>
-      tap to reveal {label}
+      tap to reveal
     </HiddenTextContainer>
   );
 }
 
 export const TextContainer = styled.div`
-  border: 2px solid var(--bg-dark-primary);
+  border: 2px solid var(--primary-lite);
   overflow: hidden;
   padding: 4px 8px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.21);
-  }
 `;
 
 export const HiddenTextContainer = styled.div`
-  border: 2px solid var(--bg-dark-primary);
+  border: 2px solid var(--primary-lite);
   overflow: hidden;
   padding: 4px 8px;
   border-radius: 4px;
@@ -41,8 +36,8 @@ export const HiddenTextContainer = styled.div`
   align-items: center;
   user-select: none;
   cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.1);
   &:hover {
-    background-color: rgba(0, 0, 0, 0.18);
+    background-color: rgba(0, 0, 0, 0.12);
   }
 `;

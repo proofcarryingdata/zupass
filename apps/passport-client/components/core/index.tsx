@@ -1,9 +1,9 @@
+import { Spacer } from "@pcd/passport-ui";
 import * as React from "react";
 import styled from "styled-components";
 import { icons } from "../icons";
 import { Button } from "./Button";
 import { BigInput } from "./Input";
-import { Spacer } from "./Spacer";
 
 export { Button, BigInput, Spacer };
 
