@@ -112,7 +112,6 @@ async function verifyProof(
   if (!verified) return false;
 
   const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
-  const pcdGroup = deserializeSemaphoreGroup(pcd.claim.group);
 
-  return expectedGroup.root.toString() === pcdGroup.root.toString();
+  return expectedGroup.root.toString() === pcd.claim.merkleRoot;
 }
