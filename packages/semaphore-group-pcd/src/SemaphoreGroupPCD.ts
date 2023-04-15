@@ -48,9 +48,15 @@ export interface SemaphoreGroupPCDArgs {
 
 export interface SemaphoreGroupPCDClaim {
   /**
-   * A serialized version of the group to which this PCD is referring.
+   * The merkle root of the group being proven membership in. Retreiving members
+   * in the root is left to the application logic.
    */
-  group: SerializedSemaphoreGroup;
+  merkleRoot: string;
+
+  /**
+   * Depth of the tree for the Merkle root.
+   */
+  depth: number;
 
   /**
    * Stringified `BigInt`.
@@ -150,7 +156,8 @@ export async function prove(
   );
 
   const claim: SemaphoreGroupPCDClaim = {
-    group: serializedGroup,
+    merkleRoot: deserializedGroup.root.toString(),
+    depth: deserializedGroup.depth,
     externalNullifier: args.externalNullifier.value.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
     signal: args.signal.value.toString(),
@@ -162,17 +169,15 @@ export async function prove(
 }
 
 export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
-  const deserializedGroup = deserializeSemaphoreGroup(pcd.claim.group);
-
   const fullProof: FullProof = {
     externalNullifier: pcd.claim.externalNullifier,
-    merkleTreeRoot: deserializedGroup.root + "",
+    merkleTreeRoot: pcd.claim.merkleRoot + "",
     nullifierHash: pcd.claim.nullifierHash,
     signal: pcd.claim.signal,
     proof: pcd.proof,
   };
 
-  const valid = await verifyProof(fullProof, pcd.claim.group.depth);
+  const valid = await verifyProof(fullProof, pcd.claim.depth);
 
   return valid;
 }
