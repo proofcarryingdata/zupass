@@ -113,7 +113,8 @@ async function loadInitialState(): Promise<ZuState> {
   const encryptionKey = await loadEncryptionKey();
 
   let modal = "" as ZuState["modal"];
-  if (!localStorage["savedSyncKey"]) {
+  if (self != null && !localStorage["savedSyncKey"]) {
+    console.log("Asking existing user to save their sync key...");
     modal = "save-sync";
   }
 

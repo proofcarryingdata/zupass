@@ -4,6 +4,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
+import { err } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -50,44 +51,36 @@ function SendEmailVerification({ email }: { email: string }) {
     if (triedSendingEmail) return;
     setTriedSendingEmail(true);
 
+    const handleResult = (devToken: string | undefined) => {
+      if (devToken === undefined) {
+        setEmailSent(true);
+      } else {
+        dispatch({ type: "login", email, token: devToken });
+      }
+    };
+
     requestLoginCode(email, identity)
-      .then((devToken: string | undefined) => {
-        if (devToken === undefined) {
-          setEmailSent(true);
+      .then(handleResult)
+      .catch((e) => {
+        const message = e.message as string;
+        if (message.includes("already registered")) {
+          const result = window.confirm(`
+This email is already registered. Do you want to continue anyway?
+
+This will clear your old passport.
+
+IF YOU STILL HAVE YOUR OLD PASSPORT, CANCEL 
+AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
+          if (result) {
+            requestLoginCode(email, identity, true)
+              .then(handleResult)
+              .catch((e) => err(dispatch, "Email failed", e.message));
+          } else {
+            window.location.href = "#/";
+            window.location.reload();
+          }
         } else {
-          dispatch({ type: "login", email, token: devToken });
-        }
-      })
-      .catch((err) => {
-        const { message } = err;
-        if ((message as string).includes("already registered")) {
-          dispatch({
-            type: "error",
-            error: {
-              title: "Email failed",
-              message: (
-                <>
-                  {message} <br /> <br />
-                  You have already logged in on another device or browser. Copy
-                  the sync key from the settings page, using the browser you've
-                  already logged in on.
-                  <br />
-                  <br />
-                  For example, if you generated a passport from inside an email
-                  mobile app, you should click on the passport link in your
-                  invite email again to open your logged in passport. Then,
-                  click the gear icon in the top right, copy your sync key,
-                  click Sync Existing Passport on this page, and finally paste
-                  in your sync key.
-                </>
-              ),
-            },
-          });
-        } else {
-          dispatch({
-            type: "error",
-            error: { title: "Email failed", message },
-          });
+          err(dispatch, "Email failed", message);
         }
       });
   }, [setEmailSent, dispatch, identity, triedSendingEmail, email]);
@@ -143,12 +136,14 @@ function SendEmailVerification({ email }: { email: string }) {
  */
 async function requestLoginCode(
   email: string,
-  identity: Identity
+  identity: Identity,
+  force = false
 ): Promise<string | undefined> {
-  console.log(`Requesting email verification for ${email}...`);
+  console.log(`Requesting email verification for ${email}, force=${force}...`);
   const params = new URLSearchParams({
     email,
     commitment: identity.commitment.toString(),
+    force: force ? "true" : "false",
   }).toString();
   const url = `${config.passportServer}/zuzalu/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });

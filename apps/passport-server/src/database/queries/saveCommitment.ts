@@ -1,8 +1,8 @@
 import { ClientBase, Pool } from "pg";
 
-// Saves a new commitment. Can only happen once per email address.
-// Returns the commitment (new or existing) UUID.
-export async function findOrCreateCommitment(
+// Saves a new commitment. Overwrites any existing commitment for this email.
+// Returns the commitment UUID.
+export async function saveCommitment(
   client: ClientBase | Pool,
   params: {
     email: string;
@@ -18,7 +18,7 @@ export async function findOrCreateCommitment(
     `\
 INSERT INTO commitments (uuid, participant_email, commitment)
 VALUES (gen_random_uuid(), $1, $2)
-ON CONFLICT (commitment) DO NOTHING`,
+ON CONFLICT (participant_email) DO UPDATE SET commitment = $2`,
     [email, commitment]
   );
   const uuidResult = await client.query(

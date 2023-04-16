@@ -284,5 +284,7 @@ async function loadFromSync(
     self: storage.self,
   });
 
+  console.log("Loaded from sync key, redirecting to home screen...");
+  window.localStorage["savedSyncKey"] = "true";
   window.location.hash = "#/";
 }
