@@ -2,13 +2,14 @@ import * as React from "react";
 import { useCallback, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { ZuState } from "../../src/state";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 
 export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
-    (modal: string) => dispatch({ type: "set-modal", modal }),
+    (modal: ZuState["modal"]) => dispatch({ type: "set-modal", modal }),
     [dispatch]
   );
   const openInfo = useCallback(() => setModal("info"), [setModal]);

@@ -112,7 +112,12 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
 
-  return { self, encryptionKey, pcds, identity };
+  let modal = "" as ZuState["modal"];
+  if (!localStorage["savedSyncKey"]) {
+    modal = "save-sync";
+  }
+
+  return { self, encryptionKey, pcds, identity, modal };
 }
 
 // Redirect old site visitors to the correct site

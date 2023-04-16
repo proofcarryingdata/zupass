@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { Button, CenterColumn, H3, Spacer, TextCenter } from "../core";
+import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { Modal } from "./Modal";
 
 export function SaveSyncModal() {
@@ -15,10 +15,10 @@ export function SaveSyncModal() {
     setTimeout(() => setJustCopied(false), 2000);
   }, [syncKey]);
 
-  const close = useCallback(
-    () => dispatch({ type: "set-modal", modal: "" }),
-    [dispatch]
-  );
+  const close = useCallback(() => {
+    localStorage["savedSyncKey"] = "true";
+    dispatch({ type: "set-modal", modal: "" });
+  }, [dispatch]);
 
   if (syncKey == null) return null;
 
@@ -26,7 +26,7 @@ export function SaveSyncModal() {
     <Modal>
       <Wrap>
         <TextCenter>
-          <H3>WELCOME TO ZUPASS</H3>
+          <H2>WELCOME TO ZUPASS</H2>
         </TextCenter>
         <Spacer h={32} />
         <TextCenter>

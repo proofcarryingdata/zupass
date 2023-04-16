@@ -15,7 +15,7 @@ export interface ZuState {
 
   // View state
   pendingAction?: PendingAction;
-  modal?: string;
+  modal: "info" | "settings" | "save-sync" | "";
 
   // Participant metadata.
   // TODO: reload from passport server on startup.

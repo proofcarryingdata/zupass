@@ -1,6 +1,10 @@
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
+export function assertUnreachable(_: never): never {
+  throw new Error("Unreachable");
+}
+
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {

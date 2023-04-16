@@ -1,6 +1,8 @@
 import React, { ReactNode, useCallback, useContext } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { ZuState } from "../../src/state";
+import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
@@ -19,7 +21,7 @@ export function MaybeModal() {
   return <Modal onClose={close}>{body}</Modal>;
 }
 
-function getModalBody(modal: string) {
+function getModalBody(modal: ZuState["modal"]) {
   switch (modal) {
     case "info":
       return <InfoModal />;
@@ -27,8 +29,10 @@ function getModalBody(modal: string) {
       return <SettingsModal />;
     case "save-sync":
       return <SaveSyncModal />;
-    default:
+    case "":
       return null;
+    default:
+      assertUnreachable(modal);
   }
 }
 

@@ -40,7 +40,7 @@ export type Action =
     }
   | {
       type: "set-modal";
-      modal: string;
+      modal: ZuState["modal"];
     }
   | {
       type: "error";
