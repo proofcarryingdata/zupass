@@ -24,7 +24,7 @@ export interface WebAuthnPCDClaim {
   /**
    * The challenge that is claimed to be signed by the credential.
    */
-  challenge: string | ((challenge: string) => boolean);
+  challenge: string;
   /**
    * The origin(s) of this WebAuthn credential, e.g. google.com.
    */
@@ -42,9 +42,7 @@ export interface WebAuthnPCDClaim {
   authenticator: AuthenticatorDevice;
 }
 
-export interface WebAuthnPCDProof {
-  authenticationProof: AuthenticationResponseJSON;
-}
+export type WebAuthnPCDProof = AuthenticationResponseJSON;
 
 export class WebAuthnPCD implements PCD<WebAuthnPCDClaim, WebAuthnPCDProof> {
   type = WebAuthnPCDTypeName;
@@ -77,15 +75,13 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
     authenticator: args.authenticator,
     challenge: args.challenge,
   };
-  const proof = {
-    authenticationProof: authenticationResponseJSON,
-  };
+  const proof = authenticationResponseJSON;
   return new WebAuthnPCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
   const { verified } = await verifyAuthenticationResponse({
-    response: pcd.proof.authenticationProof,
+    response: pcd.proof,
     expectedChallenge: pcd.claim.challenge,
     expectedOrigin: pcd.claim.origin,
     expectedRPID: pcd.claim.rpID,
