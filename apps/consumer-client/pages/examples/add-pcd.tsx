@@ -17,6 +17,22 @@ export default function Page() {
     <div>
       <HomeLink />
       <h2>Prove and Add</h2>
+      <p>
+        This page contains several examples of how to add PCDs to the passport.
+        You can add a PCD to the passport in one of two ways:
+      </p>
+      <ul>
+        <li>
+          Add a PCD (which can be kind of dangerous if the user then expects
+          that PCD to be private, as is the case for adding a raw Semaphore
+          Identity).
+        </li>
+        <li>
+          Prove, and <i>then</i> add the PCD to the passport. The application
+          that initiates this does not get a copy of the PCD back, it just adds
+          it to the passport.
+        </li>
+      </ul>
       <ExampleContainer>
         <button onClick={addGroupMembershipProofPCD}>
           prove and add a group membership proof

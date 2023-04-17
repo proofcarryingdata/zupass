@@ -12,7 +12,7 @@ export const GlobalStyle = createGlobalStyle`
     line-height: 1.5em;
   }
 
-  p {
+  p, ul, ol {
     max-width: 600px;
   }
 
