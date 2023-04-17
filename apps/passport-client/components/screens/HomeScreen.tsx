@@ -32,7 +32,8 @@ export function HomeScreen() {
 
   const pcds = useMemo(() => {
     return state.pcds.getAll();
-  }, [state.pcds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.pcds, state]);
   const zuzaluPCDId = useMemo(() => {
     return pcds[0]?.id;
   }, [pcds]);
@@ -57,7 +58,7 @@ export function HomeScreen() {
                 <Spacer h={8} />
                 <PCDCard
                   pcd={pcd}
-                  expanded={pcd.id === selectedPCD.id}
+                  expanded={pcd.id === selectedPCD?.id}
                   isZuzaluIdentity={pcd.id === zuzaluPCDId}
                   onClick={() => {
                     setSelectedPCDID(pcd.id);
