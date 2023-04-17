@@ -11,6 +11,11 @@ import { err } from "../../../src/util";
 import { JustAddScreen } from "./JustAddScreen";
 import { ProveAndAddScreen } from "./ProveAndAddScreen";
 
+/**
+ * Asks user if they want to add the given PCD to their passport. The
+ * PCD can either be a `SerializedPCD` passed in via a url, or one that
+ * is freshly generated in-passport via a proving screen.
+ */
 export function AddScreen() {
   const location = useLocation();
   const [_, dispatch] = useContext(DispatchContext);
