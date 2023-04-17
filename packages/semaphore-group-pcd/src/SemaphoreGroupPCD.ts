@@ -211,10 +211,10 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
-export function getDisplayOptions(_pcd: SemaphoreGroupPCD): DisplayOptions {
+export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
   return {
-    backgroundColor: "#ff00ff",
     header: "Semaphore Group Signal",
+    displayName: "semaphore-" + pcd.id.substring(0, 4),
   };
 }
 

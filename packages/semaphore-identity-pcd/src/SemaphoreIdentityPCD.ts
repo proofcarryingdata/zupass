@@ -63,10 +63,11 @@ export async function deserialize(
   });
 }
 
-export function getDisplayOptions(_pcd: SemaphoreIdentityPCD): DisplayOptions {
+export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
   return {
-    backgroundColor: "#00ff00",
     header: "Semaphore Identity",
+    displayName:
+      "semaphore-" + pcd.claim.identity.commitment.toString().substring(0, 8),
   };
 }
 

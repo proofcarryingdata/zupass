@@ -199,10 +199,10 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
-export function getDisplayOptions(_pcd: SemaphoreSignaturePCD): DisplayOptions {
+export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
   return {
-    backgroundColor: "#00ffff",
     header: "Semaphore Signature",
+    displayName: "semaphore-" + pcd.id.substring(0, 4),
   };
 }
 

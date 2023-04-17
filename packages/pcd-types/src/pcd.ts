@@ -13,8 +13,18 @@ export interface SerializedPCD<_T extends PCD = PCD> {
 }
 
 export interface DisplayOptions {
-  backgroundColor?: string;
+  /**
+   * Shown to the user in the main page of the passport, where they can
+   * see all of their cards.
+   */
   header?: string;
+
+  /**
+   * Shown to the user in the `GenericProveScreen`, allowing them to
+   * disambiguate between different pcds of the same type. In the future,
+   * we'll have a better way to disambiguate between them.
+   */
+  displayName?: string;
 }
 
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
