@@ -2,6 +2,7 @@ import {
   PCDGetWithoutProvingRequest,
   PCDRequestType,
 } from "@pcd/passport-interface";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useContext, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
@@ -36,6 +37,15 @@ export function GetWithoutProvingScreen() {
       dispatch,
       "Unsupported request",
       `Expected a PCD GetWithoutProving request`
+    );
+    return null;
+  }
+
+  if (request.pcdType === SemaphoreIdentityPCDTypeName) {
+    err(
+      dispatch,
+      "Unsupported PCD Type",
+      `You cannot request a Semaphore Identity PCD.`
     );
     return null;
   }
