@@ -476,12 +476,14 @@ export function PCDArgInput<T extends PCDPackage>({
             {pcdCollection
               .getAll()
               .filter((pcd) => {
-                arg.pcdType === undefined || pcd.type === arg.pcdType;
+                return arg.pcdType === undefined || pcd.type === arg.pcdType;
               })
               .map((pcd) => {
+                const pcdPackage = pcdCollection.getPackage(pcd.type);
                 return (
                   <option key={pcd.id} value={pcd.id}>
-                    {pcd.type}
+                    {pcdPackage?.getDisplayOptions(pcd)?.displayName ??
+                      pcd.type}
                   </option>
                 );
               })}

@@ -15,14 +15,11 @@ export class PCDCollection {
     this.pcds = pcds;
   }
 
-  public getPackage<T extends PCDPackage = PCDPackage>(name: string): T {
+  public getPackage<T extends PCDPackage = PCDPackage>(
+    name: string
+  ): T | undefined {
     const matching = this.packages.find((p) => p.name === name);
-
-    if (matching === undefined) {
-      throw new Error(`no package matching ${name}`);
-    }
-
-    return matching as T;
+    return matching as T | undefined;
   }
 
   public hasPackage(name: string): boolean {
