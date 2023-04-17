@@ -16,8 +16,9 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
+  const popupSrcId = "zuzalu-signature-proof";
   // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages(popupSrcId);
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -62,6 +63,7 @@ export default function Page() {
             () =>
               openSemaphoreSignaturePopup(
                 PASSPORT_URL,
+                popupSrcId,
                 window.location.origin + "/popup",
                 messageToSign,
                 serverProving

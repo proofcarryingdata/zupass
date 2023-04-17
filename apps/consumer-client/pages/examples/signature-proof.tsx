@@ -19,8 +19,9 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
+  const popupSrcId = "generic-signature-proof";
   // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages(popupSrcId);
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -52,7 +53,7 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={useCallback(
-            () => requestSemaphoreSignature(serverProving),
+            () => requestSemaphoreSignature(popupSrcId, serverProving),
             [serverProving]
           )}
         >
@@ -95,12 +96,13 @@ export default function Page() {
   );
 }
 
-function requestSemaphoreSignature(proveOnServer: boolean) {
+function requestSemaphoreSignature(popupSrcId: string, proveOnServer: boolean) {
   const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     PASSPORT_URL,
+    popupSrcId,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {

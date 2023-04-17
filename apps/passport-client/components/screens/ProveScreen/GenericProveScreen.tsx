@@ -43,13 +43,12 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
           args: args,
         };
         const pendingPCD = await requestPendingPCD(serverReq);
-        window.location.href = `${
-          req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        window.location.href = `${req.returnUrl
+          }?srcId=${req.srcId}&encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
       } else {
         const pcd = await pcdPackage.prove(args);
         const serialized = await pcdPackage.serialize(pcd);
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        window.location.href = `${req.returnUrl}?srcId=${req.srcId}&proof=${JSON.stringify(
           serialized
         )}`;
       }
@@ -61,6 +60,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
     args,
     pcdPackage,
     req.returnUrl,
+    req.srcId,
     req.options?.proveOnServer,
     req.pcdType,
   ]);

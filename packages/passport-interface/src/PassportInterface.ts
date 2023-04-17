@@ -6,6 +6,7 @@ export enum PCDRequestType {
 }
 
 export interface PCDRequest {
+  srcId: string;
   returnUrl: string;
   type: PCDRequestType;
 }
@@ -33,6 +34,7 @@ export interface PCDAddRequest extends PCDRequest {
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
   passportOrigin: string,
+  srcId: string,
   returnUrl: string,
   pcdType: T["name"],
   args: ArgsOf<T>,
@@ -40,6 +42,7 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
 ) {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
+    srcId: srcId,
     returnUrl: returnUrl,
     args: args,
     pcdType,
@@ -51,11 +54,13 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
 
 export function constructPassportPcdAddRequestUrl(
   passportOrigin: string,
+  srcId: string,
   returnUrl: string,
   pcd: PCD
 ) {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
+    srcId: srcId,
     returnUrl: returnUrl,
     pcd,
   };

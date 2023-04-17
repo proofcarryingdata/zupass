@@ -26,8 +26,9 @@ import {
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
+  const popupSrcId = "generic-group-proof";
   // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages(popupSrcId);
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
@@ -78,6 +79,7 @@ export default function Page() {
         <button
           onClick={() =>
             requestMembershipProof(
+              popupSrcId,
               debugChecked,
               serverProving,
               "consumer-client"
@@ -133,6 +135,7 @@ export default function Page() {
 
 // Show the Passport popup, ask the user to show anonymous membership.
 function requestMembershipProof(
+  popupSrcId: string,
   debug: boolean,
   proveOnServer: boolean,
   originalSiteName: string
@@ -142,6 +145,7 @@ function requestMembershipProof(
     typeof SemaphoreGroupPCDPackage
   >(
     PASSPORT_URL,
+    popupSrcId,
     popupUrl,
     SemaphoreGroupPCDPackage.name,
     {

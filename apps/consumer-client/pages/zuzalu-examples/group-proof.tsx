@@ -13,8 +13,9 @@ import { useState } from "react";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
+  const popupSrcId = "zuzalu-group-proof";
   // Populate PCD from either client-side or server-side proving using passport popup
-  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages(popupSrcId);
 
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = (valid: boolean) => {
@@ -62,6 +63,7 @@ export default function Page() {
           onClick={() =>
             openZuzaluMembershipPopup(
               PASSPORT_URL,
+              popupSrcId,
               window.location.origin + "/popup",
               SEMAPHORE_GROUP_URL,
               "consumer-client"

@@ -15,9 +15,10 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
  * party developer.
  */
 export default function Page() {
+  const popupSrcId = "zuzalu-uuid-proof";
   // We only do client-side proofs for Zuzalu UUID proofs, which means we can
   // ignore any PendingPCDs that would result from server-side proving
-  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages(popupSrcId);
   
   const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
   const onProofVerified = (valid: boolean) => {
@@ -56,6 +57,7 @@ export default function Page() {
           onClick={() =>
             openSignedZuzaluUUIDPopup(
               PASSPORT_URL,
+              popupSrcId,
               window.location.origin + "/popup",
               "consumer-client"
             )

@@ -23,6 +23,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
  */
 export function openZuzaluMembershipPopup(
   urlToPassportWebsite: string,
+  srcId: string,
   popupUrl: string,
   urlToSemaphoreGroup: string,
   originalSiteName: string,
@@ -33,6 +34,7 @@ export function openZuzaluMembershipPopup(
     typeof SemaphoreGroupPCDPackage
   >(
     urlToPassportWebsite,
+    srcId,
     popupUrl,
     SemaphoreGroupPCDPackage.name,
     {

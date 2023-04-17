@@ -59,12 +59,12 @@ export function SemaphoreGroupProveScreen({
         const pendingPCD = await requestPendingPCD(serverReq);
         window.location.href = `${
           req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        }?srcId=${req.srcId}&encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        window.location.href = `${req.returnUrl}?srcId=${req.srcId}&proof=${JSON.stringify(
           serializedPCD
         )}`;
       }
@@ -81,6 +81,7 @@ export function SemaphoreGroupProveScreen({
   }, [
     group,
     req.returnUrl,
+    req.srcId,
     state.identity,
     req.args,
     req.options?.proveOnServer,

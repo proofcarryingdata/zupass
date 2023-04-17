@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
  * React hook that listens for PCDs and PendingPCDs from a passport popup window
  * using message passing and event listeners.
  */
-export function usePassportPopupMessages() {
+export function usePassportPopupMessages(srcId: string) {
   const [pcdStr, setPCDStr] = useState("");
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 
   // Listen for PCDs coming back from the Passport popup
   useEffect(() => {
     function receiveMessage(ev: MessageEvent<any>) {
+      if (ev.data.srcId !== srcId) return;
+
       // Extensions including Metamask apparently send messages to every page. Ignore those.
       if (ev.data.encodedPCD) {
         console.log("Received PCD", ev.data.encodedPCD);
@@ -22,7 +24,7 @@ export function usePassportPopupMessages() {
     }
     window.addEventListener("message", receiveMessage, false);
     return () => window.removeEventListener("message", receiveMessage);
-  }, []);
+  }, [srcId]);
 
   return [pcdStr, pendingPCDStr];
 }
@@ -51,18 +53,19 @@ export function usePassportPopupSetup() {
     const paramsProofUrl = params.get("proofUrl");
     const paramsProof = params.get("proof");
     const paramsEncodingPendingPCD = params.get("encodedPendingPCD");
+    const srcId = params.get("srcId");
 
     // First, this page is window.open()-ed. Redirect to the Passport app.
     if (paramsProofUrl != null) {
       window.location.href = decodeURIComponent(paramsProofUrl);
     } else if (paramsProof != null) {
       // Later, the Passport redirects back with a proof. Send it to our parent.
-      window.opener.postMessage({ encodedPCD: paramsProof }, "*");
+      window.opener.postMessage({ encodedPCD: paramsProof, srcId: srcId }, "*");
       window.close();
     } else if (paramsEncodingPendingPCD != null) {
       // Later, the Passport redirects back with a encodedPendingPCD. Send it to our parent.
       window.opener.postMessage(
-        { encodedPendingPCD: paramsEncodingPendingPCD },
+        { encodedPendingPCD: paramsEncodingPendingPCD, srcId: srcId },
         "*"
       );
       window.close();

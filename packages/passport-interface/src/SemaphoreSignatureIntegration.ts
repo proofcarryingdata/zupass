@@ -15,6 +15,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
  */
 export function openSemaphoreSignaturePopup(
   urlToPassportWebsite: string,
+  srcId: string,
   popupUrl: string,
   messageToSign: string,
   proveOnServer?: boolean
@@ -23,6 +24,7 @@ export function openSemaphoreSignaturePopup(
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
+    srcId,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
@@ -56,6 +58,7 @@ export function openSemaphoreSignaturePopup(
  */
 export function openSignedZuzaluUUIDPopup(
   urlToPassportWebsite: string,
+  srcId: string,
   popupUrl: string,
   originalSiteName: string
 ) {
@@ -63,6 +66,7 @@ export function openSignedZuzaluUUIDPopup(
     typeof SemaphoreSignaturePCDPackage
   >(
     urlToPassportWebsite,
+    srcId,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {

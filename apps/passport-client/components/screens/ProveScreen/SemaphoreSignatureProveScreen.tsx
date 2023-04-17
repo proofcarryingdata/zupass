@@ -47,12 +47,12 @@ export function SemaphoreSignatureProveScreen({
         const pendingPCD = await requestPendingPCD(serverReq);
         window.location.href = `${
           req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        }?srcId=${req.srcId}&encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
       } else {
         const { prove, serialize } = SemaphoreSignaturePCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
+        window.location.href = `${req.returnUrl}?srcId=${req.srcId}&proof=${JSON.stringify(
           serializedPCD
         )}`;
       }
