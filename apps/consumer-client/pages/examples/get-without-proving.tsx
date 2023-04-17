@@ -1,6 +1,10 @@
-import { constructPassportPcdGetWithoutProvingRequestUrl } from "@pcd/passport-interface";
+import {
+  constructPassportPcdGetWithoutProvingRequestUrl,
+  usePassportPopupMessages,
+} from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { HomeLink } from "../../components/Core";
+import { useMemo } from "react";
+import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
@@ -10,6 +14,16 @@ import { sendPassportRequest } from "../../src/util";
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
+  const [passportPCDStr] = usePassportPopupMessages();
+
+  const formatted = useMemo(() => {
+    try {
+      return JSON.stringify(JSON.parse(passportPCDStr), null, 2);
+    } catch (e) {
+      return null;
+    }
+  }, [passportPCDStr]);
+
   return (
     <>
       <HomeLink />
@@ -26,6 +40,7 @@ export default function Page() {
         <button onClick={getProofWithoutProving}>
           get pcd without proving
         </button>
+        {formatted && <CollapsableCode code={formatted} />}
       </ExampleContainer>
     </>
   );

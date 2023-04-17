@@ -58,7 +58,6 @@ export const CollapsableCode = ({
 };
 
 const CollapsableCodeContainer = styled.div`
-  background-color: #eee;
   border-radius: 8px;
   border: 1px solid grey;
   overflow-y: scroll;
