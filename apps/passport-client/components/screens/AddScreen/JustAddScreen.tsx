@@ -1,23 +1,41 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { useDeserialized } from "../../../src/useDeserialized";
 
 import { Button, H2, Spacer } from "../../core";
+import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 
 export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const [_, dispatch] = useContext(DispatchContext);
+  const [added, setAdded] = useState(false);
+  const { error, pcd } = useDeserialized(request.pcd);
 
   const onAddClick = useCallback(async () => {
     await dispatch({ type: "add-pcd", pcd: request.pcd });
-    window.close();
+    setAdded(true);
   }, [dispatch, request.pcd]);
 
-  const { error, pcd } = useDeserialized(request.pcd);
+  let content;
+
+  if (!added) {
+    content = (
+      <>
+        <H2>{"ADD PCD".toUpperCase()}</H2>
+        <Spacer h={16} />
+        {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
+        {error && JSON.stringify(error)}
+        <Spacer h={16} />
+        <Button onClick={onAddClick}>Add</Button>
+      </>
+    );
+  } else {
+    content = <AddedPCD />;
+  }
 
   return (
     <AppContainer bg="gray">
@@ -25,12 +43,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
         <Spacer h={16} />
         <AppHeader />
         <Spacer h={16} />
-        <H2>{"ADD PCD".toUpperCase()}</H2>
-        <Spacer h={16} />
-        {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
-        {error && JSON.stringify(error)}
-        <Spacer h={16} />
-        <Button onClick={onAddClick}>Add</Button>
+        {content}
       </Container>
     </AppContainer>
   );
