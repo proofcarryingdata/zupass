@@ -31,7 +31,7 @@ export function HomeScreen() {
     return state.pcds.getAll();
   }, [state.pcds]);
   const zuzaluPCDId = useMemo(() => {
-    return pcds[0].id;
+    return pcds[0]?.id;
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
   const selectedPCD = useMemo(() => {
