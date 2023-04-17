@@ -37,4 +37,11 @@ export const GlobalStyle = createGlobalStyle`
       color: #ad96ff;
     }
   }
+
+  input {
+    background-color: #111111;
+    color: #d6d6d6;
+    padding: 2px;
+    border: 1px solid #d6d6d6;
+  }
 `;
