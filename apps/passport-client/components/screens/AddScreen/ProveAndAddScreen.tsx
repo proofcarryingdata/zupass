@@ -2,7 +2,8 @@ import { PCDProveAndAddRequest } from "@pcd/passport-interface";
 import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
-import { Button, Spacer } from "../../core";
+import { Spacer } from "../../core";
+import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
@@ -34,18 +35,7 @@ export function ProveAndAddScreen({
       />
     );
   } else {
-    content = (
-      <div>
-        added pcd!
-        <Button
-          onClick={() => {
-            window.close();
-          }}
-        >
-          Close
-        </Button>
-      </div>
-    );
+    content = <AddedPCD />;
   }
 
   return (
