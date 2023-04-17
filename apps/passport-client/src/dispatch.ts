@@ -255,7 +255,7 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
     await savePCDs(state.pcds);
     update({ pcds: state.pcds });
   } else {
-    console.log("ERROR");
+    throw new Error(`Can't add PCD: missing package ${pcd.type}`);
   }
 }
 

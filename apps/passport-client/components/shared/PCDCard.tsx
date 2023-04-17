@@ -112,12 +112,10 @@ function CardBody({
     }
   }
 
-  console.log("");
-
   return (
     <>
       <TextCenter>
-        {pcd.type} <br />
+        {pcd.type} unsupported <br />
         no implementation of a ui for this type of card found
       </TextCenter>
       <Spacer h={16} />
