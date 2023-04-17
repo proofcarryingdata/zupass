@@ -28,12 +28,14 @@ export class PCDCollection {
 
   public async serialize(pcd: PCD): Promise<SerializedPCD> {
     const pcdPackage = this.getPackage(pcd.type);
+    if (!pcdPackage) throw new Error(`no package matching ${pcd.type}`);
     const serialized = await pcdPackage.serialize(pcd);
     return serialized;
   }
 
   public async deserialize(serialized: SerializedPCD): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
+    if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
     const deserialized = await pcdPackage.deserialize(serialized.pcd);
     return deserialized;
   }
