@@ -93,7 +93,7 @@ export function VerifyScreen() {
         <Spacer h={48} />
         <Placeholder minH={160}>
           {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-          {result && getCard(result)}
+          {result && result.valid && getCard(result)}
         </Placeholder>
         <Spacer h={64} />
         {result != null && (
