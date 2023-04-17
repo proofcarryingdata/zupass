@@ -23,6 +23,8 @@ export function SemaphoreGroupProveScreen({
 }: {
   req: PCDGetRequest<typeof SemaphoreGroupPCDPackage>;
 }) {
+  const [error, setError] = useState<string | undefined>();
+
   // Load semaphore group
   const [group, setGroup] = useState<SerializedSemaphoreGroup>(null);
   useEffect(() => {
@@ -67,7 +69,14 @@ export function SemaphoreGroupProveScreen({
         )}`;
       }
     } catch (e) {
-      console.log(e);
+      if (
+        typeof e.message === "string" &&
+        e.message.indexOf("The identity is not part of the group") >= 0
+      ) {
+        setError("You are not part of this group.");
+      } else if (typeof e.message === "string") {
+        setError(e.message);
+      }
     }
   }, [
     group,
@@ -94,8 +103,10 @@ export function SemaphoreGroupProveScreen({
     );
   }
 
-  if (!proving) {
+  if (!proving && error === undefined) {
     lines.push(<Button onClick={onProve}>Prove</Button>);
+  } else if (error !== undefined) {
+    lines.push(<ErrorContainer>{error}</ErrorContainer>);
   } else {
     lines.push(<RippleLoader />);
   }
@@ -163,4 +174,15 @@ async function fillArgs(
 
 const LineWrap = styled.div`
   margin-bottom: 16px;
+`;
+
+const ErrorContainer = styled.div`
+  border: 2px solid var(--danger);
+  color: white;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-lite-primary);
 `;
