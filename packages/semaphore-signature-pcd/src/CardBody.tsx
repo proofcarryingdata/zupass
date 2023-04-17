@@ -1,4 +1,10 @@
-import { HiddenText, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
+import {
+  FieldLabel,
+  HiddenText,
+  Separator,
+  Spacer,
+  TextContainer,
+} from "@pcd/passport-ui";
 import styled from "styled-components";
 import { SemaphoreSignaturePCD } from "./SemaphoreSignaturePCD";
 
@@ -16,11 +22,11 @@ export function SemaphoreIdentityCardBody({
 
       <Separator />
 
-      <span>Commitment</span>
+      <FieldLabel>Commitment</FieldLabel>
       <HiddenText text={pcd.claim.identityCommitment} />
       <Spacer h={8} />
 
-      <span>Signed Message</span>
+      <FieldLabel>Signed Message</FieldLabel>
       <TextContainer>{pcd.claim.signedMessage}</TextContainer>
     </Container>
   );

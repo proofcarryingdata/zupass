@@ -13,12 +13,14 @@ export function Spacer({
 }
 
 export const Separator = styled.div`
-  border-radius: 99px;
-  width: 90%;
-  margin: 5%;
   box-sizing: border-box;
-  height: 2px;
   background-color: var(--primary-lite);
-  margin-top: 8px;
-  margin-bottom: 8px;
+  width: 100%;
+  height: 2px;
+  border-radius: 99px;
+  margin: 8px 0px;
+`;
+
+export const FieldLabel = styled.span`
+  font-weight: bold;
 `;

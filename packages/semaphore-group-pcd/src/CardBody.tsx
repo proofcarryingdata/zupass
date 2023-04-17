@@ -1,4 +1,4 @@
-import { Separator, Spacer, TextContainer } from "@pcd/passport-ui";
+import { FieldLabel, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { SemaphoreGroupPCD } from "./SemaphoreGroupPCD";
 
@@ -14,19 +14,19 @@ export function SemaphoreGroupCardBody({ pcd }: { pcd: SemaphoreGroupPCD }) {
 
       <Separator />
 
-      <span>Group Root</span>
+      <FieldLabel>Group Root</FieldLabel>
       <TextContainer>{pcd.claim.merkleRoot}</TextContainer>
       <Spacer h={8} />
 
-      <span>Signal</span>
+      <FieldLabel>Signal</FieldLabel>
       <TextContainer>{pcd.claim.signal}</TextContainer>
       <Spacer h={8} />
 
-      <span>Nullifier Hash</span>
+      <FieldLabel>Nullifier Hash</FieldLabel>
       <TextContainer>{pcd.claim.nullifierHash}</TextContainer>
       <Spacer h={8} />
 
-      <span>External Nullifier</span>
+      <FieldLabel>External Nullifier</FieldLabel>
       <TextContainer>{pcd.claim.externalNullifier}</TextContainer>
     </Container>
   );
