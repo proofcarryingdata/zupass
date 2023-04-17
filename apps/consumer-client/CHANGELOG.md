@@ -1,5 +1,12 @@
 # consumer-client
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.1
+
 ## 0.0.5
 
 ### Patch Changes

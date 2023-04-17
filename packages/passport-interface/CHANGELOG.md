@@ -1,5 +1,11 @@
 # @pcd/passport-interface
 
+## 0.4.1
+
+### Patch Changes
+
+- Switch to callback for notifying proof verification and completion in passport-interface package.
+
 ## 0.4.0
 
 ### Minor Changes
