@@ -196,6 +196,8 @@ async function finishLogin(
 
   // Ask user to save their sync key
   update({ modal: "save-sync" });
+
+  window.location.hash = "#/";
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
@@ -213,11 +215,9 @@ async function saveParticipantPCDs(participant: ZuParticipant) {
 
   const blobKey = await getHash(encryptionKey);
 
-  uploadEncryptedStorage(blobKey, encryptedStorage)
+  return uploadEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
       console.log("successfully saved encrypted storage to server");
-      // Redirect to the home page.
-      window.location.hash = "#/";
     })
     .catch((_e) => {
       // TODO
