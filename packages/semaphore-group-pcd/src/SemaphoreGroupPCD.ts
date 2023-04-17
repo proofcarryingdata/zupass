@@ -5,6 +5,7 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
+  StringArgument,
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -55,7 +56,7 @@ export interface SemaphoreGroupPCDArgs {
   group: ObjectArgument<SerializedSemaphoreGroup>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
   externalNullifier: BigIntArgument;
-  signal: BigIntArgument;
+  signedMessage: StringArgument;
 }
 
 export interface SemaphoreGroupPCDClaim {
@@ -71,9 +72,9 @@ export interface SemaphoreGroupPCDClaim {
   depth: number;
 
   /**
-   * Stringified `BigInt`.
+   * Pre-hashed message being attested to as a member of a group.
    */
-  signal: string;
+  signedMessage: string;
 
   /**
    * Stringified `BigInt`.
@@ -135,7 +136,7 @@ export async function prove(
     throw new Error("Cannot make group proof: missing externalNullifier");
   }
 
-  if (!args.signal.value) {
+  if (!args.signedMessage.value) {
     throw new Error("Cannot make group proof: missing signal");
   }
 
@@ -160,7 +161,7 @@ export async function prove(
     identityPCD.claim.identity,
     deserializedGroup,
     args.externalNullifier.value,
-    args.signal.value,
+    generateMessageHash(args.signedMessage.value),
     {
       zkeyFilePath: initArgs.zkeyFilePath,
       wasmFilePath: initArgs.wasmFilePath,
@@ -172,7 +173,7 @@ export async function prove(
     depth: deserializedGroup.depth,
     externalNullifier: args.externalNullifier.value.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
-    signal: args.signal.value.toString(),
+    signedMessage: args.signedMessage.value,
   };
 
   const proof: SemaphoreGroupPCDProof = fullProof.proof;
@@ -185,7 +186,7 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
     externalNullifier: pcd.claim.externalNullifier,
     merkleTreeRoot: pcd.claim.merkleRoot + "",
     nullifierHash: pcd.claim.nullifierHash,
-    signal: pcd.claim.signal,
+    signal: generateMessageHash(pcd.claim.signedMessage),
     proof: pcd.proof,
   };
 

@@ -29,7 +29,7 @@ describe("semaphore group identity should work", function () {
     const group = new Group(1, 16);
     group.addMember(identity.commitment);
     const externalNullifier = group.root;
-    const signal = 1;
+    const signedMessage = "Test message";
 
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
       await SemaphoreIdentityPCDPackage.prove({ identity })
@@ -40,9 +40,9 @@ describe("semaphore group identity should work", function () {
         argumentType: ArgumentTypeName.BigInt,
         value: externalNullifier + "",
       },
-      signal: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: signal + "",
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: signedMessage,
       },
       group: {
         argumentType: ArgumentTypeName.Object,
@@ -67,7 +67,7 @@ describe("semaphore group identity should work", function () {
 
     const pcd = await prove(args);
     // make the pcd invalid by changing its claim
-    pcd.claim.signal = pcd.claim.signal + "1";
+    pcd.claim.signedMessage = pcd.claim.signedMessage + "1";
 
     const verified = await verify(pcd);
     assert.equal(verified, false);

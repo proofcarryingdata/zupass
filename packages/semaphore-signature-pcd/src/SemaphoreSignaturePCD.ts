@@ -65,7 +65,7 @@ export interface SemaphoreSignaturePCDArgs {
 
 export interface SemaphoreSignaturePCDClaim {
   /**
-   * Pre-hashed message.
+   * Pre-hashed message being attested to.
    */
   signedMessage: string;
 

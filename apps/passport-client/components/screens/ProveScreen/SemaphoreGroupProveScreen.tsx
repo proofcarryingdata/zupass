@@ -133,11 +133,11 @@ async function fillArgs(
   let args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: 23 + "",
+      value: "1",
     },
-    signal: {
-      argumentType: ArgumentTypeName.BigInt,
-      value: 34 + "",
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: "1",
     },
     group: {
       argumentType: ArgumentTypeName.Object,
@@ -160,8 +160,8 @@ async function fillArgs(
     };
   }
   // same, but for signal
-  if (reqArgs.signal.value !== undefined) {
-    args = { ...args, signal: reqArgs.signal };
+  if (reqArgs.signedMessage.value !== undefined) {
+    args = { ...args, signedMessage: reqArgs.signedMessage };
   }
 
   console.log("Proving semaphore membership", args);

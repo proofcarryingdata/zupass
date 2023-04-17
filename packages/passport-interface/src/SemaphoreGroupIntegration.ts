@@ -18,7 +18,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
  * @param urlToSemaphoreGroup URL where Zuzalu semaphore group is being served from
  * @param originalSiteName Name of site requesting proof
- * @param signal Optional signal that user is anonymously attesting to
+ * @param signedMessage Optional signedMessage that user is anonymously attesting to
  * @param externalNullifier Optional unique identifier for this SemaphoreGroupPCD
  */
 export function openZuzaluMembershipPopup(
@@ -26,7 +26,7 @@ export function openZuzaluMembershipPopup(
   popupUrl: string,
   urlToSemaphoreGroup: string,
   originalSiteName: string,
-  signal?: string,
+  signedMessage?: string,
   externalNullifier?: string
 ) {
   const proofUrl = constructPassportPcdGetRequestUrl<
@@ -52,10 +52,10 @@ export function openZuzaluMembershipPopup(
         value: undefined,
         userProvided: true,
       },
-      signal: {
-        argumentType: ArgumentTypeName.BigInt,
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
         userProvided: false,
-        value: signal ?? "1",
+        value: signedMessage ?? "1",
       },
     },
     {

@@ -165,8 +165,8 @@ function requestMembershipProof(
         description:
           "The Semaphore Identity which you are signing the message on behalf of.",
       },
-      signal: {
-        argumentType: ArgumentTypeName.BigInt,
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
         userProvided: true,
         value: "1",
         description:
