@@ -2,6 +2,7 @@ import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 
 export enum PCDRequestType {
   Get = "Get",
+  GetWithoutProving = "GetWithoutProving",
   Add = "Add",
   ProveAndAdd = "ProveAndAdd",
 }
@@ -32,6 +33,10 @@ export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   options?: ProveOptions;
 }
 
+export interface PCDGetWithoutProvingRequest extends PCDRequest {
+  pcdType: string;
+}
+
 export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
   pcd: SerializedPCD;
@@ -43,6 +48,20 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
   pcdType: string;
   args: ArgsOf<T>;
   options?: ProveOptions;
+}
+
+export function constructPassportPcdGetWithoutProvingRequestUrl(
+  passportOrigin: string,
+  returnUrl: string,
+  pcdType: string
+) {
+  const req: PCDGetWithoutProvingRequest = {
+    type: PCDRequestType.GetWithoutProving,
+    pcdType,
+    returnUrl,
+  };
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/prove?request=${encReq}`;
 }
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
