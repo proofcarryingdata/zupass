@@ -31,6 +31,10 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   a:visited {
-    color: #8564ff;
+    color: #a186ff;
+
+    &:hover {
+      color: #ad96ff;
+    }
   }
 `;
