@@ -177,12 +177,11 @@ const LineWrap = styled.div`
 `;
 
 const ErrorContainer = styled.div`
-  border: 2px solid var(--danger);
   color: white;
-  border-radius: 8px;
+  border-radius: 99px;
   padding: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--bg-lite-primary);
+  background-color: var(--danger);
 `;
