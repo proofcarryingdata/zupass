@@ -27,6 +27,9 @@ export default function Page() {
           <li>
             <a href="/examples/add-pcd">Add add PCDs to the Passport</a>
           </li>
+          <li>
+            <a href="/examples/get-without-proving">Get Without Proving</a>
+          </li>
         </ol>
       </div>
       <div>

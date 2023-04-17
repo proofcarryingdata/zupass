@@ -61,7 +61,7 @@ export function constructPassportPcdGetWithoutProvingRequestUrl(
     returnUrl,
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${passportOrigin}#/prove?request=${encReq}`;
+  return `${passportOrigin}#/get-without-proving?request=${encReq}`;
 }
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(

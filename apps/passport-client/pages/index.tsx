@@ -3,6 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -90,6 +91,10 @@ function Router() {
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
+          <Route
+            path="get-without-proving"
+            element={<GetWithoutProvingScreen />}
+          />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="scan" element={<ScanScreen />} />
