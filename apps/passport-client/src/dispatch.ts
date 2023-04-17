@@ -199,6 +199,8 @@ async function finishLogin(
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
+  console.log("uploading pcds");
+
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
