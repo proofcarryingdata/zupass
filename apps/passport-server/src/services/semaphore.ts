@@ -13,12 +13,14 @@ export class SemaphoreService {
       { name: "Zuzalu Participants", group: new Group("1", 16) },
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
+      { name: "Zuzalu Organizers", group: new Group("4", 16) },
     ];
   }
 
   groupParticipants = () => this.getNamedGroup("1").group;
   groupResidents = () => this.getNamedGroup("2").group;
   groupVisitors = () => this.getNamedGroup("3").group;
+  groupOrganizers = () => this.getNamedGroup("4").group;
 
   getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -61,8 +63,10 @@ export class SemaphoreService {
   addParticipant(p: PassportParticipant) {
     this.addParticipantToGroup(p, this.groupParticipants());
 
-    const group = this.getGroupForRole(p.role);
-    this.addParticipantToGroup(p, group);
+    const groups = this.getGroupsForRole(p.role);
+    for (const group of groups) {
+      this.addParticipantToGroup(p, group);
+    }
 
     this.participants[p.uuid] = p;
   }
@@ -77,13 +81,14 @@ export class SemaphoreService {
   }
 
   // Get the semaphore group for a participant role
-  getGroupForRole(role: ParticipantRole): Group {
+  getGroupsForRole(role: ParticipantRole): Group[] {
     switch (role) {
       case ParticipantRole.Organizer:
+        return [this.groupOrganizers(), this.groupResidents()];
       case ParticipantRole.Resident:
-        return this.groupResidents();
+        return [this.groupResidents()];
       case ParticipantRole.Visitor:
-        return this.groupVisitors();
+        return [this.groupVisitors()];
       default:
         throw new Error(`unsupported role ${role}`);
     }
