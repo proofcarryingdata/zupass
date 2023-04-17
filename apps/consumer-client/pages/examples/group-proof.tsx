@@ -33,10 +33,15 @@ export default function Page() {
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { proof, group, valid } = useSemaphoreGroupProof(
+  const [valid, setValid] = useState<boolean | undefined>();
+  const onVerified = (valid: boolean) => {
+    setValid(valid);
+  };
+  const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
     SEMAPHORE_GROUP_URL,
-    "consumer-client"
+    "consumer-client",
+    onVerified
   );
 
   const [debugChecked, setDebugChecked] = useState(false);

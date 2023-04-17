@@ -18,8 +18,14 @@ export default function Page() {
   // We only do client-side proofs for Zuzalu UUID proofs, which means we can
   // ignore any PendingPCDs that would result from server-side proving
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
+  
+  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+  const onProofVerified = (valid: boolean) => {
+    setSignatureProofValid(valid);
+  };
+
+  const { signatureProof } =
+    useSemaphoreSignatureProof(pcdStr, onProofVerified);
 
   // Extract UUID, the signed message of the returned PCD
   const [uuid, setUuid] = useState<string | undefined>();

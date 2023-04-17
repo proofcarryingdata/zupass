@@ -26,8 +26,13 @@ export default function Page() {
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
+  
+  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+  const onProofVerified = (valid: boolean) => {
+    setSignatureProofValid(valid);
+  };
+  const { signatureProof } =
+    useSemaphoreSignatureProof(pcdStr, onProofVerified);
 
   const [serverProving, setServerProving] = useState(false);
 

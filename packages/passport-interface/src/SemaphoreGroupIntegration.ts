@@ -76,6 +76,7 @@ export function useSemaphoreGroupProof(
   pcdStr: string,
   semaphoreGroupUrl: string,
   originalSiteName: string,
+  onVerified: (valid: boolean) => void,
   externalNullifier?: string
 ) {
   const [error, setError] = useState<Error | undefined>();
@@ -98,8 +99,6 @@ export function useSemaphoreGroupProof(
     })();
   }, [semaphoreGroupPCD, semaphoreGroupUrl]);
 
-  // Verify the proof
-  const [semaphoreProofValid, setValid] = useState<boolean | undefined>();
   useEffect(() => {
     if (semaphoreGroupPCD && semaphoreGroup) {
       const proofExternalNullifier =
@@ -109,20 +108,19 @@ export function useSemaphoreGroupProof(
         semaphoreGroupPCD,
         semaphoreGroup,
         proofExternalNullifier
-      ).then(setValid);
+      ).then(onVerified);
     }
   }, [
     semaphoreGroupPCD,
     semaphoreGroup,
     externalNullifier,
     originalSiteName,
-    setValid,
+    onVerified,
   ]);
 
   return {
     proof: semaphoreGroupPCD,
     group: semaphoreGroup,
-    valid: semaphoreProofValid,
     error,
   };
 }
