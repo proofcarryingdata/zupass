@@ -6,6 +6,7 @@ import {
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { useState } from "react";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -14,10 +15,17 @@ import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 export default function Page() {
   // Populate PCD from either client-side or server-side proving using passport popup
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
-  const { proof, group, valid } = useSemaphoreGroupProof(
+
+  const [valid, setValid] = useState<boolean | undefined>();
+  const onVerified = (valid: boolean) => {
+    setValid(valid);
+  };
+
+  const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
     SEMAPHORE_GROUP_URL,
-    "consumer-client"
+    "consumer-client",
+    onVerified,
   );
 
   return (
