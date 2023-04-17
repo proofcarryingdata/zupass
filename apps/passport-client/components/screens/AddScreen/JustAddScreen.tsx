@@ -12,7 +12,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 
 export function JustAddScreen({ request }: { request: PCDAddRequest }) {
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, dispatch] = useContext(DispatchContext);
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
 
