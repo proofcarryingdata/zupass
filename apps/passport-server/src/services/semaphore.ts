@@ -59,7 +59,8 @@ export class SemaphoreService {
     console.log(`[SEMA] Semaphore service reloaded.`);
   }
 
-  // Add a single participant to the semaphore group
+  // Add a single participant to the semaphore groups which they
+  // belong to.
   addParticipant(p: PassportParticipant) {
     this.addParticipantToGroup(p, this.groupParticipants());
 
@@ -80,7 +81,7 @@ export class SemaphoreService {
     group.addMember(bigIntCommitment);
   }
 
-  // Get the semaphore group for a participant role
+  // Get the semaphore groups for a participant role
   getGroupsForRole(role: ParticipantRole): Group[] {
     switch (role) {
       case ParticipantRole.Organizer:
