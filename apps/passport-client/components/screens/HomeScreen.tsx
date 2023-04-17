@@ -7,11 +7,14 @@ import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 import { PCDCard } from "../shared/PCDCard";
+import { useSyncE2EEStorage } from "../shared/SyncManager";
 
 /**
  * Show the user their passport, an overview of cards / PCDs.
  */
 export function HomeScreen() {
+  useSyncE2EEStorage();
+
   const [state] = useContext(DispatchContext);
   const navigate = useNavigate();
 

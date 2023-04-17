@@ -1,4 +1,4 @@
-import { getHash, passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
+import { PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -11,11 +11,9 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
+import { uploadPCDs } from "../components/shared/SyncManager";
 import { config } from "./config";
 import {
-  loadEncryptionKey,
-  loadPCDs,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
@@ -201,27 +199,7 @@ async function finishLogin(
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
-  console.log("uploading pcds");
-
-  const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
-  const encryptedStorage = await passportEncrypt(
-    JSON.stringify({
-      pcds: await pcds.serializeAll(),
-      self: participant,
-    }),
-    encryptionKey
-  );
-
-  const blobKey = await getHash(encryptionKey);
-
-  return uploadEncryptedStorage(blobKey, encryptedStorage)
-    .then(() => {
-      console.log("successfully saved encrypted storage to server");
-    })
-    .catch((_e) => {
-      // TODO
-    });
+  return uploadPCDs(participant);
 }
 
 // Runs periodically, whenever we poll new participant info.
