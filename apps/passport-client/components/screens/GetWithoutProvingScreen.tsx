@@ -2,7 +2,7 @@ import {
   PCDGetWithoutProvingRequest,
   PCDRequestType,
 } from "@pcd/passport-interface";
-import { useContext } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
@@ -15,9 +15,21 @@ export function GetWithoutProvingScreen() {
   const location = useLocation();
   const [state, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
+  const [selectedPCDID, setSelectedPCDID] = useState<string>("none");
   const request = JSON.parse(
     params.get("request")
   ) as PCDGetWithoutProvingRequest;
+
+  const onSendClick = useCallback(async () => {
+    if (selectedPCDID === undefined) return;
+    const pcd = state.pcds.getById(selectedPCDID);
+    const pcdPackage = state.pcds.getPackage(pcd.type);
+    if (pcdPackage === undefined) return;
+    const serializedPCD = await pcdPackage.serialize(pcd);
+    window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
+      serializedPCD
+    )}`;
+  }, [request.returnUrl, selectedPCDID, state.pcds]);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(
@@ -41,7 +53,12 @@ export function GetWithoutProvingScreen() {
           give it to the website.
         </p>
         <Spacer h={16} />
-        <select style={{ width: "100%" }}>
+        <select
+          style={{ width: "100%" }}
+          value={selectedPCDID}
+          onChange={(e) => setSelectedPCDID(e.target.value)}
+        >
+          <option value="none">select</option>
           {state.pcds
             .getAll()
             .filter((pcd) => pcd.type === request.pcdType)
@@ -55,7 +72,7 @@ export function GetWithoutProvingScreen() {
             })}
         </select>
         <Spacer h={16} />
-        <Button>Send</Button>
+        <Button onClick={onSendClick}>Send</Button>
       </Container>
     </AppContainer>
   );
