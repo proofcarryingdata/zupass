@@ -253,6 +253,10 @@ function resetPassport() {
 
 async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
   if (state.pcds.hasPackage(pcd.type)) {
+    const newPCD = await state.pcds.deserialize(pcd);
+    if (state.pcds.hasPCDWithId(newPCD.id)) {
+      throw new Error("This PCD has already been added to your passport");
+    }
     await state.pcds.deserializeAndAdd(pcd);
     await savePCDs(state.pcds);
     update({ pcds: state.pcds });

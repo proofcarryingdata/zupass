@@ -75,6 +75,10 @@ export class PCDCollection {
     return this.pcds.find((pcd) => pcd.id === id);
   }
 
+  public hasPCDWithId(id: string): boolean {
+    return this.getById(id) !== undefined;
+  }
+
   public getPCDsByType(type: string) {
     return this.pcds.filter((pcd) => pcd.type === type);
   }

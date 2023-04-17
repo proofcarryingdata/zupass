@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { useDeserialized } from "../../../src/useDeserialized";
+import { err } from "../../../src/util";
 
 import { Button, H2, Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
@@ -16,8 +17,12 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const { error, pcd } = useDeserialized(request.pcd);
 
   const onAddClick = useCallback(async () => {
-    await dispatch({ type: "add-pcd", pcd: request.pcd });
-    setAdded(true);
+    try {
+      await dispatch({ type: "add-pcd", pcd: request.pcd });
+      setAdded(true);
+    } catch (e) {
+      await err(dispatch, "Error Adding PCD", e.message);
+    }
   }, [dispatch, request.pcd]);
 
   let content;
