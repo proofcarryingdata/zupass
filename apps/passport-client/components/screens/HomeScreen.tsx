@@ -27,13 +27,16 @@ export function HomeScreen() {
     }
   });
 
-  const zuzaluPCDId = useMemo(() => {
-    return state.pcds.getAll()[0].id;
+  const pcds = useMemo(() => {
+    return state.pcds.getAll();
   }, [state.pcds]);
-  const [selectedPCDID, setSelectedPCDID] = useState(() => zuzaluPCDId);
+  const zuzaluPCDId = useMemo(() => {
+    return pcds[0].id;
+  }, [pcds]);
+  const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
   const selectedPCD = useMemo(() => {
-    return state.pcds.getAll().find((pcd) => pcd.id === selectedPCDID);
-  }, [state.pcds, selectedPCDID]);
+    return pcds.find((pcd) => pcd.id === selectedPCDID);
+  }, [pcds, selectedPCDID]);
 
   if (state.self == null) return null;
 
@@ -45,7 +48,7 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {state.pcds.getAll().map((pcd) => {
+          {pcds.map((pcd) => {
             return (
               <>
                 <Spacer h={8} />
@@ -54,7 +57,6 @@ export function HomeScreen() {
                   expanded={pcd.id === selectedPCD.id}
                   isZuzaluIdentity={pcd.id === zuzaluPCDId}
                   onClick={() => {
-                    console.log("CLICKED");
                     setSelectedPCDID(pcd.id);
                   }}
                 />

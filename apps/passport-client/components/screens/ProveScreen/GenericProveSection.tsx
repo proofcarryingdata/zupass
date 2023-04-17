@@ -13,6 +13,10 @@ import { Button, H1, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
 
+/**
+ * A reuseable form which can be used to generate a new instance of a PCD
+ * given the type, arguments, and proving options.
+ */
 export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
