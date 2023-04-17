@@ -55,7 +55,7 @@ export function ProveScreen() {
 
   return (
     <AppContainer bg="gray">
-      <Spacer h={24} />
+      <Spacer h={48} />
       <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />
       <CenterColumn w={280}>{body}</CenterColumn>

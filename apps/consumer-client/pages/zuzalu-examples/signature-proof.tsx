@@ -24,13 +24,17 @@ export default function Page() {
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
 
-  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
 
-  const { signatureProof } =
-    useSemaphoreSignatureProof(pcdStr, onProofVerified);
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
 
   const [messageToSign, setMessageToSign] = useState<string>("");
   const [serverProving, setServerProving] = useState(false);

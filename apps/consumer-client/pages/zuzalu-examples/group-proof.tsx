@@ -3,10 +3,10 @@ import {
   usePassportPopupMessages,
   useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
+import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
-import { useState } from "react";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -15,6 +15,10 @@ import { useState } from "react";
 export default function Page() {
   // Populate PCD from either client-side or server-side proving using passport popup
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+
+  const [messageToSign, setMessageToSign] = useState<string | undefined>(
+    undefined
+  );
 
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = (valid: boolean) => {
@@ -26,6 +30,7 @@ export default function Page() {
     SEMAPHORE_GROUP_URL,
     "consumer-client",
     onVerified,
+    messageToSign
   );
 
   return (
@@ -58,13 +63,22 @@ export default function Page() {
         .
       </p>
       <ExampleContainer>
+        <input
+          style={{ marginBottom: "8px" }}
+          placeholder="Message to group sign"
+          type="text"
+          value={messageToSign}
+          onChange={(e) => setMessageToSign(e.target.value)}
+        />
+        <br />
         <button
           onClick={() =>
             openZuzaluMembershipPopup(
               PASSPORT_URL,
               window.location.origin + "/popup",
               SEMAPHORE_GROUP_URL,
-              "consumer-client"
+              "consumer-client",
+              messageToSign
             )
           }
           disabled={valid}

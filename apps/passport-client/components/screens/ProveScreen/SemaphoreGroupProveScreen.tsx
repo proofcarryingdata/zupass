@@ -90,15 +90,21 @@ export function SemaphoreGroupProveScreen({
   if (group === null) {
     lines.push(<p>Loading the group...</p>);
   } else {
+    console.log(req.options);
     const websiteName =
-      req.options?.description !== undefined
-        ? req.options?.description
+      req.options?.originalSiteName !== undefined
+        ? req.options?.originalSiteName
         : "This website";
+
+    const attestedMessage =
+      req.args.signedMessage.value !== "1"
+        ? `, and that you are signing "${req.args.signedMessage.value}".`
+        : ".";
 
     lines.push(
       <p>
         <b>{websiteName}</b> is requesting a proof that you're one of{" "}
-        {group.members.length} members of {group.name}.
+        {group.members.length} members of {group.name + attestedMessage}
       </p>
     );
   }

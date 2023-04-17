@@ -18,7 +18,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
  * @param urlToSemaphoreGroup URL where Zuzalu semaphore group is being served from
  * @param originalSiteName Name of site requesting proof
- * @param signedMessage Optional signedMessage that user is anonymously attesting to
+ * @param signedMessage signedMessage being attested to, if not provided default login screen is shown
  * @param externalNullifier Optional unique identifier for this SemaphoreGroupPCD
  */
 export function openZuzaluMembershipPopup(
@@ -27,7 +27,8 @@ export function openZuzaluMembershipPopup(
   urlToSemaphoreGroup: string,
   originalSiteName: string,
   signedMessage?: string,
-  externalNullifier?: string
+  externalNullifier?: string,
+  title?: string
 ) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -59,8 +60,8 @@ export function openZuzaluMembershipPopup(
       },
     },
     {
-      title: "Zuzalu Anon Auth",
-      description: originalSiteName,
+      title: title ?? "Zuzalu Anon Auth",
+      originalSiteName: originalSiteName,
     }
   );
 
@@ -77,6 +78,7 @@ export function useSemaphoreGroupProof(
   semaphoreGroupUrl: string,
   originalSiteName: string,
   onVerified: (valid: boolean) => void,
+  signedMessage?: string,
   externalNullifier?: string
 ) {
   const [error, setError] = useState<Error | undefined>();
@@ -104,10 +106,13 @@ export function useSemaphoreGroupProof(
       const proofExternalNullifier =
         externalNullifier ?? generateMessageHash(originalSiteName).toString();
 
+      const proofSignedMessage = signedMessage ?? "1";
+
       verifyProof(
         semaphoreGroupPCD,
         semaphoreGroup,
-        proofExternalNullifier
+        proofExternalNullifier,
+        proofSignedMessage
       ).then(onVerified);
     }
   }, [
@@ -115,6 +120,7 @@ export function useSemaphoreGroupProof(
     semaphoreGroup,
     externalNullifier,
     originalSiteName,
+    signedMessage,
     onVerified,
   ]);
 
@@ -128,7 +134,8 @@ export function useSemaphoreGroupProof(
 async function verifyProof(
   pcd: SemaphoreGroupPCD,
   serializedExpectedGroup: SerializedSemaphoreGroup,
-  externalNullifier: string
+  externalNullifier: string,
+  signedMessage?: string
 ): Promise<boolean> {
   const { verify } = SemaphoreGroupPCDPackage;
   const verified = await verify(pcd);
@@ -137,9 +144,9 @@ async function verifyProof(
   // verify the claim is for the correct externalNullifier and group
   const sameExternalNullifier =
     pcd.claim.externalNullifier === externalNullifier;
-
+  const sameSignedMessage = pcd.claim.signedMessage === signedMessage;
   const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
   const sameRoot = expectedGroup.root.toString() === pcd.claim.merkleRoot;
 
-  return sameExternalNullifier && sameRoot;
+  return sameExternalNullifier && sameRoot && sameSignedMessage;
 }
