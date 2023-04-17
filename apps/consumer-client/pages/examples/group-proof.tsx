@@ -160,6 +160,7 @@ function requestMembershipProof(
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreGroupPCDPackage.name,
         value: undefined,
         userProvided: true,
         description:

@@ -97,7 +97,9 @@ export function isObjectArgument(
 export type PCDArgument<T extends PCD = PCD> = Argument<
   ArgumentTypeName.PCD,
   SerializedPCD<T>
->;
+> & {
+  pcdType: string;
+};
 export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
   return arg.argumentType === ArgumentTypeName.PCD;
 }

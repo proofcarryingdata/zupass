@@ -145,6 +145,7 @@ async function fillArgs(
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({ identity })
       ),

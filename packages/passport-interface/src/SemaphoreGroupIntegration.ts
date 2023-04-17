@@ -6,6 +6,7 @@ import {
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { useEffect, useState } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
@@ -49,6 +50,7 @@ export function openZuzaluMembershipPopup(
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
       },

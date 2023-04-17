@@ -1,6 +1,7 @@
 import { constructPassportPcdProveAndAddRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -49,6 +50,7 @@ async function addGroupMembershipProof() {
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description:
@@ -83,6 +85,7 @@ async function addSignatureProof() {
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
       },

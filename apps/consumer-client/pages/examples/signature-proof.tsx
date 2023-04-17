@@ -6,6 +6,7 @@ import {
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
@@ -26,13 +27,17 @@ export default function Page() {
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  
-  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
-  const { signatureProof } =
-    useSemaphoreSignatureProof(pcdStr, onProofVerified);
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
 
   const [serverProving, setServerProving] = useState(false);
 
@@ -106,6 +111,7 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description: "The identity with which to sign a message.",

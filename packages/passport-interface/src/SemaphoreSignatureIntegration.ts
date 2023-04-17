@@ -1,4 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
@@ -28,6 +29,7 @@ export function openSemaphoreSignaturePopup(
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
       },
@@ -68,6 +70,7 @@ export function openSignedZuzaluUUIDPopup(
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
       },
@@ -90,7 +93,10 @@ export function openSignedZuzaluUUIDPopup(
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
-export function useSemaphoreSignatureProof(pcdStr: string, onVerified: (valid: boolean) => void) {
+export function useSemaphoreSignatureProof(
+  pcdStr: string,
+  onVerified: (valid: boolean) => void
+) {
   const semaphoreSignaturePCD = useSerializedPCD(
     SemaphoreSignaturePCDPackage,
     pcdStr

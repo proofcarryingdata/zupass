@@ -473,13 +473,18 @@ export function PCDArgInput<T extends PCDPackage>({
             <option key="none" value={"none"}>
               select
             </option>
-            {pcdCollection.getAll().map((pcd) => {
-              return (
-                <option key={pcd.id} value={pcd.id}>
-                  {pcd.type}
-                </option>
-              );
-            })}
+            {pcdCollection
+              .getAll()
+              .filter((pcd) => {
+                arg.pcdType === undefined || pcd.type === arg.pcdType;
+              })
+              .map((pcd) => {
+                return (
+                  <option key={pcd.id} value={pcd.id}>
+                    {pcd.type}
+                  </option>
+                );
+              })}
           </select>
         </InputContainer>
       </Row>
