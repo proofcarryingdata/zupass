@@ -18,7 +18,7 @@ export const Separator = styled.div`
   width: 100%;
   height: 2px;
   border-radius: 99px;
-  margin: 8px 0px;
+  margin: 16px 0px;
 `;
 
 export const FieldLabel = styled.span`

@@ -52,9 +52,9 @@ export function initZuzaluRoutes(
       await insertParticipant(dbPool, {
         email: email,
         email_token: "",
-        name: "test testerly",
+        name: "Ivan Chub",
         order_id: "",
-        residence: "atlantis",
+        residence: "",
         role: ParticipantRole.Resident,
       });
     }
