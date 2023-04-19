@@ -13,7 +13,9 @@ import { EthereumOwnershipPCDPackage } from "../src/EthereumOwnershipPCD";
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
 
-describe("semaphore signature PCD should work", function () {
+describe("Ethereum ownership PCD", function () {
+  this.timeout(30 * 1000);
+
   this.beforeAll(async function () {
     await SemaphoreSignaturePCDPackage.init!({
       zkeyFilePath,
