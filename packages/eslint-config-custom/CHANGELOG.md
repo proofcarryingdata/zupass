@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.4.1
+
+### Patch Changes
+
+- Support for multiple cards in passport
+
 ## 0.4.0
 
 ### Minor Changes

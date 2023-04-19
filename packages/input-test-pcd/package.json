@@ -1,6 +1,6 @@
 {
   "name": "@pcd/input-test-pcd",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "main": "./index.js",
   "types": "./index.ts",
   "license": "GPL-3.0-or-later",
@@ -12,8 +12,8 @@
     "postinstall": "tsc"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.4.0",
-    "@pcd/tsconfig": "0.4.0",
+    "@pcd/pcd-types": "0.4.1",
+    "@pcd/tsconfig": "0.4.1",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "@semaphore-protocol/proof": "^3.2.3",
@@ -26,7 +26,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.4.0",
+    "@pcd/eslint-config-custom": "0.4.1",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"

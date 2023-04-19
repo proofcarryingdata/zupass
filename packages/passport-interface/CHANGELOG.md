@@ -1,5 +1,17 @@
 # @pcd/passport-interface
 
+## 0.4.2
+
+### Patch Changes
+
+- Support for multiple cards in passport
+- Updated dependencies
+  - @pcd/passport-crypto@0.4.1
+  - @pcd/pcd-types@0.4.1
+  - @pcd/semaphore-group-pcd@0.4.1
+  - @pcd/semaphore-signature-pcd@0.4.1
+  - @pcd/tsconfig@0.4.1
+
 ## 0.4.1
 
 ### Patch Changes

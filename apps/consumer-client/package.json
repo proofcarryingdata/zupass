@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,10 +11,10 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/passport-interface": "0.4.1",
-    "@pcd/pcd-types": "0.4.0",
-    "@pcd/semaphore-group-pcd": "0.4.0",
-    "@pcd/semaphore-identity-pcd": "0.4.0",
+    "@pcd/passport-interface": "0.4.2",
+    "@pcd/pcd-types": "0.4.1",
+    "@pcd/semaphore-group-pcd": "0.4.1",
+    "@pcd/semaphore-identity-pcd": "0.4.1",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "next": "^13.1.1",
@@ -24,8 +24,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
-    "@pcd/eslint-config-custom": "0.4.0",
-    "@pcd/tsconfig": "0.4.0",
+    "@pcd/eslint-config-custom": "0.4.1",
+    "@pcd/tsconfig": "0.4.1",
     "@types/expect": "^24.3.0",
     "@types/node": "^17.0.12",
     "@types/react": "^18.0.22",

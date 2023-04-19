@@ -1,5 +1,18 @@
 # passport-client
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.4.1
+  - @pcd/passport-interface@0.4.2
+  - @pcd/passport-ui@0.4.1
+  - @pcd/pcd-collection@0.4.1
+  - @pcd/pcd-types@0.4.1
+  - @pcd/semaphore-group-pcd@0.4.1
+  - @pcd/semaphore-identity-pcd@0.4.1
+
 ## 0.0.6
 
 ### Patch Changes
