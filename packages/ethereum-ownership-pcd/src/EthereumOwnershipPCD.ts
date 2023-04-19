@@ -9,6 +9,7 @@ import {
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName,
 } from "@pcd/semaphore-identity-pcd";
 import {
@@ -122,6 +123,21 @@ export async function prove(
 
   if (!ethers.isAddress(args.ethereumAddress.value)) {
     throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
+  }
+
+  const deserializedIdentity = await SemaphoreIdentityPCDPackage.deserialize(
+    args.identity.value.pcd
+  );
+
+  if (
+    deserializedIdentity.claim.identity.commitment.toString() !==
+    args.identityCommitment.value
+  ) {
+    throw new Error(
+      `identity commitment ${
+        args.identityCommitment.value
+      } does not equal commitment of identity pcd: ${deserializedIdentity.claim.identity.commitment.toString()}`
+    );
   }
 
   console.log(`sig: ${args.ethereumSignatureOfCommitment.value}`);
