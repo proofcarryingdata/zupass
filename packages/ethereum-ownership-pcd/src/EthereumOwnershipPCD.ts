@@ -68,11 +68,6 @@ export interface EthereumOwnershipPCDArgs {
 
 export interface EthereumOwnershipPCDClaim {
   /**
-   * Stringified `BigInt`.
-   */
-  identityCommitment: string;
-
-  /**
    * 0x...
    */
   ethereumAddress: string;
@@ -161,7 +156,6 @@ export async function prove(
     uuid(),
     {
       ethereumAddress: args.ethereumAddress.value,
-      identityCommitment: args.identityCommitment.value,
     },
     {
       signatureProof: await SemaphoreSignaturePCDPackage.serialize(
@@ -194,8 +188,14 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     return false;
   }
 
+  const deserializedSignatureProof =
+    await SemaphoreSignaturePCDPackage.deserialize(
+      pcd.proof.signatureProof.pcd
+    );
   const recoveredAddress = ethers.verifyMessage(
-    new TextEncoder().encode(pcd.claim.identityCommitment),
+    new TextEncoder().encode(
+      deserializedSignatureProof.claim.identityCommitment
+    ),
     pcd.proof.ethereumSignatureOfCommitment
   );
 

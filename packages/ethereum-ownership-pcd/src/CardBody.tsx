@@ -5,6 +5,8 @@ import {
   Spacer,
   TextContainer,
 } from "@pcd/passport-ui";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { EthereumOwnershipPCD } from "./EthereumOwnershipPCD";
 
@@ -13,6 +15,17 @@ export function SemaphoreIdentityCardBody({
 }: {
   pcd: EthereumOwnershipPCD;
 }) {
+  const [identityCommitment, setIdentityCommitement] =
+    useState("<deserializing>");
+
+  useEffect(() => {
+    SemaphoreSignaturePCDPackage.deserialize(pcd.proof.signatureProof.pcd).then(
+      (pcd) => {
+        setIdentityCommitement(pcd.claim.identityCommitment);
+      }
+    );
+  }, [pcd]);
+
   return (
     <Container>
       <p>
@@ -23,7 +36,7 @@ export function SemaphoreIdentityCardBody({
       <Separator />
 
       <FieldLabel>Commitment</FieldLabel>
-      <HiddenText text={pcd.claim.identityCommitment} />
+      <HiddenText text={identityCommitment} />
       <Spacer h={8} />
 
       <FieldLabel>Ethereum Address</FieldLabel>
