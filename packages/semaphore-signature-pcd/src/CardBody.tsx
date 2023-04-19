@@ -17,7 +17,7 @@ export function SemaphoreIdentityCardBody({
     <Container>
       <p>
         This PCD represents a particular message that has been signed by a
-        particular Semaphore identity.
+        particular Semaphore Identity.
       </p>
 
       <Separator />

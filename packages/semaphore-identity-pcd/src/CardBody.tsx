@@ -11,7 +11,7 @@ export function SemaphoreIdentityCardBody({
     <Container>
       <p>
         This PCD represents a Sempahore Identity, which can be used to send
-        anonymous group signals.
+        anonymous group signals, log into websites, etc.
       </p>
       <Separator />
       <FieldLabel>Semaphore Commitment</FieldLabel>
