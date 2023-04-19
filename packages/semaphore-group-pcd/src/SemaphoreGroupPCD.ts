@@ -214,7 +214,7 @@ export async function deserialize(
 export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
   return {
     header: "Semaphore Group Signal",
-    displayName: "semaphore-" + pcd.id.substring(0, 4),
+    displayName: "semaphore-group-" + pcd.id.substring(0, 4),
   };
 }
 

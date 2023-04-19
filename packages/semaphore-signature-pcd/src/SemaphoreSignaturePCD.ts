@@ -202,7 +202,7 @@ export async function deserialize(
 export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
   return {
     header: "Semaphore Signature",
-    displayName: "semaphore-" + pcd.id.substring(0, 4),
+    displayName: "semaphore-sig-" + pcd.id.substring(0, 4),
   };
 }
 
