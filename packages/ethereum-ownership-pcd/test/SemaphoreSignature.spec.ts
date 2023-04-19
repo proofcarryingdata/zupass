@@ -5,9 +5,9 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import * as path from "path";
 import {
-  SemaphoreSignaturePCDArgs,
-  SemaphoreSignaturePCDPackage,
-} from "../src/SemaphoreSignaturePCD";
+  EthereumOwnershipPCDArgs,
+  EthereumOwnershipPCDPackage,
+} from "../src/EthereumOwnershipPCD";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -16,10 +16,10 @@ describe("semaphore signature PCD should work", function () {
   this.timeout(1000 * 30);
 
   // sets up shared Semaphore args across test cases
-  let args: SemaphoreSignaturePCDArgs;
+  let args: EthereumOwnershipPCDArgs;
   this.beforeAll(async function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await SemaphoreSignaturePCDPackage.init!({
+    await EthereumOwnershipPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
     });
@@ -43,14 +43,14 @@ describe("semaphore signature PCD should work", function () {
   });
 
   it("should be able to generate a PCD that verifies", async function () {
-    const { prove, verify } = SemaphoreSignaturePCDPackage;
+    const { prove, verify } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     const verified = await verify(pcd);
     assert.equal(verified, true);
   });
 
   it("should not verify a PCD with an incorrect signed message", async function () {
-    const { prove, verify } = SemaphoreSignaturePCDPackage;
+    const { prove, verify } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     pcd.claim.signedMessage += "1";
     const verified = await verify(pcd);
@@ -58,7 +58,7 @@ describe("semaphore signature PCD should work", function () {
   });
 
   it("should not verify a PCD with an incorrect nullifier hash", async function () {
-    const { prove, verify } = SemaphoreSignaturePCDPackage;
+    const { prove, verify } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     pcd.claim.nullifierHash += "1";
     const verified = await verify(pcd);
@@ -66,7 +66,7 @@ describe("semaphore signature PCD should work", function () {
   });
 
   it("should not verify a PCD with an incorrect identity commitment", async function () {
-    const { prove, verify } = SemaphoreSignaturePCDPackage;
+    const { prove, verify } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     pcd.claim.identityCommitment += "1";
     const verified = await verify(pcd);
@@ -74,7 +74,7 @@ describe("semaphore signature PCD should work", function () {
   });
 
   it("should not verify a proof with an incorrect proof", async function () {
-    const { prove, verify } = SemaphoreSignaturePCDPackage;
+    const { prove, verify } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     pcd.proof[0] += "1";
     const verified = await verify(pcd);
@@ -82,7 +82,7 @@ describe("semaphore signature PCD should work", function () {
   });
 
   it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
-    const { prove, serialize, deserialize } = SemaphoreSignaturePCDPackage;
+    const { prove, serialize, deserialize } = EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     const serialized_pcd = await serialize(pcd);
     const deserialized_pcd = await deserialize(serialized_pcd.pcd);
@@ -91,7 +91,7 @@ describe("semaphore signature PCD should work", function () {
 
   it("verifying a deserialized PCD that is valid should result in a correct verification", async function () {
     const { prove, verify, serialize, deserialize } =
-      SemaphoreSignaturePCDPackage;
+      EthereumOwnershipPCDPackage;
     const pcd = await prove(args);
     const serialized_pcd = await serialize(pcd);
     const deserialized_pcd = await deserialize(serialized_pcd.pcd);

@@ -6,18 +6,18 @@ import {
   TextContainer,
 } from "@pcd/passport-ui";
 import styled from "styled-components";
-import { SemaphoreSignaturePCD } from "./SemaphoreSignaturePCD";
+import { EthereumOwnershipPCD } from "./EthereumOwnershipPCD";
 
 export function SemaphoreIdentityCardBody({
   pcd,
 }: {
-  pcd: SemaphoreSignaturePCD;
+  pcd: EthereumOwnershipPCD;
 }) {
   return (
     <Container>
       <p>
-        This PCD represents a particular message that has been signed by a
-        particular Semaphore Identity.
+        This PCD represents that a particular Semphore identity owns a
+        particular PCD. particular Semaphore Identity.
       </p>
 
       <Separator />
@@ -26,8 +26,8 @@ export function SemaphoreIdentityCardBody({
       <HiddenText text={pcd.claim.identityCommitment} />
       <Spacer h={8} />
 
-      <FieldLabel>Signed Message</FieldLabel>
-      <TextContainer>{pcd.claim.signedMessage}</TextContainer>
+      <FieldLabel>Ethereum Address</FieldLabel>
+      <TextContainer>{pcd.claim.ethereumAddress}</TextContainer>
     </Container>
   );
 }

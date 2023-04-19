@@ -1,1 +1,1 @@
-export * from "./src/SemaphoreSignaturePCD";
+export * from "./src/EthereumOwnershipPCD";
