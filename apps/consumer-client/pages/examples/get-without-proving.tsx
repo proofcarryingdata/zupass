@@ -10,8 +10,8 @@ import { PASSPORT_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 /**
- * Example page which shows how to use the generic prove screen to
- * request a Semaphore Signature PCD as a third party developer.
+ * Example page which shows how to get a PCD from the passport without
+ * proving it first.
  */
 export default function Page() {
   const [passportPCDStr] = usePassportPopupMessages();
@@ -27,14 +27,10 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Generic Semaphore Signature Proof</h2>
+      <h2>Get Without Proving</h2>
       <p>
-        This page shows a working example of an integration with the Zuzalu
-        Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Residents Semaphore Group. Although the data
-        that is returned is not specific for Zuzalu, this specific request shows
-        a specific screen within the passport which was specifically designed
-        for Zuzalu.
+        This page shows a working example of how to request a PCD from the
+        passport without proving it first.
       </p>
       <ExampleContainer>
         <button onClick={getProofWithoutProving}>
