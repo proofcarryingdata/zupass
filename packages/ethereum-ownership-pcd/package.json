@@ -1,6 +1,6 @@
 {
   "name": "@pcd/ethereum-ownership-pcd",
-  "version": "0.4.2-next.2",
+  "version": "0.4.2-next.3",
   "license": "GPL-3.0-or-later",
   "main": "./index.js",
   "types": "./index.ts",

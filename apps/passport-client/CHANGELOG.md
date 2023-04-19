@@ -1,5 +1,12 @@
 # passport-client
 
+## 0.0.8-next.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.4.2-next.3
+
 ## 0.0.8-next.2
 
 ### Patch Changes

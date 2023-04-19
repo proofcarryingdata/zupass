@@ -1,5 +1,11 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.4.2-next.3
+
+### Patch Changes
+
+- Fix more textencoder stuff
+
 ## 0.4.2-next.2
 
 ### Patch Changes
