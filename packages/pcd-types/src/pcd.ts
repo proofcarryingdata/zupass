@@ -12,6 +12,11 @@ export interface SerializedPCD<_T extends PCD = PCD> {
   pcd: string;
 }
 
+/**
+ * This interface can be optionally returned by the package ƒor any given
+ * PCD, which allows the package some degree of control over how the PCD
+ * is displayed in the passport application.
+ */
 export interface DisplayOptions {
   /**
    * Shown to the user in the main page of the passport, where they can

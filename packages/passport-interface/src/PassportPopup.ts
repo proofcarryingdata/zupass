@@ -51,7 +51,6 @@ export function usePassportPopupSetup() {
     const paramsProofUrl = params.get("proofUrl");
     const paramsProof = params.get("proof");
     const paramsEncodingPendingPCD = params.get("encodedPendingPCD");
-    const pcdResponse = params.get("pcdResponse");
 
     // First, this page is window.open()-ed. Redirect to the Passport app.
     if (paramsProofUrl != null) {
@@ -66,10 +65,6 @@ export function usePassportPopupSetup() {
         { encodedPendingPCD: paramsEncodingPendingPCD },
         "*"
       );
-      window.close();
-    } else if (pcdResponse != null) {
-      // Later, the Passport redirects back with a encodedPendingPCD. Send it to our parent.
-      window.opener.postMessage({ response: pcdResponse }, "*");
       window.close();
     }
   }, []);
