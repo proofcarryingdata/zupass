@@ -1,3 +1,4 @@
+import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -28,11 +29,17 @@ export async function loadPCDs() {
     zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
   });
 
+  await EthereumOwnershipPCDPackage.init({
+    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
+  });
+
   return await PCDCollection.deserialize(
     [
       SemaphoreGroupPCDPackage,
       SemaphoreIdentityPCDPackage,
       SemaphoreSignaturePCDPackage,
+      EthereumOwnershipPCDPackage,
     ],
     serialized
   );

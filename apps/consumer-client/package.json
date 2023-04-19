@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,7 +11,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/passport-interface": "0.4.2",
+    "@pcd/ethereum-ownership-pcd": "0.4.2",
+    "@pcd/passport-interface": "0.4.3",
     "@pcd/pcd-types": "0.4.1",
     "@pcd/semaphore-group-pcd": "0.4.1",
     "@pcd/semaphore-identity-pcd": "0.4.1",

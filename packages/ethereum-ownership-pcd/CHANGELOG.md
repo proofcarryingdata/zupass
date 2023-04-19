@@ -1,34 +1,47 @@
-# @pcd/passport-interface
-
-## 0.4.3
-
-### Patch Changes
-
-- f975aba: Update name of get without proving url
-
-## 0.4.3-next.0
-
-### Patch Changes
-
-- Update name of get without proving url
+# @pcd/semaphore-signature-pcd
 
 ## 0.4.2
 
 ### Patch Changes
 
-- Support for multiple cards in passport
-- Updated dependencies
-  - @pcd/passport-crypto@0.4.1
-  - @pcd/pcd-types@0.4.1
-  - @pcd/semaphore-group-pcd@0.4.1
-  - @pcd/semaphore-signature-pcd@0.4.1
-  - @pcd/tsconfig@0.4.1
+- 6d41ad6: Fix more textencoder stuff
+- 561ff8b: initial testing package
+- 4c9ef35: Updated API of ethereum ownership pcd
+- e32b0e4: Remove TextEncoder dependency
+
+## 0.4.2-next.3
+
+### Patch Changes
+
+- Fix more textencoder stuff
+
+## 0.4.2-next.2
+
+### Patch Changes
+
+- Remove TextEncoder dependency
+
+## 0.4.2-next.1
+
+### Patch Changes
+
+- Updated API of ethereum ownership pcd
+
+## 0.4.2-next.0
+
+### Patch Changes
+
+- initial testing package
 
 ## 0.4.1
 
 ### Patch Changes
 
-- Switch to callback for notifying proof verification and completion in passport-interface package.
+- Support for multiple cards in passport
+- Updated dependencies
+  - @pcd/passport-ui@0.4.1
+  - @pcd/pcd-types@0.4.1
+  - @pcd/tsconfig@0.4.1
 
 ## 0.4.0
 
@@ -39,10 +52,7 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/passport-crypto@0.4.0
   - @pcd/pcd-types@0.4.0
-  - @pcd/semaphore-group-pcd@0.4.0
-  - @pcd/semaphore-signature-pcd@0.4.0
   - @pcd/tsconfig@0.4.0
 
 ## 0.3.0
@@ -54,10 +64,7 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/passport-crypto@0.3.0
   - @pcd/pcd-types@0.3.0
-  - @pcd/semaphore-group-pcd@0.3.0
-  - @pcd/semaphore-signature-pcd@0.3.0
   - @pcd/tsconfig@0.3.0
 
 ## 0.2.0
@@ -71,9 +78,6 @@
 - b589756: Fixed circuluar dependency
 - Updated dependencies [b589756]
 - Updated dependencies [ea46c31]
-  - @pcd/semaphore-signature-pcd@0.2.0
-  - @pcd/semaphore-group-pcd@0.2.0
-  - @pcd/passport-crypto@0.2.0
   - @pcd/pcd-types@0.2.0
   - @pcd/tsconfig@0.2.0
 
@@ -86,9 +90,6 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.2.0-next.1
-  - @pcd/semaphore-group-pcd@0.2.0-next.1
-  - @pcd/passport-crypto@0.2.0-next.1
   - @pcd/pcd-types@0.2.0-next.1
   - @pcd/tsconfig@0.2.0-next.1
 
@@ -98,9 +99,6 @@
 
 - Fixed circuluar dependency
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.2-next.0
-  - @pcd/semaphore-group-pcd@0.1.2-next.0
-  - @pcd/passport-crypto@0.1.2-next.0
   - @pcd/pcd-types@0.1.2-next.0
   - @pcd/tsconfig@0.1.2-next.0
 
@@ -118,9 +116,6 @@
 - Updated dependencies [d64f99a]
 - Updated dependencies [d46a364]
 - Updated dependencies [87b7e2b]
-  - @pcd/semaphore-signature-pcd@0.1.1
-  - @pcd/semaphore-group-pcd@0.1.1
-  - @pcd/passport-crypto@0.1.1
   - @pcd/pcd-types@0.1.1
   - @pcd/tsconfig@0.1.1
 
@@ -130,9 +125,6 @@
 
 - Install missing dependency
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.1-next.4
-  - @pcd/semaphore-group-pcd@0.1.1-next.4
-  - @pcd/passport-crypto@0.1.1-next.4
   - @pcd/pcd-types@0.1.1-next.4
   - @pcd/tsconfig@0.1.1-next.2
 
@@ -142,9 +134,6 @@
 
 - Fix compilation error.
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.1-next.3
-  - @pcd/semaphore-group-pcd@0.1.1-next.3
-  - @pcd/passport-crypto@0.1.1-next.3
   - @pcd/pcd-types@0.1.1-next.3
   - @pcd/tsconfig@0.1.1-next.1
 
@@ -154,9 +143,6 @@
 
 - CommonJS
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.1-next.2
-  - @pcd/semaphore-group-pcd@0.1.1-next.2
-  - @pcd/passport-crypto@0.1.1-next.2
   - @pcd/pcd-types@0.1.1-next.2
   - @pcd/tsconfig@0.1.1-next.0
 
@@ -166,9 +152,6 @@
 
 - Include proper dependencies.
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.1-next.1
-  - @pcd/semaphore-group-pcd@0.1.1-next.1
-  - @pcd/passport-crypto@0.1.1-next.1
   - @pcd/pcd-types@0.1.1-next.1
 
 ## 0.1.1-next.0
@@ -177,9 +160,6 @@
 
 - Testing javascript build
 - Updated dependencies
-  - @pcd/semaphore-signature-pcd@0.1.1-next.0
-  - @pcd/semaphore-group-pcd@0.1.1-next.0
-  - @pcd/passport-crypto@0.1.1-next.0
   - @pcd/pcd-types@0.1.1-next.0
 
 ## 0.1.0
@@ -191,93 +171,36 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/passport-crypto@0.1.0
   - @pcd/pcd-types@0.1.0
-  - @pcd/semaphore-group-pcd@0.1.0
-  - @pcd/semaphore-signature-pcd@0.1.0
 
-## 0.0.9
+## 0.0.5
 
 ### Patch Changes
 
 - Implemented ProofOptions interface.
 - Updated dependencies
-  - @pcd/passport-crypto@0.0.3
   - @pcd/pcd-types@0.0.9
-  - @pcd/semaphore-group-pcd@0.0.9
-  - @pcd/semaphore-signature-pcd@0.0.5
 
-## 0.0.8
+## 0.0.4
 
 ### Patch Changes
 
 - New and improved passport interface - requests routed through message passing api rather than URLs. Also, new PCD request interface for requesting the Zuzalu UUID from a user.
 - Updated dependencies
-  - @pcd/passport-crypto@0.0.2
   - @pcd/pcd-types@0.0.8
-  - @pcd/semaphore-group-pcd@0.0.8
-  - @pcd/semaphore-signature-pcd@0.0.4
 
-## 0.0.7
+## 0.0.3
 
 ### Patch Changes
 
 - new crypto packages
 - Updated dependencies
-  - @pcd/passport-crypto@0.0.1
   - @pcd/pcd-types@0.0.7
-  - @pcd/semaphore-group-pcd@0.0.7
-  - @pcd/semaphore-signature-pcd@0.0.3
 
-## 0.0.6
+## 0.0.2
 
 ### Patch Changes
 
 - Add SemaphoreSignaturePCD
 - Updated dependencies
   - @pcd/pcd-types@0.0.6
-  - @pcd/semaphore-group-pcd@0.0.6
-  - @pcd/semaphore-signature-pcd@0.0.2
-
-## 0.0.5
-
-### Patch Changes
-
-- new version
-- Updated dependencies
-  - @pcd/pcd-types@0.0.5
-  - @pcd/semaphore-group-pcd@0.0.5
-
-## 0.0.4
-
-### Patch Changes
-
-- Another update.
-- Updated dependencies
-  - @pcd/pcd-types@0.0.4
-  - @pcd/semaphore-group-pcd@0.0.4
-
-## 0.0.3
-
-### Patch Changes
-
-- Preparing for zuzalu.
-- Updated dependencies
-  - @pcd/semaphore-group-pcd@0.0.3
-  - @pcd/pcd-types@0.0.3
-
-## 0.0.2
-
-### Patch Changes
-
-- 0.0.2
-- Updated dependencies
-  - @pcd/pcd-types@0.0.2
-
-## 0.0.1
-
-### Patch Changes
-
-- Initial changeset.
-- Updated dependencies
-  - @pcd/pcd-types@0.0.1
