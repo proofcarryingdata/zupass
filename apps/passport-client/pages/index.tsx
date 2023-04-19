@@ -95,8 +95,8 @@ function Router() {
             path="get-without-proving"
             element={<GetWithoutProvingScreen />}
           />
-          <Route path="prove" element={<ProveScreen />} />
           <Route path="add" element={<AddScreen />} />
+          <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
           <Route path="verify" element={<VerifyScreen />} />
