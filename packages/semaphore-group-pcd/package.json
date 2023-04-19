@@ -25,6 +25,7 @@
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "18.0.22",
+    "@types/styled-components": "^5.1.26",
     "@types/uuid": "^9.0.0",
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
