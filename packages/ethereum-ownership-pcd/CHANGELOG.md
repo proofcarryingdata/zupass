@@ -1,5 +1,11 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.4.2-next.2
+
+### Patch Changes
+
+- Remove TextEncoder dependency
+
 ## 0.4.2-next.1
 
 ### Patch Changes
