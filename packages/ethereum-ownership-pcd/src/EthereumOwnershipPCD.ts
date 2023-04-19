@@ -1,4 +1,5 @@
 import {
+  ArgumentTypeName,
   DisplayOptions,
   PCD,
   PCDArgument,
@@ -6,10 +7,18 @@ import {
   SerializedPCD,
   StringArgument,
 } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { Proof } from "@semaphore-protocol/proof";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDTypeName,
+} from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage,
+} from "@pcd/semaphore-signature-pcd";
+import ethers from "ethers";
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { SemaphoreIdentityCardBody as EthereumOwnershipCardBody } from "./CardBody";
 
 /**
@@ -70,7 +79,8 @@ export interface EthereumOwnershipPCDClaim {
 }
 
 export interface EthereumOwnershipPCDProof {
-  signatureProof: Proof;
+  signatureProof: SerializedPCD<SemaphoreSignaturePCD>;
+  ethereumSignatureOfCommitment: string;
 }
 
 export class EthereumOwnershipPCD
@@ -99,10 +109,103 @@ export async function init(args: EthereumOwnershipPCDInitArgs): Promise<void> {
 export async function prove(
   args: EthereumOwnershipPCDArgs
 ): Promise<EthereumOwnershipPCD> {
-  throw new Error("unimplemented");
+  if (args.identityCommitment.value === undefined) {
+    throw new Error(`missing argument identityCommitment`);
+  }
+
+  if (args.identity.value === undefined) {
+    throw new Error(`missing argument identity`);
+  }
+
+  if (args.ethereumSignatureOfCommitment.value === undefined) {
+    throw new Error(`missing argument ethereumSignatureOfCommitment`);
+  }
+
+  if (args.ethereumAddress.value === undefined) {
+    throw new Error(`missing argument ethereumAddress`);
+  }
+
+  if (!ethers.isAddress(args.ethereumAddress)) {
+    throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
+  }
+
+  const address = ethers.getAddress(
+    ethers.recoverAddress(
+      new TextEncoder().encode(args.identityCommitment.value),
+      args.ethereumSignatureOfCommitment.value
+    )
+  );
+  const formattedArgAddress = ethers.getAddress(args.ethereumAddress.value);
+
+  if (address !== formattedArgAddress) {
+    throw new Error(
+      `recovered address ${address} does not match argument address: ${formattedArgAddress} `
+    );
+  }
+
+  const semaphoreSignature = await SemaphoreSignaturePCDPackage.prove({
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDTypeName,
+      value: args.identity.value,
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: args.ethereumSignatureOfCommitment.value,
+    },
+  });
+
+  return new EthereumOwnershipPCD(
+    uuid(),
+    {
+      ethereumAddress: args.ethereumAddress.value,
+      identityCommitment: args.identityCommitment.value,
+    },
+    {
+      signatureProof: await SemaphoreSignaturePCDPackage.serialize(
+        semaphoreSignature
+      ),
+      ethereumSignatureOfCommitment: args.ethereumSignatureOfCommitment.value,
+    }
+  );
 }
 
 export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
+  const semaphoreSignature = await SemaphoreSignaturePCDPackage.deserialize(
+    pcd.proof.signatureProof.pcd
+  );
+  const proofValid = await SemaphoreSignaturePCDPackage.verify(
+    semaphoreSignature
+  );
+
+  // the semaphore signature of the ethereum signature must be valid
+  if (!proofValid) {
+    return false;
+  }
+
+  // the string that the semaphore signature signed must equal to the ethereum
+  // signature of the commitment
+  if (
+    semaphoreSignature.claim.signedMessage !==
+    pcd.proof.ethereumSignatureOfCommitment
+  ) {
+    return false;
+  }
+
+  const recoveredAddress = ethers.recoverAddress(
+    new TextEncoder().encode(pcd.claim.identityCommitment),
+    pcd.proof.ethereumSignatureOfCommitment
+  );
+
+  // the signature of the commitment by the ethereum address must have been
+  // signed by the claimed ethereum address
+  if (
+    ethers.getAddress(recoveredAddress) !==
+    ethers.getAddress(pcd.claim.ethereumAddress)
+  ) {
+    return false;
+  }
+
   return true;
 }
 
