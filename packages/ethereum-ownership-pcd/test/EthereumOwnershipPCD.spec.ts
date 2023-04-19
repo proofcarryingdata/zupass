@@ -32,7 +32,7 @@ describe("Ethereum ownership PCD", function () {
       identity
     );
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+      identity.claim.identity.commitment.toString()
     );
 
     const ethereumPCD = await EthereumOwnershipPCDPackage.prove({
@@ -63,7 +63,7 @@ describe("Ethereum ownership PCD", function () {
       identity
     );
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+      identity.claim.identity.commitment.toString()
     );
     const mangledSignature =
       signatureOfIdentityCommitment.substring(
@@ -99,7 +99,7 @@ describe("Ethereum ownership PCD", function () {
       identity
     );
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+      identity.claim.identity.commitment.toString()
     );
 
     assert.rejects(() =>
@@ -130,7 +130,7 @@ describe("Ethereum ownership PCD", function () {
       identity
     );
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+      identity.claim.identity.commitment.toString()
     );
 
     const pcd = await EthereumOwnershipPCDPackage.prove({
