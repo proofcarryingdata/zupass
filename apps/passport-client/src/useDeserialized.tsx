@@ -2,6 +2,9 @@ import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { useContext, useEffect, useState } from "react";
 import { DispatchContext } from "./dispatch";
 
+/**
+ * Hook that deserializes a given PCD, or returns an error.
+ */
 export function useDeserialized(pcd: SerializedPCD): {
   pcd?: PCD | undefined;
   error?: Error | undefined;
