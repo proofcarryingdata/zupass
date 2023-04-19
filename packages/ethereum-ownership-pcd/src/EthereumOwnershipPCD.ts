@@ -55,8 +55,6 @@ export interface EthereumOwnershipPCDInitArgs {
   wasmFilePath: string;
 }
 
-let initArgs: EthereumOwnershipPCDInitArgs | undefined = undefined;
-
 // We hardcode the externalNullifer to also be your identityCommitment
 // so that your nullifier for specific groups is not revealed when
 // a SemaphoreSignaturePCD is requested from a consumer application.
@@ -99,7 +97,7 @@ export class EthereumOwnershipPCD
 }
 
 export async function init(args: EthereumOwnershipPCDInitArgs): Promise<void> {
-  initArgs = args;
+  return SemaphoreSignaturePCDPackage.init!(args);
 }
 
 export async function prove(

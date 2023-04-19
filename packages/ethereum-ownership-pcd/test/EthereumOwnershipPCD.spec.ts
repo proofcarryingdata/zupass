@@ -4,7 +4,6 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName,
 } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { ethers } from "ethers";
 import * as path from "path";
@@ -17,7 +16,7 @@ describe("Ethereum ownership PCD", function () {
   this.timeout(30 * 1000);
 
   this.beforeAll(async function () {
-    await SemaphoreSignaturePCDPackage.init!({
+    await EthereumOwnershipPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
     });
