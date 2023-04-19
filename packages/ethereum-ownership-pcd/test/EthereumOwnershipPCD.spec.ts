@@ -75,7 +75,7 @@ describe("Ethereum ownership PCD", function () {
         signatureOfIdentityCommitment.length - 1
       ) + "0";
 
-    assert.rejects(async () => {
+    await assert.rejects(async () => {
       await EthereumOwnershipPCDPackage.prove({
         ethereumAddress: {
           argumentType: ArgumentTypeName.String,
@@ -96,5 +96,83 @@ describe("Ethereum ownership PCD", function () {
         },
       });
     });
+  });
+
+  it("should not be able create a PCD where identity does not match identity pcd", async function () {
+    const wallet = ethers.Wallet.createRandom(null);
+    const identity = await SemaphoreIdentityPCDPackage.prove({
+      identity: new Identity(),
+    });
+    const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
+      identity
+    );
+    const signatureOfIdentityCommitment = await wallet.signMessage(
+      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+    );
+
+    assert.rejects(() =>
+      EthereumOwnershipPCDPackage.prove({
+        ethereumAddress: {
+          argumentType: ArgumentTypeName.String,
+          value: wallet.address,
+        },
+        ethereumSignatureOfCommitment: {
+          argumentType: ArgumentTypeName.String,
+          value: signatureOfIdentityCommitment,
+        },
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: SemaphoreIdentityPCDTypeName,
+          value: serializedIdentity,
+        },
+        identityCommitment: {
+          argumentType: ArgumentTypeName.String,
+          value: identity.claim.identity.commitment.toString() + "0",
+        },
+      })
+    );
+  });
+
+  it("should not be able verify a PCD whose Ethereum address was tampered with", async function () {
+    const wallet = ethers.Wallet.createRandom(null);
+    const identity = await SemaphoreIdentityPCDPackage.prove({
+      identity: new Identity(),
+    });
+    const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
+      identity
+    );
+    const signatureOfIdentityCommitment = await wallet.signMessage(
+      new TextEncoder().encode(identity.claim.identity.commitment.toString())
+    );
+
+    const pcd = await EthereumOwnershipPCDPackage.prove({
+      ethereumAddress: {
+        argumentType: ArgumentTypeName.String,
+        value: wallet.address,
+      },
+      ethereumSignatureOfCommitment: {
+        argumentType: ArgumentTypeName.String,
+        value: signatureOfIdentityCommitment,
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDTypeName,
+        value: serializedIdentity,
+      },
+      identityCommitment: {
+        argumentType: ArgumentTypeName.String,
+        value: identity.claim.identity.commitment.toString(),
+      },
+    });
+
+    const mangledAddress =
+      pcd.claim.ethereumAddress.substring(
+        0,
+        pcd.claim.ethereumAddress.length - 1
+      ) + "0";
+
+    pcd.claim.ethereumAddress = mangledAddress;
+
+    assert.rejects(EthereumOwnershipPCDPackage.verify(pcd));
   });
 });
