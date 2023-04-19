@@ -12,6 +12,10 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
+/**
+ * Example 3rd party application page which shows how to add
+ * PCDs into the passport.
+ */
 export default function Page() {
   return (
     <div>
