@@ -124,9 +124,7 @@ export async function prove(
 
   const address = ethers.getAddress(
     ethers.verifyMessage(
-      new TextEncoder().encode(
-        deserializedIdentity.claim.identity.commitment.toString()
-      ),
+      deserializedIdentity.claim.identity.commitment.toString(),
       args.ethereumSignatureOfCommitment.value
     )
   );
@@ -193,9 +191,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
 
   try {
     const recoveredAddress = ethers.verifyMessage(
-      new TextEncoder().encode(
-        deserializedSignatureProof.claim.identityCommitment
-      ),
+      deserializedSignatureProof.claim.identityCommitment,
       pcd.proof.ethereumSignatureOfCommitment
     );
 
