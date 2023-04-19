@@ -1,5 +1,5 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { useDeserialized } from "../../../src/useDeserialized";
@@ -11,8 +11,12 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 
+/**
+ * Screen that allows the user to respond to a `PCDAddRequest` and add
+ * a PCD into their wallet without proving it.
+ */
 export function JustAddScreen({ request }: { request: PCDAddRequest }) {
-  const [state, dispatch] = useContext(DispatchContext);
+  const [_state, dispatch] = useContext(DispatchContext);
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
 
