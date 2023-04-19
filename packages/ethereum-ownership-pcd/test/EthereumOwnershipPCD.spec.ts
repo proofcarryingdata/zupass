@@ -49,10 +49,6 @@ describe("Ethereum ownership PCD", function () {
         pcdType: SemaphoreIdentityPCDTypeName,
         value: serializedIdentity,
       },
-      identityCommitment: {
-        argumentType: ArgumentTypeName.String,
-        value: identity.claim.identity.commitment.toString(),
-      },
     });
 
     await EthereumOwnershipPCDPackage.verify(ethereumPCD);
@@ -90,10 +86,6 @@ describe("Ethereum ownership PCD", function () {
           pcdType: SemaphoreIdentityPCDTypeName,
           value: serializedIdentity,
         },
-        identityCommitment: {
-          argumentType: ArgumentTypeName.String,
-          value: identity.claim.identity.commitment.toString(),
-        },
       });
     });
   });
@@ -125,10 +117,6 @@ describe("Ethereum ownership PCD", function () {
           pcdType: SemaphoreIdentityPCDTypeName,
           value: serializedIdentity,
         },
-        identityCommitment: {
-          argumentType: ArgumentTypeName.String,
-          value: identity.claim.identity.commitment.toString() + "0",
-        },
       })
     );
   });
@@ -158,10 +146,6 @@ describe("Ethereum ownership PCD", function () {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDTypeName,
         value: serializedIdentity,
-      },
-      identityCommitment: {
-        argumentType: ArgumentTypeName.String,
-        value: identity.claim.identity.commitment.toString(),
       },
     });
 

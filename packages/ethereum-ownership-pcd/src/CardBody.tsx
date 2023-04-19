@@ -29,8 +29,8 @@ export function SemaphoreIdentityCardBody({
   return (
     <Container>
       <p>
-        This PCD represents that a particular Semphore identity owns a
-        particular PCD. particular Semaphore Identity.
+        This PCD represents that a particular Semphore Identity owns a
+        particular Ethereum Address.
       </p>
 
       <Separator />

@@ -60,7 +60,6 @@ export interface EthereumOwnershipPCDInitArgs {
 // a SemaphoreSignaturePCD is requested from a consumer application.
 export interface EthereumOwnershipPCDArgs {
   identity: PCDArgument<SemaphoreIdentityPCD>;
-  identityCommitment: StringArgument;
   ethereumAddress: StringArgument;
   ethereumSignatureOfCommitment: StringArgument;
 }
@@ -103,10 +102,6 @@ export async function init(args: EthereumOwnershipPCDInitArgs): Promise<void> {
 export async function prove(
   args: EthereumOwnershipPCDArgs
 ): Promise<EthereumOwnershipPCD> {
-  if (args.identityCommitment.value === undefined) {
-    throw new Error(`missing argument identityCommitment`);
-  }
-
   if (args.identity.value === undefined) {
     throw new Error(`missing argument identity`);
   }
@@ -127,20 +122,11 @@ export async function prove(
     args.identity.value.pcd
   );
 
-  if (
-    deserializedIdentity.claim.identity.commitment.toString() !==
-    args.identityCommitment.value
-  ) {
-    throw new Error(
-      `identity commitment ${
-        args.identityCommitment.value
-      } does not equal commitment of identity pcd: ${deserializedIdentity.claim.identity.commitment.toString()}`
-    );
-  }
-
   const address = ethers.getAddress(
     ethers.verifyMessage(
-      new TextEncoder().encode(args.identityCommitment.value),
+      new TextEncoder().encode(
+        deserializedIdentity.claim.identity.commitment.toString()
+      ),
       args.ethereumSignatureOfCommitment.value
     )
   );
@@ -204,19 +190,25 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     await SemaphoreSignaturePCDPackage.deserialize(
       pcd.proof.signatureProof.pcd
     );
-  const recoveredAddress = ethers.verifyMessage(
-    new TextEncoder().encode(
-      deserializedSignatureProof.claim.identityCommitment
-    ),
-    pcd.proof.ethereumSignatureOfCommitment
-  );
 
-  // the signature of the commitment by the ethereum address must have been
-  // signed by the claimed ethereum address
-  if (
-    ethers.getAddress(recoveredAddress) !==
-    ethers.getAddress(pcd.claim.ethereumAddress)
-  ) {
+  try {
+    const recoveredAddress = ethers.verifyMessage(
+      new TextEncoder().encode(
+        deserializedSignatureProof.claim.identityCommitment
+      ),
+      pcd.proof.ethereumSignatureOfCommitment
+    );
+
+    // the signature of the commitment by the ethereum address must have been
+    // signed by the claimed ethereum address
+    if (
+      ethers.getAddress(recoveredAddress) !==
+      ethers.getAddress(pcd.claim.ethereumAddress)
+    ) {
+      return false;
+    }
+  } catch (e) {
+    console.log(e);
     return false;
   }
 
