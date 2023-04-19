@@ -1,3 +1,4 @@
+import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -112,6 +113,7 @@ async function genPassport(
       SemaphoreIdentityPCDPackage,
       SemaphoreGroupPCDPackage,
       SemaphoreSignaturePCDPackage,
+      EthereumOwnershipPCDPackage,
     ],
     [identityPCD]
   );
@@ -262,6 +264,7 @@ async function loadFromSync(
       SemaphoreIdentityPCDPackage,
       SemaphoreGroupPCDPackage,
       SemaphoreSignaturePCDPackage,
+      EthereumOwnershipPCDPackage,
     ],
     []
   );
