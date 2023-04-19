@@ -1,5 +1,11 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.4.2-next.0
+
+### Patch Changes
+
+- initial testing package
+
 ## 0.4.1
 
 ### Patch Changes

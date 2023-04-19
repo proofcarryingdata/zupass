@@ -1,6 +1,6 @@
 {
   "name": "passport-client",
-  "version": "0.0.7",
+  "version": "0.0.8-next.0",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
-    "@pcd/ethereum-ownership-pcd": "0.4.1",
+    "@pcd/ethereum-ownership-pcd": "0.4.2-next.0",
     "@pcd/passport-crypto": "0.4.1",
     "@pcd/passport-interface": "0.4.2",
     "@pcd/passport-ui": "0.4.1",

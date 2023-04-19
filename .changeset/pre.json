@@ -1,0 +1,26 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "consumer-client": "0.0.7",
+    "consumer-server": "0.0.6",
+    "docs": "1.0.0",
+    "passport-client": "0.0.7",
+    "passport-server": "0.0.7",
+    "@pcd/eslint-config-custom": "0.4.1",
+    "@pcd/ethereum-ownership-pcd": "0.4.1",
+    "@pcd/input-test-pcd": "0.4.1",
+    "@pcd/passport-crypto": "0.4.1",
+    "@pcd/passport-interface": "0.4.2",
+    "@pcd/passport-ui": "0.4.1",
+    "@pcd/pcd-collection": "0.4.1",
+    "@pcd/pcd-types": "0.4.1",
+    "@pcd/semaphore-group-pcd": "0.4.1",
+    "@pcd/semaphore-identity-pcd": "0.4.1",
+    "@pcd/semaphore-signature-pcd": "0.4.1",
+    "@pcd/tsconfig": "0.4.1"
+  },
+  "changesets": [
+    "five-apes-arrive"
+  ]
+}
