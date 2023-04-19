@@ -238,9 +238,6 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
     await state.pcds.deserializeAndAdd(pcd);
     await savePCDs(state.pcds);
     update({ pcds: state.pcds });
-
-    // Save PCDs to E2EE storage.
-    await saveParticipantPCDs(state.self);
   } else {
     throw new Error(`Can't add PCD: missing package ${pcd.type}`);
   }
@@ -250,9 +247,6 @@ async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
-
-  // Save PCDs to E2EE storage.
-  await saveParticipantPCDs(state.self);
 }
 
 async function loadFromSync(
