@@ -1,5 +1,6 @@
 import { PCDProveAndAddRequest } from "@pcd/passport-interface";
-import { useCallback, useContext, useState } from "react";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { Spacer } from "../../core";
@@ -21,14 +22,17 @@ export function ProveAndAddScreen({
   const [proved, setProved] = useState(false);
 
   const onProve = useCallback(
-    async (_pcd, serializedPCD) => {
-      await dispatch({ type: "add-pcd", pcd: serializedPCD });
+    (_: any, serializedPCD: SerializedPCD) => {
+      dispatch({ type: "add-pcd", pcd: serializedPCD });
       setProved(true);
+      window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
+        serializedPCD
+      )}`;
     },
-    [dispatch]
+    [dispatch, request.returnUrl]
   );
 
-  let content;
+  let content: ReactNode;
 
   if (!proved) {
     content = (
