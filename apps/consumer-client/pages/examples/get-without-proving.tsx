@@ -1,5 +1,5 @@
 import {
-  constructPassportPcdGetWithoutProvingRequestUrl,
+  getWithoutProvingUrl,
   usePassportPopupMessages,
 } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -43,7 +43,7 @@ export default function Page() {
 }
 
 function getProofWithoutProving() {
-  const url = constructPassportPcdGetWithoutProvingRequestUrl(
+  const url = getWithoutProvingUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
     SemaphoreSignaturePCDPackage.name

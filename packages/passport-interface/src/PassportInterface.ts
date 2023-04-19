@@ -45,7 +45,7 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
   options?: ProveOptions;
 }
 
-export function constructPassportPcdGetWithoutProvingRequestUrl(
+export function getWithoutProvingUrl(
   passportOrigin: string,
   returnUrl: string,
   pcdType: string
