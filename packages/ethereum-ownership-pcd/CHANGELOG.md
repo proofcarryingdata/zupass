@@ -1,5 +1,14 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.4.2
+
+### Patch Changes
+
+- 6d41ad6: Fix more textencoder stuff
+- 561ff8b: initial testing package
+- 4c9ef35: Updated API of ethereum ownership pcd
+- e32b0e4: Remove TextEncoder dependency
+
 ## 0.4.2-next.3
 
 ### Patch Changes

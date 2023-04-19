@@ -1,5 +1,17 @@
 # passport-client
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [6d41ad6]
+- Updated dependencies [561ff8b]
+- Updated dependencies [f975aba]
+- Updated dependencies [4c9ef35]
+- Updated dependencies [e32b0e4]
+  - @pcd/ethereum-ownership-pcd@0.4.2
+  - @pcd/passport-interface@0.4.3
+
 ## 0.0.8-next.4
 
 ### Patch Changes

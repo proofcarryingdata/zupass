@@ -1,5 +1,11 @@
 # @pcd/passport-interface
 
+## 0.4.3
+
+### Patch Changes
+
+- f975aba: Update name of get without proving url
+
 ## 0.4.3-next.0
 
 ### Patch Changes
