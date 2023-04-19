@@ -21,6 +21,7 @@
     "@pcd/tsconfig": "0.4.1"
   },
   "changesets": [
-    "five-apes-arrive"
+    "five-apes-arrive",
+    "kind-mayflies-occur"
   ]
 }

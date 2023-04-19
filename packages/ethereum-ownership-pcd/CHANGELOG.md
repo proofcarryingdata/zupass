@@ -1,5 +1,11 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.4.2-next.1
+
+### Patch Changes
+
+- Updated API of ethereum ownership pcd
+
 ## 0.4.2-next.0
 
 ### Patch Changes
