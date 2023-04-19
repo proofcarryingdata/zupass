@@ -11,6 +11,7 @@
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@pcd/ethereum-ownership-pcd": "0.4.1",
     "@pcd/passport-crypto": "0.4.1",
     "@pcd/passport-interface": "0.4.2",
     "@pcd/passport-ui": "0.4.1",

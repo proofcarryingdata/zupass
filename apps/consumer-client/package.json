@@ -11,6 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@pcd/ethereum-ownership-pcd": "0.4.1",
     "@pcd/passport-interface": "0.4.2",
     "@pcd/pcd-types": "0.4.1",
     "@pcd/semaphore-group-pcd": "0.4.1",
