@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.8-next.3",
+  "version": "0.0.8-next.4",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@pcd/ethereum-ownership-pcd": "0.4.2-next.3",
-    "@pcd/passport-interface": "0.4.2",
+    "@pcd/passport-interface": "0.4.3-next.0",
     "@pcd/pcd-types": "0.4.1",
     "@pcd/semaphore-group-pcd": "0.4.1",
     "@semaphore-protocol/group": "^3.2.3",

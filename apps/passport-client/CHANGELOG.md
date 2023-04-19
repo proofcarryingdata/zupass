@@ -1,5 +1,12 @@
 # passport-client
 
+## 0.0.8-next.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.3-next.0
+
 ## 0.0.8-next.3
 
 ### Patch Changes
