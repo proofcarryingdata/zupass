@@ -15,24 +15,27 @@ export class PCDCollection {
     this.pcds = pcds;
   }
 
-  public getPackage(name: string): PCDPackage {
+  public getPackage<T extends PCDPackage = PCDPackage>(
+    name: string
+  ): T | undefined {
     const matching = this.packages.find((p) => p.name === name);
+    return matching as T | undefined;
+  }
 
-    if (matching === undefined) {
-      throw new Error(`no package matching ${name}`);
-    }
-
-    return matching;
+  public hasPackage(name: string): boolean {
+    return this.packages.find((p) => p.name === name) !== undefined;
   }
 
   public async serialize(pcd: PCD): Promise<SerializedPCD> {
     const pcdPackage = this.getPackage(pcd.type);
+    if (!pcdPackage) throw new Error(`no package matching ${pcd.type}`);
     const serialized = await pcdPackage.serialize(pcd);
     return serialized;
   }
 
   public async deserialize(serialized: SerializedPCD): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
+    if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
     const deserialized = await pcdPackage.deserialize(serialized.pcd);
     return deserialized;
   }
@@ -46,6 +49,14 @@ export class PCDCollection {
   ): Promise<void> {
     const deserialized = await this.deserializeAll(serialized);
     this.addAll(deserialized);
+  }
+
+  public async remove(id: string) {
+    this.pcds = this.pcds.filter((pcd) => pcd.id !== id);
+  }
+
+  public async deserializeAndAdd(serialized: SerializedPCD): Promise<void> {
+    await this.deserializeAllAndAdd([serialized]);
   }
 
   public async serializeAll(): Promise<SerializedPCD[]> {
@@ -62,6 +73,10 @@ export class PCDCollection {
 
   public getById(id: string): PCD | undefined {
     return this.pcds.find((pcd) => pcd.id === id);
+  }
+
+  public hasPCDWithId(id: string): boolean {
+    return this.getById(id) !== undefined;
   }
 
   public getPCDsByType(type: string) {

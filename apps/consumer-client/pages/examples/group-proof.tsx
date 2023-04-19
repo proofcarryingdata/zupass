@@ -11,6 +11,7 @@ import {
   generateMessageHash,
   SemaphoreGroupPCDPackage,
 } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -160,6 +161,7 @@ function requestMembershipProof(
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description:

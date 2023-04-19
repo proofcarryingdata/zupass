@@ -9,7 +9,6 @@ import { useLocation } from "react-router-dom";
 import { config } from "../../src/config";
 import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { ZuIdCard } from "../../src/model/Card";
 import { decodeQRPayload } from "../../src/qr";
 import { bigintToUuid } from "../../src/util";
 import {
@@ -23,7 +22,12 @@ import {
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
-import { CardElem } from "../shared/CardElem";
+import {
+  CardContainerExpanded,
+  CardHeader,
+  CardOutlineExpanded,
+} from "../shared/PCDCard";
+import { ZuzaluCardBody } from "../shared/ZuzaluCard";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
 type VerifyType = "identity-proof" | "anon-proof";
@@ -89,9 +93,7 @@ export function VerifyScreen() {
         <Spacer h={48} />
         <Placeholder minH={160}>
           {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-          {result?.valid === true && (
-            <CardElem expanded card={getCard(result)} />
-          )}
+          {result && result.valid && getCard(result)}
         </Placeholder>
         <Spacer h={64} />
         {result != null && (
@@ -107,15 +109,20 @@ export function VerifyScreen() {
   );
 }
 
-function getCard(result: VerifyResult): ZuIdCard {
+function getCard(result: VerifyResult) {
   if (!result.valid) throw new Error("Invalid proof");
   if (result.type !== "identity-proof") throw new Error("Not an ID proof");
-  return {
-    id: "0x1234",
-    type: "zuzalu-id",
-    header: "VERIFIED ZUZALU PASSPORT",
-    participant: result.participant,
-  };
+
+  return (
+    <CardContainerExpanded>
+      <CardOutlineExpanded>
+        <CardHeader col="var(--accent-lite)">
+          VERIFIED ZUZALU PASSPORT
+        </CardHeader>
+        <ZuzaluCardBody showQrCode={false} participant={result.participant} />
+      </CardOutlineExpanded>
+    </CardContainerExpanded>
+  );
 }
 
 async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {

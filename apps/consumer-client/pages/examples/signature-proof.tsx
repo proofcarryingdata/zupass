@@ -1,18 +1,19 @@
 import {
   constructPassportPcdGetRequestUrl,
-  openPassportPopup,
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { sendPassportRequest } from "../../src/util";
 
 /**
  * Example page which shows how to use the generic prove screen to
@@ -26,13 +27,17 @@ export default function Page() {
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  
-  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
-  const { signatureProof } =
-    useSemaphoreSignatureProof(pcdStr, onProofVerified);
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
 
   const [serverProving, setServerProving] = useState(false);
 
@@ -106,6 +111,7 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description: "The identity with which to sign a message.",
@@ -125,5 +131,5 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
     }
   );
 
-  openPassportPopup(popupUrl, proofUrl);
+  sendPassportRequest(proofUrl);
 }

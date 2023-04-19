@@ -1,4 +1,5 @@
 import {
+  DisplayOptions,
   PCD,
   PCDArgument,
   PCDPackage,
@@ -19,6 +20,7 @@ import {
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreIdentityCardBody } from "./CardBody";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
@@ -197,6 +199,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
+  return {
+    header: "Semaphore Signature",
+    displayName: "semaphore-sig-" + pcd.id.substring(0, 4),
+  };
+}
+
 /**
  * PCD-conforming wrapper to sign messages using one's Semaphore public key. This is a small
  * extension of the existing Semaphore protocol, which is mostly geared at group signatures.
@@ -209,6 +218,8 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDInitArgs
 > = {
   name: SemaphoreSignaturePCDTypeName,
+  renderCardBody: SemaphoreIdentityCardBody,
+  getDisplayOptions,
   init,
   prove,
   verify,

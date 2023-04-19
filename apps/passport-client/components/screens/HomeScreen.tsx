@@ -1,20 +1,19 @@
-import { ZuParticipant } from "@pcd/passport-interface";
-import { Identity } from "@semaphore-protocol/identity";
-import * as React from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
-import { Card, ZuIdCard } from "../../src/model/Card";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
-import { CardElem } from "../shared/CardElem";
+import { PCDCard } from "../shared/PCDCard";
 
 /**
  * Show the user their passport, an overview of cards / PCDs.
  */
 export function HomeScreen() {
+  useSyncE2EEStorage();
+
   const [state] = useContext(DispatchContext);
   const navigate = useNavigate();
 
@@ -30,11 +29,17 @@ export function HomeScreen() {
     }
   });
 
-  const cards = useMemo(
-    () => getTestCards(state.identity, state.self),
-    [state]
-  );
-  const [sel, _setSel] = useState(0);
+  const pcds = useMemo(() => {
+    return state.pcds.getAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.pcds, state]);
+  const zuzaluPCDId = useMemo(() => {
+    return pcds[0]?.id;
+  }, [pcds]);
+  const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
+  const selectedPCD = useMemo(() => {
+    return pcds.find((pcd) => pcd.id === selectedPCDID);
+  }, [pcds, selectedPCDID]);
 
   if (state.self == null) return null;
 
@@ -46,25 +51,24 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <CardElem card={cards[sel]} expanded />
+          {pcds.map((pcd) => {
+            return (
+              <>
+                <Spacer h={8} />
+                <PCDCard
+                  pcd={pcd}
+                  expanded={pcd.id === selectedPCD?.id}
+                  isZuzaluIdentity={pcd.id === zuzaluPCDId}
+                  onClick={() => {
+                    setSelectedPCDID(pcd.id);
+                  }}
+                />
+              </>
+            );
+          })}
         </Placeholder>
         <Spacer h={24} />
-        {/*cards.map((c, i) => {
-        if (i === sel) return <Spacer key={i} h={48} />;
-        return <CardElem key={i} card={c} onClick={() => setSel(i)} />;
-      })*/}
       </AppContainer>
     </>
   );
-}
-
-function getTestCards(identity: Identity, self?: ZuParticipant): Card[] {
-  const c1: ZuIdCard | undefined = self && {
-    id: "0x1234",
-    type: "zuzalu-id",
-    header: "VERIFIED ZUZALU PASSPORT",
-    identity,
-    participant: self,
-  };
-  return [c1];
 }

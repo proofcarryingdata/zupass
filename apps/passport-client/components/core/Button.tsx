@@ -1,21 +1,23 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export function Button({
   children,
   onClick,
   style,
   type,
+  size,
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   style?: "primary" | "danger";
+  size?: "large" | "small";
   type?: "submit" | "button" | "reset";
 }) {
   const Btn = style === "danger" ? BtnDanger : BtnBase;
   return (
-    <Btn type={type} onClick={onClick}>
+    <Btn type={type} size={size} onClick={onClick}>
       {children}
     </Btn>
   );
@@ -41,8 +43,18 @@ const buttonStyle = `
   }
 `;
 
-const BtnBase = styled.button`
+const BtnBase = styled.button<{ size?: "large" | "small" }>`
   ${buttonStyle}
+  ${({ size }: { size?: "large" | "small" }) =>
+    size === undefined || size === "large"
+      ? css``
+      : css`
+          height: unset;
+          width: unset;
+          display: inline-block;
+          padding: 8px 16px;
+          border-radius: 32px;
+        `}
 `;
 
 const BtnDanger = styled(BtnBase)`

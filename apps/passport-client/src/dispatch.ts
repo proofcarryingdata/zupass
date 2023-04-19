@@ -1,6 +1,7 @@
-import { getHash, passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
+import { PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import {
   SemaphoreIdentityPCD,
@@ -10,17 +11,15 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { config } from "./config";
 import {
-  loadEncryptionKey,
-  loadPCDs,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
   saveSelf,
 } from "./localstorage";
 import { ZuError, ZuState } from "./state";
+import { uploadPCDs } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -56,7 +55,9 @@ export type Action =
       type: "load-from-sync";
       storage: EncryptedStorage;
       encryptionKey: string;
-    };
+    }
+  | { type: "add-pcd"; pcd: SerializedPCD }
+  | { type: "remove-pcd"; id: string };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -86,6 +87,10 @@ export async function dispatch(
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     case "set-modal":
       return update({ modal: action.modal });
+    case "add-pcd":
+      return addPCD(state, update, action.pcd);
+    case "remove-pcd":
+      return removePCD(state, update, action.id);
     default:
       console.error("Unknown action type", action);
   }
@@ -189,30 +194,12 @@ async function finishLogin(
 
   // Ask user to save their sync key
   update({ modal: "save-sync" });
+
+  window.location.hash = "#/";
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
-  const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
-  const encryptedStorage = await passportEncrypt(
-    JSON.stringify({
-      pcds: await pcds.serializeAll(),
-      self: participant,
-    }),
-    encryptionKey
-  );
-
-  const blobKey = await getHash(encryptionKey);
-
-  uploadEncryptedStorage(blobKey, encryptedStorage)
-    .then(() => {
-      console.log("successfully saved encrypted storage to server");
-      // Redirect to the home page.
-      window.location.hash = "#/";
-    })
-    .catch((_e) => {
-      // TODO
-    });
+  return uploadPCDs(participant);
 }
 
 // Runs periodically, whenever we poll new participant info.
@@ -240,6 +227,26 @@ function resetPassport() {
   // Reload to clear in-memory state.
   window.location.hash = "#/";
   window.location.reload();
+}
+
+async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
+  if (state.pcds.hasPackage(pcd.type)) {
+    const newPCD = await state.pcds.deserialize(pcd);
+    if (state.pcds.hasPCDWithId(newPCD.id)) {
+      throw new Error("This PCD has already been added to your passport");
+    }
+    await state.pcds.deserializeAndAdd(pcd);
+    await savePCDs(state.pcds);
+    update({ pcds: state.pcds });
+  } else {
+    throw new Error(`Can't add PCD: missing package ${pcd.type}`);
+  }
+}
+
+async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
+  state.pcds.remove(pcdId);
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
 }
 
 async function loadFromSync(

@@ -1,5 +1,6 @@
 import {
   BigIntArgument,
+  DisplayOptions,
   ObjectArgument,
   PCD,
   PCDArgument,
@@ -20,6 +21,7 @@ import {
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreGroupCardBody } from "./CardBody";
 import {
   deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
@@ -209,6 +211,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
+  return {
+    header: "Semaphore Group Signal",
+    displayName: "semaphore-group-" + pcd.id.substring(0, 4),
+  };
+}
+
 /**
  * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
  * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
@@ -220,6 +229,8 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SempahoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
+  getDisplayOptions,
+  renderCardBody: SemaphoreGroupCardBody,
   init,
   prove,
   verify,

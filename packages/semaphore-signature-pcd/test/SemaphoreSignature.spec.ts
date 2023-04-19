@@ -32,6 +32,7 @@ describe("semaphore signature PCD should work", function () {
     args = {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: identityPCD,
       },
       signedMessage: {

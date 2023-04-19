@@ -8,6 +8,7 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "react", "react-hooks"],
+  ignorePatterns: ["*.d.ts"],
   rules: {
     "no-case-declarations": "off",
     "no-unused-vars": "off",

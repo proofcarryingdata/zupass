@@ -1,7 +1,8 @@
-import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreIdentityCardBody } from "./CardBody";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
@@ -62,6 +63,15 @@ export async function deserialize(
   });
 }
 
+export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
+  return {
+    header: "Semaphore Identity",
+    displayName:
+      "semaphore-id-" +
+      pcd.claim.identity.commitment.toString().substring(0, 8),
+  };
+}
+
 /**
  * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
  * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
@@ -72,6 +82,8 @@ export const SemaphoreIdentityPCDPackage: PCDPackage<
   SemaphoreIdentityPCDArgs
 > = {
   name: SemaphoreIdentityPCDTypeName,
+  renderCardBody: SemaphoreIdentityCardBody,
+  getDisplayOptions,
   prove,
   verify,
   serialize,
