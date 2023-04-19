@@ -12,7 +12,7 @@ import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
-import { sleep } from "../../../src/util";
+import { getReferrerHost, sleep } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -65,13 +65,9 @@ export function SemaphoreSignatureProveScreen({
 
   if (req.args.signedMessage.value === undefined) {
     // Website is asking for a signature of the Zuzalu UUID for auth
-    const websiteName =
-      req.options?.description !== undefined
-        ? req.options?.description
-        : "This website";
     lines.push(
       <p>
-        <b>{websiteName}</b> will receive: your name, your email, and your
+        <b>{getReferrerHost()}</b> will receive your name, your email, and your
         Semaphore public key.
       </p>
     );

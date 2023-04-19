@@ -14,7 +14,7 @@ import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
-import { sleep } from "../../../src/util";
+import { getReferrerHost, sleep } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -90,14 +90,9 @@ export function SemaphoreGroupProveScreen({
   if (group === null) {
     lines.push(<p>Loading the group...</p>);
   } else {
-    const websiteName =
-      req.options?.description !== undefined
-        ? req.options?.description
-        : "This website";
-
     lines.push(
       <p>
-        <b>{websiteName}</b> is requesting a proof that you're one of{" "}
+        <b>{getReferrerHost()}</b> is requesting a proof that you're one of{" "}
         {group.members.length} members of {group.name}.
       </p>
     );
