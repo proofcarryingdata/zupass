@@ -34,7 +34,7 @@ describe("Ethereum ownership PCD", function () {
       new TextEncoder().encode(identity.claim.identity.commitment.toString())
     );
 
-    const proof = await EthereumOwnershipPCDPackage.prove({
+    const ethereumPCD = await EthereumOwnershipPCDPackage.prove({
       ethereumAddress: {
         argumentType: ArgumentTypeName.String,
         value: wallet.address,
@@ -54,6 +54,6 @@ describe("Ethereum ownership PCD", function () {
       },
     });
 
-    console.log(proof);
+    await EthereumOwnershipPCDPackage.verify(ethereumPCD);
   });
 });

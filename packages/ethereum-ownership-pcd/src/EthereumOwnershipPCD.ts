@@ -138,8 +138,6 @@ export async function prove(
     );
   }
 
-  console.log(`sig: ${args.ethereumSignatureOfCommitment.value}`);
-
   const address = ethers.getAddress(
     ethers.verifyMessage(
       new TextEncoder().encode(args.identityCommitment.value),
