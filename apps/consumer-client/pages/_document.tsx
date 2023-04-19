@@ -1,6 +1,11 @@
 import Document from "next/document";
 import { ServerStyleSheet } from "styled-components";
 
+/**
+ * Wraps all pages, necessary for server-side-rendered styles to be applied
+ * immediately on page load. Without this class, styles flicker into existence
+ * upon every page load.
+ */
 export default class MyDocument extends Document {
   static async getInitialProps(ctx: any) {
     const sheet = new ServerStyleSheet();
