@@ -15,7 +15,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage,
 } from "@pcd/semaphore-signature-pcd";
-import ethers from "ethers";
+import { ethers } from "ethers";
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
@@ -125,12 +125,14 @@ export async function prove(
     throw new Error(`missing argument ethereumAddress`);
   }
 
-  if (!ethers.isAddress(args.ethereumAddress)) {
+  if (!ethers.isAddress(args.ethereumAddress.value)) {
     throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
   }
 
+  console.log(`sig: ${args.ethereumSignatureOfCommitment.value}`);
+
   const address = ethers.getAddress(
-    ethers.recoverAddress(
+    ethers.verifyMessage(
       new TextEncoder().encode(args.identityCommitment.value),
       args.ethereumSignatureOfCommitment.value
     )
@@ -192,7 +194,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     return false;
   }
 
-  const recoveredAddress = ethers.recoverAddress(
+  const recoveredAddress = ethers.verifyMessage(
     new TextEncoder().encode(pcd.claim.identityCommitment),
     pcd.proof.ethereumSignatureOfCommitment
   );
