@@ -24,6 +24,7 @@ export const TextContainer = styled.div`
   overflow: hidden;
   padding: 4px 8px;
   border-radius: 4px;
+  margin-bottom: 8px;
 `;
 
 export const HiddenTextContainer = styled.div`

@@ -1,13 +1,12 @@
-import * as React from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 import { PCDCard } from "../shared/PCDCard";
-import { useSyncE2EEStorage } from "../shared/SyncManager";
 
 /**
  * Show the user their passport, an overview of cards / PCDs.

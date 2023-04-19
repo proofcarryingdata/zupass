@@ -1,13 +1,13 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import { ZuParticipant } from "@pcd/passport-interface";
 import { useContext, useEffect } from "react";
-import { uploadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
-import { DispatchContext } from "../../src/dispatch";
-import { loadEncryptionKey, loadPCDs } from "../../src/localstorage";
-import { ZuState } from "../../src/state";
+import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
+import { DispatchContext } from "./dispatch";
+import { loadEncryptionKey, loadPCDs } from "./localstorage";
+import { ZuState } from "./state";
 
 export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
-  console.log("uploading pcds");
+  console.log("[SYNC] uploading pcds");
 
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
@@ -23,10 +23,10 @@ export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
 
   return uploadEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
-      console.log("successfully saved encrypted storage to server");
+      console.log("[SYNC] uploaded PCDs");
     })
     .catch((e) => {
-      console.log("failed to upload e2ee", e);
+      console.log("[SYNC] failed to upload PCDs", e);
     });
 }
 

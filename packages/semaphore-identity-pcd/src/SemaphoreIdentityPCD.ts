@@ -65,9 +65,10 @@ export async function deserialize(
 
 export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
   return {
-    header: "Ethereum Address Ownership",
+    header: "Semaphore Identity",
     displayName:
-      "eth-" + pcd.claim.identity.commitment.toString().substring(0, 8),
+      "semaphore-id-" +
+      pcd.claim.identity.commitment.toString().substring(0, 8),
   };
 }
 

@@ -11,7 +11,6 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { uploadPCDs } from "../components/shared/SyncManager";
 import { config } from "./config";
 import {
   saveEncryptionKey,
@@ -20,6 +19,7 @@ import {
   saveSelf,
 } from "./localstorage";
 import { ZuError, ZuState } from "./state";
+import { uploadPCDs } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
