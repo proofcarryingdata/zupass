@@ -25,14 +25,15 @@ export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
     .then(() => {
       console.log("successfully saved encrypted storage to server");
     })
-    .catch((_e) => {
-      // TODO
+    .catch((e) => {
+      console.log("failed to upload e2ee", e);
     });
 }
 
 function trySync(state: ZuState) {
   const lastSyncedIds = localStorage["last-synced-ids"];
   let parsedLastSyncedIds: string[] = [];
+
   try {
     parsedLastSyncedIds = JSON.parse(lastSyncedIds) as string[];
   } catch (_e) {
@@ -54,6 +55,12 @@ function trySync(state: ZuState) {
   }
 }
 
+/**
+ * Listens to changes on the state of the application. Whenever there is a change
+ * that causes there to be a difference between the current set of PCDs (as identified
+ * by the concatenation of their ids) and the set of PCDs that was last uploaded,
+ * uploads the current set of PCDs, and saves the fact that we uploaded them.
+ */
 export function useSyncE2EEStorage() {
   const [state] = useContext(DispatchContext);
 

@@ -12,6 +12,10 @@ import { Button, H1, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 
+/**
+ * Screen that allows the user to respond to a request from a third
+ * party website asking for a particular PCD.
+ */
 export function GetWithoutProvingScreen() {
   const location = useLocation();
   const [state, dispatch] = useContext(DispatchContext);
