@@ -114,7 +114,7 @@ export async function prove(
     throw new Error(`missing argument ethereumAddress`);
   }
 
-  if (!ethers.isAddress(args.ethereumAddress.value)) {
+  if (!ethers.utils.isAddress(args.ethereumAddress.value)) {
     throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
   }
 
@@ -122,13 +122,15 @@ export async function prove(
     args.identity.value.pcd
   );
 
-  const address = ethers.getAddress(
-    ethers.verifyMessage(
+  const address = ethers.utils.getAddress(
+    ethers.utils.verifyMessage(
       deserializedIdentity.claim.identity.commitment.toString(),
       args.ethereumSignatureOfCommitment.value
     )
   );
-  const formattedArgAddress = ethers.getAddress(args.ethereumAddress.value);
+  const formattedArgAddress = ethers.utils.getAddress(
+    args.ethereumAddress.value
+  );
 
   if (address !== formattedArgAddress) {
     throw new Error(
@@ -190,7 +192,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     );
 
   try {
-    const recoveredAddress = ethers.verifyMessage(
+    const recoveredAddress = ethers.utils.verifyMessage(
       deserializedSignatureProof.claim.identityCommitment,
       pcd.proof.ethereumSignatureOfCommitment
     );
@@ -198,8 +200,8 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     // the signature of the commitment by the ethereum address must have been
     // signed by the claimed ethereum address
     if (
-      ethers.getAddress(recoveredAddress) !==
-      ethers.getAddress(pcd.claim.ethereumAddress)
+      ethers.utils.getAddress(recoveredAddress) !==
+      ethers.utils.getAddress(pcd.claim.ethereumAddress)
     ) {
       return false;
     }
