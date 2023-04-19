@@ -1,5 +1,5 @@
 import { PCDProveAndAddRequest } from "@pcd/passport-interface";
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { Spacer } from "../../core";
@@ -8,6 +8,10 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
 
+/**
+ * Screen that allows the user to prove a new PCD, and then add it to the
+ * passport.
+ */
 export function ProveAndAddScreen({
   request,
 }: {
