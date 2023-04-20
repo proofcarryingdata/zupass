@@ -14,6 +14,7 @@ import {
 export class SemaphoreService {
   // Groups by ID
   groups = SemaphoreService.createGroups();
+  dbPool: Pool | ClientBase;
 
   static createGroups(): NamedGroup[] {
     return [
@@ -22,6 +23,10 @@ export class SemaphoreService {
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
     ];
+  }
+
+  setPool(dbPool: Pool | ClientBase) {
+    this.dbPool = dbPool;
   }
 
   groupParticipants = () => this.getNamedGroup("1").group;
@@ -54,9 +59,9 @@ export class SemaphoreService {
   }
 
   // Load participants from DB, rebuild semaphore groups
-  async reload(dbPool: ClientBase | Pool) {
+  async reload() {
     console.log(`[SEMA] Reloading semaphore service...`);
-    const ps = await fetchPassportParticipants(dbPool);
+    const ps = await fetchPassportParticipants(this.dbPool);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
     this.groups = SemaphoreService.createGroups();
@@ -64,13 +69,13 @@ export class SemaphoreService {
       this.addParticipant(p);
     }
     console.log(`[SEMA] Semaphore service reloaded.`);
-    this.saveHistoricSemaphoreGroups(dbPool);
+    this.saveHistoricSemaphoreGroups();
   }
 
-  async saveHistoricSemaphoreGroups(dbPool: ClientBase | Pool) {
+  async saveHistoricSemaphoreGroups() {
     console.log(`[SEMA] Semaphore service - saving historic semaphore groups`);
 
-    const latestGroups = await getLatestSemaphoreGroups(dbPool);
+    const latestGroups = await getLatestSemaphoreGroups(this.dbPool);
 
     for (const localGroup of this.groups) {
       const correspondingLatestGroup = latestGroups.find(
@@ -82,7 +87,7 @@ export class SemaphoreService {
         correspondingLatestGroup.rootHash !== localGroup.group.root
       ) {
         await insertNewSemaphoreGroup(
-          dbPool,
+          this.dbPool,
           localGroup.group.id.toString(),
           localGroup.group.root.toString(),
           JSON.stringify(
@@ -94,17 +99,10 @@ export class SemaphoreService {
   }
 
   async getHistoricSemaphoreGroup(
-    dbPool: ClientBase | Pool,
-    rootHash: string,
-    groupId: string
+    groupId: string,
+    rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
-    const group = await getGroupByRoot(dbPool, rootHash, groupId);
-
-    if (group === undefined) {
-      return undefined;
-    }
-
-    return JSON.parse(group.group);
+    return await getGroupByRoot(this.dbPool, rootHash, groupId);
   }
 
   // Add a single participant to the semaphore groups which they
@@ -147,11 +145,12 @@ export class SemaphoreService {
 export const semaphoreService = new SemaphoreService();
 
 export function startSemaphoreService({ dbPool }: { dbPool: Pool }) {
-  semaphoreService.reload(dbPool);
+  semaphoreService.setPool(dbPool);
+  semaphoreService.reload();
 
   // Reload every minute
   setInterval(() => {
-    semaphoreService.reload(dbPool);
+    semaphoreService.reload();
   }, 60 * 1000);
 }
 

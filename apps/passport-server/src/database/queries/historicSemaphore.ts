@@ -1,6 +1,6 @@
 import { ClientBase, Pool, QueryResultRow } from "pg";
 
-interface HistoricSemaphoreGroup {
+export interface HistoricSemaphoreGroup {
   id: number;
   groupId: string;
   rootHash: string;
