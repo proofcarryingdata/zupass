@@ -198,11 +198,14 @@ export function initZuzaluRoutes(
   });
 
   app.get("/semaphore/:id/:root", async (req: Request, res: Response) => {
-    const semaphoreId = decodeString(req.params.id, "id");
-    const root = decodeString(req.params.id, "root");
+    const id = decodeString(req.params.id, "id");
+    const root = decodeString(req.params.root, "root");
+
+    console.log("id", id);
+    console.log("root", root);
 
     const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
-      semaphoreId,
+      id,
       root
     );
 
@@ -212,7 +215,7 @@ export function initZuzaluRoutes(
       return;
     }
 
-    return JSON.stringify(historicGroup.serializedGroup);
+    res.json(JSON.parse(historicGroup.serializedGroup));
   });
 
   // Load E2EE storage for a given user.

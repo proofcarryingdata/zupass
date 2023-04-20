@@ -49,19 +49,22 @@ export async function insertNewSemaphoreGroup(
 
 export async function getGroupByRoot(
   client: ClientBase | Pool,
-  rootHash: string,
-  groupId: string
+  groupId: string,
+  rootHash: string
 ): Promise<HistoricSemaphoreGroup | undefined> {
-  const rows = await client.query(
-    `select * from semaphore_history where rootHash=$1 and groupId=$2;`,
-    [rootHash, groupId]
+  const result = await client.query(
+    `select * from semaphore_history where groupId=$1 and rootHash=$2;`,
+    [groupId, rootHash]
   );
 
-  if (rows.rowCount === 0) {
+  console.log("groupid", groupId, "roothash", rootHash);
+  console.log(result);
+
+  if (result.rowCount === 0) {
     return undefined;
   }
 
-  return rowToGroup(rows.rows[0]);
+  return rowToGroup(result.rows[0]);
 }
 
 function rowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {

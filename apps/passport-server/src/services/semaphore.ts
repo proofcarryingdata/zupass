@@ -118,7 +118,7 @@ export class SemaphoreService {
       throw new Error("no database connection");
     }
 
-    return await getGroupByRoot(this.dbPool, rootHash, groupId);
+    return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
   // Add a single participant to the semaphore groups which they
