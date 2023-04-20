@@ -26,6 +26,7 @@ export function QR({
         dark: fgColor,
         light: bgColor,
       },
+      errorCorrectionLevel: "L",
     });
   }, [bgColor, canvas, fgColor, value]);
 
