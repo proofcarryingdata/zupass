@@ -4,12 +4,9 @@ import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
   SerializedSemaphoreGroup,
-  serializeSemaphoreGroup,
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
-import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
@@ -120,11 +117,6 @@ async function fillArgs(
   semaphoreGroup: SerializedSemaphoreGroup,
   reqArgs: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCDArgs> {
-  const group = new Group(BigInt(semaphoreGroup.id), semaphoreGroup.depth);
-  for (const member of semaphoreGroup.members) {
-    group.addMember(BigInt(member));
-  }
-
   let args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
@@ -136,7 +128,7 @@ async function fillArgs(
     },
     group: {
       argumentType: ArgumentTypeName.Object,
-      value: serializeSemaphoreGroup(group, "Zuzalu Attendees"),
+      value: semaphoreGroup,
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -159,11 +151,6 @@ async function fillArgs(
   if (reqArgs.signal.value !== undefined) {
     args = { ...args, signal: reqArgs.signal };
   }
-
-  console.log("Proving semaphore membership", args);
-  console.log("Group root", group.root.toString());
-  console.log("Group first member", group.members[0]);
-  console.log("Identity", identity.commitment.toString());
 
   return args;
 }
