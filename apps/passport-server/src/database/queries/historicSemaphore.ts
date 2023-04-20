@@ -8,7 +8,9 @@ interface HistoricSemaphoreGroup {
   timeCreated: string;
 }
 
-export async function getLatestSemaphoreGroups(client: ClientBase | Pool) {
+export async function getLatestSemaphoreGroups(
+  client: ClientBase | Pool
+): Promise<HistoricSemaphoreGroup[]> {
   const result = await client.query(`
     select * from SemaphoreHistory
     order by max(id)
@@ -16,4 +18,16 @@ export async function getLatestSemaphoreGroups(client: ClientBase | Pool) {
   `);
 
   return result.rows as HistoricSemaphoreGroup[];
+}
+
+export async function insertNewSemaphoreGroup(
+  client: ClientBase | Pool,
+  groupId: string,
+  rootHash: string,
+  group: string
+): Promise<void> {
+  await client.query(
+    `insert into SemaphoreHistory(groupId, rootHash, group) values($1, $2, $3);`,
+    [groupId, rootHash, group]
+  );
 }
