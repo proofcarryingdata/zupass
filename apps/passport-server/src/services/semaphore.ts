@@ -4,7 +4,9 @@ import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
 import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
 import {
+  getGroupByRoot,
   getLatestSemaphoreGroups,
+  HistoricSemaphoreGroup,
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
 
@@ -89,6 +91,20 @@ export class SemaphoreService {
         );
       }
     }
+  }
+
+  async getHistoricSemaphoreGroup(
+    dbPool: ClientBase | Pool,
+    rootHash: string,
+    groupId: string
+  ): Promise<HistoricSemaphoreGroup | undefined> {
+    const group = await getGroupByRoot(dbPool, rootHash, groupId);
+
+    if (group === undefined) {
+      return undefined;
+    }
+
+    return JSON.parse(group.group);
   }
 
   // Add a single participant to the semaphore groups which they
