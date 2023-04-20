@@ -7,7 +7,6 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
-import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
@@ -30,7 +29,7 @@ export function SemaphoreSignatureProveScreen({
 
       // Give the UI has a chance to update to the 'loading' state before the
       // potentially blocking proving operation kicks off
-      sleep(200);
+      await sleep(200);
 
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
