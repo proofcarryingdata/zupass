@@ -14,7 +14,7 @@ import {
 export class SemaphoreService {
   // Groups by ID
   groups = SemaphoreService.createGroups();
-  dbPool: Pool | ClientBase;
+  dbPool: Pool | ClientBase | undefined;
 
   static createGroups(): NamedGroup[] {
     return [
@@ -60,6 +60,10 @@ export class SemaphoreService {
 
   // Load participants from DB, rebuild semaphore groups
   async reload() {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
     console.log(`[SEMA] Reloading semaphore service...`);
     const ps = await fetchPassportParticipants(this.dbPool);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
@@ -73,19 +77,27 @@ export class SemaphoreService {
   }
 
   async saveHistoricSemaphoreGroups() {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
     console.log(`[SEMA] Semaphore service - saving historic semaphore groups`);
 
     const latestGroups = await getLatestSemaphoreGroups(this.dbPool);
 
     for (const localGroup of this.groups) {
       const correspondingLatestGroup = latestGroups.find(
-        (g) => g.groupId === localGroup.name
+        (g) => g.groupId === localGroup.group.id
       );
 
       if (
         correspondingLatestGroup === undefined ||
-        correspondingLatestGroup.rootHash !== localGroup.group.root
+        correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
       ) {
+        console.log(
+          "[SEMA] outdated semaphore group - appending a new one into the database"
+        );
+
         await insertNewSemaphoreGroup(
           this.dbPool,
           localGroup.group.id.toString(),
@@ -102,6 +114,10 @@ export class SemaphoreService {
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
     return await getGroupByRoot(this.dbPool, rootHash, groupId);
   }
 

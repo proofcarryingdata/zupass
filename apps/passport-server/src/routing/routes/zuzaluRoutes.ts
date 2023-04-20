@@ -127,7 +127,7 @@ export function initZuzaluRoutes(
         });
 
         // Reload Merkle trees
-        await semaphoreService.reload(dbClient);
+        await semaphoreService.reload();
         const participant = semaphoreService.getParticipant(uuid);
         if (participant == null) {
           throw new Error(`${uuid} not found`);
@@ -212,7 +212,7 @@ export function initZuzaluRoutes(
       return;
     }
 
-    return JSON.stringify(historicGroup.group);
+    return JSON.stringify(historicGroup.serializedGroup);
   });
 
   // Load E2EE storage for a given user.

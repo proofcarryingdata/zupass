@@ -4,20 +4,35 @@ export interface HistoricSemaphoreGroup {
   id: number;
   groupId: string;
   rootHash: string;
-  group: string;
+  serializedGroup: string;
   timeCreated: string;
 }
 
 export async function getLatestSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
-  const result = await client.query(`
-    select * from SemaphoreHistory
-    order by max(id)
-    group by groupId;
-  `);
+  const distinctGroups = await client.query(
+    `select distinct(groupid) from semaphore_history;`
+  );
 
-  return result.rows.map(rowToGroup) as HistoricSemaphoreGroup[];
+  const newestGroups: HistoricSemaphoreGroup[] = [];
+
+  for (const groupId of distinctGroups.rows.map((row) => row.groupid)) {
+    const newestGroupId = await client.query(
+      `select max(id) from semaphore_history where groupid = $1`,
+      [groupId]
+    );
+
+    const newestGroup = await client.query(
+      `select id, groupId, rootHash, serializedGroup, timeCreated` +
+        ` from semaphore_history where id = $1;`,
+      [newestGroupId.rows[0].max]
+    );
+
+    newestGroups.push(rowToGroup(newestGroup.rows[0]));
+  }
+
+  return newestGroups;
 }
 
 export async function insertNewSemaphoreGroup(
@@ -27,7 +42,7 @@ export async function insertNewSemaphoreGroup(
   group: string
 ): Promise<void> {
   await client.query(
-    `insert into SemaphoreHistory(groupId, rootHash, group) values($1, $2, $3);`,
+    `insert into semaphore_history(groupId, rootHash, serializedGroup) values($1, $2, $3);`,
     [groupId, rootHash, group]
   );
 }
@@ -38,7 +53,7 @@ export async function getGroupByRoot(
   groupId: string
 ): Promise<HistoricSemaphoreGroup | undefined> {
   const rows = await client.query(
-    `select * from SemaphoreHistory where rootHash=$1 and groupId=$2;`,
+    `select * from semaphore_history where rootHash=$1 and groupId=$2;`,
     [rootHash, groupId]
   );
 
@@ -51,10 +66,10 @@ export async function getGroupByRoot(
 
 function rowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
   return {
-    id: row[0],
-    groupId: row[1],
-    rootHash: row[2],
-    group: row[3],
-    timeCreated: row[4],
+    id: row.id,
+    groupId: row.groupid,
+    rootHash: row.roothash,
+    serializedGroup: row.serializedgroup,
+    timeCreated: row.timecreated,
   };
 }
