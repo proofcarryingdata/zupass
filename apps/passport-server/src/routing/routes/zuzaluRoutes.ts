@@ -201,9 +201,6 @@ export function initZuzaluRoutes(
     const id = decodeString(req.params.id, "id");
     const root = decodeString(req.params.root, "root");
 
-    console.log("id", id);
-    console.log("root", root);
-
     const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
       id,
       root
