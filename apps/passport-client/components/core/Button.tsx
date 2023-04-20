@@ -8,16 +8,18 @@ export function Button({
   style,
   type,
   size,
+  disabled,
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   style?: "primary" | "danger";
   size?: "large" | "small";
   type?: "submit" | "button" | "reset";
+  disabled: boolean;
 }) {
   const Btn = style === "danger" ? BtnDanger : BtnBase;
   return (
-    <Btn type={type} size={size} onClick={onClick}>
+    <Btn type={type} size={size} disabled={disabled} onClick={onClick}>
       {children}
     </Btn>
   );
@@ -43,8 +45,9 @@ const buttonStyle = `
   }
 `;
 
-const BtnBase = styled.button<{ size?: "large" | "small" }>`
+const BtnBase = styled.button<{ size?: "large" | "small"; disabled?: boolean }>`
   ${buttonStyle}
+
   ${({ size }: { size?: "large" | "small" }) =>
     size === undefined || size === "large"
       ? css``

@@ -21,9 +21,11 @@ export function SemaphoreGroupProveScreen({
   req: PCDGetRequest<typeof SemaphoreGroupPCDPackage>;
 }) {
   const [error, setError] = useState<string | undefined>();
+  const [group, setGroup] = useState<SerializedSemaphoreGroup | null>(null);
+  const [state] = useContext(DispatchContext);
+  const [proving, setProving] = useState(false);
+  const isLoading = group === null;
 
-  // Load semaphore group
-  const [group, setGroup] = useState<SerializedSemaphoreGroup>(null);
   useEffect(() => {
     const fetchGroup = async () => {
       const res = await fetch(req.args.group.remoteUrl);
@@ -33,10 +35,6 @@ export function SemaphoreGroupProveScreen({
     };
     fetchGroup().catch(console.error);
   }, [req.args.group.remoteUrl]);
-
-  // Once that's done & user clicks Prove, create a zero-knowledge proof
-  const [state] = useContext(DispatchContext);
-  const [proving, setProving] = useState(false);
 
   const onProve = useCallback(async () => {
     try {
@@ -96,7 +94,11 @@ export function SemaphoreGroupProveScreen({
   }
 
   if (!proving && error === undefined) {
-    lines.push(<Button onClick={onProve}>Prove</Button>);
+    lines.push(
+      <Button disabled={isLoading} onClick={onProve}>
+        {isLoading ? "Loading..." : "Prove"}
+      </Button>
+    );
   } else if (error !== undefined) {
     lines.push(<ErrorContainer>{error}</ErrorContainer>);
   } else {
