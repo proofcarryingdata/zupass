@@ -1,7 +1,12 @@
+import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
 import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
+import {
+  getLatestSemaphoreGroups,
+  insertNewSemaphoreGroup,
+} from "../database/queries/historicSemaphore";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {
@@ -57,6 +62,33 @@ export class SemaphoreService {
       this.addParticipant(p);
     }
     console.log(`[SEMA] Semaphore service reloaded.`);
+    this.saveHistoricSemaphoreGroups(dbPool);
+  }
+
+  async saveHistoricSemaphoreGroups(dbPool: ClientBase | Pool) {
+    console.log(`[SEMA] Semaphore service - saving historic semaphore groups`);
+
+    const latestGroups = await getLatestSemaphoreGroups(dbPool);
+
+    for (const localGroup of this.groups) {
+      const correspondingLatestGroup = latestGroups.find(
+        (g) => g.groupId === localGroup.name
+      );
+
+      if (
+        correspondingLatestGroup === undefined ||
+        correspondingLatestGroup.rootHash !== localGroup.group.root
+      ) {
+        await insertNewSemaphoreGroup(
+          dbPool,
+          localGroup.group.id.toString(),
+          localGroup.group.root.toString(),
+          JSON.stringify(
+            serializeSemaphoreGroup(localGroup.group, localGroup.name)
+          )
+        );
+      }
+    }
   }
 
   // Add a single participant to the semaphore groups which they
