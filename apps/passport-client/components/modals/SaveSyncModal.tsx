@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
@@ -17,7 +17,7 @@ export function SaveSyncModal() {
 
   const close = useCallback(() => {
     localStorage["savedSyncKey"] = "true";
-    dispatch({ type: "set-modal", modal: "" });
+    dispatch({ type: "set-modal", modal: "", modalUnDismissable: undefined });
   }, [dispatch]);
 
   if (syncKey == null) return null;

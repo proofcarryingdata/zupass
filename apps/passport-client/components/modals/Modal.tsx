@@ -15,13 +15,15 @@ export function MaybeModal() {
   const [state, dispatch] = useContext(DispatchContext);
   const close = useCallback(
     () =>
-      dispatch({ type: "set-modal", modal: "", modalDismissable: undefined }),
+      dispatch({ type: "set-modal", modal: "", modalUnDismissable: undefined }),
     [dispatch]
   );
   const body = getModalBody(state.modal);
   if (body == null) return null;
   return (
-    <Modal onClose={state.modalDismissable ? close : undefined}>{body}</Modal>
+    <Modal onClose={!state.modalUnDismissable ? close : undefined}>
+      {body}
+    </Modal>
   );
 }
 

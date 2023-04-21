@@ -41,7 +41,7 @@ export type Action =
   | {
       type: "set-modal";
       modal: ZuState["modal"];
-      modalDismissable: boolean;
+      modalUnDismissable: boolean;
     }
   | {
       type: "error";
@@ -91,7 +91,7 @@ export async function dispatch(
     case "set-modal":
       return update({
         modal: action.modal,
-        modalDismissable: action.modalDismissable,
+        modalUnDismissable: action.modalUnDismissable,
       });
     case "add-pcd":
       return addPCD(state, update, action.pcd);
@@ -204,7 +204,7 @@ async function finishLogin(
   await saveParticipantPCDs(participant);
 
   // Ask user to save their sync key
-  update({ modal: "save-sync", modalDismissable: false });
+  update({ modal: "save-sync", modalUnDismissable: false });
 
   window.location.hash = "#/";
 }
@@ -311,7 +311,7 @@ async function loadFromSync(
 async function participantInvalid(_state: ZuState, update: ZuUpdate) {
   update({
     participantInvalid: true,
-    modalDismissable: false,
+    modalUnDismissable: true,
     modal: "invalid-participant",
   });
 }

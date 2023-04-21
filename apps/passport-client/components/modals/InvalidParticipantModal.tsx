@@ -12,7 +12,7 @@ export function InvalidParticipantModal() {
 
   return (
     <Container>
-      <Spacer h={24} />
+      <Spacer h={8} />
       <H1>Invalid Passport</H1>
       <Spacer h={24} />
       <p>

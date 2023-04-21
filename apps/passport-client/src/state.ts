@@ -19,7 +19,7 @@ export interface ZuState {
 
   // Whether or not the user can close the modal by tapping its
   // background or the x button.
-  modalDismissable?: boolean;
+  modalUnDismissable?: boolean;
 
   // Participant metadata.
   // TODO: reload from passport server on startup.

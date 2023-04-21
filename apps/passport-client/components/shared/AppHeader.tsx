@@ -9,15 +9,16 @@ export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
     (modal: ZuState["modal"], modalDismissable?: boolean) =>
-      dispatch({ type: "set-modal", modal, modalDismissable }),
+      dispatch({
+        type: "set-modal",
+        modal,
+        modalUnDismissable: modalDismissable,
+      }),
     [dispatch]
   );
-  const openInfo = useCallback(() => setModal("info", true), [setModal]);
-  const openSettings = useCallback(
-    () => setModal("settings", true),
-    [setModal]
-  );
-  const close = useCallback(() => setModal("", true), [setModal]);
+  const openInfo = useCallback(() => setModal("info"), [setModal]);
+  const openSettings = useCallback(() => setModal("settings"), [setModal]);
+  const close = useCallback(() => setModal(""), [setModal]);
 
   // Close on escape
   useEffect(() => {
