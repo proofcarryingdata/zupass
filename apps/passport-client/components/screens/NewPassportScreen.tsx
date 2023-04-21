@@ -116,7 +116,11 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <BigInput ref={inRef} placeholder="code from email" />
+          <BigInput
+            disabled={verifyingCode}
+            ref={inRef}
+            placeholder="code from email"
+          />
           <Spacer h={8} />
           {verifyingCode && (
             <div>
@@ -125,12 +129,17 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
           )}
           {!verifyingCode && <Button onClick={verify}>Verify</Button>}
         </CenterColumn>
-        <Spacer h={48} />
-        <HR />
-        <Spacer h={24} />
-        <CenterColumn w={280}>
-          <LinkButton to={"/"}>Cancel</LinkButton>
-        </CenterColumn>
+        {!verifyingCode && (
+          <>
+            <Spacer h={48} />
+            <HR />
+            <Spacer h={24} />
+            <CenterColumn w={280}>
+              <LinkButton to={"/"}>Cancel</LinkButton>
+            </CenterColumn>
+          </>
+        )}
+
         <Spacer h={24} />
       </BackgroundGlow>
     </AppContainer>
