@@ -79,7 +79,7 @@ class App extends React.Component<object, ZuState> {
     if (this.state?.self) {
       await pollParticipant(this.state.self, this.dispatch);
     }
-    setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
+    setTimeout(this.jobPollParticipant, 1000 * 30);
   };
 }
 

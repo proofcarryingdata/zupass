@@ -17,7 +17,6 @@ export async function pollParticipant(
         // app isn't able to find them, so we should log the user out of this passport.
         dispatch({ type: "participant-invalid" });
       }
-      // TODO: show as "MISSING" or maybe "REMOVED"?
       console.log("Participant not found, skipping update");
       return;
     }

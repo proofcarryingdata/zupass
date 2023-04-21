@@ -302,6 +302,6 @@ async function loadFromSync(
   window.location.hash = "#/";
 }
 
-async function participantInvalid(state: ZuState, update: ZuUpdate) {
-  update({ participantInvalid: true });
+async function participantInvalid(_state: ZuState, update: ZuUpdate) {
+  update({ participantInvalid: true, modal: "invalid-participant" });
 }
