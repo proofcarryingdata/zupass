@@ -3,6 +3,7 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
+import { safeRedirect } from "../../../src/passportRequest";
 import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
@@ -25,9 +26,7 @@ export function ProveAndAddScreen({
     (_: any, serializedPCD: SerializedPCD) => {
       dispatch({ type: "add-pcd", pcd: serializedPCD });
       setProved(true);
-      window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
-        serializedPCD
-      )}`;
+      safeRedirect(request.returnUrl, serializedPCD);
     },
     [dispatch, request.returnUrl]
   );

@@ -4,10 +4,13 @@ import {
   PendingPCD,
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import * as React from "react";
 import { useCallback, useContext } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
+import {
+  safeRedirect,
+  safeRedirectPending,
+} from "../../../src/passportRequest";
 import { err } from "../../../src/util";
 import { Spacer } from "../../core";
 import { AppHeader } from "../../shared/AppHeader";
@@ -27,17 +30,10 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   const onProve = useCallback(
     async (_pcd: PCD, serialized: SerializedPCD, pendingPCD: PendingPCD) => {
       if (pendingPCD) {
-        window.location.href = `${
-          req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-          serialized
-        )}`;
+        safeRedirect(req.returnUrl, serialized);
       }
-      window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-        serialized
-      )}`;
     },
     [req.returnUrl]
   );

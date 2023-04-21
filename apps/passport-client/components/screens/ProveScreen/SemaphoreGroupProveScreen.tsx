@@ -9,11 +9,14 @@ import {
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
-import * as React from "react";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
+import {
+  safeRedirect,
+  safeRedirectPending,
+} from "../../../src/passportRequest";
 import { getReferrerHost, sleep } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -57,16 +60,12 @@ export function SemaphoreGroupProveScreen({
           args: args,
         };
         const pendingPCD = await requestPendingPCD(serverReq);
-        window.location.href = `${
-          req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-          serializedPCD
-        )}`;
+        safeRedirect(req.returnUrl, serializedPCD);
       }
     } catch (e) {
       if (
