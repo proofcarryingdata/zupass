@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";

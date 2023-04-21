@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useContext } from "react";
+import React, { ReactNode, useCallback, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuState } from "../../src/state";
@@ -7,6 +7,7 @@ import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { InfoModal } from "./InfoModal";
+import { InvalidParticipantModal } from "./InvalidParticipantModal";
 import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
@@ -16,9 +17,30 @@ export function MaybeModal() {
     () => dispatch({ type: "set-modal", modal: "" }),
     [dispatch]
   );
+  const dismissable = isModalDismissable(state.modal);
+
+  // Close on escape
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && dismissable) {
+        close();
+      }
+    };
+    window.addEventListener("keydown", listener, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", listener, { capture: true });
+  }, [close, state.modal, dismissable]);
+
   const body = getModalBody(state.modal);
+
   if (body == null) return null;
-  return <Modal onClose={close}>{body}</Modal>;
+  return (
+    <Modal onClose={dismissable === true ? close : undefined}>{body}</Modal>
+  );
+}
+
+function isModalDismissable(modal: ZuState["modal"]) {
+  return !["save-sync", "invalid-participant"].includes(modal);
 }
 
 function getModalBody(modal: ZuState["modal"]) {
@@ -29,6 +51,8 @@ function getModalBody(modal: ZuState["modal"]) {
       return <SettingsModal />;
     case "save-sync":
       return <SaveSyncModal />;
+    case "invalid-participant":
+      return <InvalidParticipantModal />;
     case "":
       return null;
     default:

@@ -18,6 +18,7 @@ import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
   loadIdentity,
+  loadParticipantInvalid,
   loadPCDs,
   loadSelf,
   saveIdentity,
@@ -76,10 +77,11 @@ class App extends React.Component<object, ZuState> {
 
   // Poll for participant updates
   jobPollParticipant = async () => {
+    console.log("[JOB] polling participant");
     if (this.state?.self) {
       await pollParticipant(this.state.self, this.dispatch);
     }
-    setTimeout(this.jobPollParticipant, 5 * 60 * 1000);
+    setTimeout(this.jobPollParticipant, 1000 * 60 * 5);
   };
 }
 
@@ -118,14 +120,25 @@ async function loadInitialState(): Promise<ZuState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
+  const participantInvalid = loadParticipantInvalid();
 
   let modal = "" as ZuState["modal"];
-  if (self != null && !localStorage["savedSyncKey"]) {
+
+  if (participantInvalid) {
+    modal = "invalid-participant";
+  } else if (self != null && !localStorage["savedSyncKey"]) {
     console.log("Asking existing user to save their sync key...");
     modal = "save-sync";
   }
 
-  return { self, encryptionKey, pcds, identity, modal };
+  return {
+    self,
+    encryptionKey,
+    pcds,
+    identity,
+    modal,
+    participantInvalid,
+  };
 }
 
 // Redirect old site visitors to the correct site

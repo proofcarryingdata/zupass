@@ -16,6 +16,7 @@ import { config } from "./config";
 import {
   saveEncryptionKey,
   saveIdentity,
+  saveParticipantInvalid,
   savePCDs,
   saveSelf,
 } from "./localstorage";
@@ -52,6 +53,7 @@ export type Action =
   | {
       type: "reset-passport";
     }
+  | { type: "participant-invalid" }
   | {
       type: "load-from-sync";
       storage: EncryptedStorage;
@@ -87,11 +89,15 @@ export async function dispatch(
     case "load-from-sync":
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     case "set-modal":
-      return update({ modal: action.modal });
+      return update({
+        modal: action.modal,
+      });
     case "add-pcd":
       return addPCD(state, update, action.pcd);
     case "remove-pcd":
       return removePCD(state, update, action.id);
+    case "participant-invalid":
+      return participantInvalid(state, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -193,11 +199,11 @@ async function finishLogin(
 
   window.location.hash = "#/";
 
-  // Save PCDs to E2EE storage.
-  await saveParticipantPCDs(participant);
-
   // Ask user to save their sync key
   update({ modal: "save-sync" });
+
+  // Save PCDs to E2EE storage.
+  await saveParticipantPCDs(participant);
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
@@ -297,4 +303,13 @@ async function loadFromSync(
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
   window.location.hash = "#/";
+}
+
+async function participantInvalid(_state: ZuState, update: ZuUpdate) {
+  saveParticipantInvalid(true);
+
+  update({
+    participantInvalid: true,
+    modal: "invalid-participant",
+  });
 }
