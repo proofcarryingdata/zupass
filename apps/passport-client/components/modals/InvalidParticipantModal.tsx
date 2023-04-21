@@ -1,8 +1,15 @@
 import { Spacer } from "@pcd/passport-ui";
+import { useCallback, useContext } from "react";
 import styled from "styled-components";
+import { DispatchContext } from "../../src/dispatch";
 import { Button, H1 } from "../core";
 
 export function InvalidParticipantModal() {
+  const [_state, dispatch] = useContext(DispatchContext);
+  const onClick = useCallback(() => {
+    dispatch({ type: "reset-passport" });
+  }, [dispatch]);
+
   return (
     <Container>
       <Spacer h={24} />
@@ -14,7 +21,7 @@ export function InvalidParticipantModal() {
         existing passport onto this device.
       </p>
       <Spacer h={24} />
-      <Button>Exit</Button>
+      <Button onClick={onClick}>Exit</Button>
     </Container>
   );
 }
