@@ -12,6 +12,11 @@ export async function pollParticipant(
   try {
     const response = await fetch(url);
     if (!response.ok) {
+      if (response.status === 404) {
+        // this participant was previously a valid participant, but now the
+        // app isn't able to find them, so we should log the user out of this passport.
+        dispatch({ type: "participant-invalid" });
+      }
       // TODO: show as "MISSING" or maybe "REMOVED"?
       console.log("Participant not found, skipping update");
       return;

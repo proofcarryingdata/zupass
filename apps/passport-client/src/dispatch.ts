@@ -52,6 +52,7 @@ export type Action =
   | {
       type: "reset-passport";
     }
+  | { type: "participant-invalid" }
   | {
       type: "load-from-sync";
       storage: EncryptedStorage;
@@ -92,6 +93,8 @@ export async function dispatch(
       return addPCD(state, update, action.pcd);
     case "remove-pcd":
       return removePCD(state, update, action.id);
+    case "participant-invalid":
+      return participantInvalid(state, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -297,4 +300,8 @@ async function loadFromSync(
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
   window.location.hash = "#/";
+}
+
+async function participantInvalid(state: ZuState, update: ZuUpdate) {
+  update({ participantInvalid: true });
 }

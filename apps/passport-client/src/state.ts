@@ -23,6 +23,9 @@ export interface ZuState {
 
   // If set, shows an error popover.
   error?: ZuError;
+
+  // If set, the user has been invalidated server-side
+  participantInvalid?: boolean;
 }
 
 export interface ZuError {

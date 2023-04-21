@@ -125,7 +125,13 @@ async function loadInitialState(): Promise<ZuState> {
     modal = "save-sync";
   }
 
-  return { self, encryptionKey, pcds, identity, modal };
+  return {
+    self,
+    encryptionKey,
+    pcds,
+    identity,
+    modal,
+  };
 }
 
 // Redirect old site visitors to the correct site
