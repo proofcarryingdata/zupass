@@ -35,12 +35,12 @@ export function MaybeModal() {
 
   if (body == null) return null;
   return (
-    <Modal onClose={dismissable !== true ? close : undefined}>{body}</Modal>
+    <Modal onClose={dismissable === true ? close : undefined}>{body}</Modal>
   );
 }
 
 function isModalDismissable(modal: ZuState["modal"]) {
-  return ["save-sync", "invalid-participant"].includes(modal);
+  return !["save-sync", "invalid-participant"].includes(modal);
 }
 
 function getModalBody(modal: ZuState["modal"]) {
