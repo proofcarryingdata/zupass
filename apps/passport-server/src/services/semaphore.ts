@@ -126,6 +126,14 @@ export class SemaphoreService {
     return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
+  async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
+    return getLatestSemaphoreGroups(this.dbPool);
+  }
+
   // Add a single participant to the semaphore groups which they
   // belong to.
   addParticipant(p: PassportParticipant) {
