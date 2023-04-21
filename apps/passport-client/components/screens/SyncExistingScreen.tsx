@@ -40,10 +40,10 @@ export function SyncExistingScreen() {
               "If this is your first time using zupass.org, please generate a new passport instead.",
           },
         });
-        return;
-      } finally {
         setIsLoading(false);
+        return;
       }
+
       console.log("downloaded encrypted storage");
       const decrypted = await passportDecrypt(storage, syncKey);
       console.log("decrypted encrypted storage");
@@ -53,6 +53,8 @@ export function SyncExistingScreen() {
         storage: decrypted,
         encryptionKey: syncKey,
       });
+
+      setIsLoading(false);
     };
 
     load().catch((e) => {
@@ -92,19 +94,21 @@ export function SyncExistingScreen() {
         ></BigInput>
         <Spacer h={16} />
         {!isLoading && (
-          <Button style="primary" type="submit" onClick={onSyncClick}>
-            Sync
-          </Button>
+          <>
+            <Button style="primary" type="submit" onClick={onSyncClick}>
+              Sync
+            </Button>
+            <Spacer h={8} />
+            <Button style="danger" type="submit" onClick={onClose}>
+              Back
+            </Button>
+          </>
         )}
         {isLoading && (
           <div>
             <RippleLoader />
           </div>
         )}
-        <Spacer h={8} />
-        <Button style="danger" type="submit" onClick={onClose}>
-          Back
-        </Button>
         <Spacer h={32} />
       </TextCenter>
     </AppContainer>
