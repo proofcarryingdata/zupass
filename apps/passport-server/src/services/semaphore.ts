@@ -95,7 +95,8 @@ export class SemaphoreService {
         correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
       ) {
         console.log(
-          "[SEMA] outdated semaphore group - appending a new one into the database"
+          `[SEMA] outdated semaphore group ${localGroup.group.id}` +
+            ` - appending a new one into the database`
         );
 
         await insertNewSemaphoreGroup(
