@@ -16,6 +16,7 @@ import { config } from "./config";
 import {
   saveEncryptionKey,
   saveIdentity,
+  saveParticipantInvalid,
   savePCDs,
   saveSelf,
 } from "./localstorage";
@@ -204,7 +205,7 @@ async function finishLogin(
   await saveParticipantPCDs(participant);
 
   // Ask user to save their sync key
-  update({ modal: "save-sync", modalUnDismissable: false });
+  update({ modal: "save-sync", modalUnDismissable: true });
 
   window.location.hash = "#/";
 }
@@ -309,6 +310,8 @@ async function loadFromSync(
 }
 
 async function participantInvalid(_state: ZuState, update: ZuUpdate) {
+  saveParticipantInvalid(true);
+
   update({
     participantInvalid: true,
     modalUnDismissable: true,

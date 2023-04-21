@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useContext } from "react";
+import React, { ReactNode, useCallback, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuState } from "../../src/state";
@@ -18,10 +18,24 @@ export function MaybeModal() {
       dispatch({ type: "set-modal", modal: "", modalUnDismissable: undefined }),
     [dispatch]
   );
+
+  // Close on escape
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && state.modalUnDismissable !== true) {
+        close();
+      }
+    };
+    window.addEventListener("keydown", listener, { capture: true });
+    return () =>
+      window.removeEventListener("keydown", listener, { capture: true });
+  }, [close, state.modal, state.modalUnDismissable]);
+
   const body = getModalBody(state.modal);
+
   if (body == null) return null;
   return (
-    <Modal onClose={!state.modalUnDismissable ? close : undefined}>
+    <Modal onClose={state.modalUnDismissable !== true ? close : undefined}>
       {body}
     </Modal>
   );
