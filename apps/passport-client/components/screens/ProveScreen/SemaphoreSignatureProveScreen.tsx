@@ -33,7 +33,7 @@ export function SemaphoreSignatureProveScreen({
 
       // Give the UI has a chance to update to the 'loading' state before the
       // potentially blocking proving operation kicks off
-      sleep(200);
+      await sleep(200);
 
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
