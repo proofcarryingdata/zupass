@@ -17,10 +17,6 @@ export interface ZuState {
   pendingAction?: PendingAction;
   modal: "info" | "settings" | "save-sync" | "invalid-participant" | "";
 
-  // Whether or not the user can close the modal by tapping its
-  // background or the x button.
-  modalUnDismissable?: boolean;
-
   // Participant metadata.
   // TODO: reload from passport server on startup.
   self?: ZuParticipant;

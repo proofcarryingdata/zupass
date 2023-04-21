@@ -17,7 +17,7 @@ export function SaveSyncModal() {
 
   const close = useCallback(() => {
     localStorage["savedSyncKey"] = "true";
-    dispatch({ type: "set-modal", modal: "", modalUnDismissable: undefined });
+    dispatch({ type: "set-modal", modal: "" });
   }, [dispatch]);
 
   if (syncKey == null) return null;

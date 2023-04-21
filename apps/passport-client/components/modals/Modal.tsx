@@ -14,31 +14,33 @@ import { SettingsModal } from "./SettingsModal";
 export function MaybeModal() {
   const [state, dispatch] = useContext(DispatchContext);
   const close = useCallback(
-    () =>
-      dispatch({ type: "set-modal", modal: "", modalUnDismissable: undefined }),
+    () => dispatch({ type: "set-modal", modal: "" }),
     [dispatch]
   );
+  const dismissable = isModalDismissable(state.modal);
 
   // Close on escape
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && state.modalUnDismissable !== true) {
+      if (e.key === "Escape" && dismissable) {
         close();
       }
     };
     window.addEventListener("keydown", listener, { capture: true });
     return () =>
       window.removeEventListener("keydown", listener, { capture: true });
-  }, [close, state.modal, state.modalUnDismissable]);
+  }, [close, state.modal, dismissable]);
 
   const body = getModalBody(state.modal);
 
   if (body == null) return null;
   return (
-    <Modal onClose={state.modalUnDismissable !== true ? close : undefined}>
-      {body}
-    </Modal>
+    <Modal onClose={dismissable !== true ? close : undefined}>{body}</Modal>
   );
+}
+
+function isModalDismissable(modal: ZuState["modal"]) {
+  return ["save-sync", "invalid-participant"].includes(modal);
 }
 
 function getModalBody(modal: ZuState["modal"]) {

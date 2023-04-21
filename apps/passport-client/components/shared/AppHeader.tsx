@@ -12,7 +12,6 @@ export function AppHeader() {
       dispatch({
         type: "set-modal",
         modal,
-        modalUnDismissable: modalDismissable,
       }),
     [dispatch]
   );

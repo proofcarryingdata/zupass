@@ -123,15 +123,12 @@ async function loadInitialState(): Promise<ZuState> {
   const participantInvalid = loadParticipantInvalid();
 
   let modal = "" as ZuState["modal"];
-  let modalUnDismissable = undefined;
 
   if (participantInvalid) {
     modal = "invalid-participant";
-    modalUnDismissable = true;
   } else if (self != null && !localStorage["savedSyncKey"]) {
     console.log("Asking existing user to save their sync key...");
     modal = "save-sync";
-    modalUnDismissable = true;
   }
 
   return {
@@ -141,7 +138,6 @@ async function loadInitialState(): Promise<ZuState> {
     identity,
     modal,
     participantInvalid,
-    modalUnDismissable,
   };
 }
 
