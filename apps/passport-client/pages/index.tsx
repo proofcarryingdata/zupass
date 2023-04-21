@@ -18,6 +18,7 @@ import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
   loadIdentity,
+  loadParticipantInvalid,
   loadPCDs,
   loadSelf,
   saveIdentity,
@@ -119,6 +120,7 @@ async function loadInitialState(): Promise<ZuState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
+  const participantInvalid = loadParticipantInvalid();
 
   let modal = "" as ZuState["modal"];
   if (self != null && !localStorage["savedSyncKey"]) {
@@ -132,6 +134,7 @@ async function loadInitialState(): Promise<ZuState> {
     pcds,
     identity,
     modal,
+    participantInvalid,
   };
 }
 
