@@ -50,6 +50,7 @@ describe("semaphore group identity should work", function () {
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: identityPCD,
       },
     };

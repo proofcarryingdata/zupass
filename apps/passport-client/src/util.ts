@@ -1,6 +1,27 @@
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
+export function assertUnreachable(_: never): never {
+  throw new Error("Unreachable");
+}
+
+export function getReferrerHost() {
+  const referrer = document.referrer;
+  if (!referrer) {
+    return "";
+  }
+  const url = new URL(referrer);
+  return url.host;
+}
+
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+}
+
 export function err(dispatch: Dispatcher, title: string, message: string) {
   dispatch({
     type: "error",

@@ -1,12 +1,17 @@
 import {
   constructPassportPcdGetRequestUrl,
-  usePassportResponse,
+  openPassportPopup,
+  usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphorePassportProof,
+  useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import {
+  generateMessageHash,
+  SemaphoreGroupPCDPackage,
+} from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -16,26 +21,32 @@ import {
   PASSPORT_URL,
   SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
 
 /**
  * Example page which shows how to use the generic prove screen to
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { proof, group, valid } = useSemaphorePassportProof(
+  const [valid, setValid] = useState<boolean | undefined>();
+  const onVerified = (valid: boolean) => {
+    setValid(valid);
+  };
+  const { proof, group } = useSemaphoreGroupProof(
+    pcdStr,
     SEMAPHORE_GROUP_URL,
-    pcdStr
+    "consumer-client",
+    onVerified
   );
 
   const [debugChecked, setDebugChecked] = useState(false);
+  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -66,7 +77,13 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestMembershipProof(debugChecked, serverProving)}
+          onClick={() =>
+            requestMembershipProof(
+              debugChecked,
+              serverProving,
+              "consumer-client"
+            )
+          }
           disabled={valid}
         >
           Request Group Membership Proof
@@ -93,7 +110,10 @@ export default function Page() {
         </label>
         {passportPendingPCDStr && (
           <>
-            <PendingPCDStatusDisplay status={pendingPCDStatus} />
+            <PendingPCDStatusDisplay
+              status={pendingPCDStatus}
+              pendingPCDError={pendingPCDError}
+            />
           </>
         )}
         {proof != null && (
@@ -113,18 +133,23 @@ export default function Page() {
 }
 
 // Show the Passport popup, ask the user to show anonymous membership.
-function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
+function requestMembershipProof(
+  debug: boolean,
+  proveOnServer: boolean,
+  originalSiteName: string
+) {
+  const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
     PASSPORT_URL,
-    window.location.origin + "/popup",
+    popupUrl,
     SemaphoreGroupPCDPackage.name,
     {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
-        value: "1",
+        value: generateMessageHash(originalSiteName).toString(),
         description:
           "You can choose a nullifier to prevent this signed message from being used across domains.",
       },
@@ -136,6 +161,7 @@ function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description:
@@ -159,5 +185,5 @@ function requestMembershipProof(debug: boolean, proveOnServer: boolean) {
     }
   );
 
-  requestProofFromPassport(proofUrl);
+  openPassportPopup(popupUrl, proofUrl);
 }

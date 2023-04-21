@@ -1,5 +1,6 @@
 import {
   BigIntArgument,
+  DisplayOptions,
   ObjectArgument,
   PCD,
   PCDArgument,
@@ -10,14 +11,17 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
 } from "@pcd/semaphore-identity-pcd";
+import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   FullProof,
   generateProof,
   Proof,
   verifyProof,
 } from "@semaphore-protocol/proof";
+import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreGroupCardBody } from "./CardBody";
 import {
   deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
@@ -26,6 +30,17 @@ import {
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
+
+/**
+ * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
+ * @param signal The initial message.
+ * @returns The outputted hash, fed in as a signal to the Semaphore proof.
+ */
+export function generateMessageHash(signal: string): bigint {
+  // right shift to fit into a field element, which is 254 bits long
+  // shift by 8 ensures we have a 253 bit element
+  return BigInt("0x" + sha256(signal)) >> BigInt(8);
+}
 
 export interface SempahoreGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
@@ -47,9 +62,15 @@ export interface SemaphoreGroupPCDArgs {
 
 export interface SemaphoreGroupPCDClaim {
   /**
-   * A serialized version of the group to which this PCD is referring.
+   * The merkle root of the group being proven membership in. Retreiving members
+   * in the root is left to the application logic.
    */
-  group: SerializedSemaphoreGroup;
+  merkleRoot: string;
+
+  /**
+   * Depth of the tree for the Merkle root.
+   */
+  depth: number;
 
   /**
    * Stringified `BigInt`.
@@ -96,12 +117,12 @@ export async function prove(
   args: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCD> {
   if (!initArgs) {
-    throw new Error("cannot make group proof: init has not been called yet");
+    throw new Error("Cannot make group proof: init has not been called yet");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
-    throw new Error("cannot make group proof: missing semaphore identity PCD");
+    throw new Error("Cannot make group proof: missing semaphore identity PCD");
   }
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -109,15 +130,30 @@ export async function prove(
 
   const serializedGroup = args.group.value;
   if (!serializedGroup) {
-    throw new Error("cannot make group proof: missing semaphore group");
+    throw new Error("Cannot make group proof: missing semaphore group");
   }
 
   if (!args.externalNullifier.value) {
-    throw new Error("cannot make group proof: missing externalNullifier");
+    throw new Error("Cannot make group proof: missing externalNullifier");
   }
 
   if (!args.signal.value) {
-    throw new Error("cannot make group proof: missing signal");
+    throw new Error("Cannot make group proof: missing signal");
+  }
+
+  // Restrict the SemaphoreGroupPCD from having the same externalNullifier as the
+  // SemaphoreSignaturePCD. The nullifierHash in a SemaphoreGroupPCD is supposed
+  // to be a unique string that is one-to-one with a specific member of the group,
+  // but unlinkable to any specific member. However, if an adversarial SemaphoreGroupPCD
+  // is set up with the same externalNullifier as the SemaphoreSignaturePCD, then the
+  // outputted nullifierHash for a user will be the same as the nullifierHash outputted
+  // from the same user's SemaphoreSignaturePCD. Thus, an adversary could link a
+  // nullifierHash back to a user if they also have access to a signature from them,
+  // which is unintended behavior that would break their anonymity.
+  if (BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER) {
+    throw new Error(
+      "Cannot make group proof: same externalNullifier as SemaphoreSignaturePCD, which would break anonymity"
+    );
   }
 
   const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
@@ -134,7 +170,8 @@ export async function prove(
   );
 
   const claim: SemaphoreGroupPCDClaim = {
-    group: serializedGroup,
+    merkleRoot: deserializedGroup.root.toString(),
+    depth: deserializedGroup.depth,
     externalNullifier: args.externalNullifier.value.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
     signal: args.signal.value.toString(),
@@ -146,17 +183,15 @@ export async function prove(
 }
 
 export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
-  const deserializedGroup = deserializeSemaphoreGroup(pcd.claim.group);
-
   const fullProof: FullProof = {
     externalNullifier: pcd.claim.externalNullifier,
-    merkleTreeRoot: deserializedGroup.root + "",
+    merkleTreeRoot: pcd.claim.merkleRoot + "",
     nullifierHash: pcd.claim.nullifierHash,
     signal: pcd.claim.signal,
     proof: pcd.proof,
   };
 
-  const valid = await verifyProof(fullProof, pcd.claim.group.depth);
+  const valid = await verifyProof(fullProof, pcd.claim.depth);
 
   return valid;
 }
@@ -176,6 +211,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
+  return {
+    header: "Semaphore Group Signal",
+    displayName: "semaphore-group-" + pcd.id.substring(0, 4),
+  };
+}
+
 /**
  * PCD-conforming wrapper for the Semaphore zero-knowledge protocol. You can
  * find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
@@ -187,6 +229,8 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SempahoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
+  getDisplayOptions,
+  renderCardBody: SemaphoreGroupCardBody,
   init,
   prove,
   verify,

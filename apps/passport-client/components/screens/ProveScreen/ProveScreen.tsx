@@ -8,7 +8,6 @@ import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
@@ -37,10 +36,18 @@ export function ProveScreen() {
   if (request.options?.genericProveScreen) {
     return <GenericProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
-    title = "Prove membership";
+    if (request.options?.title !== undefined) {
+      title = request.options?.title;
+    } else {
+      title = "Prove membership";
+    }
     body = <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
-    title = "Sign a message";
+    if (request.options?.title !== undefined) {
+      title = request.options?.title;
+    } else {
+      title = "Sign a message";
+    }
     body = <SemaphoreSignatureProveScreen req={request} />;
   } else {
     return <GenericProveScreen req={request} />;
@@ -48,8 +55,6 @@ export function ProveScreen() {
 
   return (
     <AppContainer bg="gray">
-      <Spacer h={24} />
-      <AppHeader />
       <Spacer h={24} />
       <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />

@@ -1,4 +1,5 @@
 import {
+  DisplayOptions,
   PCD,
   PCDArgument,
   PCDPackage,
@@ -19,18 +20,19 @@ import {
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { SemaphoreIdentityCardBody } from "./CardBody";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
  * so that they cannot be reused by malicious actors across different
  * applications.
  */
-const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
+export const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
   "hardcoded-nullifier"
 );
 
 /**
- * Hashes a message to be signed with Keccak and fits it into a baby jub jub field element.
+ * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
  * @param signal The initial message.
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
@@ -197,6 +199,13 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
+  return {
+    header: "Semaphore Signature",
+    displayName: "semaphore-sig-" + pcd.id.substring(0, 4),
+  };
+}
+
 /**
  * PCD-conforming wrapper to sign messages using one's Semaphore public key. This is a small
  * extension of the existing Semaphore protocol, which is mostly geared at group signatures.
@@ -209,6 +218,8 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDInitArgs
 > = {
   name: SemaphoreSignaturePCDTypeName,
+  renderCardBody: SemaphoreIdentityCardBody,
+  getDisplayOptions,
   init,
   prove,
   verify,

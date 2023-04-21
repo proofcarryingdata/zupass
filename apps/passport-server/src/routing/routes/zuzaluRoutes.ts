@@ -14,8 +14,8 @@ import {
 } from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
 import { fetchStatus } from "../../database/queries/fetchStatus";
-import { findOrCreateCommitment } from "../../database/queries/findOrCreateCommitment";
 import { insertParticipant } from "../../database/queries/insertParticipant";
+import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -34,8 +34,10 @@ export function initZuzaluRoutes(
   app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
     const email = decodeString(req.query.email, "email");
     const commitment = decodeString(req.query.commitment, "commitment");
+    const force = decodeString(req.query.force, "force") === "true";
+
     console.log(
-      `[ZUID] Got login email request. email=${email} commitment=${commitment}`
+      `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
 
     // Generate a 6-digit random token.
@@ -43,14 +45,14 @@ export function initZuzaluRoutes(
     if (token.length !== 6) throw new Error("Unreachable");
 
     // Save the token. This lets the user prove access to their email later.
-    if (
+    const devBypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production"
-    ) {
+      process.env.NODE_ENV !== "production";
+    if (devBypassEmail) {
       await insertParticipant(dbPool, {
         email: email,
         email_token: "",
-        name: "test testerly",
+        name: "Test User",
         order_id: "",
         residence: "atlantis",
         role: ParticipantRole.Resident,
@@ -63,7 +65,8 @@ export function initZuzaluRoutes(
       throw new Error(`${email} doesn't have a ticket.`);
     } else if (
       participant.commitment != null &&
-      participant.commitment !== commitment
+      participant.commitment !== commitment &&
+      !force
     ) {
       throw new Error(`${email} already registered.`);
     }
@@ -73,10 +76,7 @@ export function initZuzaluRoutes(
     );
 
     // Send an email with the login token.
-    if (
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production"
-    ) {
+    if (devBypassEmail) {
       console.log("[DEV] Bypassing email, returning token");
       res.json({ token });
     } else {
@@ -99,7 +99,11 @@ export function initZuzaluRoutes(
         const email = decodeString(req.query.email, "email");
         const commitment = decodeString(req.query.commitment, "commitment");
         console.log(
-          `[ZUID] Got new participant request. email=${email} token=${token} commitment=${commitment}`
+          `[ZUID] new-participant ${JSON.stringify({
+            token,
+            email,
+            commitment,
+          })}`
         );
 
         // Look up participant record from Pretix
@@ -117,7 +121,7 @@ export function initZuzaluRoutes(
 
         // Save commitment to DB.
         console.log(`[ZUID] Saving new commitment: ${commitment}`);
-        const uuid = await findOrCreateCommitment(dbClient, {
+        const uuid = await saveCommitment(dbClient, {
           email,
           commitment,
         });

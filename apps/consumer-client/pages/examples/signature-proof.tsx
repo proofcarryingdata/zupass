@@ -1,33 +1,45 @@
 import {
   constructPassportPcdGetRequestUrl,
-  usePassportResponse,
+  usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
   useSemaphoreSignatureProof,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
+import { sendPassportRequest } from "../../src/util";
 
 /**
  * Example page which shows how to use the generic prove screen to
  * request a Semaphore Signature PCD as a third party developer.
  */
 export default function Page() {
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
     PASSPORT_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { signatureProof, signatureProofValid } =
-    useSemaphoreSignatureProof(pcdStr);
+
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
+  const onProofVerified = (valid: boolean) => {
+    setSignatureProofValid(valid);
+  };
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
+
+  const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
@@ -63,7 +75,10 @@ export default function Page() {
         </label>
         {passportPendingPCDStr && (
           <>
-            <PendingPCDStatusDisplay status={pendingPCDStatus} />
+            <PendingPCDStatusDisplay
+              status={pendingPCDStatus}
+              pendingPCDError={pendingPCDError}
+            />
           </>
         )}
         {signatureProof != null && (
@@ -86,15 +101,17 @@ export default function Page() {
 }
 
 function requestSemaphoreSignature(proveOnServer: boolean) {
+  const popupUrl = window.location.origin + "/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     PASSPORT_URL,
-    window.location.origin + "/popup",
+    popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
         argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
         description: "The identity with which to sign a message.",
@@ -114,5 +131,5 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
     }
   );
 
-  requestProofFromPassport(proofUrl);
+  sendPassportRequest(proofUrl);
 }

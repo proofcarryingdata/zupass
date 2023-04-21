@@ -1,55 +1,6 @@
-import { PCDOf, PCDPackage } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
 import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
 import { StatusRequest, StatusResponse } from "./RequestTypes";
-
-export function useProof<T extends PCDPackage>(
-  proofPackage: T,
-  proofEnc: string
-) {
-  const [proof, setProof] = useState<PCDOf<T>>();
-
-  useEffect(() => {
-    if (proofEnc) {
-      const parsedPCD = JSON.parse(decodeURIComponent(proofEnc));
-      if (parsedPCD.type !== proofPackage.name) {
-        return;
-      }
-      proofPackage.deserialize(parsedPCD.pcd).then((pcd) => {
-        setProof(pcd as any);
-      });
-    }
-  }, [proofPackage, proofEnc, setProof]);
-
-  return proof;
-}
-
-/**
- * React hook that listens for PCDs and PendingPCDs from a passport popup window
- * using message passing and event listeners.
- */
-export function usePassportResponse() {
-  const [pcdStr, setPCDStr] = useState("");
-  const [pendingPCDStr, setPendingPCDStr] = useState("");
-
-  // Listen for PCDs coming back from the Passport popup
-  useEffect(() => {
-    function receiveMessage(ev: MessageEvent<any>) {
-      // Extensions including Metamask apparently send messages to every page. Ignore those.
-      if (ev.data.encodedPCD) {
-        console.log("Received PCD", ev.data.encodedPCD);
-        setPCDStr(ev.data.encodedPCD);
-      } else if (ev.data.encodedPendingPCD) {
-        console.log(ev.data);
-        setPendingPCDStr(ev.data.encodedPendingPCD);
-      }
-    }
-    window.addEventListener("message", receiveMessage, false);
-    return () => window.removeEventListener("message", receiveMessage);
-  }, []);
-
-  return [pcdStr, pendingPCDStr];
-}
 
 /**
  * React hook that pings server on status of a PendingPCD. Returns a serialized
@@ -58,8 +9,11 @@ export function usePassportResponse() {
 export function usePendingPCD(
   pendingPCDStr: string,
   passportURL: string
-): [PendingPCDStatus, string] {
-  const [status, setStatus] = useState<PendingPCDStatus>(PendingPCDStatus.NONE);
+): [PendingPCDStatus, string, string] {
+  const [pendingPCDStatus, setPendingPCDStatus] = useState<PendingPCDStatus>(
+    PendingPCDStatus.NONE
+  );
+  const [pendingPCDError, setPendingPCDError] = useState("");
   const [pcdStr, setPCDStr] = useState("");
 
   useEffect(() => {
@@ -83,15 +37,26 @@ export function usePendingPCD(
         })
           .then((response) => response.json())
           .then((data: StatusResponse) => {
-            setStatus(data.status);
-            if (data.status === PendingPCDStatus.COMPLETE) {
+            setPendingPCDStatus(data.status);
+            if (
+              data.status === PendingPCDStatus.COMPLETE &&
+              data.serializedPCD !== undefined
+            ) {
               setPCDStr(data.serializedPCD);
+              setPendingPCDError("");
+              clearInterval(interval);
+            } else if (
+              data.status === PendingPCDStatus.ERROR &&
+              data.error !== undefined
+            ) {
+              setPendingPCDError(data.error);
               clearInterval(interval);
             }
           })
           .catch((error) => {
-            setStatus(PendingPCDStatus.ERROR);
-            console.error(error);
+            setPendingPCDStatus(PendingPCDStatus.ERROR);
+            setPendingPCDError(error);
+            clearInterval(interval);
           });
       }
     };
@@ -101,7 +66,7 @@ export function usePendingPCD(
     return () => clearInterval(interval);
   }, [pendingPCDStr, passportURL]);
 
-  return [status, pcdStr];
+  return [pendingPCDStatus, pendingPCDError, pcdStr];
 }
 
 /**

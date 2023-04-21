@@ -14,13 +14,17 @@ import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
+import { getReferrerHost, sleep } from "../../../src/util";
 import { Button } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreGroupProveScreen({
   req,
 }: {
   req: PCDGetRequest<typeof SemaphoreGroupPCDPackage>;
 }) {
+  const [error, setError] = useState<string | undefined>();
+
   // Load semaphore group
   const [group, setGroup] = useState<SerializedSemaphoreGroup>(null);
   useEffect(() => {
@@ -40,6 +44,11 @@ export function SemaphoreGroupProveScreen({
   const onProve = useCallback(async () => {
     try {
       setProving(true);
+
+      // Give the UI has a chance to update to the 'loading' state before the
+      // potentially blocking proving operation kicks off
+      sleep(200);
+
       const args = await fillArgs(state.identity, group, req.args);
 
       if (req.options?.proveOnServer === true) {
@@ -60,7 +69,14 @@ export function SemaphoreGroupProveScreen({
         )}`;
       }
     } catch (e) {
-      console.log(e);
+      if (
+        typeof e.message === "string" &&
+        e.message.indexOf("The identity is not part of the group") >= 0
+      ) {
+        setError("You are not part of this group.");
+      } else if (typeof e.message === "string") {
+        setError(e.message);
+      }
     }
   }, [
     group,
@@ -71,16 +87,23 @@ export function SemaphoreGroupProveScreen({
   ]);
 
   const lines: ReactNode[] = [];
-  lines.push(<p>Loading {req.args.group.remoteUrl}</p>);
-  if (group != null) {
-    lines.push(<p>Loaded {group.name}</p>);
+  if (group === null) {
+    lines.push(<p>Loading the group...</p>);
+  } else {
     lines.push(
-      <p>You're proving that you're one of {group.members.length} members</p>
+      <p>
+        <b>{getReferrerHost()}</b> is requesting a proof that you're one of{" "}
+        {group.members.length} members of {group.name}.
+      </p>
     );
-    lines.push(<Button onClick={onProve}>Prove</Button>);
   }
-  if (proving) {
-    lines.push(<p>Proving...</p>);
+
+  if (!proving && error === undefined) {
+    lines.push(<Button onClick={onProve}>Prove</Button>);
+  } else if (error !== undefined) {
+    lines.push(<ErrorContainer>{error}</ErrorContainer>);
+  } else {
+    lines.push(<RippleLoader />);
   }
 
   return (
@@ -117,6 +140,7 @@ async function fillArgs(
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({ identity })
       ),
@@ -146,4 +170,14 @@ async function fillArgs(
 
 const LineWrap = styled.div`
   margin-bottom: 16px;
+`;
+
+const ErrorContainer = styled.div`
+  color: white;
+  border-radius: 99px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--danger);
 `;

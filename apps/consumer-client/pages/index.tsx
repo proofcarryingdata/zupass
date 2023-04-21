@@ -24,6 +24,12 @@ export default function Page() {
           <li>
             <a href="/examples/signature-proof">Semaphore Signature Proof</a>
           </li>
+          <li>
+            <a href="/examples/add-pcd">Add PCDs to the Passport</a>
+          </li>
+          <li>
+            <a href="/examples/get-without-proving">Get Without Proving</a>
+          </li>
         </ol>
       </div>
       <div>
@@ -31,17 +37,17 @@ export default function Page() {
         <ol>
           <li>
             <a href="/zuzalu-examples/group-proof">
-              Semaphore Group Membership Proof
+              Zuzalu Group Membership Proof
+            </a>
+          </li>
+          <li>
+            <a href="/zuzalu-examples/uuid-proof">
+              Zuzalu Identity-Revealing Proof
             </a>
           </li>
           <li>
             <a href="/zuzalu-examples/signature-proof">
               Semaphore Signature Proof
-            </a>
-          </li>
-          <li>
-            <a href="/zuzalu-examples/uuid-proof">
-              Semaphore Identity-Revealing Proof
             </a>
           </li>
         </ol>

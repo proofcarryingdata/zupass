@@ -1,5 +1,17 @@
 # @pcd/eslint-config-custom
 
+## 0.4.1
+
+### Patch Changes
+
+- Support for multiple cards in passport
+
+## 0.4.0
+
+### Minor Changes
+
+- Updated passport interface and related packages to simplify and make more explicit the APIs that allow developers to request PCDs from the passport.
+
 ## 0.3.0
 
 ### Minor Changes

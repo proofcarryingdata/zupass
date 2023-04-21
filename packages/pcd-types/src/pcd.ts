@@ -12,8 +12,30 @@ export interface SerializedPCD<_T extends PCD = PCD> {
   pcd: string;
 }
 
+/**
+ * This interface can be optionally returned by the package ƒor any given
+ * PCD, which allows the package some degree of control over how the PCD
+ * is displayed in the passport application.
+ */
+export interface DisplayOptions {
+  /**
+   * Shown to the user in the main page of the passport, where they can
+   * see all of their cards.
+   */
+  header?: string;
+
+  /**
+   * Shown to the user in the `GenericProveScreen`, allowing them to
+   * disambiguate between different pcds of the same type. In the future,
+   * we'll have a better way to disambiguate between them.
+   */
+  displayName?: string;
+}
+
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
+  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+  renderCardBody?: ({ pcd }: { pcd: PCD<C, P> }) => React.ReactElement;
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;
@@ -90,7 +112,9 @@ export function isObjectArgument(
 export type PCDArgument<T extends PCD = PCD> = Argument<
   ArgumentTypeName.PCD,
   SerializedPCD<T>
->;
+> & {
+  pcdType?: string;
+};
 export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
   return arg.argumentType === ArgumentTypeName.PCD;
 }

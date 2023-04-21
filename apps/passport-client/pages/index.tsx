@@ -2,6 +2,8 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -25,9 +27,11 @@ import { ZuState } from "../src/state";
 
 class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
-  update = (diff: Pick<ZuState, keyof ZuState>) => this.setState(diff);
+  update = (diff: Pick<ZuState, keyof ZuState>) => {
+    console.log("App.update", diff);
+    this.setState(diff);
+  };
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
-
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
@@ -87,6 +91,11 @@ function Router() {
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
+          <Route
+            path="get-without-proving"
+            element={<GetWithoutProvingScreen />}
+          />
+          <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
@@ -110,7 +119,13 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
 
-  return { self, encryptionKey, pcds, identity };
+  let modal = "" as ZuState["modal"];
+  if (self != null && !localStorage["savedSyncKey"]) {
+    console.log("Asking existing user to save their sync key...");
+    modal = "save-sync";
+  }
+
+  return { self, encryptionKey, pcds, identity, modal };
 }
 
 // Redirect old site visitors to the correct site

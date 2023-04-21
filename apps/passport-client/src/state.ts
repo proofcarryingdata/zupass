@@ -3,14 +3,19 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 
-export type PendingAction = { type: "new-passport"; email: string };
+export type PendingAction =
+  | { type: "new-passport"; email: string }
+  | { type: "save-sync-key" };
 
 export interface ZuState {
   // Zuzalu semaphore identity.
   identity: Identity;
   pcds: PCDCollection;
-  pendingAction?: PendingAction;
   encryptionKey?: string;
+
+  // View state
+  pendingAction?: PendingAction;
+  modal: "info" | "settings" | "save-sync" | "";
 
   // Participant metadata.
   // TODO: reload from passport server on startup.

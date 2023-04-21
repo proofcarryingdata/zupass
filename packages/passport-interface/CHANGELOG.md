@@ -1,5 +1,50 @@
 # @pcd/passport-interface
 
+## 0.4.3
+
+### Patch Changes
+
+- f975aba: Update name of get without proving url
+
+## 0.4.3-next.0
+
+### Patch Changes
+
+- Update name of get without proving url
+
+## 0.4.2
+
+### Patch Changes
+
+- Support for multiple cards in passport
+- Updated dependencies
+  - @pcd/passport-crypto@0.4.1
+  - @pcd/pcd-types@0.4.1
+  - @pcd/semaphore-group-pcd@0.4.1
+  - @pcd/semaphore-signature-pcd@0.4.1
+  - @pcd/tsconfig@0.4.1
+
+## 0.4.1
+
+### Patch Changes
+
+- Switch to callback for notifying proof verification and completion in passport-interface package.
+
+## 0.4.0
+
+### Minor Changes
+
+- Updated passport interface and related packages to simplify and make more explicit the APIs that allow developers to request PCDs from the passport.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.4.0
+  - @pcd/pcd-types@0.4.0
+  - @pcd/semaphore-group-pcd@0.4.0
+  - @pcd/semaphore-signature-pcd@0.4.0
+  - @pcd/tsconfig@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

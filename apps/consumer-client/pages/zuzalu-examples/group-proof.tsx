@@ -1,36 +1,31 @@
 import {
-  requestZuzaluMembershipUrl,
-  usePassportResponse,
-  usePCDMultiplexer,
-  usePendingPCD,
-  useSemaphorePassportProof,
+  openZuzaluMembershipPopup,
+  usePassportPopupMessages,
+  useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
-import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import {
-  PASSPORT_SERVER_URL,
-  PASSPORT_URL,
-  SEMAPHORE_GROUP_URL,
-} from "../../src/constants";
-import { requestProofFromPassport } from "../../src/util";
+import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { useState } from "react";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const [passportPCDStr, passportPendingPCDStr] = usePassportResponse();
-  const [serverProving, setServerProving] = useState(false);
-  const [pendingPCDStatus, serverPCDStr] = usePendingPCD(
-    passportPendingPCDStr,
-    PASSPORT_SERVER_URL
-  );
-  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
-  const { proof, group, valid } = useSemaphorePassportProof(
+  // Populate PCD from either client-side or server-side proving using passport popup
+  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+
+  const [valid, setValid] = useState<boolean | undefined>();
+  const onVerified = (valid: boolean) => {
+    setValid(valid);
+  };
+
+  const { proof, group } = useSemaphoreGroupProof(
+    pcdStr,
     SEMAPHORE_GROUP_URL,
-    pcdStr
+    "consumer-client",
+    onVerified,
   );
 
   return (
@@ -64,26 +59,18 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() => requestZuzaluMembershipProof(serverProving)}
+          onClick={() =>
+            openZuzaluMembershipPopup(
+              PASSPORT_URL,
+              window.location.origin + "/popup",
+              SEMAPHORE_GROUP_URL,
+              "consumer-client"
+            )
+          }
           disabled={valid}
         >
           Request Zuzalu Membership Proof
         </button>
-        <label>
-          <input
-            type="checkbox"
-            checked={serverProving}
-            onChange={() => {
-              setServerProving((checked: boolean) => !checked);
-            }}
-          />
-          server-side proof
-        </label>
-        {passportPendingPCDStr && (
-          <>
-            <PendingPCDStatusDisplay status={pendingPCDStatus} />
-          </>
-        )}
         {proof != null && (
           <>
             <p>Got Zuzalu Membership Proof from Passport</p>
@@ -98,18 +85,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-// Show the Passport popup, ask the user to show anonymous membership.
-function requestZuzaluMembershipProof(proveOnServer: boolean) {
-  const proofUrl = requestZuzaluMembershipUrl(
-    PASSPORT_URL,
-    window.location.origin + "/popup",
-    SEMAPHORE_GROUP_URL,
-    "1337",
-    "12345",
-    proveOnServer
-  );
-
-  requestProofFromPassport(proofUrl);
 }

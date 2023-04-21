@@ -85,7 +85,7 @@ export function LoginScreen() {
         <HR />
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>Sync Existing Passport</LinkButton>
+          <LinkButton to={"/sync-existing"}>Login with Sync Key</LinkButton>
           <Spacer h={8} />
           <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
         </CenterColumn>

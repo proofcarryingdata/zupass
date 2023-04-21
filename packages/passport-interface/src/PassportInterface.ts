@@ -1,8 +1,10 @@
-import { ArgsOf, PCD, PCDPackage } from "@pcd/pcd-types";
+import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 
 export enum PCDRequestType {
   Get = "Get",
+  GetWithoutProving = "GetWithoutProving",
   Add = "Add",
+  ProveAndAdd = "ProveAndAdd",
 }
 
 export interface PCDRequest {
@@ -10,7 +12,7 @@ export interface PCDRequest {
   type: PCDRequestType;
 }
 
-export interface GetRequestOptions {
+export interface ProveOptions {
   genericProveScreen?: boolean;
   title?: string;
   description?: string;
@@ -23,12 +25,38 @@ export interface PCDGetRequest<T extends PCDPackage = PCDPackage>
   type: PCDRequestType.Get;
   pcdType: T["name"];
   args: ArgsOf<T>;
-  options?: GetRequestOptions;
+  options?: ProveOptions;
+}
+
+export interface PCDGetWithoutProvingRequest extends PCDRequest {
+  pcdType: string;
 }
 
 export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
-  pcd: PCD;
+  pcd: SerializedPCD;
+}
+
+export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
+  extends PCDRequest {
+  type: PCDRequestType.ProveAndAdd;
+  pcdType: string;
+  args: ArgsOf<T>;
+  options?: ProveOptions;
+}
+
+export function getWithoutProvingUrl(
+  passportOrigin: string,
+  returnUrl: string,
+  pcdType: string
+) {
+  const req: PCDGetWithoutProvingRequest = {
+    type: PCDRequestType.GetWithoutProving,
+    pcdType,
+    returnUrl,
+  };
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/get-without-proving?request=${encReq}`;
 }
 
 export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
@@ -36,7 +64,7 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
   returnUrl: string,
   pcdType: T["name"],
   args: ArgsOf<T>,
-  options?: GetRequestOptions
+  options?: ProveOptions
 ) {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
@@ -52,38 +80,33 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
 export function constructPassportPcdAddRequestUrl(
   passportOrigin: string,
   returnUrl: string,
-  pcd: PCD
+  pcd: SerializedPCD
 ) {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
     pcd,
   };
-  return `${passportOrigin}?request=${JSON.stringify(req)}`;
+  const eqReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/add?request=${eqReq}`;
 }
 
-// export function passportReceiveRequest(
-//   url: string
-// ): PCDGetRequest | PCDAddRequest | undefined {
-//   const URL = new URLSearchParams(url);
-
-//   const request = JSON.parse(URL.get("request") || "");
-
-//   if (isPassportAddRequest(request)) {
-//     return request;
-//   }
-
-//   if (isPassportGetRequest(request)) {
-//     return request;
-//   }
-
-//   return undefined;
-// }
-
-// export function isPassportGetRequest(req: any): req is PCDGetRequest {
-//   return req.type === PCDRequestType.Get;
-// }
-
-// export function isPassportAddRequest(req: any): req is PCDAddRequest {
-//   return req.type === PCDRequestType.Add;
-// }
+export function constructPassportPcdProveAndAddRequestUrl<
+  T extends PCDPackage = PCDPackage
+>(
+  passportOrigin: string,
+  returnUrl: string,
+  pcdType: string,
+  args: ArgsOf<T>,
+  options?: ProveOptions
+) {
+  const req: PCDProveAndAddRequest = {
+    type: PCDRequestType.ProveAndAdd,
+    returnUrl: returnUrl,
+    pcdType,
+    args,
+    options,
+  };
+  const eqReq = encodeURIComponent(JSON.stringify(req));
+  return `${passportOrigin}#/add?request=${eqReq}`;
+}

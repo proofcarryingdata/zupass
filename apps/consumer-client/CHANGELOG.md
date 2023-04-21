@@ -1,5 +1,79 @@
 # consumer-client
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [6d41ad6]
+- Updated dependencies [561ff8b]
+- Updated dependencies [f975aba]
+- Updated dependencies [4c9ef35]
+- Updated dependencies [e32b0e4]
+  - @pcd/ethereum-ownership-pcd@0.4.2
+  - @pcd/passport-interface@0.4.3
+
+## 0.0.8-next.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.3-next.0
+
+## 0.0.8-next.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.4.2-next.3
+
+## 0.0.8-next.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.4.2-next.2
+
+## 0.0.8-next.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.4.2-next.1
+
+## 0.0.8-next.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.4.2-next.0
+
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.2
+  - @pcd/pcd-types@0.4.1
+  - @pcd/semaphore-group-pcd@0.4.1
+  - @pcd/semaphore-identity-pcd@0.4.1
+
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.1
+
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.4.0
+  - @pcd/pcd-types@0.4.0
+  - @pcd/semaphore-group-pcd@0.4.0
+  - @pcd/semaphore-identity-pcd@0.4.0
+
 ## 0.0.4
 
 ### Patch Changes

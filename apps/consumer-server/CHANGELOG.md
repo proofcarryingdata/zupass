@@ -1,5 +1,19 @@
 # consumer-server
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.4.1
+
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.4.0
+
 ## 0.0.4
 
 ### Patch Changes

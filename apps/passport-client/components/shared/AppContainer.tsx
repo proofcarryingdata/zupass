@@ -2,7 +2,7 @@ import * as React from "react";
 import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { ErrorPopup } from "./ErrorPopup";
+import { ErrorPopup } from "../modals/ErrorPopup";
 
 // Wrapper for all screens.
 export function AppContainer({

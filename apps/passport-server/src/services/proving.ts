@@ -72,7 +72,8 @@ export async function enqueueProofRequest(
     if (queue.length == 1) {
       pendingPCDResponse.set(hash, {
         status: PendingPCDStatus.PROVING,
-        serializedPCD: "",
+        serializedPCD: undefined,
+        error: undefined,
       });
 
       // we don't wait for this to end; we let it work in the background
@@ -80,7 +81,8 @@ export async function enqueueProofRequest(
     } else {
       pendingPCDResponse.set(hash, {
         status: PendingPCDStatus.QUEUED,
-        serializedPCD: "",
+        serializedPCD: undefined,
+        error: undefined,
       });
     }
   }
@@ -103,7 +105,8 @@ export function getPendingPCDStatus(hash: string): StatusResponse {
   const response = pendingPCDResponse.get(hash);
   if (response !== undefined) return response;
   return {
-    serializedPCD: "",
+    serializedPCD: undefined,
+    error: undefined,
     status: PendingPCDStatus.NONE,
   };
 }
@@ -127,11 +130,13 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     pendingPCDResponse.set(currentHash, {
       status: PendingPCDStatus.COMPLETE,
       serializedPCD: JSON.stringify(serializedPCD),
+      error: undefined,
     });
-  } catch (e) {
+  } catch (e: any) {
     pendingPCDResponse.set(currentHash, {
       status: PendingPCDStatus.ERROR,
-      serializedPCD: "",
+      serializedPCD: undefined,
+      error: e.message,
     });
   }
 
@@ -148,7 +153,8 @@ async function serverProve(proveRequest: ProveRequest): Promise<void> {
     ) {
       pendingPCDResponse.set(topHash, {
         status: PendingPCDStatus.PROVING,
-        serializedPCD: "",
+        serializedPCD: undefined,
+        error: undefined,
       });
       serverProve(queue[0]);
     }
