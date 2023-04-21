@@ -1,5 +1,4 @@
 import { Identity } from "@semaphore-protocol/identity";
-import * as React from "react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { config } from "../../src/config";
@@ -17,6 +16,7 @@ import {
   ZuLogo,
 } from "../core";
 import { Button, LinkButton } from "../core/Button";
+import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 
 /**
@@ -44,6 +44,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const [state, dispatch] = useContext(DispatchContext);
   const { identity } = state;
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
@@ -87,9 +88,11 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
-  const login = useCallback(() => {
+  const verify = useCallback(async () => {
     const token = inRef.current?.value || "";
-    dispatch({ type: "login", email, token });
+    setVerifyingCode(true);
+    await dispatch({ type: "login", email, token });
+    setVerifyingCode(false);
   }, [dispatch, email]);
 
   return (
@@ -115,7 +118,12 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
         <CenterColumn w={280}>
           <BigInput ref={inRef} placeholder="code from email" />
           <Spacer h={8} />
-          <Button onClick={login}>Verify</Button>
+          {verifyingCode && (
+            <div>
+              <RippleLoader />
+            </div>
+          )}
+          {!verifyingCode && <Button onClick={verify}>Verify</Button>}
         </CenterColumn>
         <Spacer h={48} />
         <HR />
