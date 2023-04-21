@@ -11,28 +11,17 @@ export interface HistoricSemaphoreGroup {
 export async function getLatestSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
-  const distinctGroups = await client.query(
-    `select distinct(groupid) from semaphore_history;`
+  const latestGroups = await client.query(
+    `select s1.* from semaphore_history s1
+    join (
+      select s2.groupid, max(s2.id) as max_id
+      from semaphore_history s2
+      group by s2.groupid
+    ) groups
+    on groups.max_id = s1.id;`
   );
 
-  const newestGroups: HistoricSemaphoreGroup[] = [];
-
-  for (const groupId of distinctGroups.rows.map((row) => row.groupid)) {
-    const newestGroupId = await client.query(
-      `select max(id) from semaphore_history where groupid = $1`,
-      [groupId]
-    );
-
-    const newestGroup = await client.query(
-      `select id, groupId, rootHash, serializedGroup, timeCreated` +
-        ` from semaphore_history where id = $1;`,
-      [newestGroupId.rows[0].max]
-    );
-
-    newestGroups.push(rowToGroup(newestGroup.rows[0]));
-  }
-
-  return newestGroups;
+  return latestGroups.rows.map(rowToGroup);
 }
 
 export async function insertNewSemaphoreGroup(
