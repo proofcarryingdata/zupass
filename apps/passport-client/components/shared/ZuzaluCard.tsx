@@ -1,8 +1,6 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import * as React from "react";
 import { useCallback, useContext, useEffect, useState } from "react";
-import QRCode from "react-qr-code";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
@@ -10,6 +8,7 @@ import { DispatchContext } from "../../src/dispatch";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
+import { QR } from "./QR";
 
 export function ZuzaluCardBody({
   showQrCode,
@@ -104,7 +103,8 @@ function ZuzaluQR() {
 
   return (
     <QRWrap>
-      <QRCode bgColor={qrBg} fgColor={qrFg} value={qrLink} style={qrStyle} />
+      {/* <QRCode  value={qrLink} style={qrStyle} /> */}
+      <QR value={qrLink} bgColor={qrBg} fgColor={qrFg} />
       <QRLogoDone />
     </QRWrap>
   );
@@ -126,8 +126,7 @@ const QRLogo = styled.img`
 `;
 
 // Style constants
-const qrSize = "280px";
-const qrStyle = { width: qrSize, height: qrSize };
+const qrSize = "300px";
 const [qrBg, qrFg] = (() => {
   const style = getComputedStyle(document.body);
   const bg = style.getPropertyValue("--white");
