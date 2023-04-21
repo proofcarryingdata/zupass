@@ -8,7 +8,7 @@ import { icons } from "../icons";
 export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
-    (modal: ZuState["modal"], modalDismissable?: boolean) =>
+    (modal: ZuState["modal"]) =>
       dispatch({
         type: "set-modal",
         modal,
