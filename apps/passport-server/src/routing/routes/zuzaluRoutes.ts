@@ -55,7 +55,7 @@ export function initZuzaluRoutes(
         name: "Test User",
         order_id: "",
         residence: "atlantis",
-        role: ParticipantRole.Resident,
+        role: ParticipantRole.Organizer,
       });
     }
 
