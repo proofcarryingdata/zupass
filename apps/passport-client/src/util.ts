@@ -22,6 +22,10 @@ export async function sleep(ms: number): Promise<void> {
   });
 }
 
+export async function nextFrame() {
+  await sleep(50);
+}
+
 export function err(dispatch: Dispatcher, title: string, message: string) {
   dispatch({
     type: "error",

@@ -15,7 +15,7 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import { getReferrerHost, sleep } from "../../../src/util";
+import { getReferrerHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -33,7 +33,7 @@ export function SemaphoreSignatureProveScreen({
 
       // Give the UI has a chance to update to the 'loading' state before the
       // potentially blocking proving operation kicks off
-      await sleep(200);
+      await nextFrame();
 
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
