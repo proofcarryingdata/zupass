@@ -91,7 +91,7 @@ export class SemaphoreService {
       );
 
       if (
-        correspondingLatestGroup === undefined ||
+        correspondingLatestGroup == null ||
         correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
       ) {
         console.log(
