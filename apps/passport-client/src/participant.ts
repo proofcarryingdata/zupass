@@ -8,7 +8,7 @@ export async function pollParticipant(
   dispatch: Dispatcher
 ) {
   const url = `${config.passportServer}/zuzalu/participant/${self.uuid}`;
-  console.log(`Polling ${url}`);
+  console.log(`[USER_POLL] Polling ${url}`);
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -17,12 +17,12 @@ export async function pollParticipant(
         // app isn't able to find them, so we should log the user out of this passport.
         dispatch({ type: "participant-invalid" });
       }
-      console.log("Participant not found, skipping update");
+      console.log("[USER_POLL] Participant not found, skipping update");
       return;
     }
     const participant = await response.json();
     dispatch({ type: "set-self", self: participant });
   } catch (e) {
-    console.error("Error polling participant", e);
+    console.error("[USER_POLL] Error polling participant", e);
   }
 }
