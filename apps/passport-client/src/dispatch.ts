@@ -201,13 +201,11 @@ async function finishLogin(
 
   window.location.hash = "#/";
 
-  // Save PCDs to E2EE storage.
-  await saveParticipantPCDs(participant);
-
   // Ask user to save their sync key
   update({ modal: "save-sync", modalUnDismissable: true });
 
-  window.location.hash = "#/";
+  // Save PCDs to E2EE storage.
+  await saveParticipantPCDs(participant);
 }
 
 async function saveParticipantPCDs(participant: ZuParticipant) {
