@@ -14,12 +14,15 @@ import { SettingsModal } from "./SettingsModal";
 export function MaybeModal() {
   const [state, dispatch] = useContext(DispatchContext);
   const close = useCallback(
-    () => dispatch({ type: "set-modal", modal: "" }),
+    () =>
+      dispatch({ type: "set-modal", modal: "", modalDismissable: undefined }),
     [dispatch]
   );
   const body = getModalBody(state.modal);
   if (body == null) return null;
-  return <Modal onClose={close}>{body}</Modal>;
+  return (
+    <Modal onClose={state.modalDismissable ? close : undefined}>{body}</Modal>
+  );
 }
 
 function getModalBody(modal: ZuState["modal"]) {

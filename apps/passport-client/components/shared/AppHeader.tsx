@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useCallback, useContext, useEffect } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
@@ -9,12 +8,16 @@ import { icons } from "../icons";
 export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
-    (modal: ZuState["modal"]) => dispatch({ type: "set-modal", modal }),
+    (modal: ZuState["modal"], modalDismissable?: boolean) =>
+      dispatch({ type: "set-modal", modal, modalDismissable }),
     [dispatch]
   );
-  const openInfo = useCallback(() => setModal("info"), [setModal]);
-  const openSettings = useCallback(() => setModal("settings"), [setModal]);
-  const close = useCallback(() => setModal(""), [setModal]);
+  const openInfo = useCallback(() => setModal("info", true), [setModal]);
+  const openSettings = useCallback(
+    () => setModal("settings", true),
+    [setModal]
+  );
+  const close = useCallback(() => setModal("", true), [setModal]);
 
   // Close on escape
   useEffect(() => {
