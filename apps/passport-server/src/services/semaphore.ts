@@ -81,7 +81,7 @@ export class SemaphoreService {
       throw new Error("no database connection");
     }
 
-    console.log(`[SEMA] Semaphore service - saving historic semaphore groups`);
+    console.log(`[SEMA] Semaphore service - diffing historic semaphore groups`);
 
     const latestGroups = await getLatestSemaphoreGroups(this.dbPool);
 
@@ -106,6 +106,10 @@ export class SemaphoreService {
           JSON.stringify(
             serializeSemaphoreGroup(localGroup.group, localGroup.name)
           )
+        );
+      } else {
+        console.log(
+          `[SEMA] group '${localGroup.group.id}' is not outdated, not appending to group history`
         );
       }
     }
