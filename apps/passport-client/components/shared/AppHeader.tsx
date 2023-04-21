@@ -6,7 +6,7 @@ import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 
 export function AppHeader() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
     (modal: ZuState["modal"], modalDismissable?: boolean) =>
       dispatch({
