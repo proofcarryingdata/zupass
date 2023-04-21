@@ -43,7 +43,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
       </>
     );
   } else {
-    content = <AddedPCD />;
+    content = <AddedPCD onCloseClick={() => window.close()} />;
   }
 
   return (

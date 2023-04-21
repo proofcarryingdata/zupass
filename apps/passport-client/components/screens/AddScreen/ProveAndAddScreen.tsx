@@ -21,14 +21,17 @@ export function ProveAndAddScreen({
 }) {
   const [_, dispatch] = useContext(DispatchContext);
   const [proved, setProved] = useState(false);
+  const [serializedPCD, setSerializedPCD] = useState<
+    SerializedPCD | undefined
+  >();
 
   const onProve = useCallback(
     (_: any, serializedPCD: SerializedPCD) => {
       dispatch({ type: "add-pcd", pcd: serializedPCD });
       setProved(true);
-      safeRedirect(request.returnUrl, serializedPCD);
+      setSerializedPCD(serializedPCD);
     },
-    [dispatch, request.returnUrl]
+    [dispatch]
   );
 
   let content: ReactNode;
@@ -42,7 +45,13 @@ export function ProveAndAddScreen({
       />
     );
   } else {
-    content = <AddedPCD />;
+    content = (
+      <AddedPCD
+        onCloseClick={() => {
+          safeRedirect(request.returnUrl, serializedPCD);
+        }}
+      />
+    );
   }
 
   return (
