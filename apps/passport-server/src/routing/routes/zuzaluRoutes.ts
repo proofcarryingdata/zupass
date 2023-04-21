@@ -127,7 +127,7 @@ export function initZuzaluRoutes(
         });
 
         // Reload Merkle trees
-        await semaphoreService.reload(dbClient);
+        await semaphoreService.reload();
         const participant = semaphoreService.getParticipant(uuid);
         if (participant == null) {
           throw new Error(`${uuid} not found`);
@@ -195,6 +195,24 @@ export function initZuzaluRoutes(
 
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
+  });
+
+  app.get("/semaphore/:id/:root", async (req: Request, res: Response) => {
+    const id = decodeString(req.params.id, "id");
+    const root = decodeString(req.params.root, "root");
+
+    const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
+      id,
+      root
+    );
+
+    if (historicGroup === undefined) {
+      res.status(404);
+      res.send("not found");
+      return;
+    }
+
+    res.json(JSON.parse(historicGroup.serializedGroup));
   });
 
   // Load E2EE storage for a given user.

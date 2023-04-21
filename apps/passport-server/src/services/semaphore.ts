@@ -1,12 +1,20 @@
+import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
 import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
+import {
+  getGroupByRoot,
+  getLatestSemaphoreGroups,
+  HistoricSemaphoreGroup,
+  insertNewSemaphoreGroup,
+} from "../database/queries/historicSemaphore";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {
   // Groups by ID
   groups = SemaphoreService.createGroups();
+  dbPool: Pool | ClientBase | undefined;
 
   static createGroups(): NamedGroup[] {
     return [
@@ -15,6 +23,10 @@ export class SemaphoreService {
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
     ];
+  }
+
+  setPool(dbPool: Pool | ClientBase) {
+    this.dbPool = dbPool;
   }
 
   groupParticipants = () => this.getNamedGroup("1").group;
@@ -47,9 +59,13 @@ export class SemaphoreService {
   }
 
   // Load participants from DB, rebuild semaphore groups
-  async reload(dbPool: ClientBase | Pool) {
+  async reload() {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
     console.log(`[SEMA] Reloading semaphore service...`);
-    const ps = await fetchPassportParticipants(dbPool);
+    const ps = await fetchPassportParticipants(this.dbPool);
     console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
     this.participants = {};
     this.groups = SemaphoreService.createGroups();
@@ -57,6 +73,57 @@ export class SemaphoreService {
       this.addParticipant(p);
     }
     console.log(`[SEMA] Semaphore service reloaded.`);
+    this.saveHistoricSemaphoreGroups();
+  }
+
+  async saveHistoricSemaphoreGroups() {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
+    console.log(`[SEMA] Semaphore service - diffing historic semaphore groups`);
+
+    const latestGroups = await getLatestSemaphoreGroups(this.dbPool);
+
+    for (const localGroup of this.groups) {
+      const correspondingLatestGroup = latestGroups.find(
+        (g) => g.groupId === localGroup.group.id
+      );
+
+      if (
+        correspondingLatestGroup == null ||
+        correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
+      ) {
+        console.log(
+          `[SEMA] outdated semaphore group ${localGroup.group.id}` +
+            ` - appending a new one into the database`
+        );
+
+        await insertNewSemaphoreGroup(
+          this.dbPool,
+          localGroup.group.id.toString(),
+          localGroup.group.root.toString(),
+          JSON.stringify(
+            serializeSemaphoreGroup(localGroup.group, localGroup.name)
+          )
+        );
+      } else {
+        console.log(
+          `[SEMA] group '${localGroup.group.id}' is not outdated, not appending to group history`
+        );
+      }
+    }
+  }
+
+  async getHistoricSemaphoreGroup(
+    groupId: string,
+    rootHash: string
+  ): Promise<HistoricSemaphoreGroup | undefined> {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
+    return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
   // Add a single participant to the semaphore groups which they
@@ -99,11 +166,12 @@ export class SemaphoreService {
 export const semaphoreService = new SemaphoreService();
 
 export function startSemaphoreService({ dbPool }: { dbPool: Pool }) {
-  semaphoreService.reload(dbPool);
+  semaphoreService.setPool(dbPool);
+  semaphoreService.reload();
 
   // Reload every minute
   setInterval(() => {
-    semaphoreService.reload(dbPool);
+    semaphoreService.reload();
   }, 60 * 1000);
 }
 
