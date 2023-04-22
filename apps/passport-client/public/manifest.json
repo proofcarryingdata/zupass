@@ -13,7 +13,7 @@
       "type": "image/png"
     }
   ],
-  "start_url": "https://publu.github.io/zupass/",
+  "start_url": "https://zupass.org",
   "display": "standalone",
   "theme_color": "#000000",
   "background_color": "#ffffff"
