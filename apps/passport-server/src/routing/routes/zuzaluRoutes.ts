@@ -197,22 +197,39 @@ export function initZuzaluRoutes(
     res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
   });
 
-  app.get("/semaphore/:id/:root", async (req: Request, res: Response) => {
+  app.get(
+    "/semaphore/historic/:id/:root",
+    async (req: Request, res: Response) => {
+      const id = decodeString(req.params.id, "id");
+      const root = decodeString(req.params.root, "root");
+
+      const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
+        id,
+        root
+      );
+
+      if (historicGroup === undefined) {
+        res.status(404);
+        res.send("not found");
+        return;
+      }
+
+      res.json(JSON.parse(historicGroup.serializedGroup));
+    }
+  );
+
+  app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
     const id = decodeString(req.params.id, "id");
-    const root = decodeString(req.params.root, "root");
 
-    const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
-      id,
-      root
-    );
+    const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
+    const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
 
-    if (historicGroup === undefined) {
-      res.status(404);
-      res.send("not found");
+    if (matchingGroup === undefined) {
+      res.status(404).send("not found");
       return;
     }
 
-    res.json(JSON.parse(historicGroup.serializedGroup));
+    res.json(matchingGroup.rootHash);
   });
 
   // Load E2EE storage for a given user.

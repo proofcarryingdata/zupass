@@ -46,9 +46,6 @@ export async function getGroupByRoot(
     [groupId, rootHash]
   );
 
-  console.log("groupid", groupId, "roothash", rootHash);
-  console.log(result);
-
   if (result.rowCount === 0) {
     return undefined;
   }
