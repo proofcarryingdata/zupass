@@ -22,7 +22,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdLoader";
 import { ZuError, ZuState } from "./state";
-import { uploadPCDs } from "./useSyncE2EEStorage";
+import { uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -204,11 +204,7 @@ async function finishLogin(
   update({ modal: "save-sync" });
 
   // Save PCDs to E2EE storage.
-  await saveParticipantPCDs(participant);
-}
-
-async function saveParticipantPCDs(participant: ZuParticipant) {
-  return uploadPCDs(participant);
+  return uploadStorage();
 }
 
 // Runs periodically, whenever we poll new participant info.

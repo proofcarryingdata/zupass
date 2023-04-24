@@ -3,7 +3,6 @@ import {
   passportDecrypt,
   passportEncrypt,
 } from "@pcd/passport-crypto";
-import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect } from "react";
 import {
@@ -11,13 +10,18 @@ import {
   uploadEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
 import { DispatchContext } from "./dispatch";
-import { loadEncryptionKey, loadPCDs } from "./localstorage";
+import { loadEncryptionKey, loadPCDs, loadSelf } from "./localstorage";
 import { getPackages } from "./pcdLoader";
 import { ZuState } from "./state";
 
-export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
-  console.log("[SYNC] uploading pcds");
+/**
+ * Uploads the state of this passport which is contained in localstorage
+ * to the server, end to end encrypted.
+ */
+export async function uploadStorage(): Promise<void> {
+  console.log("[SYNC] uploading e2ee storage");
 
+  const participant = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
@@ -29,17 +33,22 @@ export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
   );
 
   const blobKey = await getHash(encryptionKey);
-
   return uploadEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
-      console.log("[SYNC] uploaded PCDs");
+      console.log("[SYNC] uploaded e2ee storage");
     })
     .catch((e) => {
-      console.log("[SYNC] failed to upload PCDs", e);
+      console.log("[SYNC] failed to upload e2ee storage", e);
     });
 }
 
-export async function downloadPCDs() {
+/**
+ * Given the encryption key in local storage, downloads the e2ee
+ * encrypted storage from the server.
+ */
+export async function downloadStorage() {
+  console.log("[SYNC] downloading e2ee storage");
+
   const encryptionKey = await loadEncryptionKey();
   const blobHash = await getHash(encryptionKey);
   const storage = await downloadEncryptedStorage(blobHash);
@@ -65,7 +74,7 @@ function trySync(state: ZuState) {
 
   if (lastSync !== currentSync) {
     console.log("[SYNC] diff detected - uploading PCDs");
-    uploadPCDs(state.self).then(() => {
+    uploadStorage().then(() => {
       localStorage["last-synced-ids"] = JSON.stringify(currentPcdIds);
     });
   } else {
