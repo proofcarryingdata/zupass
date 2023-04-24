@@ -1,5 +1,6 @@
 import {
-  openSignedZuzaluUUIDPopup,
+  openSignedZuzaluSignInPopup,
+  SignInMessagePayload,
   useFetchParticipant,
   usePassportPopupMessages,
   useSemaphoreSignatureProof,
@@ -18,26 +19,37 @@ export default function Page() {
   // We only do client-side proofs for Zuzalu UUID proofs, which means we can
   // ignore any PendingPCDs that would result from server-side proving
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
-  
-  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
 
-  const { signatureProof } =
-    useSemaphoreSignatureProof(pcdStr, onProofVerified);
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
 
   // Extract UUID, the signed message of the returned PCD
-  const [uuid, setUuid] = useState<string | undefined>();
+  const [signedMessage, setSignedMessage] = useState<
+    SignInMessagePayload | undefined
+  >();
   useEffect(() => {
     if (signatureProofValid && signatureProof) {
-      const userUuid = signatureProof.claim.signedMessage;
-      setUuid(userUuid);
+      const signInPayload = JSON.parse(
+        signatureProof.claim.signedMessage
+      ) as SignInMessagePayload;
+      setSignedMessage(signInPayload);
     }
   }, [signatureProofValid, signatureProof]);
 
   // Finally, once we have the UUID, fetch the participant data from Passport.
-  const { participant } = useFetchParticipant(PASSPORT_SERVER_URL, uuid);
+  const { participant } = useFetchParticipant(
+    PASSPORT_SERVER_URL,
+    signedMessage?.uuid
+  );
 
   return (
     <>
@@ -54,15 +66,16 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={() =>
-            openSignedZuzaluUUIDPopup(
+            openSignedZuzaluSignInPopup(
               PASSPORT_URL,
               window.location.origin + "/popup",
               "consumer-client"
             )
           }
         >
-          Request UUID
+          Sign In
         </button>
+
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
@@ -70,6 +83,12 @@ export default function Page() {
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
+            {signedMessage &&
+            signedMessage.referrer === window.location.host ? (
+              <p>✅ Origin Matches</p>
+            ) : (
+              <p>❌ Origin Does Not Match</p>
+            )}
             <CollapsableCode
               label="PCD Response"
               code={JSON.stringify(signatureProof, null, 2)}

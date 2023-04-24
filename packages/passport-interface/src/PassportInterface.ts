@@ -18,6 +18,12 @@ export interface ProveOptions {
   description?: string;
   debug?: boolean;
   proveOnServer?: boolean;
+  signIn?: boolean;
+}
+
+export interface SignInMessagePayload {
+  uuid: string;
+  referrer: string;
 }
 
 export interface PCDGetRequest<T extends PCDPackage = PCDPackage>

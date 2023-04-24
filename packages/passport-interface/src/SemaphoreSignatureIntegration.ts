@@ -91,8 +91,9 @@ export function openSignedZuzaluUUIDPopup(
 
 /**
  * Opens a passport popup to generate a Semaphore signature proof on the user's
- * Zuzalu DB uuid, which can then be used to fetch user details from the passport
- * server. Built specifically for Zuzalu apps.
+ * Zuzalu DB uuid and website referer, which can then be used to fetch user details
+ * from the passport server, and ensure that the sign in signature was meant for this
+ * website. Built specifically for Zuzalu apps.
  *
  * @param urlToPassportWebsite URL of passport website
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
@@ -119,12 +120,13 @@ export function openSignedZuzaluSignInPopup(
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         userProvided: true,
-        value: "%sign_in%",
+        value: undefined,
       },
     },
     {
       title: "Zuzalu Auth",
       description: originalSiteName,
+      signIn: true,
     }
   );
 
