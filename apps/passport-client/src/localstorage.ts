@@ -2,20 +2,11 @@ import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
-import { uploadStorage } from "./useSyncE2EEStorage";
 
-export async function savePCDs(
-  pcds: PCDCollection,
-  dontUpload?: boolean
-): Promise<void> {
+export async function savePCDs(pcds: PCDCollection): Promise<void> {
   const serialized = await pcds.serializeAll();
   const stringified = JSON.stringify(serialized);
   window.localStorage["pcds"] = stringified;
-
-  if (!dontUpload) {
-    // It's important that storage is uploaded here!
-    return uploadStorage();
-  }
 }
 
 export async function loadPCDs() {

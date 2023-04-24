@@ -10,7 +10,12 @@ import {
   uploadEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
 import { DispatchContext } from "./dispatch";
-import { loadEncryptionKey, loadPCDs, loadSelf } from "./localstorage";
+import {
+  loadEncryptionKey,
+  loadPCDs,
+  loadSelf,
+  savePCDs,
+} from "./localstorage";
 import { getPackages } from "./pcdPackages";
 
 /**
@@ -48,6 +53,7 @@ export async function downloadStorage(): Promise<PCDCollection> {
   const decrypted = await passportDecrypt(storage, encryptionKey);
   const pcds = new PCDCollection(await getPackages(), []);
   await pcds.deserializeAllAndAdd(decrypted.pcds);
+  await savePCDs(pcds);
   return pcds;
 }
 
