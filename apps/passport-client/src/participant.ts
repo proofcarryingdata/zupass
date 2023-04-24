@@ -20,8 +20,9 @@ export async function pollParticipant(
       console.log("[USER_POLL] Participant not found, skipping update");
       return;
     }
+
     const participant = await response.json();
-    dispatch({ type: "set-self", self: participant });
+    await dispatch({ type: "set-self", self: participant });
   } catch (e) {
     console.error("[USER_POLL] Error polling participant", e);
   }
