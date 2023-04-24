@@ -1,5 +1,6 @@
 import {
-  openSignedZuzaluUUIDPopup,
+  openSignedZuzaluSignInPopup,
+  SignInMessagePayload,
   useFetchParticipant,
   usePassportPopupMessages,
   useSemaphoreSignatureProof,
@@ -32,21 +33,28 @@ export default function Page() {
   );
 
   // Extract UUID, the signed message of the returned PCD
-  const [uuid, setUuid] = useState<string | undefined>();
+  const [signedMessage, setSignedMessage] = useState<
+    SignInMessagePayload | undefined
+  >();
   useEffect(() => {
     if (signatureProofValid && signatureProof) {
-      const userUuid = signatureProof.claim.signedMessage;
-      setUuid(userUuid);
+      const signInPayload = JSON.parse(
+        signatureProof.claim.signedMessage
+      ) as SignInMessagePayload;
+      setSignedMessage(signInPayload);
     }
   }, [signatureProofValid, signatureProof]);
 
   // Finally, once we have the UUID, fetch the participant data from Passport.
-  const { participant } = useFetchParticipant(PASSPORT_SERVER_URL, uuid);
+  const { participant } = useFetchParticipant(
+    PASSPORT_SERVER_URL,
+    signedMessage?.uuid
+  );
 
   return (
     <>
       <HomeLink />
-      <h2>[DEPRECATED] Zuzalu UUID-revealing proof </h2>
+      <h2>Zuzalu UUID-revealing proof </h2>
       <p>
         This proof type is almost the same as <code>SempahoreSignaturePCD</code>
         , except one key feature: the message that is 'signed' within this PCD
@@ -58,15 +66,16 @@ export default function Page() {
         <button
           disabled={signatureProofValid}
           onClick={() =>
-            openSignedZuzaluUUIDPopup(
+            openSignedZuzaluSignInPopup(
               PASSPORT_URL,
               window.location.origin + "/popup",
               "consumer-client"
             )
           }
         >
-          Request UUID
+          Sign In
         </button>
+
         {signatureProof != null && (
           <>
             <h3>Got Semaphore Signature Proof from Passport</h3>
@@ -74,6 +83,12 @@ export default function Page() {
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
+            {signedMessage &&
+            signedMessage.referrer === window.location.host ? (
+              <p>✅ Origin Matches</p>
+            ) : (
+              <p>❌ Origin Does Not Match</p>
+            )}
             <CollapsableCode
               label="PCD Response"
               code={JSON.stringify(signatureProof, null, 2)}
