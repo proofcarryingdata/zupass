@@ -20,6 +20,7 @@ import { setParticipantToken } from "../../database/queries/setParticipantToken"
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
+import { normalizeEmail } from "../../util/util";
 
 // API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
@@ -32,7 +33,7 @@ export function initZuzaluRoutes(
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
   app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
-    const email = decodeString(req.query.email, "email");
+    const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
 
@@ -96,7 +97,7 @@ export function initZuzaluRoutes(
       let dbClient = undefined as PoolClient | undefined;
       try {
         const token = decodeString(req.query.token, "token");
-        const email = decodeString(req.query.email, "email");
+        const email = normalizeEmail(decodeString(req.query.email, "email"));
         const commitment = decodeString(req.query.commitment, "commitment");
         console.log(
           `[ZUID] new-participant ${JSON.stringify({
