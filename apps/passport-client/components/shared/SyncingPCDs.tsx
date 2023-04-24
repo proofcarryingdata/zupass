@@ -4,7 +4,9 @@ import { RippleLoader } from "../core/RippleLoader";
 export function SyncingPCDs() {
   return (
     <SyncingPCDsContainer>
-      <RippleLoader />
+      <div>
+        <RippleLoader />
+      </div>
     </SyncingPCDsContainer>
   );
 }
