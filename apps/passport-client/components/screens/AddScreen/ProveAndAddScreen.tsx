@@ -26,8 +26,8 @@ export function ProveAndAddScreen({
   >();
 
   const onProve = useCallback(
-    (_: any, serializedPCD: SerializedPCD) => {
-      dispatch({ type: "add-pcd", pcd: serializedPCD });
+    async (_: any, serializedPCD: SerializedPCD) => {
+      await dispatch({ type: "add-pcd", pcd: serializedPCD });
       setProved(true);
       setSerializedPCD(serializedPCD);
     },

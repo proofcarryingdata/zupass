@@ -259,8 +259,8 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
 
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
-  await savePCDs(state.pcds);
   update({ pcds: state.pcds });
+  await savePCDs(state.pcds);
 }
 
 async function loadFromSync(
