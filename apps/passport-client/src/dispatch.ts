@@ -20,6 +20,7 @@ import {
   savePCDs,
   saveSelf,
 } from "./localstorage";
+import { getPackages } from "./pcdLoader";
 import { ZuError, ZuState } from "./state";
 import { uploadPCDs } from "./useSyncE2EEStorage";
 
@@ -274,15 +275,7 @@ async function loadFromSync(
 ) {
   console.log("loading from sync", storage);
 
-  const pcds = new PCDCollection(
-    [
-      SemaphoreIdentityPCDPackage,
-      SemaphoreGroupPCDPackage,
-      SemaphoreSignaturePCDPackage,
-      EthereumOwnershipPCDPackage,
-    ],
-    []
-  );
+  const pcds = new PCDCollection(await getPackages(), []);
 
   await pcds.deserializeAllAndAdd(storage.pcds);
   // assumes that we only have one semaphore identity in the passport.
