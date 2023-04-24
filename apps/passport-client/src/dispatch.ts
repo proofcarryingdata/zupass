@@ -341,13 +341,29 @@ async function sync(state: ZuState, update: ZuUpdate) {
     update({
       downloadingPCDs: true,
     });
-    const pcds = await downloadStorage();
-    update({
-      downloadedPCDs: true,
-      downloadingPCDs: false,
-      pcds: pcds,
-      uploadedUploadId: state.pcds.getUploadId(),
-    });
+    try {
+      const pcds = await downloadStorage();
+      update({
+        downloadedPCDs: true,
+        downloadingPCDs: false,
+        pcds: pcds,
+        uploadedUploadId: state.pcds.getUploadId(),
+      });
+    } catch (e) {
+      if (typeof e.message === "string") {
+        if (e.message.includes("can't load e2ee: never saved")) {
+          console.log(
+            `[SYNC] E2EE has never been uploaded, skipping download in favor` +
+              ` of writing the storage for the first time`
+          );
+          update({
+            downloadedPCDs: true,
+            downloadingPCDs: false,
+          });
+        }
+      }
+    }
+
     return;
   }
 
