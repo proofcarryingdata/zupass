@@ -289,7 +289,7 @@ async function loadFromSync(
     throw new Error("no identity found in encrypted storage");
   }
 
-  await savePCDs(pcds, true);
+  await savePCDs(pcds);
   saveEncryptionKey(encryptionKey);
   saveSelf(storage.self);
   saveIdentity(identityPCD.claim.identity);
