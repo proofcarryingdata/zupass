@@ -75,7 +75,7 @@ export class PCDCollection {
     return this.getAll().map((pcd) => pcd.id);
   }
 
-  public pcdSetIdentifier(): string {
+  public getUploadId(): string {
     return this.getAllIds().join(",");
   }
 

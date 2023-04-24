@@ -3,6 +3,7 @@ import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { useDeserialized } from "../../../src/useDeserialized";
+import { useIsDownloaded, useIsSynced } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 
 import { Button, H2, Spacer } from "../../core";
@@ -19,6 +20,8 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const [_state, dispatch] = useContext(DispatchContext);
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
+  const synced = useIsSynced();
+  const isDownloaded = useIsDownloaded();
 
   const onAddClick = useCallback(async () => {
     try {
@@ -31,7 +34,9 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   let content;
 
-  if (!added) {
+  if (!isDownloaded) {
+    return <>downloading</>;
+  } else if (!added) {
     content = (
       <>
         <H2>{"ADD PCD".toUpperCase()}</H2>
@@ -42,6 +47,8 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
         <Button onClick={onAddClick}>Add</Button>
       </>
     );
+  } else if (!synced) {
+    return <>Syncing</>;
   } else {
     content = <AddedPCD onCloseClick={() => window.close()} />;
   }

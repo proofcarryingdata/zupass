@@ -4,7 +4,7 @@ import {
   passportEncrypt,
 } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
@@ -63,4 +63,24 @@ export function useSyncE2EEStorage() {
   useEffect(() => {
     dispatch({ type: "sync" });
   }, [dispatch, state]);
+}
+
+export function useIsSynced() {
+  const [state] = useContext(DispatchContext);
+
+  const synced = useMemo(() => {
+    return state.uploadedUploadId === state.pcds.getUploadId();
+  }, [state]);
+
+  return synced;
+}
+
+export function useIsDownloaded() {
+  const [state] = useContext(DispatchContext);
+
+  const isDownloaded = useMemo(() => {
+    return state.downloadedPCDs !== undefined;
+  }, [state]);
+
+  return isDownloaded;
 }

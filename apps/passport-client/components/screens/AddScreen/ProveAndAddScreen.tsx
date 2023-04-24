@@ -4,6 +4,7 @@ import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { safeRedirect } from "../../../src/passportRequest";
+import { useIsDownloaded, useIsSynced } from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
@@ -24,6 +25,8 @@ export function ProveAndAddScreen({
   const [serializedPCD, setSerializedPCD] = useState<
     SerializedPCD | undefined
   >();
+  const synced = useIsSynced();
+  const isDownloaded = useIsDownloaded();
 
   const onProve = useCallback(
     async (_: any, serializedPCD: SerializedPCD) => {
@@ -36,7 +39,9 @@ export function ProveAndAddScreen({
 
   let content: ReactNode;
 
-  if (!proved) {
+  if (!isDownloaded) {
+    content = <>Downloading</>;
+  } else if (!proved) {
     content = (
       <GenericProveSection
         initialArgs={request.args}
@@ -44,6 +49,8 @@ export function ProveAndAddScreen({
         onProve={onProve}
       />
     );
+  } else if (!synced) {
+    content = <>Syncing</>;
   } else {
     content = (
       <AddedPCD

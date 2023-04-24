@@ -341,7 +341,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
       downloadedPCDs: true,
       downloadingPCDs: false,
       pcds: pcds,
-      uploadedPCDSetIdentifier: state.pcds.pcdSetIdentifier(),
+      uploadedUploadId: state.pcds.getUploadId(),
     });
   }
 
@@ -351,29 +351,29 @@ async function sync(state: ZuState, update: ZuUpdate) {
 
   let shouldUpload = false;
 
-  if (state.uploadingPCDSetIdentifier !== undefined) {
-    if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+  if (state.uploadingUploadId !== undefined) {
+    if (state.uploadedUploadId !== state.pcds.getUploadId()) {
       console.log(
         "[SYNC] already uploading, but the set we're uploading is outdated"
       );
       shouldUpload = true;
     }
-  } else if (state.uploadedPCDSetIdentifier !== undefined) {
-    if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+  } else if (state.uploadedUploadId !== undefined) {
+    if (state.uploadedUploadId !== state.pcds.getUploadId()) {
       console.log("[SYNC] uploading a changed set of PCDs");
       shouldUpload = true;
     }
   }
 
   if (shouldUpload) {
-    const uploadingIdentifier = state.pcds.pcdSetIdentifier();
+    const uploadingIdentifier = state.pcds.getUploadId();
     update({
-      uploadingPCDSetIdentifier: uploadingIdentifier,
+      uploadingUploadId: uploadingIdentifier,
     });
     await uploadStorage();
     update({
-      uploadingPCDSetIdentifier: undefined,
-      uploadedPCDSetIdentifier: uploadingIdentifier,
+      uploadingUploadId: undefined,
+      uploadedUploadId: uploadingIdentifier,
     });
   }
 }
