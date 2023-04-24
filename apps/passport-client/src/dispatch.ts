@@ -172,7 +172,7 @@ async function login(
     return;
   }
 
-  finishLogin(participant, state, update);
+  return finishLogin(participant, state, update);
 }
 
 /**
@@ -201,13 +201,13 @@ async function finishLogin(
   // Save to local storage.
   setSelf(participant, state, update);
 
+  // Save PCDs to E2EE storage.
+  await uploadStorage();
+
   window.location.hash = "#/";
 
   // Ask user to save their sync key
   update({ modal: "save-sync" });
-
-  // Save PCDs to E2EE storage.
-  return uploadStorage();
 }
 
 // Runs periodically, whenever we poll new participant info.
