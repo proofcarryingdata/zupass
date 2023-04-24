@@ -10,7 +10,9 @@ import { Button, H2, Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
+import { DownloadingPCDs } from "../../shared/DownloadingPCDs";
 import { PCDCard } from "../../shared/PCDCard";
+import { SyncingPCDs } from "../../shared/SyncingPCDs";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -35,7 +37,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   let content;
 
   if (!isDownloaded) {
-    return <>downloading</>;
+    return <DownloadingPCDs />;
   } else if (!added) {
     content = (
       <>
@@ -48,7 +50,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
       </>
     );
   } else if (!synced) {
-    return <>Syncing</>;
+    return <SyncingPCDs />;
   } else {
     content = <AddedPCD onCloseClick={() => window.close()} />;
   }

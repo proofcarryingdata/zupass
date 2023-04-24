@@ -9,6 +9,8 @@ import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
+import { DownloadingPCDs } from "../../shared/DownloadingPCDs";
+import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
 
 /**
@@ -40,7 +42,7 @@ export function ProveAndAddScreen({
   let content: ReactNode;
 
   if (!isDownloaded) {
-    content = <>Downloading</>;
+    content = <DownloadingPCDs />;
   } else if (!proved) {
     content = (
       <GenericProveSection
@@ -50,7 +52,7 @@ export function ProveAndAddScreen({
       />
     );
   } else if (!synced) {
-    content = <>Syncing</>;
+    content = <SyncingPCDs />;
   } else {
     content = (
       <AddedPCD
