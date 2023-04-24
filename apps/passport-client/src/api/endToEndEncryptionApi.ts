@@ -8,7 +8,7 @@ import { config } from "../config";
 
 export async function downloadEncryptedStorage(
   blobKey: string
-): Promise<EncryptedPacket> {
+): Promise<EncryptedPacket | null> {
   const request: LoadE2EERequest = {
     blobKey,
   };
@@ -23,6 +23,11 @@ export async function downloadEncryptedStorage(
       Accept: "application/json",
     },
   });
+
+  if (response.status === 404) {
+    return null;
+  }
+
   if (!response.ok) {
     throw new Error(await response.text());
   }

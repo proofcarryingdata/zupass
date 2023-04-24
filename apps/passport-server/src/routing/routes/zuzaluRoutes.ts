@@ -241,6 +241,7 @@ export function initZuzaluRoutes(
       if (request.blobKey === undefined) {
         throw new Error("Can't load e2ee: missing blobKey");
       }
+
       console.log(`[E2EE] Loading ${request.blobKey}`);
 
       try {
@@ -250,7 +251,11 @@ export function initZuzaluRoutes(
         );
 
         if (!storageModel) {
-          throw new Error("can't load e2ee: never saved");
+          console.log(
+            `can't load e2ee: never saved sync key ${request.blobKey}`
+          );
+          res.sendStatus(404);
+          return;
         }
 
         const result: LoadE2EEResponse = {
