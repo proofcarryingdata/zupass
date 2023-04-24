@@ -22,7 +22,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
-import { uploadStorage } from "./useSyncE2EEStorage";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -61,7 +61,8 @@ export type Action =
       encryptionKey: string;
     }
   | { type: "add-pcd"; pcd: SerializedPCD }
-  | { type: "remove-pcd"; id: string };
+  | { type: "remove-pcd"; id: string }
+  | { type: "download-pcds" };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -99,6 +100,8 @@ export async function dispatch(
       return removePCD(state, update, action.id);
     case "participant-invalid":
       return participantInvalid(update);
+    case "download-pcds":
+      return downloadPCDs(update);
     default:
       console.error("Unknown action type", action);
   }
@@ -311,5 +314,24 @@ function participantInvalid(update: ZuUpdate) {
   update({
     participantInvalid: true,
     modal: "invalid-participant",
+  });
+}
+
+async function downloadPCDs(state: ZuState, update: ZuUpdate) {
+  if (state.downloadedPCDs || state.downloadingPCDs) {
+    console.log("already downloading or downloaded PCDs");
+    return;
+  }
+
+  update({
+    downloadingPCDs: true,
+  });
+
+  const pcds = await downloadStorage();
+
+  update({
+    downloadedPCDs: true,
+    downloadingPCDs: false,
+    pcds: pcds,
   });
 }

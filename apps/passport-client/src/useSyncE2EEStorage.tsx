@@ -4,10 +4,12 @@ import {
   passportEncrypt,
 } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { useContext } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
+import { DispatchContext } from "./dispatch";
 import { loadEncryptionKey, loadPCDs, loadSelf } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 
@@ -43,7 +45,7 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage() {
+export async function downloadStorage(): Promise<PCDCollection> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = await loadEncryptionKey();
@@ -52,8 +54,13 @@ export async function downloadStorage() {
   const decrypted = await passportDecrypt(storage, encryptionKey);
   const pcds = new PCDCollection(await getPackages(), []);
   await pcds.deserializeAllAndAdd(decrypted.pcds);
+  return pcds;
 }
 
 export function useSyncE2EEStorage() {
+  const [state, dispatch] = useContext(DispatchContext);
+
+  dispatch({ type: "download-pcds" });
+
   return "ok";
 }

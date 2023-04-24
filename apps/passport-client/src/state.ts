@@ -28,6 +28,10 @@ export interface ZuState {
   participantInvalid?: boolean;
 
   uploadedPCDIds?: string[];
+
+  downloadedPCDs?: boolean;
+
+  downloadingPCDs?: boolean;
 }
 
 export interface ZuError {
