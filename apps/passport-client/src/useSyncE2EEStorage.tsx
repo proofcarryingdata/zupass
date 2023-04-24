@@ -4,7 +4,7 @@ import {
   passportEncrypt,
 } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
@@ -18,8 +18,6 @@ import { getPackages } from "./pcdPackages";
  * to the server, end to end encrypted.
  */
 export async function uploadStorage(): Promise<void> {
-  console.log("[SYNC] uploading e2ee storage");
-
   const participant = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
@@ -32,13 +30,9 @@ export async function uploadStorage(): Promise<void> {
   );
 
   const blobKey = await getHash(encryptionKey);
-  return uploadEncryptedStorage(blobKey, encryptedStorage)
-    .then(() => {
-      console.log("[SYNC] uploaded e2ee storage");
-    })
-    .catch((e) => {
-      console.log("[SYNC] failed to upload e2ee storage", e);
-    });
+  return uploadEncryptedStorage(blobKey, encryptedStorage).catch((e) => {
+    console.log("[SYNC] failed to upload e2ee storage", e);
+  });
 }
 
 /**
@@ -60,11 +54,7 @@ export async function downloadStorage(): Promise<PCDCollection> {
 export function useSyncE2EEStorage() {
   const [state, dispatch] = useContext(DispatchContext);
 
-  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+  useEffect(() => {
     dispatch({ type: "sync" });
-  } else {
-    dispatch({ type: "upload-pcds" });
-  }
-
-  return "ok";
+  }, [dispatch, state]);
 }

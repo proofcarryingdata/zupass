@@ -328,6 +328,8 @@ function participantInvalid(update: ZuUpdate) {
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: ZuState, update: ZuUpdate) {
+  console.log("[SYNC]");
+
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     update({
       downloadingPCDs: true,
@@ -344,6 +346,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
+    console.log("[SYNC] downloading");
     return;
   }
 
@@ -351,10 +354,14 @@ async function sync(state: ZuState, update: ZuUpdate) {
 
   if (state.uploadingPCDSetIdentifier !== undefined) {
     if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+      console.log(
+        "[SYNC] already uploading, but the set we're uploading is outdated"
+      );
       shouldUpload = true;
     }
   } else if (state.uploadedPCDSetIdentifier !== undefined) {
     if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+      console.log("[SYNC] uploading a changed set of PCDs");
       shouldUpload = true;
     }
   }
