@@ -90,6 +90,48 @@ export function openSignedZuzaluUUIDPopup(
 }
 
 /**
+ * Opens a passport popup to generate a Semaphore signature proof on the user's
+ * Zuzalu DB uuid, which can then be used to fetch user details from the passport
+ * server. Built specifically for Zuzalu apps.
+ *
+ * @param urlToPassportWebsite URL of passport website
+ * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param originalSiteName Name of site requesting proof
+ */
+export function openSignedZuzaluSignInPopup(
+  urlToPassportWebsite: string,
+  popupUrl: string,
+  originalSiteName: string
+) {
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreSignaturePCDPackage
+  >(
+    urlToPassportWebsite,
+    popupUrl,
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        userProvided: true,
+        value: "%sign_in%",
+      },
+    },
+    {
+      title: "Zuzalu Auth",
+      description: originalSiteName,
+    }
+  );
+
+  openPassportPopup(popupUrl, proofUrl);
+}
+
+/**
  * React hook which can be used on 3rd party application websites that
  * parses and verifies a PCD representing a Semaphore signature proof.
  */
