@@ -87,9 +87,12 @@ export function SemaphoreGroupProveScreen({
   } else {
     lines.push(
       <p>
-        <b>{getReferrerHost()}</b> is requesting a proof that you're one of{" "}
+        <b>{getReferrerHost()}</b> will receive a proof that you're one of{" "}
         {group.members.length} members of {group.name}.
       </p>
+    );
+    lines.push(
+      <p>This zero-knowledge proof won't reveal anything else about you.</p>
     );
   }
 

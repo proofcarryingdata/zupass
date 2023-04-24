@@ -70,7 +70,6 @@ export function SemaphoreSignatureProveScreen({
         Semaphore public key.
       </p>
     );
-    lines.push("Make sure you trust this website!");
 
     if (!proving) {
       lines.push(<Button onClick={onProve}>Continue</Button>);
