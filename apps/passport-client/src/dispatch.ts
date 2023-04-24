@@ -62,7 +62,7 @@ export type Action =
     }
   | { type: "add-pcd"; pcd: SerializedPCD }
   | { type: "remove-pcd"; id: string }
-  | { type: "download-pcds" };
+  | { type: "sync" };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -100,8 +100,8 @@ export async function dispatch(
       return removePCD(state, update, action.id);
     case "participant-invalid":
       return participantInvalid(update);
-    case "download-pcds":
-      return downloadPCDs(update);
+    case "sync":
+      return sync(state, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -253,9 +253,8 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
       throw new Error("This PCD has already been added to your passport");
     }
     await state.pcds.deserializeAndAdd(pcd);
-    const pcdIds = state.pcds.getAll().map((pcd) => pcd.id);
     await savePCDs(state.pcds);
-    update({ pcds: state.pcds, uploadedPCDIds: pcdIds });
+    update({ pcds: state.pcds });
   } else {
     throw new Error(`Can't add PCD: missing package ${pcd.type}`);
   }
@@ -264,9 +263,7 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
   update({ pcds: state.pcds });
-  const pcdIDs = state.pcds.getAll().map((pcd) => pcd.id);
   await savePCDs(state.pcds);
-  update({ uploadedPCDIds: pcdIDs });
 }
 
 async function loadFromSync(
@@ -317,21 +314,60 @@ function participantInvalid(update: ZuUpdate) {
   });
 }
 
-async function downloadPCDs(state: ZuState, update: ZuUpdate) {
-  if (state.downloadedPCDs || state.downloadingPCDs) {
-    console.log("already downloading or downloaded PCDs");
+/**
+ * This sync function can be called any amount of times, and it will
+ * function properly. It does the following:
+ *
+ * - if PCDs have not been downloaded yet, and are not in the
+ *   process of being downloaded, kicks off the process of downloading
+ *   them from e2ee.
+ *
+ * - if the PCDs have been downloaded, and the current set of PCDs
+ *   in the passport does not equal the downloaded set, and if the
+ *   passport is not currently uploading the current set of PCDs
+ *   to e2ee, then uploads then to e2ee.
+ */
+async function sync(state: ZuState, update: ZuUpdate) {
+  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+    update({
+      downloadingPCDs: true,
+    });
+    console.log("[SYNC] downloading PCDs");
+    const pcds = await downloadStorage();
+    console.log("[SYNC] downloaded PCDs");
+    update({
+      downloadedPCDs: true,
+      downloadingPCDs: false,
+      pcds: pcds,
+      uploadedPCDSetIdentifier: state.pcds.pcdSetIdentifier(),
+    });
+  }
+
+  if (state.downloadingPCDs || !state.downloadedPCDs) {
     return;
   }
 
-  update({
-    downloadingPCDs: true,
-  });
+  let shouldUpload = false;
 
-  const pcds = await downloadStorage();
+  if (state.uploadingPCDSetIdentifier !== undefined) {
+    if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+      shouldUpload = true;
+    }
+  } else if (state.uploadedPCDSetIdentifier !== undefined) {
+    if (state.uploadedPCDSetIdentifier !== state.pcds.pcdSetIdentifier()) {
+      shouldUpload = true;
+    }
+  }
 
-  update({
-    downloadedPCDs: true,
-    downloadingPCDs: false,
-    pcds: pcds,
-  });
+  if (shouldUpload) {
+    const uploadingIdentifier = state.pcds.pcdSetIdentifier();
+    update({
+      uploadingPCDSetIdentifier: uploadingIdentifier,
+    });
+    await uploadStorage();
+    update({
+      uploadingPCDSetIdentifier: undefined,
+      uploadedPCDSetIdentifier: uploadingIdentifier,
+    });
+  }
 }

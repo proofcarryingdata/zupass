@@ -60,7 +60,11 @@ export async function downloadStorage(): Promise<PCDCollection> {
 export function useSyncE2EEStorage() {
   const [state, dispatch] = useContext(DispatchContext);
 
-  dispatch({ type: "download-pcds" });
+  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+    dispatch({ type: "sync" });
+  } else {
+    dispatch({ type: "upload-pcds" });
+  }
 
   return "ok";
 }
