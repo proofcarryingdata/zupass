@@ -17,13 +17,15 @@ import {
   savePCDs,
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { sleep } from "./util";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
  * to the server, end to end encrypted.
  */
 export async function uploadStorage(): Promise<void> {
-  // await sleep(5000);
+  await sleep(5000);
+
   const participant = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
@@ -52,7 +54,7 @@ export async function uploadStorage(): Promise<void> {
 export async function downloadStorage(): Promise<PCDCollection> {
   console.log("[SYNC] downloading e2ee storage");
 
-  // await sleep(5000);
+  await sleep(5000);
 
   const encryptionKey = await loadEncryptionKey();
   const blobHash = await getHash(encryptionKey);
