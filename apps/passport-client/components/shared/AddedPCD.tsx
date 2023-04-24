@@ -6,18 +6,12 @@ import { Button, H1 } from "../core";
  * their passport. PCDs can be added by third party websites via uploading
  * a `SerializedPCD`, or by requesting a new PCD to be proved by the passport.
  */
-export function AddedPCD() {
+export function AddedPCD({ onCloseClick }: { onCloseClick: () => void }) {
   return (
     <AddedPCDContainer>
       <H1>Added</H1>
       <p>Close this window by clicking the button below.</p>
-      <Button
-        onClick={() => {
-          window.close();
-        }}
-      >
-        Close
-      </Button>
+      <Button onClick={onCloseClick}>Close</Button>
     </AddedPCDContainer>
   );
 }
