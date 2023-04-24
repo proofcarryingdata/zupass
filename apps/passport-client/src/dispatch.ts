@@ -97,7 +97,7 @@ export async function dispatch(
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
-      return participantInvalid(state, update);
+      return participantInvalid(update);
     default:
       console.error("Unknown action type", action);
   }
@@ -212,10 +212,19 @@ async function saveParticipantPCDs(participant: ZuParticipant) {
 
 // Runs periodically, whenever we poll new participant info.
 async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
+  let participantMismatched = false;
+
   if (BigInt(self.commitment) !== state.identity.commitment) {
-    throw new Error("Identity commitment mismatch");
+    console.log("Identity commitment mismatch");
+    participantMismatched = true;
   } else if (state.self && state.self.uuid !== self.uuid) {
-    throw new Error("Participant UUID mismatch");
+    console.log("Participant UUID mismatch");
+    participantMismatched = true;
+  }
+
+  if (participantMismatched) {
+    participantInvalid(update);
+    return;
   }
 
   saveSelf(self); // Save to local storage.
@@ -305,9 +314,8 @@ async function loadFromSync(
   window.location.hash = "#/";
 }
 
-async function participantInvalid(_state: ZuState, update: ZuUpdate) {
+function participantInvalid(update: ZuUpdate) {
   saveParticipantInvalid(true);
-
   update({
     participantInvalid: true,
     modal: "invalid-participant",

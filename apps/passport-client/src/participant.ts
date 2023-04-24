@@ -22,18 +22,7 @@ export async function pollParticipant(
     }
 
     const participant = await response.json();
-
-    try {
-      await dispatch({ type: "set-self", self: participant });
-    } catch (e: any) {
-      console.log("failed to set self");
-      if (typeof e.message === "string") {
-        const msgString: string = e.message;
-        if (msgString.includes("mismatch")) {
-          dispatch({ type: "participant-invalid" });
-        }
-      }
-    }
+    await dispatch({ type: "set-self", self: participant });
   } catch (e) {
     console.error("[USER_POLL] Error polling participant", e);
   }
