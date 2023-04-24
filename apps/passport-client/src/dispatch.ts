@@ -262,8 +262,8 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
 
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
-  update({ pcds: state.pcds });
   await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
 }
 
 async function loadFromSync(
@@ -331,36 +331,30 @@ async function sync(state: ZuState, update: ZuUpdate) {
   console.log("[SYNC] calculating correct sync action");
 
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
+    console.log("[SYNC] sync action: download");
     update({
       downloadingPCDs: true,
     });
-    console.log("[SYNC] downloading PCDs");
     const pcds = await downloadStorage();
-    console.log("[SYNC] downloaded PCDs");
     update({
       downloadedPCDs: true,
       downloadingPCDs: false,
       pcds: pcds,
       uploadedUploadId: state.pcds.getUploadId(),
     });
+    return;
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
+    console.log("[SYNC] sync action: no-op");
     return;
   }
 
   let shouldUpload = false;
 
-  if (state.uploadingUploadId !== undefined) {
-    if (state.uploadedUploadId !== state.pcds.getUploadId()) {
-      console.log(
-        "[SYNC] already uploading, but the set we're uploading is outdated"
-      );
-      shouldUpload = true;
-    }
-  } else if (state.uploadedUploadId !== undefined) {
-    if (state.uploadedUploadId !== state.pcds.getUploadId()) {
-      console.log("[SYNC] uploading a changed set of PCDs");
+  if (state.uploadedUploadId !== state.pcds.getUploadId()) {
+    if (state.uploadingUploadId !== state.pcds.getUploadId()) {
+      console.log("[SYNC] sync action: upload");
       shouldUpload = true;
     }
   }
@@ -375,5 +369,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
       uploadingUploadId: undefined,
       uploadedUploadId: uploadingIdentifier,
     });
+  } else {
+    console.log("[SYNC] sync action: no-op");
   }
 }
