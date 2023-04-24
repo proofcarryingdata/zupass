@@ -6,7 +6,13 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { startRegistration } from "@simplewebauthn/browser";
+import {
+  generateRegistrationOptions,
+  verifyRegistrationResponse,
+} from "@simplewebauthn/server";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
@@ -50,6 +56,11 @@ export default function Page() {
         <br />
         <button onClick={addIdentityPCD}>
           add a new semaphore identity to the passport
+        </button>
+        <br />
+        <br />
+        <button onClick={addWebAuthnPCD}>
+          add a new webauthn credential to the passport
         </button>
       </ExampleContainer>
     </div>
@@ -145,6 +156,58 @@ async function addIdentityPCD() {
     PASSPORT_URL,
     window.location.origin + "/popup",
     serializedNewIdentity
+  );
+
+  sendPassportRequest(url);
+}
+
+async function addWebAuthnPCD() {
+  // Generate a new WebAuthn credential
+  const generatedRegistrationOptions = await generateRegistrationOptions({
+    rpName: "consumer-client",
+    rpID: window.location.hostname,
+    userID: "user-id",
+    userName: "user",
+    attestationType: "direct",
+    challenge: "challenge",
+    supportedAlgorithmIDs: [-7],
+  });
+  const startRegistrationResponse = await startRegistration(
+    generatedRegistrationOptions
+  );
+  const verificationResponse = await verifyRegistrationResponse({
+    response: startRegistrationResponse,
+    expectedOrigin: window.location.origin,
+    expectedChallenge: generatedRegistrationOptions.challenge,
+    supportedAlgorithmIDs: [-7],
+  });
+
+  if (!verificationResponse.registrationInfo) {
+    throw new Error("Registration failed the return correct response.");
+  }
+
+  const { credentialID, credentialPublicKey, counter } =
+    verificationResponse.registrationInfo;
+
+  const newCredential = await WebAuthnPCDPackage.prove({
+    rpID: window.location.hostname,
+    authenticator: {
+      credentialID,
+      credentialPublicKey,
+      counter,
+    },
+    challenge: "1",
+    origin: window.location.origin,
+  });
+
+  const serializedNewCredential = await WebAuthnPCDPackage.serialize(
+    newCredential
+  );
+
+  const url = constructPassportPcdAddRequestUrl(
+    PASSPORT_URL,
+    window.location.origin + "/popup",
+    serializedNewCredential
   );
 
   sendPassportRequest(url);

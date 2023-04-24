@@ -10,6 +10,7 @@ import {
   SemaphoreIdentityPCDTypeName,
 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { createContext } from "react";
@@ -115,6 +116,7 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
+  console.log("Generating");
   // Show the NewPassportScreen.
   // This will save the sema identity & request email verification.
   update({ pendingAction: { type: "new-passport", email } });
@@ -128,6 +130,7 @@ async function genPassport(
       SemaphoreSignaturePCDPackage,
       EthereumOwnershipPCDPackage,
       JubJubSignaturePCDPackage,
+      WebAuthnPCDPackage,
     ],
     [identityPCD]
   );
@@ -255,6 +258,7 @@ function resetPassport() {
 }
 
 async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
+  console.log({ state });
   if (state.pcds.hasPackage(pcd.type)) {
     const newPCD = await state.pcds.deserialize(pcd);
     if (state.pcds.hasPCDWithId(newPCD.id)) {
