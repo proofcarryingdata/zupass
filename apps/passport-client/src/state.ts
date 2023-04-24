@@ -26,6 +26,8 @@ export interface ZuState {
 
   // If set, the user has been invalidated server-side
   participantInvalid?: boolean;
+
+  uploadedPCDIds?: string[];
 }
 
 export interface ZuError {

@@ -250,8 +250,9 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
       throw new Error("This PCD has already been added to your passport");
     }
     await state.pcds.deserializeAndAdd(pcd);
+    const pcdIds = state.pcds.getAll().map((pcd) => pcd.id);
     await savePCDs(state.pcds);
-    update({ pcds: state.pcds });
+    update({ pcds: state.pcds, uploadedPCDIds: pcdIds });
   } else {
     throw new Error(`Can't add PCD: missing package ${pcd.type}`);
   }
@@ -260,7 +261,9 @@ async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
   update({ pcds: state.pcds });
+  const pcdIDs = state.pcds.getAll().map((pcd) => pcd.id);
   await savePCDs(state.pcds);
+  update({ uploadedPCDIds: pcdIDs });
 }
 
 async function loadFromSync(
