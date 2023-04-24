@@ -77,10 +77,17 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
   const authenticationOptions = await generateAuthenticationOptions({
     rpID: args.rpID,
     challenge: args.challenge,
+    allowCredentials: [
+      {
+        id: args.authenticator.credentialID,
+        type: "public-key",
+      },
+    ],
   });
   const authenticationResponseJSON = await startAuthentication(
     authenticationOptions
   );
+  console.log({ args, hey: arrayBufferToBase64(new Uint8Array([1])) });
   const claim: WebAuthnPCDClaim = {
     rpID: args.rpID,
     origin: args.origin,
@@ -121,7 +128,6 @@ export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
 export async function serialize(
   pcd: WebAuthnPCD
 ): Promise<SerializedPCD<WebAuthnPCD>> {
-  console.log("serialize", pcd);
   return {
     type: WebAuthnPCDTypeName,
     pcd: JSONBig().stringify(pcd),

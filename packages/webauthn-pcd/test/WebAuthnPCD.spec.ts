@@ -1,65 +1,67 @@
-import { generateRegistrationOptions } from "@simplewebauthn/server";
-// import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/WebAuthnPCD";
+import assert from "assert";
+import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/WebAuthnPCD";
 
-// jest.mock("../helpers/browserSupportsWebAuthn");
+jest.mock("@simplewebauthn/browser", () => ({
+  startRegistration: async () => ({
+    id: "my-new-credential",
+    rawId: "my-new-credential",
+    response: {
+      clientDataJSON: "",
+      attestationObject: "",
+    },
+    clientExtensionResults: {},
+    type: "public-key",
+  }),
+  startAuthentication: async () => ({
+    id: "my-existing-credential",
+    rawId: "my-existing-credential",
+    response: {
+      clientDataJSON: "",
+      attestationObject: "",
+    },
+    clientExtensionResults: {},
+    type: "public-key",
+  }),
+}));
 
-// replace
-// const mockNavigatorCreate = window.navigator.credentials.create as jest.Mock;
-// const mockSupportsWebauthn = browserSupportsWebAuthn as jest.Mock;
+const args: WebAuthnPCDArgs = {
+  challenge: "challenge",
+  origin: "localhost",
+  rpID: "rpID",
+  authenticator: {
+    credentialID: new Uint8Array([1, 2, 3, 4]),
+    credentialPublicKey: new Uint8Array([1, 2, 3, 4]),
+    counter: 0,
+  },
+};
 
 describe("WebAuthn PCD", function () {
-  // let args: WebAuthnPCDArgs;
-  this.beforeAll(async function () {
-    const generatedRegistrationOptions = await generateRegistrationOptions({
-      rpName: "test-rp-name",
-      rpID: "test-rpID",
-      userID: "test-user-id",
-      userName: "test-username",
-      attestationType: "direct",
-      challenge: "test-challenge",
-      supportedAlgorithmIDs: [-7],
-    });
-    // const registrationResponse = await startRegistration(
-    //   generatedRegistrationOptions
-    // );
-    // const { verified, registrationInfo } = await verifyRegistrationResponse({
-    //   response: registrationResponse,
-    //   expectedOrigin: window.location.hostname,
-    //   expectedChallenge: generatedRegistrationOptions.challenge,
-    //   supportedAlgorithmIDs: [-7],
-    // });
-    // assert.equal(verified, true, "registration verification failed");
-    // assert(registrationInfo, "registrationInfo should be defined");
-    // const { counter, credentialID, credentialPublicKey } = registrationInfo;
-
-    // args = {
-    //   rpID: "test-rp-id",
-    //   origin: window.location.hostname,
-    //   challenge: "test-challenge",
-    //   authenticator: {
-    //     credentialPublicKey,
-    //     credentialID,
-    //     counter,
-    //   },
-    // };
-  });
-
   it("should be able to generate a proof that verifies", async function () {
-    // TODO
+    const { prove, verify } = WebAuthnPCDPackage;
+    const pcd = await prove(args);
+    const verified = await verify(pcd);
+    assert.equal(verified, true);
   });
 
   it("should not verify an incorrect proof", async function () {
-    // TODO
+    const { prove, verify } = WebAuthnPCDPackage;
+
+    const pcd = await prove(args);
+    // make the pcd invalid by changing its claim
+    pcd.claim.challenge = pcd.claim.challenge + "1";
+
+    const verified = await verify(pcd);
+    assert.equal(verified, false);
   });
 
-  // it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
-  //   const { prove, verify, serialize, deserialize } = WebAuthnPCDPackage;
-  //   const pcd = await prove(args);
+  it("serializing and then deserializing a PCD should result in equal PCDs", async function () {
+    const { prove, verify, serialize, deserialize } = WebAuthnPCDPackage;
+    const pcd = await prove(args);
 
-  //   const serialized_pcd = await serialize(pcd);
-  //   const deserialized_pcd = await deserialize(serialized_pcd.pcd);
-  //   const verified = await verify(deserialized_pcd);
+    const serialized_pcd = await serialize(pcd);
+    const deserialized_pcd = await deserialize(serialized_pcd.pcd);
+    const verified = await verify(deserialized_pcd);
 
-  //   assert.equal(verified, true);
-  // });
+    assert.equal(verified, true);
+  });
 });
