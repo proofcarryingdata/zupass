@@ -48,12 +48,16 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage(): Promise<PCDCollection> {
+export async function downloadStorage(): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
-
   const encryptionKey = await loadEncryptionKey();
   const blobHash = await getHash(encryptionKey);
   const storage = await downloadEncryptedStorage(blobHash);
+
+  if (storage == null) {
+    return null;
+  }
+
   const decrypted = await passportDecrypt(storage, encryptionKey);
   const pcds = new PCDCollection(await getPackages(), []);
   await pcds.deserializeAllAndAdd(decrypted.pcds);

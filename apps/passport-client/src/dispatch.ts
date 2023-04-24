@@ -14,6 +14,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { config } from "./config";
 import {
+  loadEncryptionKey,
   saveEncryptionKey,
   saveIdentity,
   saveParticipantInvalid,
@@ -330,18 +331,36 @@ function participantInvalid(update: ZuUpdate) {
 async function sync(state: ZuState, update: ZuUpdate) {
   console.log("[SYNC] calculating correct sync action");
 
+  if ((await loadEncryptionKey()) == null) {
+    console.log("[SYNC] no encryption key, can't sync");
+    return;
+  }
+
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     console.log("[SYNC] sync action: download");
     update({
       downloadingPCDs: true,
     });
+
     const pcds = await downloadStorage();
-    update({
-      downloadedPCDs: true,
-      downloadingPCDs: false,
-      pcds: pcds,
-      uploadedUploadId: state.pcds.getUploadId(),
-    });
+
+    if (pcds != null) {
+      update({
+        downloadedPCDs: true,
+        downloadingPCDs: false,
+        pcds: pcds,
+        uploadedUploadId: pcds.getUploadId(),
+      });
+    } else {
+      console.log(
+        `[SYNC] skipping download in favor of writing the storage for the first time`
+      );
+      update({
+        downloadedPCDs: true,
+        downloadingPCDs: false,
+      });
+    }
+
     return;
   }
 
