@@ -71,6 +71,14 @@ export class PCDCollection {
     return this.pcds;
   }
 
+  public getAllIds(): string[] {
+    return this.getAll().map((pcd) => pcd.id);
+  }
+
+  public getUploadId(): string {
+    return this.getAllIds().join(",");
+  }
+
   public getById(id: string): PCD | undefined {
     return this.pcds.find((pcd) => pcd.id === id);
   }
