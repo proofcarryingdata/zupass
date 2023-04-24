@@ -13,3 +13,7 @@ export function requireEnv(str: string): string {
   }
   return val;
 }
+
+export function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim();
+}
