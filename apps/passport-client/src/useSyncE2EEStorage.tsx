@@ -1,9 +1,18 @@
-import { getHash, passportEncrypt } from "@pcd/passport-crypto";
+import {
+  getHash,
+  passportDecrypt,
+  passportEncrypt,
+} from "@pcd/passport-crypto";
 import { ZuParticipant } from "@pcd/passport-interface";
+import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect } from "react";
-import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
+import {
+  downloadEncryptedStorage,
+  uploadEncryptedStorage,
+} from "./api/endToEndEncryptionApi";
 import { DispatchContext } from "./dispatch";
 import { loadEncryptionKey, loadPCDs } from "./localstorage";
+import { getPackages } from "./pcdLoader";
 import { ZuState } from "./state";
 
 export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
@@ -28,6 +37,15 @@ export async function uploadPCDs(participant: ZuParticipant): Promise<void> {
     .catch((e) => {
       console.log("[SYNC] failed to upload PCDs", e);
     });
+}
+
+export async function downloadPCDs() {
+  const encryptionKey = await loadEncryptionKey();
+  const blobHash = await getHash(encryptionKey);
+  const storage = await downloadEncryptedStorage(blobHash);
+  const decrypted = await passportDecrypt(storage, encryptionKey);
+  const pcds = new PCDCollection(await getPackages(), []);
+  await pcds.deserializeAllAndAdd(decrypted.pcds);
 }
 
 function trySync(state: ZuState) {
