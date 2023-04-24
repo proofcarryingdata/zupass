@@ -347,7 +347,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
         downloadedPCDs: true,
         downloadingPCDs: false,
         pcds: pcds,
-        uploadedUploadId: state.pcds.getUploadId(),
+        uploadedUploadId: pcds.getUploadId(),
       });
     } catch (e) {
       if (typeof e.message === "string") {
