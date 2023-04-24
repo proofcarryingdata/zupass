@@ -1,7 +1,7 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
-import { getPackages } from "./pcdLoader";
+import { getPackages } from "./pcdPackages";
 import { uploadStorage } from "./useSyncE2EEStorage";
 
 export async function savePCDs(pcds: PCDCollection) {

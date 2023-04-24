@@ -13,6 +13,7 @@ export async function getPackages() {
   }
 
   pcdPackages = loadPackages();
+  return pcdPackages;
 }
 
 async function loadPackages(): Promise<PCDPackage[]> {

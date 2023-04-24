@@ -9,7 +9,7 @@ import {
   uploadEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
 import { loadEncryptionKey, loadPCDs, loadSelf } from "./localstorage";
-import { getPackages } from "./pcdLoader";
+import { getPackages } from "./pcdPackages";
 
 /**
  * Uploads the state of this passport which is contained in localstorage

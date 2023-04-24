@@ -20,7 +20,7 @@ import {
   savePCDs,
   saveSelf,
 } from "./localstorage";
-import { getPackages } from "./pcdLoader";
+import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
 import { uploadStorage } from "./useSyncE2EEStorage";
 
