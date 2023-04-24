@@ -4,12 +4,14 @@ import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import { safeRedirect } from "../../../src/passportRequest";
-import { useIsDownloaded, useIsSynced } from "../../../src/useSyncE2EEStorage";
+import {
+  useHasUploaded,
+  useIsDownloaded,
+} from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
-import { DownloadingPCDs } from "../../shared/DownloadingPCDs";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
 
@@ -27,7 +29,7 @@ export function ProveAndAddScreen({
   const [serializedPCD, setSerializedPCD] = useState<
     SerializedPCD | undefined
   >();
-  const synced = useIsSynced();
+  const synced = useHasUploaded();
   const isDownloaded = useIsDownloaded();
 
   const onProve = useCallback(
@@ -42,7 +44,7 @@ export function ProveAndAddScreen({
   let content: ReactNode;
 
   if (!isDownloaded) {
-    content = <DownloadingPCDs />;
+    content = <SyncingPCDs />;
   } else if (!proved) {
     content = (
       <GenericProveSection

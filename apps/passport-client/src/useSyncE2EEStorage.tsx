@@ -74,14 +74,14 @@ export function useSyncE2EEStorage() {
   }, [dispatch, state]);
 }
 
-export function useIsSynced() {
+export function useHasUploaded() {
   const [state] = useContext(DispatchContext);
 
-  const synced = useMemo(() => {
+  const hasUploaded = useMemo(() => {
     return state.uploadedUploadId === state.pcds.getUploadId();
   }, [state]);
 
-  return synced;
+  return hasUploaded;
 }
 
 export function useIsDownloaded() {
