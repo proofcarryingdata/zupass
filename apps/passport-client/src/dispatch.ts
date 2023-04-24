@@ -346,30 +346,26 @@ async function sync(state: ZuState, update: ZuUpdate) {
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
+    return;
+  }
+
+  const uploadId = state.pcds.getUploadId();
+
+  if (
+    state.uploadedUploadId === uploadId ||
+    state.uploadingUploadId === uploadId
+  ) {
     console.log("[SYNC] sync action: no-op");
     return;
   }
 
-  let shouldUpload = false;
-
-  if (state.uploadedUploadId !== state.pcds.getUploadId()) {
-    if (state.uploadingUploadId !== state.pcds.getUploadId()) {
-      console.log("[SYNC] sync action: upload");
-      shouldUpload = true;
-    }
-  }
-
-  if (shouldUpload) {
-    const uploadingIdentifier = state.pcds.getUploadId();
-    update({
-      uploadingUploadId: uploadingIdentifier,
-    });
-    await uploadStorage();
-    update({
-      uploadingUploadId: undefined,
-      uploadedUploadId: uploadingIdentifier,
-    });
-  } else {
-    console.log("[SYNC] sync action: no-op");
-  }
+  console.log("[SYNC] sync action: upload");
+  update({
+    uploadingUploadId: uploadId,
+  });
+  await uploadStorage();
+  update({
+    uploadingUploadId: undefined,
+    uploadedUploadId: uploadId,
+  });
 }
