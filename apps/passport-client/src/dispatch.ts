@@ -289,7 +289,7 @@ async function loadFromSync(
     throw new Error("no identity found in encrypted storage");
   }
 
-  await savePCDs(pcds);
+  await savePCDs(pcds, true);
   saveEncryptionKey(encryptionKey);
   saveSelf(storage.self);
   saveIdentity(identityPCD.claim.identity);
@@ -328,7 +328,7 @@ function participantInvalid(update: ZuUpdate) {
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: ZuState, update: ZuUpdate) {
-  console.log("[SYNC]");
+  console.log("[SYNC] calculating correct sync action");
 
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     update({
@@ -346,7 +346,6 @@ async function sync(state: ZuState, update: ZuUpdate) {
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
-    console.log("[SYNC] downloading");
     return;
   }
 

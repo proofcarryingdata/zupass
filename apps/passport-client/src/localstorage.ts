@@ -4,13 +4,18 @@ import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
 import { uploadStorage } from "./useSyncE2EEStorage";
 
-export async function savePCDs(pcds: PCDCollection): Promise<void> {
+export async function savePCDs(
+  pcds: PCDCollection,
+  dontUpload?: boolean
+): Promise<void> {
   const serialized = await pcds.serializeAll();
   const stringified = JSON.stringify(serialized);
   window.localStorage["pcds"] = stringified;
 
-  // It's important that storage is uploaded here!
-  return uploadStorage();
+  if (!dontUpload) {
+    // It's important that storage is uploaded here!
+    return uploadStorage();
+  }
 }
 
 export async function loadPCDs() {
