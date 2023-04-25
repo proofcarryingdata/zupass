@@ -6,6 +6,7 @@ import { build, BuildOptions, context } from "esbuild";
 dotenv.config();
 
 const opts: BuildOptions = {
+  sourcemap: true,
   bundle: true,
   entryPoints: ["pages/index.tsx"],
   plugins: [
