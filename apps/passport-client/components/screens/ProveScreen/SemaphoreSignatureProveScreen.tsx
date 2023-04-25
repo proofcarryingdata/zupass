@@ -20,11 +20,7 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import {
-  getReferrerHost,
-  getReferrerOrigin,
-  nextFrame,
-} from "../../../src/util";
+import { getReferrerOrigin, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -121,7 +117,7 @@ async function fillArgs(
     console.log("this signature request is for signing into a website", uuid);
     const payload: SignInMessagePayload = {
       uuid,
-      referrer: getReferrerHost(),
+      referrer: getReferrerOrigin(),
     };
     signedMessage.value = JSON.stringify(payload);
   } else if (signedMessage.value === undefined) {
