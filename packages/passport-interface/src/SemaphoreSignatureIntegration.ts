@@ -48,6 +48,8 @@ export function openSemaphoreSignaturePopup(
 }
 
 /**
+ * WARNING: Deprecated for sign-in purposes!
+ *
  * Opens a passport popup to generate a Semaphore signature proof on the user's
  * Zuzalu DB uuid, which can then be used to fetch user details from the passport
  * server. Built specifically for Zuzalu apps.
@@ -55,6 +57,8 @@ export function openSemaphoreSignaturePopup(
  * @param urlToPassportWebsite URL of passport website
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
  * @param originalSiteName Name of site requesting proof
+ *
+ * @deprecated
  */
 export function openSignedZuzaluUUIDPopup(
   urlToPassportWebsite: string,
@@ -83,6 +87,48 @@ export function openSignedZuzaluUUIDPopup(
     {
       title: "Zuzalu Auth",
       description: originalSiteName,
+    }
+  );
+
+  openPassportPopup(popupUrl, proofUrl);
+}
+
+/**
+ * Opens a passport popup to generate a Semaphore signature proof on the user's
+ * Zuzalu DB uuid and website referer, which can then be used to fetch user details
+ * from the passport server, and ensure that the sign in signature was meant for this
+ * website. Built specifically for Zuzalu apps.
+ *
+ * @param urlToPassportWebsite URL of passport website
+ * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param originalSiteName Name of site requesting proof
+ */
+export function openSignedZuzaluSignInPopup(
+  urlToPassportWebsite: string,
+  popupUrl: string,
+  originalSiteName: string
+) {
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof SemaphoreSignaturePCDPackage
+  >(
+    urlToPassportWebsite,
+    popupUrl,
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+      },
+    },
+    {
+      title: "Zuzalu Auth",
+      description: originalSiteName,
+      signIn: true,
     }
   );
 

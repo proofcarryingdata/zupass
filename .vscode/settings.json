@@ -7,5 +7,6 @@
     "*.env": "properties",
     "*.env.example": "properties",
     "*.env.local.example": "properties"
-  }
+  },
+  "editor.formatOnSave": true
 }

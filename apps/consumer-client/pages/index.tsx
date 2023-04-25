@@ -42,8 +42,11 @@ export default function Page() {
           </li>
           <li>
             <a href="/zuzalu-examples/uuid-proof">
-              Zuzalu Identity-Revealing Proof
+              [DEPRECATED] Zuzalu Identity-Revealing Proof
             </a>
+          </li>
+          <li>
+            <a href="/zuzalu-examples/sign-in">Zuzalu Sign In</a>
           </li>
           <li>
             <a href="/zuzalu-examples/signature-proof">

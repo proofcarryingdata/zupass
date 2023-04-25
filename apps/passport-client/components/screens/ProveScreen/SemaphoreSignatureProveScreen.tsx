@@ -1,4 +1,9 @@
-import { PCDGetRequest, ProveRequest } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  ProveOptions,
+  ProveRequest,
+  SignInMessagePayload,
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -15,7 +20,11 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import { getReferrerHost, nextFrame } from "../../../src/util";
+import {
+  getReferrerHost,
+  getReferrerOrigin,
+  nextFrame,
+} from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -39,7 +48,8 @@ export function SemaphoreSignatureProveScreen({
       const args = await fillArgs(
         state.identity,
         state.self.uuid,
-        modifiedArgs
+        modifiedArgs,
+        req.options
       );
 
       if (req.options?.proveOnServer === true) {
@@ -102,11 +112,20 @@ export function SemaphoreSignatureProveScreen({
 async function fillArgs(
   identity: Identity,
   uuid: string,
-  modifiedArgs: SemaphoreSignaturePCDArgs
+  modifiedArgs: SemaphoreSignaturePCDArgs,
+  options?: ProveOptions
 ): Promise<SemaphoreSignaturePCDArgs> {
   const signedMessage = modifiedArgs.signedMessage;
 
-  if (signedMessage.value === undefined) {
+  if (options?.signIn) {
+    console.log("this signature request is for signing into a website", uuid);
+    const payload: SignInMessagePayload = {
+      uuid,
+      referrer: getReferrerOrigin(),
+    };
+    signedMessage.value = JSON.stringify(payload);
+  } else if (signedMessage.value === undefined) {
+    // @todo: deprecate this condition
     console.log("undefined message to sign, setting it to", uuid);
     signedMessage.value = uuid;
   }
