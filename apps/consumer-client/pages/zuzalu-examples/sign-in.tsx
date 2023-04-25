@@ -109,11 +109,15 @@ export default function Page() {
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
             {signedMessage &&
-            signedMessage.referrer === window.location.origin ? (
-              <p>✅ Origin Matches</p>
-            ) : (
-              <p>❌ Origin Does Not Match</p>
-            )}
+              (signedMessage.referrer === window.location.origin ? (
+                <p>✅ Origin Matches</p>
+              ) : (
+                <p>
+                  ❌ Origin Does Not Match. Expected{" "}
+                  <code>{window.location.origin}</code> but got{" "}
+                  <code>{signedMessage.referrer}</code>
+                </p>
+              ))}
             <CollapsableCode
               label="PCD Response"
               code={JSON.stringify(signatureProof, null, 2)}
