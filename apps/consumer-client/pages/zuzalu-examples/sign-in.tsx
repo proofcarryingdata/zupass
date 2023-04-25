@@ -54,13 +54,23 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Zuzalu UUID-revealing proof </h2>
+      <h2>Zuzalu Sign-In proof </h2>
       <p>
         This proof type is almost the same as <code>SempahoreSignaturePCD</code>
         , except one key feature: the message that is 'signed' within this PCD
-        is the user's unique identifier according the the Zuzalu application.
-        This uuid can be used to download information about the user from the
-        Passport Server, including their name, email, and role.
+        contains two pieces of information injected by the passport:
+        <ul>
+          <li>
+            The user's unique identifier, or UUID. This lets you load the
+            users's details from the Passport server, including their name,
+            email and role.
+          </li>
+          <li>
+            The <code>origin</code> of the referrer of the website that
+            requested the sign in. We include this so that sign-in proofs can't
+            be reused by malicious websites.
+          </li>
+        </ul>
       </p>
       <ExampleContainer>
         <button
@@ -78,13 +88,13 @@ export default function Page() {
 
         {signatureProof != null && (
           <>
-            <h3>Got Semaphore Signature Proof from Passport</h3>
+            <h3>Sign In</h3>
             <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
             {signedMessage &&
-            signedMessage.referrer === window.location.host ? (
+            signedMessage.referrer === window.location.origin ? (
               <p>✅ Origin Matches</p>
             ) : (
               <p>❌ Origin Does Not Match</p>
