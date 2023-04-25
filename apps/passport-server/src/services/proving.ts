@@ -7,11 +7,11 @@ import {
   SupportedPCDsResponse,
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
+import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
-
 /**
  * In-memory queue of ProveRequests that requested server-side proving.
  */
@@ -33,7 +33,8 @@ const pendingPCDResponse: Map<string, StatusResponse> = new Map<
 const packages: PCDPackage[] = [
   SemaphoreGroupPCDPackage,
   SemaphoreSignaturePCDPackage,
-  JubJubSignaturePCDPackage
+  JubJubSignaturePCDPackage,
+  RLNPCDPackage
 ];
 
 export async function initPackages() {
