@@ -125,6 +125,7 @@ async function fillArgs(
     };
     signedMessage.value = JSON.stringify(payload);
   } else if (signedMessage.value === undefined) {
+    // @todo: deprecate this condition
     console.log("undefined message to sign, setting it to", uuid);
     signedMessage.value = uuid;
   }
