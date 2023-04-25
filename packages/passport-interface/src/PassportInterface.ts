@@ -21,6 +21,10 @@ export interface ProveOptions {
   signIn?: boolean;
 }
 
+/**
+ * When a website uses the passport for signing in, the passport
+ * signs this payload using a `SemaphoreSignaturePCD`.
+ */
 export interface SignInMessagePayload {
   uuid: string;
   referrer: string;
