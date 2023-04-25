@@ -2,7 +2,6 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { Proof, RLN, RLNFullProof } from "rlnjs";
 import { Identity } from "@semaphore-protocol/identity";
-
 import {
   BigIntArgument,
   ObjectArgument,
