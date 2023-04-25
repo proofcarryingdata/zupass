@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.4.2
+
+### Patch Changes
+
+- Added support for new and more secure website login flow.
+
 ## 0.4.1
 
 ### Patch Changes

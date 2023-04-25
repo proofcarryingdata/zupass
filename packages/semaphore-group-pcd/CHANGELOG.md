@@ -1,5 +1,18 @@
 # @pcd/semaphore-group-pcd
 
+## 0.4.2
+
+### Patch Changes
+
+- Added support for new and more secure website login flow.
+- Updated dependencies
+  - @pcd/eslint-config-custom@0.4.2
+  - @pcd/passport-ui@0.4.2
+  - @pcd/pcd-types@0.4.2
+  - @pcd/semaphore-identity-pcd@0.4.2
+  - @pcd/semaphore-signature-pcd@0.4.2
+  - @pcd/tsconfig@0.4.2
+
 ## 0.4.1
 
 ### Patch Changes

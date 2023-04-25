@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-ui",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "GPL-3.0-or-later",
   "main": "./index.js",
   "types": "./index.ts",
@@ -12,8 +12,8 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.4.1",
-    "@pcd/tsconfig": "0.4.1",
+    "@pcd/pcd-types": "0.4.2",
+    "@pcd/tsconfig": "0.4.2",
     "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
@@ -23,7 +23,7 @@
     "typescript": "^4.9.5"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.4.1",
+    "@pcd/eslint-config-custom": "0.4.2",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"
