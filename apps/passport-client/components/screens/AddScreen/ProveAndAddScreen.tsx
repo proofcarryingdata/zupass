@@ -3,10 +3,16 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
+import { safeRedirect } from "../../../src/passportRequest";
+import {
+  useHasUploaded,
+  useIsDownloaded,
+} from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
+import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
 
 /**
@@ -20,21 +26,26 @@ export function ProveAndAddScreen({
 }) {
   const [_, dispatch] = useContext(DispatchContext);
   const [proved, setProved] = useState(false);
+  const [serializedPCD, setSerializedPCD] = useState<
+    SerializedPCD | undefined
+  >();
+  const synced = useHasUploaded();
+  const isDownloaded = useIsDownloaded();
 
   const onProve = useCallback(
-    (_: any, serializedPCD: SerializedPCD) => {
-      dispatch({ type: "add-pcd", pcd: serializedPCD });
+    async (_: any, serializedPCD: SerializedPCD) => {
+      await dispatch({ type: "add-pcd", pcd: serializedPCD });
       setProved(true);
-      window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
-        serializedPCD
-      )}`;
+      setSerializedPCD(serializedPCD);
     },
-    [dispatch, request.returnUrl]
+    [dispatch]
   );
 
   let content: ReactNode;
 
-  if (!proved) {
+  if (!isDownloaded) {
+    content = <SyncingPCDs />;
+  } else if (!proved) {
     content = (
       <GenericProveSection
         initialArgs={request.args}
@@ -42,8 +53,16 @@ export function ProveAndAddScreen({
         onProve={onProve}
       />
     );
+  } else if (!synced) {
+    content = <SyncingPCDs />;
   } else {
-    content = <AddedPCD />;
+    content = (
+      <AddedPCD
+        onCloseClick={() => {
+          safeRedirect(request.returnUrl, serializedPCD);
+        }}
+      />
+    );
   }
 
   return (

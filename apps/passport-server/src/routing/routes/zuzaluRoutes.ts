@@ -20,6 +20,7 @@ import { setParticipantToken } from "../../database/queries/setParticipantToken"
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
+import { normalizeEmail } from "../../util/util";
 
 // API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
@@ -32,7 +33,7 @@ export function initZuzaluRoutes(
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
   app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
-    const email = decodeString(req.query.email, "email");
+    const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
 
@@ -96,7 +97,7 @@ export function initZuzaluRoutes(
       let dbClient = undefined as PoolClient | undefined;
       try {
         const token = decodeString(req.query.token, "token");
-        const email = decodeString(req.query.email, "email");
+        const email = normalizeEmail(decodeString(req.query.email, "email"));
         const commitment = decodeString(req.query.commitment, "commitment");
         console.log(
           `[ZUID] new-participant ${JSON.stringify({
@@ -127,7 +128,7 @@ export function initZuzaluRoutes(
         });
 
         // Reload Merkle trees
-        await semaphoreService.reload(dbClient);
+        await semaphoreService.reload();
         const participant = semaphoreService.getParticipant(uuid);
         if (participant == null) {
           throw new Error(`${uuid} not found`);
@@ -197,6 +198,41 @@ export function initZuzaluRoutes(
     res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
   });
 
+  app.get(
+    "/semaphore/historic/:id/:root",
+    async (req: Request, res: Response) => {
+      const id = decodeString(req.params.id, "id");
+      const root = decodeString(req.params.root, "root");
+
+      const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
+        id,
+        root
+      );
+
+      if (historicGroup === undefined) {
+        res.status(404);
+        res.send("not found");
+        return;
+      }
+
+      res.json(JSON.parse(historicGroup.serializedGroup));
+    }
+  );
+
+  app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
+    const id = decodeString(req.params.id, "id");
+
+    const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
+    const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
+
+    if (matchingGroup === undefined) {
+      res.status(404).send("not found");
+      return;
+    }
+
+    res.json(matchingGroup.rootHash);
+  });
+
   // Load E2EE storage for a given user.
   app.post(
     "/sync/load/",
@@ -206,6 +242,7 @@ export function initZuzaluRoutes(
       if (request.blobKey === undefined) {
         throw new Error("Can't load e2ee: missing blobKey");
       }
+
       console.log(`[E2EE] Loading ${request.blobKey}`);
 
       try {
@@ -215,7 +252,11 @@ export function initZuzaluRoutes(
         );
 
         if (!storageModel) {
-          throw new Error("can't load e2ee: never saved");
+          console.log(
+            `can't load e2ee: never saved sync key ${request.blobKey}`
+          );
+          res.sendStatus(404);
+          return;
         }
 
         const result: LoadE2EEResponse = {

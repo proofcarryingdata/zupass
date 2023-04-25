@@ -38,7 +38,11 @@ export function HomeScreen() {
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
   const selectedPCD = useMemo(() => {
-    return pcds.find((pcd) => pcd.id === selectedPCDID);
+    let selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+    if (selected === undefined) {
+      selected = pcds[0];
+    }
+    return selected;
   }, [pcds, selectedPCDID]);
 
   if (state.self == null) return null;

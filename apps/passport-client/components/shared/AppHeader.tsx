@@ -1,5 +1,4 @@
-import * as React from "react";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuState } from "../../src/state";
@@ -9,21 +8,15 @@ import { icons } from "../icons";
 export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
-    (modal: ZuState["modal"]) => dispatch({ type: "set-modal", modal }),
+    (modal: ZuState["modal"]) =>
+      dispatch({
+        type: "set-modal",
+        modal,
+      }),
     [dispatch]
   );
   const openInfo = useCallback(() => setModal("info"), [setModal]);
   const openSettings = useCallback(() => setModal("settings"), [setModal]);
-  const close = useCallback(() => setModal(""), [setModal]);
-
-  // Close on escape
-  useEffect(() => {
-    const listener = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", listener, { capture: true });
-    return () => window.removeEventListener("keydown", listener);
-  }, [close]);
 
   return (
     <AppHeaderWrap>

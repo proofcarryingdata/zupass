@@ -1,14 +1,9 @@
-import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
-import { config } from "./config";
+import { getPackages } from "./pcdPackages";
 
-export async function savePCDs(pcds: PCDCollection) {
+export async function savePCDs(pcds: PCDCollection): Promise<void> {
   const serialized = await pcds.serializeAll();
   const stringified = JSON.stringify(serialized);
   window.localStorage["pcds"] = stringified;
@@ -18,38 +13,7 @@ export async function loadPCDs() {
   const stringified = window.localStorage["pcds"];
   const serialized = JSON.parse(stringified ?? "[]");
 
-  const SERVER_STATIC_URL = config.passportServer + "/static/";
-
-  await SemaphoreGroupPCDPackage.init({
-    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey"
-  });
-
-  await SemaphoreSignaturePCDPackage.init({
-    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey"
-  });
-
-  await EthereumOwnershipPCDPackage.init({
-    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
-  });
-
-  await EthereumOwnershipPCDPackage.init({
-    wasmFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
-  });
-
-  return await PCDCollection.deserialize(
-    [
-      SemaphoreGroupPCDPackage,
-      SemaphoreIdentityPCDPackage,
-      SemaphoreSignaturePCDPackage,
-      EthereumOwnershipPCDPackage,
-      JubJubSignaturePCDPackage
-    ],
-    serialized
-  );
+  return await PCDCollection.deserialize(await getPackages(), serialized);
 }
 
 export function saveEncryptionKey(key: string): void {
@@ -78,4 +42,12 @@ export function loadIdentity(): Identity | null {
 
 export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
+}
+
+export function saveParticipantInvalid(participantInvalid: boolean) {
+  window.localStorage["participantInvalid"] = participantInvalid;
+}
+
+export function loadParticipantInvalid(): boolean {
+  return JSON.parse(window.localStorage["participantInvalid"] ?? "false");
 }

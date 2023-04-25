@@ -1,12 +1,13 @@
 import {
   PCDAddRequest,
   PCDProveAndAddRequest,
-  PCDRequest,
   PCDRequestType,
 } from "@pcd/passport-interface";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../../src/dispatch";
+import { validateRequest } from "../../../src/passportRequest";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { JustAddScreen } from "./JustAddScreen";
 import { ProveAndAddScreen } from "./ProveAndAddScreen";
@@ -20,7 +21,8 @@ export function AddScreen() {
   const location = useLocation();
   const [_, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
-  const request = JSON.parse(params.get("request")) as PCDRequest;
+  const request = validateRequest(params);
+  useSyncE2EEStorage();
 
   if (request.type === PCDRequestType.ProveAndAdd) {
     return <ProveAndAddScreen request={request as PCDProveAndAddRequest} />;

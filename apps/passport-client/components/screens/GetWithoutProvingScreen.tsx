@@ -7,6 +7,7 @@ import { useCallback, useContext, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
@@ -21,9 +22,7 @@ export function GetWithoutProvingScreen() {
   const [state, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
   const [selectedPCDID, setSelectedPCDID] = useState<string>("none");
-  const request = JSON.parse(
-    params.get("request")
-  ) as PCDGetWithoutProvingRequest;
+  const request = validateRequest<PCDGetWithoutProvingRequest>(params);
 
   const onSendClick = useCallback(async () => {
     if (selectedPCDID === undefined) return;
@@ -31,9 +30,7 @@ export function GetWithoutProvingScreen() {
     const pcdPackage = state.pcds.getPackage(pcd.type);
     if (pcdPackage === undefined) return;
     const serializedPCD = await pcdPackage.serialize(pcd);
-    window.location.href = `${request.returnUrl}?proof=${JSON.stringify(
-      serializedPCD
-    )}`;
+    safeRedirect(request.returnUrl, serializedPCD);
   }, [request.returnUrl, selectedPCDID, state.pcds]);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {

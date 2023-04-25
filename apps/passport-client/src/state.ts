@@ -15,7 +15,7 @@ export interface ZuState {
 
   // View state
   pendingAction?: PendingAction;
-  modal: "info" | "settings" | "save-sync" | "";
+  modal: "info" | "settings" | "save-sync" | "invalid-participant" | "";
 
   // Participant metadata.
   // TODO: reload from passport server on startup.
@@ -23,6 +23,17 @@ export interface ZuState {
 
   // If set, shows an error popover.
   error?: ZuError;
+
+  // If set, the user has been invalidated server-side
+  participantInvalid?: boolean;
+
+  uploadedUploadId?: string;
+
+  uploadingUploadId?: string;
+
+  downloadedPCDs?: boolean;
+
+  downloadingPCDs?: boolean;
 }
 
 export interface ZuError {

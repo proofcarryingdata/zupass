@@ -7,12 +7,15 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
-import * as React from "react";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
-import { getReferrerHost, sleep } from "../../../src/util";
+import {
+  safeRedirect,
+  safeRedirectPending,
+} from "../../../src/passportRequest";
+import { getReferrerHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -30,7 +33,7 @@ export function SemaphoreSignatureProveScreen({
 
       // Give the UI has a chance to update to the 'loading' state before the
       // potentially blocking proving operation kicks off
-      sleep(200);
+      await nextFrame();
 
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
@@ -45,16 +48,12 @@ export function SemaphoreSignatureProveScreen({
           args: args,
         };
         const pendingPCD = await requestPendingPCD(serverReq);
-        window.location.href = `${
-          req.returnUrl
-        }?encodedPendingPCD=${JSON.stringify(pendingPCD)}`;
+        safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
         const { prove, serialize } = SemaphoreSignaturePCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
-        window.location.href = `${req.returnUrl}?proof=${JSON.stringify(
-          serializedPCD
-        )}`;
+        safeRedirect(req.returnUrl, serializedPCD);
       }
     } catch (e) {
       console.log(e);
@@ -71,7 +70,6 @@ export function SemaphoreSignatureProveScreen({
         Semaphore public key.
       </p>
     );
-    lines.push("Make sure you trust this website!");
 
     if (!proving) {
       lines.push(<Button onClick={onProve}>Continue</Button>);

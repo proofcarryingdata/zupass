@@ -14,13 +14,16 @@ import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { config } from "./config";
 import {
+  loadEncryptionKey,
   saveEncryptionKey,
   saveIdentity,
+  saveParticipantInvalid,
   savePCDs,
   saveSelf,
 } from "./localstorage";
+import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
-import { uploadPCDs } from "./useSyncE2EEStorage";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -52,13 +55,15 @@ export type Action =
   | {
       type: "reset-passport";
     }
+  | { type: "participant-invalid" }
   | {
       type: "load-from-sync";
       storage: EncryptedStorage;
       encryptionKey: string;
     }
   | { type: "add-pcd"; pcd: SerializedPCD }
-  | { type: "remove-pcd"; id: string };
+  | { type: "remove-pcd"; id: string }
+  | { type: "sync" };
 
 export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
 
@@ -87,11 +92,17 @@ export async function dispatch(
     case "load-from-sync":
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     case "set-modal":
-      return update({ modal: action.modal });
+      return update({
+        modal: action.modal,
+      });
     case "add-pcd":
       return addPCD(state, update, action.pcd);
     case "remove-pcd":
       return removePCD(state, update, action.id);
+    case "participant-invalid":
+      return participantInvalid(update);
+    case "sync":
+      return sync(state, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -162,7 +173,7 @@ async function login(
     return;
   }
 
-  finishLogin(participant, state, update);
+  return finishLogin(participant, state, update);
 }
 
 /**
@@ -192,24 +203,29 @@ async function finishLogin(
   setSelf(participant, state, update);
 
   // Save PCDs to E2EE storage.
-  await saveParticipantPCDs(participant);
+  await uploadStorage();
+
+  window.location.hash = "#/";
 
   // Ask user to save their sync key
   update({ modal: "save-sync" });
-
-  window.location.hash = "#/";
-}
-
-async function saveParticipantPCDs(participant: ZuParticipant) {
-  return uploadPCDs(participant);
 }
 
 // Runs periodically, whenever we poll new participant info.
 async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
+  let participantMismatched = false;
+
   if (BigInt(self.commitment) !== state.identity.commitment) {
-    throw new Error("Identity commitment mismatch");
+    console.log("Identity commitment mismatch");
+    participantMismatched = true;
   } else if (state.self && state.self.uuid !== self.uuid) {
-    throw new Error("Participant UUID mismatch");
+    console.log("Participant UUID mismatch");
+    participantMismatched = true;
+  }
+
+  if (participantMismatched) {
+    participantInvalid(update);
+    return;
   }
 
   saveSelf(self); // Save to local storage.
@@ -259,15 +275,7 @@ async function loadFromSync(
 ) {
   console.log("loading from sync", storage);
 
-  const pcds = new PCDCollection(
-    [
-      SemaphoreIdentityPCDPackage,
-      SemaphoreGroupPCDPackage,
-      SemaphoreSignaturePCDPackage,
-      EthereumOwnershipPCDPackage,
-    ],
-    []
-  );
+  const pcds = new PCDCollection(await getPackages(), []);
 
   await pcds.deserializeAllAndAdd(storage.pcds);
   // assumes that we only have one semaphore identity in the passport.
@@ -297,4 +305,86 @@ async function loadFromSync(
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
   window.location.hash = "#/";
+}
+
+function participantInvalid(update: ZuUpdate) {
+  saveParticipantInvalid(true);
+  update({
+    participantInvalid: true,
+    modal: "invalid-participant",
+  });
+}
+
+/**
+ * This sync function can be called any amount of times, and it will
+ * function properly. It does the following:
+ *
+ * - if PCDs have not been downloaded yet, and are not in the
+ *   process of being downloaded, kicks off the process of downloading
+ *   them from e2ee.
+ *
+ * - if the PCDs have been downloaded, and the current set of PCDs
+ *   in the passport does not equal the downloaded set, and if the
+ *   passport is not currently uploading the current set of PCDs
+ *   to e2ee, then uploads then to e2ee.
+ */
+async function sync(state: ZuState, update: ZuUpdate) {
+  console.log("[SYNC] calculating correct sync action");
+
+  if ((await loadEncryptionKey()) == null) {
+    console.log("[SYNC] no encryption key, can't sync");
+    return;
+  }
+
+  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+    console.log("[SYNC] sync action: download");
+    update({
+      downloadingPCDs: true,
+    });
+
+    const pcds = await downloadStorage();
+
+    if (pcds != null) {
+      update({
+        downloadedPCDs: true,
+        downloadingPCDs: false,
+        pcds: pcds,
+        uploadedUploadId: pcds.getUploadId(),
+      });
+    } else {
+      console.log(
+        `[SYNC] skipping download in favor of writing the storage for the first time`
+      );
+      update({
+        downloadedPCDs: true,
+        downloadingPCDs: false,
+      });
+    }
+
+    return;
+  }
+
+  if (state.downloadingPCDs || !state.downloadedPCDs) {
+    return;
+  }
+
+  const uploadId = state.pcds.getUploadId();
+
+  if (
+    state.uploadedUploadId === uploadId ||
+    state.uploadingUploadId === uploadId
+  ) {
+    console.log("[SYNC] sync action: no-op");
+    return;
+  }
+
+  console.log("[SYNC] sync action: upload");
+  update({
+    uploadingUploadId: uploadId,
+  });
+  await uploadStorage();
+  update({
+    uploadingUploadId: undefined,
+    uploadedUploadId: uploadId,
+  });
 }

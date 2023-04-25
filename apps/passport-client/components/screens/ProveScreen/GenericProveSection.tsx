@@ -4,11 +4,11 @@ import {
   ProveRequest,
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { default as React, useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
-import { sleep } from "../../../src/util";
+import { nextFrame } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
@@ -44,7 +44,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
       // Give the UI has a chance to update to the 'loading' state before the
       // potentially blocking proving operation kicks off
-      await sleep(200);
+      await nextFrame();
 
       if (options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
