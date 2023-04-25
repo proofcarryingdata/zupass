@@ -123,8 +123,6 @@ export function openSignedZuzaluSignInPopup(
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        userProvided: true,
-        value: undefined,
       },
     },
     {
