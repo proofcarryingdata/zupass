@@ -26,15 +26,13 @@ The Zuzalu Passport holds a collection of *cards*. UX-wise, the Zuzalu Passport 
 
 Initially, the only card in the Zuzalu Passport wallet is a [Semaphore keypair](https://semaphore.appliedzkp.org/) that acts as your primary identifier as a resident or visitor. This is a special card: it displays a QR code which you can use to prove that you are indeed a Zuzalu resident.
 
-However, the Passport data model allows anyone to create new types of cards, and to publish a flow to allow others to add a card of this new type into their passport. The flow for adding a new type of card to your Passport will be similar to the Apple Wallet's "Add to Wallet" button. Examples of other cards you could potentially build, and allow others to add to their Passports in the future, include:
+However, the Passport data model allows anyone to create new types of cards, and to publish a flow to allow others to add a card of this new type into their passport. The flow for adding a new type of card to your Passport will be similar to the Apple Wallet's "Add to Wallet" button. Examples of other cards you could build, and allow others to add to their Passports, include:
 
-- An Ethereum signature proving that you are `janedoe.eth` on Ethereum.
-- A signature from a Synthetic Biology subevent host, certifying that you attended the subevent.
+- An Ethereum signature proving that you are `janedoe.eth` on Ethereum. (see the [ETH PCD generator](https://eth-pcd.vercel.app/)).
+- A signature from a Synthetic Biology subevent host, certifying that you attended the subevent, or that you're authorized to attend the subevent.
 - An email you've received from invites@zuzalu.org identifying the apartment number you're staying in.
 - An [ETHdos](https://ethdos.xyz/)-style recursive ZK proof, certifying that you are 2 degrees of connection away from Vitalik.
 - A ZKML proof composed with a timestamp server signature, certifying that you visited the Lustica Bay lighthouse on Sunday, April 2nd.
-
-(Note that this feature is currently ⚠️[under construction](https://github.com/proofcarryingdata/zupass/pull/125)⚠️ and should be complete in the next few days!)
 
 Any third-party service--for example, a Zuzalu voting app--can request a card, multiple cards, or some claim about one or multiple cards from the Zuzalu Passport ([live examples](https://consumer-client.onrender.com/)). For those who have used Ethereum apps before, this is a similar flow to how a dapp website might ask you to sign a message or a transaction by popping up Metamask. A few more concrete examples of card requests that a third-party app could make:
 
