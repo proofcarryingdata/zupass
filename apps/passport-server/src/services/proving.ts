@@ -9,6 +9,7 @@ import {
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
 
 /**
@@ -32,6 +33,7 @@ const pendingPCDResponse: Map<string, StatusResponse> = new Map<
 const packages: PCDPackage[] = [
   SemaphoreGroupPCDPackage,
   SemaphoreSignaturePCDPackage,
+  JubJubSignaturePCDPackage
 ];
 
 export async function initPackages() {

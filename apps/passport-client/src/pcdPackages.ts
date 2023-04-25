@@ -3,6 +3,7 @@ import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { config } from "./config";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
@@ -39,5 +40,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     SemaphoreIdentityPCDPackage,
     SemaphoreSignaturePCDPackage,
     EthereumOwnershipPCDPackage,
+    JubJubSignaturePCDPackage
   ];
 }

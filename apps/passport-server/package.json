@@ -26,6 +26,7 @@
     "@types/pg": "^8.6.6",
     "cors": "^2.8.5",
     "express": "^5.0.0-beta.1",
+    "jubjub-signature-pcd": "0.0.5",
     "libhoney": "^4.0.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",

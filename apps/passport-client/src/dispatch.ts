@@ -24,6 +24,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -125,6 +126,7 @@ async function genPassport(
       SemaphoreGroupPCDPackage,
       SemaphoreSignaturePCDPackage,
       EthereumOwnershipPCDPackage,
+      JubJubSignaturePCDPackage
     ],
     [identityPCD]
   );
