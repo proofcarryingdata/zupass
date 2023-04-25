@@ -20,7 +20,11 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import { getReferrerOrigin, nextFrame } from "../../../src/util";
+import {
+  getReferrerHost,
+  getReferrerOrigin,
+  nextFrame,
+} from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -72,8 +76,8 @@ export function SemaphoreSignatureProveScreen({
     // Website is asking for a signature of the Zuzalu UUID for auth
     lines.push(
       <p>
-        <b>{getReferrerOrigin()}</b> will receive your name, your email, and
-        your Semaphore public key.
+        <b>{getReferrerHost()}</b> will receive your name, your email, and your
+        Semaphore public key.
       </p>
     );
 
