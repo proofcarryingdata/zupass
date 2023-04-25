@@ -104,7 +104,9 @@ export default function Page() {
         {signatureProof != null && (
           <>
             <h3>Sign In</h3>
-            <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
+            <p>
+              Message signed <code>{signatureProof.claim.signedMessage}</code>
+            </p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
             {signatureProofValid === false && <p>❌ Proof is invalid</p>}
             {signatureProofValid === true && <p>✅ Proof is valid</p>}
