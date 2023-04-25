@@ -2717,19 +2717,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^18.0.22":
+"@types/react@*", "@types/react@18.0.22", "@types/react@^18.0.22":
   version "18.0.28"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.0.28.tgz"
   integrity sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==
-  dependencies:
-    "@types/prop-types" "*"
-    "@types/scheduler" "*"
-    csstype "^3.0.2"
-
-"@types/react@18.0.22":
-  version "18.0.22"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.22.tgz#97782d995d999617de116cf61f437f1351036fc7"
-  integrity sha512-4yWc5PyCkZN8ke8K9rQHkTXxHIWHxLzzW6RI1kXVoepkD3vULpKzC2sDtAMKn78h92BRYuzf+7b/ms7ajE6hFw==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -6573,10 +6564,10 @@ jsprim@^1.2.2:
     array-includes "^3.1.5"
     object.assign "^4.1.3"
 
-jubjub-signature-pcd@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/jubjub-signature-pcd/-/jubjub-signature-pcd-0.0.4.tgz#455eed6f06b3587aff9679c4cbc24d51b65fb3dc"
-  integrity sha512-mn7/XABpTmU3cyNyTZy2Rn5TRyoI/KVQsk7RAMr2NPlfOA7fmoTJ+8mHHPDzw7JFAvcK9FdnVA6PpW/a8Cp/8g==
+jubjub-signature-pcd@0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/jubjub-signature-pcd/-/jubjub-signature-pcd-0.0.5.tgz#de83c9c0235100972ee87c15d729a90fc3b72bee"
+  integrity sha512-XSOl1+r31U0BJQUz0e/BL5RScEzPqISwfvyKf0M2GQ+nY+l/EVSAKAHGQEamIvyGcU5TROROoI9/VSyl3+o2og==
   dependencies:
     "@pcd/passport-ui" "^0.4.1"
     "@pcd/pcd-types" "^0.4.1"
@@ -7760,6 +7751,11 @@ pngjs@^5.0.0:
   version "5.0.0"
   resolved "https://registry.npmjs.org/pngjs/-/pngjs-5.0.0.tgz"
   integrity sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==
+
+poseidon-encryption@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/poseidon-encryption/-/poseidon-encryption-1.0.2.tgz#611c23c90193ea7cab1bd0eaecc5cf6a5978729e"
+  integrity sha512-buo/lgwUzWXv7DWBkoCaNGnr4KmDj4fofIv7HW2DtY6N5oXWsjy6kmEauY8RwZQAO94cBc86txTP5LU4r2FrtA==
 
 postcss-value-parser@^4.0.2:
   version "4.2.0"
@@ -9981,7 +9977,7 @@ which-typed-array@^1.1.2, which-typed-array@^1.1.9:
 
 which@2.0.2, which@^2.0.1:
   version "2.0.2"
-  resolved "https://registry.yarnpkg.com/which/-/which-2.0.2.tgz#7c6a8dd0a636a0327e10b59c9286eee93f3f51b1"
+  resolved "https://registry.npmjs.org/which/-/which-2.0.2.tgz"
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
@@ -9993,10 +9989,10 @@ which@^1.2.9:
   dependencies:
     isexe "^2.0.0"
 
-which@^2.0.1:
-  version "2.0.2"
-  resolved "https://registry.npmjs.org/which/-/which-2.0.2.tgz"
-  integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
+wide-align@1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/wide-align/-/wide-align-1.1.3.tgz#ae074e6bdc0c14a431e804e624549c633b000457"
+  integrity sha512-QGkOQc8XL6Bt5PwnsExKBPuMKBxnGxWWW3fU55Xt4feHozMUhdUMaBCk290qpm/wG5u/RSKzwdAC4i51YigihA==
   dependencies:
     string-width "^1.0.2 || 2"
 
