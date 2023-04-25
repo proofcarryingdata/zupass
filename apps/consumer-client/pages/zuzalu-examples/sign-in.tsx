@@ -12,8 +12,7 @@ import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
- * request a Semaphore Signature PCD containing the user's uuid as a third
- * party developer.
+ * let the user sign into a third party website.
  */
 export default function Page() {
   // We only do client-side proofs for Zuzalu UUID proofs, which means we can
@@ -45,7 +44,7 @@ export default function Page() {
     }
   }, [signatureProofValid, signatureProof]);
 
-  // Finally, once we have the UUID, fetch the participant data from Passport.
+  // Once we have the UUID, fetch the participant data from Passport.
   const { participant } = useFetchParticipant(
     PASSPORT_SERVER_URL,
     signedMessage?.uuid
@@ -54,7 +53,7 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Zuzalu Sign-In proof </h2>
+      <h2>Zuzalu Sign-In proof</h2>
       <p>
         This page serves as the canonical example of how to integrate with the
         Zuzalu Passport for the purposes of identity-revealing sign in. This
