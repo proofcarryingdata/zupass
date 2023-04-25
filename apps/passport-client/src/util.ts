@@ -14,6 +14,15 @@ export function getReferrerHost() {
   return url.host;
 }
 
+export function getReferrerOrigin() {
+  const referrer = document.referrer;
+  if (!referrer) {
+    return "";
+  }
+  const url = new URL(referrer);
+  return url.origin;
+}
+
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
