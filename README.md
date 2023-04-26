@@ -83,16 +83,26 @@ If you are on the PCD team and need more environment variables, contact @ichub.
 
 In the root of this project, execute the following to start the servers and static sites locally.
 
+Installs dependencies for all apps and packages in this repository.
 ```bash
-# installs dependencies for all apps and packages in this repository
 yarn
 
+```
+Start your local db.
+```bash
 # starts local Postgres - you must have Postgres installed for this
 # to work properly. in case you want to restart a Postgres instance
 # you previously started in this project, you can also run the command
 # yarn localdb:restart
 yarn localdb:init && yarn localdb:up
+```
+You can also use docker also. Required `docker` and `docker-compose`. 
+```bash
+yarn localdb:docker:up
 
+```
+Run `zupass` application.
+```bash 
 # starts all the applications contained in the `/apps` directory of the
 # repository. this includes the passport server and client, as well as
 # a server and client for an example application built on top of the
