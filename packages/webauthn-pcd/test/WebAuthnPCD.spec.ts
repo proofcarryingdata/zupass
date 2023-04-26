@@ -1,28 +1,7 @@
+import * as browserModule from "@simplewebauthn/browser";
 import assert from "assert";
+import sinon from "sinon";
 import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/WebAuthnPCD";
-
-jest.mock("@simplewebauthn/browser", () => ({
-  startRegistration: async () => ({
-    id: "my-new-credential",
-    rawId: "my-new-credential",
-    response: {
-      clientDataJSON: "",
-      attestationObject: "",
-    },
-    clientExtensionResults: {},
-    type: "public-key",
-  }),
-  startAuthentication: async () => ({
-    id: "my-existing-credential",
-    rawId: "my-existing-credential",
-    response: {
-      clientDataJSON: "",
-      attestationObject: "",
-    },
-    clientExtensionResults: {},
-    type: "public-key",
-  }),
-}));
 
 const args: WebAuthnPCDArgs = {
   challenge: "challenge",
@@ -36,6 +15,22 @@ const args: WebAuthnPCDArgs = {
 };
 
 describe("WebAuthn PCD", function () {
+  this.beforeAll(async function () {
+    sinon.stub(browserModule, "startAuthentication").returns(
+      Promise.resolve({
+        id: "my-existing-credential",
+        rawId: "my-existing-credential",
+        response: {
+          clientDataJSON: "clientDataJSON",
+          signature: "signature",
+          authenticatorData: "attestationObject",
+        },
+        clientExtensionResults: {},
+        type: "public-key",
+      })
+    );
+  });
+
   it("should be able to generate a proof that verifies", async function () {
     const { prove, verify } = WebAuthnPCDPackage;
     const pcd = await prove(args);

@@ -87,7 +87,6 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
   const authenticationResponseJSON = await startAuthentication(
     authenticationOptions
   );
-  console.log({ args, hey: arrayBufferToBase64(new Uint8Array([1])) });
   const claim: WebAuthnPCDClaim = {
     rpID: args.rpID,
     origin: args.origin,
