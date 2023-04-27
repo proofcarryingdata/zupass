@@ -6,6 +6,7 @@
     "jsx": "react-jsx",
     "lib": ["ES2015"],
     "module": "CommonJS",
-    "target": "es6"
+    "target": "es6",
+    "resolveJsonModule": true
   }
 }
