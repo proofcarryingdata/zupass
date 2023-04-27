@@ -15,6 +15,7 @@ export function startPretixSync(context: ApplicationContext) {
       token: requireEnv("PRETIX_TOKEN"),
       orgUrl: requireEnv("PRETIX_ORG_URL"),
       zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
+      visitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
       zuEventOrganizersItemID: 151,
     };
@@ -44,6 +45,7 @@ interface PretixConfig {
   token: string;
   orgUrl: string;
   zuEventID: string;
+  visitorEventID: string;
   zuEventOrganizersItemID: number;
 }
 
