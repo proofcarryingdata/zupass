@@ -12,11 +12,11 @@
     "clean": "tsc --build --clean"
   },
   "dependencies": {
-    "@pcd/eslint-config-custom": "0.4.1",
-    "@pcd/pcd-types": "0.4.1",
-    "@pcd/tsconfig": "0.4.1",
-    "@pcd/semaphore-identity-pcd": "0.4.1",
-    "@pcd/semaphore-group-pcd": "0.4.1",
+    "@pcd/eslint-config-custom": "^0.4.1",
+    "@pcd/pcd-types": "^0.4.1",
+    "@pcd/tsconfig": "^0.4.1",
+    "@pcd/semaphore-identity-pcd": "^0.4.1",
+    "@pcd/semaphore-group-pcd": "^0.4.1",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "json-bigint": "^1.0.0",
