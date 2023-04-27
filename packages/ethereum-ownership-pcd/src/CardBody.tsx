@@ -15,13 +15,13 @@ export function SemaphoreIdentityCardBody({
 }: {
   pcd: EthereumOwnershipPCD;
 }) {
-  const [identityCommitment, setIdentityCommitement] =
+  const [identityCommitment, setIdentityCommitment] =
     useState("<deserializing>");
 
   useEffect(() => {
     SemaphoreSignaturePCDPackage.deserialize(pcd.proof.signatureProof.pcd).then(
       (pcd) => {
-        setIdentityCommitement(pcd.claim.identityCommitment);
+        setIdentityCommitment(pcd.claim.identityCommitment);
       }
     );
   }, [pcd]);
