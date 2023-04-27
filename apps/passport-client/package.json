@@ -1,6 +1,6 @@
 {
   "name": "passport-client",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "@pcd/pcd-types": "0.4.2",
     "@pcd/semaphore-group-pcd": "0.4.2",
     "@pcd/semaphore-identity-pcd": "0.4.2",
-    "@pcd/rln-pcd": "0.3.0",
+    "@pcd/rln-pcd": "0.3.1",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",

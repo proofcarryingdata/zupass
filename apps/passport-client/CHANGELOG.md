@@ -1,5 +1,12 @@
 # passport-client
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/rln-pcd@0.3.1
+
 ## 0.0.9
 
 ### Patch Changes

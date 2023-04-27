@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -21,7 +21,7 @@
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "@semaphore-protocol/proof": "^3.2.3",
-    "@pcd/rln-pcd": "0.3.0",
+    "@pcd/rln-pcd": "0.3.1",
     "@sendgrid/mail": "^7.7.0",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
