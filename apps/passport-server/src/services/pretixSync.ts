@@ -15,7 +15,7 @@ export function startPretixSync(context: ApplicationContext) {
       token: requireEnv("PRETIX_TOKEN"),
       orgUrl: requireEnv("PRETIX_ORG_URL"),
       zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
-      visitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
+      zuVisitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
       zuEventOrganizersItemID: 151,
     };
@@ -45,7 +45,7 @@ interface PretixConfig {
   token: string;
   orgUrl: string;
   zuEventID: string;
-  visitorEventID: string;
+  zuVisitorEventID: string;
   zuEventOrganizersItemID: number;
 }
 
@@ -77,7 +77,12 @@ async function saveParticipants(
 ) {
   // Query database to see what's changed
   const existingPs = await fetchParticipantEmails(dbClient);
-  const existingMap = new Map(existingPs.map((p) => [p.email, p.role]));
+  const existingMap = new Map(
+    existingPs.map((p) => [
+      p.email,
+      { role: p.role, visitor_date_ranges: p.visitor_date_ranges },
+    ])
+  );
 
   // Insert new participants
   const newParticipants = participants.filter((p) => !existingMap.has(p.email));
@@ -90,7 +95,13 @@ async function saveParticipants(
   // Update role on existing participants
   const updatedParticipants = participants
     .filter((p) => existingMap.has(p.email))
-    .filter((p) => existingMap.get(p.email) !== p.role);
+    .filter((p) => {
+      return (
+        existingMap.get(p.email)?.role !== p.role ||
+        existingMap.get(p.email)?.visitor_date_ranges !== p.visitor_date_ranges
+      );
+    });
+
   for (const p of updatedParticipants) {
     const oldRole = existingMap.get(p.email);
     console.log(
@@ -127,12 +138,17 @@ async function loadResidents(
   console.log(
     `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
   );
-  const organizers = ordersToParticipants(orgOrders, ParticipantRole.Organizer);
+  const organizers = ordersToParticipants(
+    orgOrders,
+    [],
+    ParticipantRole.Organizer
+  );
   const orgEmails = new Set(organizers.map((p) => p.email));
 
   // Extract other residents
   const residents = ordersToParticipants(
     orders,
+    [],
     ParticipantRole.Resident
   ).filter((p) => !orgEmails.has(p.email));
 
@@ -151,25 +167,25 @@ async function loadVisitors(
   pretixConfig: PretixConfig,
   residents: PretixParticipant[]
 ): Promise<PretixParticipant[]> {
-  const subEvents = await fetchSubEvents(pretixConfig);
+  const subevents = await fetchSubevents(
+    pretixConfig,
+    pretixConfig.zuVisitorEventID
+  );
 
-  const subEventOrders = [];
-  for (const event of subEvents) {
-    const participants = await fetchOrders(pretixConfig, event.slug);
-    subEventOrders.push(...participants);
-  }
-  console.log(`[PRETIX] loaded ${subEventOrders.length} visitor orders`);
+  const visitorOrders = await fetchOrders(
+    pretixConfig,
+    pretixConfig.zuVisitorEventID
+  );
 
-  const subEventParticipants = ordersToParticipants(
-    subEventOrders,
+  const visitors = ordersToParticipants(
+    visitorOrders,
+    subevents,
     ParticipantRole.Visitor
   );
 
-  const residentEmails = new Set(residents.map((p) => p.email));
-  const visitors = subEventParticipants.filter(
-    (p) => !residentEmails.has(p.email)
-  );
   console.log(`[PRETIX] loaded ${visitors.length} visitors`);
+
+  subevents;
 
   return visitors;
 }
@@ -180,6 +196,7 @@ async function loadVisitors(
  */
 function ordersToParticipants(
   orders: PretixOrder[],
+  subEvents: PretixSubevent[],
   role: ParticipantRole
 ): PretixParticipant[] {
   const participants: PretixParticipant[] = orders
@@ -191,14 +208,29 @@ function ordersToParticipants(
     // check that they have an email and a name
     .filter((o) => !!o.positions[0].attendee_name)
     .filter((o) => !!(o.email || o.positions[0].attendee_email))
-    .map((o) => ({
-      role,
-      email: (o.email || o.positions[0].attendee_email).toLowerCase(),
-      name: o.positions[0].attendee_name,
-      residence: "", // TODO: not in pretix yet
-      order_id: o.code,
-      email_token: "",
-    }));
+    .map((o) => {
+      const subevent = subEvents.find(
+        (subEvent) => subEvent.id === o.positions[0].subevent
+      );
+
+      return {
+        role,
+        email: (o.email || o.positions[0].attendee_email).toLowerCase(),
+        name: o.positions[0].attendee_name,
+        residence: "", // TODO: not in pretix yet
+        order_id: o.code,
+        email_token: "",
+        visitor_date_ranges:
+          subevent === undefined
+            ? []
+            : [
+                {
+                  date_from: subevent.date_from,
+                  date_to: subevent.date_to,
+                },
+              ],
+      } satisfies PretixParticipant;
+    });
 
   return participants;
 }
@@ -229,45 +261,30 @@ async function fetchOrders(
   return orders;
 }
 
-/**
- * Loads details for all events that are *not* the main Zuzalu event.
- */
-async function fetchSubEvents(
-  pretixConfig: PretixConfig
-): Promise<PretixEvent[]> {
-  const events: PretixEvent[] = [];
+// Fetch all item types for a given event.
+async function fetchSubevents(
+  pretixConfig: PretixConfig,
+  eventID: string
+): Promise<PretixSubevent[]> {
+  const orders: PretixSubevent[] = [];
 
   // Fetch orders from paginated API
-  let url = `${pretixConfig.orgUrl}/events`;
+  let url = `${pretixConfig.orgUrl}/events/${eventID}/subevents/`;
   while (url != null) {
     console.log(`[PRETIX] Fetching ${url}`);
     const res = await fetch(url, {
-      headers: {
-        Authorization: `Token ${pretixConfig.token}`,
-      },
+      headers: { Authorization: `Token ${pretixConfig.token}` },
     });
     if (!res.ok) {
-      console.error(
-        `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
-      );
+      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
       break;
     }
     const page = await res.json();
-    events.push(...page.results);
+    orders.push(...page.results);
     url = page.next;
   }
 
-  return events.filter((e) => e.slug !== pretixConfig.zuEventID);
-}
-
-interface PretixEvent {
-  /**
-   * Unique identifier for a Pretix event.
-   */
-  slug: string;
-
-  // This type actually has more stuff, but the only
-  // relevant one is `slug`.
+  return orders;
 }
 
 // A Pretix order. For our purposes, each order contains one ticket.
@@ -289,4 +306,16 @@ interface PretixPosition {
   price: string;
   attendee_name: string; // "Danilo Kim"
   attendee_email: string;
+  subevent: number;
+}
+
+interface PretixSubevent {
+  id: number;
+  date_from: string;
+  date_to: string;
+}
+
+export interface DateRange {
+  date_from: string;
+  date_to: string;
 }

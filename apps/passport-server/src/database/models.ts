@@ -1,3 +1,5 @@
+import { DateRange } from "../services/pretixSync";
+
 /** A single Pretix ticket holder. May or may not have a passport yet. */
 export interface PretixParticipant {
   email: string;
@@ -6,6 +8,7 @@ export interface PretixParticipant {
   residence: string;
   order_id: string;
   email_token: string;
+  visitor_date_ranges?: DateRange[];
 }
 
 /** A Zuzalu participant with passport (Pretix participant + commitment) */

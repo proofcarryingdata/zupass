@@ -57,6 +57,7 @@ export function initZuzaluRoutes(
         order_id: "",
         residence: "atlantis",
         role: ParticipantRole.Resident,
+        visitor_date_ranges: undefined,
       });
     }
 
