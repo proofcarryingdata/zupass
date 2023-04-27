@@ -1,5 +1,6 @@
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
+import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -35,11 +36,17 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: SERVER_STATIC_URL + "/semaphore-artifacts/16.zkey",
   });
 
+  await RLNPCDPackage.init({
+    wasmFilePath: SERVER_STATIC_URL + "/rln-artifacts/16.wasm",
+    zkeyFilePath: SERVER_STATIC_URL + "/rln-artifacts/16.zkey",
+  });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
     SemaphoreSignaturePCDPackage,
     EthereumOwnershipPCDPackage,
-    JubJubSignaturePCDPackage
+    JubJubSignaturePCDPackage,
+    RLNPCDPackage,
   ];
 }
