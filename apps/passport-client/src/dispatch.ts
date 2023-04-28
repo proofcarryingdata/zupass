@@ -11,6 +11,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { createContext } from "react";
 import { config } from "./config";
 import {
@@ -21,10 +22,10 @@ import {
   savePCDs,
   saveSelf,
 } from "./localstorage";
+import { sanitizeDateRanges } from "./participant";
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -126,7 +127,7 @@ async function genPassport(
       SemaphoreGroupPCDPackage,
       SemaphoreSignaturePCDPackage,
       EthereumOwnershipPCDPackage,
-      JubJubSignaturePCDPackage
+      JubJubSignaturePCDPackage,
     ],
     [identityPCD]
   );
@@ -228,6 +229,10 @@ async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
   if (participantMismatched) {
     participantInvalid(update);
     return;
+  }
+
+  if (self.visitor_date_ranges) {
+    self.visitor_date_ranges = sanitizeDateRanges(self.visitor_date_ranges);
   }
 
   saveSelf(self); // Save to local storage.

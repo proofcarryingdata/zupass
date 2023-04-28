@@ -57,19 +57,23 @@ export function getVisitorStatus(participant?: ZuParticipant):
 const ZUZALU_START_DATE = "2023-03-24";
 const ZUZALU_END_DATE = "2023-05-26";
 
-function sanitizeDateRanges(ranges: DateRange[]): FullDateRange[] {
+export function sanitizeDateRanges(ranges: DateRange[]): FullDateRange[] {
   const sanitized = ranges.map(
     (range) =>
       ({
         date_from: range.date_from ?? ZUZALU_START_DATE,
-        date_to: range.date_from ?? ZUZALU_END_DATE,
+        date_to: range.date_to ?? ZUZALU_END_DATE,
       } satisfies FullDateRange)
   );
+
+  sanitized.sort((a, b) => {
+    return new Date(a.date_from).getTime() - new Date(b.date_from).getTime();
+  });
 
   return sanitized;
 }
 
-function isDateInRanges(date: Date, ranges: DateRange[]) {
+export function isDateInRanges(date: Date, ranges: DateRange[]): boolean {
   const sanitizedRanges = sanitizeDateRanges(ranges);
 
   for (const range of sanitizedRanges) {
