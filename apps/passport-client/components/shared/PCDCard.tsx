@@ -54,7 +54,7 @@ export function PCDCard({
         <CardOutlineExpanded>
           <CardHeader
             col={visitorExpired ? "" : "var(--accent-lite)"}
-            style={{ backgroundColor: "var(--danger)" }}
+            style={{ backgroundColor: visitorExpired ? "var(--danger)" : "" }}
           >
             {header}
           </CardHeader>
