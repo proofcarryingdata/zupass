@@ -53,10 +53,13 @@ export function getVisitorStatus(participant?: ZuParticipant):
   return { isVisitor: false, isDateRangeValid: true };
 }
 
+const ZUZALU_START_DATE = "2023-03-24";
+const ZUZALU_END_DATE = "2023-05-26";
+
 function isDateInRanges(date: Date, ranges: DateRange[]) {
   for (const range of ranges) {
-    const from = new Date(range.date_from).getTime();
-    const to = new Date(range.date_to).getTime();
+    const from = new Date(range.date_from ?? ZUZALU_START_DATE).getTime();
+    const to = new Date(range.date_to ?? ZUZALU_END_DATE).getTime();
     const testDate = date.getTime();
 
     if (testDate <= to && testDate >= from) {

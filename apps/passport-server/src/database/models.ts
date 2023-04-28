@@ -1,4 +1,4 @@
-import { DateRange } from "../services/pretixSync";
+import { DateRange } from "@pcd/passport-interface";
 
 /** A single Pretix ticket holder. May or may not have a passport yet. */
 export interface PretixParticipant {

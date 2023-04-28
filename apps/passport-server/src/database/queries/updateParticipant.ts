@@ -1,5 +1,5 @@
+import { DateRange } from "@pcd/passport-interface";
 import { ClientBase, Pool } from "pg";
-import { DateRange } from "../../services/pretixSync";
 
 export async function updateParticipant(
   client: ClientBase | Pool,

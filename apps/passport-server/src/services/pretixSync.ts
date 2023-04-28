@@ -341,8 +341,3 @@ interface PretixSubevent {
   date_from: string;
   date_to: string;
 }
-
-export interface DateRange {
-  date_from: string;
-  date_to: string;
-}
