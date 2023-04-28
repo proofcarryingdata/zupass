@@ -189,7 +189,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Expired visitor: see dates.",
+      message: "Expired visitor.",
     };
   }
 
