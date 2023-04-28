@@ -54,7 +54,7 @@ export function getVisitorStatus(participant?: ZuParticipant):
 }
 
 function isDateInRanges(date: Date, ranges: DateRange[]) {
-  for (const range in ranges) {
+  for (const range of ranges) {
     const from = new Date(range.date_from).getTime();
     const to = new Date(range.date_to).getTime();
     const testDate = date.getTime();
