@@ -178,17 +178,17 @@ async function loadVisitors(
     pretixConfig.zuVisitorEventID
   );
 
-  const visitors = ordersToParticipants(
+  const visitorParticipants = ordersToParticipants(
     visitorOrders,
     subevents,
     ParticipantRole.Visitor
   );
 
+  const visitors = deduplicateVisitorParticipants(visitorParticipants);
+
   console.log(`[PRETIX] loaded ${visitors.length} visitors`);
 
-  subevents;
-
-  return visitors;
+  return visitorParticipants;
 }
 
 /**
@@ -234,6 +234,32 @@ function ordersToParticipants(
     });
 
   return participants;
+}
+
+function deduplicateVisitorParticipants(
+  participants: PretixParticipant[]
+): PretixParticipant[] {
+  // email -> participant
+  const dedupedParticipants: Map<string, PretixParticipant> = new Map();
+
+  for (const participant of participants) {
+    const existingVisitor = dedupedParticipants.get(participant.email);
+    if (existingVisitor) {
+      existingVisitor.visitor_date_ranges =
+        existingVisitor.visitor_date_ranges ?? [];
+      existingVisitor.visitor_date_ranges.push(
+        ...(participant.visitor_date_ranges ?? [])
+      );
+      console.log(
+        `[PRETIX] merging visitor ${participant.email} to have ` +
+          `${existingVisitor.visitor_date_ranges?.length} visitor date ranges`
+      );
+    } else {
+      dedupedParticipants.set(participant.email, participant);
+    }
+  }
+
+  return Array.from(dedupedParticipants.values());
 }
 
 // Fetch all orders for a given event.
