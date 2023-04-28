@@ -57,6 +57,7 @@ export function ZuzaluCardBody({
 function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
   if (!participant) return null;
   if (participant.role !== ParticipantRole.Visitor) return null;
+  if (!participant.visitor_date_ranges) return null;
 
   return (
     <>
