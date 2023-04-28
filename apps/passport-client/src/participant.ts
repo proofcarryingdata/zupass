@@ -57,7 +57,9 @@ export function getVisitorStatus(participant?: ZuParticipant):
 const ZUZALU_START_DATE = "2023-03-24";
 const ZUZALU_END_DATE = "2023-05-26";
 
-export function sanitizeDateRanges(ranges: DateRange[]): FullDateRange[] {
+export function sanitizeDateRanges(ranges?: DateRange[]): FullDateRange[] {
+  if (!ranges) return [];
+
   const sanitized = ranges.map(
     (range) =>
       ({
