@@ -2,6 +2,7 @@ import { PCD } from "@pcd/pcd-types";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { getVisitorStatus } from "../../src/participant";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
@@ -23,21 +24,40 @@ export function PCDCard({
   onClick?: () => void;
   hideRemoveButton?: boolean;
 }) {
+  const [state] = useContext(DispatchContext);
   const pcdPackage = usePackage(pcd);
   const displayOptions = useMemo(() => {
     if (pcdPackage?.getDisplayOptions) {
       return pcdPackage?.getDisplayOptions(pcd);
     }
   }, [pcd, pcdPackage]);
-  const header = isZuzaluIdentity
-    ? "VERIFIED ZUZALU PASSPORT"
-    : displayOptions?.header?.toUpperCase() ?? "PCD";
+
+  const visitorStatus = getVisitorStatus(state.self);
+  const visitorExpired =
+    visitorStatus !== undefined &&
+    !visitorStatus.isDateRangeValid &&
+    visitorStatus.isVisitor;
+
+  let header = displayOptions?.header?.toUpperCase() ?? "PCD";
+
+  if (isZuzaluIdentity) {
+    header = "VERIFIED ZUZALU PASSPORT";
+  }
+
+  if (visitorExpired) {
+    header = "EXPIRED ZUZALU PASSPORT";
+  }
 
   if (expanded) {
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
-          <CardHeader col="var(--accent-lite)">{header}</CardHeader>
+          <CardHeader
+            col={visitorExpired ? "" : "var(--accent-lite)"}
+            style={{ backgroundColor: "var(--danger)" }}
+          >
+            {header}
+          </CardHeader>
           <CardBodyContainer>
             <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
             {!hideRemoveButton && (

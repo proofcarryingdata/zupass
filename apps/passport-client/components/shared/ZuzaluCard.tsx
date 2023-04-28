@@ -21,6 +21,11 @@ export function ZuzaluCardBody({
   const [state, _] = useContext(DispatchContext);
   const actualParticipant = participant ?? state.self;
   const { role, name, email, residence } = actualParticipant;
+  const visitorStatus = getVisitorStatus(actualParticipant);
+  const visitorExpired =
+    visitorStatus !== undefined &&
+    !visitorStatus.isDateRangeValid &&
+    visitorStatus.isVisitor;
 
   return (
     <CardBody>
@@ -38,16 +43,15 @@ export function ZuzaluCardBody({
         <VisitorDateSection participant={actualParticipant} />
       </TextCenter>
       <Spacer h={24} />
-      <Footer role={role}>ZUZALU {role.toUpperCase()}</Footer>
+      <Footer role={role} expired={visitorExpired}>
+        ZUZALU {role.toUpperCase()}
+      </Footer>
     </CardBody>
   );
 }
 
 function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
   if (!participant) return null;
-  const visitorStatus = getVisitorStatus(participant);
-
-  console.log("VisitorDateSection", participant);
 
   return (
     <>
@@ -75,11 +79,16 @@ const CardBody = styled.div`
   border-radius: 0 0 12px 12px;
 `;
 
-const Footer = styled.div<{ role: string }>`
+const Footer = styled.div<{ role: string; expired: boolean }>`
   font-size: 20px;
   letter-spacing: 1px;
-  background: ${(p) =>
-    highlight(p.role) ? "var(--accent-lite)" : "var(--primary-dark)"};
+  background: ${(p) => {
+    if (p.expired) {
+      return "var(--danger)";
+    }
+
+    return highlight(p.role) ? "var(--accent-lite)" : "var(--primary-dark)";
+  }};
   color: ${(p) => (highlight(p.role) ? "var(--primary-dark)" : "var(--white)")};
   /* Must be slightly lower than the card's border-radius to nest correctly. */
   border-radius: 0 0 10px 10px;
