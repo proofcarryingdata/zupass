@@ -42,11 +42,13 @@ export function startPretixSync(context: ApplicationContext) {
  * Synchronize Pretix state with Zupass state.
  */
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
+  const syncStart = Date.now();
+  console.log("[PRETIX] Sync start");
   const participants = await loadAllParticipants(pretixConfig);
   const participantEmails = new Set(participants.map((p) => p.email));
 
   console.log(
-    `[PRETIX] loaded ${participants.length} Pretix participants (visitors and residents)` +
+    `[PRETIX] loaded ${participants.length} Pretix participants (visitors, residents, and organizers)` +
       ` from Pretix, found ${participantEmails.size} unique emails`
   );
 
@@ -58,6 +60,12 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
   } finally {
     dbClient.release();
   }
+  const syncEnd = Date.now();
+  console.log(
+    `[PRETIX] Sync end. Completed in ${Math.floor(
+      (syncEnd - syncStart) / 1000
+    )} seconds`
+  );
 }
 
 /**
@@ -95,6 +103,7 @@ async function saveParticipants(
     });
 
   // For the participants that have changed, update them in the database.
+  console.log(`[PRETIX] Updating ${updatedParticipants.length} participants`);
   for (const updatedParticipant of updatedParticipants) {
     const oldParticipant = existingParticipantsByEmail.get(
       updatedParticipant.email
@@ -124,6 +133,8 @@ async function saveParticipants(
 async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
+  console.log("[PRETIX] Fetching participants");
+
   const residents = await loadResidents(pretixConfig);
   const visitors = await loadVisitors(pretixConfig);
 
@@ -141,6 +152,8 @@ async function loadAllParticipants(
 async function loadResidents(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
+  console.log("[PRETIX] Fetching residents");
+
   // Fetch orders
   const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
 
@@ -179,6 +192,7 @@ async function loadResidents(
 async function loadVisitors(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
+  console.log("[PRETIX] Fetching visitors");
   const subevents = await fetchSubevents(
     pretixConfig,
     pretixConfig.zuVisitorEventID
