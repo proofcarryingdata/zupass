@@ -45,7 +45,7 @@ export function PCDCard({
   }
 
   if (visitorExpired) {
-    header = "EXPIRED ZUZALU PASSPORT";
+    header = "EXPIRED";
   }
 
   if (expanded) {
