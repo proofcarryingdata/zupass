@@ -3,12 +3,12 @@ import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName,
 } from "@pcd/semaphore-signature-pcd";
-import * as React from "react";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { config } from "../../src/config";
 import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
+import { getVisitorStatus } from "../../src/participant";
 import { decodeQRPayload } from "../../src/qr";
 import { bigintToUuid } from "../../src/util";
 import {
@@ -176,6 +176,20 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
       valid: false,
       type: "identity-proof",
       message: "Proof expired",
+    };
+  }
+
+  const visitorStatus = getVisitorStatus(participant);
+
+  if (
+    visitorStatus !== undefined &&
+    visitorStatus.isVisitor &&
+    !visitorStatus.isDateRangeValid
+  ) {
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Expired visitor: see dates.",
     };
   }
 
