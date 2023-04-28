@@ -189,7 +189,7 @@ async function loadVisitors(
 
   console.log(`[PRETIX] loaded ${visitors.length} visitors`);
 
-  return visitorParticipants;
+  return visitors;
 }
 
 /**
@@ -253,29 +253,32 @@ function ordersToParticipants(
 }
 
 function deduplicateVisitorParticipants(
-  participants: PretixParticipant[]
+  visitors: PretixParticipant[]
 ): PretixParticipant[] {
   // email -> participant
-  const dedupedParticipants: Map<string, PretixParticipant> = new Map();
+  const dedupedVisitors: Map<string, PretixParticipant> = new Map();
 
-  for (const participant of participants) {
-    const existingVisitor = dedupedParticipants.get(participant.email);
+  for (const visitor of visitors) {
+    const existingVisitor = dedupedVisitors.get(visitor.email);
+
     if (existingVisitor) {
       existingVisitor.visitor_date_ranges =
         existingVisitor.visitor_date_ranges ?? [];
+
       existingVisitor.visitor_date_ranges.push(
-        ...(participant.visitor_date_ranges ?? [])
+        ...(visitor.visitor_date_ranges ?? [])
       );
+
       console.log(
-        `[PRETIX] merging visitor ${participant.email} to have ` +
+        `[PRETIX] merging visitor ${visitor.email} to have ` +
           `${existingVisitor.visitor_date_ranges?.length} visitor date ranges`
       );
     } else {
-      dedupedParticipants.set(participant.email, participant);
+      dedupedVisitors.set(visitor.email, visitor);
     }
   }
 
-  return Array.from(dedupedParticipants.values());
+  return Array.from(dedupedVisitors.values());
 }
 
 // Fetch all orders for a given event.
