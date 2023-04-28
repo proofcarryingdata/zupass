@@ -55,6 +55,9 @@ function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
 
   return (
     <>
+      <InfoLine>
+        <b>Visitor Dates:</b>
+      </InfoLine>
       {participant.visitor_date_ranges.map((range, i) => (
         <InfoLine key={i}>
           <DateRangeText range={range} />
