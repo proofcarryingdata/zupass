@@ -116,7 +116,8 @@ async function saveParticipants(
     await updateParticipant(dbClient, updatedParticipant);
   }
 
-  // Step 3 of saving: remove participants that don't exist in Pretix
+  // Step 3 of saving: remove participants that don't exist in Pretix, but do
+  // exist in our database.
   const removedParticipants = existingParticipants.filter(
     (existing) => !pretixParticipantsAsMap.has(existing.email)
   );
@@ -133,7 +134,9 @@ async function saveParticipants(
 async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  console.log("[PRETIX] Fetching participants");
+  console.log(
+    "[PRETIX] Fetching participants (visitors, residents, organizers)"
+  );
 
   const residents = await loadResidents(pretixConfig);
   const visitors = await loadVisitors(pretixConfig);
@@ -147,7 +150,7 @@ async function loadAllParticipants(
 }
 
 /**
- * Loads those participants who are residents (not visitors) of Zuzalu.
+ * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
  */
 async function loadResidents(
   pretixConfig: PretixConfig
@@ -218,11 +221,15 @@ async function loadVisitors(
 
 /**
  * Converts a given list of orders to participants, and sets
- * all of their roles to equal the given role.
+ * all of their roles to equal the given role. When `subEvents`
+ * is passed in as a parameter, cross-reference them with the
+ * orders, and set the visitor date ranges for the new
+ * `PretixParticipant` to equal to the date ranges of the visitor
+ * subevent events they have in their order.
  */
 function ordersToParticipants(
   orders: PretixOrder[],
-  subEvents: PretixSubevent[],
+  visitorSubEvents: PretixSubevent[],
   role: ParticipantRole
 ): PretixParticipant[] {
   const participants: PretixParticipant[] = orders
@@ -238,7 +245,9 @@ function ordersToParticipants(
       const orderSubevents = o.positions
         .map((position) => position.subevent)
         .map((positionSubeventId) =>
-          subEvents.find((subEvent) => subEvent.id === positionSubeventId)
+          visitorSubEvents.find(
+            (subEvent) => subEvent.id === positionSubeventId
+          )
         )
         .filter((subEvent) => subEvent != null);
 
@@ -264,6 +273,11 @@ function ordersToParticipants(
   return participants;
 }
 
+/**
+ * Some visitors have multiple orders. These orders need to be merged
+ * into a single pretix participant zupass-side, so that a single user
+ * on our end contains all the dates they have a visitor ticket to.
+ */
 function deduplicateVisitorParticipants(
   visitors: PretixParticipant[]
 ): PretixParticipant[] {
@@ -278,11 +292,6 @@ function deduplicateVisitorParticipants(
 
       existingVisitor.visitor_date_ranges.push(
         ...(visitor.visitor_date_ranges ?? [])
-      );
-
-      console.log(
-        `[PRETIX] merging visitor ${visitor.email} to have ` +
-          `${existingVisitor.visitor_date_ranges?.length} visitor date ranges`
       );
     } else {
       dedupedVisitors.set(visitor.email, visitor);
