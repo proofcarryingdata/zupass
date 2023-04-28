@@ -1,10 +1,11 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { DateRange, ZuParticipant } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
+import { getVisitorStatus } from "../../src/participant";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
@@ -18,7 +19,8 @@ export function ZuzaluCardBody({
   participant?: ZuParticipant;
 }) {
   const [state, _] = useContext(DispatchContext);
-  const { role, name, email, residence } = participant ?? state.self;
+  const actualParticipant = participant ?? state.self;
+  const { role, name, email, residence } = actualParticipant;
 
   return (
     <CardBody>
@@ -33,10 +35,37 @@ export function ZuzaluCardBody({
         <H3 col="var(--primary-dark)">{name}</H3>
         <InfoLine>{email}</InfoLine>
         <InfoLine>{residence}</InfoLine>
+        <VisitorDateSection participant={actualParticipant} />
       </TextCenter>
       <Spacer h={24} />
       <Footer role={role}>ZUZALU {role.toUpperCase()}</Footer>
     </CardBody>
+  );
+}
+
+function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
+  if (!participant) return null;
+  const visitorStatus = getVisitorStatus(participant);
+
+  console.log("VisitorDateSection", participant);
+
+  return (
+    <>
+      {participant.visitor_date_ranges.map((range, i) => (
+        <InfoLine key={i}>
+          <DateRangeText range={range} />
+        </InfoLine>
+      ))}
+    </>
+  );
+}
+
+function DateRangeText({ range }: { range: DateRange }) {
+  return (
+    <span>
+      {new Date(range.date_from).toDateString()} -{" "}
+      {new Date(range.date_to).toDateString()}
+    </span>
   );
 }
 

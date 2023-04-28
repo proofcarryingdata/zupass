@@ -1,4 +1,8 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import {
+  DateRange,
+  ParticipantRole,
+  ZuParticipant,
+} from "@pcd/passport-interface";
 import { config } from "./config";
 import { Dispatcher } from "./dispatch";
 
@@ -26,4 +30,39 @@ export async function pollParticipant(
   } catch (e) {
     console.error("[USER_POLL] Error polling participant", e);
   }
+}
+
+export function getVisitorStatus(participant?: ZuParticipant):
+  | {
+      isVisitor: boolean;
+      isDateRangeValid: boolean;
+    }
+  | undefined {
+  if (participant === undefined) return undefined;
+
+  if (participant.role === ParticipantRole.Visitor) {
+    return {
+      isVisitor: true,
+      isDateRangeValid: isDateInRanges(
+        new Date(),
+        participant.visitor_date_ranges
+      ),
+    };
+  }
+
+  return { isVisitor: false, isDateRangeValid: true };
+}
+
+function isDateInRanges(date: Date, ranges: DateRange[]) {
+  for (const range in ranges) {
+    const from = new Date(range.date_from).getTime();
+    const to = new Date(range.date_to).getTime();
+    const testDate = date.getTime();
+
+    if (testDate <= to && testDate >= from) {
+      return true;
+    }
+  }
+
+  return false;
 }

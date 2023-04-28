@@ -8,7 +8,7 @@ export interface ZuParticipant {
   /** Participant metadata */
   email: string;
   name: string;
-  role: string;
+  role: ParticipantRole;
   residence: string;
   visitor_date_ranges: DateRange[];
 }
@@ -16,4 +16,10 @@ export interface ZuParticipant {
 export interface DateRange {
   date_from: string;
   date_to: string;
+}
+
+export enum ParticipantRole {
+  Visitor = "visitor",
+  Resident = "resident",
+  Organizer = "organizer",
 }
