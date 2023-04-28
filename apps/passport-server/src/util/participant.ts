@@ -24,3 +24,14 @@ export function participantUpdatedFromPretix(
 
   return false;
 }
+
+/**
+ * Converts list of participants to map indexed by email address.
+ */
+export function participantsToMap(
+  participants: PretixParticipant[]
+): Map<string, PretixParticipant> {
+  return new Map(
+    participants.map((participant) => [participant.email, participant])
+  );
+}

@@ -13,7 +13,10 @@ import { fetchPretixParticipants } from "../database/queries/fetchPretixParticip
 import { insertParticipant } from "../database/queries/insertParticipant";
 import { updateParticipant } from "../database/queries/updateParticipant";
 import { ApplicationContext } from "../types";
-import { participantUpdatedFromPretix } from "../util/participant";
+import {
+  participantsToMap,
+  participantUpdatedFromPretix,
+} from "../util/participant";
 
 /**
  * Kick off a period sync from Preticx into Zupass.
@@ -66,9 +69,7 @@ async function saveParticipants(
   participants: PretixParticipant[]
 ) {
   const existingParticipants = await fetchPretixParticipants(dbClient);
-  const existingParticipantsByEmail = new Map(
-    existingParticipants.map((p) => [p.email, p])
-  );
+  const existingParticipantsByEmail = participantsToMap(existingParticipants);
   const newParticipants = participants.filter(
     (p) => !existingParticipantsByEmail.has(p.email)
   );
