@@ -1,5 +1,6 @@
 import {
   DateRange,
+  FullDateRange,
   ParticipantRole,
   ZuParticipant,
 } from "@pcd/passport-interface";
@@ -56,10 +57,24 @@ export function getVisitorStatus(participant?: ZuParticipant):
 const ZUZALU_START_DATE = "2023-03-24";
 const ZUZALU_END_DATE = "2023-05-26";
 
+function sanitizeDateRanges(ranges: DateRange[]): FullDateRange[] {
+  const sanitized = ranges.map(
+    (range) =>
+      ({
+        date_from: range.date_from ?? ZUZALU_START_DATE,
+        date_to: range.date_from ?? ZUZALU_END_DATE,
+      } satisfies FullDateRange)
+  );
+
+  return sanitized;
+}
+
 function isDateInRanges(date: Date, ranges: DateRange[]) {
-  for (const range of ranges) {
-    const from = new Date(range.date_from ?? ZUZALU_START_DATE).getTime();
-    const to = new Date(range.date_to ?? ZUZALU_END_DATE).getTime();
+  const sanitizedRanges = sanitizeDateRanges(ranges);
+
+  for (const range of sanitizedRanges) {
+    const from = new Date(range.date_from).getTime();
+    const to = new Date(range.date_to).getTime();
     const testDate = date.getTime();
 
     if (testDate <= to && testDate >= from) {

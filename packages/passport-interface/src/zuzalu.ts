@@ -18,6 +18,11 @@ export interface DateRange {
   date_to?: string | null;
 }
 
+export interface FullDateRange {
+  date_from: string;
+  date_to: string;
+}
+
 export enum ParticipantRole {
   Visitor = "visitor",
   Resident = "resident",
