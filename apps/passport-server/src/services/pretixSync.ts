@@ -9,6 +9,7 @@ import {
   PretixSubevent,
 } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
+import { deleteParticipant } from "../database/queries/deleteParticipant";
 import { fetchPretixParticipants } from "../database/queries/fetchPretixParticipants";
 import { insertParticipant } from "../database/queries/insertParticipant";
 import { updateParticipant } from "../database/queries/updateParticipant";
@@ -63,14 +64,16 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
  * - Insert new participants into the database.
  * - Update role and visitor dates of existing participants, if they
  *   been changed.
+ * - Delete participants that are no longer residents.
  */
 async function saveParticipants(
   dbClient: PoolClient,
-  participants: PretixParticipant[]
+  pretixParticipants: PretixParticipant[]
 ) {
+  const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
   const existingParticipants = await fetchPretixParticipants(dbClient);
   const existingParticipantsByEmail = participantsToMap(existingParticipants);
-  const newParticipants = participants.filter(
+  const newParticipants = pretixParticipants.filter(
     (p) => !existingParticipantsByEmail.has(p.email)
   );
 
@@ -83,7 +86,7 @@ async function saveParticipants(
 
   // Step 2 of saving: update participants that have changed
   // Filter to participants that existed before, and filter to those that have changed.
-  const updatedParticipants = participants
+  const updatedParticipants = pretixParticipants
     .filter((p) => existingParticipantsByEmail.has(p.email))
     .filter((p) => {
       const oldParticipant = existingParticipantsByEmail.get(p.email)!;
@@ -102,6 +105,16 @@ async function saveParticipants(
       )}`
     );
     await updateParticipant(dbClient, updatedParticipant);
+  }
+
+  // Step 3 of saving: remove participants that don't exist in Pretix
+  const removedParticipants = existingParticipants.filter(
+    (existing) => !pretixParticipantsAsMap.has(existing.email)
+  );
+  console.log(`[PRETIX] Deleting ${removedParticipants.length}`);
+  for (const removedParticipant of removedParticipants) {
+    console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
+    await deleteParticipant(dbClient, removedParticipant.email);
   }
 }
 
