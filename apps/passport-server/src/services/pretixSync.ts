@@ -3,6 +3,7 @@ import { PoolClient } from "pg";
 import {
   fetchOrders,
   fetchSubevents,
+  getPretixConfig,
   PretixConfig,
   PretixOrder,
   PretixSubevent,
@@ -13,40 +14,23 @@ import { insertParticipant } from "../database/queries/insertParticipant";
 import { updateParticipant } from "../database/queries/updateParticipant";
 import { ApplicationContext } from "../types";
 import { participantUpdatedFromPretix } from "../util/participant";
-import { requireEnv } from "../util/util";
 
-// Periodically try to sync Zuzalu residents and visitors from Pretix.
+/**
+ * Kick off a period sync from Preticx into Zupass.
+ */
 export function startPretixSync(context: ApplicationContext) {
-  // Make sure we can use the Pretix API.
-  let pretixConfig: PretixConfig;
-  try {
-    pretixConfig = {
-      token: requireEnv("PRETIX_TOKEN"),
-      orgUrl: requireEnv("PRETIX_ORG_URL"),
-      zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
-      zuVisitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
-      // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
-      zuEventOrganizersItemID: 151,
-    };
-  } catch (e) {
-    console.error(
-      `[INIT] Missing environment variable ${e} - skipping starting Pretix sync`
-    );
-    return;
-  }
-
-  // Sync periodically.
+  const pretixConfig = getPretixConfig();
+  if (pretixConfig == null) return;
   console.log("[PRETIX] Starting Pretix sync: " + JSON.stringify(pretixConfig));
-  trySync();
-  async function trySync() {
+  trySync(pretixConfig);
+  async function trySync(config: PretixConfig) {
     try {
-      await sync(context, pretixConfig);
+      await sync(context, config);
     } catch (e: any) {
       context.rollbar?.error(e);
       console.error(e);
     }
-    // TODO: write to honeycomb
-    setTimeout(trySync, 1000 * 60);
+    setTimeout(() => trySync(config), 1000 * 60);
   }
 }
 
@@ -250,8 +234,7 @@ function ordersToParticipants(
 function deduplicateVisitorParticipants(
   visitors: PretixParticipant[]
 ): PretixParticipant[] {
-  // email -> participant
-  const dedupedVisitors: Map<string, PretixParticipant> = new Map();
+  const dedupedVisitors: Map<string /* email */, PretixParticipant> = new Map();
 
   for (const visitor of visitors) {
     const existingVisitor = dedupedVisitors.get(visitor.email);

@@ -1,3 +1,26 @@
+import { requireEnv } from "../util/util";
+
+export function getPretixConfig(): PretixConfig | null {
+  // Make sure we can use the Pretix API.
+  let pretixConfig: PretixConfig;
+  try {
+    pretixConfig = {
+      token: requireEnv("PRETIX_TOKEN"),
+      orgUrl: requireEnv("PRETIX_ORG_URL"),
+      zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
+      zuVisitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
+      // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
+      zuEventOrganizersItemID: 151,
+    };
+    return pretixConfig;
+  } catch (e) {
+    console.error(
+      `[INIT] Missing environment variable ${e} required for pretix sync.`
+    );
+    return null;
+  }
+}
+
 // Fetch all orders for a given event.
 export async function fetchOrders(
   pretixConfig: PretixConfig,
