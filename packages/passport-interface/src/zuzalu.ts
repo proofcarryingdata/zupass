@@ -10,17 +10,10 @@ export interface ZuParticipant {
   name: string;
   role: string;
   residence: string;
+  visitor_date_ranges: DateRange[];
 }
 
-export interface BackendUser {
-  identifier: string;
-  status: number;
-  createdAt: Date;
-  encryptedBlob: string;
-  updatedAt: Date;
-}
-
-export interface ClientUser extends BackendUser {
-  masterKey: string;
-  serverPassword: string;
+export interface DateRange {
+  date_from: string;
+  date_to: string;
 }
