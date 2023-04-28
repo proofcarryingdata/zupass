@@ -111,7 +111,7 @@ async function saveParticipants(
   const removedParticipants = existingParticipants.filter(
     (existing) => !pretixParticipantsAsMap.has(existing.email)
   );
-  console.log(`[PRETIX] Deleting ${removedParticipants.length}`);
+  console.log(`[PRETIX] Deleting ${removedParticipants.length} participants`);
   for (const removedParticipant of removedParticipants) {
     console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
     await deleteParticipant(dbClient, removedParticipant.email);
