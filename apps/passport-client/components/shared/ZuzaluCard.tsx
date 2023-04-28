@@ -29,7 +29,7 @@ export function ZuzaluCardBody({
 
   return (
     <CardBody>
-      {showQrCode && (
+      {showQrCode && !visitorExpired && (
         <>
           <Spacer h={32} />
           <ZuzaluQR />
