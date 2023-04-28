@@ -211,24 +211,12 @@ function ordersToParticipants(
     .filter((o) => !!o.positions[0].attendee_name)
     .filter((o) => !!(o.email || o.positions[0].attendee_email))
     .map((o) => {
-      if (o.positions.length >= 2) {
-        console.log(
-          `[PRETIX_IVAN] ${o.positions[0].attendee_email} has multiple positions`
-        );
-      }
-
       const orderSubevents = o.positions
         .map((position) => position.subevent)
         .map((positionSubeventId) =>
           subEvents.find((subEvent) => subEvent.id === positionSubeventId)
         )
         .filter((subEvent) => subEvent != null);
-
-      if (orderSubevents.length >= 2) {
-        console.log(
-          `[PRETIX_IVAN] ${o.positions[0].attendee_email} has multiple valid subevents, which are: ${orderSubevents}`
-        );
-      }
 
       const visitorDateRanges = orderSubevents.map(
         (subEvent) =>
