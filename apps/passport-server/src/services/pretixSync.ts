@@ -98,14 +98,15 @@ async function saveParticipants(
     .filter((p) => {
       return (
         existingMap.get(p.email)?.role !== p.role ||
-        existingMap.get(p.email)?.visitor_date_ranges !== p.visitor_date_ranges
+        JSON.stringify(existingMap.get(p.email)?.visitor_date_ranges) !==
+          JSON.stringify(p.visitor_date_ranges)
       );
     });
 
   for (const p of updatedParticipants) {
-    const oldRole = existingMap.get(p.email);
+    const oldParticipant = existingMap.get(p.email);
     console.log(
-      `[PRETIX] Updating ${p.email} ${p.name} from ${oldRole} to ${p.role}`
+      `[PRETIX] Updating ${p.email} ${p.name} from ${oldParticipant?.role} to ${p.role}`
     );
     await updateParticipant(dbClient, p);
   }
