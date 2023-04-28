@@ -1,3 +1,4 @@
+import { DateRange } from "@pcd/passport-interface";
 import { PoolClient } from "pg";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
@@ -210,8 +211,31 @@ function ordersToParticipants(
     .filter((o) => !!o.positions[0].attendee_name)
     .filter((o) => !!(o.email || o.positions[0].attendee_email))
     .map((o) => {
-      const subevent = subEvents.find(
-        (subEvent) => subEvent.id === o.positions[0].subevent
+      if (o.positions.length >= 2) {
+        console.log(
+          `[PRETIX_IVAN] ${o.positions[0].attendee_email} has multiple positions`
+        );
+      }
+
+      const orderSubevents = o.positions
+        .map((position) => position.subevent)
+        .map((positionSubeventId) =>
+          subEvents.find((subEvent) => subEvent.id === positionSubeventId)
+        )
+        .filter((subEvent) => subEvent != null);
+
+      if (orderSubevents.length >= 2) {
+        console.log(
+          `[PRETIX_IVAN] ${o.positions[0].attendee_email} has multiple valid subevents, which are: ${orderSubevents}`
+        );
+      }
+
+      const visitorDateRanges = orderSubevents.map(
+        (subEvent) =>
+          ({
+            date_from: subEvent?.date_from,
+            date_to: subEvent?.date_to,
+          } satisfies DateRange)
       );
 
       return {
@@ -221,15 +245,7 @@ function ordersToParticipants(
         residence: "", // TODO: not in pretix yet
         order_id: o.code,
         email_token: "",
-        visitor_date_ranges:
-          subevent === undefined
-            ? []
-            : [
-                {
-                  date_from: subevent.date_from,
-                  date_to: subevent.date_to,
-                },
-              ],
+        visitor_date_ranges: visitorDateRanges,
       } satisfies PretixParticipant;
     });
 
@@ -338,6 +354,6 @@ interface PretixPosition {
 
 interface PretixSubevent {
   id: number;
-  date_from: string;
-  date_to: string;
+  date_from?: string | null;
+  date_to?: string | null;
 }
