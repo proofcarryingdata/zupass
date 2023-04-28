@@ -1,10 +1,11 @@
 import { DateRange } from "@pcd/passport-interface";
 import { PoolClient } from "pg";
 import { ParticipantRole, PretixParticipant } from "../database/models";
-import { fetchParticipantEmails } from "../database/queries/fetchParticipantEmails";
+import { fetchPretixParticipants } from "../database/queries/fetchPretixParticipants";
 import { insertParticipant } from "../database/queries/insertParticipant";
 import { updateParticipant } from "../database/queries/updateParticipant";
 import { ApplicationContext } from "../types";
+import { participantUpdatedFromPretix } from "../util/participant";
 import { requireEnv } from "../util/util";
 
 // Periodically try to sync Zuzalu residents and visitors from Pretix.
@@ -42,26 +43,17 @@ export function startPretixSync(context: ApplicationContext) {
   }
 }
 
-interface PretixConfig {
-  token: string;
-  orgUrl: string;
-  zuEventID: string;
-  zuVisitorEventID: string;
-  zuEventOrganizersItemID: number;
-}
-
-// Fetch tickets from Pretix, save to DB.
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
-  // Load from pretix
   const participants = await loadAllParticipants(pretixConfig);
   const participantEmails = new Set(participants.map((p) => p.email));
+
   console.log(
-    `[PRETIX] loaded ${participants.length} Pretix participants, ${participantEmails.size} unique emails`
+    `[PRETIX] loaded ${participants.length} Pretix participants (visitors and residents) from Pretix, found ${participantEmails.size} unique emails`
   );
 
-  // Save to DB
   const { dbPool } = context;
   const dbClient = await dbPool.connect();
+
   try {
     await saveParticipants(dbClient, participants);
   } finally {
@@ -69,47 +61,51 @@ async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
   }
 }
 
-// Insert new participants into the database.
-// Update role of existing participants.
-// TODO: handle revoked/cancelled tickets.
+/**
+ * - Insert new participants into the database.
+ * - Update role and visitor dates of existing participants, if they
+ *   been changed.
+ */
 async function saveParticipants(
   dbClient: PoolClient,
   participants: PretixParticipant[]
 ) {
-  // Query database to see what's changed
-  const existingPs = await fetchParticipantEmails(dbClient);
-  const existingMap = new Map(
-    existingPs.map((p) => [
-      p.email,
-      { role: p.role, visitor_date_ranges: p.visitor_date_ranges },
-    ])
+  const existingParticipants = await fetchPretixParticipants(dbClient);
+  const existingParticipantsByEmail = new Map(
+    existingParticipants.map((p) => [p.email, p])
+  );
+  const newParticipants = participants.filter(
+    (p) => !existingParticipantsByEmail.has(p.email)
   );
 
-  // Insert new participants
-  const newParticipants = participants.filter((p) => !existingMap.has(p.email));
+  // Step 1 of saving: insert participants that are new
   console.log(`[PRETIX] Inserting ${newParticipants.length} new participants`);
-  for (const p of newParticipants) {
-    console.log(`[PRETIX] Inserting ${p.email} ${p.name} ${p.role}`);
-    await insertParticipant(dbClient, p);
+  for (const participant of newParticipants) {
+    console.log(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
+    await insertParticipant(dbClient, participant);
   }
 
-  // Update role on existing participants
+  // Step 2 of saving: update participants that have changed
+  // Filter to participants that existed before, and filter to those that have changed.
   const updatedParticipants = participants
-    .filter((p) => existingMap.has(p.email))
+    .filter((p) => existingParticipantsByEmail.has(p.email))
     .filter((p) => {
-      return (
-        existingMap.get(p.email)?.role !== p.role ||
-        JSON.stringify(existingMap.get(p.email)?.visitor_date_ranges) !==
-          JSON.stringify(p.visitor_date_ranges)
-      );
+      const oldParticipant = existingParticipantsByEmail.get(p.email)!;
+      const newParticipant = p;
+      return participantUpdatedFromPretix(oldParticipant, newParticipant);
     });
 
-  for (const p of updatedParticipants) {
-    const oldParticipant = existingMap.get(p.email);
-    console.log(
-      `[PRETIX] Updating ${p.email} ${p.name} from ${oldParticipant?.role} to ${p.role}`
+  // For the participants that have changed, update them in the database.
+  for (const updatedParticipant of updatedParticipants) {
+    const oldParticipant = existingParticipantsByEmail.get(
+      updatedParticipant.email
     );
-    await updateParticipant(dbClient, p);
+    console.log(
+      `[PRETIX] Updating ${JSON.stringify(oldParticipant)} to ${JSON.stringify(
+        updatedParticipant
+      )}`
+    );
+    await updateParticipant(dbClient, updatedParticipant);
   }
 }
 
@@ -347,4 +343,12 @@ interface PretixSubevent {
   id: number;
   date_from?: string | null;
   date_to?: string | null;
+}
+
+interface PretixConfig {
+  token: string;
+  orgUrl: string;
+  zuEventID: string;
+  zuVisitorEventID: string;
+  zuEventOrganizersItemID: number;
 }
