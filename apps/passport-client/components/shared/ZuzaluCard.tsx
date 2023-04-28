@@ -1,4 +1,8 @@
-import { DateRange, ZuParticipant } from "@pcd/passport-interface";
+import {
+  DateRange,
+  ParticipantRole,
+  ZuParticipant,
+} from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -52,6 +56,7 @@ export function ZuzaluCardBody({
 
 function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
   if (!participant) return null;
+  if (participant.role !== ParticipantRole.Visitor) return null;
 
   return (
     <>
