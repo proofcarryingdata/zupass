@@ -112,8 +112,14 @@ async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
   const residents = await loadResidents(pretixConfig);
-  const visitors = await loadVisitors(pretixConfig, residents);
-  return [...residents, ...visitors];
+  const visitors = await loadVisitors(pretixConfig);
+
+  const residentsAsMap = participantsToMap(residents);
+  const nonResidentVisitors = visitors.filter(
+    (v) => !residentsAsMap.has(v.email)
+  );
+
+  return [...residents, ...nonResidentVisitors];
 }
 
 /**
@@ -158,8 +164,7 @@ async function loadResidents(
  * who are not members of the main Zuzalu event in pretix.
  */
 async function loadVisitors(
-  pretixConfig: PretixConfig,
-  residents: PretixParticipant[]
+  pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
   const subevents = await fetchSubevents(
     pretixConfig,
