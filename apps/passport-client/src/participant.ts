@@ -33,6 +33,11 @@ export async function pollParticipant(
   }
 }
 
+/**
+ * If the user is a visitor, they must have a visitor ticket that is
+ * active at the current moment to be a 'valid' visitor. This function
+ * checks the validity of the visitor, if they are a visitor.
+ */
 export function getVisitorStatus(participant?: ZuParticipant):
   | {
       isVisitor: boolean;
