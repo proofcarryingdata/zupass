@@ -10,7 +10,7 @@ interface Config {
 export const config: Config = {
   devMode: process.env.NODE_ENV !== "production",
   passportServer: process.env.PASSPORT_SERVER_URL,
-  maxProofAge: 1000 * 60 * 30,
+  maxProofAge: 1000 * 30, // 60 * 60 * 4,
 };
 
 console.log("Config: " + JSON.stringify(config));
