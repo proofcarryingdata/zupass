@@ -1,5 +1,4 @@
 import { PCD } from "@pcd/pcd-types";
-import * as React from "react";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";

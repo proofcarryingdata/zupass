@@ -24,6 +24,7 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { pollParticipant } from "../src/participant";
+import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<object, ZuState> {
@@ -145,6 +146,8 @@ async function loadInitialState(): Promise<ZuState> {
 if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
   window.location.replace("https://zupass.org/" + window.location.hash);
 }
+
+registerServiceWorker();
 
 const root = createRoot(document.querySelector("#root"));
 root.render(
