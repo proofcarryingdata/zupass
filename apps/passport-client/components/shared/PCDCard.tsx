@@ -30,7 +30,7 @@ export function PCDCard({
     }
   }, [pcd, pcdPackage]);
   const header = isZuzaluIdentity
-    ? "VERIFIED ZUZALU PASSPORT 2"
+    ? "VERIFIED ZUZALU PASSPORT"
     : displayOptions?.header?.toUpperCase() ?? "PCD";
 
   if (expanded) {
