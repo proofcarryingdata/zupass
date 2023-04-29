@@ -1,3 +1,15 @@
+/**
+ * Installs a service worker which caches application code and
+ * various artifacts needed by the application, so that the website
+ * works offline, and so that it loads fast.
+ *
+ * The service worker is invalidated each time there is a production
+ * deploy.
+ *
+ * The service worker is not installed in development mode, so that
+ * its caching of application code does not interfere with quick
+ * iteration loops.
+ */
 export async function registerServiceWorker() {
   const serviceWorkerPath = "/service-worker.js";
 

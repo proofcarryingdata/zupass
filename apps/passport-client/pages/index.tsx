@@ -24,7 +24,7 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { pollParticipant } from "../src/participant";
-import { registerServiceWorker } from "../src/serviceWorkerUtils";
+import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
 
 class App extends React.Component<object, ZuState> {
