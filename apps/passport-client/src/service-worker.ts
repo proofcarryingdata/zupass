@@ -1,21 +1,23 @@
 // this file is loaded as a service worker
 
+const impermanentCache = ["/", "/index.html", "/global.css", "/js/index.js"];
+
 async function addResourcesToCache(resources: string[]): Promise<void> {
   const cache = await caches.open("v1");
+
+  await Promise.all(impermanentCache.map((item) => cache.delete(item)));
+
   await cache.addAll(resources);
 }
 
 self.addEventListener("install", (event: any) => {
-  console.log("[SERVICE_WORKER] installing");
+  console.log(`[SERVICE_WORKER] installing ${process.env.SW_ID}`);
   (self as any).skipWaiting();
 
   event.waitUntil(
     addResourcesToCache([
-      "/",
+      ...impermanentCache,
       "/favicon.ico",
-      "/index.html",
-      "/global.css",
-      "/js/index.js",
       "/semaphore-artifacts/16.wasm",
       "/semaphore-artifacts/16.zkey",
       "/fonts/IBMPlexSans-Regular.ttf",
@@ -24,7 +26,7 @@ self.addEventListener("install", (event: any) => {
     ])
   );
 
-  console.log("[SERVICE_WORKER] installed");
+  console.log(`[SERVICE_WORKER] installed ${process.env.SW_ID}`);
 });
 
 async function cacheFirst(request): Promise<Response> {
@@ -44,5 +46,5 @@ self.addEventListener("fetch", (event: any) => {
 });
 
 self.addEventListener("activate", () => {
-  console.log("[SERVICE_WORKER] activated");
+  console.log(`[SERVICE_WORKER] activated ${process.env.SW_ID}`);
 });

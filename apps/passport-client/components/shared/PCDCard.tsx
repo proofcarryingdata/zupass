@@ -1,5 +1,4 @@
 import { PCD } from "@pcd/pcd-types";
-import * as React from "react";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
@@ -31,7 +30,7 @@ export function PCDCard({
     }
   }, [pcd, pcdPackage]);
   const header = isZuzaluIdentity
-    ? "VERIFIED ZUZALU PASSPORT"
+    ? "VERIFIED ZUZALU PASSPORT 2"
     : displayOptions?.header?.toUpperCase() ?? "PCD";
 
   if (expanded) {

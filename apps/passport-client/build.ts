@@ -2,6 +2,7 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
+import { v4 as uuid } from "uuid";
 
 dotenv.config();
 
@@ -52,7 +53,7 @@ const serviceWorkerOpts: BuildOptions = {
   // workers are only able to be attached to the same scope as they
   // themselves are served from.
   outdir: "public/",
-  define,
+  define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) },
 };
 
 run(process.argv[2])
