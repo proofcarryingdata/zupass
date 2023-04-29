@@ -110,6 +110,7 @@ function ZuzaluQR() {
 
   // Load or generate QR code on mount, then regenerate periodically
   useEffect(() => {
+    maybeGenerateQR();
     const interval = setInterval(maybeGenerateQR, config.maxProofAge / 10);
     return () => clearInterval(interval);
   }, [maybeGenerateQR]);
