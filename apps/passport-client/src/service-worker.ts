@@ -1,7 +1,5 @@
 // this file is loaded as a service worker
 
-console.log("test");
-
 async function addResourcesToCache(resources: string[]): Promise<void> {
   const cache = await caches.open("v1");
   await cache.addAll(resources);

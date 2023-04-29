@@ -2,7 +2,6 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
-import http from "http";
 
 dotenv.config();
 
@@ -80,38 +79,9 @@ async function run(command: string) {
 
       const { host } = await ctx.serve({
         servedir: "public",
-        port: 2999,
+        port: 3000,
         host: "0.0.0.0",
       });
-
-      // Then start a proxy server on port 3000
-      console.log("starting server");
-      http
-        .createServer((req, res) => {
-          const options = {
-            hostname: host,
-            port: 2999,
-            path: req.url,
-            method: req.method,
-            headers: req.headers,
-          };
-
-          console.log(`${options.method} - ${options.path}`);
-
-          const proxyReq = http.request(options, (proxyRes) => {
-            if (options.path === "/js/service-worker.js") {
-              console.log("updating content type");
-              // proxyRes.headers["content-type"] = "application/javascript";
-              proxyRes.headers["Service-Worker-Allowed"] = "/";
-            }
-
-            res.writeHead(proxyRes.statusCode, proxyRes.headers);
-            proxyRes.pipe(res, { end: true });
-          });
-
-          req.pipe(proxyReq, { end: true });
-        })
-        .listen(3000);
 
       console.log(`Serving passport client on ${host}`);
       break;

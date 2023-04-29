@@ -1,5 +1,5 @@
 export async function registerServiceWorker() {
-  const serviceWorkerPath = "/js/service-worker.js";
+  const serviceWorkerPath = "/service-worker.js";
 
   console.log(`[SERVICE_WORKER] attempting to register ${serviceWorkerPath}`);
 
@@ -9,12 +9,9 @@ export async function registerServiceWorker() {
   }
 
   try {
-    const registration = await navigator.serviceWorker.register(
-      serviceWorkerPath,
-      {
-        scope: "/",
-      }
-    );
+    await navigator.serviceWorker.register(serviceWorkerPath, {
+      scope: "/",
+    });
     console.log(`[SERVICE_WORKER] registered ${serviceWorkerPath}`);
   } catch (e) {
     console.log(
