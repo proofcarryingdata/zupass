@@ -11,6 +11,13 @@
  * iteration loops.
  */
 export async function registerServiceWorker() {
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      `[SERVICE_WORKER] not registering service worker in development mode`
+    );
+    return;
+  }
+
   const serviceWorkerPath = "/service-worker.js";
 
   console.log(`[SERVICE_WORKER] attempting to register ${serviceWorkerPath}`);
