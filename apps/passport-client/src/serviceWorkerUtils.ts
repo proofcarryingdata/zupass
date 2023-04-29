@@ -1,12 +1,16 @@
 export async function registerServiceWorker() {
-  if (!("serviceworker" in navigator)) {
+  const serviceWorkerPath = "/js/service-worker.js";
+
+  console.log(`[SERVICE_WORKER] attempting to register ${serviceWorkerPath}`);
+
+  if (!("serviceWorker" in navigator)) {
+    console.log(`[SERVICE_WORKER] service workers not supported`);
     return;
   }
-  const serviceWorkerPath = "/js/src/service-worker.js";
 
   try {
     await navigator.serviceWorker.register(serviceWorkerPath, {
-      scope: "/*",
+      scope: "/",
     });
     console.log(`[SERVICE_WORKER] registered ${serviceWorkerPath}`);
   } catch (e) {
