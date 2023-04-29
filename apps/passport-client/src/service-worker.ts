@@ -1,5 +1,11 @@
 // this file is loaded as a service worker
 
+/**
+ * These files are cleared from the cache every time a new version
+ * of the service worker is installed, because a new version of
+ * the service worker is triggered by a change in the service worker
+ * source code, which happens each time production deploys.
+ */
 const impermanentCache = ["/", "/index.html", "/global.css", "/js/index.js"];
 
 async function addResourcesToCache(resources: string[]): Promise<void> {
