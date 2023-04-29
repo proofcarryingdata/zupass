@@ -7,6 +7,7 @@ async function addResourcesToCache(resources: string[]): Promise<void> {
 
 self.addEventListener("install", (event: any) => {
   console.log("[SERVICE_WORKER] installing");
+  (self as any).skipWaiting();
 
   event.waitUntil(
     addResourcesToCache([
