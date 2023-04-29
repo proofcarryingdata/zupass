@@ -8,7 +8,7 @@ dotenv.config();
 const opts: BuildOptions = {
   sourcemap: true,
   bundle: true,
-  entryPoints: ["pages/index.tsx"],
+  entryPoints: ["pages/index.tsx", "src/service-worker.ts"],
   plugins: [
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
