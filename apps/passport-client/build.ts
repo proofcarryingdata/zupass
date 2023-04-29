@@ -53,6 +53,12 @@ const serviceWorkerOpts: BuildOptions = {
   // workers are only able to be attached to the same scope as they
   // themselves are served from.
   outdir: "public/",
+  // Service workers are only updated when the binary contents of their
+  // files changes. The service worker for zupass.org uses this environment
+  // variable, which causes its contents to be changed every time `build.ts`
+  // is invoked, so that each new production deploy invalidates the previous
+  // service worker, which clears zupass.org application code (html, js, etc.),
+  // so that clients are not forever stuck on one version of the code.
   define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) },
 };
 
