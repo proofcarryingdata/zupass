@@ -9,9 +9,12 @@ export async function registerServiceWorker() {
   }
 
   try {
-    await navigator.serviceWorker.register(serviceWorkerPath, {
-      scope: "/",
-    });
+    const registration = await navigator.serviceWorker.register(
+      serviceWorkerPath,
+      {
+        scope: "/",
+      }
+    );
     console.log(`[SERVICE_WORKER] registered ${serviceWorkerPath}`);
   } catch (e) {
     console.log(

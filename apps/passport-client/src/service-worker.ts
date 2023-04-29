@@ -1,23 +1,13 @@
 // this file is loaded as a service worker
 
-const addResourcesToCache = async (resources: string[]) => {
+async function addResourcesToCache(resources: string[]): Promise<void> {
   const cache = await caches.open("v1");
   await cache.addAll(resources);
-};
-
-const cacheFirst = async (request) => {
-  const responseFromCache = await caches.match(request);
-  if (responseFromCache) {
-    return responseFromCache;
-  }
-  return fetch(request);
-};
-
-self.addEventListener("fetch", (event: any) => {
-  event.respondWith(cacheFirst(event.request));
-});
+}
 
 self.addEventListener("install", (event: any) => {
+  console.log("[SERVICE_WORKER] installing");
+
   event.waitUntil(
     addResourcesToCache([
       "/",
@@ -28,4 +18,26 @@ self.addEventListener("install", (event: any) => {
       "/semaphore-artifacts/16.zkey",
     ])
   );
+
+  console.log("[SERVICE_WORKER] installed");
+});
+
+async function cacheFirst(request): Promise<Response> {
+  const responseFromCache = await caches.match(request);
+
+  if (responseFromCache) {
+    console.log("[SERVICE_WORKER] cache hit ", request?.url);
+    return responseFromCache;
+  } else {
+    console.log("[SERVICE_WORKER] cache miss", request?.url);
+    return fetch(request);
+  }
+}
+
+self.addEventListener("fetch", (event: any) => {
+  event.respondWith(cacheFirst(event.request));
+});
+
+self.addEventListener("activate", () => {
+  console.log("[SERVICE_WORKER] activated");
 });
