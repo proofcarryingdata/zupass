@@ -12,7 +12,8 @@ self.addEventListener("install", (event: any) => {
       "/index.html",
       "/global.css",
       "/js/index.js",
-      "/image-list.js",
+      "/semaphore-artifacts/16.wasm",
+      "/semaphore-artifacts/16.zkey",
     ])
   );
 });
