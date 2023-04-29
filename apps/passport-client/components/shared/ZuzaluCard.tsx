@@ -1,6 +1,6 @@
 import { ZuParticipant } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
@@ -62,32 +62,54 @@ function highlight(role: string) {
   return role === "resident" || role === "organizer";
 }
 
+/**
+ * Generate a fresh Zuzalu identity-revealing proof every n ms.
+ * We regenerate before the proof expires to allow for a few minutes of
+ * clock skew between prover and verifier.
+ */
+const regenerateAfterMs = (config.maxProofAge * 2) / 3;
+
 function ZuzaluQR() {
   const [state] = useContext(DispatchContext);
   const { identity, self } = state;
   const { uuid } = self;
 
   const [qrPayload, setQRPayload] = useState<string | undefined>();
+  const keepRegenerating = useRef<boolean>(true);
 
   const generateQr = useCallback(
     async function () {
-      const pcd = await createZuzaluQRProof(identity, uuid);
+      if (!keepRegenerating.current) return;
+      const timestamp = Date.now();
+      console.log(`generating zuzalu QR proof, timestamp ${timestamp}`);
+      const pcd = await createZuzaluQRProof(identity, uuid, timestamp);
       const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
       const stringified = JSON.stringify(serialized);
-      console.log(
-        `generated zuzalu QR proof with length ${stringified.length}`
-      );
-      const encodedProof = encodeQRPayload(stringified);
-      setQRPayload(encodedProof);
+      console.log(`generated zuzalu QR proof, length ${stringified.length}`);
+
+      const qrPCD = encodeQRPayload(stringified);
+      localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });
+      setQRPayload(qrPCD);
+
+      if (!keepRegenerating.current) return;
+      window.setTimeout(generateQr, regenerateAfterMs);
     },
     [identity, uuid]
   );
 
-  // Generate QR code on mount, then regenerate periodically
+  // Load or generate QR code on mount, then regenerate periodically
   useEffect(() => {
-    generateQr();
-    const interval = setInterval(generateQr, (config.maxProofAge * 2) / 3);
-    return () => clearInterval(interval);
+    const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
+    let startInMs = 0;
+    if (timestamp != null && Date.now() - timestamp < config.maxProofAge) {
+      setQRPayload(qrPCD);
+      startInMs = Math.max(0, regenerateAfterMs - (Date.now() - timestamp));
+      console.log(`Loaded QR from storage. Regenerating in ${startInMs}ms`);
+    }
+    setTimeout(generateQr, startInMs);
+    return () => {
+      keepRegenerating.current = false;
+    };
   }, [generateQr]);
 
   if (qrPayload == null) {

@@ -16,13 +16,14 @@ export interface ZuzaluQRPayload {
 // Create a PCD proving that we own a given semaphore identity.
 export async function createZuzaluQRProof(
   identity: Identity,
-  uuid: string
+  uuid: string,
+  timestamp: number
 ): Promise<SemaphoreSignaturePCD> {
   const { prove } = SemaphoreSignaturePCDPackage;
 
   const payload: ZuzaluQRPayload = {
     uuid: uuidToBigint(uuid).toString(),
-    timestamp: Date.now(),
+    timestamp,
   };
 
   const args: SemaphoreSignaturePCDArgs = {
