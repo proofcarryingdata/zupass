@@ -11,11 +11,15 @@ self.addEventListener("install", (event: any) => {
   event.waitUntil(
     addResourcesToCache([
       "/",
+      "/favicon.ico",
       "/index.html",
       "/global.css",
       "/js/index.js",
       "/semaphore-artifacts/16.wasm",
       "/semaphore-artifacts/16.zkey",
+      "/fonts/IBMPlexSans-Regular.ttf",
+      "/fonts/IBMPlexSans-Medium.ttf",
+      "/fonts/IBMPlexSans-Light.ttf",
     ])
   );
 
