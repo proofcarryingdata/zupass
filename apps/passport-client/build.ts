@@ -39,6 +39,7 @@ const passportAppOpts: BuildOptions = {
 };
 
 const serviceWorkerOpts: BuildOptions = {
+  tsconfig: "./service-worker-tsconfig.json",
   sourcemap: true,
   bundle: true,
   entryPoints: ["src/service-worker.ts"],
