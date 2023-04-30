@@ -162,7 +162,7 @@ async function addIdentityPCD() {
 }
 
 async function addWebAuthnPCD() {
-  // Generate a new WebAuthn credential
+  // Register a new WebAuthn credential for testing.
   const generatedRegistrationOptions = await generateRegistrationOptions({
     rpName: "consumer-client",
     rpID: window.location.hostname,
@@ -179,16 +179,20 @@ async function addWebAuthnPCD() {
     response: startRegistrationResponse,
     expectedOrigin: window.location.origin,
     expectedChallenge: generatedRegistrationOptions.challenge,
-    supportedAlgorithmIDs: [-7],
+    supportedAlgorithmIDs: [-7], // support ES256 signing algorithm
   });
 
   if (!verificationResponse.registrationInfo) {
     throw new Error("Registration failed the return correct response.");
   }
 
+  // Get relevant credential arguments from registration response.
   const { credentialID, credentialPublicKey, counter } =
     verificationResponse.registrationInfo;
 
+  // Create new WebAuthn PCD. This process initiates the WebAuth
+  // authentication ceremony, prompting a authorization gesture like
+  // a fingerprint or Face ID scan, depending on the device.
   const newCredential = await WebAuthnPCDPackage.prove({
     rpID: window.location.hostname,
     authenticator: {
@@ -196,7 +200,7 @@ async function addWebAuthnPCD() {
       credentialPublicKey,
       counter,
     },
-    challenge: "1",
+    challenge: "1", // arbitrary challenge to be signed
     origin: window.location.origin,
   });
 
@@ -204,6 +208,7 @@ async function addWebAuthnPCD() {
     newCredential
   );
 
+  // Add new WebAuthn PCD to Passport.
   const url = constructPassportPcdAddRequestUrl(
     PASSPORT_URL,
     window.location.origin + "/popup",
