@@ -20,11 +20,7 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import {
-  getReferrerHost,
-  getReferrerOrigin,
-  nextFrame,
-} from "../../../src/util";
+import { getHost, getOrigin, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -49,6 +45,7 @@ export function SemaphoreSignatureProveScreen({
         state.identity,
         state.self.uuid,
         modifiedArgs,
+        req.returnUrl,
         req.options
       );
 
@@ -76,8 +73,8 @@ export function SemaphoreSignatureProveScreen({
     // Website is asking for a signature of the Zuzalu UUID for auth
     lines.push(
       <p>
-        <b>{getReferrerHost()}</b> will receive your name, your email, and your
-        Semaphore public key.
+        <b>{getHost(req.returnUrl)}</b> will receive your name, your email, and
+        your Semaphore public key.
       </p>
     );
 
@@ -113,6 +110,7 @@ async function fillArgs(
   identity: Identity,
   uuid: string,
   modifiedArgs: SemaphoreSignaturePCDArgs,
+  returnURL: string,
   options?: ProveOptions
 ): Promise<SemaphoreSignaturePCDArgs> {
   const signedMessage = modifiedArgs.signedMessage;
@@ -121,7 +119,7 @@ async function fillArgs(
     console.log("this signature request is for signing into a website", uuid);
     const payload: SignInMessagePayload = {
       uuid,
-      referrer: getReferrerOrigin(),
+      referrer: getOrigin(returnURL),
     };
     signedMessage.value = JSON.stringify(payload);
   } else if (signedMessage.value === undefined) {

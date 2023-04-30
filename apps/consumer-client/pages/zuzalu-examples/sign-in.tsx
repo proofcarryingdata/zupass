@@ -68,9 +68,9 @@ export default function Page() {
           role.
         </li>
         <li>
-          The <code>origin</code> of the referrer of the website that requested
-          the sign in. We include this so that sign-in proofs can't be reused by
-          malicious websites.
+          The <code>origin</code> of the website that requested the sign in. We
+          include this so that sign-in proofs can't be reused by malicious
+          websites.
         </li>
       </ul>
       <p>

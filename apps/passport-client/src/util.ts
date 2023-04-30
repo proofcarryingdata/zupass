@@ -5,21 +5,13 @@ export function assertUnreachable(_: never): never {
   throw new Error("Unreachable");
 }
 
-export function getReferrerHost() {
-  const referrer = document.referrer;
-  if (!referrer) {
-    return "";
-  }
-  const url = new URL(referrer);
+export function getHost(returnURL: string) {
+  const url = new URL(returnURL);
   return url.host;
 }
 
-export function getReferrerOrigin() {
-  const referrer = document.referrer;
-  if (!referrer) {
-    return "";
-  }
-  const url = new URL(referrer);
+export function getOrigin(returnURL: string) {
+  const url = new URL(returnURL);
   return url.origin;
 }
 

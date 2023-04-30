@@ -33,13 +33,9 @@ export function validateRequest<T extends PCDRequest>(
 // A javascript:... returnUrl allows a caller to exfiltrate user secrets.
 function validateReturnUrl(returnUrl: string) {
   const url = new URL(returnUrl);
-  if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error("Invalid return URL protocol: " + url.protocol);
-  }
-  const referrer = new URL(window.document.referrer);
-  if (url.origin !== referrer.origin) {
-    throw new Error("Invalid return URL origin: " + url.origin);
-  }
+  if (url.protocol === "https:") return;
+  if (url.protocol === "http:" && url.hostname === "localhost") return;
+  throw new Error("Invalid return URL protocol: " + url.protocol);
 }
 
 // Redirects to the returnUrl with a pending server proof in the query string.
