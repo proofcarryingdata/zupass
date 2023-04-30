@@ -15,7 +15,7 @@ import {
   safeRedirect,
   safeRedirectPending,
 } from "../../../src/passportRequest";
-import { getReferrerHost, nextFrame } from "../../../src/util";
+import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -87,7 +87,7 @@ export function SemaphoreGroupProveScreen({
   } else {
     lines.push(
       <p>
-        <b>{getReferrerHost()}</b> will receive a proof that you're one of{" "}
+        <b>{getHost(req.returnUrl)}</b> will receive a proof that you're one of{" "}
         {group.members.length} members of {group.name}.
       </p>
     );
