@@ -2,6 +2,7 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
+import fs from "fs";
 import { v4 as uuid } from "uuid";
 
 dotenv.config();
@@ -33,6 +34,7 @@ const passportAppOpts: BuildOptions = {
     ".svg": "dataurl",
   },
   outdir: "public/js",
+  metafile: true,
   define,
 };
 
@@ -71,6 +73,13 @@ async function run(command: string) {
     case "build":
       const passportRes = await build({ ...passportAppOpts, minify: true });
       console.error("Built", passportRes);
+
+      // Bundle size data for use with https://esbuild.github.io/analyze/
+      fs.writeFileSync(
+        `${passportAppOpts.outdir}/bundle-size.json`,
+        JSON.stringify(passportRes.metafile)
+      );
+
       const serviceWorkerRes = await build({
         ...serviceWorkerOpts,
         minify: true,
