@@ -16,7 +16,7 @@
     "@pcd/pcd-types": "0.5.2",
     "@pcd/semaphore-group-pcd": "0.5.2",
     "@pcd/semaphore-identity-pcd": "0.5.2",
-    "@pcd/webauthn-pcd": "*",
+    "@pcd/webauthn-pcd": "0.4.2",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "@simplewebauthn/browser": "^7.2.0",

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/webauthn-pcd",
-  "version": "0.0.10",
+  "version": "0.4.2",
   "license": "GPL-3.0-or-later",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -10,25 +10,25 @@
     "build": "tsc --noEmit"
   },
   "dependencies": {
-    "@pcd/pcd-types": "*",
+    "@pcd/pcd-types": "0.4.2",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@simplewebauthn/typescript-types": "^7.0.0",
     "json-bigint": "^1.0.0",
-    "uuid": "^9.0.0"
-  },
-  "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "uuid": "^9.0.0",
+    "typescript": "^4.5.2",
+    "@pcd/eslint-config-custom": "0.4.2",
+    "@pcd/tsconfig": "0.4.2",
     "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
-    "@types/sinon": "^10.0.14",
+    "@types/sinon": "^10.0.14"
+  },
+  "devDependencies": {
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "sinon": "^15.0.4",
-    "ts-mocha": "^10.0.0",
-    "typescript": "^4.5.2"
+    "ts-mocha": "^10.0.0"
   },
   "publishConfig": {
     "access": "public"

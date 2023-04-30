@@ -116,7 +116,6 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
-  console.log("Generating");
   // Show the NewPassportScreen.
   // This will save the sema identity & request email verification.
   update({ pendingAction: { type: "new-passport", email } });
@@ -258,7 +257,6 @@ function resetPassport() {
 }
 
 async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
-  console.log({ state });
   if (state.pcds.hasPackage(pcd.type)) {
     const newPCD = await state.pcds.deserialize(pcd);
     if (state.pcds.hasPCDWithId(newPCD.id)) {
