@@ -8,19 +8,23 @@ export interface ZuParticipant {
   /** Participant metadata */
   email: string;
   name: string;
-  role: string;
+  role: ParticipantRole;
   residence: string;
+  visitor_date_ranges: DateRange[];
 }
 
-export interface BackendUser {
-  identifier: string;
-  status: number;
-  createdAt: Date;
-  encryptedBlob: string;
-  updatedAt: Date;
+export interface DateRange {
+  date_from?: string | null;
+  date_to?: string | null;
 }
 
-export interface ClientUser extends BackendUser {
-  masterKey: string;
-  serverPassword: string;
+export interface FullDateRange {
+  date_from: string;
+  date_to: string;
+}
+
+export enum ParticipantRole {
+  Visitor = "visitor",
+  Resident = "resident",
+  Organizer = "organizer",
 }

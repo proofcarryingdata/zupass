@@ -58,7 +58,8 @@ select
     p.name,
     p.role,
     p.residence,
-    p.order_id
+    p.order_id,
+    p.visitor_date_ranges
 from commitments c
 join pretix_participants p on c.participant_email=p.email;`
   );
