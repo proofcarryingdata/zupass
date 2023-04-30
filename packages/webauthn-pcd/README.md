@@ -8,4 +8,4 @@ Some example use cases:
 
 - Proof that I own a particular Yubikey and therefore am a authorized member of an organization.
 - Proof that I own an Apple device that has a particular [Passkey](https://developer.apple.com/passkeys/), and that I've used Face ID or Touch ID to authenticate.
-- Proof that a human has in some way interacted with a hardware device (through fingerprint, facial scan, or otherwise), and therefore not an automated spammer.
+- Proof that a human has in some way interacted with a hardware device (through fingerprint, facial scan, or other [test of user presence](https://www.w3.org/TR/webauthn-2/#test-of-user-presence)), and therefore not an script or automated spammer.

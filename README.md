@@ -2,27 +2,27 @@
 
 ## What is the Zuzalu Passport?
 
-*This README is generally aimed at developers interested in building on top of the Zuzalu Passport. If you are a resident looking for instructions on how to set up your Passport, visit [this link](https://docs.google.com/document/d/1pADZ8ixBkKkJcw3NA1dNMhrB6dwWGfFx6H92IV6dKuU/edit?usp=sharing).*
+_This README is generally aimed at developers interested in building on top of the Zuzalu Passport. If you are a resident looking for instructions on how to set up your Passport, visit [this link](https://docs.google.com/document/d/1pADZ8ixBkKkJcw3NA1dNMhrB6dwWGfFx6H92IV6dKuU/edit?usp=sharing)._
 
-The [Zuzalu Passport](https://zupass.org) allows Zuzalu residents to store personal data relating to Zuzalu identity, reputation, activity, and more, and to share any part of this data with any (physical and digital) Zuzalu service or app of their choosing. Zuzalu services may include anything built by Zuzalu administrators or other residents: physical authentication procedures, the Zuzalu website, Zuzalu message boards, Zuzalu governance infrastructure, a resident *Mafia* game, a community matchmaking service, a community newsletter, and more.
+The [Zuzalu Passport](https://zupass.org) allows Zuzalu residents to store personal data relating to Zuzalu identity, reputation, activity, and more, and to share any part of this data with any (physical and digital) Zuzalu service or app of their choosing. Zuzalu services may include anything built by Zuzalu administrators or other residents: physical authentication procedures, the Zuzalu website, Zuzalu message boards, Zuzalu governance infrastructure, a resident _Mafia_ game, a community matchmaking service, a community newsletter, and more.
 
 **Every active Zuzalu resident and visitor has created a Zuzalu Passport, making it a simple but powerful "base" for anyone to build and experiment on top of.** The goal of the Zuzalu Passport is to help the Zuzalu community collectively build out community infrastructure over the course of the next two months, by providing a solid foundation and by onboarding people onto new tools enabled by zero-knowledge.
 
 Under the hood, the Zuzalu Passport stores cryptographically-manipulable data such as keypairs, credentials, attestations, and more, and uses a very lightweight standard for arbitrary zero-knowledge proofs to pass along this data to applications. ZKPs enable three critical features in the Passport system:
 
-- **Any Zuzalu resident can build applications that use the Passport system**, without needing permission from Zuzalu organizers or Passport maintainers. There are no API keys, centralized servers, proprietary standards, special tokens, or gated endpoints* that you need approval for in order to build an experimental community governance project that anyone with a Zuzalu Passport can participate in. With the Passport architecture, application developers can simply give or request data from users directly.
+- **Any Zuzalu resident can build applications that use the Passport system**, without needing permission from Zuzalu organizers or Passport maintainers. There are no API keys, centralized servers, proprietary standards, special tokens, or gated endpoints\* that you need approval for in order to build an experimental community governance project that anyone with a Zuzalu Passport can participate in. With the Passport architecture, application developers can simply give or request data from users directly.
 - **Zuzalu applications are interoperable by default, and can understand and "talk to" one another without the need for special permissioning.** For example, one resident could build a message board where posters can accumulate "Zuzalu karma" for posting high-quality content, another resident can build a "private POAPs" service allowing Zuzalu event attendees to prove participation in community events, and a third resident could build a private polling app where users with either more "Zuzalu karma" OR provably high community event participation can cast votes carrying more voting weight--without the three application builders having to coordinate at all!
 - **Users store and control their own data.** Zuzalu user data is by default only accessible by the user on their own devices--not by the Zuzalu organizers, the Passport maintainers, or the developers of any Zuzalu applications. Additionally, thanks to ZKPs, users have total control over who they share this data with, and how.
 
 As mentioned above, we hope for the Zuzalu Passport to enable more permissionless experimentation in community and governance infrastructure at Zuzalu. You can find a list of starter ideas for things to build on the Zuzalu Passport [here](https://0xparc.notion.site/2023-03-28-Zuzalu-Passport-RFP-31f9fa45d3ba40289edcf45559536bbb). We'll also be running workshops and a hackathon track throughout ZK Week, for Zuzalu residents and visitors who are interested in hacking on top of the Passport!
 
-**Currently, we run a server that serves a Merkle Tree of participant public keys and some metadata for convenience, though this could easily be migrated on-chain.*
+\*_Currently, we run a server that serves a Merkle Tree of participant public keys and some metadata for convenience, though this could easily be migrated on-chain._
 
 ## For Developers: Understanding the Zuzalu Passport Model
 
 ### Zuzalu Passport Cards
 
-The Zuzalu Passport holds a collection of *cards*. UX-wise, the Zuzalu Passport interface is similar in concept to the [Apple Wallet](https://help.apple.com/assets/63BCA8F46048E91596771871/63BCA8F56048E9159677187F/en_US/36d4991d06798f24f230e7282a911222.png).
+The Zuzalu Passport holds a collection of _cards_. UX-wise, the Zuzalu Passport interface is similar in concept to the [Apple Wallet](https://help.apple.com/assets/63BCA8F46048E91596771871/63BCA8F56048E9159677187F/en_US/36d4991d06798f24f230e7282a911222.png).
 
 Initially, the only card in the Zuzalu Passport wallet is a [Semaphore keypair](https://semaphore.appliedzkp.org/) that acts as your primary identifier as a resident or visitor. This is a special card: it displays a QR code which you can use to prove that you are indeed a Zuzalu resident.
 
@@ -45,7 +45,7 @@ Any third-party service--for example, a Zuzalu voting app--can request a card, m
 
 As a developer, if you are interested in working with the Zuzalu Passport and with Zuzalu Passport Cards, you'll need to understand the "PCD" abstraction.
 
-"PCD" is short for "Proof-Carrying Data"*. In this repository, we use this term to refer to any claim about the world that is attached to a proof of its own correctness, without the need for external context to verify--such as a user card, or a response to a third-party request for information about user cards.
+"PCD" is short for "Proof-Carrying Data"\*. In this repository, we use this term to refer to any claim about the world that is attached to a proof of its own correctness, without the need for external context to verify--such as a user card, or a response to a third-party request for information about user cards.
 
 All PCDs consist of a "claim", which is the human-interpretable statement that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached to the "claim," which is a cryptographic or mathematical proof of the claim. All PCDs within this SDK also expose a `prove` and `verify` function, which allow you to instantiate them, and verify that they are indeed correct.
 
@@ -61,7 +61,7 @@ Many PCDs are [zkSNARKs](https://learn.0xparc.org/materials/circom/prereq-materi
 
 This is a PCD because anyone can verify that what it claims is true by running the RSA signature verification locally.
 
-**Our "PCD" abstraction is partially inspired by a spiritually similar academic cryptography concept of [the same name](https://dspace.mit.edu/handle/1721.1/61151). Note that the academic term has a slightly different technical definition.*
+\*_Our "PCD" abstraction is partially inspired by a spiritually similar academic cryptography concept of [the same name](https://dspace.mit.edu/handle/1721.1/61151). Note that the academic term has a slightly different technical definition._
 
 ### What is the PCD SDK?
 
@@ -123,7 +123,7 @@ Some of these packages are used to share development configuration between the d
 - [`@pcd/semaphore-group-pcd`](packages/semaphore-group-pcd): a pcd which wraps the [Semaphore](https://semaphore.appliedzkp.org/docs/introduction) protocol, which allows PCD-consuming applications to consume and generate Semaphore proofs.
 - [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
 - [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
-- [`@pcd/webauthn-pcd`](packages/webauthn-pcd): a pcd that can be used to attest to a valid attestatinos from [WebAuthn](https://webauthn.guide/) hardware devices, such as facial scanners, fingerprints, Yubikeys, and more.
+- [`@pcd/webauthn-pcd`](packages/webauthn-pcd): a pcd that can be used to make claims about [WebAuthn](https://webauthn.guide/) attestations, i.e. signing a particular challenge with a fingerprint, Yubikey, or another [authorization gesture](https://www.w3.org/TR/webauthn-2/#authorization-gesture).
 - ... more to come!
 
 #### shared code packages
