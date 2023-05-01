@@ -200,6 +200,21 @@ export function initZuzaluRoutes(
   });
 
   app.get(
+    "/semaphore/valid-historic/:id/:root",
+    async (req: Request, res: Response) => {
+      const id = decodeString(req.params.id, "id");
+      const root = decodeString(req.params.root, "root");
+
+      const historicGroupValid =
+        await semaphoreService.getHistoricSemaphoreGroupValid(id, root);
+
+      res.json({
+        valid: historicGroupValid,
+      });
+    }
+  );
+
+  app.get(
     "/semaphore/historic/:id/:root",
     async (req: Request, res: Response) => {
       const id = decodeString(req.params.id, "id");
