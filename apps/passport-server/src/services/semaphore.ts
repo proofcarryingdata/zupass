@@ -126,6 +126,19 @@ export class SemaphoreService {
     return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
+  async getHistoricSemaphoreGroupValid(
+    groupId: string,
+    rootHash: string
+  ): Promise<boolean> {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
+    const group = await getGroupByRoot(this.dbPool, groupId, rootHash);
+
+    return group !== undefined;
+  }
+
   async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
     if (!this.dbPool) {
       throw new Error("no database connection");
