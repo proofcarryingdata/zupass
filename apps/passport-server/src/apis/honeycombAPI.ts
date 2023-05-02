@@ -7,14 +7,15 @@ import { requireEnv } from "../util/util";
 export function getHoneycombAPI(): Libhoney | null {
   try {
     const honeycombApiKey = requireEnv("HONEYCOMB_API_KEY");
-    requireEnv("OTEL_SERVICE_NAME");
 
-    console.log("[INIT] Loaded a Honeycomb API");
-
-    return new Libhoney({
+    const api = new Libhoney({
       writeKey: honeycombApiKey,
       dataset: "server-metrics",
     });
+
+    console.log("[INIT] Loaded a Honeycomb API");
+
+    return api;
   } catch (e) {
     console.log(
       `[INIT] Missing environment variable ${e} - skipping starting Honeycomb API`
