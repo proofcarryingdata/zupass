@@ -1,4 +1,5 @@
 import { DateRange } from "@pcd/passport-interface";
+
 import { PoolClient } from "pg";
 import {
   fetchOrders,
@@ -18,6 +19,7 @@ import {
   participantsToMap,
   participantUpdatedFromPretix,
 } from "../util/participant";
+import { teleTrace } from "./telemetry";
 
 /**
  * Kick off a period sync from Preticx into Zupass.
@@ -29,7 +31,9 @@ export function startPretixSync(context: ApplicationContext) {
   trySync(pretixConfig);
   async function trySync(config: PretixConfig) {
     try {
-      await sync(context, config);
+      teleTrace("Pretix", "sync", async () => {
+        await sync(context, config);
+      });
     } catch (e: any) {
       context.rollbar?.error(e);
       console.error(e);
