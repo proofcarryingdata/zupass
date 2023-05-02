@@ -10,6 +10,7 @@ export function tracingMiddleware() {
       "request",
       async (span) => {
         span?.setAttribute("url", req.originalUrl);
+        span?.setAttribute("path", req.path);
         span?.setAttribute("method", req.method);
         span?.setAttribute("ip", req.ip);
 
