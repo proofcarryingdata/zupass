@@ -19,7 +19,7 @@ export async function startTelemetry(
   }
 
   honeyClient = context.honeyClient;
-  tracer = opentelemetry.trace.getTracer("passport-server");
+  tracer = opentelemetry.trace.getTracer("server-telemetry");
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],

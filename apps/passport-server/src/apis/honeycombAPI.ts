@@ -2,37 +2,25 @@
 /// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
-import { IS_PROD } from "../util/isProd";
 import { requireEnv } from "../util/util";
-
-function getDatasetName() {
-  const prefix = "passport-server";
-
-  if (IS_PROD) {
-    return prefix + "-prod";
-  }
-
-  return prefix + "-dev";
-}
 
 export function getHoneycombAPI(): Libhoney | null {
   try {
-    requireEnv("HONEYCOMB_API_KEY");
+    const honeycombApiKey = requireEnv("HONEYCOMB_API_KEY");
     requireEnv("OTEL_SERVICE_NAME");
+
+    console.log("[INIT] Loaded a Honeycomb API");
+
+    return new Libhoney({
+      writeKey: honeycombApiKey,
+      dataset: "server-metrics",
+    });
   } catch (e) {
     console.log(
       `[INIT] Missing environment variable ${e} - skipping starting Honeycomb API`
     );
     return null;
   }
-
-  console.log("[INIT] Loaded a Honeycomb API");
-
-  return new Libhoney({
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    writeKey: process.env.HONEYCOMB_API_KEY!,
-    dataset: getDatasetName(),
-  });
 }
 
 export enum EventName {
