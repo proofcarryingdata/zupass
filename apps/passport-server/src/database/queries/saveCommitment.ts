@@ -1,4 +1,5 @@
 import { ClientBase, Pool } from "pg";
+import { query } from "../query";
 
 // Saves a new commitment. Overwrites any existing commitment for this email.
 // Returns the commitment UUID.
@@ -14,14 +15,16 @@ export async function saveCommitment(
 
   // Insert succeeds only if we already have a Pretix participant (but don't
   // already have a commitment) for this email--due to foreign + unique keys.
-  const insertResult = await client.query(
+  const insertResult = await query(
+    client,
     `\
 INSERT INTO commitments (uuid, participant_email, commitment)
 VALUES (gen_random_uuid(), $1, $2)
 ON CONFLICT (participant_email) DO UPDATE SET commitment = $2`,
     [email, commitment]
   );
-  const uuidResult = await client.query(
+  const uuidResult = await query(
+    client,
     `\
 SELECT uuid FROM commitments
 WHERE participant_email = $1 AND commitment = $2`,

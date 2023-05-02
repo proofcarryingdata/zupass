@@ -1,11 +1,13 @@
 import { DateRange } from "@pcd/passport-interface";
 import { ClientBase, Pool } from "pg";
+import { query } from "../query";
 
 export async function updateParticipant(
   client: ClientBase | Pool,
   params: { email: string; role: string; visitor_date_ranges?: DateRange[] }
 ): Promise<number> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 update pretix_participants
 set role=$2, visitor_date_ranges=$3

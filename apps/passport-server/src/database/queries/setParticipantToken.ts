@@ -1,5 +1,6 @@
 import { ClientBase, Pool } from "pg";
 import { PretixParticipant } from "../models";
+import { query } from "../query";
 
 // Sets the email auth token for a given Pretix participant.
 // Returns null if not found. Returns full participant info on success.
@@ -14,7 +15,8 @@ export async function setParticipantToken(
 
   // Insert succeeds only if we already have a Pretix participant (but don't
   // already have a commitment) for this email--due to foreign + unique keys.
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 update pretix_participants
 set email_token = $2
@@ -23,7 +25,8 @@ where email = $1`,
   );
   if (result.rowCount == 0) return null;
 
-  const pp = await client.query(
+  const pp = await query(
+    client,
     `\
 select p.email, p.name, p.role, p.residence, p.email_token, c.commitment
 from pretix_participants p

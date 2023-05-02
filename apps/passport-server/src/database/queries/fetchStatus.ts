@@ -1,14 +1,14 @@
 import { ClientBase, Pool } from "pg";
+import { query } from "../query";
 
 /** Fetch database status. */
-export async function fetchStatus(
-  client: ClientBase | Pool
-): Promise<{
+export async function fetchStatus(client: ClientBase | Pool): Promise<{
   n_pretix_participants: number;
   n_commitments: number;
   n_e2ee: number;
 }> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 select 
     (select count(*) from pretix_participants) as n_pretix_participants,

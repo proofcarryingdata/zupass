@@ -1,4 +1,5 @@
 import { ClientBase, Pool, QueryResultRow } from "pg";
+import { query } from "../query";
 
 export interface HistoricSemaphoreGroup {
   id: number;
@@ -11,7 +12,8 @@ export interface HistoricSemaphoreGroup {
 export async function getLatestSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
-  const latestGroups = await client.query(
+  const latestGroups = await query(
+    client,
     `select s1.* from semaphore_history s1
     join (
       select s2.groupid, max(s2.id) as max_id
@@ -30,7 +32,8 @@ export async function insertNewSemaphoreGroup(
   rootHash: string,
   group: string
 ): Promise<void> {
-  await client.query(
+  await query(
+    client,
     `insert into semaphore_history(groupId, rootHash, serializedGroup) values($1, $2, $3);`,
     [groupId, rootHash, group]
   );
@@ -41,7 +44,8 @@ export async function getGroupByRoot(
   groupId: string,
   rootHash: string
 ): Promise<HistoricSemaphoreGroup | undefined> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `select * from semaphore_history where groupId=$1 and rootHash=$2;`,
     [groupId, rootHash]
   );
