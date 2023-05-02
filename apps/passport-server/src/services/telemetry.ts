@@ -33,16 +33,24 @@ export function startTelemetry(context: ApplicationContext): void {
     .catch((error) => console.log("Error initializing tracing", error));
 }
 
-export async function teleTrace<T>(
+/**
+ * Runs the given function, and and creates traces in Honeycomb that are linked
+ * to 'parent' and 'child' traces - other invocations of functions wrapped in
+ * 'traced' that run inside of this one, or that this one is running inside of.
+ *
+ * In the case that the Honeycomb environment variables are not set up this function
+ * just calls `func`.
+ */
+export async function traced<T>(
   service: string,
   method: string,
   func: (span?: Span) => Promise<T>
 ): Promise<T> {
-  if (!honeyClient) {
+  if (!honeyClient || !tracer) {
     return func();
   }
 
-  return tracer!.startActiveSpan(service + "." + method, async (span) => {
+  return tracer.startActiveSpan(service + "." + method, async (span) => {
     console.log("ACTIVE SPAN START");
     const result = await func(span);
     span.end();

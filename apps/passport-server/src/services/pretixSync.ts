@@ -19,7 +19,7 @@ import {
   participantsToMap,
   participantUpdatedFromPretix,
 } from "../util/participant";
-import { teleTrace } from "./telemetry";
+import { traced } from "./telemetry";
 
 const TRACE_SERVICE = "Pretix";
 
@@ -46,7 +46,7 @@ export function startPretixSync(context: ApplicationContext) {
  * Synchronize Pretix state with Zupass state.
  */
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
-  return teleTrace(TRACE_SERVICE, "sync", async () => {
+  return traced(TRACE_SERVICE, "sync", async () => {
     const syncStart = Date.now();
     console.log("[PRETIX] Sync start");
     const participants = await loadAllParticipants(pretixConfig);
@@ -84,7 +84,7 @@ async function saveParticipants(
   dbClient: PoolClient,
   pretixParticipants: PretixParticipant[]
 ) {
-  return teleTrace(TRACE_SERVICE, "saveParticipants", async () => {
+  return traced(TRACE_SERVICE, "saveParticipants", async () => {
     const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
     const existingParticipants = await fetchPretixParticipants(dbClient);
     const existingParticipantsByEmail = participantsToMap(existingParticipants);
@@ -144,7 +144,7 @@ async function saveParticipants(
 async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  return teleTrace(TRACE_SERVICE, "loadAllParticipants", async () => {
+  return traced(TRACE_SERVICE, "loadAllParticipants", async () => {
     console.log(
       "[PRETIX] Fetching participants (visitors, residents, organizers)"
     );
@@ -167,7 +167,7 @@ async function loadAllParticipants(
 async function loadResidents(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  return teleTrace(TRACE_SERVICE, "loadResidents", async () => {
+  return traced(TRACE_SERVICE, "loadResidents", async () => {
     console.log("[PRETIX] Fetching residents");
 
     // Fetch orders
@@ -209,7 +209,7 @@ async function loadResidents(
 async function loadVisitors(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  return teleTrace(TRACE_SERVICE, "loadVisitors", async () => {
+  return traced(TRACE_SERVICE, "loadVisitors", async () => {
     console.log("[PRETIX] Fetching visitors");
     const subevents = await fetchSubevents(
       pretixConfig,

@@ -1,4 +1,4 @@
-import { teleTrace } from "../services/telemetry";
+import { traced } from "../services/telemetry";
 import { requireEnv } from "../util/util";
 
 const TRACE_SERVICE = "Fetch";
@@ -29,7 +29,7 @@ export async function fetchOrders(
   pretixConfig: PretixConfig,
   eventID: string
 ): Promise<PretixOrder[]> {
-  return teleTrace(TRACE_SERVICE, "fetchOrders", async () => {
+  return traced(TRACE_SERVICE, "fetchOrders", async () => {
     const orders: PretixOrder[] = [];
 
     // Fetch orders from paginated API
@@ -57,7 +57,7 @@ export async function fetchSubevents(
   pretixConfig: PretixConfig,
   eventID: string
 ): Promise<PretixSubevent[]> {
-  return teleTrace(TRACE_SERVICE, "fetchSubevents", async () => {
+  return traced(TRACE_SERVICE, "fetchSubevents", async () => {
     const orders: PretixSubevent[] = [];
 
     // Fetch orders from paginated API
