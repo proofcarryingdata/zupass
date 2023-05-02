@@ -51,10 +51,8 @@ export async function traced<T>(
   }
 
   return tracer.startActiveSpan(service + "." + method, async (span) => {
-    console.log("ACTIVE SPAN START");
     const result = await func(span);
     span.end();
-    console.log("ACTIVE SPAN END");
     return result;
   });
 }
