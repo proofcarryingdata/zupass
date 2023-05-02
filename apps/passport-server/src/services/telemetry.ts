@@ -44,7 +44,10 @@ export function startTelemetry(context: ApplicationContext): void {
 export async function traced<T>(
   service: string,
   method: string,
-  func: (span?: Span) => Promise<T>
+  func: (span?: Span) => Promise<T>,
+  options?: {
+    autoEndSpan?: boolean; // default true
+  }
 ): Promise<T> {
   if (!honeyClient || !tracer) {
     return func();
@@ -52,7 +55,13 @@ export async function traced<T>(
 
   return tracer.startActiveSpan(service + "." + method, async (span) => {
     const result = await func(span);
-    span.end();
+    if (
+      options == null ||
+      options.autoEndSpan == null ||
+      options.autoEndSpan == true
+    ) {
+      span.end();
+    }
     return result;
   });
 }

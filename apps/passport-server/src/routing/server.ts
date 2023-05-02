@@ -4,6 +4,7 @@ import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext } from "../types";
 import { IS_PROD } from "../util/isProd";
+import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
@@ -27,6 +28,7 @@ export async function startServer(
     app.use(morgan("tiny"));
     app.use(express.json());
     app.use(cors());
+    app.use(tracingMiddleware());
 
     routes.forEach((r) => r(app, context));
 
