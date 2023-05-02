@@ -15,6 +15,7 @@ export function tracingMiddleware() {
         span?.setAttribute("ip", req.ip);
 
         res.on("close", () => {
+          span?.setAttribute("statusCode", res.statusCode);
           span?.end();
         });
 
