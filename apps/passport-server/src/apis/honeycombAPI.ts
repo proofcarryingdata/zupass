@@ -6,7 +6,7 @@ import { IS_PROD } from "../util/isProd";
 import { requireEnv } from "../util/util";
 
 function getDatasetName() {
-  const prefix = "zk-faucet";
+  const prefix = "passport-server";
 
   if (IS_PROD) {
     return prefix + "-prod";
