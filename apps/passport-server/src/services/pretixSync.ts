@@ -21,6 +21,8 @@ import {
 } from "../util/participant";
 import { teleTrace } from "./telemetry";
 
+const TRACE_SERVICE = "Pretix";
+
 /**
  * Kick off a period sync from Preticx into Zupass.
  */
@@ -31,9 +33,7 @@ export function startPretixSync(context: ApplicationContext) {
   trySync(pretixConfig);
   async function trySync(config: PretixConfig) {
     try {
-      teleTrace("Pretix", "sync", async () => {
-        await sync(context, config);
-      });
+      await sync(context, config);
     } catch (e: any) {
       context.rollbar?.error(e);
       console.error(e);
@@ -46,30 +46,32 @@ export function startPretixSync(context: ApplicationContext) {
  * Synchronize Pretix state with Zupass state.
  */
 async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
-  const syncStart = Date.now();
-  console.log("[PRETIX] Sync start");
-  const participants = await loadAllParticipants(pretixConfig);
-  const participantEmails = new Set(participants.map((p) => p.email));
+  return teleTrace(TRACE_SERVICE, "sync", async () => {
+    const syncStart = Date.now();
+    console.log("[PRETIX] Sync start");
+    const participants = await loadAllParticipants(pretixConfig);
+    const participantEmails = new Set(participants.map((p) => p.email));
 
-  console.log(
-    `[PRETIX] loaded ${participants.length} Pretix participants (visitors, residents, and organizers)` +
-      ` from Pretix, found ${participantEmails.size} unique emails`
-  );
+    console.log(
+      `[PRETIX] loaded ${participants.length} Pretix participants (visitors, residents, and organizers)` +
+        ` from Pretix, found ${participantEmails.size} unique emails`
+    );
 
-  const { dbPool } = context;
-  const dbClient = await dbPool.connect();
+    const { dbPool } = context;
+    const dbClient = await dbPool.connect();
 
-  try {
-    await saveParticipants(dbClient, participants);
-  } finally {
-    dbClient.release();
-  }
-  const syncEnd = Date.now();
-  console.log(
-    `[PRETIX] Sync end. Completed in ${Math.floor(
-      (syncEnd - syncStart) / 1000
-    )} seconds`
-  );
+    try {
+      await saveParticipants(dbClient, participants);
+    } finally {
+      dbClient.release();
+    }
+    const syncEnd = Date.now();
+    console.log(
+      `[PRETIX] Sync end. Completed in ${Math.floor(
+        (syncEnd - syncStart) / 1000
+      )} seconds`
+    );
+  });
 }
 
 /**
@@ -82,54 +84,58 @@ async function saveParticipants(
   dbClient: PoolClient,
   pretixParticipants: PretixParticipant[]
 ) {
-  const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
-  const existingParticipants = await fetchPretixParticipants(dbClient);
-  const existingParticipantsByEmail = participantsToMap(existingParticipants);
-  const newParticipants = pretixParticipants.filter(
-    (p) => !existingParticipantsByEmail.has(p.email)
-  );
-
-  // Step 1 of saving: insert participants that are new
-  console.log(`[PRETIX] Inserting ${newParticipants.length} new participants`);
-  for (const participant of newParticipants) {
-    console.log(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
-    await insertParticipant(dbClient, participant);
-  }
-
-  // Step 2 of saving: update participants that have changed
-  // Filter to participants that existed before, and filter to those that have changed.
-  const updatedParticipants = pretixParticipants
-    .filter((p) => existingParticipantsByEmail.has(p.email))
-    .filter((p) => {
-      const oldParticipant = existingParticipantsByEmail.get(p.email)!;
-      const newParticipant = p;
-      return participantUpdatedFromPretix(oldParticipant, newParticipant);
-    });
-
-  // For the participants that have changed, update them in the database.
-  console.log(`[PRETIX] Updating ${updatedParticipants.length} participants`);
-  for (const updatedParticipant of updatedParticipants) {
-    const oldParticipant = existingParticipantsByEmail.get(
-      updatedParticipant.email
+  return teleTrace(TRACE_SERVICE, "saveParticipants", async () => {
+    const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
+    const existingParticipants = await fetchPretixParticipants(dbClient);
+    const existingParticipantsByEmail = participantsToMap(existingParticipants);
+    const newParticipants = pretixParticipants.filter(
+      (p) => !existingParticipantsByEmail.has(p.email)
     );
+
+    // Step 1 of saving: insert participants that are new
     console.log(
-      `[PRETIX] Updating ${JSON.stringify(oldParticipant)} to ${JSON.stringify(
-        updatedParticipant
-      )}`
+      `[PRETIX] Inserting ${newParticipants.length} new participants`
     );
-    await updateParticipant(dbClient, updatedParticipant);
-  }
+    for (const participant of newParticipants) {
+      console.log(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
+      await insertParticipant(dbClient, participant);
+    }
 
-  // Step 3 of saving: remove participants that don't exist in Pretix, but do
-  // exist in our database.
-  const removedParticipants = existingParticipants.filter(
-    (existing) => !pretixParticipantsAsMap.has(existing.email)
-  );
-  console.log(`[PRETIX] Deleting ${removedParticipants.length} participants`);
-  for (const removedParticipant of removedParticipants) {
-    console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
-    await deleteParticipant(dbClient, removedParticipant.email);
-  }
+    // Step 2 of saving: update participants that have changed
+    // Filter to participants that existed before, and filter to those that have changed.
+    const updatedParticipants = pretixParticipants
+      .filter((p) => existingParticipantsByEmail.has(p.email))
+      .filter((p) => {
+        const oldParticipant = existingParticipantsByEmail.get(p.email)!;
+        const newParticipant = p;
+        return participantUpdatedFromPretix(oldParticipant, newParticipant);
+      });
+
+    // For the participants that have changed, update them in the database.
+    console.log(`[PRETIX] Updating ${updatedParticipants.length} participants`);
+    for (const updatedParticipant of updatedParticipants) {
+      const oldParticipant = existingParticipantsByEmail.get(
+        updatedParticipant.email
+      );
+      console.log(
+        `[PRETIX] Updating ${JSON.stringify(
+          oldParticipant
+        )} to ${JSON.stringify(updatedParticipant)}`
+      );
+      await updateParticipant(dbClient, updatedParticipant);
+    }
+
+    // Step 3 of saving: remove participants that don't exist in Pretix, but do
+    // exist in our database.
+    const removedParticipants = existingParticipants.filter(
+      (existing) => !pretixParticipantsAsMap.has(existing.email)
+    );
+    console.log(`[PRETIX] Deleting ${removedParticipants.length} participants`);
+    for (const removedParticipant of removedParticipants) {
+      console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
+      await deleteParticipant(dbClient, removedParticipant.email);
+    }
+  });
 }
 
 /**
@@ -138,19 +144,21 @@ async function saveParticipants(
 async function loadAllParticipants(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  console.log(
-    "[PRETIX] Fetching participants (visitors, residents, organizers)"
-  );
+  return teleTrace(TRACE_SERVICE, "loadAllParticipants", async () => {
+    console.log(
+      "[PRETIX] Fetching participants (visitors, residents, organizers)"
+    );
 
-  const residents = await loadResidents(pretixConfig);
-  const visitors = await loadVisitors(pretixConfig);
+    const residents = await loadResidents(pretixConfig);
+    const visitors = await loadVisitors(pretixConfig);
 
-  const residentsAsMap = participantsToMap(residents);
-  const nonResidentVisitors = visitors.filter(
-    (v) => !residentsAsMap.has(v.email)
-  );
+    const residentsAsMap = participantsToMap(residents);
+    const nonResidentVisitors = visitors.filter(
+      (v) => !residentsAsMap.has(v.email)
+    );
 
-  return [...residents, ...nonResidentVisitors];
+    return [...residents, ...nonResidentVisitors];
+  });
 }
 
 /**
@@ -159,37 +167,39 @@ async function loadAllParticipants(
 async function loadResidents(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  console.log("[PRETIX] Fetching residents");
+  return teleTrace(TRACE_SERVICE, "loadResidents", async () => {
+    console.log("[PRETIX] Fetching residents");
 
-  // Fetch orders
-  const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
+    // Fetch orders
+    const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
 
-  // Extract organizers
-  const orgOrders = orders.filter(
-    (o) => o.positions[0].item === pretixConfig.zuEventOrganizersItemID
-  );
-  console.log(
-    `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
-  );
-  const organizers = ordersToParticipants(
-    orgOrders,
-    [],
-    ParticipantRole.Organizer
-  );
-  const orgEmails = new Set(organizers.map((p) => p.email));
+    // Extract organizers
+    const orgOrders = orders.filter(
+      (o) => o.positions[0].item === pretixConfig.zuEventOrganizersItemID
+    );
+    console.log(
+      `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
+    );
+    const organizers = ordersToParticipants(
+      orgOrders,
+      [],
+      ParticipantRole.Organizer
+    );
+    const orgEmails = new Set(organizers.map((p) => p.email));
 
-  // Extract other residents
-  const residents = ordersToParticipants(
-    orders,
-    [],
-    ParticipantRole.Resident
-  ).filter((p) => !orgEmails.has(p.email));
+    // Extract other residents
+    const residents = ordersToParticipants(
+      orders,
+      [],
+      ParticipantRole.Resident
+    ).filter((p) => !orgEmails.has(p.email));
 
-  // Return the combined list
-  console.log(
-    `[PRETIX] loaded ${organizers.length} organizers, ${residents.length} residents`
-  );
-  return [...organizers, ...residents];
+    // Return the combined list
+    console.log(
+      `[PRETIX] loaded ${organizers.length} organizers, ${residents.length} residents`
+    );
+    return [...organizers, ...residents];
+  });
 }
 
 /**
@@ -199,28 +209,30 @@ async function loadResidents(
 async function loadVisitors(
   pretixConfig: PretixConfig
 ): Promise<PretixParticipant[]> {
-  console.log("[PRETIX] Fetching visitors");
-  const subevents = await fetchSubevents(
-    pretixConfig,
-    pretixConfig.zuVisitorEventID
-  );
+  return teleTrace(TRACE_SERVICE, "loadVisitors", async () => {
+    console.log("[PRETIX] Fetching visitors");
+    const subevents = await fetchSubevents(
+      pretixConfig,
+      pretixConfig.zuVisitorEventID
+    );
 
-  const visitorOrders = await fetchOrders(
-    pretixConfig,
-    pretixConfig.zuVisitorEventID
-  );
+    const visitorOrders = await fetchOrders(
+      pretixConfig,
+      pretixConfig.zuVisitorEventID
+    );
 
-  const visitorParticipants = ordersToParticipants(
-    visitorOrders,
-    subevents,
-    ParticipantRole.Visitor
-  );
+    const visitorParticipants = ordersToParticipants(
+      visitorOrders,
+      subevents,
+      ParticipantRole.Visitor
+    );
 
-  const visitors = deduplicateVisitorParticipants(visitorParticipants);
+    const visitors = deduplicateVisitorParticipants(visitorParticipants);
 
-  console.log(`[PRETIX] loaded ${visitors.length} visitors`);
+    console.log(`[PRETIX] loaded ${visitors.length} visitors`);
 
-  return visitors;
+    return visitors;
+  });
 }
 
 /**
