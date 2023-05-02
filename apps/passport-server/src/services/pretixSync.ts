@@ -84,7 +84,7 @@ async function saveParticipants(
   dbClient: PoolClient,
   pretixParticipants: PretixParticipant[]
 ) {
-  return traced(TRACE_SERVICE, "saveParticipants", async () => {
+  return traced(TRACE_SERVICE, "saveParticipants", async (span) => {
     const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
     const existingParticipants = await fetchPretixParticipants(dbClient);
     const existingParticipantsByEmail = participantsToMap(existingParticipants);
@@ -135,6 +135,16 @@ async function saveParticipants(
       console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
       await deleteParticipant(dbClient, removedParticipant.email);
     }
+
+    span?.setAttribute("participantsInserted", newParticipants.length);
+    span?.setAttribute("participantsUpdated", updatedParticipants.length);
+    span?.setAttribute("participantsDeleted", removedParticipants.length);
+    span?.setAttribute(
+      "participantsTotal",
+      existingParticipants.length +
+        newParticipants.length -
+        removedParticipants.length
+    );
   });
 }
 
