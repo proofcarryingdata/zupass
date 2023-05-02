@@ -8,7 +8,9 @@ import { ApplicationContext } from "../types";
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
 
-export function startTelemetry(context: ApplicationContext): void {
+export async function startTelemetry(
+  context: ApplicationContext
+): Promise<void> {
   if (!context.honeyClient) {
     console.log(
       "[INIT] Not starting telemetry service - missing Honeycomb instance."
@@ -25,7 +27,7 @@ export function startTelemetry(context: ApplicationContext): void {
 
   console.log("[INIT] Starting telemetry");
 
-  sdk
+  return sdk
     .start()
     .then(() => {
       console.log("[INIT] Tracing initialized");
