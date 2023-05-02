@@ -10,7 +10,6 @@ import { ServiceInitializer } from "./services/types";
 import { ApplicationContext } from "./types";
 
 const services: ServiceInitializer[] = [
-  startTelemetry,
   startMetrics,
   startServer,
   startPretixSync,
@@ -27,6 +26,8 @@ export async function startApplication() {
     honeyClient,
     rollbar,
   };
+
+  await startTelemetry(context);
 
   // Run all services concurrently.
   for (const service of services) {

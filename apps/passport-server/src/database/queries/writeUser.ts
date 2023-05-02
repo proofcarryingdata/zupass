@@ -1,4 +1,5 @@
 import { ClientBase, Pool } from "pg";
+import { query } from "../query";
 
 export async function writeUser(
   client: ClientBase | Pool,
@@ -8,7 +9,8 @@ export async function writeUser(
     claimed_server_password: string;
   }
 ): Promise<number> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 update users
 set encrypted_blob = $1, updated_at = NOW()

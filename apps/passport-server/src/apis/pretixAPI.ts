@@ -1,4 +1,7 @@
+import { traced } from "../services/telemetry";
 import { requireEnv } from "../util/util";
+
+const TRACE_SERVICE = "Fetch";
 
 export function getPretixConfig(): PretixConfig | null {
   // Make sure we can use the Pretix API.
@@ -26,25 +29,27 @@ export async function fetchOrders(
   pretixConfig: PretixConfig,
   eventID: string
 ): Promise<PretixOrder[]> {
-  const orders: PretixOrder[] = [];
+  return traced(TRACE_SERVICE, "fetchOrders", async () => {
+    const orders: PretixOrder[] = [];
 
-  // Fetch orders from paginated API
-  let url = `${pretixConfig.orgUrl}/events/${eventID}/orders/`;
-  while (url != null) {
-    console.log(`[PRETIX] Fetching ${url}`);
-    const res = await fetch(url, {
-      headers: { Authorization: `Token ${pretixConfig.token}` },
-    });
-    if (!res.ok) {
-      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-      break;
+    // Fetch orders from paginated API
+    let url = `${pretixConfig.orgUrl}/events/${eventID}/orders/`;
+    while (url != null) {
+      console.log(`[PRETIX] Fetching ${url}`);
+      const res = await fetch(url, {
+        headers: { Authorization: `Token ${pretixConfig.token}` },
+      });
+      if (!res.ok) {
+        console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+        break;
+      }
+      const page = await res.json();
+      orders.push(...page.results);
+      url = page.next;
     }
-    const page = await res.json();
-    orders.push(...page.results);
-    url = page.next;
-  }
 
-  return orders;
+    return orders;
+  });
 }
 
 // Fetch all item types for a given event.
@@ -52,25 +57,27 @@ export async function fetchSubevents(
   pretixConfig: PretixConfig,
   eventID: string
 ): Promise<PretixSubevent[]> {
-  const orders: PretixSubevent[] = [];
+  return traced(TRACE_SERVICE, "fetchSubevents", async () => {
+    const orders: PretixSubevent[] = [];
 
-  // Fetch orders from paginated API
-  let url = `${pretixConfig.orgUrl}/events/${eventID}/subevents/`;
-  while (url != null) {
-    console.log(`[PRETIX] Fetching ${url}`);
-    const res = await fetch(url, {
-      headers: { Authorization: `Token ${pretixConfig.token}` },
-    });
-    if (!res.ok) {
-      console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-      break;
+    // Fetch orders from paginated API
+    let url = `${pretixConfig.orgUrl}/events/${eventID}/subevents/`;
+    while (url != null) {
+      console.log(`[PRETIX] Fetching ${url}`);
+      const res = await fetch(url, {
+        headers: { Authorization: `Token ${pretixConfig.token}` },
+      });
+      if (!res.ok) {
+        console.error(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+        break;
+      }
+      const page = await res.json();
+      orders.push(...page.results);
+      url = page.next;
     }
-    const page = await res.json();
-    orders.push(...page.results);
-    url = page.next;
-  }
 
-  return orders;
+    return orders;
+  });
 }
 
 // A Pretix order. For our purposes, each order contains one ticket.

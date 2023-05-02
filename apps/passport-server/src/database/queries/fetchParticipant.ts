@@ -1,12 +1,14 @@
 import { ClientBase, Pool } from "pg";
 import { PassportParticipant, PretixParticipant } from "../models";
+import { query } from "../query";
 
 /** Fetch a ticketed participant, with or without Passport yet. */
 export async function fetchPretixParticipant(
   client: ClientBase | Pool,
   params: { email: string }
 ): Promise<PretixParticipant | null> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 select 
     email,
@@ -27,7 +29,8 @@ export async function fetchPassportParticipant(
   client: ClientBase | Pool,
   params: { uuid: string }
 ): Promise<PassportParticipant | null> {
-  const result = await client.query(
+  const result = await query(
+    client,
     `\
 select 
     c.uuid,
