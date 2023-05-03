@@ -10,6 +10,7 @@ import { DispatchContext } from "../../src/dispatch";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
+import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 
@@ -53,6 +54,7 @@ export function GetWithoutProvingScreen() {
 
   return (
     <AppContainer bg="gray">
+      <MaybeModal fullScreen />
       <Container>
         <Spacer h={16} />
         <AppHeader />

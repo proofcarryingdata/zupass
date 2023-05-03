@@ -9,6 +9,7 @@ import {
 } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, H2, Spacer } from "../../core";
+import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
@@ -58,6 +59,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   return (
     <AppContainer bg="gray">
+      <MaybeModal fullScreen />
       <Container>
         <Spacer h={16} />
         <AppHeader />

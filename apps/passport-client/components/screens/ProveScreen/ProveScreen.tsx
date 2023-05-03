@@ -1,12 +1,12 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import * as React from "react";
 import { useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
+import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
@@ -55,6 +55,7 @@ export function ProveScreen() {
 
   return (
     <AppContainer bg="gray">
+      <MaybeModal fullScreen />
       <Spacer h={24} />
       <H2>{title.toUpperCase()}</H2>
       <Spacer h={24} />
