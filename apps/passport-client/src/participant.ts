@@ -33,6 +33,12 @@ export async function pollParticipant(
   }
 }
 
+export enum VisitorStatus {
+  Current,
+  Upcoming,
+  Expired,
+}
+
 /**
  * If the user is a visitor, they must have a visitor ticket that is
  * active at the current moment to be a 'valid' visitor. This function
@@ -40,23 +46,34 @@ export async function pollParticipant(
  */
 export function getVisitorStatus(participant?: ZuParticipant):
   | {
-      isVisitor: boolean;
-      isDateRangeValid: boolean;
+      isVisitor: true;
+      status: VisitorStatus;
     }
+  | { isVisitor: false }
   | undefined {
   if (participant === undefined) return undefined;
 
+  const now = new Date();
+
   if (participant.role === ParticipantRole.Visitor) {
+    if (isDateInRanges(now, participant.visitor_date_ranges)) {
+      return {
+        isVisitor: true,
+        status: VisitorStatus.Current,
+      };
+    }
+
+    if (anyUpcomingDateRange(now, participant.visitor_date_ranges)) {
+      return { isVisitor: true, status: VisitorStatus.Upcoming };
+    }
+
     return {
       isVisitor: true,
-      isDateRangeValid: isDateInRanges(
-        new Date(),
-        participant.visitor_date_ranges
-      ),
+      status: VisitorStatus.Expired,
     };
   }
 
-  return { isVisitor: false, isDateRangeValid: true };
+  return { isVisitor: false };
 }
 
 const ZUZALU_START_DATE = "2023-03-24";
@@ -89,6 +106,22 @@ export function isDateInRanges(date: Date, ranges: DateRange[]): boolean {
     const testDate = date.getTime();
 
     if (testDate <= to && testDate >= from) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export function anyUpcomingDateRange(date: Date, ranges: DateRange[]): boolean {
+  const sanitizedRanges = sanitizeDateRanges(ranges);
+  const now = date.getTime();
+
+  for (const range of sanitizedRanges) {
+    const start = new Date(range.date_from).getTime();
+    const end = new Date(range.date_from).getTime();
+
+    if (now < start || now < end) {
       return true;
     }
   }

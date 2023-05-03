@@ -2,7 +2,7 @@ import { PCD } from "@pcd/pcd-types";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus } from "../../src/participant";
+import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
@@ -33,10 +33,6 @@ export function PCDCard({
   }, [pcd, pcdPackage]);
 
   const visitorStatus = getVisitorStatus(state.self);
-  const visitorExpired =
-    visitorStatus !== undefined &&
-    !visitorStatus.isDateRangeValid &&
-    visitorStatus.isVisitor;
 
   let header = displayOptions?.header?.toUpperCase() ?? "PCD";
 
@@ -44,17 +40,30 @@ export function PCDCard({
     header = "VERIFIED ZUZALU PASSPORT";
   }
 
-  if (visitorExpired) {
+  if (
+    visitorStatus.isVisitor &&
+    visitorStatus.status === VisitorStatus.Expired
+  ) {
     header = "EXPIRED";
+  } else if (
+    visitorStatus.isVisitor &&
+    visitorStatus.status === VisitorStatus.Upcoming
+  ) {
+    header = "UPCOMING";
   }
+
+  const notCurrentVisitor =
+    visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
 
   if (expanded) {
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
           <CardHeader
-            col={visitorExpired ? "" : "var(--accent-lite)"}
-            style={{ backgroundColor: visitorExpired ? "var(--danger)" : "" }}
+            col={notCurrentVisitor ? "" : "var(--accent-lite)"}
+            style={{
+              backgroundColor: notCurrentVisitor ? "var(--danger)" : "",
+            }}
           >
             {header}
           </CardHeader>
