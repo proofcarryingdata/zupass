@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useContext, useEffect } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { ZuState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
@@ -11,7 +11,7 @@ import { InvalidParticipantModal } from "./InvalidParticipantModal";
 import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
-export function MaybeModal() {
+export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const [state, dispatch] = useContext(DispatchContext);
   const close = useCallback(
     () => dispatch({ type: "set-modal", modal: "" }),
@@ -35,7 +35,12 @@ export function MaybeModal() {
 
   if (body == null) return null;
   return (
-    <Modal onClose={dismissable === true ? close : undefined}>{body}</Modal>
+    <Modal
+      fullScreen={fullScreen}
+      onClose={dismissable === true ? close : undefined}
+    >
+      {body}
+    </Modal>
   );
 }
 
@@ -60,11 +65,15 @@ function getModalBody(modal: ZuState["modal"]) {
   }
 }
 
-export function Modal(props: { onClose?: () => void; children: ReactNode }) {
+export function Modal(props: {
+  onClose?: () => void;
+  children: ReactNode;
+  fullScreen?: boolean;
+}) {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
     <ModalBg onClick={props.onClose}>
-      <ModalWrap onClick={ignore}>
+      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
         {props.onClose && (
           <CircleButton diameter={20} padding={16} onClick={props.onClose}>
             <img src={icons.closeWhite} width={20} height={20} />
@@ -89,7 +98,7 @@ const ModalBg = styled.div`
   z-index: 999;
 `;
 
-const ModalWrap = styled.div`
+const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   background: radial-gradient(circle, var(--bg-lite-gray), var(--bg-dark-gray));
   width: 100%;
   max-width: 420px;
@@ -97,4 +106,14 @@ const ModalWrap = styled.div`
   min-height: 480px;
   padding: 12px;
   border-radius: 12px;
+
+  ${({ fullScreen }) =>
+    fullScreen &&
+    css`
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      margin: 0;
+      border-radius: 0;
+    `}
 `;

@@ -9,6 +9,7 @@ import {
   useIsDownloaded,
 } from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
+import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
@@ -67,6 +68,7 @@ export function ProveAndAddScreen({
 
   return (
     <AppContainer bg="gray">
+      <MaybeModal fullScreen />
       <Container>
         <Spacer h={24} />
         <AppHeader />
