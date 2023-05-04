@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 import { config } from "../../src/config";
 import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus } from "../../src/participant";
+import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { decodeQRPayload } from "../../src/qr";
 import { bigintToUuid } from "../../src/util";
 import {
@@ -184,7 +184,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   if (
     visitorStatus !== undefined &&
     visitorStatus.isVisitor &&
-    !visitorStatus.isDateRangeValid
+    visitorStatus.status !== VisitorStatus.Current
   ) {
     return {
       valid: false,

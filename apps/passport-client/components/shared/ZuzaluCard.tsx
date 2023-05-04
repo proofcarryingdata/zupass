@@ -9,7 +9,7 @@ import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus } from "../../src/participant";
+import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
@@ -26,19 +26,19 @@ export function ZuzaluCardBody({
   const actualParticipant = participant ?? state.self;
   const { role, name, email, residence } = actualParticipant;
   const visitorStatus = getVisitorStatus(actualParticipant);
-  const visitorExpired =
-    visitorStatus !== undefined &&
-    !visitorStatus.isDateRangeValid &&
-    visitorStatus.isVisitor;
 
   return (
     <CardBody>
-      {showQrCode && !visitorExpired && (
-        <>
-          <Spacer h={32} />
-          <ZuzaluQR />
-        </>
-      )}
+      {showQrCode &&
+        !(
+          visitorStatus.isVisitor &&
+          visitorStatus.status !== VisitorStatus.Current
+        ) && (
+          <>
+            <Spacer h={32} />
+            <ZuzaluQR />
+          </>
+        )}
       <Spacer h={24} />
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
@@ -47,7 +47,13 @@ export function ZuzaluCardBody({
         <VisitorDateSection participant={actualParticipant} />
       </TextCenter>
       <Spacer h={24} />
-      <Footer role={role} expired={visitorExpired}>
+      <Footer
+        role={role}
+        notCurrent={
+          visitorStatus.isVisitor &&
+          visitorStatus.status !== VisitorStatus.Current
+        }
+      >
         ZUZALU {role.toUpperCase()}
       </Footer>
     </CardBody>
@@ -88,11 +94,11 @@ const CardBody = styled.div`
   border-radius: 0 0 12px 12px;
 `;
 
-const Footer = styled.div<{ role: string; expired: boolean }>`
+const Footer = styled.div<{ role: string; notCurrent: boolean }>`
   font-size: 20px;
   letter-spacing: 1px;
   background: ${(p) => {
-    if (p.expired) {
+    if (p.notCurrent) {
       return "var(--danger)";
     }
 
