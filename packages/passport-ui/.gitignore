@@ -2,3 +2,4 @@
 *.d.ts.map
 *.js
 !.eslintrc.js
+dist

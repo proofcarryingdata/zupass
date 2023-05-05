@@ -21,7 +21,11 @@
       "outputs": [],
       "cache": false
     },
-    "postinstall": {
+    "prepublishOnly": {
+      "outputs": [],
+      "cache": false
+    },
+    "typecheck": {
       "outputs": [],
       "cache": false
     }

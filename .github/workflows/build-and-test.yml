@@ -11,7 +11,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-      - run: "yarn --prefer-offline"
+      - run: "yarn"
       - run: "yarn build"
+      - run: "yarn typecheck"
       - run: "yarn lint"
       - run: "yarn test"
