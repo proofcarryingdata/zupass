@@ -9,7 +9,6 @@ import { traced } from "../../services/telemetry";
 export function tracingMiddleware() {
   console.log("[TRACING] setting up middleware");
   return (req: Request, res: Response, next: NextFunction) => {
-    console.log("[TRACING] handling request");
     traced(
       "Express",
       "request",
