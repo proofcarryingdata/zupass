@@ -5,9 +5,7 @@ export interface PCD<C = unknown, P = unknown> {
   proof: P;
 }
 
-declare const tag: unique symbol;
 export interface SerializedPCD<_T extends PCD = PCD> {
-  [tag]: "SerializedPcd";
   type: string;
   pcd: string;
 }
