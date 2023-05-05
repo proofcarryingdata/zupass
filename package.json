@@ -18,6 +18,7 @@
     "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test --concurrency=1 && yarn clean",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
+    "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel"
   },
   "devDependencies": {

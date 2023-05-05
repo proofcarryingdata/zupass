@@ -13,7 +13,8 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "dev": "tsup src/index.ts --watch --dts",
+    "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
