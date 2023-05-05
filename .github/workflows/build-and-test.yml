@@ -13,5 +13,6 @@ jobs:
           node-version: 18.x
       - run: "yarn"
       - run: "yarn build"
+      - run: "yarn typecheck"
       - run: "yarn lint"
       - run: "yarn test"
