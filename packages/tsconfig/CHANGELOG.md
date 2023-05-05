@@ -1,5 +1,17 @@
 # @pcd/tsconfig
 
+## 0.5.1
+
+### Patch Changes
+
+- Use tsup.
+
+## 0.5.0
+
+### Minor Changes
+
+- Use tsup.
+
 ## 0.4.2
 
 ### Patch Changes

@@ -1,5 +1,35 @@
 # passport-client
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.5.1
+  - @pcd/semaphore-identity-pcd@0.5.1
+  - @pcd/semaphore-group-pcd@0.5.1
+  - @pcd/passport-interface@0.5.1
+  - @pcd/passport-crypto@0.5.1
+  - @pcd/pcd-collection@0.5.1
+  - @pcd/passport-ui@0.5.1
+  - @pcd/pcd-types@0.5.1
+  - @pcd/rln-pcd@0.4.1
+
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.5.0
+  - @pcd/passport-crypto@0.5.0
+  - @pcd/passport-interface@0.5.0
+  - @pcd/passport-ui@0.5.0
+  - @pcd/pcd-collection@0.5.0
+  - @pcd/pcd-types@0.5.0
+  - @pcd/rln-pcd@0.4.0
+  - @pcd/semaphore-group-pcd@0.5.0
+  - @pcd/semaphore-identity-pcd@0.5.0
+
 ## 0.0.10
 
 ### Patch Changes

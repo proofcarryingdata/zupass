@@ -1,5 +1,32 @@
 # @pcd/passport-interface
 
+## 0.5.1
+
+### Patch Changes
+
+- Use tsup.
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.5.1
+  - @pcd/semaphore-identity-pcd@0.5.1
+  - @pcd/semaphore-group-pcd@0.5.1
+  - @pcd/passport-crypto@0.5.1
+  - @pcd/pcd-types@0.5.1
+
+## 0.5.0
+
+### Minor Changes
+
+- Use tsup.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.5.0
+  - @pcd/pcd-types@0.5.0
+  - @pcd/semaphore-group-pcd@0.5.0
+  - @pcd/semaphore-identity-pcd@0.5.0
+  - @pcd/semaphore-signature-pcd@0.5.0
+
 ## 0.4.4
 
 ### Patch Changes
