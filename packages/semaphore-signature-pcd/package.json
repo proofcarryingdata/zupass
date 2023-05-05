@@ -8,7 +8,8 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
-    "test": "ts-mocha --exit test/**/*.spec.ts"
+    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@pcd/passport-ui": "0.4.2",

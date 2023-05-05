@@ -21,7 +21,7 @@
       "outputs": [],
       "cache": false
     },
-    "postinstall": {
+    "prepublishOnly": {
       "outputs": [],
       "cache": false
     }

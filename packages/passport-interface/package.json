@@ -8,7 +8,8 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch"
+    "dev": "tsup src/index.ts --watch",
+    "prepublishOnly": "yarn build"
   },
   "dependencies": {
     "@pcd/passport-crypto": "0.4.2",
