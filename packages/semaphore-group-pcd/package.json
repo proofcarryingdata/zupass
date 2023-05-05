@@ -2,14 +2,13 @@
   "name": "@pcd/semaphore-group-pcd",
   "version": "0.4.2",
   "license": "GPL-3.0-or-later",
-  "main": "./index.js",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsc --noEmit",
-    "postinstall": "tsc",
-    "clean": "tsc --build --clean"
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch"
   },
   "dependencies": {
     "@pcd/eslint-config-custom": "0.4.2",

@@ -1,35 +1,34 @@
 {
   "name": "@pcd/passport-crypto",
   "version": "0.4.2",
-  "main": "./index.js",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsc --noEmit",
-    "postinstall": "tsc",
-    "clean": "tsc --build --clean"
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch"
   },
   "dependencies": {
     "@pcd/pcd-collection": "0.4.2",
     "@pcd/pcd-types": "0.4.2",
     "@pcd/semaphore-identity-pcd": "0.4.2",
-    "@pcd/tsconfig": "0.4.2",
     "@semaphore-protocol/identity": "^3.2.3",
-    "@types/libsodium-wrappers": "^0.7.10",
-    "@types/mocha": "^10.0.1",
-    "@types/react": "^18.0.22",
-    "@types/react-dom": "^18.0.7",
     "libsodium-wrappers": "^0.7.11",
-    "react": "^18.2.0",
-    "typescript": "^4.9.5"
+    "react": "^18.2.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.4.2",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^10.0.0",
+    "@types/libsodium-wrappers": "^0.7.10",
+    "@types/mocha": "^10.0.1",
+    "@types/react": "^18.0.22",
+    "@types/react-dom": "^18.0.7",
+    "typescript": "^4.9.5",
+    "@pcd/tsconfig": "0.4.2"
   },
   "publishConfig": {
     "access": "public"

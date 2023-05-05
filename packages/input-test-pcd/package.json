@@ -1,15 +1,14 @@
 {
   "name": "@pcd/input-test-pcd",
   "version": "0.4.2",
-  "main": "./index.js",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsc --noEmit",
-    "clean": "tsc --build --clean",
-    "postinstall": "tsc"
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch"
   },
   "dependencies": {
     "@pcd/pcd-types": "0.4.2",
