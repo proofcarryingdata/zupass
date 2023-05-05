@@ -18,21 +18,13 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/eslint-config-custom": "0.4.2",
     "@pcd/passport-ui": "0.4.2",
     "@pcd/pcd-types": "0.4.2",
     "@pcd/semaphore-identity-pcd": "0.4.2",
     "@pcd/semaphore-signature-pcd": "0.4.2",
-    "@pcd/tsconfig": "0.4.2",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "@semaphore-protocol/proof": "^3.2.3",
-    "@types/expect": "^24.3.0",
-    "@types/json-bigint": "^1.0.1",
-    "@types/mocha": "^10.0.1",
-    "@types/react": "18.0.22",
-    "@types/styled-components": "^5.1.26",
-    "@types/uuid": "^9.0.0",
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
     "react": "18.2.0",
@@ -41,6 +33,14 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@pcd/eslint-config-custom": "0.4.2",
+    "@pcd/tsconfig": "0.4.2",
+    "@types/expect": "^24.3.0",
+    "@types/json-bigint": "^1.0.1",
+    "@types/mocha": "^10.0.1",
+    "@types/react": "18.0.22",
+    "@types/styled-components": "^5.1.26",
+    "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"

@@ -16,8 +16,8 @@
     "prepublishOnly": "yarn build"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.4.2",
-    "@pcd/tsconfig": "0.4.2",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
     "@types/react": "^18.0.22",
     "eslint": "^7.32.0",
     "tsup": "^6.7.0",
