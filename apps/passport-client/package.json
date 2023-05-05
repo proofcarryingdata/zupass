@@ -11,6 +11,7 @@
     "test": "ts-mocha --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@extism/runtime-browser": "^0.3.0",
     "@pcd/ethereum-ownership-pcd": "0.5.1",
     "@pcd/passport-crypto": "0.5.1",
     "@pcd/passport-interface": "0.5.1",

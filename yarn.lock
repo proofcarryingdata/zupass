@@ -212,6 +212,11 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
+"@bjorn3/browser_wasi_shim@^0.2.7":
+  version "0.2.8"
+  resolved "https://registry.yarnpkg.com/@bjorn3/browser_wasi_shim/-/browser_wasi_shim-0.2.8.tgz#6e52ce92e1ef071a81f8fad1606d15e405ba7d4b"
+  integrity sha512-omPjmPH2Yk/VM7739/BYtaU9JKuzHlmr6GwyGreaefIbhDgwJxO+NjjBZaEZ8/GjtC8dZXshJGfghJ/ZOPEuqg==
+
 "@changesets/apply-release-plan@^6.1.3":
   version "6.1.3"
   resolved "https://registry.npmjs.org/@changesets/apply-release-plan/-/apply-release-plan-6.1.3.tgz"
@@ -956,6 +961,13 @@
     "@ethersproject/logger" "^5.7.0"
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
+
+"@extism/runtime-browser@^0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@extism/runtime-browser/-/runtime-browser-0.3.0.tgz#ead12fd679b8e0c5d57d086da472b6bd96c41e40"
+  integrity sha512-8BlPUyF13XYlLowuU8tAHUM6hKWh/6gIk85/04+jK6xotSqCCdVQmyT+6xVm4S0PtmkPPI7Qz9vAGr/oCJGviQ==
+  dependencies:
+    "@bjorn3/browser_wasi_shim" "^0.2.7"
 
 "@grpc/grpc-js@^1.7.1", "@grpc/grpc-js@^1.7.3":
   version "1.8.13"
@@ -2060,6 +2072,30 @@
   resolved "https://registry.npmjs.org/@opentelemetry/semantic-conventions/-/semantic-conventions-1.9.1.tgz"
   integrity sha512-oPQdbFDmZvjXk5ZDoBGXG8B4tSB/qW5vQunJWQMFUBp7Xe8O1ByPANueJ+Jzg58esEBegyyxZ7LRmfJr7kFcFg==
 
+"@pcd/passport-ui@^0.4.1":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@pcd/passport-ui/-/passport-ui-0.4.2.tgz#ed12bc67eef713cf1b1d5b6a39c825067c0fe226"
+  integrity sha512-P8B6VkRZfHWjXHvzjhHRuF/FX3qIHPxzt1ph7/DnyMsM6MKl/25VlZdTdqm6wLWGeVaOB/cJIUnTd4ZonJPs2Q==
+  dependencies:
+    "@pcd/pcd-types" "0.4.2"
+    "@pcd/tsconfig" "0.4.2"
+    "@types/expect" "^24.3.0"
+    "@types/mocha" "^10.0.1"
+    "@types/react" "^18.0.22"
+    "@types/styled-components" "^5.1.26"
+    react "^18.2.0"
+    styled-components "^5.3.9"
+    typescript "^4.9.5"
+
+"@pcd/pcd-types@0.4.2", "@pcd/pcd-types@^0.4.1":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.4.2.tgz#3a77e30f42e76315a9279765bc88d90b54d45501"
+  integrity sha512-7H3dDWkaUGdW7muAM4KO+8NYbYx5JoWErMOPfdA5QKG3dGpSDiJf4E+xZjwSCCjZQTM7QXHUyZpmsVQii3iYZQ==
+  dependencies:
+    "@pcd/tsconfig" "0.4.2"
+    "@types/react" "^18.0.22"
+    typescript "^4.9.5"
+
 "@pcd/semaphore-identity-pcd@^0.1.0":
   version "0.1.0"
   resolved "https://registry.npmjs.org/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.1.0.tgz"
@@ -2071,6 +2107,11 @@
     "@semaphore-protocol/proof" "^3.1.0"
     json-bigint "^1.0.0"
     uuid "^9.0.0"
+
+"@pcd/tsconfig@0.4.2":
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.4.2.tgz#ea0121cf14f5f5d4a9e59cec864d9d0d1666a02e"
+  integrity sha512-bxeNIxvg+kHvrUn2bT6cnUYxr9lumOol9KUUM6SlHXOFaNylEwNx3h9i089yHCIYx5Pc8NLeU2uHatwWPlstsg==
 
 "@protobufjs/aspromise@^1.1.1", "@protobufjs/aspromise@^1.1.2":
   version "1.1.2"
@@ -2743,10 +2784,19 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@18.0.22", "@types/react@^18.0.22":
+"@types/react@*", "@types/react@^18.0.22":
   version "18.0.28"
   resolved "https://registry.npmjs.org/@types/react/-/react-18.0.28.tgz"
   integrity sha512-RD0ivG1kEztNBdoAK7lekI9M+azSnitIn85h4iOiaLjaTrMjzslhaqCGaI4IyCJ1RljWiLCEu4jyrLLgqxBTew==
+  dependencies:
+    "@types/prop-types" "*"
+    "@types/scheduler" "*"
+    csstype "^3.0.2"
+
+"@types/react@18.0.22":
+  version "18.0.22"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.22.tgz#97782d995d999617de116cf61f437f1351036fc7"
+  integrity sha512-4yWc5PyCkZN8ke8K9rQHkTXxHIWHxLzzW6RI1kXVoepkD3vULpKzC2sDtAMKn78h92BRYuzf+7b/ms7ajE6hFw==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
