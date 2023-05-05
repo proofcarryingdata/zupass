@@ -59,6 +59,9 @@ export function usePassportPopupSetup() {
       // Later, the Passport redirects back with a proof. Send it to our parent.
       window.opener.postMessage({ encodedPCD: paramsProof }, "*");
       window.close();
+      setTimeout(() => {
+        setError("Finished. Please close this window.");
+      }, 1000 * 3);
     } else if (paramsEncodingPendingPCD != null) {
       // Later, the Passport redirects back with a encodedPendingPCD. Send it to our parent.
       window.opener.postMessage(
@@ -66,6 +69,9 @@ export function usePassportPopupSetup() {
         "*"
       );
       window.close();
+      setTimeout(() => {
+        setError("Finished. Please close this window.");
+      }, 1000 * 3);
     }
   }, []);
 
