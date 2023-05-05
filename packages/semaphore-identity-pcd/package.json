@@ -4,6 +4,11 @@
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
+  "files": [
+    "./src/*",
+    "./dist/*",
+    "./README.md"
+  ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",

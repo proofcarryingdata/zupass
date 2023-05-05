@@ -1,9 +1,15 @@
 {
   "name": "@pcd/rln-pcd",
   "version": "0.3.1",
+  "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
-  "license": "GPL-3.0-or-later",
+  "files": [
+    "./artifacts/*",
+    "./src/*",
+    "./dist/*",
+    "./README.md"
+  ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
