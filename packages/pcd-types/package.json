@@ -3,11 +3,11 @@
   "version": "0.4.2",
   "license": "MIT",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts --dts",
-    "dev": "tsup src/index.ts --dts --watch"
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.4.2",
