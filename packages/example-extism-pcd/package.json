@@ -1,0 +1,31 @@
+{
+  "name": "@pcd/example-extism-pcd",
+  "version": "0.5.1",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "files": [
+    "./src/*",
+    "./dist/*",
+    "./README.md"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn build"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
+    "@types/react": "^18.0.22",
+    "eslint": "^7.32.0",
+    "tsup": "^6.7.0",
+    "typescript": "^4.9.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {}
+}

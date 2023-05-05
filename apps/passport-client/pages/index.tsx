@@ -24,6 +24,7 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { pollParticipant } from "../src/participant";
+import { testPlugin } from "../src/pluginManager";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
 
@@ -148,6 +149,7 @@ if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
 }
 
 registerServiceWorker();
+testPlugin();
 
 const root = createRoot(document.querySelector("#root"));
 root.render(
