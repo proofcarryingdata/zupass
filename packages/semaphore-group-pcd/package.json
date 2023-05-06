@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-group-pcd",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -19,10 +19,10 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.5.1",
-    "@pcd/pcd-types": "0.5.1",
-    "@pcd/semaphore-identity-pcd": "0.5.1",
-    "@pcd/semaphore-signature-pcd": "0.5.1",
+    "@pcd/passport-ui": "0.5.2",
+    "@pcd/pcd-types": "0.5.2",
+    "@pcd/semaphore-identity-pcd": "0.5.2",
+    "@pcd/semaphore-signature-pcd": "0.5.2",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
     "@semaphore-protocol/proof": "^3.2.3",

@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.5.2
+
+### Patch Changes
+
+- Remove tag.
+
 ## 0.5.1
 
 ### Patch Changes

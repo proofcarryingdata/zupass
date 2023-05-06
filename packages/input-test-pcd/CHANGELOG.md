@@ -1,5 +1,12 @@
 # @pcd/input-test-pcd
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.5.2
+
 ## 0.5.1
 
 ### Patch Changes

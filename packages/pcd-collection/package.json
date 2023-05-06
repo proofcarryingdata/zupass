@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -17,7 +17,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.5.1"
+    "@pcd/pcd-types": "0.5.2"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
