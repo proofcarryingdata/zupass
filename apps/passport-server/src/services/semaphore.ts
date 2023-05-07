@@ -9,6 +9,7 @@ import {
   HistoricSemaphoreGroup,
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
+import { traced } from "./telemetry";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {
@@ -60,20 +61,23 @@ export class SemaphoreService {
 
   // Load participants from DB, rebuild semaphore groups
   async reload() {
-    if (!this.dbPool) {
-      throw new Error("no database connection");
-    }
+    return traced("Semaphore", "reload", async (span) => {
+      if (!this.dbPool) {
+        throw new Error("no database connection");
+      }
 
-    console.log(`[SEMA] Reloading semaphore service...`);
-    const ps = await fetchPassportParticipants(this.dbPool);
-    console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
-    this.participants = {};
-    this.groups = SemaphoreService.createGroups();
-    for (const p of ps) {
-      this.addParticipant(p);
-    }
-    console.log(`[SEMA] Semaphore service reloaded.`);
-    this.saveHistoricSemaphoreGroups();
+      console.log(`[SEMA] Reloading semaphore service...`);
+      const ps = await fetchPassportParticipants(this.dbPool);
+      console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
+      this.participants = {};
+      this.groups = SemaphoreService.createGroups();
+      for (const p of ps) {
+        this.addParticipant(p);
+      }
+      console.log(`[SEMA] Semaphore service reloaded.`);
+      span?.setAttribute("participants", ps.length);
+      this.saveHistoricSemaphoreGroups();
+    });
   }
 
   async saveHistoricSemaphoreGroups() {
