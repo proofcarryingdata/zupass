@@ -1,5 +1,6 @@
 import { readFile } from "fs/promises";
 import request from "request";
+import { traced } from "../../services/telemetry";
 import { ApplicationContext } from "../../types";
 
 function getMailingClient() {
@@ -74,18 +75,22 @@ export async function sendEmail(
   name: string,
   token: string
 ): Promise<void> {
-  const msg = {
-    to: to,
-    from: "passport@0xparc.org",
-    subject: "Welcome to your Zuzalu Passport",
-    ...(await composeMail(name, token)),
-  };
+  return traced("Email", "sendEmail", async (span) => {
+    span?.setAttribute("email", to);
 
-  try {
-    await getMailingClient().send(msg);
-  } catch (e: any) {
-    console.log(e);
-    context.rollbar?.error(e);
-    throw new Error(`Sendgrid error, failed to email ${to}`);
-  }
+    const msg = {
+      to: to,
+      from: "passport@0xparc.org",
+      subject: "Welcome to your Zuzalu Passport",
+      ...(await composeMail(name, token)),
+    };
+
+    try {
+      await getMailingClient().send(msg);
+    } catch (e: any) {
+      console.log(e);
+      context.rollbar?.error(e);
+      throw new Error(`Sendgrid error, failed to email ${to}`);
+    }
+  });
 }
