@@ -1,10 +1,12 @@
 {
-  "name": "passport-client",
+  "name": "@pcd/passport-client-ui",
   "version": "0.0.13",
   "license": "GPL-3.0-or-later",
-  "private": true,
+  "private": false,
+  "files": [
+    "pages/index.tsx"
+  ],
   "scripts": {
-    "dev": "ts-node build.ts dev",
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",

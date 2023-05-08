@@ -4,7 +4,6 @@
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
-    "dev": "ts-node build.ts dev",
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",

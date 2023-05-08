@@ -1,6 +1,5 @@
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -13,7 +12,6 @@ import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
-import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -24,10 +22,9 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { pollParticipant } from "../src/participant";
-import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
 
-class App extends React.Component<object, ZuState> {
+export class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
   update = (diff: Pick<ZuState, keyof ZuState>) => {
     console.log("App.update", diff);
@@ -141,17 +138,3 @@ async function loadInitialState(): Promise<ZuState> {
     participantInvalid,
   };
 }
-
-// Redirect old site visitors to the correct site
-if (!["zupass.org", "localhost"].includes(window.location.hostname)) {
-  window.location.replace("https://zupass.org/" + window.location.hash);
-}
-
-registerServiceWorker();
-
-const root = createRoot(document.querySelector("#root"));
-root.render(
-  <RollbarProvider>
-    <App />
-  </RollbarProvider>
-);
