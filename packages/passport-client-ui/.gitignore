@@ -1,0 +1,5 @@
+
+# Esbuild generated output
+public/js
+.env
+public/service-worker.js
