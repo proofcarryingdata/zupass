@@ -1,0 +1,134 @@
+html {
+  --bg-dark-primary: #19473F;
+  --bg-lite-primary: #206b5e;
+  --bg-dark-gray:    #2A3231;
+  --bg-lite-gray:    #374B49;
+  --primary-dark:    #325F57;
+  --primary-lite:    #468C80;
+  --accent-dark:     #fcd270;
+  --accent-dark-rbg: 252, 210, 112;
+  --accent-lite:     #ffe5a4;
+  --danger:          #A95940;
+  --danger-rgb:      169, 89, 64;
+  --white:           #FFFFFF;
+  --white-rgb:       255, 255, 255;
+  --black:           #000000;
+  --black-rgb:       0, 0, 0;
+
+  background: var(--bg-dark-primary);
+  color: var(--white);
+  font: 16px PlexSans, system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+a, a:visited {
+  color: var(--accent-dark);
+  text-decoration: none;
+}
+
+/* IBM Plex Sans */
+@font-face {
+  font-family: 'PlexSans';
+  font-style: normal;
+  font-weight: 200;
+  src:url(/fonts/IBMPlexSans-ExtraLight.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'PlexSans';
+  font-style: normal;
+  font-weight: 300;
+  src:url(/fonts/IBMPlexSans-Light.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'PlexSans';
+  font-style: italic;
+  font-weight: 300;
+  src:url(/fonts/IBMPlexSans-LightItalic.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'PlexSans';
+  font-style: normal;
+  font-weight: 400;
+  src:url(/fonts/IBMPlexSans-Regular.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'PlexSans';
+  font-style: normal;
+  font-weight: 500;
+  src:url(/fonts/IBMPlexSans-Medium.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'PlexSans';
+  font-style: normal;
+  font-weight: 600;
+  src:url(/fonts/IBMPlexSans-SemiBold.ttf) format('truetype');
+}
+
+/*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
+html,
+body,
+p,
+ol,
+ul,
+li,
+dl,
+dt,
+dd,
+blockquote,
+figure,
+fieldset,
+legend,
+textarea,
+pre,
+iframe,
+hr,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  padding: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 100%;
+  font-weight: normal;
+}
+ul {
+  list-style: none;
+}
+button,
+input,
+select {
+  margin: 0;
+}
+html {
+  box-sizing: border-box;
+}
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+img,
+video {
+  height: auto;
+  max-width: 100%;
+}
+iframe {
+  border: 0;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,
+th {
+  padding: 0;
+}
