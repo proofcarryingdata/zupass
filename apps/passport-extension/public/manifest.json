@@ -2,17 +2,13 @@
   "manifest_version": 2,
   "name": "Zupass",
   "version": "1.0",
-
   "description": "Zuzalu Passport",
-
   "icons": {
     "48": "icons/border-48.png"
   },
-
-  "content_scripts": [
-    {
-      "matches": ["*://*.mozilla.org/*"],
-      "js": ["js/index.js"]
-    }
-  ]
+  "browser_action": {
+    "default_icon": "icons/beasts-32.png",
+    "default_title": "Beastify",
+    "default_popup": "index.html"
+  }
 }
