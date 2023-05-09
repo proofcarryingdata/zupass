@@ -4,18 +4,18 @@
   "version": "1.0",
   "description": "Zuzalu Passport",
   "icons": {
-    "48": "icons/border-48.png"
+    "48": "icons/icon-48.png"
   },
   "permissions": ["webRequest"],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
-  },
   "action": {
-    "default_icon": "icons/beasts-32.png",
-    "default_title": "Beastify",
+    "default_icon": "icons/icon.png",
+    "default_title": "Zupass",
     "default_popup": "index.html"
   },
   "sandbox": {
     "pages": ["sandbox.html"]
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
   }
 }
