@@ -1,5 +1,6 @@
 import { Fragment, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
@@ -18,15 +19,22 @@ export function HomeScreen() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (state.self == null) {
-      console.log("Redirecting to login screen");
-      navigate("/login");
-    } else if (sessionStorage.pendingProofRequest != null) {
-      console.log("Redirecting to prove screen");
-      const encReq = encodeURIComponent(sessionStorage.pendingProofRequest);
-      navigate("/prove?request=" + encReq);
-      delete sessionStorage.pendingProofRequest;
-    }
+    config.sessionStorage
+      .getStorageItem("pendingProofRequest")
+      .then((pendingProofRequest) => {
+        if (state.self == null) {
+          console.log("Redirecting to login screen");
+          navigate("/login");
+        } else if (pendingProofRequest != null) {
+          console.log("Redirecting to prove screen");
+          const encReq = encodeURIComponent(pendingProofRequest);
+          navigate("/prove?request=" + encReq);
+          config.sessionStorage.setStorageItem(
+            "pendingProofRequest",
+            undefined
+          );
+        }
+      });
   });
 
   const pcds = useMemo(() => {

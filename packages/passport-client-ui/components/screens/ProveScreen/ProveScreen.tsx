@@ -3,6 +3,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext } from "react";
 import { useLocation } from "react-router-dom";
+import { config } from "../../../src/config";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
@@ -24,7 +25,10 @@ export function ProveScreen() {
   }
 
   if (state.self == null) {
-    sessionStorage.pendingProofRequest = JSON.stringify(request);
+    config.sessionStorage.setStorageItem(
+      "pendingProofRequest",
+      JSON.stringify(request)
+    );
     window.location.href = "/#/login";
     window.location.reload();
     return null;
