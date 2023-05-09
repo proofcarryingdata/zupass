@@ -21,6 +21,7 @@ const define = {
 const passportAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
+  minify: false,
   entryPoints: ["pages/index.tsx"],
   plugins: [
     NodeModulesPolyfillPlugin(),
