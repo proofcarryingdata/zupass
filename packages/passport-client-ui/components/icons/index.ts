@@ -1,3 +1,5 @@
+import "./svg.d.ts";
+
 import closeWhite from "./close-white.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";

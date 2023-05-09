@@ -6,6 +6,10 @@
     "lib": ["ES2015", "DOM"],
     "esModuleInterop": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../../packages/passport-client-ui/components/icons/svg.d.ts"
+  ],
   "exclude": ["node_modules"]
 }
