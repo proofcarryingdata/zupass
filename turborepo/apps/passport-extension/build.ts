@@ -38,6 +38,26 @@ const passportAppOpts: BuildOptions = {
   define,
 };
 
+const containerOpts: BuildOptions = {
+  sourcemap: true,
+  bundle: true,
+  minify: false,
+  entryPoints: ["pages/container.tsx"],
+  plugins: [
+    NodeModulesPolyfillPlugin(),
+    NodeGlobalsPolyfillPlugin({
+      process: true,
+      buffer: true,
+    }),
+  ],
+  loader: {
+    ".svg": "dataurl",
+  },
+  outdir: "public/js",
+  metafile: true,
+  define,
+};
+
 run(process.argv[2])
   .then(() => console.log("Built passport client"))
   .catch((err) => console.error(err));
@@ -47,6 +67,9 @@ async function run(command: string) {
     case "build":
       const passportRes = await build({ ...passportAppOpts, minify: true });
       console.error("Built", passportRes);
+
+      const containerRes = await build({...containerOpts})
+      console.log("Built container");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
