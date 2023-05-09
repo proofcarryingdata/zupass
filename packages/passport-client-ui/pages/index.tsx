@@ -1,5 +1,6 @@
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
+import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -12,6 +13,7 @@ import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
+import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -137,4 +139,13 @@ async function loadInitialState(): Promise<ZuState> {
     modal,
     participantInvalid,
   };
+}
+
+export function mountApplication(element: HTMLElement) {
+  const root = createRoot(element);
+  root.render(
+    <RollbarProvider>
+      <App />
+    </RollbarProvider>
+  );
 }

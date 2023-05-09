@@ -1,5 +1,3 @@
-import { App } from "@pcd/passport-client-ui/pages/index";
-import { createRoot } from "react-dom/client";
+import { mountApplication } from "@pcd/passport-client-ui/pages/index";
 
-const root = createRoot(document.querySelector("#root"));
-root.render(<App />);
+mountApplication(document.querySelector("#root"));
