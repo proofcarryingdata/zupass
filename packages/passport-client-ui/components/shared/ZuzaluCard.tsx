@@ -149,14 +149,20 @@ function ZuzaluQR() {
       }
 
       console.log(`[QR] generating zuzalu proof, timestamp ${timestamp}`);
-      const pcd = await createZuzaluQRProof(identity, uuid, timestamp);
-      const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
-      const stringified = JSON.stringify(serialized);
-      console.log(`[QR] generated zuzalu proof, length ${stringified.length}`);
+      try {
+        const pcd = await createZuzaluQRProof(identity, uuid, timestamp);
+        const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
+        const stringified = JSON.stringify(serialized);
+        console.log(
+          `[QR] generated zuzalu proof, length ${stringified.length}`
+        );
 
-      const qrPCD = encodeQRPayload(stringified);
-      localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });
-      setQRPayload({ timestamp, qrPCD });
+        const qrPCD = encodeQRPayload(stringified);
+        localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });
+        setQRPayload({ timestamp, qrPCD });
+      } catch (e) {
+        console.log(e);
+      }
     },
     [identity, qrPayload, uuid]
   );
