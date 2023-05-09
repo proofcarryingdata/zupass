@@ -17,6 +17,7 @@ import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Config, setConfig } from "../src/config";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
+  getSavedSyncKey as loadSavedSyncKey,
   loadEncryptionKey,
   loadIdentity,
   loadParticipantInvalid,
@@ -122,12 +123,13 @@ async function loadInitialState(): Promise<ZuState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const participantInvalid = await loadParticipantInvalid();
+  const savedSyncKey = await loadSavedSyncKey();
 
   let modal = "" as ZuState["modal"];
 
   if (participantInvalid) {
     modal = "invalid-participant";
-  } else if (self != null && !localStorage["savedSyncKey"]) {
+  } else if (self != null && !savedSyncKey) {
     console.log("Asking existing user to save their sync key...");
     modal = "save-sync";
   }

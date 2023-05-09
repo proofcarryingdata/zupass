@@ -9,6 +9,7 @@ import styled from "styled-components";
 import { config } from "../../src/config";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
+import { getZuzaluQR, setZuzaluQR } from "../../src/localstorage";
 import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
@@ -132,13 +133,17 @@ function ZuzaluQR() {
    */
   const regenerateAfterMs = (config.maxProofAge * 2) / 3;
 
-  const [qrPayload, setQRPayload] = useState<QRPayload>(() => {
-    const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
-    if (timestamp != null && Date.now() - timestamp < config.maxProofAge) {
-      console.log(`[QR] from localStorage, timestamp ${timestamp}`);
-      return { timestamp, qrPCD };
-    }
-  });
+  const [qrPayload, setQRPayload] = useState<QRPayload>();
+
+  useEffect(() => {
+    getZuzaluQR().then((qr) => {
+      const { timestamp, qrPCD } = qr;
+      if (timestamp != null && Date.now() - timestamp < config.maxProofAge) {
+        console.log(`[QR] from localStorage, timestamp ${timestamp}`);
+        setQRPayload({ timestamp, qrPCD });
+      }
+    });
+  }, []);
 
   const maybeGenerateQR = useCallback(
     async function () {
@@ -158,8 +163,9 @@ function ZuzaluQR() {
         );
 
         const qrPCD = encodeQRPayload(stringified);
-        localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });
-        setQRPayload({ timestamp, qrPCD });
+        setZuzaluQR(JSON.stringify({ timestamp, qrPCD })).then(() => {
+          setQRPayload({ timestamp, qrPCD });
+        });
       } catch (e) {
         console.log(e);
       }

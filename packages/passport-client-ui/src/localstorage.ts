@@ -59,3 +59,21 @@ export async function loadParticipantInvalid(): Promise<boolean> {
   );
   return JSON.parse(participantInvalid ?? "false");
 }
+
+export async function setSavedSyncKey(saved: boolean): Promise<void> {
+  return config.hardware.setStorageItem("savedSyncKey", saved + "");
+}
+
+export async function getSavedSyncKey(): Promise<boolean> {
+  const savedSyncKey = await config.hardware.getStorageItem("savedSyncKey");
+  return JSON.parse(savedSyncKey ?? "false");
+}
+
+export async function setZuzaluQR(qr: any): Promise<void> {
+  return config.hardware.setStorageItem("savedSyncKey", JSON.stringify(qr));
+}
+
+export async function getZuzaluQR(): Promise<any> {
+  const savedSyncKey = await config.hardware.getStorageItem("zuzaluQR");
+  return JSON.parse(savedSyncKey ?? "{}");
+}

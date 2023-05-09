@@ -1,6 +1,7 @@
 import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
+import { setSavedSyncKey } from "../../src/localstorage";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { Modal } from "./Modal";
 
@@ -16,8 +17,9 @@ export function SaveSyncModal() {
   }, [syncKey]);
 
   const close = useCallback(() => {
-    localStorage["savedSyncKey"] = "true";
-    dispatch({ type: "set-modal", modal: "" });
+    setSavedSyncKey(true).then(() => {
+      dispatch({ type: "set-modal", modal: "" });
+    });
   }, [dispatch]);
 
   if (syncKey == null) return null;
