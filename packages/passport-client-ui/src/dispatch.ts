@@ -248,7 +248,7 @@ function clearError(state: ZuState, update: ZuUpdate) {
 
 function resetPassport() {
   // Clear saved state.
-  window.localStorage.clear();
+  config.hardware.clearStorage();
   // Reload to clear in-memory state.
   window.location.hash = "#/";
   window.location.reload();
@@ -310,7 +310,7 @@ async function loadFromSync(
   });
 
   console.log("Loaded from sync key, redirecting to home screen...");
-  window.localStorage["savedSyncKey"] = "true";
+  config.hardware.setStorageItem("savedSyncKey", "true");
   window.location.hash = "#/";
 }
 

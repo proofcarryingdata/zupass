@@ -6,6 +6,13 @@ export interface Config {
   // The amount of time a zuzalu qr code proof is valid for
   maxProofAge: number;
   rollbarToken: string | undefined;
+  hardware: Hardware;
+}
+
+export interface Hardware {
+  setStorageItem: (key: string, value: string) => Promise<void>;
+  getStorageItem: (key: string) => Promise<string | undefined>;
+  clearStorage: () => Promise<void>;
 }
 
 export let config: Config;

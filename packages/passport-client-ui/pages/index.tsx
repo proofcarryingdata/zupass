@@ -111,17 +111,17 @@ function Router() {
 }
 
 async function loadInitialState(): Promise<ZuState> {
-  let identity = loadIdentity();
+  let identity = await loadIdentity();
   if (identity == null) {
     console.log("Generating a new Semaphore identity...");
     identity = new Identity();
     saveIdentity(identity);
   }
 
-  const self = loadSelf();
+  const self = await loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
-  const participantInvalid = loadParticipantInvalid();
+  const participantInvalid = await loadParticipantInvalid();
 
   let modal = "" as ZuState["modal"];
 
