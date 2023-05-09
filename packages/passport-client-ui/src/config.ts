@@ -1,16 +1,15 @@
-interface Config {
+export interface Config {
   // Development mode lets you bypass email auth, etc.
   devMode: boolean;
   // The URL of the Passport server.
   passportServer: string;
   // The amount of time a zuzalu qr code proof is valid for
   maxProofAge: number;
+  rollbarToken: string | undefined;
 }
 
-export const config: Config = {
-  devMode: process.env.NODE_ENV !== "production",
-  passportServer: process.env.PASSPORT_SERVER_URL,
-  maxProofAge: 1000 * 60 * 60 * 4,
-};
+export let config: Config;
 
-console.log("Config: " + JSON.stringify(config));
+export function setConfig(_config: Config) {
+  config = _config;
+}

@@ -14,6 +14,7 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { Config, setConfig } from "../src/config";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -141,8 +142,11 @@ async function loadInitialState(): Promise<ZuState> {
   };
 }
 
-export function mountApplication(element: HTMLElement) {
+export function mountApplication(element: HTMLElement, config: Config) {
+  setConfig(config);
+
   const root = createRoot(element);
+
   root.render(
     <RollbarProvider>
       <App />

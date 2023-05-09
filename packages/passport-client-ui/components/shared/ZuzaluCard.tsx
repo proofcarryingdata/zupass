@@ -115,13 +115,6 @@ function highlight(role: string) {
   return role === "resident" || role === "organizer";
 }
 
-/**
- * Generate a fresh Zuzalu identity-revealing proof every n ms.
- * We regenerate before the proof expires to allow for a few minutes of
- * clock skew between prover and verifier.
- */
-const regenerateAfterMs = (config.maxProofAge * 2) / 3;
-
 interface QRPayload {
   timestamp: number;
   qrPCD: string;
@@ -131,6 +124,13 @@ function ZuzaluQR() {
   const [state] = useContext(DispatchContext);
   const { identity, self } = state;
   const { uuid } = self;
+
+  /**
+   * Generate a fresh Zuzalu identity-revealing proof every n ms.
+   * We regenerate before the proof expires to allow for a few minutes of
+   * clock skew between prover and verifier.
+   */
+  const regenerateAfterMs = (config.maxProofAge * 2) / 3;
 
   const [qrPayload, setQRPayload] = useState<QRPayload>(() => {
     const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
@@ -164,7 +164,7 @@ function ZuzaluQR() {
         console.log(e);
       }
     },
-    [identity, qrPayload, uuid]
+    [identity, qrPayload, regenerateAfterMs, uuid]
   );
 
   // Load or generate QR code on mount, then regenerate periodically
