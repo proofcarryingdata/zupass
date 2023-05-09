@@ -1,10 +1,9 @@
-import * as browserModule from "@simplewebauthn/browser";
+import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server/./dist";
 import assert from "assert";
-import sinon from "sinon";
 import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/WebAuthnPCD";
 
 const args: WebAuthnPCDArgs = {
-  challenge: "challenge",
+  challenge: "valid_challenge",
   origin: "localhost",
   rpID: "rpID",
   authenticator: {
@@ -14,23 +13,47 @@ const args: WebAuthnPCDArgs = {
   },
 };
 
-describe("WebAuthn PCD", function () {
-  this.beforeAll(async function () {
-    sinon.stub(browserModule, "startAuthentication").returns(
-      Promise.resolve({
-        id: "my-existing-credential",
-        rawId: "my-existing-credential",
-        response: {
-          clientDataJSON: "clientDataJSON",
-          signature: "signature",
-          authenticatorData: "attestationObject",
-        },
-        clientExtensionResults: {},
-        type: "public-key",
-      })
-    );
-  });
+jest.mock("@simplewebauthn/browser", () => ({
+  startRegistration: async () => ({
+    id: "my-credential",
+    rawId: "my-credential",
+    response: {
+      clientDataJSON: "",
+      attestationObject: "",
+    },
+    clientExtensionResults: {},
+    type: "public-key",
+  }),
+  startAuthentication: async () => ({
+    id: "my-credential",
+    rawId: "my-credential",
+    response: {
+      clientDataJSON: "",
+      attestationObject: "",
+    },
+    clientExtensionResults: {},
+    type: "public-key",
+  }),
+}));
 
+jest.mock("@simplewebauthn/server", () => ({
+  ...jest.requireActual("@simplewebauthn/server"),
+  verifyAuthenticationResponse: async ({
+    expectedChallenge,
+  }: VerifyAuthenticationResponseOpts) => ({
+    verified: expectedChallenge === "valid_challenge",
+  }),
+}));
+
+// Mock out wasm-based utils function
+jest.mock("@pcd/passport-crypto/src/utils", () => ({
+  arrayBufferToBase64: (arrayBuffer: ArrayBuffer) =>
+    btoa(String.fromCharCode(...new Uint8Array(arrayBuffer))),
+  base64ToArrayBuffer: (base64String: string) =>
+    Uint8Array.from(atob(base64String), (c) => c.charCodeAt(0)),
+}));
+
+describe("WebAuthn PCD", () => {
   it("should be able to generate a proof that verifies", async function () {
     const { prove, verify } = WebAuthnPCDPackage;
     const pcd = await prove(args);
