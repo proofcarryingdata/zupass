@@ -10,5 +10,6 @@
     "default_icon": "icons/beasts-32.png",
     "default_title": "Beastify",
     "default_popup": "index.html"
-  }
+  },
+  "content_security_policy": "script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'"
 }
