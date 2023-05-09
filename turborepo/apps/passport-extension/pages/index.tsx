@@ -31,3 +31,10 @@ mountApplication(document.querySelector("#root"), {
     },
   },
 });
+
+
+window.addEventListener('message', function(event) {
+  alert("Message received from parent: " + event.data);
+  window.parent.postMessage("ack from child", "*")
+});
+
