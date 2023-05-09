@@ -14,5 +14,8 @@
     "default_icon": "icons/beasts-32.png",
     "default_title": "Beastify",
     "default_popup": "index.html"
+  },
+  "sandbox": {
+    "pages": ["sandbox.html"]
   }
 }
