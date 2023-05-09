@@ -2353,17 +2353,6 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.8.0.tgz#fe2aa90e6df050a11cd57f5c0f47b0641fd2cad3"
   integrity sha512-TYh1MRcm4JnvpqtqOwT9WYaBYY4KERHdToxs/suDTLviGRsQkIjS5yYROTYTSJQUnYLOn/TuOh5GoMwfLSU+Ew==
 
-"@pcd/eslint-config-custom@0.4.2":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.4.2.tgz#b4f91868cc41c157c1a61328cac1bf9888fb6aa8"
-  integrity sha512-pIkHwVmHK/USu84WgLeZ31f+NVYrlZ/U1Q57KWKpOQ1dmuSi+sT0PvnnRg+wa4BDBFDYfIq02vU7qEtXQduNUg==
-  dependencies:
-    eslint "^7.23.0"
-    eslint-config-next "13.0.0"
-    eslint-config-prettier "^8.3.0"
-    eslint-config-turbo latest
-    eslint-plugin-react "7.31.8"
-
 "@pcd/passport-ui@^0.4.1":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@pcd/passport-ui/-/passport-ui-0.4.2.tgz#ed12bc67eef713cf1b1d5b6a39c825067c0fe226"
