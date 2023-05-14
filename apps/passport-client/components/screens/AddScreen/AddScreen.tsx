@@ -8,7 +8,8 @@ import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../../src/dispatch";
 import { validateRequest } from "../../../src/passportRequest";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { err } from "../../../src/util";
+import { ErrorPopup } from "../../modals/ErrorPopup";
+import { AppContainer } from "../../shared/AppContainer";
 import { JustAddScreen } from "./JustAddScreen";
 import { ProveAndAddScreen } from "./ProveAndAddScreen";
 
@@ -19,10 +20,17 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  */
 export function AddScreen() {
   const location = useLocation();
-  const [_, dispatch] = useContext(DispatchContext);
+  const [state, _dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
   useSyncE2EEStorage();
+
+  if (state.self == null) {
+    sessionStorage.pendingAddRequest = JSON.stringify(request);
+    window.location.href = "/#/login";
+    window.location.reload();
+    return null;
+  }
 
   if (request.type === PCDRequestType.ProveAndAdd) {
     return <ProveAndAddScreen request={request as PCDProveAndAddRequest} />;
@@ -32,6 +40,19 @@ export function AddScreen() {
     return <JustAddScreen request={request as PCDAddRequest} />;
   }
 
-  err(dispatch, "Unsupported request", `Expected a PCD ADD request`);
-  return null;
+  // Need to do this instead of using an error dispatch as that will lead to an
+  // infinite loop of error dispatches as the state updates
+  return (
+    <AppContainer bg="gray">
+      <ErrorPopup
+        error={{
+          title: "Unsupported request",
+          message: "Expected a PCD ADD request",
+        }}
+        onClose={() => {
+          window.location.hash = "#/";
+        }}
+      />
+    </AppContainer>
+  );
 }

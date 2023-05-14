@@ -26,6 +26,15 @@ export function HomeScreen() {
       const encReq = encodeURIComponent(sessionStorage.pendingProofRequest);
       navigate("/prove?request=" + encReq);
       delete sessionStorage.pendingProofRequest;
+    } else if (sessionStorage.pendingAddRequest != null) {
+      console.log("Redirecting to add screen");
+      const encReq = encodeURIComponent(sessionStorage.pendingAddRequest);
+      navigate("/add?request=" + encReq);
+      delete sessionStorage.pendingAddRequest;
+    } else if (sessionStorage.pendingHaloRequest != null) {
+      console.log("Redirecting to halo screen");
+      navigate(`/halo${sessionStorage.pendingHaloRequest}`);
+      delete sessionStorage.pendingHaloRequest;
     }
   });
 
@@ -38,7 +47,14 @@ export function HomeScreen() {
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
   const selectedPCD = useMemo(() => {
-    let selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+    let searchId = selectedPCDID;
+    // if user just added a PCD, highlight that one
+    if (sessionStorage.newAddedPCDID != null) {
+      searchId = sessionStorage.newAddedPCDID;
+      delete sessionStorage.newAddedPCDID;
+    }
+
+    let selected = pcds.find((pcd) => pcd.id === searchId);
     if (selected === undefined) {
       selected = pcds[0];
     }
