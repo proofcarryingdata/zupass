@@ -134,6 +134,7 @@ export async function verify(pcd: HaLoNoncePCD): Promise<boolean> {
     return false;
   }
 
+  // from code in https://gist.github.com/Clee681/e05034cb77365edc1eac9bf7575b0d24
   const rndBuf = Buffer.from(pcd.proof.signedDigest, "hex");
   const hash = sha256.create();
   const rndHashed = hash
@@ -171,7 +172,7 @@ export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
 
 export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
   return {
-    header: "Zuzalu Memento",
+    header: `Zuzalu Memento ${pcd.id.substring(0, 4)}`,
     displayName: "halo-nonce-" + pcd.id.substring(0, 4),
   };
 }
