@@ -306,7 +306,7 @@ export function BooleanArgInput<T extends PCDPackage>({
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      args[argName].value = e.target.value;
+      args[argName].value = !args[argName].value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
     [args, setArgs, argName]
@@ -326,7 +326,8 @@ export function BooleanArgInput<T extends PCDPackage>({
       <Row>
         <InputContainer>
           <input
-            value={arg.value}
+            type="checkbox"
+            checked={arg.value}
             onChange={onChange}
             disabled={!arg.userProvided}
           />
