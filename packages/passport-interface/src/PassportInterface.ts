@@ -8,7 +8,7 @@ export enum PCDRequestType {
 }
 
 export interface PCDRequest {
-  returnUrl: string;
+  returnUrl?: string;
   type: PCDRequestType;
 }
 

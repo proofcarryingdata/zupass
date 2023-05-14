@@ -1,4 +1,5 @@
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -48,5 +49,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EthereumOwnershipPCDPackage,
     JubJubSignaturePCDPackage,
     RLNPCDPackage,
+    HaLoNoncePCDPackage,
   ];
 }

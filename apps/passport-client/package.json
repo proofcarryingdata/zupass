@@ -20,6 +20,7 @@
     "@pcd/rln-pcd": "0.4.1",
     "@pcd/semaphore-group-pcd": "0.5.2",
     "@pcd/semaphore-identity-pcd": "0.5.2",
+    "@pcd/halo-nonce-pcd": "*",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/group": "^3.2.3",
     "@semaphore-protocol/identity": "^3.2.3",
