@@ -20,10 +20,6 @@ describe("halo nonce PCD should work", function () {
   let args: HaLoNoncePCDArgs;
   this.beforeAll(async function () {
     args = {
-      requestNewPCD: {
-        argumentType: ArgumentTypeName.Boolean,
-        value: false,
-      },
       pk2: {
         argumentType: ArgumentTypeName.String,
         value:

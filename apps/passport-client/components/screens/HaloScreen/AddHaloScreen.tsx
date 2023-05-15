@@ -37,10 +37,6 @@ export function AddHaloScreen({
   useEffect(() => {
     const generatePCD = async () => {
       const args: HaLoNoncePCDArgs = {
-        requestNewPCD: {
-          argumentType: ArgumentTypeName.Boolean,
-          value: false,
-        },
         pk2: {
           argumentType: ArgumentTypeName.String,
           value: pk2,
