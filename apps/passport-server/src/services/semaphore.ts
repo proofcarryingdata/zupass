@@ -71,9 +71,7 @@ export class SemaphoreService {
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
       this.participants = {};
       this.groups = SemaphoreService.createGroups();
-      for (const p of ps) {
-        this.addParticipant(p);
-      }
+      this.addParticipants(ps);
       console.log(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
       this.saveHistoricSemaphoreGroups();
@@ -153,15 +151,17 @@ export class SemaphoreService {
 
   // Add a single participant to the semaphore groups which they
   // belong to.
-  addParticipant(p: PassportParticipant) {
-    this.addParticipantToGroup(p, this.groupParticipants());
+  addParticipants(participants: PassportParticipant[]) {
+    for (const p of participants) {
+      this.addParticipantToGroup(p, this.groupParticipants());
 
-    const groups = this.getGroupsForRole(p.role);
-    for (const group of groups) {
-      this.addParticipantToGroup(p, group);
+      const groups = this.getGroupsForRole(p.role);
+      for (const group of groups) {
+        this.addParticipantToGroup(p, group);
+      }
+
+      this.participants[p.uuid] = p;
     }
-
-    this.participants[p.uuid] = p;
   }
 
   addParticipantToGroup(p: PassportParticipant, group: Group) {
