@@ -165,9 +165,9 @@ export class SemaphoreService {
       this.participants[p.uuid] = p;
       const participantGroups = this.getGroupsForRole(p.role);
       for (const namedGroup of participantGroups) {
-        // console.log(
-        //   `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
-        // );
+        console.log(
+          `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
+        );
         const participantsInGroup = groupToParticipants.get(
           namedGroup.group.id.toString()
         );
