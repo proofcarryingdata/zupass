@@ -47,17 +47,21 @@ export function HomeScreen() {
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
   const selectedPCD = useMemo(() => {
-    let searchId = selectedPCDID;
+    let selected;
+
     // if user just added a PCD, highlight that one
     if (sessionStorage.newAddedPCDID != null) {
-      searchId = sessionStorage.newAddedPCDID;
+      selected = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
       delete sessionStorage.newAddedPCDID;
+    } else {
+      selected = pcds.find((pcd) => pcd.id === selectedPCDID);
     }
 
-    let selected = pcds.find((pcd) => pcd.id === searchId);
+    // default to Zuzalu PCD if no valid PCD found
     if (selected === undefined) {
       selected = pcds[0];
     }
+
     return selected;
   }, [pcds, selectedPCDID]);
 

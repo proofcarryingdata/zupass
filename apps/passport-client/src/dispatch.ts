@@ -1,18 +1,13 @@
-import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
-import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName,
 } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { createContext } from "react";
 import { config } from "./config";
 import {
@@ -122,17 +117,7 @@ async function genPassport(
   window.location.hash = "#/new-passport";
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const pcds = new PCDCollection(
-    [
-      SemaphoreIdentityPCDPackage,
-      SemaphoreGroupPCDPackage,
-      SemaphoreSignaturePCDPackage,
-      EthereumOwnershipPCDPackage,
-      JubJubSignaturePCDPackage,
-      HaLoNoncePCDPackage,
-    ],
-    [identityPCD]
-  );
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();

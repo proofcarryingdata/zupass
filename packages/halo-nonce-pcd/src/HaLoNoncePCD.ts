@@ -1,5 +1,4 @@
 import {
-  BooleanArgument,
   DisplayOptions,
   PCD,
   PCDPackage,
@@ -15,14 +14,11 @@ const secp256k1 = new ec("secp256k1");
 
 export const HaLoNoncePCDTypeName = "halo-nonce-pcd";
 
+// Arguments taken from the URL produced by the HaLo tags, the definition is at
+// https://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random
 export interface HaLoNoncePCDArgs {
   /**
-   * True if we request a new HaLoNoncePCD, false if we read from remaining params
-   */
-  requestNewPCD: BooleanArgument;
-
-  /**
-   * The uncompressed hex string of the public key on slot 2
+   * The uncompressed hex string of the signing public key
    */
   pk2: StringArgument;
 
@@ -79,53 +75,42 @@ export class HaLoNoncePCD implements PCD<HaLoNoncePCDClaim, HaLoNoncePCDProof> {
 }
 
 export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
-  if (!args.requestNewPCD.value) {
-    if (
-      args.pk2.value === undefined ||
-      args.rnd.value === undefined ||
-      args.rndsig.value === undefined
-    ) {
-      throw new Error("Cannot make HaLoNoncePCD: some arguments are not set.");
-    }
-
-    const claim: HaLoNoncePCDClaim = {
-      nonce: parseInt(args.rnd.value.substring(0, 8)),
-      pubkeyHex: args.pk2.value,
-    };
-
-    if (isNaN(claim.nonce)) {
-      throw new Error("Nonce is not a valid number.");
-    }
-
-    try {
-      secp256k1.keyFromPublic(claim.pubkeyHex, "hex");
-    } catch (e) {
-      throw new Error("Unable to decode public key.");
-    }
-
-    // Clean up signature for easier verification
-    const sigBuf = Buffer.from(args.rndsig.value, "hex");
-    if (sigBuf.length < 2 || 2 + sigBuf[1] > sigBuf.length) {
-      throw new Error("Malformed signature in the rndsig field.");
-    }
-    const cutSig = sigBuf.subarray(0, 2 + sigBuf[1]).toString("hex");
-
-    const proof: HaLoNoncePCDProof = {
-      signedDigest: args.rnd.value,
-      cleanedSignature: cutSig,
-    };
-
-    return new HaLoNoncePCD(uuid(), claim, proof);
-  } else {
-    // TODO: directly use `execHaloCmdWeb` from the libhalo library, as in
-    // https://github.com/arx-research/libhalo/blob/master/docs/web-reactjs.md
-
-    return new HaLoNoncePCD(
-      uuid(),
-      { nonce: 0, pubkeyHex: "" },
-      { signedDigest: "", cleanedSignature: "" }
-    );
+  if (
+    args.pk2.value === undefined ||
+    args.rnd.value === undefined ||
+    args.rndsig.value === undefined
+  ) {
+    throw new Error("Cannot make HaLoNoncePCD: some arguments are not set.");
   }
+
+  const claim: HaLoNoncePCDClaim = {
+    nonce: parseInt(args.rnd.value.substring(0, 8)),
+    pubkeyHex: args.pk2.value,
+  };
+
+  if (isNaN(claim.nonce)) {
+    throw new Error("Nonce is not a valid number.");
+  }
+
+  try {
+    secp256k1.keyFromPublic(claim.pubkeyHex, "hex");
+  } catch (e) {
+    throw new Error("Unable to decode public key.");
+  }
+
+  // Clean up signature for easier verification
+  const sigBuf = Buffer.from(args.rndsig.value, "hex");
+  if (sigBuf.length < 2 || 2 + sigBuf[1] > sigBuf.length) {
+    throw new Error("Malformed signature in the rndsig field.");
+  }
+  const cutSig = sigBuf.subarray(0, 2 + sigBuf[1]).toString("hex");
+
+  const proof: HaLoNoncePCDProof = {
+    signedDigest: args.rnd.value,
+    cleanedSignature: cutSig,
+  };
+
+  return new HaLoNoncePCD(uuid(), claim, proof);
 }
 
 export async function verify(pcd: HaLoNoncePCD): Promise<boolean> {
@@ -178,9 +163,11 @@ export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
 }
 
 /**
- * PCD-conforming wrapper to sign messages using one's Semaphore public key. This is a small
- * extension of the existing Semaphore protocol, which is mostly geared at group signatures.
- * Find documentation of Semaphore here: https://semaphore.appliedzkp.org/docs/introduction
+ * A PCD wrapper for one operation of the HaLo (Hardware Locked) tags from Arx Research,
+ * ttps://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random).
+ * This is an operation in which the private key in slot #2 of the HaLo tag produces
+ * an secp256k1 ECDSA signature of an **incrementing nonce** concatenated with a random string.
+ * The nonce is incremented by the HaLo tag after each signature operation.
  */
 export const HaLoNoncePCDPackage: PCDPackage<
   HaLoNoncePCDClaim,

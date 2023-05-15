@@ -1,6 +1,6 @@
 {
   "name": "@pcd/halo-nonce-pcd",
-  "version": "0.5.2",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -18,9 +18,6 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.5.2",
-    "@pcd/pcd-types": "0.5.2",
-    "@types/elliptic": "^6.4.14",
     "elliptic": "^6.5.4",
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
@@ -29,6 +26,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@pcd/passport-ui": "0.5.2",
+    "@pcd/pcd-types": "0.5.2",
+    "@types/elliptic": "^6.4.14",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/expect": "^24.3.0",
