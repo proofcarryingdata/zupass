@@ -30,10 +30,10 @@ export class SemaphoreService {
     this.dbPool = dbPool;
   }
 
-  groupParticipants = () => this.getNamedGroup("1").group;
-  groupResidents = () => this.getNamedGroup("2").group;
-  groupVisitors = () => this.getNamedGroup("3").group;
-  groupOrganizers = () => this.getNamedGroup("4").group;
+  groupParticipants = () => this.getNamedGroup("1");
+  groupResidents = () => this.getNamedGroup("2");
+  groupVisitors = () => this.getNamedGroup("3");
+  groupOrganizers = () => this.getNamedGroup("4");
 
   getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -69,9 +69,8 @@ export class SemaphoreService {
       console.log(`[SEMA] Reloading semaphore service...`);
       const ps = await fetchPassportParticipants(this.dbPool);
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
-      this.participants = {};
       this.groups = SemaphoreService.createGroups();
-      this.addParticipants(ps);
+      this.setGroups(ps);
       console.log(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
       this.saveHistoricSemaphoreGroups();
@@ -149,32 +148,52 @@ export class SemaphoreService {
     return getLatestSemaphoreGroups(this.dbPool);
   }
 
-  // Add a single participant to the semaphore groups which they
-  // belong to.
-  addParticipants(participants: PassportParticipant[]) {
+  setGroups(participants: PassportParticipant[]) {
+    this.participants = {};
+    this.groups = SemaphoreService.createGroups();
+
+    const groupToParticipants: Map<string, PassportParticipant[]> = new Map();
+    const groupsById: Map<string, NamedGroup> = new Map();
+
+    for (const group of this.groups) {
+      groupToParticipants.set(group.group.id.toString(), []);
+      groupsById.set(group.group.id.toString(), group);
+    }
+
     for (const p of participants) {
-      this.addParticipantToGroup(p, this.groupParticipants());
-
-      const groups = this.getGroupsForRole(p.role);
-      for (const group of groups) {
-        this.addParticipantToGroup(p, group);
-      }
-
       this.participants[p.uuid] = p;
-    }
-  }
 
-  addParticipantToGroup(p: PassportParticipant, group: Group) {
-    console.log(`[SEMA] Adding ${p.role} ${p.email} to sema group ${group.id}`);
-    const bigIntCommitment = BigInt(p.commitment);
-    if (group.indexOf(bigIntCommitment) >= 0) {
-      throw new Error(`member ${bigIntCommitment} already in semaphore group`);
+      const participantGroups = this.getGroupsForRole(p.role);
+      for (const group of participantGroups) {
+        const participantsInGroup = groupToParticipants.get(
+          group.group.id.toString()
+        );
+        participantsInGroup && participantsInGroup.push(p);
+      }
     }
-    group.addMember(bigIntCommitment);
+
+    for (const groupParticipants of groupToParticipants.entries()) {
+      const namedGroup = groupsById.get(groupParticipants[0]);
+      if (namedGroup) {
+        const participantIds = groupParticipants[1].map((p) => p.commitment);
+        const replacementGroup = new Group(
+          namedGroup?.group.id,
+          namedGroup?.group.depth,
+          participantIds
+        );
+        namedGroup.group = replacementGroup;
+
+        for (const p of groupParticipants[1]) {
+          console.log(
+            `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
+          );
+        }
+      }
+    }
   }
 
   // Get the semaphore groups for a participant role
-  getGroupsForRole(role: ParticipantRole): Group[] {
+  getGroupsForRole(role: ParticipantRole): NamedGroup[] {
     switch (role) {
       case ParticipantRole.Organizer:
         return [this.groupOrganizers(), this.groupResidents()];
