@@ -5,7 +5,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { useCallback, useContext } from "react";
-import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import {
   safeRedirect,
@@ -13,6 +12,7 @@ import {
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
 import { Spacer } from "../../core";
+import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "./GenericProveSection";
 
@@ -44,7 +44,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   }
 
   return (
-    <Container>
+    <AppContainer bg="gray">
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
@@ -55,13 +55,6 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
         options={req.options}
       />
       <Spacer h={64} />
-    </Container>
+    </AppContainer>
   );
 }
-
-const Container = styled.div`
-  background-color: var(--bg-dark-gray);
-  width: 100vw;
-  min-height: 100vh;
-  padding: 16px;
-`;

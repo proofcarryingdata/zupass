@@ -93,7 +93,7 @@ export function isBigIntArgument(
   return arg.argumentType === ArgumentTypeName.BigInt;
 }
 
-export type BooleanArgument = Argument<ArgumentTypeName.Boolean, string>;
+export type BooleanArgument = Argument<ArgumentTypeName.Boolean, boolean>;
 export function isBooleanArgument(
   arg: Argument<any, unknown>
 ): arg is BooleanArgument {
