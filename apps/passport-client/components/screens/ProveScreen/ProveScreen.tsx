@@ -21,17 +21,19 @@ export function ProveScreen() {
   if (request.type !== PCDRequestType.Get) {
     // Need to do this instead of using an error dispatch as that will lead to an
     // infinite loop of error dispatches as the state updates
-    <AppContainer bg="gray">
-      <ErrorPopup
-        error={{
-          title: "Unsupported request",
-          message: "Expected a PCD GET request",
-        }}
-        onClose={() => {
-          window.location.hash = "#/";
-        }}
-      />
-    </AppContainer>;
+    return (
+      <AppContainer bg="gray">
+        <ErrorPopup
+          error={{
+            title: "Unsupported request",
+            message: "Expected a PCD GET request",
+          }}
+          onClose={() => {
+            window.location.hash = "#/";
+          }}
+        />
+      </AppContainer>
+    );
   }
 
   if (state.self == null) {
