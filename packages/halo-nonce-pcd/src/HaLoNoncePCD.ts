@@ -157,7 +157,7 @@ export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
 
 export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
   return {
-    header: `Zuzalu Memento ${pcd.id.substring(0, 4)}`,
+    header: `Zuzalu Stamp`,
     displayName: "halo-nonce-" + pcd.id.substring(0, 4),
   };
 }
