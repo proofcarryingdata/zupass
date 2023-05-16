@@ -16,6 +16,7 @@ export class SemaphoreService {
   // Groups by ID
   groups = SemaphoreService.createGroups();
   dbPool: Pool | ClientBase | undefined;
+  loaded = false;
 
   static createGroups(): NamedGroup[] {
     return [
@@ -46,6 +47,10 @@ export class SemaphoreService {
 
   // Get a participant by UUID, or null if not found.
   getParticipant(uuid: string): PassportParticipant | null {
+    if (!this.loaded) {
+      throw new Error("Semaphore service not loaded");
+    }
+
     return this.participants[uuid] || null;
   }
 
@@ -70,6 +75,7 @@ export class SemaphoreService {
       const ps = await fetchPassportParticipants(this.dbPool);
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
       this.setGroups(ps);
+      this.loaded = true;
       console.log(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
       this.saveHistoricSemaphoreGroups();
