@@ -47,6 +47,8 @@ export class SemaphoreService {
 
   // Get a participant by UUID, or null if not found.
   getParticipant(uuid: string): PassportParticipant | null {
+    // prevents client from thinking the user has been logged out
+    // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
       throw new Error("Semaphore service not loaded");
     }
@@ -154,49 +156,52 @@ export class SemaphoreService {
   }
 
   setGroups(participants: PassportParticipant[]) {
+    // reset participant state
     this.participants = {};
     this.groups = SemaphoreService.createGroups();
 
-    const groupToParticipants: Map<string, PassportParticipant[]> = new Map();
+    const groupIdsToParticipants: Map<string, PassportParticipant[]> =
+      new Map();
     const groupsById: Map<string, NamedGroup> = new Map();
     for (const group of this.groups) {
-      groupToParticipants.set(group.group.id.toString(), []);
+      groupIdsToParticipants.set(group.group.id.toString(), []);
       groupsById.set(group.group.id.toString(), group);
     }
 
     console.log(`[SEMA] initializing ${this.groups.length} groups`);
     console.log(`[SEMA] inserting ${participants.length} participants`);
 
+    // calculate which participants go into which groups
     for (const p of participants) {
       this.participants[p.uuid] = p;
-      const participantGroups = this.getGroupsForRole(p.role);
-      for (const namedGroup of participantGroups) {
+      const groupsOfThisParticipant = this.getGroupsForRole(p.role);
+      for (const namedGroup of groupsOfThisParticipant) {
         console.log(
           `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
         );
-        const participantsInGroup = groupToParticipants.get(
+        const participantsInGroup = groupIdsToParticipants.get(
           namedGroup.group.id.toString()
         );
-        participantsInGroup && participantsInGroup.push(p);
+        participantsInGroup?.push(p);
       }
     }
 
-    for (const entry of groupToParticipants.entries()) {
-      const groupId = entry[0];
-      const participants = entry[1];
-      const namedGroup = groupsById.get(groupId);
+    // based on the above calculation, instantiate each semaphore group
+    for (const entry of groupIdsToParticipants.entries()) {
+      const groupParticipants = entry[1];
+      const namedGroup = groupsById.get(entry[0]);
 
       if (namedGroup) {
         console.log(
-          `[SEMA] replacing group ${namedGroup.name} with ${participants.length} participants`
+          `[SEMA] replacing group ${namedGroup.name} with ${groupParticipants.length} participants`
         );
-        const participantIds = participants.map((p) => p.commitment);
-        const replacementGroup = new Group(
-          namedGroup?.group.id,
-          namedGroup?.group.depth,
+        const participantIds = groupParticipants.map((p) => p.commitment);
+        const newGroup = new Group(
+          namedGroup.group.id,
+          namedGroup.group.depth,
           participantIds
         );
-        namedGroup.group = replacementGroup;
+        namedGroup.group = newGroup;
       }
     }
   }
