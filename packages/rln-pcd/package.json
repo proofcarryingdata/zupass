@@ -13,8 +13,8 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup --platform=browser src/index.ts",
+    "dev": "tsup --platform=browser src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build"
   },

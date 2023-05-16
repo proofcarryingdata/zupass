@@ -62,7 +62,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       }
     } catch (e) {
       console.log(e);
-      rollbar.error(e);
+      rollbar?.error(e);
       setError(e);
       setProving(false);
     }
