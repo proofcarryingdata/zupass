@@ -2181,15 +2181,15 @@
     "@ethersproject/keccak256" "^5.7.0"
     "@zk-kit/incremental-merkle-tree" "1.0.0"
 
-"@semaphore-protocol/group@^3.2.3":
-  version "3.4.0"
-  resolved "https://registry.npmjs.org/@semaphore-protocol/group/-/group-3.4.0.tgz"
-  integrity sha512-6PvcFXqw9HMrpvk6nAtTd/H/DAiOxqiysYmlu8bIVPd0D1Gwd1gWhevMsxpmUpnP/zTqHjjFr5CoBUBSxcHtdg==
+"@semaphore-protocol/group@^3.10.0":
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.10.0.tgz#9245940d7e788cbfd3e7747e201264f1805b626e"
+  integrity sha512-tbvIPUCILcuXZKH4nPTibM0u+doy0akFTPwL6lqf/0Nao/myFEtetqUY9nHCtykzKcqSN+r2SgtB+h+ZsPPc+A==
   dependencies:
     "@ethersproject/bignumber" "^5.7.0"
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/keccak256" "^5.7.0"
-    "@zk-kit/incremental-merkle-tree" "1.0.0"
+    "@zk-kit/incremental-merkle-tree" "1.1.0"
 
 "@semaphore-protocol/identity@^2.6.1":
   version "2.6.1"
@@ -2213,10 +2213,10 @@
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
 
-"@semaphore-protocol/identity@^3.2.3":
-  version "3.4.0"
-  resolved "https://registry.npmjs.org/@semaphore-protocol/identity/-/identity-3.4.0.tgz"
-  integrity sha512-qjV4yjz7rX+DFbUhuy6WdDCOhq2JK7fmeGm8bVA7HY/ddSBdjXqIt7BwuWMWVzxzaCiDQK5QUa6S4ojgSA3cMg==
+"@semaphore-protocol/identity@^3.10.0":
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.10.0.tgz#b0b48dd292c6aa8085db82d9328eccc1ff76065d"
+  integrity sha512-907ea3y27F8RTcAbukc0aoKK0O2WSJHY1uoUD3CuP+z6JNo+D3Ikcb9iu1QEDS3XsW6XloPSs50utK1bYQNIow==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/keccak256" "^5.7.0"
@@ -2236,10 +2236,10 @@
     "@zk-kit/incremental-merkle-tree" "0.4.3"
     snarkjs "0.4.13"
 
-"@semaphore-protocol/proof@^3.2.3":
-  version "3.5.0"
-  resolved "https://registry.npmjs.org/@semaphore-protocol/proof/-/proof-3.5.0.tgz"
-  integrity sha512-N69UbRafobbJ0Btk2sVfYieoo1RTXwR+hwUmsXda0I2Us+bX0gXbl2fAvECpIBpI8edCQuN/p5Rsdn5K/V/slg==
+"@semaphore-protocol/proof@^3.10.0":
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.10.0.tgz#efc0c6ca7e7f5d88c8186a5619c3aa71f0ca8a9c"
+  integrity sha512-L0DiZJ7l4Qc2DT0Wz0GNru/As6l5gtj9urkLaiFIiufSjRs95LP9y0C0/VYvh9OSrUnQWyLTexmrImNbCj0Flw==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/bytes" "^5.7.0"
@@ -3016,6 +3016,11 @@
   version "1.0.0"
   resolved "https://registry.npmjs.org/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.0.0.tgz"
   integrity sha512-2iRLZfHnZ6wKE+oZN2CnpkKYCE5f5dpv6YRIwLDCz0xwJZrIMQ81AamFBdxPesQSYMMP0GkC0iv1rm6gxAL2Ow==
+
+"@zk-kit/incremental-merkle-tree@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz#6b0ccce56f9e05ccf73f7ea4fa746d5ef7d24b1d"
+  integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
 
 "@zxing/browser@0.0.7":
   version "0.0.7"

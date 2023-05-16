@@ -22,8 +22,8 @@
     "@pcd/pcd-types": "^0.5.1",
     "@pcd/semaphore-group-pcd": "^0.5.1",
     "@pcd/semaphore-identity-pcd": "^0.5.1",
-    "@semaphore-protocol/group": "^3.2.3",
-    "@semaphore-protocol/identity": "^3.2.3",
+    "@semaphore-protocol/group": "^3.10.0",
+    "@semaphore-protocol/identity": "^3.10.0",
     "json-bigint": "^1.0.0",
     "rlnjs": "^2.0.8"
   },
