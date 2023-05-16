@@ -12,8 +12,8 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup --platform=browser src/index.ts",
+    "dev": "tsup --platform=browser src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build"
