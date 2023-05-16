@@ -31,6 +31,7 @@ export function AddHaloScreen({
   const [_state, dispatch] = useContext(DispatchContext);
   const [added, setAdded] = useState(false);
   const [pcd, setPCD] = useState<HaLoNoncePCD | undefined>(undefined);
+  const [invalidPCD, setInvalidPCD] = useState(false);
   const hasUploaded = useHasUploaded();
   const isDownloaded = useIsDownloaded();
 
@@ -50,12 +51,23 @@ export function AddHaloScreen({
           value: rndsig,
         },
       };
-      const producedPCD = await HaLoNoncePCDPackage.prove(args);
+
+      let producedPCD;
+      try {
+        producedPCD = await HaLoNoncePCDPackage.prove(args);
+      } catch (e) {
+        err(dispatch, "Error Generating PCD", e.message);
+        setInvalidPCD(true);
+      }
+      if (!(await HaLoNoncePCDPackage.verify(producedPCD))) {
+        err(dispatch, "Error Generating PCD", "PCD failed to verify");
+        setInvalidPCD(true);
+      }
       setPCD(producedPCD);
     };
 
     generatePCD();
-  }, [pk2, rnd, rndsig]);
+  }, [pk2, rnd, rndsig, dispatch]);
 
   const onAddClick = useCallback(async () => {
     try {
@@ -69,7 +81,9 @@ export function AddHaloScreen({
 
   let content: ReactNode;
 
-  if (!isDownloaded || !pcd) {
+  if (invalidPCD) {
+    return <AppContainer bg="gray" />;
+  } else if (!isDownloaded || !pcd) {
     return <SyncingPCDs />;
   } else if (!added) {
     content = (
