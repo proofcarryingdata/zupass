@@ -26,6 +26,15 @@ export function HomeScreen() {
       const encReq = encodeURIComponent(sessionStorage.pendingProofRequest);
       navigate("/prove?request=" + encReq);
       delete sessionStorage.pendingProofRequest;
+    } else if (sessionStorage.pendingAddRequest != null) {
+      console.log("Redirecting to add screen");
+      const encReq = encodeURIComponent(sessionStorage.pendingAddRequest);
+      navigate("/add?request=" + encReq);
+      delete sessionStorage.pendingAddRequest;
+    } else if (sessionStorage.pendingHaloRequest != null) {
+      console.log("Redirecting to halo screen");
+      navigate(`/halo${sessionStorage.pendingHaloRequest}`);
+      delete sessionStorage.pendingHaloRequest;
     }
   });
 
@@ -36,12 +45,23 @@ export function HomeScreen() {
   const zuzaluPCDId = useMemo(() => {
     return pcds[0]?.id;
   }, [pcds]);
-  const [selectedPCDID, setSelectedPCDID] = useState(zuzaluPCDId);
+  const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
-    let selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+    let selected;
+
+    // if user just added a PCD, highlight that one
+    if (sessionStorage.newAddedPCDID != null) {
+      selected = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
+      delete sessionStorage.newAddedPCDID;
+    } else {
+      selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+    }
+
+    // default to Zuzalu PCD if no valid PCD found
     if (selected === undefined) {
       selected = pcds[0];
     }
+
     return selected;
   }, [pcds, selectedPCDID]);
 

@@ -22,7 +22,10 @@ export function serializeSemaphoreGroup(
 export function deserializeSemaphoreGroup(
   serializedGroup: SerializedSemaphoreGroup
 ) {
-  const group = new Group(BigInt(serializedGroup.id), serializedGroup.depth);
-  group.addMembers(serializedGroup.members.map((m) => BigInt(m)));
+  const group = new Group(
+    BigInt(serializedGroup.id),
+    serializedGroup.depth,
+    serializedGroup.members.map((m) => BigInt(m))
+  );
   return group;
 }

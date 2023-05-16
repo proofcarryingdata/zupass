@@ -1,5 +1,15 @@
 # @pcd/passport-crypto
 
+## 0.5.3
+
+### Patch Changes
+
+- Improved performance of group parsing.
+- Updated dependencies
+  - @pcd/pcd-collection@0.5.3
+  - @pcd/pcd-types@0.5.3
+  - @pcd/semaphore-identity-pcd@0.5.3
+
 ## 0.5.2
 
 ### Patch Changes

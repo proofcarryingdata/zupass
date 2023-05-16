@@ -1,7 +1,7 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { DispatchContext } from "../../../src/dispatch";
 import { err } from "../../../src/util";
@@ -18,15 +18,29 @@ export function ProveScreen() {
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
 
-  if (request.type !== PCDRequestType.Get) {
-    err(dispatch, "Unsupported request", `Expected a PCD GET request`);
-    return null;
-  }
+  const screen = getScreen(request);
+  useEffect(() => {
+    if (screen === null) {
+      err(dispatch, "Unsupported request", `Expected a PCD GET request`);
+    }
+  }, [dispatch, screen]);
 
   if (state.self == null) {
     sessionStorage.pendingProofRequest = JSON.stringify(request);
     window.location.href = "/#/login";
     window.location.reload();
+    return null;
+  }
+
+  if (screen == null) {
+    // Need AppContainer to display error
+    return <AppContainer bg="gray" />;
+  }
+  return screen;
+}
+
+function getScreen(request: PCDGetRequest) {
+  if (request.type !== PCDRequestType.Get) {
     return null;
   }
 
