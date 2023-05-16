@@ -1,5 +1,16 @@
 # @pcd/semaphore-group-pcd
 
+## 0.5.3
+
+### Patch Changes
+
+- Improved performance of group parsing.
+- Updated dependencies
+  - @pcd/passport-ui@0.5.3
+  - @pcd/pcd-types@0.5.3
+  - @pcd/semaphore-identity-pcd@0.5.3
+  - @pcd/semaphore-signature-pcd@0.5.3
+
 ## 0.5.2
 
 ### Patch Changes

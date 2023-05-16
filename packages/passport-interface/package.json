@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-interface",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -18,11 +18,11 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/passport-crypto": "0.5.2",
-    "@pcd/pcd-types": "0.5.2",
-    "@pcd/semaphore-group-pcd": "0.5.2",
-    "@pcd/semaphore-identity-pcd": "0.5.2",
-    "@pcd/semaphore-signature-pcd": "0.5.2",
+    "@pcd/passport-crypto": "0.5.3",
+    "@pcd/pcd-types": "0.5.3",
+    "@pcd/semaphore-group-pcd": "0.5.3",
+    "@pcd/semaphore-identity-pcd": "0.5.3",
+    "@pcd/semaphore-signature-pcd": "0.5.3",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "@semaphore-protocol/proof": "^3.10.0",

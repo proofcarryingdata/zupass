@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.5.2
+
+### Patch Changes
+
+- Improved performance of group parsing.
+
 ## 0.5.1
 
 ### Patch Changes
