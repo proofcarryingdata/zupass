@@ -5,6 +5,7 @@ import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { config } from "./config";
 
@@ -49,6 +50,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EthereumOwnershipPCDPackage,
     JubJubSignaturePCDPackage,
     RLNPCDPackage,
+    WebAuthnPCDPackage,
     HaLoNoncePCDPackage,
   ];
 }
