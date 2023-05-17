@@ -2,7 +2,7 @@
   "name": "@pcd/rln-pcd",
   "version": "0.4.2",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
+  "main": "./dist/node/index.js",
   "types": "./src/index.ts",
   "files": [
     "./artifacts/*",
