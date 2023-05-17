@@ -3,6 +3,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
+import "mocha";
 import * as path from "path";
 import {
   SemaphoreSignaturePCDArgs,

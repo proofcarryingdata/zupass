@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import assert from "assert";
+import "mocha";
 import { HaLoNoncePCDArgs, HaLoNoncePCDPackage } from "../src/HaLoNoncePCD";
 
 describe("halo nonce PCD should work", function () {

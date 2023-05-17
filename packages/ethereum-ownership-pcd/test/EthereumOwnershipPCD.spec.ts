@@ -7,6 +7,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { ethers } from "ethers";
+import "mocha";
 import * as path from "path";
 import { EthereumOwnershipPCDPackage } from "../src/EthereumOwnershipPCD";
 
