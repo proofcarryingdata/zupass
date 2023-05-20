@@ -2,7 +2,7 @@
   "name": "@pcd/ethereum-ownership-pcd",
   "version": "0.5.3",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
+  "main": "./dist/node/index.js",
   "types": "./src/index.ts",
   "files": [
     "./artifacts/*",
@@ -10,10 +10,20 @@
     "./dist/*",
     "./README.md"
   ],
+  "exports": {
+    ".": {
+      "node": {
+        "default": "./dist/node/index.js"
+      },
+      "browser": {
+        "default": "./dist/browser/index.js"
+      }
+    }
+  },
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
+    "dev": "tsup --platform=browser src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build"
