@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,7 +11,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/ethereum-ownership-pcd": "0.5.3",
+    "@pcd/ethereum-ownership-pcd": "0.5.4",
     "@pcd/passport-interface": "0.5.3",
     "@pcd/pcd-types": "0.5.3",
     "@pcd/webauthn-pcd": "0.5.3",

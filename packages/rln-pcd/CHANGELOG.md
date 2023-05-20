@@ -1,5 +1,11 @@
 # @pcd/rln-pcd
 
+## 0.4.3
+
+### Patch Changes
+
+- Fix browser build.
+
 ## 0.4.2
 
 ### Patch Changes

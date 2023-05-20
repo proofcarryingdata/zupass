@@ -1,5 +1,12 @@
 # consumer-client
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.5.4
+
 ## 0.0.13
 
 ### Patch Changes

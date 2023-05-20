@@ -1,5 +1,13 @@
 # passport-server
 
+## 0.0.15
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.5.4
+  - @pcd/rln-pcd@0.4.3
+
 ## 0.0.14
 
 ### Patch Changes

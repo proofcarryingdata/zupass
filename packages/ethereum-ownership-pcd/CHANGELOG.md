@@ -1,5 +1,11 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.5.4
+
+### Patch Changes
+
+- Fix browser build.
+
 ## 0.5.3
 
 ### Patch Changes
