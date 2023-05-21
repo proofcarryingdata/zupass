@@ -199,7 +199,7 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
-export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
+export function useDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
   return {
     header: "Semaphore Signature",
     displayName: "semaphore-sig-" + pcd.id.substring(0, 4),
@@ -219,7 +219,7 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
 > = {
   name: SemaphoreSignaturePCDTypeName,
   renderCardBody: SemaphoreIdentityCardBody,
-  getDisplayOptions,
+  useDisplayOptions,
   init,
   prove,
   verify,

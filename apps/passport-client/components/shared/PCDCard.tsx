@@ -1,5 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import { useCallback, useContext, useMemo } from "react";
+import { useCallback, useContext } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/participant";
@@ -26,11 +26,9 @@ export function PCDCard({
 }) {
   const [state] = useContext(DispatchContext);
   const pcdPackage = usePackage(pcd);
-  const displayOptions = useMemo(() => {
-    if (pcdPackage?.getDisplayOptions) {
-      return pcdPackage?.getDisplayOptions(pcd);
-    }
-  }, [pcd, pcdPackage]);
+  const displayOptions = pcdPackage?.useDisplayOptions
+    ? pcdPackage?.useDisplayOptions(pcd)
+    : undefined;
 
   const visitorStatus = getVisitorStatus(state.self);
 

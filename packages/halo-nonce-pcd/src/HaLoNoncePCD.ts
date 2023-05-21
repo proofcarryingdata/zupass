@@ -5,8 +5,10 @@ import {
   SerializedPCD,
   StringArgument,
 } from "@pcd/pcd-types";
+import Airtable from "airtable";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
+import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HaLoNonceCardBody } from "./CardBody";
 
@@ -84,7 +86,7 @@ export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
   }
 
   const claim: HaLoNoncePCDClaim = {
-    nonce: parseInt(args.rnd.value.substring(0, 8)),
+    nonce: parseInt(args.rnd.value.substring(0, 8), 16),
     pubkeyHex: args.pk2.value,
   };
 
@@ -115,7 +117,9 @@ export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
 
 export async function verify(pcd: HaLoNoncePCD): Promise<boolean> {
   // verify nonce in claim matches the one in the proof
-  if (pcd.claim.nonce !== parseInt(pcd.proof.signedDigest.substring(0, 8))) {
+  if (
+    pcd.claim.nonce !== parseInt(pcd.proof.signedDigest.substring(0, 8), 16)
+  ) {
     return false;
   }
 
@@ -155,11 +159,55 @@ export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
   return JSON.parse(serialized);
 }
 
-export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
-  return {
+export function useDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
+  const [loadedAirtable, setLoadedAirtable] = useState(false);
+  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>({
     header: `Zuzalu Stamp`,
     displayName: "halo-nonce-" + pcd.id.substring(0, 4),
-  };
+  });
+
+  const base = new Airtable({
+    apiKey:
+      "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2",
+  }).base("appJcTn3eQUXKQEKT");
+
+  useEffect(() => {
+    if (loadedAirtable) return;
+    base("Image link")
+      .select({
+        fields: ["pubKeyHex", "Name of experience"],
+      })
+      .eachPage(
+        function page(records, fetchNextPage) {
+          for (const record of records) {
+            console.log(record.get("pubKeyHex"), pcd.claim.pubkeyHex);
+            if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
+              const newHeader = record.get("Name of experience");
+              if (newHeader) {
+                setDisplayOptions({
+                  header: newHeader.toString(),
+                  displayName:
+                    newHeader.toString() +
+                    " #" +
+                    parseInt(pcd.proof.signedDigest.substring(0, 8), 16),
+                });
+                break;
+              }
+            }
+          }
+          fetchNextPage();
+        },
+        function done(err) {
+          if (err) {
+            console.error(err);
+            return;
+          }
+          setLoadedAirtable(true);
+        }
+      );
+  }, [loadedAirtable, setLoadedAirtable, pcd, setDisplayOptions, base]);
+
+  return displayOptions;
 }
 
 /**
@@ -176,7 +224,7 @@ export const HaLoNoncePCDPackage: PCDPackage<
 > = {
   name: HaLoNoncePCDTypeName,
   renderCardBody: HaLoNonceCardBody,
-  getDisplayOptions,
+  useDisplayOptions,
   prove,
   verify,
   serialize,

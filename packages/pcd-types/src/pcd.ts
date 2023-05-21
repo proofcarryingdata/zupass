@@ -13,7 +13,9 @@ export interface SerializedPCD<_T extends PCD = PCD> {
 /**
  * This interface can be optionally returned by the package ƒor any given
  * PCD, which allows the package some degree of control over how the PCD
- * is displayed in the passport application.
+ * is displayed in the passport application. These fields are returned by a
+ * React hook in case the package needs to determine the display options from
+ * an external server.
  */
 export interface DisplayOptions {
   /**
@@ -32,7 +34,7 @@ export interface DisplayOptions {
 
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
-  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+  useDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
   renderCardBody?: ({ pcd }: { pcd: PCD<C, P> }) => React.ReactElement;
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;

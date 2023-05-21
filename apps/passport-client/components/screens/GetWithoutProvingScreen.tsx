@@ -79,7 +79,7 @@ export function GetWithoutProvingScreen() {
               const pcdPackage = state.pcds.getPackage(pcd.type);
               return (
                 <option key={pcd.id} value={pcd.id}>
-                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
+                  {pcdPackage?.useDisplayOptions(pcd)?.displayName ?? pcd.id}
                 </option>
               );
             })}
