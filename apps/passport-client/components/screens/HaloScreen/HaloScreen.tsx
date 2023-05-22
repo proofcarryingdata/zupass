@@ -12,7 +12,7 @@ import { AddHaloScreen } from "./AddHaloScreen";
  */
 export function HaloScreen() {
   const location = useLocation();
-  const [state, dispatch] = useContext(DispatchContext);
+  const [_state, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
   useSyncE2EEStorage();
 
@@ -22,13 +22,6 @@ export function HaloScreen() {
       err(dispatch, "Unsupported request", `Expected a Halo signature URL`);
     }
   }, [dispatch, screen]);
-
-  if (state.self == null) {
-    sessionStorage.pendingHaloRequest = location.search;
-    window.location.href = "/#/login";
-    window.location.reload();
-    return null;
-  }
 
   if (screen == null) {
     // Need AppContainer to display error

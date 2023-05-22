@@ -183,13 +183,12 @@ export function useCardHeader(pcd: HaLoNoncePCD): string {
       .eachPage(
         function page(records, fetchNextPage) {
           for (const record of records) {
-            console.log(record.get("pubKeyHex"), pcd.claim.pubkeyHex);
             if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
               const newHeader = record.get("experienceName");
               if (newHeader) {
                 setHeader(newHeader.toString().toUpperCase());
-                break;
               }
+              break;
             }
           }
           fetchNextPage();

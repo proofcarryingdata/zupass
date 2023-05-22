@@ -33,11 +33,12 @@ export function PCDCard({
     }
   }, [pcd, pcdPackage]);
 
-  const visitorStatus = getVisitorStatus(state.self);
-
   let header;
+  let notCurrentVisitor = false;
 
   if (isZuzaluIdentity) {
+    const visitorStatus = getVisitorStatus(state.self);
+
     if (
       visitorStatus.isVisitor &&
       visitorStatus.status === VisitorStatus.Expired
@@ -51,14 +52,14 @@ export function PCDCard({
     } else {
       header = "VERIFIED ZUZALU PASSPORT";
     }
+
+    notCurrentVisitor =
+      visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
   } else {
     header = pcdPackage?.useCardHeader?.(pcd) ?? "PCD";
   }
-
-  const notCurrentVisitor =
-    visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
 
   if (expanded) {
     return (
