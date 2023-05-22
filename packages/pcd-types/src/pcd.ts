@@ -18,8 +18,8 @@ export interface SerializedPCD<_T extends PCD = PCD> {
 export interface DisplayOptions {
   /**
    * Shown to the user in the main page of the passport, where they can
-   * see all of their cards. If no header is provided, the passport will use
-   * renderCardBody with `returnHeader` set to true.
+   * see all of their cards. If `header` is undefined, the passport will use
+   * `renderCardBody` with `returnHeader` set to true.
    */
   header?: string;
 
