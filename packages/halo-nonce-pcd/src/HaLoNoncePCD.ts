@@ -159,12 +159,15 @@ export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
   return JSON.parse(serialized);
 }
 
-export function useDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
-  const [loadedAirtable, setLoadedAirtable] = useState(false);
-  const [displayOptions, setDisplayOptions] = useState<DisplayOptions>({
-    header: `Zuzalu Stamp`,
+export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
+  return {
     displayName: "halo-nonce-" + pcd.id.substring(0, 4),
-  });
+  };
+}
+
+export function useCardHeader(pcd: HaLoNoncePCD): string {
+  const [loadedAirtable, setLoadedAirtable] = useState(false);
+  const [header, setHeader] = useState<string>("NFC STAMP");
 
   const base = new Airtable({
     apiKey:
@@ -175,22 +178,16 @@ export function useDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
     if (loadedAirtable) return;
     base("Image link")
       .select({
-        fields: ["pubKeyHex", "Name of experience"],
+        fields: ["pubKeyHex", "experienceName"],
       })
       .eachPage(
         function page(records, fetchNextPage) {
           for (const record of records) {
             console.log(record.get("pubKeyHex"), pcd.claim.pubkeyHex);
             if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
-              const newHeader = record.get("Name of experience");
+              const newHeader = record.get("experienceName");
               if (newHeader) {
-                setDisplayOptions({
-                  header: newHeader.toString(),
-                  displayName:
-                    newHeader.toString() +
-                    " #" +
-                    parseInt(pcd.proof.signedDigest.substring(0, 8), 16),
-                });
+                setHeader(newHeader.toString().toUpperCase());
                 break;
               }
             }
@@ -205,9 +202,9 @@ export function useDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
           setLoadedAirtable(true);
         }
       );
-  }, [loadedAirtable, setLoadedAirtable, pcd, setDisplayOptions, base]);
+  }, [loadedAirtable, pcd, base]);
 
-  return displayOptions;
+  return header;
 }
 
 /**
@@ -224,7 +221,8 @@ export const HaLoNoncePCDPackage: PCDPackage<
 > = {
   name: HaLoNoncePCDTypeName,
   renderCardBody: HaLoNonceCardBody,
-  useDisplayOptions,
+  getDisplayOptions,
+  useCardHeader,
   prove,
   verify,
   serialize,

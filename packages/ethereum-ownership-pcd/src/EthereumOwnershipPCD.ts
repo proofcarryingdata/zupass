@@ -228,7 +228,7 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
-export function useDisplayOptions(pcd: EthereumOwnershipPCD): DisplayOptions {
+export function getDisplayOptions(pcd: EthereumOwnershipPCD): DisplayOptions {
   return {
     header: "Ethereum " + pcd.claim.ethereumAddress.substring(0, 12),
     displayName: "eth-owner-" + pcd.id.substring(0, 4),
@@ -248,7 +248,7 @@ export const EthereumOwnershipPCDPackage: PCDPackage<
 > = {
   name: EthereumOwnershipPCDTypeName,
   renderCardBody: EthereumOwnershipCardBody,
-  useDisplayOptions,
+  getDisplayOptions,
   init,
   prove,
   verify,

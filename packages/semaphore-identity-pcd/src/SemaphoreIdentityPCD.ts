@@ -63,7 +63,7 @@ export async function deserialize(
   });
 }
 
-export function useDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
+export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
   return {
     header: "Semaphore Identity",
     displayName:
@@ -83,7 +83,7 @@ export const SemaphoreIdentityPCDPackage: PCDPackage<
 > = {
   name: SemaphoreIdentityPCDTypeName,
   renderCardBody: SemaphoreIdentityCardBody,
-  useDisplayOptions,
+  getDisplayOptions,
   prove,
   verify,
   serialize,

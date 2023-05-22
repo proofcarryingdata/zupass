@@ -137,7 +137,7 @@ export async function deserialize(serialized: string): Promise<WebAuthnPCD> {
   return JSONBig().parse(serialized);
 }
 
-export function useDisplayOptions(pcd: WebAuthnPCD): DisplayOptions {
+export function getDisplayOptions(pcd: WebAuthnPCD): DisplayOptions {
   return {
     header: "WebAuthn Credential Signature",
     displayName: "webauthn-" + pcd.id.substring(0, 4),
@@ -159,5 +159,5 @@ export const WebAuthnPCDPackage: PCDPackage<
   serialize,
   deserialize,
   renderCardBody: WebAuthnCardBody,
-  useDisplayOptions,
+  getDisplayOptions,
 };

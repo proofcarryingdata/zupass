@@ -211,7 +211,7 @@ export async function deserialize(
   return JSONBig().parse(serialized);
 }
 
-export function useDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
+export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
   return {
     header: "Semaphore Group Signal",
     displayName: "semaphore-group-" + pcd.id.substring(0, 4),
@@ -229,7 +229,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SempahoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
-  useDisplayOptions,
+  getDisplayOptions,
   renderCardBody: SemaphoreGroupCardBody,
   init,
   prove,

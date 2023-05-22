@@ -1,5 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/participant";
@@ -26,28 +26,35 @@ export function PCDCard({
 }) {
   const [state] = useContext(DispatchContext);
   const pcdPackage = usePackage(pcd);
-  const displayOptions = pcdPackage?.useDisplayOptions
-    ? pcdPackage?.useDisplayOptions(pcd)
-    : undefined;
+
+  const displayOptions = useMemo(() => {
+    if (pcdPackage?.getDisplayOptions) {
+      return pcdPackage?.getDisplayOptions(pcd);
+    }
+  }, [pcd, pcdPackage]);
 
   const visitorStatus = getVisitorStatus(state.self);
 
-  let header = displayOptions?.header?.toUpperCase() ?? "PCD";
+  let header;
 
   if (isZuzaluIdentity) {
-    header = "VERIFIED ZUZALU PASSPORT";
-  }
-
-  if (
-    visitorStatus.isVisitor &&
-    visitorStatus.status === VisitorStatus.Expired
-  ) {
-    header = "EXPIRED";
-  } else if (
-    visitorStatus.isVisitor &&
-    visitorStatus.status === VisitorStatus.Upcoming
-  ) {
-    header = "UPCOMING";
+    if (
+      visitorStatus.isVisitor &&
+      visitorStatus.status === VisitorStatus.Expired
+    ) {
+      header = "EXPIRED";
+    } else if (
+      visitorStatus.isVisitor &&
+      visitorStatus.status === VisitorStatus.Upcoming
+    ) {
+      header = "UPCOMING";
+    } else {
+      header = "VERIFIED ZUZALU PASSPORT";
+    }
+  } else if (displayOptions?.header) {
+    header = displayOptions.header.toUpperCase();
+  } else {
+    header = pcdPackage?.useCardHeader?.(pcd) ?? "PCD";
   }
 
   const notCurrentVisitor =

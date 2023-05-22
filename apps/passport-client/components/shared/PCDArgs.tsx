@@ -483,7 +483,7 @@ export function PCDArgInput<T extends PCDPackage>({
                 const pcdPackage = pcdCollection.getPackage(pcd.type);
                 return (
                   <option key={pcd.id} value={pcd.id}>
-                    {pcdPackage?.useDisplayOptions(pcd)?.displayName ??
+                    {pcdPackage?.getDisplayOptions(pcd)?.displayName ??
                       pcd.type}
                   </option>
                 );

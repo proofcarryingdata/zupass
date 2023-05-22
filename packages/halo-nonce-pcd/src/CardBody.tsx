@@ -24,14 +24,12 @@ export function HaLoNonceCardBody({ pcd }: { pcd: HaLoNoncePCD }) {
       .eachPage(
         function page(records, fetchNextPage) {
           for (const record of records) {
-            console.log(record.get("pubKeyHex"), pcd.claim.pubkeyHex);
             if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
               const recordImageUrl = record.get("imageUrl");
-              console.log(recordImageUrl);
               if (recordImageUrl) {
                 setImageUrl(recordImageUrl.toString());
-                break;
               }
+              break;
             }
           }
           fetchNextPage();
