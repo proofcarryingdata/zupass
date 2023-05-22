@@ -26,34 +26,44 @@ export function PCDCard({
 }) {
   const [state] = useContext(DispatchContext);
   const pcdPackage = usePackage(pcd);
+
   const displayOptions = useMemo(() => {
     if (pcdPackage?.getDisplayOptions) {
       return pcdPackage?.getDisplayOptions(pcd);
     }
   }, [pcd, pcdPackage]);
 
-  const visitorStatus = getVisitorStatus(state.self);
-
-  let header = displayOptions?.header?.toUpperCase() ?? "PCD";
+  let header;
+  let notCurrentVisitor = false;
 
   if (isZuzaluIdentity) {
-    header = "VERIFIED ZUZALU PASSPORT";
+    const visitorStatus = getVisitorStatus(state.self);
+
+    if (
+      visitorStatus.isVisitor &&
+      visitorStatus.status === VisitorStatus.Expired
+    ) {
+      header = "EXPIRED";
+    } else if (
+      visitorStatus.isVisitor &&
+      visitorStatus.status === VisitorStatus.Upcoming
+    ) {
+      header = "UPCOMING";
+    } else {
+      header = "VERIFIED ZUZALU PASSPORT";
+    }
+
+    notCurrentVisitor =
+      visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
+  } else if (displayOptions?.header) {
+    header = displayOptions.header.toUpperCase();
   }
 
-  if (
-    visitorStatus.isVisitor &&
-    visitorStatus.status === VisitorStatus.Expired
-  ) {
-    header = "EXPIRED";
-  } else if (
-    visitorStatus.isVisitor &&
-    visitorStatus.status === VisitorStatus.Upcoming
-  ) {
-    header = "UPCOMING";
-  }
-
-  const notCurrentVisitor =
-    visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
+  const headerContent = header ? (
+    <>{header}</>
+  ) : (
+    pcdPackage?.renderCardBody({ pcd, returnHeader: true })
+  );
 
   if (expanded) {
     return (
@@ -65,7 +75,7 @@ export function PCDCard({
               backgroundColor: notCurrentVisitor ? "var(--danger)" : "",
             }}
           >
-            {header}
+            {headerContent}
           </CardHeader>
           <CardBodyContainer>
             <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
@@ -81,7 +91,7 @@ export function PCDCard({
   return (
     <CardContainerCollapsed {...{ onClick }}>
       <CardOutlineCollapsed>
-        <CardHeaderCollapsed>{header}</CardHeaderCollapsed>
+        <CardHeaderCollapsed>{headerContent}</CardHeaderCollapsed>
       </CardOutlineCollapsed>
     </CardContainerCollapsed>
   );

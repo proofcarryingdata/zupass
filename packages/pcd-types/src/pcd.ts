@@ -18,7 +18,8 @@ export interface SerializedPCD<_T extends PCD = PCD> {
 export interface DisplayOptions {
   /**
    * Shown to the user in the main page of the passport, where they can
-   * see all of their cards.
+   * see all of their cards. If `header` is undefined, the passport will use
+   * `renderCardBody` with `returnHeader` set to true.
    */
   header?: string;
 
@@ -33,7 +34,13 @@ export interface DisplayOptions {
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
-  renderCardBody?: ({ pcd }: { pcd: PCD<C, P> }) => React.ReactElement;
+  renderCardBody?: ({
+    pcd,
+    returnHeader,
+  }: {
+    pcd: PCD<C, P>;
+    returnHeader?: boolean;
+  }) => React.ReactElement;
   init?: (initArgs: I) => Promise<void>;
   prove(args: A): Promise<PCD<C, P>>;
   verify(pcd: PCD<C, P>): Promise<boolean>;

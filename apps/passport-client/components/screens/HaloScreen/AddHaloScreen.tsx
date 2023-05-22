@@ -5,14 +5,16 @@ import {
 } from "@pcd/halo-nonce-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { DispatchContext } from "../../../src/dispatch";
 import {
   useHasUploaded,
   useIsDownloaded,
+  useLoggedIn,
 } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
-import { Button, Spacer } from "../../core";
+import { Button, Spacer, TextCenter } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
@@ -28,10 +30,12 @@ export function AddHaloScreen({
   rnd: string;
   rndsig: string;
 }) {
+  const location = useLocation();
   const [_state, dispatch] = useContext(DispatchContext);
   const [added, setAdded] = useState(false);
   const [pcd, setPCD] = useState<HaLoNoncePCD | undefined>(undefined);
   const [invalidPCD, setInvalidPCD] = useState(false);
+  const loggedIn = useLoggedIn();
   const hasUploaded = useHasUploaded();
   const isDownloaded = useIsDownloaded();
 
@@ -79,11 +83,40 @@ export function AddHaloScreen({
     }
   }, [dispatch, pcd]);
 
+  const onLoginClick = () => {
+    console.log(location.search);
+    sessionStorage.pendingHaloRequest = location.search;
+    window.location.href = "/#/login";
+    window.location.reload();
+  };
+
   let content: ReactNode;
 
   if (invalidPCD) {
     return <AppContainer bg="gray" />;
-  } else if (!isDownloaded || !pcd) {
+  } else if (!pcd) {
+    return <SyncingPCDs />;
+  } else if (!loggedIn) {
+    return (
+      <AppContainer bg="gray">
+        <MaybeModal fullScreen />
+        <Container>
+          <Spacer h={16} />
+          <Spacer h={16} />
+          {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
+          <Spacer h={16} />
+          <TextCenter>
+            <p>
+              To add this stamp, login to your passport or copy this link into a
+              logged in device.
+            </p>
+          </TextCenter>
+          <Spacer h={16} />
+          <Button onClick={onLoginClick}>Login</Button>
+        </Container>
+      </AppContainer>
+    );
+  } else if (!isDownloaded) {
     return <SyncingPCDs />;
   } else if (!added) {
     content = (

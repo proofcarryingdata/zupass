@@ -1,4 +1,4 @@
-import { Fragment, useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DispatchContext } from "../../src/dispatch";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
@@ -38,6 +38,17 @@ export function HomeScreen() {
     }
   });
 
+  useEffect(() => {
+    if (sessionStorage.newAddedPCDID != null) {
+      // scroll to element with id of newAddedPCDID
+      const el = document.getElementById(sessionStorage.newAddedPCDID);
+      if (el) {
+        el.scrollIntoView();
+      }
+      delete sessionStorage.newAddedPCDID;
+    }
+  });
+
   const pcds = useMemo(() => {
     return state.pcds.getAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -52,7 +63,6 @@ export function HomeScreen() {
     // if user just added a PCD, highlight that one
     if (sessionStorage.newAddedPCDID != null) {
       selected = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
-      delete sessionStorage.newAddedPCDID;
     } else {
       selected = pcds.find((pcd) => pcd.id === selectedPCDID);
     }
@@ -77,7 +87,7 @@ export function HomeScreen() {
         <Placeholder minH={540}>
           {pcds.map((pcd) => {
             return (
-              <Fragment key={pcd.id}>
+              <div id={pcd.id} key={pcd.id}>
                 <Spacer h={8} />
                 <PCDCard
                   pcd={pcd}
@@ -87,7 +97,7 @@ export function HomeScreen() {
                     setSelectedPCDID(pcd.id);
                   }}
                 />
-              </Fragment>
+              </div>
             );
           })}
         </Placeholder>

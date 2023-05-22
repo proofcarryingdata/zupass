@@ -4,6 +4,7 @@ import {
   passportDecrypt,
 } from "@pcd/passport-crypto";
 import React, { useCallback, useContext, useState } from "react";
+import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
@@ -73,44 +74,52 @@ export function SyncExistingScreen() {
 
   return (
     <AppContainer bg="primary">
-      <Spacer h={64} />
-      <TextCenter>
-        <H2>SYNC EXISTING PASSPORT</H2>
-        <Spacer h={32} />
+      <Container>
+        <Spacer h={64} />
         <TextCenter>
-          If you've already created your passport on another device, you can
-          sync it here. You can find your sync key on your existing device by
-          clicking on the settings icon.
+          <H2>SYNC EXISTING PASSPORT</H2>
+          <Spacer h={32} />
+          <TextCenter>
+            If you've already created your passport on another device, you can
+            sync it here. You can find your sync key on your existing device by
+            clicking on the settings icon.
+          </TextCenter>
+          <Spacer h={32} />
+          <BigInput
+            disabled={isLoading}
+            type="text"
+            placeholder="sync key"
+            value={syncKey}
+            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+              setSyncKey(e.target.value);
+            }, [])}
+          ></BigInput>
+          <Spacer h={16} />
+          {!isLoading && (
+            <>
+              <Button style="primary" type="submit" onClick={onSyncClick}>
+                Sync
+              </Button>
+              <Spacer h={8} />
+              <Button style="danger" type="submit" onClick={onClose}>
+                Back
+              </Button>
+            </>
+          )}
+          {isLoading && (
+            <div>
+              <RippleLoader />
+            </div>
+          )}
+          <Spacer h={32} />
         </TextCenter>
-        <Spacer h={32} />
-        <BigInput
-          disabled={isLoading}
-          type="text"
-          placeholder="sync key"
-          value={syncKey}
-          onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-            setSyncKey(e.target.value);
-          }, [])}
-        ></BigInput>
-        <Spacer h={16} />
-        {!isLoading && (
-          <>
-            <Button style="primary" type="submit" onClick={onSyncClick}>
-              Sync
-            </Button>
-            <Spacer h={8} />
-            <Button style="danger" type="submit" onClick={onClose}>
-              Back
-            </Button>
-          </>
-        )}
-        {isLoading && (
-          <div>
-            <RippleLoader />
-          </div>
-        )}
-        <Spacer h={32} />
-      </TextCenter>
+      </Container>
     </AppContainer>
   );
 }
+
+const Container = styled.div`
+  padding: 16px;
+  width: 100%;
+  max-width: 100%;
+`;

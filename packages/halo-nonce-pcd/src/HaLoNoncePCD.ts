@@ -84,7 +84,7 @@ export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
   }
 
   const claim: HaLoNoncePCDClaim = {
-    nonce: parseInt(args.rnd.value.substring(0, 8)),
+    nonce: parseInt(args.rnd.value.substring(0, 8), 16),
     pubkeyHex: args.pk2.value,
   };
 
@@ -115,7 +115,9 @@ export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
 
 export async function verify(pcd: HaLoNoncePCD): Promise<boolean> {
   // verify nonce in claim matches the one in the proof
-  if (pcd.claim.nonce !== parseInt(pcd.proof.signedDigest.substring(0, 8))) {
+  if (
+    pcd.claim.nonce !== parseInt(pcd.proof.signedDigest.substring(0, 8), 16)
+  ) {
     return false;
   }
 
@@ -157,7 +159,6 @@ export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
 
 export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
   return {
-    header: `Zuzalu Stamp`,
     displayName: "halo-nonce-" + pcd.id.substring(0, 4),
   };
 }

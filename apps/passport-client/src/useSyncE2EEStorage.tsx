@@ -73,6 +73,16 @@ export function useSyncE2EEStorage() {
   }, [dispatch, state]);
 }
 
+export function useLoggedIn() {
+  const [state] = useContext(DispatchContext);
+
+  const loggedIn = useMemo(() => {
+    return state.self !== undefined;
+  }, [state]);
+
+  return loggedIn;
+}
+
 export function useHasUploaded() {
   const [state] = useContext(DispatchContext);
 

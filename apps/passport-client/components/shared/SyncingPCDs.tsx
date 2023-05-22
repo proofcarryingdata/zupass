@@ -17,6 +17,7 @@ const SyncingPCDsContainer = styled.div`
   align-items: center;
   width: 100%;
   height: 100%;
-  gap: 16px;
+  gap: 1rem;
   flex-direction: column;
+  padding: 2rem;
 `;
