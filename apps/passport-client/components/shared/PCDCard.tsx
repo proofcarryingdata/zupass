@@ -57,9 +57,13 @@ export function PCDCard({
       visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
-  } else {
-    header = pcdPackage?.useCardHeader?.(pcd) ?? "PCD";
   }
+
+  const headerContent = header ? (
+    <>{header}</>
+  ) : (
+    pcdPackage?.renderCardBody({ pcd, returnHeader: true })
+  );
 
   if (expanded) {
     return (
@@ -71,7 +75,7 @@ export function PCDCard({
               backgroundColor: notCurrentVisitor ? "var(--danger)" : "",
             }}
           >
-            {header}
+            {headerContent}
           </CardHeader>
           <CardBodyContainer>
             <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
@@ -87,7 +91,7 @@ export function PCDCard({
   return (
     <CardContainerCollapsed {...{ onClick }}>
       <CardOutlineCollapsed>
-        <CardHeaderCollapsed>{header}</CardHeaderCollapsed>
+        <CardHeaderCollapsed>{headerContent}</CardHeaderCollapsed>
       </CardOutlineCollapsed>
     </CardContainerCollapsed>
   );

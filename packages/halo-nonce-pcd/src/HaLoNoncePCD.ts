@@ -5,10 +5,8 @@ import {
   SerializedPCD,
   StringArgument,
 } from "@pcd/pcd-types";
-import Airtable from "airtable";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
-import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HaLoNonceCardBody } from "./CardBody";
 
@@ -165,47 +163,6 @@ export function getDisplayOptions(pcd: HaLoNoncePCD): DisplayOptions {
   };
 }
 
-export function useCardHeader(pcd: HaLoNoncePCD): string {
-  const [loadedAirtable, setLoadedAirtable] = useState(false);
-  const [header, setHeader] = useState<string>("NFC STAMP");
-
-  const base = new Airtable({
-    apiKey:
-      "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2",
-  }).base("appJcTn3eQUXKQEKT");
-
-  useEffect(() => {
-    if (loadedAirtable) return;
-    base("Image link")
-      .select({
-        fields: ["pubKeyHex", "experienceName"],
-      })
-      .eachPage(
-        function page(records, fetchNextPage) {
-          for (const record of records) {
-            if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
-              const newHeader = record.get("experienceName");
-              if (newHeader) {
-                setHeader(newHeader.toString().toUpperCase());
-              }
-              break;
-            }
-          }
-          fetchNextPage();
-        },
-        function done(err) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          setLoadedAirtable(true);
-        }
-      );
-  }, [loadedAirtable, pcd, base]);
-
-  return header;
-}
-
 /**
  * A PCD wrapper for one operation of the HaLo (Hardware Locked) tags from Arx Research,
  * ttps://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random).
@@ -221,7 +178,6 @@ export const HaLoNoncePCDPackage: PCDPackage<
   name: HaLoNoncePCDTypeName,
   renderCardBody: HaLoNonceCardBody,
   getDisplayOptions,
-  useCardHeader,
   prove,
   verify,
   serialize,
