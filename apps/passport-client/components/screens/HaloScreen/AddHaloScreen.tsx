@@ -95,7 +95,6 @@ export function AddHaloScreen({
   if (invalidPCD) {
     return <AppContainer bg="gray" />;
   } else if (!pcd) {
-    console.log("!pcd");
     return <SyncingPCDs />;
   } else if (!loggedIn) {
     return (
@@ -118,7 +117,6 @@ export function AddHaloScreen({
       </AppContainer>
     );
   } else if (!isDownloaded) {
-    console.log("isDownloaded");
     return <SyncingPCDs />;
   } else if (!added) {
     content = (
@@ -130,7 +128,6 @@ export function AddHaloScreen({
       </>
     );
   } else if (!hasUploaded) {
-    console.log("hasUploaded");
     return <SyncingPCDs />;
   } else {
     sessionStorage.newAddedPCDID = pcd.id;
