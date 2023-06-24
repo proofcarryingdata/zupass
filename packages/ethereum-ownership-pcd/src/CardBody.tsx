@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { EthereumOwnershipPCD } from "./EthereumOwnershipPCD";
 
-export function SemaphoreIdentityCardBody({
+export function EthereumOwnershipCardBody({
   pcd,
 }: {
   pcd: EthereumOwnershipPCD;
