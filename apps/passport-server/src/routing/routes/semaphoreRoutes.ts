@@ -1,3 +1,4 @@
+import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -55,5 +56,20 @@ export function initSemaphoreRoutes(
     }
 
     res.json(matchingGroup.rootHash);
+  });
+
+  // Fetch a semaphore group.
+  app.get("/semaphore/:id", async (req: Request, res: Response) => {
+    const semaphoreId = decodeString(req.params.id, "id");
+
+    const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
+    if (namedGroup == null) {
+      res.sendStatus(404);
+      res.json(`Missing semaphore group ${semaphoreId}`);
+      return;
+    }
+
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
   });
 }

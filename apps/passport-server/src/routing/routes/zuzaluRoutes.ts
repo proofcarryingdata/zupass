@@ -1,17 +1,7 @@
-import {
-  LoadE2EERequest,
-  LoadE2EEResponse,
-  SaveE2EERequest,
-  ZuParticipant,
-} from "@pcd/passport-interface";
-import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { ParticipantRole } from "../../database/models";
-import {
-  getEncryptedStorage,
-  setEncryptedStorage,
-} from "../../database/queries/e2ee";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
 import { fetchStatus } from "../../database/queries/fetchStatus";
 import { insertParticipant } from "../../database/queries/insertParticipant";
@@ -183,77 +173,4 @@ export function initZuzaluRoutes(
     if (!participant) res.status(404);
     res.json(participant || null);
   });
-
-  // Fetch a semaphore group.
-  app.get("/semaphore/:id", async (req: Request, res: Response) => {
-    const semaphoreId = decodeString(req.params.id, "id");
-
-    const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
-    if (namedGroup == null) {
-      res.sendStatus(404);
-      res.json(`Missing semaphore group ${semaphoreId}`);
-      return;
-    }
-
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
-  });
-
-  // Load E2EE storage for a given user.
-  app.post(
-    "/sync/load/",
-    async (req: Request, res: Response, next: NextFunction) => {
-      const request = req.body as LoadE2EERequest;
-
-      if (request.blobKey === undefined) {
-        throw new Error("Can't load e2ee: missing blobKey");
-      }
-
-      console.log(`[E2EE] Loading ${request.blobKey}`);
-
-      try {
-        const storageModel = await getEncryptedStorage(
-          context,
-          request.blobKey
-        );
-
-        if (!storageModel) {
-          console.log(
-            `can't load e2ee: never saved sync key ${request.blobKey}`
-          );
-          res.sendStatus(404);
-          return;
-        }
-
-        const result: LoadE2EEResponse = {
-          encryptedStorage: JSON.parse(storageModel.encrypted_blob),
-        };
-
-        res.json(result);
-      } catch (e) {
-        console.log(e);
-        next(e);
-      }
-    }
-  );
-
-  app.post(
-    "/sync/save",
-    async (req: Request, res: Response, next: NextFunction) => {
-      const request = req.body as SaveE2EERequest;
-      console.log(`[E2EE] Saving ${request.blobKey}`);
-
-      try {
-        await setEncryptedStorage(
-          context,
-          request.blobKey,
-          request.encryptedBlob
-        );
-
-        res.send("ok");
-      } catch (e) {
-        next(e);
-      }
-    }
-  );
 }
