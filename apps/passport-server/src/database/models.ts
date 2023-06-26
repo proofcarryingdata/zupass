@@ -21,3 +21,9 @@ export enum ParticipantRole {
   Resident = "resident",
   Organizer = "organizer",
 }
+
+export interface CommitmentRow {
+  uuid: string;
+  commitment: string;
+  participant_email: string;
+}

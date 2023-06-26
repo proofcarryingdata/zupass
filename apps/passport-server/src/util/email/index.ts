@@ -45,15 +45,22 @@ function getMailingClient() {
   };
 }
 
-async function composeMail(
+/**
+ * TODO: deprecate this
+ */
+async function composePretixEmail(
   name: string,
   token: string
 ): Promise<{ text: string; html: string }> {
   // Get this files path
   const basePath = __dirname;
 
-  const textTemplate = (await readFile(basePath + "/email.txt")).toString();
-  const htmlTemplate = (await readFile(basePath + "/email.html")).toString();
+  const textTemplate = (
+    await readFile(basePath + "/pretix/email.txt")
+  ).toString();
+  const htmlTemplate = (
+    await readFile(basePath + "/pretix/email.html")
+  ).toString();
 
   const text = textTemplate
     .replace("{{name}}", name)
@@ -69,7 +76,33 @@ async function composeMail(
   };
 }
 
-export async function sendEmail(
+async function composeGenericEmail(
+  token: string
+): Promise<{ text: string; html: string }> {
+  // Get this files path
+  const basePath = __dirname;
+
+  const textTemplate = (
+    await readFile(basePath + "/generic/email.txt")
+  ).toString();
+  const htmlTemplate = (
+    await readFile(basePath + "/generic/email.html")
+  ).toString();
+
+  const text = textTemplate.replace("{{token}}", token);
+
+  const html = htmlTemplate.replace("{{token}}", token);
+
+  return {
+    text,
+    html,
+  };
+}
+
+/**
+ * TODO: deprecate this
+ */
+export async function sendPretixEmail(
   context: ApplicationContext,
   to: string,
   name: string,
@@ -82,7 +115,32 @@ export async function sendEmail(
       to: to,
       from: "passport@0xparc.org",
       subject: "Welcome to your Zuzalu Passport",
-      ...(await composeMail(name, token)),
+      ...(await composePretixEmail(name, token)),
+    };
+
+    try {
+      await getMailingClient().send(msg);
+    } catch (e: any) {
+      console.log(e);
+      context.rollbar?.error(e);
+      throw new Error(`Sendgrid error, failed to email ${to}`);
+    }
+  });
+}
+
+export async function sendPCDPassEmail(
+  context: ApplicationContext,
+  to: string,
+  token: string
+): Promise<void> {
+  return traced("Email", "sendEmail", async (span) => {
+    span?.setAttribute("email", to);
+
+    const msg = {
+      to: to,
+      from: "passport@0xparc.org",
+      subject: "Welcome to your Zuzalu Passport",
+      ...(await composeGenericEmail(token)),
     };
 
     try {

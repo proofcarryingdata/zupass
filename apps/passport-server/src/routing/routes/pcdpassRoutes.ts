@@ -1,13 +1,13 @@
-import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
+import { ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
+import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
-import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
-import { sendEmail } from "../../util/email";
+import { sendPCDPassEmail } from "../../util/email";
 import {
   decodeString,
   generateEmailToken,
@@ -37,37 +37,23 @@ export function initPCDPassRoutes(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
 
-    const token = generateEmailToken();
-    // Save the token. This lets the user prove access to their email later.
     const devBypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
-    if (devBypassEmail) {
-      await insertPretixParticipant(dbPool, {
-        email: email,
-        name: "Test User",
-        order_id: "",
-        residence: "atlantis",
-        role: ParticipantRole.Resident,
-        visitor_date_ranges: undefined,
-      });
-    }
 
+    const token = generateEmailToken();
+    // Save the token. This lets the user prove access to their email later.
     await setEmailToken(dbPool, { email, token });
-    const participant = await fetchPretixParticipant(dbPool, { email });
+    const existingCommitment = await fetchCommitment(dbPool, email);
 
-    if (participant == null) {
-      throw new Error(`${email} doesn't have a ticket.`);
-    } else if (
-      participant.commitment != null &&
-      participant.commitment !== commitment &&
-      !force
-    ) {
+    if (existingCommitment != null && !force) {
       throw new Error(`${email} already registered.`);
     }
-    const stat = participant.commitment == null ? "NEW" : "EXISTING";
+
     console.log(
-      `Saved login token for ${stat} email=${email} commitment=${commitment}`
+      `Saved login token for ${
+        existingCommitment === null ? "NEW" : "EXISTING"
+      } email=${email} commitment=${commitment}`
     );
 
     // Send an email with the login token.
@@ -75,11 +61,8 @@ export function initPCDPassRoutes(
       console.log("[DEV] Bypassing email, returning token");
       res.json({ token });
     } else {
-      const { name } = participant;
-      console.log(
-        `[ZUID] Sending token=${token} to email=${email} name=${name}`
-      );
-      await sendEmail(context, email, name, token);
+      console.log(`[ZUID] Sending token=${token} to email=${email}`);
+      await sendPCDPassEmail(context, email, token);
       res.sendStatus(200);
     }
   });

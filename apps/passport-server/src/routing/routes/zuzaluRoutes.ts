@@ -8,7 +8,7 @@ import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
-import { sendEmail } from "../../util/email";
+import { sendPretixEmail } from "../../util/email";
 import {
   decodeString,
   generateEmailToken,
@@ -77,7 +77,7 @@ export function initZuzaluRoutes(
       console.log(
         `[ZUID] Sending token=${token} to email=${email} name=${name}`
       );
-      await sendEmail(context, email, name, token);
+      await sendPretixEmail(context, email, name, token);
       res.sendStatus(200);
     }
   });
