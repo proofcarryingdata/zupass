@@ -103,6 +103,10 @@ export class SemaphoreService {
       allCommitments.map((c) => c.commitment)
     );
     namedGroup.group = newGroup;
+    this.genericParticipants = {};
+    allCommitments.forEach((c) => {
+      this.genericParticipants[c.uuid] = c;
+    });
   }
 
   private async saveHistoricSemaphoreGroups() {

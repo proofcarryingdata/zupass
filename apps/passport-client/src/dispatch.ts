@@ -143,6 +143,8 @@ async function login(
     const res = await submitNewUser(email, token, state.identity);
     if (!res.ok) throw new Error(await res.text());
     participant = await res.json();
+
+    alert(JSON.stringify(participant, null, 2));
   } catch (e) {
     update({
       error: {

@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
+import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -92,6 +93,7 @@ export function initPCDPassRoutes(
 
         // Save commitment to DB.
         console.log(`[ZUID] Saving new commitment: ${commitment}`);
+        await saveCommitment(dbClient, { email, commitment });
 
         // Reload Merkle trees
         await semaphoreService.reload();

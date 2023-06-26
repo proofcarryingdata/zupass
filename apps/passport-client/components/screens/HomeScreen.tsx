@@ -1,5 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { config } from "../../src/config";
 import { DispatchContext } from "../../src/dispatch";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
@@ -92,7 +93,7 @@ export function HomeScreen() {
                 <PCDCard
                   pcd={pcd}
                   expanded={pcd.id === selectedPCD?.id}
-                  isZuzaluIdentity={pcd.id === zuzaluPCDId}
+                  isZuzaluIdentity={pcd.id === zuzaluPCDId && config.isZuzalu}
                   onClick={() => {
                     setSelectedPCDID(pcd.id);
                   }}
