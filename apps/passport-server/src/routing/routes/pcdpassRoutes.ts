@@ -2,7 +2,7 @@ import { ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { fetchCommitment } from "../../database/queries/fetchCommitment";
-import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
+import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
@@ -84,17 +84,12 @@ export function initPCDPassRoutes(
           })}`
         );
 
-        // Look up participant record from Pretix
         dbClient = await dbPool.connect();
-        const pretix = await fetchPretixParticipant(dbClient, { email });
-        if (pretix == null) {
-          throw new Error(`Ticket for ${email} not found`);
-        } else if (pretix.token !== token) {
+        const savedToken = await fetchEmailToken(dbClient, email);
+        if (savedToken !== token) {
           throw new Error(
             `Wrong token. If you got more than one email, use the latest one.`
           );
-        } else if (pretix.email !== email) {
-          throw new Error(`Email mismatch.`);
         }
 
         // Save commitment to DB.
