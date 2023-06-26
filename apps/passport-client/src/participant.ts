@@ -4,7 +4,7 @@ import {
   ParticipantRole,
   ZuParticipant,
 } from "@pcd/passport-interface";
-import { config } from "./config";
+import { requestUser } from "./api/user";
 import { Dispatcher } from "./dispatch";
 
 // Starts polling the participant record, in the background.
@@ -12,10 +12,8 @@ export async function pollParticipant(
   self: ZuParticipant,
   dispatch: Dispatcher
 ) {
-  const url = `${config.passportServer}/zuzalu/participant/${self.uuid}`;
-  console.log(`[USER_POLL] Polling ${url}`);
   try {
-    const response = await fetch(url);
+    const response = await requestUser(self.uuid);
     if (!response.ok) {
       if (response.status === 404) {
         // this participant was previously a valid participant, but now the

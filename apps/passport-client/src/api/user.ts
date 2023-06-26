@@ -1,6 +1,12 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { config } from "../config";
 
+export async function requestUser(uuid: string): Promise<Response> {
+  const url = `${config.passportServer}/zuzalu/participant/${uuid}`;
+  const response = await fetch(url);
+  return response;
+}
+
 export async function requestConfirmationEmail(
   email: string,
   identity: Identity,
