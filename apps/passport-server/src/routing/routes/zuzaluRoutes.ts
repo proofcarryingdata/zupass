@@ -12,7 +12,7 @@ import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
 import { decodeString, normalizeEmail } from "../../util/util";
 
-// API for Passport setup, Zuzalu IDs, and semaphore groups.
+// API for Passport setup, Zuzalu IDs
 export function initZuzaluRoutes(
   app: express.Application,
   context: ApplicationContext
