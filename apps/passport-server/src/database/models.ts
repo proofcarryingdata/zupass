@@ -7,7 +7,6 @@ export interface PretixParticipant {
   role: ParticipantRole;
   residence: string;
   order_id: string;
-  email_token: string;
   visitor_date_ranges?: DateRange[];
 }
 

@@ -1,8 +1,8 @@
 import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
-import { fetchPretixParticipant } from "../../database/queries/fetchPretixParticipant";
-import { insertPretixParticipant } from "../../database/queries/insertParticipant";
+import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
+import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
@@ -44,7 +44,6 @@ export function initPCDPassRoutes(
     if (devBypassEmail) {
       await insertPretixParticipant(dbPool, {
         email: email,
-        email_token: "",
         name: "Test User",
         order_id: "",
         residence: "atlantis",
@@ -53,7 +52,8 @@ export function initPCDPassRoutes(
       });
     }
 
-    const participant = await setEmailToken(dbPool, { email, token });
+    await setEmailToken(dbPool, { email, token });
+    const participant = await fetchPretixParticipant(dbPool, { email });
 
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
@@ -105,7 +105,7 @@ export function initPCDPassRoutes(
         const pretix = await fetchPretixParticipant(dbClient, { email });
         if (pretix == null) {
           throw new Error(`Ticket for ${email} not found`);
-        } else if (pretix.email_token !== token) {
+        } else if (pretix.token !== token) {
           throw new Error(
             `Wrong token. If you got more than one email, use the latest one.`
           );

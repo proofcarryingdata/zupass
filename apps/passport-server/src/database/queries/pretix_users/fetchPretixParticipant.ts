@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchPretixParticipant(
   client: ClientBase | Pool,
   params: { email: string }
-): Promise<PretixParticipant | null> {
+): Promise<(PretixParticipant & { commitment: string; token: string }) | null> {
   const result = await sqlQuery(
     client,
     `\
@@ -18,6 +18,7 @@ select
     order_id,
     email_token
 from pretix_participants
+join email_tokens e on email = e.email
 where email = $1;`,
     [params.email]
   );
@@ -42,6 +43,7 @@ select
     p.order_id
 from commitments c
 join pretix_participants p on c.participant_email=p.email
+join email_tokens e on p.email = e.email
 where c.uuid = $1;`,
     [params.uuid]
   );
@@ -64,7 +66,8 @@ select
     p.order_id,
     p.visitor_date_ranges
 from commitments c
-join pretix_participants p on c.participant_email=p.email;`
+join pretix_participants p on c.participant_email=p.email
+join email_tokens e on c.participant_email=e.email;`
   );
   return result.rows;
 }

@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { sqlQuery } from "../../sqlQuery";
+import { sqlQuery } from "../sqlQuery";
 
 // Sets the email auth token for a given Pretix participant.
 // Returns null if not found. Returns full participant info on success.
