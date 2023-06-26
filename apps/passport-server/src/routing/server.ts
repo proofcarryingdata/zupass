@@ -7,6 +7,7 @@ import { IS_PROD } from "../util/isProd";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeroutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
@@ -20,6 +21,7 @@ const routes: RouteInitializer[] = [
   initSemaphoreRoutes,
   initE2EERoutes,
   initZuzaluRoutes,
+  initPCDPassRoutes,
   initPCDRoutes,
   initStaticRoutes,
   initPCDRoutes,
