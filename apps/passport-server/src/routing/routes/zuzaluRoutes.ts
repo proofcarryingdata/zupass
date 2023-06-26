@@ -9,7 +9,11 @@ import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
-import { decodeString, normalizeEmail } from "../../util/util";
+import {
+  decodeString,
+  generateEmailToken,
+  normalizeEmail,
+} from "../../util/util";
 
 // API for Passport setup, Zuzalu IDs
 export function initZuzaluRoutes(
@@ -30,9 +34,7 @@ export function initZuzaluRoutes(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
 
-    // Generate a 6-digit random token.
-    const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
-    if (token.length !== 6) throw new Error("Unreachable");
+    const token = generateEmailToken();
 
     // Save the token. This lets the user prove access to their email later.
     const devBypassEmail =

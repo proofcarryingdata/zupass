@@ -31,3 +31,10 @@ export function decodeString(
   }
   return decodeURIComponent(s);
 }
+
+export function generateEmailToken(): string {
+  // Generate a 6-digit random token.
+  const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
+  if (token.length !== 6) throw new Error("Unreachable");
+  return token;
+}
