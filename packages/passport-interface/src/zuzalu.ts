@@ -5,12 +5,14 @@ export interface ZuParticipant {
   /** Semaphore public commitment */
   commitment: string;
 
-  /** Participant metadata */
+  /** Email address they used to register */
   email: string;
-  name: string;
-  role: ParticipantRole;
-  residence: string;
-  visitor_date_ranges: DateRange[];
+
+  /** Zuzalu-Specific Participant metadata */
+  name?: string;
+  role?: ParticipantRole;
+  residence?: string;
+  visitor_date_ranges?: DateRange[];
 }
 
 export interface DateRange {
