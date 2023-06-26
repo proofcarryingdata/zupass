@@ -9,7 +9,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { config } from "./config";
+import { submitNewUser } from "./api/user";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
@@ -138,18 +138,9 @@ async function login(
   state: ZuState,
   update: ZuUpdate
 ) {
-  // Verify the token, save the participant to local storage, redirect to
-  // the home page.
-  const query = new URLSearchParams({
-    email,
-    token,
-    commitment: state.identity.commitment.toString(),
-  }).toString();
-  const loginUrl = `${config.passportServer}/zuzalu/new-participant?${query}`;
-
   let participant: ZuParticipant;
   try {
-    const res = await fetch(loginUrl);
+    const res = await submitNewUser(email, token, state.identity);
     if (!res.ok) throw new Error(await res.text());
     participant = await res.json();
   } catch (e) {

@@ -1,7 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { requestConfirmationEmail } from "../../src/api/login";
+import { requestConfirmationEmail } from "../../src/api/user";
 import { DispatchContext } from "../../src/dispatch";
 import { err } from "../../src/util";
 import {
