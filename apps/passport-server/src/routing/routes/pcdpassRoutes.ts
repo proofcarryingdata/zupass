@@ -2,7 +2,6 @@ import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
-import { fetchStatus } from "../../database/queries/fetchStatus";
 import { insertParticipant } from "../../database/queries/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setParticipantToken } from "../../database/queries/setParticipantToken";
@@ -153,27 +152,5 @@ export function initPCDPassRoutes(
     const participant = semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
     res.json(participant || null);
-  });
-
-  // Fetch service status.
-  app.get("/pcdpass/status", async (req: Request, res: Response) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    const db = await fetchStatus(dbPool);
-    const db_pool = {
-      total: dbPool.totalCount,
-      idle: dbPool.idleCount,
-      waiting: dbPool.waitingCount,
-    };
-    const semaphore = {
-      n_participants: semaphoreService.groupParticipants().group.members.length,
-      n_residents: semaphoreService.groupResidents().group.members.length,
-      n_visitors: semaphoreService.groupVisitors().group.members.length,
-    };
-    const time = new Date().toISOString();
-
-    const status = { time, db, db_pool, semaphore };
-
-    res.setHeader("Content-Type", "application/json");
-    res.end(JSON.stringify(status, null, 2));
   });
 }

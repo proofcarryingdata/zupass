@@ -10,10 +10,12 @@ import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
+import { initStatusRoutes } from "./routes/statusRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 import { RouteInitializer } from "./types";
 
 const routes: RouteInitializer[] = [
+  initStatusRoutes,
   initHealthcheckRoutes,
   initSemaphoreRoutes,
   initE2EERoutes,
