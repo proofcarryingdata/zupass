@@ -18,6 +18,7 @@ const routes: RouteInitializer[] = [
   initSemaphoreRoutes,
   initE2EERoutes,
   initZuzaluRoutes,
+  initPCDRoutes,
   initStaticRoutes,
   initPCDRoutes,
 ];
