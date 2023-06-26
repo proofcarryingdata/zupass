@@ -4,7 +4,7 @@ import { PoolClient } from "pg";
 import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
-import { setEmailToken } from "../../database/queries/setParticipantToken";
+import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";

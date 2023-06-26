@@ -5,10 +5,6 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchPretixParticipants(
   client: ClientBase | Pool
 ): Promise<PretixParticipant[]> {
-  const result = await sqlQuery(
-    client,
-    `select * from pretix_participants
-    join email_tokens e on e.email = participant_email;`
-  );
+  const result = await sqlQuery(client, `select * from pretix_participants;`);
   return result.rows;
 }

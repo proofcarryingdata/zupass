@@ -10,9 +10,9 @@ import {
   PretixSubevent,
 } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
-import { insertPretixParticipant } from "../database/queries/insertParticipant";
 import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
 import { fetchPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipants";
+import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { updateParticipant } from "../database/queries/pretix_users/updateParticipant";
 import { ApplicationContext } from "../types";
 import {
@@ -291,7 +291,6 @@ function ordersToParticipants(
         name: o.positions[0].attendee_name,
         residence: "", // TODO: not in pretix yet
         order_id: o.code,
-        email_token: "",
         visitor_date_ranges: visitorDateRanges,
       } satisfies PretixParticipant;
     });

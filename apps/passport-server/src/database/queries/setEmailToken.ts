@@ -16,7 +16,7 @@ export async function setEmailToken(
     client,
     `\
 insert into email_tokens(email, token, timeUpdated, timeCreated) values($1, $2, NOW(), NOW())
-on conflict set token = $2, timeUpdated = NOW();`,
+    on conflict(email) do update set token = $2, timeUpdated = NOW();`,
     [email, token]
   );
 }

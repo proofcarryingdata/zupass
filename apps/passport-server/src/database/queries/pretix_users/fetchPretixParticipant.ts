@@ -11,15 +11,15 @@ export async function fetchPretixParticipant(
     client,
     `\
 select 
-    email,
+    e.email as email,
     name,
     role,
     residence,
     order_id,
-    email_token
+    token
 from pretix_participants
-join email_tokens e on email = e.email
-where email = $1;`,
+join email_tokens e on pretix_participants.email = e.email
+where e.email = $1;`,
     [params.email]
   );
   return result.rows[0] || null;

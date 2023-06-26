@@ -2,13 +2,13 @@ import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
-import { fetchPassportParticipants } from "../database/queries/fetchPretixParticipant";
 import {
   getGroupByRoot,
   getLatestSemaphoreGroups,
   HistoricSemaphoreGroup,
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
+import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { traced } from "./telemetry";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
