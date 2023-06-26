@@ -6,7 +6,13 @@
  * the service worker is triggered by a change in the service worker
  * source code, which happens each time production deploys.
  */
-const impermanentCache = ["/", "/index.html", "/global.css", "/js/index.js"];
+const impermanentCache = [
+  "/",
+  "/index.html",
+  "/global-pcdpass.css",
+  "/global-zupass.css",
+  "/js/index.js",
+];
 
 async function addResourcesToCache(resources: string[]): Promise<void> {
   const cache = await caches.open("v1");

@@ -3,6 +3,8 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
+import Handlebars from "handlebars";
+import * as path from "path";
 import { v4 as uuid } from "uuid";
 
 dotenv.config();
@@ -69,6 +71,8 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string) {
+  compileHtml();
+
   switch (command) {
     case "build":
       const passportRes = await build({ ...passportAppOpts, minify: true });
@@ -104,4 +108,20 @@ async function run(command: string) {
     default:
       throw new Error(`Unknown command ${command}`);
   }
+}
+
+function compileHtml() {
+  const indexHtmlTemplateSource = fs
+    .readFileSync(path.join("public", "index.hbs"))
+    .toString();
+  const template = Handlebars.compile(indexHtmlTemplateSource);
+
+  const isZuzalu = process.env.IS_ZUZALU === "true";
+
+  const html = template({
+    title: isZuzalu ? "Zuzalu Passport" : "PCDPass",
+    cssPath: isZuzalu ? "/global-zupass.css" : "/global-pcdpass.css",
+  });
+
+  fs.writeFileSync(path.join("public", "index.html"), html);
 }
