@@ -38,7 +38,7 @@ const Background = styled.div<{ color: string }>`
 
 const Container = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   height: 100%;
