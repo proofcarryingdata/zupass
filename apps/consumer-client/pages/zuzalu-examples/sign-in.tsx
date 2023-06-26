@@ -8,7 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -46,7 +46,7 @@ export default function Page() {
 
   // Once we have the UUID, fetch the participant data from Passport.
   const { participant } = useFetchParticipant(
-    PASSPORT_SERVER_URL,
+    ZUPASS_SERVER_URL,
     signedMessage?.uuid
   );
 
@@ -91,7 +91,7 @@ export default function Page() {
           disabled={signatureProofValid}
           onClick={() =>
             openSignedZuzaluSignInPopup(
-              PASSPORT_URL,
+              ZUPASS_URL,
               window.location.origin + "/popup",
               "consumer-client"
             )

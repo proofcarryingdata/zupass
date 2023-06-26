@@ -17,8 +17,8 @@ import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import {
-  PASSPORT_SERVER_URL,
-  PASSPORT_URL,
+  ZUPASS_SERVER_URL,
+  ZUPASS_URL,
   ZUZALU_SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
 
@@ -31,7 +31,7 @@ export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
-    PASSPORT_SERVER_URL
+    ZUPASS_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
   const [valid, setValid] = useState<boolean | undefined>();
@@ -142,7 +142,7 @@ function requestMembershipProof(
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
-    PASSPORT_URL,
+    ZUPASS_URL,
     popupUrl,
     SemaphoreGroupPCDPackage.name,
     {

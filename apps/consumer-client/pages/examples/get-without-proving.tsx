@@ -6,7 +6,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useMemo } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL } from "../../src/constants";
+import { ZUPASS_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 /**
@@ -44,7 +44,7 @@ export default function Page() {
 
 function getProofWithoutProving() {
   const url = getWithoutProvingUrl(
-    PASSPORT_URL,
+    ZUPASS_URL,
     window.location.origin + "/popup",
     SemaphoreSignaturePCDPackage.name
   );

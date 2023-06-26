@@ -9,7 +9,7 @@ import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -20,7 +20,7 @@ export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
-    PASSPORT_SERVER_URL
+    PCDPASS_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
 
@@ -61,7 +61,7 @@ export default function Page() {
           onClick={useCallback(
             () =>
               openSemaphoreSignaturePopup(
-                PASSPORT_URL,
+                PCDPASS_URL,
                 window.location.origin + "/popup",
                 messageToSign,
                 serverProving

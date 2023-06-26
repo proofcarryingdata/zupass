@@ -6,7 +6,7 @@ import {
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -61,7 +61,7 @@ export default function Page() {
         <button
           onClick={() =>
             openGroupMembershipPopup(
-              PASSPORT_URL,
+              ZUPASS_URL,
               window.location.origin + "/popup",
               ZUZALU_SEMAPHORE_GROUP_URL,
               "consumer-client"

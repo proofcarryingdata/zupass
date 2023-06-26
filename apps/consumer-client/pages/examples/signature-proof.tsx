@@ -12,7 +12,7 @@ import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 /**
@@ -24,7 +24,7 @@ export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
-    PASSPORT_SERVER_URL
+    ZUPASS_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
 
@@ -105,7 +105,7 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
-    PASSPORT_URL,
+    ZUPASS_URL,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
