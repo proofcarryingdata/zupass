@@ -139,7 +139,7 @@ export async function sendPCDPassEmail(
     const msg = {
       to: to,
       from: "passport@0xparc.org",
-      subject: "Welcome to your Zuzalu Passport",
+      subject: "Welcome to PCDPass",
       ...(await composeGenericEmail(token)),
     };
 

@@ -1,6 +1,6 @@
 Hi there,
 
-Welcome to the Zuzalu Passport.
+Welcome to PCDPass.
 
 Here's the code to verify your email:
 {{token}}
