@@ -20,7 +20,7 @@ import { setParticipantToken } from "../../database/queries/setParticipantToken"
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
-import { normalizeEmail } from "../../util/util";
+import { decodeString, normalizeEmail } from "../../util/util";
 
 // API for Passport setup, Zuzalu IDs, and semaphore groups.
 export function initZuzaluRoutes(
@@ -199,56 +199,6 @@ export function initZuzaluRoutes(
     res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
   });
 
-  app.get(
-    "/semaphore/valid-historic/:id/:root",
-    async (req: Request, res: Response) => {
-      const id = decodeString(req.params.id, "id");
-      const root = decodeString(req.params.root, "root");
-
-      const historicGroupValid =
-        await semaphoreService.getHistoricSemaphoreGroupValid(id, root);
-
-      res.json({
-        valid: historicGroupValid,
-      });
-    }
-  );
-
-  app.get(
-    "/semaphore/historic/:id/:root",
-    async (req: Request, res: Response) => {
-      const id = decodeString(req.params.id, "id");
-      const root = decodeString(req.params.root, "root");
-
-      const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
-        id,
-        root
-      );
-
-      if (historicGroup === undefined) {
-        res.status(404);
-        res.send("not found");
-        return;
-      }
-
-      res.json(JSON.parse(historicGroup.serializedGroup));
-    }
-  );
-
-  app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
-    const id = decodeString(req.params.id, "id");
-
-    const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
-    const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
-
-    if (matchingGroup === undefined) {
-      res.status(404).send("not found");
-      return;
-    }
-
-    res.json(matchingGroup.rootHash);
-  });
-
   // Load E2EE storage for a given user.
   app.post(
     "/sync/load/",
@@ -306,18 +256,4 @@ export function initZuzaluRoutes(
       }
     }
   );
-}
-
-function decodeString(
-  s: any,
-  name: string,
-  predicate?: (s: string) => boolean
-): string {
-  if (s == null) {
-    throw new Error(`Missing ${name}`);
-  }
-  if (typeof s !== "string" || (predicate && !predicate(s))) {
-    throw new Error(`Invalid ${name}`);
-  }
-  return decodeURIComponent(s);
 }

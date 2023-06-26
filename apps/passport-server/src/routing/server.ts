@@ -7,12 +7,14 @@ import { IS_PROD } from "../util/isProd";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";
+import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 import { RouteInitializer } from "./types";
 
 const routes: RouteInitializer[] = [
   initHealthcheckRoutes,
+  initSemaphoreRoutes,
   initZuzaluRoutes,
   initStaticRoutes,
   initPCDRoutes,
