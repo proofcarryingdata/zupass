@@ -15,7 +15,7 @@ import {
 } from "@simplewebauthn/server";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { PASSPORT_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 /**
@@ -85,7 +85,7 @@ async function addGroupMembershipProofPCD() {
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: SEMAPHORE_GROUP_URL,
+        remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
         description: "The Semaphore group which you are proving you belong to.",
       },
       identity: {

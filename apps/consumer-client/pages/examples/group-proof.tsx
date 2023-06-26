@@ -19,7 +19,7 @@ import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDispla
 import {
   PASSPORT_SERVER_URL,
   PASSPORT_URL,
-  SEMAPHORE_GROUP_URL,
+  ZUZALU_SEMAPHORE_GROUP_URL,
 } from "../../src/constants";
 
 /**
@@ -40,7 +40,7 @@ export default function Page() {
   };
   const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
-    SEMAPHORE_GROUP_URL,
+    ZUZALU_SEMAPHORE_GROUP_URL,
     "consumer-client",
     onVerified
   );
@@ -156,7 +156,7 @@ function requestMembershipProof(
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: SEMAPHORE_GROUP_URL,
+        remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
         description: "The Semaphore group which you are proving you belong to.",
       },
       identity: {

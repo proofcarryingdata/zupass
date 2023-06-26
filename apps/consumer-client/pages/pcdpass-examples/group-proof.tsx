@@ -6,7 +6,7 @@ import {
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { PASSPORT_URL, PCDPASS_SEMAPHORE_GROUP_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -23,7 +23,7 @@ export default function Page() {
 
   const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
-    ZUZALU_SEMAPHORE_GROUP_URL,
+    PCDPASS_SEMAPHORE_GROUP_URL,
     "consumer-client",
     onVerified
   );
@@ -31,22 +31,18 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Zuzalu Semaphore Group Membership Proof</h2>
+      <h2>PCDPass Semaphore Group Membership Proof</h2>
       <p>
-        This page shows a working example of an integration with the Zuzalu
-        Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Residents Semaphore Group.
+        This page shows a working example of an integration with the PCDPass
+        application which requests and verifies that a particular user is a
+        registered user of PCDPass.
       </p>
       <p>
-        The Zuzalu Residents Semaphore Group is maintained by the Passport
-        Server application. To be able to use this flow in production, to be
-        able to generate this proof, you have to have signed in on{" "}
-        <a href={"https://zupass.org"}>zupass.org</a>. To use this flow locally,
-        you either have to sign in as a valid Zuzalu Resident which was synced
-        from Pretix, or you have to have started the local development
-        environment with the <code>BYPASS_EMAIL_REGISTRATION</code> environment
-        variable set to <code>true</code>, which allows you to log in
-        development mode without being a resident.
+        The PCDPass Semaphore Group is maintained by the Passport Server
+        application. To be able to use this flow in production, to be able to
+        generate this proof, you have to have signed in on{" "}
+        <a href={"https://pcdpass.xyz"}>pcdpass.xyz</a>. To use this flow
+        locally, you either have to sign in on a local instance of the passport.
       </p>
       <p>
         The underlying PCD that this example uses is{" "}
@@ -63,17 +59,17 @@ export default function Page() {
             openGroupMembershipPopup(
               PASSPORT_URL,
               window.location.origin + "/popup",
-              ZUZALU_SEMAPHORE_GROUP_URL,
+              PCDPASS_SEMAPHORE_GROUP_URL,
               "consumer-client"
             )
           }
           disabled={valid}
         >
-          Request Zuzalu Membership Proof
+          Request PCDPass Membership Proof
         </button>
         {proof != null && (
           <>
-            <p>Got Zuzalu Membership Proof from Passport</p>
+            <p>Got PCDPass Membership Proof from Passport</p>
             <CollapsableCode code={JSON.stringify(proof, null, 2)} />
             {group && <p>✅ Loaded group, {group.members.length} members</p>}
             {valid === undefined && <p>❓ Proof verifying</p>}

@@ -33,11 +33,11 @@ export default function Page() {
         </ol>
       </div>
       <div>
-        <h2>Zuzalu-Specific Examples</h2>
+        <h2>Zuzalu-Specific Examples [DEPRECATED]</h2>
         <ol>
           <li>
             <a href="/zuzalu-examples/group-proof">
-              Zuzalu Group Membership Proof
+              [DEPRECATED] Zuzalu Group Membership Proof
             </a>
           </li>
           <li>
@@ -46,10 +46,26 @@ export default function Page() {
             </a>
           </li>
           <li>
-            <a href="/zuzalu-examples/sign-in">Zuzalu Sign In</a>
+            <a href="/zuzalu-examples/sign-in">[DEPRECATED] Zuzalu Sign In</a>
           </li>
           <li>
             <a href="/zuzalu-examples/signature-proof">
+              [DEPRECATED] Semaphore Signature Proof
+            </a>
+          </li>
+        </ol>
+      </div>
+
+      <div>
+        <h2>PCDPass Examples</h2>
+        <ol>
+          <li>
+            <a href="/pcdpass-examples/group-proof">
+              PCDPass Group Membership Proof
+            </a>
+          </li>
+          <li>
+            <a href="/pcdpass-examples/signature-proof">
               Semaphore Signature Proof
             </a>
           </li>
