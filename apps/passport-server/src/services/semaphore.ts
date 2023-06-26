@@ -1,7 +1,12 @@
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
-import { ParticipantRole, PassportParticipant } from "../database/models";
+import {
+  CommitmentRow,
+  ParticipantRole,
+  PassportParticipant,
+} from "../database/models";
+import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
 import {
   getGroupByRoot,
   getLatestSemaphoreGroups,
@@ -24,6 +29,7 @@ export class SemaphoreService {
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
+      { name: "Generic", group: new Group("5", 16) },
     ];
   }
 
@@ -35,6 +41,7 @@ export class SemaphoreService {
   groupResidents = () => this.getNamedGroup("2");
   groupVisitors = () => this.getNamedGroup("3");
   groupOrganizers = () => this.getNamedGroup("4");
+  groupGeneric = () => this.getNamedGroup("5");
 
   getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -43,27 +50,20 @@ export class SemaphoreService {
   }
 
   // Zuzalu participants by UUID
-  participants = {} as Record<string, PassportParticipant>;
+  zuzaluParticipants = {} as Record<string, PassportParticipant>;
+  genericParticipants = {} as Record<string, CommitmentRow>;
 
   // Get a participant by UUID, or null if not found.
-  getParticipant(uuid: string): PassportParticipant | null {
+  getParticipant(uuid: string): PassportParticipant | CommitmentRow | null {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
       throw new Error("Semaphore service not loaded");
     }
 
-    return this.participants[uuid] || null;
-  }
-
-  getParticipantByCommitment(commitment: string): PassportParticipant | null {
-    const participants = Object.values(this.participants);
-    for (const participant of participants) {
-      if (participant.commitment === commitment) {
-        return participant;
-      }
-    }
-    return null;
+    return (
+      this.zuzaluParticipants[uuid] || this.genericParticipants[uuid] || null
+    );
   }
 
   // Load participants from DB, rebuild semaphore groups
@@ -76,7 +76,8 @@ export class SemaphoreService {
       console.log(`[SEMA] Reloading semaphore service...`);
       const ps = await fetchPassportParticipants(this.dbPool);
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
-      this.setGroups(ps);
+      this.setZuzaluGroups(ps);
+      this.reloadGenericGroup();
       this.loaded = true;
       console.log(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
@@ -84,7 +85,22 @@ export class SemaphoreService {
     });
   }
 
-  async saveHistoricSemaphoreGroups() {
+  private async reloadGenericGroup() {
+    if (!this.dbPool) {
+      throw new Error("no database connection");
+    }
+
+    const allCommitments = await fetchAllCommitments(this.dbPool);
+    const namedGroup = this.getNamedGroup("5");
+    const newGroup = new Group(
+      namedGroup.group.id,
+      namedGroup.group.depth,
+      allCommitments.map((c) => c.commitment)
+    );
+    namedGroup.group = newGroup;
+  }
+
+  private async saveHistoricSemaphoreGroups() {
     if (!this.dbPool) {
       throw new Error("no database connection");
     }
@@ -123,7 +139,7 @@ export class SemaphoreService {
     }
   }
 
-  async getHistoricSemaphoreGroup(
+  public async getHistoricSemaphoreGroup(
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
@@ -134,7 +150,7 @@ export class SemaphoreService {
     return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
-  async getHistoricSemaphoreGroupValid(
+  public async getHistoricSemaphoreGroupValid(
     groupId: string,
     rootHash: string
   ): Promise<boolean> {
@@ -147,7 +163,7 @@ export class SemaphoreService {
     return group !== undefined;
   }
 
-  async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
+  public async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
     if (!this.dbPool) {
       throw new Error("no database connection");
     }
@@ -155,9 +171,9 @@ export class SemaphoreService {
     return getLatestSemaphoreGroups(this.dbPool);
   }
 
-  setGroups(participants: PassportParticipant[]) {
+  private setZuzaluGroups(participants: PassportParticipant[]) {
     // reset participant state
-    this.participants = {};
+    this.zuzaluParticipants = {};
     this.groups = SemaphoreService.createGroups();
 
     const groupIdsToParticipants: Map<string, PassportParticipant[]> =
@@ -173,8 +189,8 @@ export class SemaphoreService {
 
     // calculate which participants go into which groups
     for (const p of participants) {
-      this.participants[p.uuid] = p;
-      const groupsOfThisParticipant = this.getGroupsForRole(p.role);
+      this.zuzaluParticipants[p.uuid] = p;
+      const groupsOfThisParticipant = this.getZuzaluGroupsForRole(p.role);
       for (const namedGroup of groupsOfThisParticipant) {
         console.log(
           `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
@@ -207,7 +223,7 @@ export class SemaphoreService {
   }
 
   // Get the semaphore groups for a participant role
-  getGroupsForRole(role: ParticipantRole): NamedGroup[] {
+  private getZuzaluGroupsForRole(role: ParticipantRole): NamedGroup[] {
     switch (role) {
       case ParticipantRole.Organizer:
         return [

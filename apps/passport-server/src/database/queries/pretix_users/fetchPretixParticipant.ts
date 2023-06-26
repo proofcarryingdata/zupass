@@ -65,8 +65,8 @@ select
     p.residence,
     p.order_id,
     p.visitor_date_ranges
-from commitments c
-join pretix_participants p on c.participant_email=p.email
+from pretix_participants p
+join commitments c on c.participant_email=p.email
 join email_tokens e on c.participant_email=e.email;`
   );
   return result.rows;
