@@ -142,6 +142,16 @@ export function initZuzaluRoutes(
     }
   );
 
+  // Fetch a specific participant, given their public semaphore commitment.
+  app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    const uuid = req.params.uuid;
+    console.log(`[ZUID] Fetching participant ${uuid}`);
+    const participant = semaphoreService.getParticipant(uuid);
+    if (!participant) res.status(404);
+    res.json(participant || null);
+  });
+
   // Fetch service status.
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -162,15 +172,5 @@ export function initZuzaluRoutes(
 
     res.setHeader("Content-Type", "application/json");
     res.end(JSON.stringify(status, null, 2));
-  });
-
-  // Fetch a specific participant, given their public semaphore commitment.
-  app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    const uuid = req.params.uuid;
-    console.log(`[ZUID] Fetching participant ${uuid}`);
-    const participant = semaphoreService.getParticipant(uuid);
-    if (!participant) res.status(404);
-    res.json(participant || null);
   });
 }
