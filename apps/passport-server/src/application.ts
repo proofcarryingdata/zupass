@@ -25,7 +25,7 @@ export async function startApplication() {
     dbPool,
     honeyClient,
     rollbar,
-    isZuzalu: process.env.IS_ZUZALU ? true : false,
+    isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
   };
 
   await startTelemetry(context);

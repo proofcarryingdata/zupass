@@ -14,6 +14,7 @@ import {
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
 import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
+import { ApplicationContext } from "../types";
 import { traced } from "./telemetry";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
@@ -21,6 +22,7 @@ export class SemaphoreService {
   // Groups by ID
   groups = SemaphoreService.createGroups();
   dbPool: Pool | ClientBase | undefined;
+  isZuzalu = false;
   loaded = false;
 
   static createGroups(): NamedGroup[] {
@@ -33,8 +35,9 @@ export class SemaphoreService {
     ];
   }
 
-  setPool(dbPool: Pool | ClientBase) {
+  init(dbPool: Pool | ClientBase, isZuzalu: boolean) {
     this.dbPool = dbPool;
+    this.isZuzalu = isZuzalu;
   }
 
   groupParticipants = () => this.getNamedGroup("1");
@@ -61,9 +64,11 @@ export class SemaphoreService {
       throw new Error("Semaphore service not loaded");
     }
 
-    return (
-      this.zuzaluParticipants[uuid] || this.genericParticipants[uuid] || null
-    );
+    if (this.isZuzalu) {
+      return this.zuzaluParticipants[uuid] || null;
+    }
+
+    return this.genericParticipants[uuid] || null;
   }
 
   // Load participants from DB, rebuild semaphore groups
@@ -243,8 +248,11 @@ export class SemaphoreService {
 
 export const semaphoreService = new SemaphoreService();
 
-export function startSemaphoreService({ dbPool }: { dbPool: Pool }) {
-  semaphoreService.setPool(dbPool);
+export function startSemaphoreService({
+  dbPool,
+  isZuzalu,
+}: ApplicationContext) {
+  semaphoreService.init(dbPool, isZuzalu);
   semaphoreService.reload();
 
   // Reload every minute

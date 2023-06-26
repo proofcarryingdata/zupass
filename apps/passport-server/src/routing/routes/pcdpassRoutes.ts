@@ -1,9 +1,7 @@
-import { ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
-import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
@@ -94,22 +92,12 @@ export function initPCDPassRoutes(
 
         // Save commitment to DB.
         console.log(`[ZUID] Saving new commitment: ${commitment}`);
-        const uuid = await saveCommitment(dbClient, {
-          email,
-          commitment,
-        });
 
         // Reload Merkle trees
         await semaphoreService.reload();
-        const participant = semaphoreService.getParticipant(uuid);
-        if (participant == null) {
-          throw new Error(`${uuid} not found`);
-        } else if (participant.commitment !== commitment) {
-          throw new Error(`Commitment mismatch`);
-        }
 
         // Return participant, including UUID, back to Passport
-        const zuParticipant = participant as ZuParticipant;
+        const zuParticipant = await fetchCommitment(dbClient, email);
         const jsonP = JSON.stringify(zuParticipant);
         console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
 

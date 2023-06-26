@@ -8,7 +8,7 @@ export async function fetchCommitment(
 ): Promise<CommitmentRow | null> {
   const result = await sqlQuery(
     client,
-    `select * from commitments where email = $1`,
+    `select * from commitments where participant_email = $1`,
     [email]
   );
 

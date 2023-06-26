@@ -14,7 +14,7 @@ export const config: Config = {
   devMode: process.env.NODE_ENV !== "production",
   passportServer: process.env.PASSPORT_SERVER_URL,
   maxProofAge: 1000 * 60 * 60 * 4,
-  isZuzalu: process.env.IS_ZUZALU ? true : false,
+  isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
 };
 
 console.log("Config: " + JSON.stringify(config));
