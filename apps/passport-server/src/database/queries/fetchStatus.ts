@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { query } from "../query";
+import { sqlQuery } from "../sqlQuery";
 
 /** Fetch database status. */
 export async function fetchStatus(client: ClientBase | Pool): Promise<{
@@ -7,7 +7,7 @@ export async function fetchStatus(client: ClientBase | Pool): Promise<{
   n_commitments: number;
   n_e2ee: number;
 }> {
-  const result = await query(
+  const result = await sqlQuery(
     client,
     `\
 select 

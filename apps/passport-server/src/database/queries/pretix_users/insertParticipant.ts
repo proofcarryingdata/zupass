@@ -1,12 +1,12 @@
 import { ClientBase, Pool } from "pg";
-import { PretixParticipant } from "../models";
-import { query } from "../query";
+import { PretixParticipant } from "../../models";
+import { sqlQuery } from "../../sqlQuery";
 
-export async function insertParticipant(
+export async function insertPretixParticipant(
   client: ClientBase | Pool,
   params: PretixParticipant
 ): Promise<number> {
-  const result = await query(
+  const result = await sqlQuery(
     client,
     `\
 insert into pretix_participants (email, name, role, residence, order_id, visitor_date_ranges)

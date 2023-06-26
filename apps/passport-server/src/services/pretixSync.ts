@@ -10,10 +10,10 @@ import {
   PretixSubevent,
 } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
-import { deleteParticipant } from "../database/queries/deleteParticipant";
-import { fetchPretixParticipants } from "../database/queries/fetchPretixParticipants";
-import { insertParticipant } from "../database/queries/insertParticipant";
-import { updateParticipant } from "../database/queries/updateParticipant";
+import { insertPretixParticipant } from "../database/queries/insertParticipant";
+import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
+import { fetchPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipants";
+import { updateParticipant } from "../database/queries/pretix_users/updateParticipant";
 import { ApplicationContext } from "../types";
 import {
   participantsToMap,
@@ -98,7 +98,7 @@ async function saveParticipants(
     );
     for (const participant of newParticipants) {
       console.log(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
-      await insertParticipant(dbClient, participant);
+      await insertPretixParticipant(dbClient, participant);
     }
 
     // Step 2 of saving: update participants that have changed
@@ -133,7 +133,7 @@ async function saveParticipants(
     console.log(`[PRETIX] Deleting ${removedParticipants.length} participants`);
     for (const removedParticipant of removedParticipants) {
       console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
-      await deleteParticipant(dbClient, removedParticipant.email);
+      await deletePretixParticipant(dbClient, removedParticipant.email);
     }
 
     span?.setAttribute("participantsInserted", newParticipants.length);

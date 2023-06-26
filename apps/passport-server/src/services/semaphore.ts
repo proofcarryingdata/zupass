@@ -2,7 +2,7 @@ import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
 import { ParticipantRole, PassportParticipant } from "../database/models";
-import { fetchPassportParticipants } from "../database/queries/fetchParticipant";
+import { fetchPassportParticipants } from "../database/queries/fetchPretixParticipant";
 import {
   getGroupByRoot,
   getLatestSemaphoreGroups,

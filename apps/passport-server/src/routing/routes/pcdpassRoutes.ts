@@ -1,10 +1,10 @@
 import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
-import { fetchPretixParticipant } from "../../database/queries/fetchParticipant";
-import { insertParticipant } from "../../database/queries/insertParticipant";
+import { fetchPretixParticipant } from "../../database/queries/fetchPretixParticipant";
+import { insertPretixParticipant } from "../../database/queries/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
-import { setParticipantToken } from "../../database/queries/setParticipantToken";
+import { setEmailToken } from "../../database/queries/setParticipantToken";
 import { semaphoreService } from "../../services/semaphore";
 import { ApplicationContext } from "../../types";
 import { sendEmail } from "../../util/email";
@@ -42,7 +42,7 @@ export function initPCDPassRoutes(
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
     if (devBypassEmail) {
-      await insertParticipant(dbPool, {
+      await insertPretixParticipant(dbPool, {
         email: email,
         email_token: "",
         name: "Test User",
@@ -53,7 +53,7 @@ export function initPCDPassRoutes(
       });
     }
 
-    const participant = await setParticipantToken(dbPool, { email, token });
+    const participant = await setEmailToken(dbPool, { email, token });
 
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);

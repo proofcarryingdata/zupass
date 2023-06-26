@@ -1,5 +1,5 @@
 import { ApplicationContext } from "../../types";
-import { query } from "../query";
+import { sqlQuery } from "../sqlQuery";
 
 export interface EncryptedStorageModel {
   blob_key: string;
@@ -10,7 +10,7 @@ export async function getEncryptedStorage(
   context: ApplicationContext,
   blobKey: string
 ): Promise<EncryptedStorageModel | undefined> {
-  const results = await query(
+  const results = await sqlQuery(
     context.dbPool,
     "select * from e2ee where blob_key = $1;",
     [blobKey]
@@ -28,7 +28,7 @@ export async function setEncryptedStorage(
   blobKey: string,
   encryptedBlob: string
 ) {
-  await query(
+  await sqlQuery(
     context.dbPool,
     "insert into e2ee(blob_key, encrypted_blob) values " +
       "($1, $2) on conflict(blob_key) do update set encrypted_blob = $2;",
