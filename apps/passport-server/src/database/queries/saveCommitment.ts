@@ -3,7 +3,7 @@ import { sqlQuery } from "../sqlQuery";
 
 // Saves a new commitment. Overwrites any existing commitment for this email.
 // Returns the commitment UUID.
-export async function saveCommitment(
+export async function insertCommitment(
   client: ClientBase | Pool,
   params: {
     email: string;

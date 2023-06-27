@@ -5,8 +5,8 @@ import {
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import {
-  getEncryptedStorage,
-  setEncryptedStorage,
+  fetchEncryptedStorage,
+  insertEncryptedStorage,
 } from "../../database/queries/e2ee";
 import { ApplicationContext } from "../../types";
 
@@ -27,7 +27,7 @@ export function initE2EERoutes(
       console.log(`[E2EE] Loading ${request.blobKey}`);
 
       try {
-        const storageModel = await getEncryptedStorage(
+        const storageModel = await fetchEncryptedStorage(
           context,
           request.blobKey
         );
@@ -59,7 +59,7 @@ export function initE2EERoutes(
       console.log(`[E2EE] Saving ${request.blobKey}`);
 
       try {
-        await setEncryptedStorage(
+        await insertEncryptedStorage(
           context,
           request.blobKey,
           request.encryptedBlob

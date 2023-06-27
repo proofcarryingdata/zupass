@@ -4,8 +4,8 @@ import { PoolClient } from "pg";
 import { ParticipantRole } from "../../database/models";
 import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
-import { saveCommitment } from "../../database/queries/saveCommitment";
-import { setEmailToken } from "../../database/queries/setEmailToken";
+import { insertCommitment } from "../../database/queries/saveCommitment";
+import { insertEmailToken } from "../../database/queries/setEmailToken";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { sendPretixEmail } from "../../util/email";
 import {
@@ -51,7 +51,7 @@ export function initZuzaluRoutes(
       });
     }
 
-    await setEmailToken(dbPool, { email, token });
+    await insertEmailToken(dbPool, { email, token });
     const participant = await fetchPretixParticipant(dbPool, { email });
 
     if (participant == null) {
@@ -114,7 +114,7 @@ export function initZuzaluRoutes(
 
         // Save commitment to DB.
         console.log(`[ZUID] Saving new commitment: ${commitment}`);
-        const uuid = await saveCommitment(dbClient, {
+        const uuid = await insertCommitment(dbClient, {
           email,
           commitment,
         });

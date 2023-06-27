@@ -2,8 +2,8 @@ import express, { NextFunction, Request, Response } from "express";
 import { PoolClient } from "pg";
 import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
-import { saveCommitment } from "../../database/queries/saveCommitment";
-import { setEmailToken } from "../../database/queries/setEmailToken";
+import { insertCommitment } from "../../database/queries/saveCommitment";
+import { insertEmailToken } from "../../database/queries/setEmailToken";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { sendPCDPassEmail } from "../../util/email";
 import {
@@ -42,7 +42,7 @@ export function initPCDPassRoutes(
 
     const token = generateEmailToken();
     // Save the token. This lets the user prove access to their email later.
-    await setEmailToken(dbPool, { email, token });
+    await insertEmailToken(dbPool, { email, token });
     const existingCommitment = await fetchCommitment(dbPool, email);
 
     if (existingCommitment != null && !force) {
@@ -93,7 +93,7 @@ export function initPCDPassRoutes(
 
         // Save commitment to DB.
         console.log(`[ZUID] Saving new commitment: ${commitment}`);
-        await saveCommitment(dbClient, { email, commitment });
+        await insertCommitment(dbClient, { email, commitment });
 
         // Reload Merkle trees
         await semaphoreService.reload();

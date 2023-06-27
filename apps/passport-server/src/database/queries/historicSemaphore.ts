@@ -9,7 +9,7 @@ export interface HistoricSemaphoreGroup {
   timeCreated: string;
 }
 
-export async function getLatestSemaphoreGroups(
+export async function fetchLatestSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
   const latestGroups = await sqlQuery(
@@ -39,7 +39,7 @@ export async function insertNewSemaphoreGroup(
   );
 }
 
-export async function getGroupByRoot(
+export async function fetchGroupByRoot(
   client: ClientBase | Pool,
   groupId: string,
   rootHash: string

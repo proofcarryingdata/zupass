@@ -6,7 +6,7 @@ export interface EncryptedStorageModel {
   encrypted_blob: string;
 }
 
-export async function getEncryptedStorage(
+export async function fetchEncryptedStorage(
   context: ApplicationContext,
   blobKey: string
 ): Promise<EncryptedStorageModel | undefined> {
@@ -23,7 +23,7 @@ export async function getEncryptedStorage(
   return results.rows[0] as EncryptedStorageModel;
 }
 
-export async function setEncryptedStorage(
+export async function insertEncryptedStorage(
   context: ApplicationContext,
   blobKey: string,
   encryptedBlob: string

@@ -8,8 +8,8 @@ import {
 } from "../database/models";
 import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
 import {
-  getGroupByRoot,
-  getLatestSemaphoreGroups,
+  fetchGroupByRoot,
+  fetchLatestSemaphoreGroups,
   HistoricSemaphoreGroup,
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
@@ -113,7 +113,7 @@ export class SemaphoreService {
 
     console.log(`[SEMA] Semaphore service - diffing historic semaphore groups`);
 
-    const latestGroups = await getLatestSemaphoreGroups(this.dbPool);
+    const latestGroups = await fetchLatestSemaphoreGroups(this.dbPool);
 
     for (const localGroup of this.groups) {
       const correspondingLatestGroup = latestGroups.find(
@@ -149,19 +149,19 @@ export class SemaphoreService {
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
-    return getGroupByRoot(this.dbPool, groupId, rootHash);
+    return fetchGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
   public async getHistoricSemaphoreGroupValid(
     groupId: string,
     rootHash: string
   ): Promise<boolean> {
-    const group = await getGroupByRoot(this.dbPool, groupId, rootHash);
+    const group = await fetchGroupByRoot(this.dbPool, groupId, rootHash);
     return group !== undefined;
   }
 
   public async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
-    return getLatestSemaphoreGroups(this.dbPool);
+    return fetchLatestSemaphoreGroups(this.dbPool);
   }
 
   private setZuzaluGroups(participants: PassportParticipant[]) {
