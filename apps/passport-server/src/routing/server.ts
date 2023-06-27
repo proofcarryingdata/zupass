@@ -82,7 +82,6 @@ function initAllRoutes(
   initE2EERoutes(app, context, globalServices);
   initZuzaluRoutes(app, context, globalServices);
   initPCDPassRoutes(app, context, globalServices);
-  initPCDRoutes(app, context);
+  initPCDRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
-  initPCDRoutes(app, context);
 }

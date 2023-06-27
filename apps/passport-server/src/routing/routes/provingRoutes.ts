@@ -5,24 +5,24 @@ import {
   StatusResponse,
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
-import {
-  enqueueProofRequest,
-  getPendingPCDStatus,
-  getSupportedPCDTypes,
-} from "../../services/provingService";
-import { ApplicationContext } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 
 export function initPCDRoutes(
   app: express.Application,
-  _context: ApplicationContext
+  _context: ApplicationContext,
+  globalServices: GlobalServices
 ): void {
+  const { provingService } = globalServices;
+
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
       console.log("/pcds/prove received:", req.body);
       const request = req.body as ProveRequest;
       try {
-        const pending: PendingPCD = await enqueueProofRequest(request);
+        const pending: PendingPCD = await provingService.enqueueProofRequest(
+          request
+        );
         res.json(pending);
       } catch (e) {
         console.error("/pcds/prove error: ", e);
@@ -36,7 +36,7 @@ export function initPCDRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       res.setHeader("Access-Control-Allow-Origin", "*");
       try {
-        res.json(getSupportedPCDTypes());
+        res.json(provingService.getSupportedPCDTypes());
       } catch (e) {
         console.error("/pcds/supported error: ", e);
         next(e);
@@ -50,9 +50,8 @@ export function initPCDRoutes(
       console.log("/pcds/status received:", req.body);
       const statusRequest = req.body as StatusRequest;
       try {
-        const statusResponse: StatusResponse = getPendingPCDStatus(
-          statusRequest.hash
-        );
+        const statusResponse: StatusResponse =
+          provingService.getPendingPCDStatus(statusRequest.hash);
         res.json(statusResponse);
       } catch (e) {
         console.error("/pcds/status error:", e);

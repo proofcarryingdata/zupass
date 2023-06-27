@@ -8,7 +8,7 @@ import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startMetrics as startMetricsService } from "./services/metricsService";
 import { startPretixSyncService } from "./services/pretixSyncService";
-import { initProvingService as startProvingService } from "./services/provingService";
+import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
@@ -42,6 +42,7 @@ export async function startApplication(): Promise<PCDPass> {
   startMetricsService(context);
   startPretixSyncService(context, rollbarService);
 
+  const provingService = await startProvingService();
   const emailService = startEmailService(context, rollbarService);
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
@@ -60,6 +61,7 @@ export async function startApplication(): Promise<PCDPass> {
     e2eeService,
     emailTokenService,
     rollbarService,
+    provingService,
   };
 
   startServer(context, globalServices);
