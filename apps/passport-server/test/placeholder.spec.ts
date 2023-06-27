@@ -1,4 +1,5 @@
 import { Identity } from "@semaphore-protocol/identity";
+import { expect } from "chai";
 import "mocha";
 import httpMocks from "node-mocks-http";
 import { startApplication } from "../src/application";
@@ -27,5 +28,12 @@ describe("this is a placeholder test", function () {
       true,
       response
     );
+
+    expect(response.statusCode).to.eq(200);
+
+    if (userService.bypassEmail) {
+      const responseJson = response._getJSONData();
+      expect(responseJson).to.haveOwnProperty("token");
+    }
   });
 });

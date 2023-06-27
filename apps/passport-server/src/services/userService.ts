@@ -13,8 +13,13 @@ import { generateEmailToken } from "../util/util";
 import { SemaphoreService } from "./semaphoreService";
 
 export class UserService {
-  context: ApplicationContext;
-  semaphoreService: SemaphoreService;
+  private context: ApplicationContext;
+  private semaphoreService: SemaphoreService;
+  private _bypassEmail: boolean;
+
+  public get bypassEmail() {
+    return this._bypassEmail;
+  }
 
   public constructor(
     context: ApplicationContext,
@@ -22,6 +27,9 @@ export class UserService {
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
+    this._bypassEmail =
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production";
   }
 
   public async handleSendZuzaluEmail(
@@ -39,10 +47,8 @@ export class UserService {
     const token = generateEmailToken();
 
     // Save the token. This lets the user prove access to their email later.
-    const devBypassEmail =
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production";
-    if (devBypassEmail) {
+
+    if (this._bypassEmail) {
       await insertPretixParticipant(dbPool, {
         email: email,
         name: "Test User",
@@ -71,7 +77,7 @@ export class UserService {
     );
 
     // Send an email with the login token.
-    if (devBypassEmail) {
+    if (this._bypassEmail) {
       console.log("[DEV] Bypassing email, returning token");
 
       response.json({ token });
