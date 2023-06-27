@@ -2,19 +2,19 @@ import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import { Response } from "express";
 import next from "next";
 import { fetchCommitment } from "../database/queries/fetchCommitment";
-import { fetchEmailToken } from "../database/queries/fetchEmailToken";
 import { fetchPretixParticipant } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
 import { sendPCDPassEmail, sendPretixEmail } from "../util/email";
-import { generateEmailToken } from "../util/util";
+import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
 
 export class UserService {
   private context: ApplicationContext;
   private semaphoreService: SemaphoreService;
+  private emailTokenService: EmailTokenService;
   private _bypassEmail: boolean;
 
   public get bypassEmail() {
@@ -23,10 +23,12 @@ export class UserService {
 
   public constructor(
     context: ApplicationContext,
-    semaphoreService: SemaphoreService
+    semaphoreService: SemaphoreService,
+    emailTokenService: EmailTokenService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
+    this.emailTokenService = emailTokenService;
     this._bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -44,9 +46,7 @@ export class UserService {
 
     const { dbPool } = this.context;
 
-    const token = generateEmailToken();
-
-    // Save the token. This lets the user prove access to their email later.
+    const token = await this.emailTokenService.saveNewTokenForEmail(email);
 
     if (this._bypassEmail) {
       await insertPretixParticipant(dbPool, {
@@ -109,9 +109,12 @@ export class UserService {
 
     try {
       const pretix = await fetchPretixParticipant(dbPool, { email });
+
       if (pretix == null) {
         throw new Error(`Ticket for ${email} not found`);
-      } else if (pretix.token !== emailToken) {
+      } else if (
+        !(await this.emailTokenService.checkTokenCorrect(email, emailToken))
+      ) {
         throw new Error(
           `Wrong token. If you got more than one email, use the latest one.`
         );
@@ -168,9 +171,8 @@ export class UserService {
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
 
-    const token = generateEmailToken();
-    // Save the token. This lets the user prove access to their email later.
-    await insertEmailToken(this.context.dbPool, { email, token });
+    const token = await this.emailTokenService.saveNewTokenForEmail(email);
+
     const existingCommitment = await fetchCommitment(
       this.context.dbPool,
       email
@@ -212,8 +214,7 @@ export class UserService {
     );
 
     try {
-      const savedToken = await fetchEmailToken(this.context.dbPool, email);
-      if (savedToken !== token) {
+      if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
         throw new Error(
           `Wrong token. If you got more than one email, use the latest one.`
         );
@@ -249,8 +250,13 @@ export class UserService {
 
 export function startUserService(
   context: ApplicationContext,
-  semaphoreService: SemaphoreService
+  semaphoreService: SemaphoreService,
+  emailTokenService: EmailTokenService
 ): UserService {
-  const userService = new UserService(context, semaphoreService);
+  const userService = new UserService(
+    context,
+    semaphoreService,
+    emailTokenService
+  );
   return userService;
 }

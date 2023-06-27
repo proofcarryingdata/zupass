@@ -15,7 +15,7 @@ describe("login", function () {
   });
 
   it("should be able to log in", async function () {
-    const { userService } = application.globalServices;
+    const { userService, emailTokenService } = application.globalServices;
     const testEmail = randomEmail();
     const identity = new Identity();
     const commitment = identity.commitment.toString();
@@ -30,24 +30,30 @@ describe("login", function () {
 
     expect(sendEmailResponse.statusCode).to.eq(200);
 
+    let token: string;
+
     if (userService.bypassEmail) {
       const sendEmailResponseJson = sendEmailResponse._getJSONData();
       expect(sendEmailResponseJson).to.haveOwnProperty("token");
-
-      const newUserResponse = httpMocks.createResponse();
-      await userService.handleNewPcdPassUser(
-        sendEmailResponseJson.token,
-        testEmail,
-        commitment,
-        newUserResponse
-      );
-
-      const newUserResponseJson = newUserResponse._getJSONData();
-      expect(newUserResponseJson).to.haveOwnProperty("uuid");
-      expect(newUserResponseJson).to.haveOwnProperty("commitment");
-      expect(newUserResponseJson).to.haveOwnProperty("participant_email");
-      expect(newUserResponseJson.commitment).to.eq(commitment);
-      expect(newUserResponseJson.participant_email).to.eq(testEmail);
+      token = sendEmailResponseJson.token;
+    } else {
+      token = (await emailTokenService.getTokenForEmail(testEmail)) as string;
+      expect(token).to.not.eq(null);
     }
+
+    const newUserResponse = httpMocks.createResponse();
+    await userService.handleNewPcdPassUser(
+      token,
+      testEmail,
+      commitment,
+      newUserResponse
+    );
+
+    const newUserResponseJson = newUserResponse._getJSONData();
+    expect(newUserResponseJson).to.haveOwnProperty("uuid");
+    expect(newUserResponseJson).to.haveOwnProperty("commitment");
+    expect(newUserResponseJson).to.haveOwnProperty("participant_email");
+    expect(newUserResponseJson.commitment).to.eq(commitment);
+    expect(newUserResponseJson.participant_email).to.eq(testEmail);
   });
 });
