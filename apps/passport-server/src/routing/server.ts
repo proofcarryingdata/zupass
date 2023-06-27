@@ -2,7 +2,7 @@ import cors from "cors";
 import express, { NextFunction } from "express";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, GlobalServices } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeroutes";
@@ -15,7 +15,8 @@ import { initStatusRoutes } from "./routes/statusRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 
 export async function startServer(
-  context: ApplicationContext
+  context: ApplicationContext,
+  globalServices: GlobalServices
 ): Promise<express.Application> {
   return new Promise<express.Application>((resolve, reject) => {
     const port = IS_PROD ? process.env.PORT : 3002;
@@ -26,7 +27,7 @@ export async function startServer(
     app.use(cors());
     app.use(tracingMiddleware());
 
-    initAllRoutes(app, context);
+    initAllRoutes(app, context, globalServices);
 
     app.use(
       cors({
@@ -70,13 +71,17 @@ export async function startServer(
   });
 }
 
-function initAllRoutes(app: express.Application, context: ApplicationContext) {
-  initStatusRoutes(app, context);
+function initAllRoutes(
+  app: express.Application,
+  context: ApplicationContext,
+  globalServices: GlobalServices
+) {
+  initStatusRoutes(app, context, globalServices);
   initHealthcheckRoutes(app, context);
-  initSemaphoreRoutes(app, context);
+  initSemaphoreRoutes(app, context, globalServices);
   initE2EERoutes(app, context);
-  initZuzaluRoutes(app, context);
-  initPCDPassRoutes(app, context);
+  initZuzaluRoutes(app, context, globalServices);
+  initPCDPassRoutes(app, context, globalServices);
   initPCDRoutes(app, context);
   initStaticRoutes(app, context);
   initPCDRoutes(app, context);

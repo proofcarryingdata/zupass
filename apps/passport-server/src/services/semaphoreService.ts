@@ -17,15 +17,23 @@ import { fetchPassportParticipants } from "../database/queries/pretix_users/fetc
 import { ApplicationContext } from "../types";
 import { traced } from "./telemetryService";
 
-// Semaphore service maintains the Zuzalu participant semaphore groups.
+/**
+ * This service maintains semaphore groups for all the categories of users
+ * that PCDPass is aware of.
+ */
 export class SemaphoreService {
-  // Groups by ID
-  groups = SemaphoreService.createGroups();
-  dbPool: Pool | ClientBase | undefined;
-  isZuzalu = false;
-  loaded = false;
+  private groups: NamedGroup[];
+  private dbPool: Pool | ClientBase;
+  private isZuzalu: boolean;
+  private loaded = false;
 
-  static createGroups(): NamedGroup[] {
+  public constructor(config: ApplicationContext) {
+    this.dbPool = config.dbPool;
+    this.isZuzalu = config.isZuzalu;
+    this.groups = SemaphoreService.createGroups();
+  }
+
+  private static createGroups(): NamedGroup[] {
     return [
       { name: "Zuzalu Participants", group: new Group("1", 16) },
       { name: "Zuzalu Residents", group: new Group("2", 16) },
@@ -35,29 +43,26 @@ export class SemaphoreService {
     ];
   }
 
-  init(dbPool: Pool | ClientBase, isZuzalu: boolean) {
-    this.dbPool = dbPool;
-    this.isZuzalu = isZuzalu;
-  }
+  public groupParticipants = () => this.getNamedGroup("1");
+  public groupResidents = () => this.getNamedGroup("2");
+  public groupVisitors = () => this.getNamedGroup("3");
+  public groupOrganizers = () => this.getNamedGroup("4");
+  public groupGeneric = () => this.getNamedGroup("5");
 
-  groupParticipants = () => this.getNamedGroup("1");
-  groupResidents = () => this.getNamedGroup("2");
-  groupVisitors = () => this.getNamedGroup("3");
-  groupOrganizers = () => this.getNamedGroup("4");
-  groupGeneric = () => this.getNamedGroup("5");
-
-  getNamedGroup(id: string): NamedGroup {
+  public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
     if (!ret) throw new Error("Missing group " + id);
     return ret;
   }
 
   // Zuzalu participants by UUID
-  zuzaluParticipants = {} as Record<string, PassportParticipant>;
-  genericParticipants = {} as Record<string, CommitmentRow>;
+  private zuzaluParticipants = {} as Record<string, PassportParticipant>;
+  private genericParticipants = {} as Record<string, CommitmentRow>;
 
   // Get a participant by UUID, or null if not found.
-  getParticipant(uuid: string): PassportParticipant | CommitmentRow | null {
+  public getParticipant(
+    uuid: string
+  ): PassportParticipant | CommitmentRow | null {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -72,12 +77,8 @@ export class SemaphoreService {
   }
 
   // Load participants from DB, rebuild semaphore groups
-  async reload() {
+  public async reload() {
     return traced("Semaphore", "reload", async (span) => {
-      if (!this.dbPool) {
-        throw new Error("no database connection");
-      }
-
       console.log(`[SEMA] Reloading semaphore service...`);
       const ps = await fetchPassportParticipants(this.dbPool);
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
@@ -91,10 +92,6 @@ export class SemaphoreService {
   }
 
   private async reloadGenericGroup() {
-    if (!this.dbPool) {
-      throw new Error("no database connection");
-    }
-
     const allCommitments = await fetchAllCommitments(this.dbPool);
     const namedGroup = this.getNamedGroup("5");
     const newGroup = new Group(
@@ -152,10 +149,6 @@ export class SemaphoreService {
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
-    if (!this.dbPool) {
-      throw new Error("no database connection");
-    }
-
     return getGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
@@ -163,20 +156,11 @@ export class SemaphoreService {
     groupId: string,
     rootHash: string
   ): Promise<boolean> {
-    if (!this.dbPool) {
-      throw new Error("no database connection");
-    }
-
     const group = await getGroupByRoot(this.dbPool, groupId, rootHash);
-
     return group !== undefined;
   }
 
   public async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
-    if (!this.dbPool) {
-      throw new Error("no database connection");
-    }
-
     return getLatestSemaphoreGroups(this.dbPool);
   }
 
@@ -250,19 +234,18 @@ export class SemaphoreService {
   }
 }
 
-export const semaphoreService = new SemaphoreService();
-
-export function startSemaphoreService({
-  dbPool,
-  isZuzalu,
-}: ApplicationContext) {
-  semaphoreService.init(dbPool, isZuzalu);
+export function startSemaphoreService(
+  context: ApplicationContext
+): SemaphoreService {
+  const semaphoreService = new SemaphoreService(context);
   semaphoreService.reload();
 
   // Reload every minute
   setInterval(() => {
     semaphoreService.reload();
   }, 60 * 1000);
+
+  return semaphoreService;
 }
 
 export interface NamedGroup {

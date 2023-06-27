@@ -4,8 +4,7 @@ import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
-import { semaphoreService } from "../../services/semaphoreService";
-import { ApplicationContext } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 import { sendPCDPassEmail } from "../../util/email";
 import {
   decodeString,
@@ -15,7 +14,8 @@ import {
 
 export function initPCDPassRoutes(
   app: express.Application,
-  context: ApplicationContext
+  context: ApplicationContext,
+  { semaphoreService }: GlobalServices
 ) {
   console.log("[INIT] Initializing PCDPass routes");
 

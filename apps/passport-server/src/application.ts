@@ -24,6 +24,6 @@ export async function startApplication() {
 
   startMetrics(context);
   startPretixSync(context);
-  startSemaphoreService(context);
-  startServer(context);
+  const semaphoreService = startSemaphoreService(context);
+  startServer(context, { semaphoreService });
 }

@@ -1,11 +1,11 @@
 import express, { Request, Response } from "express";
 import { fetchStatus } from "../../database/queries/fetchStatus";
-import { semaphoreService } from "../../services/semaphoreService";
-import { ApplicationContext } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 
 export function initStatusRoutes(
   app: express.Application,
-  context: ApplicationContext
+  context: ApplicationContext,
+  { semaphoreService }: GlobalServices
 ) {
   console.log("[INIT] Initializing status routes");
   const { dbPool } = context;

@@ -6,8 +6,7 @@ import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetc
 import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
-import { semaphoreService } from "../../services/semaphoreService";
-import { ApplicationContext } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 import { sendPretixEmail } from "../../util/email";
 import {
   decodeString,
@@ -18,7 +17,8 @@ import {
 // API for Passport setup, Zuzalu IDs
 export function initZuzaluRoutes(
   app: express.Application,
-  context: ApplicationContext
+  context: ApplicationContext,
+  { semaphoreService }: GlobalServices
 ): void {
   console.log("[INIT] Initializing zuzalu routes");
   const { dbPool } = context;

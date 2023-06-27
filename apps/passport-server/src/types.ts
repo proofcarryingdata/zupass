@@ -1,6 +1,7 @@
 import Libhoney from "libhoney";
 import { Pool } from "pg";
 import Rollbar from "rollbar";
+import { SemaphoreService } from "./services/semaphoreService";
 
 export interface ApplicationContext {
   dbPool: Pool;
@@ -9,4 +10,8 @@ export interface ApplicationContext {
   // whether this is the version of the application purpose-built for zuzalu,
   // or the generic version
   isZuzalu: boolean;
+}
+
+export interface GlobalServices {
+  semaphoreService: SemaphoreService;
 }

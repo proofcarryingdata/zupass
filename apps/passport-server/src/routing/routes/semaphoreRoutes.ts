@@ -1,12 +1,13 @@
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
-import { semaphoreService } from "../../services/semaphoreService";
-import { ApplicationContext } from "../../types";
+
+import { ApplicationContext, GlobalServices } from "../../types";
 import { decodeString } from "../../util/util";
 
 export function initSemaphoreRoutes(
   app: express.Application,
-  context: ApplicationContext
+  context: ApplicationContext,
+  { semaphoreService }: GlobalServices
 ) {
   app.get(
     "/semaphore/valid-historic/:id/:root",
