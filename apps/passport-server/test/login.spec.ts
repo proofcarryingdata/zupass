@@ -1,10 +1,14 @@
 import { ZuParticipant } from "@pcd/passport-interface";
-import { expect } from "chai";
+import chai from "chai";
+import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { startApplication } from "../src/application";
 import { PCDPass } from "../src/types";
-import { login } from "./login";
+import { login } from "./user/login";
+import { sync } from "./user/sync";
+
+chai.use(spies);
 
 describe("user functionality", function () {
   let application: PCDPass;
@@ -20,6 +24,6 @@ describe("user functionality", function () {
   });
 
   step("user should be able to sync end to end encryption", async function () {
-    expect(user).to.not.eq(null);
+    await sync(application, user);
   });
 });
