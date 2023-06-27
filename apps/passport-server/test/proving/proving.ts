@@ -1,19 +1,30 @@
 import { ProveRequest } from "@pcd/passport-interface";
 import chai from "chai";
 import chaiHttp from "chai-http";
+import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
 
 chai.use(chaiHttp);
 
-export async function sendProveRequest(application: PCDPass): Promise<void> {
-  const { expressContext: expressServer } = application;
+export async function sendProveRequest(
+  application: PCDPass,
+  proveRequest: ProveRequest,
+  handler: (r: Response) => Promise<void>
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const { expressContext } = application;
 
-  const proveRequest: ProveRequest = { args: {}, pcdType: "" };
-
-  (await chai.request(expressServer).post("/pcds/prove").send(proveRequest)).on(
-    "end",
-    (err, res) => {
-      console.log(err, res);
-    }
-  );
+    chai
+      .request(expressContext.app)
+      .post("/pcds/prove")
+      .send(proveRequest)
+      .then(async (r) => {
+        try {
+          await handler(r);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+  });
 }

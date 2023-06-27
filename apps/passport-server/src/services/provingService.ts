@@ -107,10 +107,10 @@ export class ProvingService {
    * proofs in the queue waiting to start.
    */
   async serverProve(proveRequest: ProveRequest): Promise<void> {
-    const pcdPackage = this.getPackage(proveRequest.pcdType);
     const currentHash = hashProveRequest(proveRequest);
 
     try {
+      const pcdPackage = this.getPackage(proveRequest.pcdType);
       const pcd = await pcdPackage.prove(proveRequest.args);
       const serializedPCD = await pcdPackage.serialize(pcd);
 
