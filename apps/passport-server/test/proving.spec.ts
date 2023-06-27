@@ -1,5 +1,6 @@
 import {
   PendingPCD,
+  PendingPCDStatus,
   ProveRequest,
   StatusRequest,
   StatusResponse,
@@ -10,7 +11,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { startApplication, stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
-import { sendProveRequest, sendStatusRequest } from "./proving/proving";
+import { sendProveRequest, waitForSettledStatus } from "./proving/proving";
 
 chai.use(spies);
 
@@ -50,7 +51,7 @@ describe.only("semaphore service", function () {
       hash: proveResponse.body.hash,
     };
 
-    const statusResponse = await sendStatusRequest(
+    const settledStatusResponse = await waitForSettledStatus(
       application,
       statusRequest,
       async (r) => {
@@ -60,5 +61,7 @@ describe.only("semaphore service", function () {
         console.log(response);
       }
     );
+
+    expect(settledStatusResponse.body.status).to.eq(PendingPCDStatus.ERROR);
   });
 });

@@ -32,3 +32,11 @@ export enum PendingPCDStatus {
   ERROR = "error",
   NONE = "none",
 }
+
+export function isSettledPendingPCDStatus(status: PendingPCDStatus) {
+  return [
+    PendingPCDStatus.ERROR,
+    PendingPCDStatus.COMPLETE,
+    PendingPCDStatus.NONE,
+  ].includes(status);
+}
