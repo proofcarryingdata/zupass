@@ -7,6 +7,7 @@ import { initProvingService as startProvingService } from "./services/provingSer
 import { getRollbar } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
+import { startUserService } from "./services/userService";
 import { ApplicationContext } from "./types";
 
 export async function startApplication() {
@@ -22,9 +23,13 @@ export async function startApplication() {
   };
 
   await startTelemetryService(context);
+
   startProvingService();
   startMetricsService(context);
   startPretixSyncService(context);
+
   const semaphoreService = startSemaphoreService(context);
-  startServer(context, { semaphoreService });
+  const userService = startUserService(context, semaphoreService);
+
+  startServer(context, { semaphoreService, userService });
 }

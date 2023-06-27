@@ -2,6 +2,7 @@ import Libhoney from "libhoney";
 import { Pool } from "pg";
 import Rollbar from "rollbar";
 import { SemaphoreService } from "./services/semaphoreService";
+import { UserService } from "./services/userService";
 
 export interface ApplicationContext {
   dbPool: Pool;
@@ -14,4 +15,5 @@ export interface ApplicationContext {
 
 export interface GlobalServices {
   semaphoreService: SemaphoreService;
+  userService: UserService;
 }

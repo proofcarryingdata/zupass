@@ -1,27 +1,16 @@
-import { ZuParticipant } from "@pcd/passport-interface";
-import express, { NextFunction, Request, Response } from "express";
-import { PoolClient } from "pg";
-import { ParticipantRole } from "../../database/models";
-import { fetchPretixParticipant } from "../../database/queries/pretix_users/fetchPretixParticipant";
-import { insertPretixParticipant } from "../../database/queries/pretix_users/insertParticipant";
-import { insertCommitment } from "../../database/queries/saveCommitment";
-import { insertEmailToken } from "../../database/queries/setEmailToken";
+import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
-import { sendPretixEmail } from "../../util/email";
-import {
-  decodeString,
-  generateEmailToken,
-  normalizeEmail,
-} from "../../util/util";
+import { decodeString, normalizeEmail } from "../../util/util";
 
-// API for Passport setup, Zuzalu IDs
+/**
+ * These routes are used by the passport client to login a new Zuzalu user.
+ */
 export function initZuzaluRoutes(
   app: express.Application,
-  context: ApplicationContext,
-  { semaphoreService }: GlobalServices
+  _context: ApplicationContext,
+  { userService }: GlobalServices
 ): void {
   console.log("[INIT] Initializing zuzalu routes");
-  const { dbPool } = context;
 
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
@@ -29,127 +18,21 @@ export function initZuzaluRoutes(
     const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
-
-    console.log(
-      `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
-    );
-
-    const token = generateEmailToken();
-
-    // Save the token. This lets the user prove access to their email later.
-    const devBypassEmail =
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production";
-    if (devBypassEmail) {
-      await insertPretixParticipant(dbPool, {
-        email: email,
-        name: "Test User",
-        order_id: "",
-        residence: "atlantis",
-        role: ParticipantRole.Resident,
-        visitor_date_ranges: undefined,
-      });
-    }
-
-    await insertEmailToken(dbPool, { email, token });
-    const participant = await fetchPretixParticipant(dbPool, { email });
-
-    if (participant == null) {
-      throw new Error(`${email} doesn't have a ticket.`);
-    } else if (
-      participant.commitment != null &&
-      participant.commitment !== commitment &&
-      !force
-    ) {
-      throw new Error(`${email} already registered.`);
-    }
-    const stat = participant.commitment == null ? "NEW" : "EXISTING";
-    console.log(
-      `Saved login token for ${stat} email=${email} commitment=${commitment}`
-    );
-
-    // Send an email with the login token.
-    if (devBypassEmail) {
-      console.log("[DEV] Bypassing email, returning token");
-      res.json({ token });
-    } else {
-      const { name } = participant;
-      console.log(
-        `[ZUID] Sending token=${token} to email=${email} name=${name}`
-      );
-      await sendPretixEmail(context, email, name, token);
-      res.sendStatus(200);
-    }
+    await userService.handleSendZuzaluEmail(email, commitment, force, res);
   });
 
   // Check the token (sent to user's email), add a new participant.
-  app.get(
-    "/zuzalu/new-participant",
-    async (req: Request, res: Response, next: NextFunction) => {
-      let dbClient = undefined as PoolClient | undefined;
-      try {
-        const token = decodeString(req.query.token, "token");
-        const email = normalizeEmail(decodeString(req.query.email, "email"));
-        const commitment = decodeString(req.query.commitment, "commitment");
-        console.log(
-          `[ZUID] new-participant ${JSON.stringify({
-            token,
-            email,
-            commitment,
-          })}`
-        );
+  app.get("/zuzalu/new-participant", async (req: Request, res: Response) => {
+    const token = decodeString(req.query.token, "token");
+    const email = normalizeEmail(decodeString(req.query.email, "email"));
+    const commitment = decodeString(req.query.commitment, "commitment");
 
-        // Look up participant record from Pretix
-        dbClient = await dbPool.connect();
-        const pretix = await fetchPretixParticipant(dbClient, { email });
-        if (pretix == null) {
-          throw new Error(`Ticket for ${email} not found`);
-        } else if (pretix.token !== token) {
-          throw new Error(
-            `Wrong token. If you got more than one email, use the latest one.`
-          );
-        } else if (pretix.email !== email) {
-          throw new Error(`Email mismatch.`);
-        }
-
-        // Save commitment to DB.
-        console.log(`[ZUID] Saving new commitment: ${commitment}`);
-        const uuid = await insertCommitment(dbClient, {
-          email,
-          commitment,
-        });
-
-        // Reload Merkle trees
-        await semaphoreService.reload();
-        const participant = semaphoreService.getParticipant(uuid);
-        if (participant == null) {
-          throw new Error(`${uuid} not found`);
-        } else if (participant.commitment !== commitment) {
-          throw new Error(`Commitment mismatch`);
-        }
-
-        // Return participant, including UUID, back to Passport
-        const zuParticipant = participant as ZuParticipant;
-        const jsonP = JSON.stringify(zuParticipant);
-        console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
-
-        res.json(zuParticipant);
-      } catch (e: any) {
-        e.message = "Can't add Zuzalu Passport: " + e.message;
-        next(e);
-      } finally {
-        if (dbClient != null) dbClient.release();
-      }
-    }
-  );
+    userService.handleNewZuzaluParticipant(token, email, commitment, res);
+  });
 
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
     const uuid = req.params.uuid;
-    console.log(`[ZUID] Fetching participant ${uuid}`);
-    const participant = semaphoreService.getParticipant(uuid);
-    if (!participant) res.status(404);
-    res.json(participant || null);
+    userService.handleGetZuzaluParticipant(uuid, res);
   });
 }
