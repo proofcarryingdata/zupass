@@ -5,7 +5,7 @@ import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
-import { initE2EERoutes } from "./routes/e2eeroutes";
+import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
 import { initPCDRoutes } from "./routes/pcdRoutes";

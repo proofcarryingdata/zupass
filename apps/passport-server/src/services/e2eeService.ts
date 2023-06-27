@@ -3,12 +3,13 @@ import {
   LoadE2EEResponse,
   SaveE2EERequest,
 } from "@pcd/passport-interface";
-import { NextFunction, Response } from "express";
+import { Response } from "express";
 import {
   fetchEncryptedStorage,
   insertEncryptedStorage,
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
+import { getRollbar } from "./rollbarService";
 
 export class E2EEService {
   private context: ApplicationContext;
@@ -17,11 +18,7 @@ export class E2EEService {
     this.context = context;
   }
 
-  public async handleLoad(
-    request: LoadE2EERequest,
-    res: Response,
-    next: NextFunction
-  ) {
+  public async handleLoad(request: LoadE2EERequest, res: Response) {
     console.log(`[E2EE] Loading ${request.blobKey}`);
 
     try {
@@ -43,15 +40,12 @@ export class E2EEService {
       res.json(result);
     } catch (e) {
       console.log(e);
-      next(e);
+      getRollbar()?.error(e as Error);
+      res.status(500);
     }
   }
 
-  public async handleSave(
-    request: SaveE2EERequest,
-    res: Response,
-    next: NextFunction
-  ) {
+  public async handleSave(request: SaveE2EERequest, res: Response) {
     console.log(`[E2EE] Saving ${request.blobKey}`);
 
     try {
@@ -63,7 +57,8 @@ export class E2EEService {
 
       res.sendStatus(200);
     } catch (e) {
-      next(e);
+      res.status(500);
+      getRollbar()?.error(e as Error);
     }
   }
 }

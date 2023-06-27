@@ -9,7 +9,7 @@ import {
   SaveE2EERequest,
   ZuParticipant,
 } from "@pcd/passport-interface";
-import { default as chai, expect } from "chai";
+import { expect } from "chai";
 import "chai-spies";
 import "mocha";
 import httpMocks from "node-mocks-http";
@@ -29,9 +29,7 @@ export async function sync(
   };
 
   const firstLoadResponse = httpMocks.createResponse();
-  const loadNextFunc = chai.spy.returns(true);
-  await e2eeService.handleLoad(loadRequest, firstLoadResponse, loadNextFunc);
-  expect(loadNextFunc).to.not.have.been.called();
+  await e2eeService.handleLoad(loadRequest, firstLoadResponse);
   expect(firstLoadResponse.statusCode).to.eq(404);
 
   const plaintextData = {
@@ -48,18 +46,12 @@ export async function sync(
     encryptedBlob: JSON.stringify(encryptedData),
   };
 
-  const saveNextFunc = chai.spy.returns(true);
   const saveResponse = httpMocks.createResponse();
-  await e2eeService.handleSave(saveRequest, saveResponse, saveNextFunc);
+  await e2eeService.handleSave(saveRequest, saveResponse);
   expect(saveResponse.statusCode).to.eq(200);
 
   const secondLoadResponse = httpMocks.createResponse();
-  const secondLoadNextFunc = chai.spy.returns(true);
-  await e2eeService.handleLoad(
-    loadRequest,
-    secondLoadResponse,
-    secondLoadNextFunc
-  );
+  await e2eeService.handleLoad(loadRequest, secondLoadResponse);
   const loadResponseJson =
     secondLoadResponse._getJSONData() as LoadE2EEResponse;
   expect(loadResponseJson).to.haveOwnProperty("encryptedStorage");
