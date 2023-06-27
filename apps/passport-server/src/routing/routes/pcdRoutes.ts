@@ -9,7 +9,6 @@ import {
   enqueueProofRequest,
   getPendingPCDStatus,
   getSupportedPCDTypes,
-  initPackages,
 } from "../../services/provingService";
 import { ApplicationContext } from "../../types";
 
@@ -17,8 +16,6 @@ export function initPCDRoutes(
   app: express.Application,
   _context: ApplicationContext
 ): void {
-  initPackages();
-
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {

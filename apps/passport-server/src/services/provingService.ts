@@ -34,10 +34,10 @@ const packages: PCDPackage[] = [
   SemaphoreGroupPCDPackage,
   SemaphoreSignaturePCDPackage,
   JubJubSignaturePCDPackage,
-  RLNPCDPackage
+  RLNPCDPackage,
 ];
 
-export async function initPackages() {
+export async function initProvingService() {
   const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
 
   await SemaphoreGroupPCDPackage.init!({

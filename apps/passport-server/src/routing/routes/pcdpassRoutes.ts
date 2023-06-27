@@ -18,12 +18,11 @@ export function initPCDPassRoutes(
   { semaphoreService }: GlobalServices
 ) {
   console.log("[INIT] Initializing PCDPass routes");
+  const { dbPool } = context;
 
   app.get("/pcdpass/", (req: Request, res: Response) => {
     res.send("ok");
   });
-
-  const { dbPool } = context;
 
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
