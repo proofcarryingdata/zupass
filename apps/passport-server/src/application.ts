@@ -11,10 +11,10 @@ import { getRollbar } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
-import { ApplicationContext } from "./types";
+import { ApplicationContext, PCDPass } from "./types";
 import { IS_PROD } from "./util/isProd";
 
-export async function startApplication() {
+export async function startApplication(): Promise<PCDPass> {
   const dotEnvPath = IS_PROD
     ? `/etc/secrets/.env`
     : path.join(process.cwd(), ".env");

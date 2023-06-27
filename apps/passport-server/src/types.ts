@@ -19,3 +19,8 @@ export interface GlobalServices {
   userService: UserService;
   e2eeService: E2EEService;
 }
+
+export interface PCDPass {
+  context: ApplicationContext;
+  globalServices: GlobalServices;
+}

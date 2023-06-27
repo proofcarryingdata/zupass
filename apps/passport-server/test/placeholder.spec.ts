@@ -1,8 +1,14 @@
-import assert from "assert";
+import "mocha";
+import { startApplication } from "../src/application";
+import { PCDPass } from "../src/types";
 
-describe("this is a placeholder test", async function () {
-  it("should pass", async function () {
-    assert.equal(1, 1);
-    assert.notEqual(1, 2);
+describe("this is a placeholder test", function () {
+  let application: PCDPass;
+
+  this.beforeAll(async () => {
+    console.log("starting application");
+    application = await startApplication();
   });
+
+  it("should pass", async function () {});
 });
