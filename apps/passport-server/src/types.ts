@@ -37,3 +37,21 @@ export interface PCDPass {
 export interface APIs {
   emailClient: EmailClient | null;
 }
+
+export interface EnvironmentVariables {
+  IS_ZUZALU?: string;
+  MAILGIN_API_KEY?: string;
+  DATABASE_USERNAME?: string;
+  DATABASE_PASSWORD?: string;
+  DATABASE_HOST?: string;
+  DATABASE_DB_NAME?: string;
+  DATABASE_SSL?: string;
+  BYPASS_EMAIL_REGISTRATION?: string;
+  NODE_ENV?: string;
+  HONEYCOMB_API_KEY?: string;
+  PRETIX_TOKEN?: string;
+  PRETIX_ORG_URL?: string;
+  PRETIX_ZU_EVENT_ID?: string;
+  PRETIX_VISITOR_EVENT_ID?: string;
+  ROLLBAR_TOKEN?: string;
+}

@@ -14,10 +14,17 @@ import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
-import { APIs, ApplicationContext, GlobalServices, PCDPass } from "./types";
+import {
+  APIs,
+  ApplicationContext,
+  EnvironmentVariables,
+  GlobalServices,
+  PCDPass,
+} from "./types";
 import { IS_PROD } from "./util/isProd";
 
 export async function startApplication(
+  envOverrides?: Partial<EnvironmentVariables>,
   apiOverrides?: Partial<APIs>
 ): Promise<PCDPass> {
   const dotEnvPath = IS_PROD
@@ -29,6 +36,8 @@ export async function startApplication(
   console.log("[INIT] Starting application");
 
   const apis = Object.assign(await defaultAPIs(), apiOverrides ?? {});
+  Object.assign(process.env, envOverrides ?? {});
+
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
 
