@@ -135,7 +135,7 @@ export class EmailService {
         this.client.send(msg);
       } catch (e: any) {
         console.log(e);
-        this, this.rollbarService?.error(e);
+        this.rollbarService?.error(e);
         throw new Error(`Sendgrid error, failed to email ${to}`);
       }
     });
