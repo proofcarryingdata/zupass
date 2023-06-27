@@ -10,7 +10,7 @@ import { sync } from "./user/sync";
 
 chai.use(spies);
 
-describe("user functionality", function () {
+describe("logging in and syncing", function () {
   let application: PCDPass;
   let user: ZuParticipant;
 

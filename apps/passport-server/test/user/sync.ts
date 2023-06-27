@@ -1,6 +1,11 @@
-import { passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
+import {
+  passportDecrypt,
+  passportEncrypt,
+  PCDCrypto,
+} from "@pcd/passport-crypto";
 import {
   LoadE2EERequest,
+  LoadE2EEResponse,
   SaveE2EERequest,
   ZuParticipant,
 } from "@pcd/passport-interface";
@@ -29,11 +34,12 @@ export async function sync(
   expect(loadNextFunc).to.not.have.been.called();
   expect(firstLoadResponse.statusCode).to.eq(404);
 
-  const dataToSync = {
+  const plaintextData = {
     test: "test",
+    one: 1,
   };
   const encryptedData = await passportEncrypt(
-    JSON.stringify(dataToSync),
+    JSON.stringify(plaintextData),
     syncKey
   );
 
@@ -46,4 +52,20 @@ export async function sync(
   const saveResponse = httpMocks.createResponse();
   await e2eeService.handleSave(saveRequest, saveResponse, saveNextFunc);
   expect(saveResponse.statusCode).to.eq(200);
+
+  const secondLoadResponse = httpMocks.createResponse();
+  const secondLoadNextFunc = chai.spy.returns(true);
+  await e2eeService.handleLoad(
+    loadRequest,
+    secondLoadResponse,
+    secondLoadNextFunc
+  );
+  const loadResponseJson =
+    secondLoadResponse._getJSONData() as LoadE2EEResponse;
+  expect(loadResponseJson).to.haveOwnProperty("encryptedStorage");
+  const decrypted = await passportDecrypt(
+    loadResponseJson.encryptedStorage,
+    syncKey
+  );
+  expect(decrypted).to.deep.eq(plaintextData);
 }
