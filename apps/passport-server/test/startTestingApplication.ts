@@ -5,7 +5,7 @@ export async function startTestingApp(): Promise<PCDPass> {
   const application = await startApplication(
     {
       IS_ZUZALU: "false",
-      MAILGIN_API_KEY: undefined,
+      MAILGUN_API_KEY: undefined,
       DATABASE_USERNAME: "admin",
       DATABASE_PASSWORD: "password",
       DATABASE_HOST: "localhost",

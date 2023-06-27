@@ -35,8 +35,9 @@ export async function startApplication(
   dotenv.config({ path: dotEnvPath });
   console.log("[INIT] Starting application");
 
+  overrideEnvironment(envOverrides);
+
   const apis = Object.assign(await defaultAPIs(), apiOverrides ?? {});
-  Object.assign(process.env, envOverrides ?? {});
 
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
@@ -92,6 +93,16 @@ export async function stopApplication(app?: PCDPass) {
   app.expressContext.server.close();
   app.globalServices.provingService.stop();
   app.globalServices.semaphoreService.stop();
+}
+
+function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
+  for (const entry of Object.entries(envOverrides ?? {})) {
+    process.env[entry[0]] = entry[1];
+    console.log("overriding", entry[0], entry[1]);
+    if (entry[1] === undefined) {
+      delete process.env[entry[0]];
+    }
+  }
 }
 
 async function defaultAPIs(): Promise<APIs> {

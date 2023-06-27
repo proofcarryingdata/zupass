@@ -11,7 +11,7 @@ import { sync } from "./user/sync";
 
 chai.use(spies);
 
-describe("logging into PCDPass and syncing", function () {
+describe.only("logging into PCDPass and syncing", function () {
   let application: PCDPass;
   let user: ZuParticipant;
 

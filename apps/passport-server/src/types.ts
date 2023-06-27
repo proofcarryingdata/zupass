@@ -40,7 +40,7 @@ export interface APIs {
 
 export interface EnvironmentVariables {
   IS_ZUZALU?: string;
-  MAILGIN_API_KEY?: string;
+  MAILGUN_API_KEY?: string;
   DATABASE_USERNAME?: string;
   DATABASE_PASSWORD?: string;
   DATABASE_HOST?: string;
