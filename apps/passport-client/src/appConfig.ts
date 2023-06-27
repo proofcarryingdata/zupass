@@ -1,4 +1,4 @@
-interface Config {
+interface AppConfig {
   // Development mode lets you bypass email auth, etc.
   devMode: boolean;
   // The URL of the Passport server.
@@ -10,11 +10,11 @@ interface Config {
   isZuzalu: boolean;
 }
 
-export const config: Config = {
+export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   passportServer: process.env.PASSPORT_SERVER_URL,
   maxProofAge: 1000 * 60 * 60 * 4,
   isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
 };
 
-console.log("Config: " + JSON.stringify(config));
+console.log("App Config: " + JSON.stringify(appConfig));

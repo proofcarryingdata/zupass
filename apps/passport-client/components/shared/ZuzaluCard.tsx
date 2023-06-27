@@ -6,7 +6,7 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { config } from "../../src/config";
+import { appConfig } from "../../src/appConfig";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/participant";
@@ -120,7 +120,7 @@ function highlight(role: string) {
  * We regenerate before the proof expires to allow for a few minutes of
  * clock skew between prover and verifier.
  */
-const regenerateAfterMs = (config.maxProofAge * 2) / 3;
+const regenerateAfterMs = (appConfig.maxProofAge * 2) / 3;
 
 interface QRPayload {
   timestamp: number;
@@ -134,7 +134,7 @@ function ZuzaluQR() {
 
   const [qrPayload, setQRPayload] = useState<QRPayload>(() => {
     const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
-    if (timestamp != null && Date.now() - timestamp < config.maxProofAge) {
+    if (timestamp != null && Date.now() - timestamp < appConfig.maxProofAge) {
       console.log(`[QR] from localStorage, timestamp ${timestamp}`);
       return { timestamp, qrPCD };
     }
@@ -164,7 +164,7 @@ function ZuzaluQR() {
   // Load or generate QR code on mount, then regenerate periodically
   useEffect(() => {
     maybeGenerateQR();
-    const interval = setInterval(maybeGenerateQR, config.maxProofAge / 10);
+    const interval = setInterval(maybeGenerateQR, appConfig.maxProofAge / 10);
     return () => clearInterval(interval);
   }, [maybeGenerateQR]);
 

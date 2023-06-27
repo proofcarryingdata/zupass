@@ -1,8 +1,8 @@
 import { Identity } from "@semaphore-protocol/identity";
-import { config } from "../config";
+import { appConfig } from "../appConfig";
 
 export async function requestUser(uuid: string): Promise<Response> {
-  const url = `${config.passportServer}/zuzalu/participant/${uuid}`;
+  const url = `${appConfig.passportServer}/zuzalu/participant/${uuid}`;
   const response = await fetch(url);
   return response;
 }
@@ -12,7 +12,7 @@ export async function requestConfirmationEmail(
   identity: Identity,
   force: boolean
 ): Promise<Response> {
-  if (config.isZuzalu) {
+  if (appConfig.isZuzalu) {
     return requestZuzaluConfirmationEmail(email, identity, force);
   }
 
@@ -24,7 +24,7 @@ export async function submitNewUser(
   token: string,
   identity: Identity
 ): Promise<Response> {
-  if (config.isZuzalu) {
+  if (appConfig.isZuzalu) {
     return submitNewZuzaluUser(email, token, identity);
   }
 
@@ -41,7 +41,7 @@ export async function requestZuzaluConfirmationEmail(
     commitment: identity.commitment.toString(),
     force: force ? "true" : "false",
   }).toString();
-  const url = `${config.passportServer}/zuzalu/send-login-email?${params}`;
+  const url = `${appConfig.passportServer}/zuzalu/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
   return res;
 }
@@ -58,7 +58,7 @@ export async function submitNewZuzaluUser(
     token,
     commitment: identity.commitment.toString(),
   }).toString();
-  const loginUrl = `${config.passportServer}/zuzalu/new-participant?${query}`;
+  const loginUrl = `${appConfig.passportServer}/zuzalu/new-participant?${query}`;
 
   const res = await fetch(loginUrl);
   if (!res.ok) throw new Error(await res.text());
@@ -75,7 +75,7 @@ export async function requestGenericConfirmationEmail(
     commitment: identity.commitment.toString(),
     force: force ? "true" : "false",
   }).toString();
-  const url = `${config.passportServer}/pcdpass/send-login-email?${params}`;
+  const url = `${appConfig.passportServer}/pcdpass/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
   return res;
 }
@@ -92,7 +92,7 @@ export async function submitNewGenericUser(
     token,
     commitment: identity.commitment.toString(),
   }).toString();
-  const loginUrl = `${config.passportServer}/pcdpass/new-participant?${query}`;
+  const loginUrl = `${appConfig.passportServer}/pcdpass/new-participant?${query}`;
 
   const res = await fetch(loginUrl);
   if (!res.ok) throw new Error(await res.text());

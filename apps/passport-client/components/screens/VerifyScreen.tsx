@@ -5,7 +5,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { config } from "../../src/config";
+import { appConfig } from "../../src/appConfig";
 import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/participant";
@@ -151,7 +151,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   ) as ZuzaluQRPayload;
 
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const participant = await fetchParticipant(config.passportServer, uuid);
+  const participant = await fetchParticipant(appConfig.passportServer, uuid);
 
   if (participant == null) {
     return {
@@ -171,7 +171,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   const timeDifferenceMs = Date.now() - payload.timestamp;
 
-  if (timeDifferenceMs >= config.maxProofAge) {
+  if (timeDifferenceMs >= appConfig.maxProofAge) {
     return {
       valid: false,
       type: "identity-proof",
