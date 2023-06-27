@@ -1,8 +1,6 @@
 import {
-  PendingPCD,
   PendingPCDStatus,
   ProveRequest,
-  StatusRequest,
   StatusResponse,
 } from "@pcd/passport-interface";
 import chai, { expect } from "chai";
@@ -11,7 +9,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { startApplication, stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
-import { sendProveRequest, waitForSettledStatus } from "./proving/proving";
+import { submitAndWaitForPendingPCD } from "./proving/proving";
 
 chai.use(spies);
 
@@ -35,33 +33,9 @@ describe.only("semaphore service", function () {
       pcdType: "",
     };
 
-    const proveResponse = await sendProveRequest(
-      application,
-      proveRequest,
-      async (r) => {
-        const response = r.body as PendingPCD;
-        expect(response).to.haveOwnProperty("pcdType");
-        expect(response).to.haveOwnProperty("hash");
-        expect(response).to.haveOwnProperty("status");
-        expect(r.statusCode).to.eq(200);
-      }
-    );
-
-    const statusRequest: StatusRequest = {
-      hash: proveResponse.body.hash,
-    };
-
-    const settledStatusResponse = await waitForSettledStatus(
-      application,
-      statusRequest,
-      async (r) => {
-        const response = r.body as StatusResponse;
-        expect(response).to.haveOwnProperty("status");
-
-        console.log(response);
-      }
-    );
-
-    expect(settledStatusResponse.body.status).to.eq(PendingPCDStatus.ERROR);
+    await submitAndWaitForPendingPCD(application, proveRequest, async (r) => {
+      const settledStatusResponse = r.body as StatusResponse;
+      expect(settledStatusResponse.status).to.eq(PendingPCDStatus.ERROR);
+    });
   });
 });

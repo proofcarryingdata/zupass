@@ -1,10 +1,11 @@
 import {
   isSettledPendingPCDStatus,
+  PendingPCD,
   ProveRequest,
   StatusRequest,
   StatusResponse,
 } from "@pcd/passport-interface";
-import chai from "chai";
+import chai, { expect } from "chai";
 import chaiHttp from "chai-http";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
@@ -72,4 +73,35 @@ export async function waitForSettledStatus(
 
   await (handler && handler(response));
   return response;
+}
+
+export async function submitAndWaitForPendingPCD(
+  application: PCDPass,
+  proveRequest: ProveRequest,
+  settledResponseHandler: (status: Response) => Promise<void>
+): Promise<void> {
+  const proveResponse = await sendProveRequest(
+    application,
+    proveRequest,
+    async (r) => {
+      const response = r.body as PendingPCD;
+      expect(response).to.haveOwnProperty("pcdType");
+      expect(response).to.haveOwnProperty("hash");
+      expect(response).to.haveOwnProperty("status");
+      expect(r.statusCode).to.eq(200);
+    }
+  );
+
+  const statusRequest: StatusRequest = {
+    hash: proveResponse.body.hash,
+  };
+
+  const settledStatusResponse = await waitForSettledStatus(
+    application,
+    statusRequest
+  );
+
+  const settledResponseBody = settledStatusResponse.body as StatusResponse;
+  expect(settledResponseBody).to.haveOwnProperty("status");
+  await settledResponseHandler(settledStatusResponse);
 }
