@@ -68,9 +68,26 @@ describe.only("semaphore service", function () {
         pcdType: SemaphoreSignaturePCDPackage.name,
       };
 
+      const expectedResult = await SemaphoreSignaturePCDPackage.prove(
+        proveRequest.args
+      );
+      expect(await SemaphoreSignaturePCDPackage.verify(expectedResult)).to.eq(
+        true
+      );
+
       await submitAndWaitForPendingPCD(application, proveRequest, async (r) => {
         const settledStatusResponse = r.body as StatusResponse;
         expect(settledStatusResponse.status).to.eq(PendingPCDStatus.COMPLETE);
+        expect(settledStatusResponse).to.haveOwnProperty("serializedPCD");
+
+        const parsedPCD = await SemaphoreSignaturePCDPackage.deserialize(
+          JSON.parse(settledStatusResponse.serializedPCD!).pcd
+        );
+
+        expect(parsedPCD.claim).to.deep.eq(expectedResult.claim);
+        expect(await SemaphoreSignaturePCDPackage.verify(parsedPCD)).to.eq(
+          true
+        );
       });
     }
   );
