@@ -6,15 +6,7 @@ import { startPretixSync } from "./services/pretixSyncService";
 import { getRollbar } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry } from "./services/telemetryService";
-import { ServiceInitializer } from "./services/types";
 import { ApplicationContext } from "./types";
-
-const services: ServiceInitializer[] = [
-  startMetrics,
-  startServer,
-  startPretixSync,
-  startSemaphoreService,
-];
 
 export async function startApplication() {
   const dbPool = await getDB();
@@ -30,8 +22,8 @@ export async function startApplication() {
 
   await startTelemetry(context);
 
-  // Run all services concurrently.
-  for (const service of services) {
-    service(context);
-  }
+  startMetrics(context);
+  startPretixSync(context);
+  startSemaphoreService(context);
+  startServer(context);
 }

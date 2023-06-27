@@ -13,19 +13,6 @@ import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
-import { RouteInitializer } from "./types";
-
-const routes: RouteInitializer[] = [
-  initStatusRoutes,
-  initHealthcheckRoutes,
-  initSemaphoreRoutes,
-  initE2EERoutes,
-  initZuzaluRoutes,
-  initPCDPassRoutes,
-  initPCDRoutes,
-  initStaticRoutes,
-  initPCDRoutes,
-];
 
 export async function startServer(
   context: ApplicationContext
@@ -39,7 +26,7 @@ export async function startServer(
     app.use(cors());
     app.use(tracingMiddleware());
 
-    routes.forEach((r) => r(app, context));
+    initAllRoutes(app, context);
 
     app.use(
       cors({
@@ -81,4 +68,16 @@ export async function startServer(
 
     return app;
   });
+}
+
+function initAllRoutes(app: express.Application, context: ApplicationContext) {
+  initStatusRoutes(app, context);
+  initHealthcheckRoutes(app, context);
+  initSemaphoreRoutes(app, context);
+  initE2EERoutes(app, context);
+  initZuzaluRoutes(app, context);
+  initPCDPassRoutes(app, context);
+  initPCDRoutes(app, context);
+  initStaticRoutes(app, context);
+  initPCDRoutes(app, context);
 }
