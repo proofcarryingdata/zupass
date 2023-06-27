@@ -1,9 +1,10 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
+import { ArgsOf, PCDPackage } from "@pcd/pcd-types";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 
-export interface ProveRequest {
+export interface ProveRequest<T extends PCDPackage = PCDPackage> {
   pcdType: string;
-  args: any;
+  args: ArgsOf<T>;
 }
 
 export interface ProveResponse {
