@@ -1,12 +1,14 @@
 import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import { Response } from "express";
 import next from "next";
+import { fetchCommitment } from "../database/queries/fetchCommitment";
+import { fetchEmailToken } from "../database/queries/fetchEmailToken";
 import { fetchPretixParticipant } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
-import { sendPretixEmail } from "../util/email";
+import { sendPCDPassEmail, sendPretixEmail } from "../util/email";
 import { generateEmailToken } from "../util/util";
 import { SemaphoreService } from "./semaphoreService";
 
@@ -141,6 +143,98 @@ export class UserService {
 
   public async handleGetZuzaluParticipant(uuid: string, res: Response) {
     console.log(`[ZUID] Fetching participant ${uuid}`);
+    const participant = this.semaphoreService.getParticipant(uuid);
+    if (!participant) res.status(404);
+    res.json(participant || null);
+  }
+
+  public async handleSendPcdPassEmail(
+    email: string,
+    commitment: string,
+    force: boolean,
+    res: Response
+  ) {
+    console.log(
+      `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
+    );
+
+    const devBypassEmail =
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production";
+
+    const token = generateEmailToken();
+    // Save the token. This lets the user prove access to their email later.
+    await insertEmailToken(this.context.dbPool, { email, token });
+    const existingCommitment = await fetchCommitment(
+      this.context.dbPool,
+      email
+    );
+
+    if (existingCommitment != null && !force) {
+      throw new Error(`${email} already registered.`);
+    }
+
+    console.log(
+      `Saved login token for ${
+        existingCommitment === null ? "NEW" : "EXISTING"
+      } email=${email} commitment=${commitment}`
+    );
+
+    // Send an email with the login token.
+    if (devBypassEmail) {
+      console.log("[DEV] Bypassing email, returning token");
+      res.json({ token });
+    } else {
+      console.log(`[ZUID] Sending token=${token} to email=${email}`);
+      await sendPCDPassEmail(this.context, email, token);
+      res.sendStatus(200);
+    }
+  }
+
+  public async handleNewPcdPassUser(
+    token: string,
+    email: string,
+    commitment: string,
+    res: Response
+  ) {
+    console.log(
+      `[ZUID] new-participant ${JSON.stringify({
+        token,
+        email,
+        commitment,
+      })}`
+    );
+
+    try {
+      const savedToken = await fetchEmailToken(this.context.dbPool, email);
+      if (savedToken !== token) {
+        throw new Error(
+          `Wrong token. If you got more than one email, use the latest one.`
+        );
+      }
+
+      // Save commitment to DB.
+      console.log(`[ZUID] Saving new commitment: ${commitment}`);
+      await insertCommitment(this.context.dbPool, { email, commitment });
+
+      // Reload Merkle trees
+      await this.semaphoreService.reload();
+
+      // Return participant, including UUID, back to Passport
+      const zuParticipant = await fetchCommitment(this.context.dbPool, email);
+      const jsonP = JSON.stringify(zuParticipant);
+      console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
+
+      res.json(zuParticipant);
+    } catch (e: any) {
+      e.message = "Can't add Zuzalu Passport: " + e.message;
+      next(e);
+    }
+  }
+
+  public async handleGetPcdPassUser(uuid: string, res: Response) {
+    console.log(`[ZUID] Fetching participant ${uuid}`);
+    res.setHeader("Access-Control-Allow-Origin", "*");
     const participant = this.semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
     res.json(participant || null);
