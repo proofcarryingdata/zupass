@@ -37,10 +37,14 @@ export class EmailService {
     token: string
   ): Promise<{ text: string; html: string }> {
     const textTemplate = (
-      await readFile(path.join(this.context.resourcesDir, "/zuzalu/email.txt"))
+      await readFile(
+        path.join(this.context.resourcesDir, "email/zuzalu/email.txt")
+      )
     ).toString();
     const htmlTemplate = (
-      await readFile(path.join(this.context.resourcesDir, "/zuzalu/email.html"))
+      await readFile(
+        path.join(this.context.resourcesDir, "email/zuzalu/email.html")
+      )
     ).toString();
 
     const text = textTemplate
@@ -61,11 +65,13 @@ export class EmailService {
     token: string
   ): Promise<{ text: string; html: string }> {
     const textTemplate = (
-      await readFile(path.join(this.context.resourcesDir, "/pcdpass/email.txt"))
+      await readFile(
+        path.join(this.context.resourcesDir, "email/pcdpass/email.txt")
+      )
     ).toString();
     const htmlTemplate = (
       await readFile(
-        path.join(this.context.resourcesDir, "/pcdpass/email.html")
+        path.join(this.context.resourcesDir, "email/pcdpass/email.html")
       )
     ).toString();
 

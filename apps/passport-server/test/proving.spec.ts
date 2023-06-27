@@ -11,9 +11,10 @@ import chai, { expect } from "chai";
 import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
-import { startApplication, stopApplication } from "../src/application";
+import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
+import { startTestingApp } from "./startTestingApplication";
 
 chai.use(spies);
 
@@ -24,7 +25,7 @@ describe("semaphore service", function () {
 
   this.beforeAll(async () => {
     console.log("starting application");
-    application = await startApplication();
+    application = await startTestingApp();
   });
 
   this.afterAll(async () => {

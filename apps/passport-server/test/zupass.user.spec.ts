@@ -3,20 +3,21 @@ import chai from "chai";
 import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
-import { startApplication, stopApplication } from "../src/application";
+import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
+import { startTestingApp } from "./startTestingApplication";
 import { loginZupass } from "./user/loginZupass";
 import { sync } from "./user/sync";
 
 chai.use(spies);
 
-describe.only("logging into Zupass and syncing", function () {
+describe("logging into Zupass and syncing", function () {
   let application: PCDPass;
   let user: ZuParticipant;
 
   this.beforeAll(async () => {
     console.log("starting application");
-    application = await startApplication();
+    application = await startTestingApp();
   });
 
   this.afterAll(async () => {
