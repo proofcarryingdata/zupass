@@ -10,7 +10,7 @@ import {
   getPendingPCDStatus,
   getSupportedPCDTypes,
   initPackages,
-} from "../../services/proving";
+} from "../../services/provingService";
 import { ApplicationContext } from "../../types";
 
 export function initPCDRoutes(

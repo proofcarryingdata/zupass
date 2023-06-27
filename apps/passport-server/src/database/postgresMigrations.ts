@@ -1,7 +1,7 @@
 import * as path from "path";
 import { PoolClient } from "pg";
 import { migrate } from "postgres-migrations";
-import { traced } from "../services/telemetry";
+import { traced } from "../services/telemetryService";
 
 const MIGRATIONS_PATH = path.join(process.cwd(), "migrations");
 

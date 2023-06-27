@@ -1,6 +1,6 @@
 import { readFile } from "fs/promises";
 import request from "request";
-import { traced } from "../../services/telemetry";
+import { traced } from "../../services/telemetryService";
 import { ApplicationContext } from "../../types";
 
 function getMailingClient() {

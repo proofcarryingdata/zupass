@@ -1,4 +1,4 @@
-import { traced } from "../services/telemetry";
+import { traced } from "../services/telemetryService";
 import { requireEnv } from "../util/util";
 
 const TRACE_SERVICE = "Fetch";

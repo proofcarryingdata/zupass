@@ -19,7 +19,7 @@ import {
   participantsToMap,
   participantUpdatedFromPretix,
 } from "../util/participant";
-import { traced } from "./telemetry";
+import { traced } from "./telemetryService";
 
 const TRACE_SERVICE = "Pretix";
 

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { traced } from "../../services/telemetry";
+import { traced } from "../../services/telemetryService";
 
 /**
  * Express middleware that traces all HTTP requests to HoneyComb. This

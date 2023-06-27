@@ -1,6 +1,6 @@
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
-import { semaphoreService } from "../../services/semaphore";
+import { semaphoreService } from "../../services/semaphoreService";
 import { ApplicationContext } from "../../types";
 import { decodeString } from "../../util/util";
 

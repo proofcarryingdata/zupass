@@ -1,11 +1,11 @@
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
-import { startMetrics } from "./services/metrics";
-import { startPretixSync } from "./services/pretixSync";
-import { getRollbar } from "./services/rollbar";
-import { startSemaphoreService } from "./services/semaphore";
-import { startTelemetry } from "./services/telemetry";
+import { startMetrics } from "./services/metricsService";
+import { startPretixSync } from "./services/pretixSyncService";
+import { getRollbar } from "./services/rollbarService";
+import { startSemaphoreService } from "./services/semaphoreService";
+import { startTelemetry } from "./services/telemetryService";
 import { ServiceInitializer } from "./services/types";
 import { ApplicationContext } from "./types";
 

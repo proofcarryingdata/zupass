@@ -15,7 +15,7 @@ import {
 } from "../database/queries/historicSemaphore";
 import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { ApplicationContext } from "../types";
-import { traced } from "./telemetry";
+import { traced } from "./telemetryService";
 
 // Semaphore service maintains the Zuzalu participant semaphore groups.
 export class SemaphoreService {

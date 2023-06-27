@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { traced } from "../services/telemetry";
+import { traced } from "../services/telemetryService";
 
 /**
  * This function executes a sql query against the database, and traces

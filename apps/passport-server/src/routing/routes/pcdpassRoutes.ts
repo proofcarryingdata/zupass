@@ -4,7 +4,7 @@ import { fetchCommitment } from "../../database/queries/fetchCommitment";
 import { fetchEmailToken } from "../../database/queries/fetchEmailToken";
 import { saveCommitment } from "../../database/queries/saveCommitment";
 import { setEmailToken } from "../../database/queries/setEmailToken";
-import { semaphoreService } from "../../services/semaphore";
+import { semaphoreService } from "../../services/semaphoreService";
 import { ApplicationContext } from "../../types";
 import { sendPCDPassEmail } from "../../util/email";
 import {

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { fetchStatus } from "../../database/queries/fetchStatus";
-import { semaphoreService } from "../../services/semaphore";
+import { semaphoreService } from "../../services/semaphoreService";
 import { ApplicationContext } from "../../types";
 
 export function initStatusRoutes(
