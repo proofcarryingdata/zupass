@@ -8,6 +8,7 @@
  */
 const impermanentCache = [
   "/",
+  "/favicon.ico",
   "/index.html",
   "/global-pcdpass.css",
   "/global-zupass.css",
@@ -29,7 +30,6 @@ self.addEventListener("install", (event: any) => {
   event.waitUntil(
     addResourcesToCache([
       ...impermanentCache,
-      "/favicon.ico",
       "/semaphore-artifacts/16.wasm",
       "/semaphore-artifacts/16.zkey",
       "/fonts/IBMPlexSans-Regular.ttf",

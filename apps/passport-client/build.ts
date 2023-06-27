@@ -9,6 +9,8 @@ import { v4 as uuid } from "uuid";
 
 dotenv.config();
 
+const IS_ZUZALU = process.env.IS_ZUZALU === "true";
+
 const define = {
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(
     process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
@@ -72,6 +74,7 @@ run(process.argv[2])
 
 async function run(command: string) {
   compileHtml();
+  compileFavicon();
 
   switch (command) {
     case "build":
@@ -116,12 +119,24 @@ function compileHtml() {
     .toString();
   const template = Handlebars.compile(indexHtmlTemplateSource);
 
-  const isZuzalu = process.env.IS_ZUZALU === "true";
-
   const html = template({
-    title: isZuzalu ? "Zuzalu Passport" : "PCDPass",
-    cssPath: isZuzalu ? "/global-zupass.css" : "/global-pcdpass.css",
+    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDPass",
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
   });
 
   fs.writeFileSync(path.join("public", "index.html"), html);
+}
+
+function compileFavicon() {
+  if (IS_ZUZALU) {
+    fs.copyFileSync(
+      path.join("public", "favicon-zupass.ico"),
+      path.join("public", "favicon.ico")
+    );
+  } else {
+    fs.copyFileSync(
+      path.join("public", "favicon-pcdpass.ico"),
+      path.join("public", "favicon.ico")
+    );
+  }
 }
