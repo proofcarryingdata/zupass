@@ -61,7 +61,7 @@ export class E2EEService {
         request.encryptedBlob
       );
 
-      res.send("ok");
+      res.sendStatus(200);
     } catch (e) {
       next(e);
     }
