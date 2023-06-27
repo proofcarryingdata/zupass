@@ -55,5 +55,14 @@ describe("login", function () {
     expect(newUserResponseJson).to.haveOwnProperty("participant_email");
     expect(newUserResponseJson.commitment).to.eq(commitment);
     expect(newUserResponseJson.participant_email).to.eq(testEmail);
+
+    const getUserResponse = httpMocks.createResponse();
+    await userService.handleGetPcdPassUser(
+      newUserResponseJson.uuid,
+      getUserResponse
+    );
+    const getUserResponseJson = getUserResponse._getJSONData();
+
+    expect(getUserResponseJson).to.deep.eq(newUserResponseJson);
   });
 });
