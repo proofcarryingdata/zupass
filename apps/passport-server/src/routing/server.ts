@@ -8,7 +8,7 @@ import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
-import { initPCDRoutes } from "./routes/pcdRoutes";
+import { initPCDRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
