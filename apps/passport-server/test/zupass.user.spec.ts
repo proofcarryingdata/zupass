@@ -1,5 +1,5 @@
 import { ZuParticipant } from "@pcd/passport-interface";
-import chai from "chai";
+import chai, { expect } from "chai";
 import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
@@ -29,6 +29,11 @@ describe("logging into Zupass and syncing", function () {
 
   step("should be able to log in", async function () {
     user = await loginZupass(application);
+    if (apis?.emailClient) {
+      expect(apis.emailClient.send).to.be.called();
+    } else {
+      throw new Error("expected email client to have been mocked");
+    }
   });
 
   step("user should be able to sync end to end encryption", async function () {
