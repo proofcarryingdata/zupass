@@ -12,6 +12,7 @@ export interface ApplicationContext {
   // whether this is the version of the application purpose-built for zuzalu,
   // or the generic version
   isZuzalu: boolean;
+  resourcesDir: string;
 }
 
 export interface GlobalServices {

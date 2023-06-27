@@ -4,6 +4,7 @@ import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startE2EEService } from "./services/e2eeService";
+import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startMetrics as startMetricsService } from "./services/metricsService";
 import { startPretixSyncService } from "./services/pretixSyncService";
@@ -31,6 +32,7 @@ export async function startApplication(): Promise<PCDPass> {
     dbPool,
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
+    resourcesDir: path.join(process.cwd(), "resources"),
   };
 
   await startTelemetryService(context);
@@ -40,12 +42,14 @@ export async function startApplication(): Promise<PCDPass> {
   startMetricsService(context);
   startPretixSyncService(context, rollbarService);
 
+  const emailService = startEmailService(context, rollbarService);
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
   const userService = startUserService(
     context,
     semaphoreService,
     emailTokenService,
+    emailService,
     rollbarService
   );
   const e2eeService = startE2EEService(context, rollbarService);

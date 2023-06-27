@@ -7,7 +7,7 @@ import { insertPretixParticipant } from "../database/queries/pretix_users/insert
 import { insertCommitment } from "../database/queries/saveCommitment";
 import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
-import { sendPCDPassEmail, sendPretixEmail } from "../util/email";
+import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
@@ -16,6 +16,7 @@ export class UserService {
   private context: ApplicationContext;
   private semaphoreService: SemaphoreService;
   private emailTokenService: EmailTokenService;
+  private emailService: EmailService;
   private rollbarService: RollbarService;
   private _bypassEmail: boolean;
 
@@ -27,11 +28,13 @@ export class UserService {
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
+    emailService: EmailService,
     rollbarService: RollbarService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
+    this.emailService = emailService;
     this.rollbarService = rollbarService;
     this._bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
@@ -90,7 +93,7 @@ export class UserService {
       console.log(
         `[ZUID] Sending token=${token} to email=${email} name=${name}`
       );
-      await sendPretixEmail(this.context, email, name, token);
+      await this.emailService.sendPretixEmail(email, name, token);
 
       response.sendStatus(200);
     }
@@ -198,7 +201,7 @@ export class UserService {
       res.json({ token });
     } else {
       console.log(`[ZUID] Sending token=${token} to email=${email}`);
-      await sendPCDPassEmail(this.context, email, token);
+      await this.emailService.sendPCDPassEmail(email, token);
       res.sendStatus(200);
     }
   }
@@ -256,12 +259,14 @@ export function startUserService(
   context: ApplicationContext,
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
+  emailService: EmailService,
   rollbarService: RollbarService
 ): UserService {
   const userService = new UserService(
     context,
     semaphoreService,
     emailTokenService,
+    emailService,
     rollbarService
   );
   return userService;
