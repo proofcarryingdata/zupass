@@ -69,6 +69,10 @@ export async function startApplication(): Promise<PCDPass> {
   return { context, globalServices, expressContext: expressServer };
 }
 
-export function stopApplication(app: PCDPass) {
+export async function stopApplication(app?: PCDPass) {
+  if (!app) return;
+
   app.expressContext.server.close();
+  app.globalServices.provingService.stop();
+  app.globalServices.semaphoreService.stop();
 }

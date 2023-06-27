@@ -22,6 +22,7 @@ import { traced } from "./telemetryService";
  * that PCDPass is aware of.
  */
 export class SemaphoreService {
+  private interval: NodeJS.Timer | undefined;
   private groups: NamedGroup[];
   private dbPool: Pool | ClientBase;
   private isZuzalu: boolean;
@@ -74,6 +75,19 @@ export class SemaphoreService {
     }
 
     return this.genericParticipants[uuid] || null;
+  }
+
+  public start() {
+    // Reload every minute
+    this.interval = setInterval(() => {
+      this.reload();
+    }, 60 * 1000);
+  }
+
+  public stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
   }
 
   // Load participants from DB, rebuild semaphore groups
@@ -238,13 +252,8 @@ export function startSemaphoreService(
   context: ApplicationContext
 ): SemaphoreService {
   const semaphoreService = new SemaphoreService(context);
+  semaphoreService.start();
   semaphoreService.reload();
-
-  // Reload every minute
-  setInterval(() => {
-    semaphoreService.reload();
-  }, 60 * 1000);
-
   return semaphoreService;
 }
 

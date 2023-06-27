@@ -39,7 +39,11 @@ export class ProvingService {
     RLNPCDPackage,
   ];
 
-  getPackage(name: string) {
+  public async stop() {
+    this.queue = [];
+  }
+
+  private getPackage(name: string) {
     const matching = this.packages.find((p) => p.name === name);
 
     if (matching === undefined) {
