@@ -4,7 +4,7 @@ import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
-import { PCDPass } from "../src/types";
+import { APIs, PCDPass } from "../src/types";
 import { startTestingApp } from "./startTestingApplication";
 import { loginZupass } from "./user/loginZupass";
 import { sync } from "./user/sync";
@@ -13,11 +13,14 @@ chai.use(spies);
 
 describe("logging into Zupass and syncing", function () {
   let application: PCDPass;
+  let apis: Partial<APIs> | undefined;
   let user: ZuParticipant;
 
   this.beforeAll(async () => {
     console.log("starting application");
-    application = await startTestingApp();
+    const env = await startTestingApp();
+    application = env.application;
+    apis = env.apis;
   });
 
   this.afterAll(async () => {

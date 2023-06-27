@@ -1,7 +1,18 @@
+import chai from "chai";
+import spies from "chai-spies";
 import { startApplication } from "../src/application";
-import { PCDPass } from "../src/types";
+import { APIs, PCDPass } from "../src/types";
 
-export async function startTestingApp(): Promise<PCDPass> {
+chai.use(spies);
+
+export interface TestingApplication {
+  application: PCDPass;
+  apis?: Partial<APIs>;
+}
+
+export async function startTestingApp(): Promise<TestingApplication> {
+  const emailClient = { send: chai.spy.returns(Promise.resolve()) };
+
   const application = await startApplication(
     {
       IS_ZUZALU: "false",
@@ -16,8 +27,10 @@ export async function startTestingApp(): Promise<PCDPass> {
       HONEYCOMB_API_KEY: undefined,
       ROLLBAR_TOKEN: undefined,
     },
-    {}
+    {
+      emailClient,
+    }
   );
 
-  return application;
+  return { application, apis: { emailClient } };
 }
