@@ -17,7 +17,7 @@ import { submitAndWaitForPendingPCD } from "./proving/proving";
 
 chai.use(spies);
 
-describe.only("semaphore service", function () {
+describe("semaphore service", function () {
   this.timeout(0);
 
   let application: PCDPass;
