@@ -6,7 +6,7 @@ import { decodeString } from "../../util/util";
 
 export function initSemaphoreRoutes(
   app: express.Application,
-  context: ApplicationContext,
+  _context: ApplicationContext,
   { semaphoreService }: GlobalServices
 ) {
   app.get(

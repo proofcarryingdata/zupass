@@ -20,7 +20,7 @@ export function initPCDPassRoutes(
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
 
-    userService.handleSendPcdPassEmail(email, commitment, force, res);
+    await userService.handleSendPcdPassEmail(email, commitment, force, res);
   });
 
   // Check the token (sent to user's email), add a new participant.
@@ -29,13 +29,13 @@ export function initPCDPassRoutes(
     const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
 
-    userService.handleNewPcdPassUser(token, email, commitment, res);
+    await userService.handleNewPcdPassUser(token, email, commitment, res);
   });
 
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     const uuid = req.params.uuid;
 
-    userService.handleGetPcdPassUser(uuid, res);
+    await userService.handleGetPcdPassUser(uuid, res);
   });
 }

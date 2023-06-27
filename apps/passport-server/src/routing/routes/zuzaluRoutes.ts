@@ -28,12 +28,13 @@ export function initZuzaluRoutes(
     const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
 
-    userService.handleNewZuzaluParticipant(token, email, commitment, res);
+    await userService.handleNewZuzaluParticipant(token, email, commitment, res);
   });
 
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     const uuid = req.params.uuid;
-    userService.handleGetZuzaluParticipant(uuid, res);
+
+    await userService.handleGetZuzaluParticipant(uuid, res);
   });
 }

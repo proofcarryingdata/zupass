@@ -79,7 +79,7 @@ function initAllRoutes(
   initStatusRoutes(app, context, globalServices);
   initHealthcheckRoutes(app, context);
   initSemaphoreRoutes(app, context, globalServices);
-  initE2EERoutes(app, context);
+  initE2EERoutes(app, context, globalServices);
   initZuzaluRoutes(app, context, globalServices);
   initPCDPassRoutes(app, context, globalServices);
   initPCDRoutes(app, context);

@@ -1,6 +1,7 @@
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
+import { startE2EEService } from "./services/e2eeService";
 import { startMetrics as startMetricsService } from "./services/metricsService";
 import { startPretixSync as startPretixSyncService } from "./services/pretixSyncService";
 import { initProvingService as startProvingService } from "./services/provingService";
@@ -30,6 +31,7 @@ export async function startApplication() {
 
   const semaphoreService = startSemaphoreService(context);
   const userService = startUserService(context, semaphoreService);
+  const e2eeService = startE2EEService(context);
 
-  startServer(context, { semaphoreService, userService });
+  startServer(context, { semaphoreService, userService, e2eeService });
 }
