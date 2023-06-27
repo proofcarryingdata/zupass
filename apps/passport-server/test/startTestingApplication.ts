@@ -4,7 +4,7 @@ import { PCDPass } from "../src/types";
 export async function startTestingApp(): Promise<PCDPass> {
   const application = await startApplication(
     {
-      IS_ZUZALU: "true",
+      IS_ZUZALU: "false",
       MAILGIN_API_KEY: undefined,
       DATABASE_USERNAME: "admin",
       DATABASE_PASSWORD: "password",
