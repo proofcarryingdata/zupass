@@ -10,7 +10,7 @@ export function initPCDPassRoutes(
   console.log("[INIT] Initializing PCDPass routes");
 
   app.get("/pcdpass/", (req: Request, res: Response) => {
-    res.send("ok");
+    res.sendStatus(200);
   });
 
   // Check that email is on the list. Send email with the login code, allowing
@@ -35,6 +35,7 @@ export function initPCDPassRoutes(
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     const uuid = req.params.uuid;
+
     userService.handleGetPcdPassUser(uuid, res);
   });
 }

@@ -18,6 +18,7 @@ export function initZuzaluRoutes(
     const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
+
     await userService.handleSendZuzaluEmail(email, commitment, force, res);
   });
 
