@@ -1,3 +1,5 @@
+import { Application } from "express";
+import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
 import { E2EEService } from "./services/e2eeService";
@@ -28,4 +30,5 @@ export interface GlobalServices {
 export interface PCDPass {
   context: ApplicationContext;
   globalServices: GlobalServices;
+  expressContext: { app: Application; server: http.Server };
 }

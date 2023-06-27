@@ -64,7 +64,11 @@ export async function startApplication(): Promise<PCDPass> {
     provingService,
   };
 
-  startServer(context, globalServices);
+  const expressServer = await startServer(context, globalServices);
 
-  return { context, globalServices };
+  return { context, globalServices, expressContext: expressServer };
+}
+
+export function stopApplication(app: PCDPass) {
+  app.expressContext.server.close();
 }

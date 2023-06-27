@@ -1,3 +1,5 @@
+import { Application } from "express";
+import * as http from "http";
 import { ApplicationContext } from "../types";
 
 export interface Metric {
@@ -14,4 +16,9 @@ export enum ResponseType {
   HTML = "HTML",
   JSON = "JSON",
   TEXT = "TEXT",
+}
+
+export interface ExpressContext {
+  app: Application;
+  server: http.Server;
 }

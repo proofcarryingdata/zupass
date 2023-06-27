@@ -19,6 +19,8 @@ describe("logging in and syncing", function () {
     application = await startApplication();
   });
 
+  this.afterAll(async () => {});
+
   step("should be able to log in", async function () {
     user = await login(application);
   });

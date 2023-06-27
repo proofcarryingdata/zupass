@@ -1,5 +1,6 @@
 import cors from "cors";
-import express, { NextFunction } from "express";
+import express, { Application, NextFunction } from "express";
+import * as http from "http";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices } from "../types";
@@ -17,58 +18,58 @@ import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 export async function startServer(
   context: ApplicationContext,
   globalServices: GlobalServices
-): Promise<express.Application> {
-  return new Promise<express.Application>((resolve, reject) => {
-    const port = IS_PROD ? process.env.PORT : 3002;
-    const app = express();
+): Promise<{ app: Application; server: http.Server }> {
+  return new Promise<{ app: Application; server: http.Server }>(
+    (resolve, reject) => {
+      const port = IS_PROD ? process.env.PORT : 3002;
+      const app = express();
 
-    app.use(morgan("tiny"));
-    app.use(express.json());
-    app.use(cors());
-    app.use(tracingMiddleware());
+      app.use(morgan("tiny"));
+      app.use(express.json());
+      app.use(cors());
+      app.use(tracingMiddleware());
 
-    initAllRoutes(app, context, globalServices);
+      initAllRoutes(app, context, globalServices);
 
-    app.use(
-      cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-      })
-    );
+      app.use(
+        cors({
+          origin: "*",
+          methods: ["GET", "POST", "PUT", "DELETE"],
+        })
+      );
 
-    app.use(
-      (
-        err: Error,
-        req: express.Request,
-        res: express.Response,
-        _next: NextFunction
-      ) => {
-        console.error(`[ERROR] ${req.method} ${req.url}`);
-        console.error(err.stack);
-        res.status(500).send(err.message);
+      app.use(
+        (
+          err: Error,
+          req: express.Request,
+          res: express.Response,
+          _next: NextFunction
+        ) => {
+          console.error(`[ERROR] ${req.method} ${req.url}`);
+          console.error(err.stack);
+          res.status(500).send(err.message);
+        }
+      );
+
+      if (globalServices.rollbarService) {
+        app.use(globalServices.rollbarService.errorHandler);
       }
-    );
 
-    if (globalServices.rollbarService) {
-      app.use(globalServices.rollbarService.errorHandler);
-    }
-
-    app.use((_req, res, _next) => {
-      res.status(404).send("Not a valid API route, refer to documentation.");
-    });
-
-    app
-      .listen(port, () => {
-        console.log(`[INIT] HTTP server listening on port ${port}`);
-        sendEvent(context, EventName.SERVER_START);
-        resolve(app);
-      })
-      .on("error", (e: Error) => {
-        reject(e);
+      app.use((_req, res, _next) => {
+        res.status(404).send("Not a valid API route, refer to documentation.");
       });
 
-    return app;
-  });
+      const server = app.listen(port, () => {
+        console.log(`[INIT] HTTP server listening on port ${port}`);
+        sendEvent(context, EventName.SERVER_START);
+        resolve({ server, app });
+      });
+
+      server.on("error", (e: Error) => {
+        reject(e);
+      });
+    }
+  );
 }
 
 function initAllRoutes(
