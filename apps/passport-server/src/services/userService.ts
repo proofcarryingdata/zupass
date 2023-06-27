@@ -9,12 +9,14 @@ import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
 import { sendPCDPassEmail, sendPretixEmail } from "../util/email";
 import { EmailTokenService } from "./emailTokenService";
+import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 
 export class UserService {
   private context: ApplicationContext;
   private semaphoreService: SemaphoreService;
   private emailTokenService: EmailTokenService;
+  private rollbarService: RollbarService;
   private _bypassEmail: boolean;
 
   public get bypassEmail() {
@@ -24,11 +26,13 @@ export class UserService {
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
-    emailTokenService: EmailTokenService
+    emailTokenService: EmailTokenService,
+    rollbarService: RollbarService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
+    this.rollbarService = rollbarService;
     this._bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -251,12 +255,14 @@ export class UserService {
 export function startUserService(
   context: ApplicationContext,
   semaphoreService: SemaphoreService,
-  emailTokenService: EmailTokenService
+  emailTokenService: EmailTokenService,
+  rollbarService: RollbarService
 ): UserService {
   const userService = new UserService(
     context,
     semaphoreService,
-    emailTokenService
+    emailTokenService,
+    rollbarService
   );
   return userService;
 }

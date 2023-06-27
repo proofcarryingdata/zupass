@@ -1,7 +1,9 @@
 import Rollbar from "rollbar";
 import { requireEnv } from "../util/util";
 
-export function getRollbar(): Rollbar | null {
+export type RollbarService = Rollbar | null;
+
+export function startRollbarService(): RollbarService {
   let rollbarToken: string;
 
   try {

@@ -9,13 +9,18 @@ import {
   insertEncryptedStorage,
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
-import { getRollbar } from "./rollbarService";
+import { RollbarService } from "./rollbarService";
 
 export class E2EEService {
   private context: ApplicationContext;
+  private rollbarService: RollbarService;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    rollbarService: RollbarService
+  ) {
     this.context = context;
+    this.rollbarService = rollbarService;
   }
 
   public async handleLoad(request: LoadE2EERequest, res: Response) {
@@ -40,7 +45,7 @@ export class E2EEService {
       res.json(result);
     } catch (e) {
       console.log(e);
-      getRollbar()?.error(e as Error);
+      this.rollbarService?.error(e as Error);
       res.status(500);
     }
   }
@@ -58,12 +63,15 @@ export class E2EEService {
       res.sendStatus(200);
     } catch (e) {
       res.status(500);
-      getRollbar()?.error(e as Error);
+      this.rollbarService?.error(e as Error);
     }
   }
 }
 
-export function startE2EEService(context: ApplicationContext) {
-  const e2eeService = new E2EEService(context);
+export function startE2EEService(
+  context: ApplicationContext,
+  rollbarService: RollbarService
+) {
+  const e2eeService = new E2EEService(context, rollbarService);
   return e2eeService;
 }

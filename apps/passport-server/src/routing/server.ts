@@ -49,8 +49,8 @@ export async function startServer(
       }
     );
 
-    if (context.rollbar) {
-      app.use(context.rollbar.errorHandler);
+    if (globalServices.rollbarService) {
+      app.use(globalServices.rollbarService.errorHandler);
     }
 
     app.use((_req, res, _next) => {

@@ -19,6 +19,7 @@ import {
   participantsToMap,
   participantUpdatedFromPretix,
 } from "../util/participant";
+import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 const TRACE_SERVICE = "Pretix";
@@ -26,7 +27,10 @@ const TRACE_SERVICE = "Pretix";
 /**
  * Kick off a period sync from Preticx into Zupass.
  */
-export function startPretixSync(context: ApplicationContext) {
+export function startPretixSyncService(
+  context: ApplicationContext,
+  rollbarService: RollbarService
+) {
   const pretixConfig = getPretixConfig();
   if (pretixConfig == null) return;
   console.log("[PRETIX] Starting Pretix sync: " + JSON.stringify(pretixConfig));
@@ -35,7 +39,7 @@ export function startPretixSync(context: ApplicationContext) {
     try {
       await sync(context, config);
     } catch (e: any) {
-      context.rollbar?.error(e);
+      rollbarService?.error(e);
       console.error(e);
     }
     setTimeout(() => trySync(config), 1000 * 60);

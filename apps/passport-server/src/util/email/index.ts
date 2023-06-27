@@ -3,7 +3,7 @@ import request from "request";
 import { traced } from "../../services/telemetryService";
 import { ApplicationContext } from "../../types";
 
-function getMailingClient() {
+export function getMailingClient() {
   if (process.env.MAILGUN_API_KEY === undefined) {
     throw new Error("Missing environment variable: MAILGUN_API_KEY");
   }

@@ -6,9 +6,9 @@ import { startServer } from "./routing/server";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startMetrics as startMetricsService } from "./services/metricsService";
-import { startPretixSync as startPretixSyncService } from "./services/pretixSyncService";
+import { startPretixSyncService } from "./services/pretixSyncService";
 import { initProvingService as startProvingService } from "./services/provingService";
-import { getRollbar } from "./services/rollbarService";
+import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
@@ -26,35 +26,36 @@ export async function startApplication(): Promise<PCDPass> {
 
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
-  const rollbar = getRollbar();
 
   const context: ApplicationContext = {
     dbPool,
     honeyClient,
-    rollbar,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
   };
 
   await startTelemetryService(context);
+  const rollbarService = startRollbarService();
 
   startProvingService();
   startMetricsService(context);
-  startPretixSyncService(context);
+  startPretixSyncService(context, rollbarService);
 
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
   const userService = startUserService(
     context,
     semaphoreService,
-    emailTokenService
+    emailTokenService,
+    rollbarService
   );
-  const e2eeService = startE2EEService(context);
+  const e2eeService = startE2EEService(context, rollbarService);
 
   const globalServices: GlobalServices = {
     semaphoreService,
     userService,
     e2eeService,
     emailTokenService,
+    rollbarService,
   };
 
   startServer(context, globalServices);
