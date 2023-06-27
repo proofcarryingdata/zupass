@@ -5,7 +5,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { startApplication, stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
-import { login } from "./user/login";
+import { loginPCDPass } from "./user/loginPCDPass";
 
 chai.use(spies);
 
@@ -23,7 +23,7 @@ describe("semaphore service", function () {
   });
 
   step("should be able to log in", async function () {
-    user = await login(application);
+    user = await loginPCDPass(application);
   });
 
   step("semaphore service should now be aware of the user", async function () {

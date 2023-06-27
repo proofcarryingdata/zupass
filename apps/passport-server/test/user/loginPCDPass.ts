@@ -5,7 +5,9 @@ import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
 import { randomEmail } from "../util";
 
-export async function login(application: PCDPass): Promise<ZuParticipant> {
+export async function loginPCDPass(
+  application: PCDPass
+): Promise<ZuParticipant> {
   const { userService, emailTokenService } = application.globalServices;
   const testEmail = randomEmail();
   const identity = new Identity();
