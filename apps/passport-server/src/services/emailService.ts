@@ -1,6 +1,5 @@
 import { readFile } from "fs/promises";
 import * as path from "path";
-import { sendEmail } from "../apis/emailAPI";
 import { ApplicationContext } from "../types";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
@@ -22,20 +21,12 @@ export class EmailService {
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService
+    rollbarService: RollbarService,
+    emailClient: EmailClient | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.client = EmailService.getMailingClient();
-  }
-
-  private static getMailingClient(): EmailClient | null {
-    if (process.env.MAILGUN_API_KEY === undefined) {
-      console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
-      return null;
-    }
-
-    return { send: sendEmail };
+    this.client = emailClient;
   }
 
   /**
@@ -147,8 +138,9 @@ export class EmailService {
 
 export function startEmailService(
   context: ApplicationContext,
-  rollbarService: RollbarService
+  rollbarService: RollbarService,
+  emailClient: EmailClient | null
 ) {
-  const emailService = new EmailService(context, rollbarService);
+  const emailService = new EmailService(context, rollbarService, emailClient);
   return emailService;
 }

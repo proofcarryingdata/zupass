@@ -3,6 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
 import { E2EEService } from "./services/e2eeService";
+import { EmailClient } from "./services/emailService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -31,4 +32,8 @@ export interface PCDPass {
   context: ApplicationContext;
   globalServices: GlobalServices;
   expressContext: { app: Application; server: http.Server };
+}
+
+export interface APIs {
+  emailClient: EmailClient | null;
 }
