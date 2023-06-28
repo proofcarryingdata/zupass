@@ -62,7 +62,7 @@ export class UserService {
     email: string,
     commitment: string,
     force: boolean,
-    response: Response
+    res: Response
   ): Promise<void> {
     logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
@@ -91,7 +91,8 @@ export class UserService {
       participant.commitment !== commitment &&
       !force
     ) {
-      throw new Error(`${email} already registered.`);
+      res.status(500).send(`${email} already registered.`);
+      return;
     }
     const stat = participant.commitment == null ? "NEW" : "EXISTING";
     logger(
@@ -102,13 +103,13 @@ export class UserService {
     if (this._bypassEmail) {
       logger("[DEV] Bypassing email, returning token");
 
-      response.json({ token });
+      res.json({ token });
     } else {
       const { name } = participant;
       logger(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
       await this.emailService.sendPretixEmail(email, name, token);
 
-      response.sendStatus(200);
+      res.sendStatus(200);
     }
   }
 
