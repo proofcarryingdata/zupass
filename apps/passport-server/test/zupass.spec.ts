@@ -1,3 +1,4 @@
+import { ZuParticipant } from "@pcd/passport-interface";
 import chai, { expect } from "chai";
 import spies from "chai-spies";
 import "mocha";
@@ -6,6 +7,8 @@ import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
 import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
+import { loginZupass } from "./user/loginZupass";
+import { sync as testE2EESync } from "./user/sync";
 import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
@@ -14,6 +17,7 @@ describe.only("Pretix sync should work", function () {
   this.timeout(0);
 
   let application: PCDPass;
+  let user: ZuParticipant;
 
   this.beforeAll(async () => {
     console.log("starting application");
@@ -30,34 +34,45 @@ describe.only("Pretix sync should work", function () {
   });
 
   step(
-    "pretix sync should cause users to end up in semaphore groups",
+    "since nobody has logged in yet, all the semaphore groups should be empty",
     async function () {
       // the mock data contains one resident, one visitor, and one organizer
       expect(
         application.globalServices.semaphoreService.groupParticipants().group
           .members.length
-      ).to.eq(3);
+      ).to.eq(0);
 
       // organizers also count as residents
       expect(
         application.globalServices.semaphoreService.groupResidents().group
           .members.length
-      ).to.eq(2);
+      ).to.eq(0);
 
       expect(
         application.globalServices.semaphoreService.groupVisitors().group
           .members.length
-      ).to.eq(1);
+      ).to.eq(0);
 
       expect(
         application.globalServices.semaphoreService.groupOrganizers().group
           .members.length
-      ).to.eq(1);
+      ).to.eq(0);
     }
   );
 
   step(
-    "user should be able to sync end to end encryption",
-    async function () {}
+    "after pretix sync completes, a pretix user should be able to log in",
+    async function () {
+      user = await loginZupass(application);
+      if (application.apis.emailAPI) {
+        expect(application.apis.emailAPI.send).to.be.called();
+      } else {
+        throw new Error("expected email client to have been mocked");
+      }
+    }
   );
+
+  step("users should be able to e2ee sync", async function () {
+    await testE2EESync(application);
+  });
 });
