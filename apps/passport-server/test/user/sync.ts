@@ -18,7 +18,7 @@ export async function sync(application: PCDPass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const syncKey = await crypto.generateRandomKey();
 
-  const { e2eeService } = application.globalServices;
+  const { e2eeService } = application.services;
 
   const loadRequest: LoadE2EERequest = {
     blobKey: syncKey,

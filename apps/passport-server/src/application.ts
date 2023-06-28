@@ -77,16 +77,21 @@ export async function startApplication(
 
   const expressServer = await startServer(context, globalServices);
 
-  return { context, globalServices, apis, expressContext: expressServer };
+  return {
+    context,
+    services: globalServices,
+    apis,
+    expressContext: expressServer,
+  };
 }
 
 export async function stopApplication(app?: PCDPass) {
   if (!app) return;
 
   app.expressContext.server.close();
-  app.globalServices.provingService.stop();
-  app.globalServices.semaphoreService.stop();
-  app.globalServices.pretixSyncService?.stop();
+  app.services.provingService.stop();
+  app.services.semaphoreService.stop();
+  app.services.pretixSyncService?.stop();
 }
 
 async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {

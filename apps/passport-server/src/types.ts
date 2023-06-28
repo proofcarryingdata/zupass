@@ -34,7 +34,7 @@ export interface GlobalServices {
 
 export interface PCDPass {
   context: ApplicationContext;
-  globalServices: GlobalServices;
+  services: GlobalServices;
   apis: APIs;
   expressContext: { app: Application; server: http.Server };
 }

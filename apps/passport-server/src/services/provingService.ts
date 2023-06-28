@@ -43,7 +43,7 @@ export class ProvingService {
     RLNPCDPackage,
   ];
 
-  public async stop() {
+  public stop() {
     this.queue = [];
   }
 

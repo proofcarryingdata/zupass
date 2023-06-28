@@ -48,24 +48,24 @@ describe("zupass functionality", function () {
     async function () {
       // the mock data contains one resident, one visitor, and one organizer
       expect(
-        application.globalServices.semaphoreService.groupParticipants().group
-          .members.length
+        application.services.semaphoreService.groupParticipants().group.members
+          .length
       ).to.eq(0);
 
       // organizers also count as residents
       expect(
-        application.globalServices.semaphoreService.groupResidents().group
-          .members.length
+        application.services.semaphoreService.groupResidents().group.members
+          .length
       ).to.eq(0);
 
       expect(
-        application.globalServices.semaphoreService.groupVisitors().group
-          .members.length
+        application.services.semaphoreService.groupVisitors().group.members
+          .length
       ).to.eq(0);
 
       expect(
-        application.globalServices.semaphoreService.groupOrganizers().group
-          .members.length
+        application.services.semaphoreService.groupOrganizers().group.members
+          .length
       ).to.eq(0);
     }
   );
@@ -74,7 +74,7 @@ describe("zupass functionality", function () {
     "after pretix sync completes, a pretix user should be able to log in",
     async function () {
       const ticketHolders =
-        await application.globalServices.userService.getZuzaluTicketHolders();
+        await application.services.userService.getZuzaluTicketHolders();
       const resident = ticketHolders.find(
         (t) => t.role === ParticipantRole.Resident
       );
@@ -94,36 +94,36 @@ describe("zupass functionality", function () {
     async function () {
       // the mock data contains one resident, one visitor, and one organizer
       expect(
-        application.globalServices.semaphoreService.groupParticipants().group
-          .members.length
+        application.services.semaphoreService.groupParticipants().group.members
+          .length
       ).to.eq(1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(residentUser.commitment)
       ).to.eq(0);
 
       // organizers also count as residents
       expect(
-        application.globalServices.semaphoreService.groupResidents().group
-          .members.length
+        application.services.semaphoreService.groupResidents().group.members
+          .length
       ).to.eq(1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupResidents()
           .group.indexOf(residentUser.commitment)
       ).to.eq(0);
 
       expect(
-        application.globalServices.semaphoreService.groupVisitors().group
-          .members.length
+        application.services.semaphoreService.groupVisitors().group.members
+          .length
       ).to.eq(0);
 
       expect(
-        application.globalServices.semaphoreService.groupOrganizers().group
-          .members.length
+        application.services.semaphoreService.groupOrganizers().group.members
+          .length
       ).to.eq(0);
     }
   );
@@ -132,7 +132,7 @@ describe("zupass functionality", function () {
     "logging in with the remaining two users should work",
     async function () {
       const ticketHolders =
-        await application.globalServices.userService.getZuzaluTicketHolders();
+        await application.services.userService.getZuzaluTicketHolders();
 
       const visitor = ticketHolders.find(
         (t) => t.role === ParticipantRole.Visitor
@@ -159,64 +159,64 @@ describe("zupass functionality", function () {
     async function () {
       // the mock data contains one resident, one visitor, and one organizer
       expect(
-        application.globalServices.semaphoreService.groupParticipants().group
-          .members.length
+        application.services.semaphoreService.groupParticipants().group.members
+          .length
       ).to.eq(3);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(residentUser.commitment)
       ).to.be.greaterThan(-1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(visitorUser.commitment)
       ).to.be.greaterThan(-1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(organizerUser.commitment)
       ).to.be.greaterThan(-1);
 
       // organizers also count as residents
       expect(
-        application.globalServices.semaphoreService.groupResidents().group
-          .members.length
+        application.services.semaphoreService.groupResidents().group.members
+          .length
       ).to.eq(2);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupResidents()
           .group.indexOf(residentUser.commitment)
       ).to.be.greaterThan(-1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupResidents()
           .group.indexOf(organizerUser.commitment)
       ).to.be.greaterThan(-1);
 
       expect(
-        application.globalServices.semaphoreService.groupVisitors().group
-          .members.length
+        application.services.semaphoreService.groupVisitors().group.members
+          .length
       ).to.eq(1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupVisitors()
           .group.indexOf(visitorUser.commitment)
       ).to.be.greaterThan(-1);
 
       expect(
-        application.globalServices.semaphoreService.groupOrganizers().group
-          .members.length
+        application.services.semaphoreService.groupOrganizers().group.members
+          .length
       ).to.eq(1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupOrganizers()
           .group.indexOf(organizerUser.commitment)
       ).to.be.greaterThan(-1);
@@ -227,7 +227,7 @@ describe("zupass functionality", function () {
     "after a user has logged in once, they cannot login again without 'force'",
     async function () {
       const ticketHolders =
-        await application.globalServices.userService.getZuzaluTicketHolders();
+        await application.services.userService.getZuzaluTicketHolders();
 
       const resident = ticketHolders.find(
         (t) => t.role === ParticipantRole.Resident
@@ -251,13 +251,13 @@ describe("zupass functionality", function () {
       expect(oldCommitment).to.not.eq(newCommitment);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(oldCommitment)
       ).to.eq(-1);
 
       expect(
-        application.globalServices.semaphoreService
+        application.services.semaphoreService
           .groupParticipants()
           .group.indexOf(newCommitment)
       ).to.be.greaterThan(-1);

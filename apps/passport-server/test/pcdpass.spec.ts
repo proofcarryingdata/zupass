@@ -38,7 +38,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("semaphore service should now be aware of the user", async function () {
-    const { semaphoreService } = application.globalServices;
+    const { semaphoreService } = application.services;
     const genericGroup = semaphoreService.groupGeneric();
     expect(genericGroup.group.indexOf(user.commitment)).to.be.above(-1);
   });

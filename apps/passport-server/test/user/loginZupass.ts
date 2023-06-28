@@ -9,7 +9,7 @@ export async function loginZupass(
   email: string,
   force: boolean
 ): Promise<ZuParticipant> {
-  const { userService, emailTokenService } = application.globalServices;
+  const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
   const sendEmailResponse = httpMocks.createResponse();

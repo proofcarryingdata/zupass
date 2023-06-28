@@ -8,7 +8,7 @@ import { randomEmail } from "../util/util";
 export async function loginPCDPass(
   application: PCDPass
 ): Promise<ZuParticipant> {
-  const { userService, emailTokenService } = application.globalServices;
+  const { userService, emailTokenService } = application.services;
   const testEmail = randomEmail();
   const identity = new Identity();
   const commitment = identity.commitment.toString();
