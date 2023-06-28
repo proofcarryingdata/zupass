@@ -13,6 +13,7 @@ import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
+import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("semaphore service", function () {
@@ -22,6 +23,7 @@ describe("semaphore service", function () {
 
   this.beforeAll(async () => {
     console.log("starting application");
+    overrideEnvironment(zuzaluTestingEnv);
     application = await startTestingApp();
   });
 

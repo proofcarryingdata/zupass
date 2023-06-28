@@ -35,4 +35,10 @@ describe("logging into PCDPass and syncing", function () {
   step("user should be able to sync end to end encryption", async function () {
     await sync(application);
   });
+
+  step("semaphore service should now be aware of the user", async function () {
+    const { semaphoreService } = application.globalServices;
+    const genericGroup = semaphoreService.groupGeneric();
+    expect(genericGroup.group.indexOf(user.commitment)).to.be.above(0);
+  });
 });

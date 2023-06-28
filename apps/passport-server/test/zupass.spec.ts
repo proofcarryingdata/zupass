@@ -9,9 +9,10 @@ import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
 import { loginZupass } from "./user/loginZupass";
 import { sync as testE2EESync } from "./user/sync";
+import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe.only("Pretix sync should work", function () {
+describe("Pretix sync should work", function () {
   this.timeout(0);
 
   let application: PCDPass;
@@ -21,6 +22,7 @@ describe.only("Pretix sync should work", function () {
 
   this.beforeAll(async () => {
     console.log("starting application");
+    overrideEnvironment(zuzaluTestingEnv);
     application = await startTestingApp();
   });
 
