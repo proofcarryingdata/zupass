@@ -54,9 +54,7 @@ export class UserService {
     return fetchPretixParticipant(this.context.dbPool, email);
   }
 
-  public async getZuzaluTicketHolders(): Promise<
-    Array<PretixParticipant & { commitment?: string }>
-  > {
+  public async getZuzaluTicketHolders(): Promise<Array<PretixParticipant>> {
     return fetchAllPretixParticipants(this.context.dbPool);
   }
 

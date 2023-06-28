@@ -3,10 +3,12 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
+import { IPretixAPI } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
 import { ParticipantRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
 import { waitForSync } from "./pretix/waitForSync";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginZupass } from "./user/loginZupass";
@@ -14,7 +16,7 @@ import { sync as testE2EESync } from "./user/sync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("zupass functionality", function () {
+describe.only("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -22,6 +24,7 @@ describe("zupass functionality", function () {
   let visitorUser: ZuParticipant;
   let organizerUser: ZuParticipant;
   let emailAPI: IEmailAPI;
+  let replacedPretixAPI: IPretixAPI;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
@@ -172,4 +175,29 @@ describe("zupass functionality", function () {
   step("users should be able to e2ee sync", async function () {
     await testE2EESync(application);
   });
+
+  step(
+    "replace api and sync should cause all users to be replaced",
+    async function () {
+      const oldTicketHolders =
+        await application.services.userService.getZuzaluTicketHolders();
+
+      const newAPI = getMockZuzaluPretixAPI();
+      if (!newAPI) {
+        throw new Error("couldn't instantiate a new pretix api");
+      }
+      replacedPretixAPI = newAPI;
+      application.services.pretixSyncService?.replaceApi(newAPI);
+      const syncStatus = await waitForSync(application);
+      expect(syncStatus).to.eq(PretixSyncStatus.Synced);
+
+      const newTicketHolders =
+        await application.services.userService.getZuzaluTicketHolders();
+
+      const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
+      const newEmails = new Set(...newTicketHolders.map((t) => t.email));
+
+      expect(oldEmails).to.not.eq(newEmails);
+    }
+  );
 });

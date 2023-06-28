@@ -47,6 +47,13 @@ export class PretixSyncService {
     this._hasCompletedSyncSinceStarting = false;
   }
 
+  public replaceApi(newAPI: IPretixAPI): void {
+    this.stop();
+    this.pretixAPI = newAPI;
+    this._hasCompletedSyncSinceStarting = false;
+    this.startSyncLoop();
+  }
+
   public startSyncLoop(): void {
     const trySync = async (): Promise<void> => {
       try {
