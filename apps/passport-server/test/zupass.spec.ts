@@ -16,7 +16,7 @@ import { sync as testE2EESync } from "./user/sync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe.only("zupass functionality", function () {
+describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -198,6 +198,13 @@ describe.only("zupass functionality", function () {
       const newEmails = new Set(...newTicketHolders.map((t) => t.email));
 
       expect(oldEmails).to.not.eq(newEmails);
+
+      expectSemaphore(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+      });
     }
   );
 });
