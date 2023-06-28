@@ -14,7 +14,7 @@ import "mocha";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
 
-export async function sync(application: PCDPass): Promise<void> {
+export async function testUserSync(application: PCDPass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const syncKey = await crypto.generateRandomKey();
 

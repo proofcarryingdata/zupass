@@ -4,7 +4,7 @@ import { expect } from "chai";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
 
-export async function loginZupass(
+export async function testLoginZupass(
   application: PCDPass,
   email: string,
   force: boolean,

@@ -8,8 +8,8 @@ import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
-import { loginPCDPass } from "./user/loginPCDPass";
-import { sync } from "./user/sync";
+import { testLoginPCDPass } from "./user/testLoginPCDPass";
+import { testUserSync } from "./user/testUserSync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
@@ -45,7 +45,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    user = await loginPCDPass(application, testEmail, false, false);
+    user = await testLoginPCDPass(application, testEmail, false, false);
     expect(emailAPI.send).to.have.been.called.exactly(1);
   });
 
@@ -53,15 +53,15 @@ describe("pcd-pass functionality", function () {
     "should not be able to log in a 2nd time without force option",
     async function () {
       await expect(
-        loginPCDPass(application, testEmail, false, true)
+        testLoginPCDPass(application, testEmail, false, true)
       ).to.be.rejectedWith("already registered");
-      user = await loginPCDPass(application, testEmail, true, true);
+      user = await testLoginPCDPass(application, testEmail, true, true);
       expect(emailAPI.send).to.have.been.called.exactly(2);
     }
   );
 
   step("user should be able to sync end to end encryption", async function () {
-    await sync(application);
+    await testUserSync(application);
   });
 
   step("semaphore service should now be aware of the user", async function () {

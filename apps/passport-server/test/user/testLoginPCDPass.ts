@@ -4,17 +4,15 @@ import { expect } from "chai";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
 
-export async function loginPCDPass(
+export async function testLoginPCDPass(
   application: PCDPass,
   email: string,
   force: boolean,
   userAlreadyLoggedIn: boolean
 ): Promise<ZuParticipant> {
   const { userService, emailTokenService } = application.services;
-
   const identity = new Identity();
   const commitment = identity.commitment.toString();
-
   const sendEmailResponse = httpMocks.createResponse();
   await userService.handleSendPcdPassEmail(
     email,

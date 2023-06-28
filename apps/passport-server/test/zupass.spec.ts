@@ -11,8 +11,8 @@ import { PCDPass } from "../src/types";
 import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
-import { loginZupass } from "./user/loginZupass";
-import { sync as testE2EESync } from "./user/sync";
+import { testLoginZupass } from "./user/testLoginZupass";
+import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
@@ -74,7 +74,7 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await loginZupass(
+      residentUser = await testLoginZupass(
         application,
         resident.email,
         false,
@@ -115,10 +115,15 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await loginZupass(application, visitor.email, false, false);
+      visitorUser = await testLoginZupass(
+        application,
+        visitor.email,
+        false,
+        false
+      );
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
-      organizerUser = await loginZupass(
+      organizerUser = await testLoginZupass(
         application,
         organizer.email,
         false,
@@ -161,10 +166,15 @@ describe("zupass functionality", function () {
       }
 
       await expect(
-        loginZupass(application, resident.email, false, true)
+        testLoginZupass(application, resident.email, false, true)
       ).to.be.rejectedWith("already registered");
 
-      residentUser = await loginZupass(application, resident.email, true, true);
+      residentUser = await testLoginZupass(
+        application,
+        resident.email,
+        true,
+        true
+      );
 
       const oldResidentCommitment = resident.commitment!;
       const newResidentCommitment = residentUser.commitment;
