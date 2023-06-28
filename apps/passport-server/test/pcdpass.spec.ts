@@ -6,7 +6,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { waitForSync } from "./pretix/waitForSync";
+import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
@@ -32,7 +32,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should not have a pretix service running", async function () {
-    const status = await waitForSync(application);
+    const status = await waitForPretixSyncStatus(application);
     expect(status).to.eq(PretixSyncStatus.NoPretix);
   });
 

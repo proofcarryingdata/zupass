@@ -3,7 +3,7 @@ import { PretixSyncStatus } from "../../src/services/types";
 import { PCDPass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
-export async function waitForSync(
+export async function waitForPretixSyncStatus(
   application: PCDPass
 ): Promise<PretixSyncStatus> {
   const { expressContext } = application;

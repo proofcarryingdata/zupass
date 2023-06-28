@@ -9,7 +9,7 @@ import { ParticipantRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
-import { waitForSync } from "./pretix/waitForSync";
+import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginZupass } from "./user/loginZupass";
 import { sync as testE2EESync } from "./user/sync";
@@ -43,7 +43,7 @@ describe("zupass functionality", function () {
   });
 
   step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForSync(application);
+    const pretixSyncStatus = await waitForPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
   });
 
@@ -203,7 +203,7 @@ describe("zupass functionality", function () {
       }
       replacedPretixAPI = newAPI;
       application.services.pretixSyncService?.replaceApi(newAPI);
-      const syncStatus = await waitForSync(application);
+      const syncStatus = await waitForPretixSyncStatus(application);
       expect(syncStatus).to.eq(PretixSyncStatus.Synced);
 
       const newTicketHolders =
