@@ -37,8 +37,7 @@ export async function startApplication(
   console.log("[INIT] Starting application");
 
   overrideEnvironment(envOverrides);
-
-  const apis = Object.assign(await defaultAPIs(), apiOverrides ?? {});
+  const apis = await getOverridenApis(apiOverrides);
 
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
@@ -103,13 +102,31 @@ export async function stopApplication(app?: PCDPass) {
 }
 
 function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
+  console.log("[INIT] overriding environment variables");
   for (const entry of Object.entries(envOverrides ?? {})) {
     process.env[entry[0]] = entry[1];
-    console.log("overriding", entry[0], entry[1]);
+    console.log(
+      "[INIT] overriding environment variable",
+      entry[0],
+      "with",
+      entry[1]
+    );
     if (entry[1] === undefined) {
       delete process.env[entry[0]];
     }
   }
+  console.log("[INIT] finished overriding environment variables");
+}
+
+async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
+  console.log("[INIT] overriding apis");
+  const defaults = await defaultAPIs();
+  for (const entry of Object.entries(apiOverrides ?? {})) {
+    console.log("[INIT] overriding service", entry[0]);
+    defaults[entry[0] as keyof APIs] = entry[1] as any;
+  }
+  console.log("[INIT] finished overriding apis");
+  return defaults;
 }
 
 async function defaultAPIs(): Promise<APIs> {
