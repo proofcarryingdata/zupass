@@ -1,6 +1,6 @@
 import { DateRange } from "@pcd/passport-interface";
 
-import { PoolClient } from "pg";
+import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
@@ -22,6 +22,11 @@ export class PretixSyncService {
   private rollbarService: RollbarService;
   private context: ApplicationContext;
   private timeout: NodeJS.Timeout | undefined;
+  private _hasCompletedSyncSinceStarting: boolean;
+
+  public get hasCompletedSyncSinceStarting() {
+    return this._hasCompletedSyncSinceStarting;
+  }
 
   public constructor(
     context: ApplicationContext,
@@ -31,6 +36,7 @@ export class PretixSyncService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.pretixAPI = pretixAPI;
+    this._hasCompletedSyncSinceStarting = false;
   }
 
   public startSyncLoop() {
@@ -69,13 +75,13 @@ export class PretixSyncService {
       );
 
       const { dbPool } = this.context;
-      const dbClient = await dbPool.connect();
 
       try {
-        await this.saveParticipants(dbClient, participants);
-      } finally {
-        dbClient.release();
+        await this.saveParticipants(dbPool, participants);
+      } catch (e) {
+        console.log("[PRETIX] failed to save participants");
       }
+
       const syncEnd = Date.now();
       console.log(
         `[PRETIX] Sync end. Completed in ${Math.floor(
@@ -92,7 +98,7 @@ export class PretixSyncService {
    * - Delete participants that are no longer residents.
    */
   async saveParticipants(
-    dbClient: PoolClient,
+    dbClient: ClientBase | Pool,
     pretixParticipants: PretixParticipant[]
   ) {
     return traced(TRACE_SERVICE, "saveParticipants", async (span) => {

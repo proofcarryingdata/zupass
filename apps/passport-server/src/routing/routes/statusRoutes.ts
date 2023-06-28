@@ -5,12 +5,14 @@ import { ApplicationContext, GlobalServices } from "../../types";
 export function initStatusRoutes(
   app: express.Application,
   context: ApplicationContext,
-  { semaphoreService }: GlobalServices
+  { semaphoreService, pretixSyncService }: GlobalServices
 ) {
   console.log("[INIT] Initializing status routes");
   const { dbPool } = context;
 
-  app.get("/pretix/status", async (req: Request, res: Response) => {});
+  app.get("/pretix/status", async (req: Request, res: Response) => {
+    res.send(pretixSyncService?.hasCompletedSyncSinceStarting);
+  });
 
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
