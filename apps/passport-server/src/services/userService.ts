@@ -48,7 +48,7 @@ export class UserService {
   public async getZuzaluPassportHolder(
     email: string
   ): Promise<PretixParticipant | null> {
-    return fetchPretixParticipant(this.context.dbPool, { email });
+    return fetchPretixParticipant(this.context.dbPool, email);
   }
 
   public async getZuzaluTicketHolders(): Promise<
@@ -82,7 +82,7 @@ export class UserService {
       });
     }
 
-    const participant = await fetchPretixParticipant(dbPool, { email });
+    const participant = await fetchPretixParticipant(dbPool, email);
 
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
@@ -105,9 +105,7 @@ export class UserService {
       response.json({ token });
     } else {
       const { name } = participant;
-      logger(
-        `[ZUID] Sending token=${token} to email=${email} name=${name}`
-      );
+      logger(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
       await this.emailService.sendPretixEmail(email, name, token);
 
       response.sendStatus(200);
@@ -130,7 +128,7 @@ export class UserService {
     );
 
     try {
-      const pretix = await fetchPretixParticipant(dbPool, { email });
+      const pretix = await fetchPretixParticipant(dbPool, email);
 
       if (pretix == null) {
         throw new Error(`Ticket for ${email} not found`);

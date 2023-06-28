@@ -10,7 +10,7 @@ export interface IEmailAPI {
   }) => Promise<void>;
 }
 
-export function sendEmail({
+export function mailgunSendEmail({
   from,
   to,
   subject,

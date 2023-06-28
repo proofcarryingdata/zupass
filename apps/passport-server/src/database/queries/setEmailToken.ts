@@ -1,8 +1,10 @@
 import { ClientBase, Pool } from "pg";
 import { sqlQuery } from "../sqlQuery";
 
-// Sets the email auth token for a given Pretix participant.
-// Returns null if not found. Returns full participant info on success.
+/**
+ * Sets the email auth token for a given user. Works for both
+ * Zupass users and PCDPass users.
+ */
 export async function insertEmailToken(
   client: ClientBase | Pool,
   params: {

@@ -1,7 +1,9 @@
 import { ClientBase, Pool } from "pg";
 import { sqlQuery } from "../sqlQuery";
 
-/** Fetch database status. */
+/**
+ * Fetches some status parameters based on the state of the database.
+ */
 export async function fetchStatus(client: ClientBase | Pool): Promise<{
   n_pretix_participants: number;
   n_commitments: number;

@@ -2,9 +2,14 @@ import { ClientBase, Pool } from "pg";
 import { PassportParticipant, PretixParticipant } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
+/**
+ * Fetch all users that have a ticket on pretix, even if they haven't
+ * logged into the passport app. Includes their commitment, if they
+ * have one.
+ */
 export async function fetchAllPretixParticipants(
   client: ClientBase | Pool
-): Promise<Array<PretixParticipant & { commitment?: string }>> {
+): Promise<Array<PretixParticipant>> {
   const result = await sqlQuery(
     client,
     `\
@@ -23,11 +28,15 @@ left join commitments c on c.participant_email = p.email;
   return result.rows;
 }
 
-/** Fetch a ticketed participant, with or without Passport yet. */
+/**
+ * Fetch a particular user that has a ticket on pretix, even if they
+ * haven't logged into the passport app. Includes their commitment,
+ * if they have one.
+ */
 export async function fetchPretixParticipant(
   client: ClientBase | Pool,
-  params: { email: string }
-): Promise<(PretixParticipant & { commitment?: string }) | null> {
+  email: string
+): Promise<PretixParticipant | null> {
   const result = await sqlQuery(
     client,
     `\
@@ -41,7 +50,7 @@ select
 from pretix_participants p
 left join commitments c on c.participant_email = p.email
 where p.email = $1;`,
-    [params.email]
+    [email]
   );
   return result.rows[0] || null;
 }

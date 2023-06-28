@@ -4,7 +4,7 @@ import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
-import { fetchPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipants";
+import { fetchAllPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { updateParticipant } from "../database/queries/pretix_users/updateParticipant";
 import { ApplicationContext } from "../types";
@@ -110,7 +110,7 @@ export class PretixSyncService {
   ) {
     return traced(TRACE_SERVICE, "saveParticipants", async (span) => {
       const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
-      const existingParticipants = await fetchPretixParticipants(dbClient);
+      const existingParticipants = await fetchAllPretixParticipants(dbClient);
       const existingParticipantsByEmail =
         participantsToMap(existingParticipants);
       const newParticipants = pretixParticipants.filter(
@@ -118,9 +118,7 @@ export class PretixSyncService {
       );
 
       // Step 1 of saving: insert participants that are new
-      logger(
-        `[PRETIX] Inserting ${newParticipants.length} new participants`
-      );
+      logger(`[PRETIX] Inserting ${newParticipants.length} new participants`);
       for (const participant of newParticipants) {
         logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
         await insertPretixParticipant(dbClient, participant);
@@ -137,9 +135,7 @@ export class PretixSyncService {
         });
 
       // For the participants that have changed, update them in the database.
-      logger(
-        `[PRETIX] Updating ${updatedParticipants.length} participants`
-      );
+      logger(`[PRETIX] Updating ${updatedParticipants.length} participants`);
       for (const updatedParticipant of updatedParticipants) {
         const oldParticipant = existingParticipantsByEmail.get(
           updatedParticipant.email
@@ -157,9 +153,7 @@ export class PretixSyncService {
       const removedParticipants = existingParticipants.filter(
         (existing) => !pretixParticipantsAsMap.has(existing.email)
       );
-      logger(
-        `[PRETIX] Deleting ${removedParticipants.length} participants`
-      );
+      logger(`[PRETIX] Deleting ${removedParticipants.length} participants`);
       for (const removedParticipant of removedParticipants) {
         logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
         await deletePretixParticipant(dbClient, removedParticipant.email);

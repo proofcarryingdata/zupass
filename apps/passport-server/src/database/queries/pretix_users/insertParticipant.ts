@@ -2,6 +2,11 @@ import { ClientBase, Pool } from "pg";
 import { PretixParticipant } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
+/**
+ * Insert a ticketed participant from pretix into the database, if
+ * they have not been inserted yet. This does not insert an identity
+ * commitment for them.
+ */
 export async function insertPretixParticipant(
   client: ClientBase | Pool,
   params: PretixParticipant

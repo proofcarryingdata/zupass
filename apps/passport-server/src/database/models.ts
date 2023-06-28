@@ -8,6 +8,7 @@ export interface PretixParticipant {
   residence: string;
   order_id: string;
   visitor_date_ranges?: DateRange[];
+  commitment?: string;
 }
 
 /** A Zuzalu participant with passport (Pretix participant + commitment) */

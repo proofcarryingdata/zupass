@@ -9,6 +9,9 @@ export interface HistoricSemaphoreGroup {
   timeCreated: string;
 }
 
+/**
+ * Fetches all the latest semaphore group states from the database.
+ */
 export async function fetchLatestSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
@@ -26,6 +29,10 @@ export async function fetchLatestSemaphoreGroups(
   return latestGroups.rows.map(rowToGroup);
 }
 
+/**
+ * Inserts an updated semaphore group to be the latest historic state for
+ * a given group.
+ */
 export async function insertNewSemaphoreGroup(
   client: ClientBase | Pool,
   groupId: string,

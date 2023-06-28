@@ -2,6 +2,9 @@ import { DateRange } from "@pcd/passport-interface";
 import { ClientBase, Pool } from "pg";
 import { sqlQuery } from "../../sqlQuery";
 
+/**
+ * Updates a pretix participant's email, role, and visitor date ranges.
+ */
 export async function updateParticipant(
   client: ClientBase | Pool,
   params: { email: string; role: string; visitor_date_ranges?: DateRange[] }

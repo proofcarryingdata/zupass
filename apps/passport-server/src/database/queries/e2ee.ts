@@ -6,6 +6,9 @@ export interface EncryptedStorageModel {
   encrypted_blob: string;
 }
 
+/**
+ * Returns the encrypted data stored with a given key.
+ */
 export async function fetchEncryptedStorage(
   context: ApplicationContext,
   blobKey: string
@@ -23,6 +26,9 @@ export async function fetchEncryptedStorage(
   return results.rows[0] as EncryptedStorageModel;
 }
 
+/**
+ * Replaces the encrypted data stored at a particular sync key.
+ */
 export async function insertEncryptedStorage(
   context: ApplicationContext,
   blobKey: string,

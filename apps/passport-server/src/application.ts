@@ -1,5 +1,5 @@
 import * as path from "path";
-import { IEmailAPI, sendEmail } from "./apis/emailAPI";
+import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
@@ -95,7 +95,7 @@ async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
       logger("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
       emailAPI = null;
     } else {
-      emailAPI = { send: sendEmail };
+      emailAPI = { send: mailgunSendEmail };
     }
   }
 

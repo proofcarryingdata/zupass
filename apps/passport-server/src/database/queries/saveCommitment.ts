@@ -2,8 +2,10 @@ import { ClientBase, Pool } from "pg";
 import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
-// Saves a new commitment. Overwrites any existing commitment for this email.
-// Returns the commitment UUID.
+/**
+ * Saves a new commitment. Overwrites any existing commitment for this email.
+ * Returns the commitment UUID. Works for both Zupass users and PCDPass users.
+ */
 export async function insertCommitment(
   client: ClientBase | Pool,
   params: {
