@@ -18,7 +18,7 @@ import { traced } from "./telemetryService";
 const TRACE_SERVICE = "Pretix";
 
 /**
- * Kick off a period sync from Preticx into Zupass.
+ * Kick off a period sync from Pretix into Zupass.
  */
 export function startPretixSyncService(
   context: ApplicationContext,
