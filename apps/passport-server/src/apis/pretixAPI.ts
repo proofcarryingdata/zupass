@@ -118,7 +118,7 @@ export interface PretixPosition {
   positionid: number;
   item: number;
   price: string;
-  attendee_name: string; // "Danilo Kim"
+  attendee_name: string; // first and last
   attendee_email: string;
   subevent: number;
 }

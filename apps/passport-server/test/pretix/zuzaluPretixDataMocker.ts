@@ -116,7 +116,7 @@ export class ZuzaluPretixDataMocker {
   }
 
   private randomOrderCode(): string {
-    return uuid().substring(0, 5);
+    return uuid().substring(0, 5).toUpperCase();
   }
 
   private randomName(): string {
