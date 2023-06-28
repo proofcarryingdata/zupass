@@ -1,5 +1,13 @@
 import { DateRange } from "@pcd/passport-interface";
 
+export interface HistoricSemaphoreGroup {
+  id: number;
+  groupId: string;
+  rootHash: string;
+  serializedGroup: string;
+  timeCreated: string;
+}
+
 /** A single Pretix ticket holder. May or may not have a passport yet. */
 export interface PretixParticipant {
   email: string;
@@ -27,4 +35,9 @@ export interface CommitmentRow {
   uuid: string;
   commitment: string;
   participant_email: string;
+}
+
+export interface EncryptedStorageModel {
+  blob_key: string;
+  encrypted_blob: string;
 }

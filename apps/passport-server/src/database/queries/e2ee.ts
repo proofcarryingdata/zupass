@@ -1,10 +1,6 @@
 import { ApplicationContext } from "../../types";
+import { EncryptedStorageModel } from "../models";
 import { sqlQuery } from "../sqlQuery";
-
-export interface EncryptedStorageModel {
-  blob_key: string;
-  encrypted_blob: string;
-}
 
 /**
  * Returns the encrypted data stored with a given key.

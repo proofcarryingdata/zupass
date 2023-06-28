@@ -1,13 +1,6 @@
 import { ClientBase, Pool, QueryResultRow } from "pg";
+import { HistoricSemaphoreGroup } from "../models";
 import { sqlQuery } from "../sqlQuery";
-
-export interface HistoricSemaphoreGroup {
-  id: number;
-  groupId: string;
-  rootHash: string;
-  serializedGroup: string;
-  timeCreated: string;
-}
 
 /**
  * Fetches all the latest semaphore group states from the database.
