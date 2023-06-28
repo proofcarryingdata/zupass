@@ -1,6 +1,5 @@
 import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import { Response } from "express";
-import next from "next";
 import { PretixParticipant } from "../database/models";
 import { fetchCommitment } from "../database/queries/fetchCommitment";
 import {
@@ -166,8 +165,9 @@ export class UserService {
 
       res.json(zuParticipant);
     } catch (e: any) {
-      e.message = "Can't add Zuzalu Passport: " + e.message;
-      next(e);
+      logger(e);
+      this.rollbarService?.error(e);
+      res.sendStatus(500);
     }
   }
 
@@ -259,8 +259,9 @@ export class UserService {
 
       res.json(zuParticipant);
     } catch (e: any) {
-      e.message = "Can't add Zuzalu Passport: " + e.message;
-      next(e);
+      logger(e);
+      this.rollbarService?.error(e);
+      res.sendStatus(500);
     }
   }
 
