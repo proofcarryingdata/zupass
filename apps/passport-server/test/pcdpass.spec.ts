@@ -12,7 +12,7 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
-describe.only("pcd-pass functionality", function () {
+describe("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   const testEmail = randomEmail();

@@ -73,7 +73,12 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await loginZupass(application, resident.email, false);
+      residentUser = await loginZupass(
+        application,
+        resident.email,
+        false,
+        false
+      );
       expect(emailAPI.send).to.have.been.called.exactly(1);
     }
   );
@@ -108,10 +113,15 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await loginZupass(application, visitor.email, false);
+      visitorUser = await loginZupass(application, visitor.email, false, false);
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
-      organizerUser = await loginZupass(application, organizer.email, false);
+      organizerUser = await loginZupass(
+        application,
+        organizer.email,
+        false,
+        false
+      );
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
   );
@@ -147,10 +157,11 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      await expect(loginZupass(application, resident.email, false)).to
-        .eventually.be.rejected;
+      await expect(
+        loginZupass(application, resident.email, false, true)
+      ).to.be.rejectedWith("already registered");
 
-      residentUser = await loginZupass(application, resident.email, true);
+      residentUser = await loginZupass(application, resident.email, true, true);
 
       const oldResidentCommitment = resident.commitment!;
       const newResidentCommitment = residentUser.commitment;

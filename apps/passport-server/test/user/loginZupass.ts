@@ -7,7 +7,8 @@ import { PCDPass } from "../../src/types";
 export async function loginZupass(
   application: PCDPass,
   email: string,
-  force: boolean
+  force: boolean,
+  alreadyRegistered: boolean
 ): Promise<ZuParticipant> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
@@ -20,7 +21,14 @@ export async function loginZupass(
     sendEmailResponse
   );
 
-  expect(sendEmailResponse.statusCode).to.eq(200);
+  if (alreadyRegistered && !force) {
+    expect(sendEmailResponse.statusCode).to.eq(500);
+    expect(sendEmailResponse._getBuffer().toString()).to.contain(
+      "already registered"
+    );
+  } else {
+    expect(sendEmailResponse.statusCode).to.eq(200);
+  }
 
   let token: string;
 
