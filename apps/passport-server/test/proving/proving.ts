@@ -60,7 +60,7 @@ export async function waitForSettledStatus(
   application: PCDPass,
   statusRequest: StatusRequest,
   handler?: (r: Response) => Promise<void>
-) {
+): Promise<Response> {
   let response = await sendStatusRequest(application, statusRequest);
   let responseBody = response.body as StatusResponse;
 

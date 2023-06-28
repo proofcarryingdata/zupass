@@ -1,4 +1,9 @@
-import { getPretixConfig, IPretixAPI } from "../../src/apis/pretixAPI";
+import {
+  getPretixConfig,
+  IPretixAPI,
+  PretixOrder,
+  PretixSubevent,
+} from "../../src/apis/pretixAPI";
 import { logger } from "../../src/util/logger";
 import {
   IMockPretixData,
@@ -23,12 +28,12 @@ export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
 
   return {
     config: mockData.config,
-    fetchOrders: async (eventID: string) => {
+    fetchOrders: async (eventID: string): Promise<PretixOrder[]> => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
       logger(`[MOCK] fetchOrders('${eventID}') =>`, result);
       return result;
     },
-    fetchSubevents: async (parentId: string) => {
+    fetchSubevents: async (parentId: string): Promise<PretixSubevent[]> => {
       const result = mockData.subEventsByParentEventId.get(parentId) ?? [];
       logger(`[MOCK] fetchSubevents('${parentId}') =>`, result);
       return result;

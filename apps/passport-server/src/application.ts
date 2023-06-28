@@ -85,7 +85,7 @@ export async function startApplication(
   };
 }
 
-export async function stopApplication(app?: PCDPass) {
+export async function stopApplication(app?: PCDPass): Promise<void> {
   if (!app) return;
 
   app.expressContext.server.close();

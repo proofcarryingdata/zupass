@@ -134,7 +134,7 @@ export function startEmailService(
   context: ApplicationContext,
   rollbarService: RollbarService,
   emailClient: IEmailAPI | null
-) {
+): void {
   const emailService = new EmailService(context, rollbarService, emailClient);
   return emailService;
 }

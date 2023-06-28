@@ -29,7 +29,7 @@ export async function insertEncryptedStorage(
   context: ApplicationContext,
   blobKey: string,
   encryptedBlob: string
-) {
+): Promise<void> {
   await sqlQuery(
     context.dbPool,
     "insert into e2ee(blob_key, encrypted_blob) values " +

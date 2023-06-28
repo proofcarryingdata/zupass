@@ -43,11 +43,11 @@ export class ProvingService {
     RLNPCDPackage,
   ];
 
-  public stop() {
+  public stop(): void {
     this.queue = [];
   }
 
-  private getPackage(name: string) {
+  private getPackage(name: string): PCDPackage {
     const matching = this.packages.find((p) => p.name === name);
 
     if (matching === undefined) {
@@ -163,7 +163,7 @@ export class ProvingService {
   }
 }
 
-export async function startProvingService() {
+export async function startProvingService(): Promise<ProvingService> {
   const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
 
   await SemaphoreGroupPCDPackage.init!({

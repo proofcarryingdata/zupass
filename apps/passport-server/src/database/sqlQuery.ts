@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { ClientBase, Pool, QueryResult } from "pg";
 import { traced } from "../services/telemetryService";
 
 /**
@@ -9,7 +9,7 @@ export function sqlQuery(
   client: ClientBase | Pool,
   query: string,
   args?: any[]
-) {
+): Promise<QueryResult> {
   return traced("DB", "query", async (span) => {
     span?.setAttribute("query", query);
     return await client.query(query, args);

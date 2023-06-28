@@ -45,11 +45,11 @@ export class SemaphoreService {
     ];
   }
 
-  public groupParticipants = () => this.getNamedGroup("1");
-  public groupResidents = () => this.getNamedGroup("2");
-  public groupVisitors = () => this.getNamedGroup("3");
-  public groupOrganizers = () => this.getNamedGroup("4");
-  public groupGeneric = () => this.getNamedGroup("5");
+  public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
+  public groupResidents = (): NamedGroup => this.getNamedGroup("2");
+  public groupVisitors = (): NamedGroup => this.getNamedGroup("3");
+  public groupOrganizers = (): NamedGroup => this.getNamedGroup("4");
+  public groupGeneric = (): NamedGroup => this.getNamedGroup("5");
 
   public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -78,14 +78,14 @@ export class SemaphoreService {
     return this.genericParticipants[uuid] || null;
   }
 
-  public start() {
+  public start(): void {
     // Reload every minute
     this.interval = setInterval(() => {
       this.reload();
     }, 60 * 1000);
   }
 
-  public stop() {
+  public stop(): void {
     if (this.interval) {
       clearInterval(this.interval);
     }
@@ -106,7 +106,7 @@ export class SemaphoreService {
     });
   }
 
-  private async reloadGenericGroup() {
+  private async reloadGenericGroup(): Promise<void> {
     const allCommitments = await fetchAllCommitments(this.dbPool);
     const namedGroup = this.getNamedGroup("5");
     const newGroup = new Group(
@@ -121,7 +121,7 @@ export class SemaphoreService {
     });
   }
 
-  private async saveHistoricSemaphoreGroups() {
+  private async saveHistoricSemaphoreGroups(): Promise<void> {
     if (!this.dbPool) {
       throw new Error("no database connection");
     }
@@ -179,7 +179,7 @@ export class SemaphoreService {
     return fetchLatestSemaphoreGroups(this.dbPool);
   }
 
-  private setZuzaluGroups(participants: PassportParticipant[]) {
+  private setZuzaluGroups(participants: PassportParticipant[]): void {
     // reset participant state
     this.zuzaluParticipants = {};
     this.groups = SemaphoreService.createGroups();

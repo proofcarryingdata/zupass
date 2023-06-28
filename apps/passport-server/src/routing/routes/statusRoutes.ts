@@ -8,7 +8,7 @@ export function initStatusRoutes(
   app: express.Application,
   context: ApplicationContext,
   { semaphoreService, pretixSyncService }: GlobalServices
-) {
+): void {
   logger("[INIT] Initializing status routes");
   const { dbPool } = context;
 

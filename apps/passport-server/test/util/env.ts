@@ -31,7 +31,7 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
 
 export function overrideEnvironment(
   envOverrides?: Partial<EnvironmentVariables>
-) {
+): void {
   if (envOverrides?.SUPPRESS_LOGGING) {
     process.env.SUPPRESS_LOGGING = envOverrides.SUPPRESS_LOGGING;
   }

@@ -30,7 +30,7 @@ export class PretixSyncService {
   private timeout: NodeJS.Timeout | undefined;
   private _hasCompletedSyncSinceStarting: boolean;
 
-  public get hasCompletedSyncSinceStarting() {
+  public get hasCompletedSyncSinceStarting(): boolean {
     return this._hasCompletedSyncSinceStarting;
   }
 
@@ -47,8 +47,8 @@ export class PretixSyncService {
     this._hasCompletedSyncSinceStarting = false;
   }
 
-  public startSyncLoop() {
-    const trySync = async () => {
+  public startSyncLoop(): void {
+    const trySync = async (): Promise<void> => {
       try {
         await this.sync();
         await this.semaphoreService.reload();
@@ -63,7 +63,7 @@ export class PretixSyncService {
     trySync();
   }
 
-  public stop() {
+  public stop(): void {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
@@ -72,7 +72,7 @@ export class PretixSyncService {
   /**
    * Synchronize Pretix state with Zupass state.
    */
-  async sync() {
+  async sync(): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
       const syncStart = Date.now();
       logger("[PRETIX] Sync start");
@@ -110,7 +110,7 @@ export class PretixSyncService {
   async saveParticipants(
     dbClient: ClientBase | Pool,
     pretixParticipants: PretixParticipant[]
-  ) {
+  ): Promise<void> {
     return traced(
       SERVICE_NAME_FOR_TRACING,
       "saveParticipants",

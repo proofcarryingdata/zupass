@@ -34,7 +34,7 @@ export function sendEvent(
   context: ApplicationContext,
   eventName: EventName,
   eventData?: any
-) {
+): void {
   if (!context.honeyClient) return;
 
   const event = context.honeyClient.newEvent();

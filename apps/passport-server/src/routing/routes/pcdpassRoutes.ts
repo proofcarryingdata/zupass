@@ -7,7 +7,7 @@ export function initPCDPassRoutes(
   app: express.Application,
   _context: ApplicationContext,
   { userService }: GlobalServices
-) {
+): void {
   logger("[INIT] Initializing PCDPass routes");
 
   app.get("/pcdpass/", (req: Request, res: Response) => {

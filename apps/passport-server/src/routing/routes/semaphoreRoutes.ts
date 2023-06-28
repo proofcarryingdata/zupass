@@ -8,7 +8,7 @@ export function initSemaphoreRoutes(
   app: express.Application,
   _context: ApplicationContext,
   { semaphoreService }: GlobalServices
-) {
+): void {
   app.get(
     "/semaphore/valid-historic/:id/:root",
     async (req: Request, res: Response) => {

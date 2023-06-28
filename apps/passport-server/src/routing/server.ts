@@ -80,7 +80,7 @@ function initAllRoutes(
   app: express.Application,
   context: ApplicationContext,
   globalServices: GlobalServices
-) {
+): void {
   initStatusRoutes(app, context, globalServices);
   initHealthcheckRoutes(app, context);
   initSemaphoreRoutes(app, context, globalServices);

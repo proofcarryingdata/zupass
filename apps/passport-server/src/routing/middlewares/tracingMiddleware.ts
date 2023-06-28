@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
 
@@ -7,7 +7,7 @@ import { logger } from "../../util/logger";
  * makes it possible to inspect the performance characteristics of all
  * HTTP requests.
  */
-export function tracingMiddleware() {
+export function tracingMiddleware(): RequestHandler {
   logger("[TRACING] setting up middleware");
   return (req: Request, res: Response, next: NextFunction) => {
     traced(

@@ -27,7 +27,7 @@ export class UserService {
   private rollbarService: RollbarService;
   private _bypassEmail: boolean;
 
-  public get bypassEmail() {
+  public get bypassEmail(): boolean {
     return this._bypassEmail;
   }
 
@@ -65,7 +65,7 @@ export class UserService {
     commitment: string,
     force: boolean,
     response: Response
-  ) {
+  ): Promise<void> {
     logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
@@ -119,7 +119,7 @@ export class UserService {
     email: string,
     commitment: string,
     res: Response
-  ) {
+  ): Promise<void> {
     const { dbPool } = this.context;
     logger(
       `[ZUID] new-participant ${JSON.stringify({
@@ -172,7 +172,10 @@ export class UserService {
     }
   }
 
-  public async handleGetZuzaluParticipant(uuid: string, res: Response) {
+  public async handleGetZuzaluParticipant(
+    uuid: string,
+    res: Response
+  ): Promise<void> {
     logger(`[ZUID] Fetching participant ${uuid}`);
     const participant = this.semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
@@ -184,7 +187,7 @@ export class UserService {
     commitment: string,
     force: boolean,
     res: Response
-  ) {
+  ): Promise<void> {
     logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
@@ -226,7 +229,7 @@ export class UserService {
     email: string,
     commitment: string,
     res: Response
-  ) {
+  ): Promise<void> {
     logger(
       `[ZUID] new-participant ${JSON.stringify({
         token,
@@ -261,7 +264,10 @@ export class UserService {
     }
   }
 
-  public async handleGetPcdPassUser(uuid: string, res: Response) {
+  public async handleGetPcdPassUser(
+    uuid: string,
+    res: Response
+  ): Promise<void> {
     logger(`[ZUID] Fetching participant ${uuid}`);
     res.setHeader("Access-Control-Allow-Origin", "*");
     const participant = this.semaphoreService.getParticipant(uuid);

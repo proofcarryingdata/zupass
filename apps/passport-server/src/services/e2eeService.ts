@@ -28,10 +28,12 @@ export class E2EEService {
     this.rollbarService = rollbarService;
   }
 
-  public async handleLoad(request: LoadE2EERequest, res: Response) {
-    logger(`[E2EE] Loading ${request.blobKey}`);
-
+  public async handleLoad(
+    request: LoadE2EERequest,
+    res: Response
+  ): Promise<void> {
     try {
+      logger(`[E2EE] Loading ${request.blobKey}`);
       const storageModel = await fetchEncryptedStorage(
         this.context,
         request.blobKey
@@ -51,11 +53,14 @@ export class E2EEService {
     } catch (e) {
       logger(e);
       this.rollbarService?.error(e as Error);
-      res.status(500);
+      res.sendStatus(500);
     }
   }
 
-  public async handleSave(request: SaveE2EERequest, res: Response) {
+  public async handleSave(
+    request: SaveE2EERequest,
+    res: Response
+  ): Promise<void> {
     logger(`[E2EE] Saving ${request.blobKey}`);
 
     try {
@@ -67,8 +72,8 @@ export class E2EEService {
 
       res.sendStatus(200);
     } catch (e) {
-      res.status(500);
       this.rollbarService?.error(e as Error);
+      res.sendStatus(500);
     }
   }
 }
@@ -76,7 +81,7 @@ export class E2EEService {
 export function startE2EEService(
   context: ApplicationContext,
   rollbarService: RollbarService
-) {
+): void {
   const e2eeService = new E2EEService(context, rollbarService);
   return e2eeService;
 }

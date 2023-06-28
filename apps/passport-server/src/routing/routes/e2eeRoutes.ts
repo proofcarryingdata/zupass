@@ -6,7 +6,7 @@ export function initE2EERoutes(
   app: express.Application,
   _context: ApplicationContext,
   globalServices: GlobalServices
-) {
+): void {
   app.post("/sync/load/", async (req: Request, res: Response) => {
     const { e2eeService } = globalServices;
     const request = req.body as LoadE2EERequest;
