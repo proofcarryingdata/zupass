@@ -1,4 +1,3 @@
-import * as dotenv from "dotenv";
 import * as path from "path";
 import { IEmailAPI, sendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -15,30 +14,12 @@ import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
-import {
-  APIs,
-  ApplicationContext,
-  EnvironmentVariables,
-  GlobalServices,
-  PCDPass,
-} from "./types";
-import { IS_PROD } from "./util/isProd";
+import { APIs, ApplicationContext, GlobalServices, PCDPass } from "./types";
 
 export async function startApplication(
-  envOverrides?: Partial<EnvironmentVariables>,
-  apiOverrides?: () => Partial<APIs>
+  apiOverrides?: Partial<APIs>
 ): Promise<PCDPass> {
-  const dotEnvPath = IS_PROD
-    ? `/etc/secrets/.env`
-    : path.join(process.cwd(), ".env");
-
-  console.log(`[INIT] Loading environment variables from: ${dotEnvPath} `);
-  dotenv.config({ path: dotEnvPath });
-  console.log("[INIT] Starting application");
-
-  overrideEnvironment(envOverrides);
   const apis = await getOverridenApis(apiOverrides);
-
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
 
@@ -102,33 +83,12 @@ export async function stopApplication(app?: PCDPass) {
   app.globalServices.pretixSyncService?.stop();
 }
 
-function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
-  console.log("[INIT] overriding environment variables");
-  for (const entry of Object.entries(envOverrides ?? {})) {
-    process.env[entry[0]] = entry[1];
-    console.log(
-      "[INIT] overriding environment variable",
-      entry[0],
-      "with",
-      entry[1]
-    );
-    if (entry[1] === undefined) {
-      delete process.env[entry[0]];
-    }
-  }
-  console.log("[INIT] finished overriding environment variables");
-}
-
-async function getOverridenApis(
-  apiOverrides?: () => Partial<APIs>
-): Promise<APIs> {
-  const overriden = apiOverrides && apiOverrides();
-
+async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
-  if (overriden?.emailAPI) {
+  if (apiOverrides?.emailAPI) {
     console.log("[INIT] overriding email client");
-    emailAPI = overriden.emailAPI;
+    emailAPI = apiOverrides.emailAPI;
   } else {
     if (process.env.MAILGUN_API_KEY === undefined) {
       console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
@@ -140,9 +100,9 @@ async function getOverridenApis(
 
   let pretixAPI: PretixAPI | null = null;
 
-  if (overriden?.pretixAPI) {
+  if (apiOverrides?.pretixAPI) {
     console.log("[INIT] overriding pretix api");
-    pretixAPI = overriden.pretixAPI;
+    pretixAPI = apiOverrides.pretixAPI;
   } else {
     pretixAPI = getPretixAPI();
   }
