@@ -2,6 +2,7 @@ import { ZuParticipant } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { ParticipantRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
@@ -19,6 +20,7 @@ describe("Pretix sync should work", function () {
   let residentUser: ZuParticipant;
   let visitorUser: ZuParticipant;
   let organizerUser: ZuParticipant;
+  let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {
     console.log("starting application");
@@ -28,6 +30,13 @@ describe("Pretix sync should work", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+  });
+
+  step("email client should have been mocked", async function () {
+    if (!application.apis.emailAPI) {
+      throw new Error("email client should have been mocked");
+    }
+    emailAPI = application.apis.emailAPI;
   });
 
   step("pretix should sync to completion", async function () {
@@ -77,11 +86,7 @@ describe("Pretix sync should work", function () {
       }
 
       residentUser = await loginZupass(application, resident.email, false);
-      if (application.apis.emailAPI) {
-        expect(application.apis.emailAPI.send).to.be.called();
-      } else {
-        throw new Error("expected email client to have been mocked");
-      }
+      expect(emailAPI.send).to.have.been.called.exactly(1);
     }
   );
 
@@ -143,18 +148,10 @@ describe("Pretix sync should work", function () {
       }
 
       visitorUser = await loginZupass(application, visitor.email, false);
-      if (application.apis.emailAPI) {
-        expect(application.apis.emailAPI.send).to.be.called();
-      } else {
-        throw new Error("expected email client to have been mocked");
-      }
+      expect(emailAPI.send).to.have.been.called.exactly(2);
 
       organizerUser = await loginZupass(application, organizer.email, false);
-      if (application.apis.emailAPI) {
-        expect(application.apis.emailAPI.send).to.be.called();
-      } else {
-        throw new Error("expected email client to have been mocked");
-      }
+      expect(emailAPI.send).to.have.been.called.exactly(3);
     }
   );
 

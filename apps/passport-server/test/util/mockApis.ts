@@ -6,8 +6,12 @@ import { getMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
 export function mockAPIs(): APIs {
   const emailAPI: IEmailAPI | null = {
-    send: chai.spy.returns(Promise.resolve()),
+    send: () => {
+      return Promise.resolve();
+    },
   };
+
+  chai.spy.on(emailAPI, "send");
 
   const pretixAPI: IPretixAPI | null = getMockZuzaluPretixAPI();
 
