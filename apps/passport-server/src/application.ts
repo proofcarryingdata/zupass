@@ -24,7 +24,6 @@ import { logger } from "./util/logger";
 export async function startApplication(
   apiOverrides?: Partial<APIs>
 ): Promise<PCDPass> {
-  const apis = await getOverridenApis(apiOverrides);
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
 
@@ -35,6 +34,8 @@ export async function startApplication(
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
   };
+
+  const apis = await getOverridenApis(context, apiOverrides);
 
   await startTelemetryService(context);
   const rollbarService = startRollbarService();
@@ -95,7 +96,10 @@ export async function stopApplication(app?: PCDPass): Promise<void> {
   await app.context.dbPool.end();
 }
 
-async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
+async function getOverridenApis(
+  context: ApplicationContext,
+  apiOverrides?: Partial<APIs>
+): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
   if (apiOverrides?.emailAPI) {
@@ -112,11 +116,13 @@ async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
 
   let pretixAPI: PretixAPI | null = null;
 
-  if (apiOverrides?.pretixAPI) {
-    logger("[INIT] overriding pretix api");
-    pretixAPI = apiOverrides.pretixAPI;
-  } else {
-    pretixAPI = getPretixAPI();
+  if (context.isZuzalu) {
+    if (apiOverrides?.pretixAPI) {
+      logger("[INIT] overriding pretix api");
+      pretixAPI = apiOverrides.pretixAPI;
+    } else {
+      pretixAPI = getPretixAPI();
+    }
   }
 
   return {
