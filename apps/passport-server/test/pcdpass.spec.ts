@@ -10,10 +10,12 @@ import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { randomEmail } from "./util/util";
 
-describe("pcd-pass functionality", function () {
+describe.only("pcd-pass functionality", function () {
   this.timeout(15_000);
 
+  const testEmail = randomEmail();
   let application: PCDPass;
   let user: ZuParticipant;
   let emailAPI: IEmailAPI;
@@ -36,9 +38,18 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    user = await loginPCDPass(application);
+    user = await loginPCDPass(application, testEmail, false);
     expect(emailAPI.send).to.have.been.called.exactly(1);
   });
+
+  step(
+    "should not be able to log in a 2nd time without force option",
+    async function () {
+      await expect(loginPCDPass(application, testEmail, false)).to.be.rejected;
+      user = await loginPCDPass(application, testEmail, true);
+      expect(emailAPI.send).to.have.been.called.exactly(2);
+    }
+  );
 
   step("user should be able to sync end to end encryption", async function () {
     await sync(application);
