@@ -12,6 +12,7 @@ dotenv.config();
 const IS_ZUZALU = process.env.IS_ZUZALU === "true";
 
 const define = {
+  "process.env.IS_ZUZALU": JSON.stringify(process.env.IS_ZUZALU),
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(
     process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
   ),
