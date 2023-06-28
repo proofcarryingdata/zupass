@@ -91,13 +91,13 @@ export class SemaphoreService {
   }
 
   // Load participants from DB, rebuild semaphore groups
-  public async reload() {
+  public async reload(): Promise<void> {
     return traced("Semaphore", "reload", async (span) => {
       console.log(`[SEMA] Reloading semaphore service...`);
       const ps = await fetchPassportParticipants(this.dbPool);
       console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
       this.setZuzaluGroups(ps);
-      this.reloadGenericGroup();
+      await this.reloadGenericGroup();
       this.loaded = true;
       console.log(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
