@@ -244,6 +244,25 @@ describe.only("Pretix sync should work", function () {
         .eventually.be.rejected;
 
       residentUser = await loginZupass(application, resident.email, true);
+
+      const oldCommitment = resident.commitment!;
+      const newCommitment = residentUser.commitment;
+
+      expect(oldCommitment != null).to.be.true;
+      expect(newCommitment != null).to.be.true;
+      expect(oldCommitment).to.not.eq(newCommitment);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(oldCommitment)
+      ).to.eq(-1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(newCommitment)
+      ).to.be.greaterThan(-1);
     }
   );
 

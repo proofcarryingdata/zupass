@@ -4,8 +4,21 @@ import { sqlQuery } from "../../sqlQuery";
 
 export async function fetchAllPretixParticipants(
   client: ClientBase | Pool
-): Promise<PretixParticipant[]> {
-  const result = await sqlQuery(client, `select * from pretix_participants;`);
+): Promise<Array<PretixParticipant & { commitment?: string }>> {
+  const result = await sqlQuery(
+    client,
+    `\
+select
+    p.email as email,
+    p.name as name,
+    p.role as role,
+    p.residence as residence,
+    p.order_id as order_id,
+    c.commitment as commitment
+from pretix_participants p
+left join commitments c on c.participant_email = p.email;
+`
+  );
 
   return result.rows;
 }
@@ -14,7 +27,7 @@ export async function fetchAllPretixParticipants(
 export async function fetchPretixParticipant(
   client: ClientBase | Pool,
   params: { email: string }
-): Promise<(PretixParticipant & { commitment: string; token: string }) | null> {
+): Promise<(PretixParticipant & { commitment?: string }) | null> {
   const result = await sqlQuery(
     client,
     `\
@@ -26,7 +39,7 @@ select
     p.order_id as order_id,
     c.commitment as commitment
 from pretix_participants p
-full join commitments c on c.participant_email = p.email
+left join commitments c on c.participant_email = p.email
 where p.email = $1;`,
     [params.email]
   );
