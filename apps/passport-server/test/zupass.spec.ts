@@ -23,7 +23,6 @@ describe("zupass functionality", function () {
   let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {
-    console.log("starting application");
     overrideEnvironment(zuzaluTestingEnv);
     application = await startTestingApp();
   });

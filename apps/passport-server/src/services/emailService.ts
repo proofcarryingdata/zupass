@@ -2,6 +2,7 @@ import { readFile } from "fs/promises";
 import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
@@ -94,7 +95,7 @@ export class EmailService {
         }
         await this.emailAPI.send(msg);
       } catch (e: any) {
-        console.log(e);
+        logger(e);
         this.rollbarService?.error(e);
         throw new Error(`Sendgrid error, failed to email ${to}`);
       }
@@ -119,7 +120,7 @@ export class EmailService {
 
         this.emailAPI.send(msg);
       } catch (e: any) {
-        console.log(e);
+        logger(e);
         this.rollbarService?.error(e);
         throw new Error(`Sendgrid error, failed to email ${to}`);
       }

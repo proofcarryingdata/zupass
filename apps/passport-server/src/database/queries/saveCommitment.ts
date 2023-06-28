@@ -1,4 +1,5 @@
 import { ClientBase, Pool } from "pg";
+import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
 // Saves a new commitment. Overwrites any existing commitment for this email.
@@ -11,7 +12,7 @@ export async function insertCommitment(
   }
 ): Promise<string> {
   const { email, commitment } = params;
-  console.log(`Saving commitment email=${email} commitment=${commitment}`);
+  logger(`Saving commitment email=${email} commitment=${commitment}`);
 
   // Insert succeeds only if we already have a Pretix participant (but don't
   // already have a commitment) for this email--due to foreign + unique keys.
@@ -38,7 +39,7 @@ WHERE participant_email = $1 AND commitment = $2`,
   }
 
   const stat = insertResult.rowCount === 1 ? "NEW" : "EXISTING";
-  console.log(
+  logger(
     `Saved. email=${email} commitment=${commitment} has ${stat} uuid=${uuid}`
   );
   return uuid;

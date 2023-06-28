@@ -59,4 +59,5 @@ export interface EnvironmentVariables {
   PRETIX_ZU_EVENT_ID?: string;
   PRETIX_VISITOR_EVENT_ID?: string;
   ROLLBAR_TOKEN?: string;
+  SUPPRESS_LOGGING?: string;
 }

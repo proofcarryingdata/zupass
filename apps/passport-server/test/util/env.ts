@@ -1,4 +1,5 @@
 import { EnvironmentVariables } from "../../src/types";
+import { logger } from "../../src/util/logger";
 
 export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   NODE_ENV: "production",
@@ -16,6 +17,7 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_TOKEN: "pretix_token",
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
+  SUPPRESS_LOGGING: "true",
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
@@ -30,10 +32,14 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
 export function overrideEnvironment(
   envOverrides?: Partial<EnvironmentVariables>
 ) {
-  console.log("[INIT] overriding environment variables");
+  if (envOverrides?.SUPPRESS_LOGGING) {
+    process.env.SUPPRESS_LOGGING = envOverrides.SUPPRESS_LOGGING;
+  }
+
+  logger("[INIT] overriding environment variables");
   for (const entry of Object.entries(envOverrides ?? {})) {
     process.env[entry[0]] = entry[1];
-    console.log(
+    logger(
       "[INIT] overriding environment variable",
       entry[0],
       "with",
@@ -43,5 +49,5 @@ export function overrideEnvironment(
       delete process.env[entry[0]];
     }
   }
-  console.log("[INIT] finished overriding environment variables");
+  logger("[INIT] finished overriding environment variables");
 }

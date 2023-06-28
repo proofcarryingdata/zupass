@@ -1,4 +1,5 @@
 import { getPretixConfig, IPretixAPI } from "../../src/apis/pretixAPI";
+import { logger } from "../../src/util/logger";
 import {
   IMockPretixData,
   ZuzaluPretixDataMocker,
@@ -13,23 +14,23 @@ export function getMockZuzaluPretixAPI(): IPretixAPI | null {
 
   const mocker = new ZuzaluPretixDataMocker(config);
   const mockData = mocker.mockData();
-  console.log("[MOCK] zuzalu pretix data", mockData);
+  logger("[MOCK] zuzalu pretix data", mockData);
   return getMockPretixAPI(mockData);
 }
 
 export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
-  console.log("[MOCK] instantiating mock zuzalu pretix api");
+  logger("[MOCK] instantiating mock zuzalu pretix api");
 
   return {
     config: mockData.config,
     fetchOrders: async (eventID: string) => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
-      console.log(`[MOCK] fetchOrders('${eventID}') =>`, result);
+      logger(`[MOCK] fetchOrders('${eventID}') =>`, result);
       return result;
     },
     fetchSubevents: async (parentId: string) => {
       const result = mockData.subEventsByParentEventId.get(parentId) ?? [];
-      console.log(`[MOCK] fetchSubevents('${parentId}') =>`, result);
+      logger(`[MOCK] fetchSubevents('${parentId}') =>`, result);
       return result;
     },
   };

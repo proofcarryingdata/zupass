@@ -1,4 +1,5 @@
 import { traced } from "../services/telemetryService";
+import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
 
 const TRACE_SERVICE = "Fetch";
@@ -24,12 +25,12 @@ export class PretixAPI implements IPretixAPI {
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
-        console.log(`[PRETIX] Fetching ${url}`);
+        logger(`[PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          console.error(
+          logger(
             `Error fetching ${url}: ${res.status} ${res.statusText}`
           );
           break;
@@ -51,12 +52,12 @@ export class PretixAPI implements IPretixAPI {
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/subevents/`;
       while (url != null) {
-        console.log(`[PRETIX] Fetching ${url}`);
+        logger(`[PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          console.error(
+          logger(
             `Error fetching ${url}: ${res.status} ${res.statusText}`
           );
           break;
@@ -83,10 +84,10 @@ export function getPretixConfig(): PretixConfig | null {
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
       zuEventOrganizersItemID: 151,
     };
-    console.log("[PRETIX] read config: " + JSON.stringify(pretixConfig));
+    logger("[PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
   } catch (e) {
-    console.error(
+    logger(
       `[INIT] missing environment variable ${e} required by pretix configuration`
     );
     return null;

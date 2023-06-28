@@ -14,7 +14,6 @@ describe("pcd-pass functionality", function () {
   let user: ZuParticipant;
 
   this.beforeAll(async () => {
-    console.log("starting application");
     overrideEnvironment(pcdpassTestingEnv);
     application = await startTestingApp();
   });
@@ -39,6 +38,6 @@ describe("pcd-pass functionality", function () {
   step("semaphore service should now be aware of the user", async function () {
     const { semaphoreService } = application.globalServices;
     const genericGroup = semaphoreService.groupGeneric();
-    expect(genericGroup.group.indexOf(user.commitment)).to.be.above(0);
+    expect(genericGroup.group.indexOf(user.commitment)).to.be.above(-1);
   });
 });

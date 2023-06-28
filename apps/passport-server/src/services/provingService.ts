@@ -12,6 +12,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
+import { logger } from "../util/logger";
 
 export class ProvingService {
   /**
@@ -117,7 +118,7 @@ export class ProvingService {
       // artificial lengthen to test multiple incoming requests
       // await sleep(5000);
 
-      console.log(`finished PCD request ${currentHash}`, serializedPCD);
+      logger(`finished PCD request ${currentHash}`, serializedPCD);
       this.pendingPCDResponse.set(currentHash, {
         status: PendingPCDStatus.COMPLETE,
         serializedPCD: JSON.stringify(serializedPCD),

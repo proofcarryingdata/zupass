@@ -15,6 +15,7 @@ import {
 } from "../database/queries/historicSemaphore";
 import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
 /**
@@ -93,13 +94,13 @@ export class SemaphoreService {
   // Load participants from DB, rebuild semaphore groups
   public async reload(): Promise<void> {
     return traced("Semaphore", "reload", async (span) => {
-      console.log(`[SEMA] Reloading semaphore service...`);
+      logger(`[SEMA] Reloading semaphore service...`);
       const ps = await fetchPassportParticipants(this.dbPool);
-      console.log(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
+      logger(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
       this.setZuzaluGroups(ps);
       await this.reloadGenericGroup();
       this.loaded = true;
-      console.log(`[SEMA] Semaphore service reloaded.`);
+      logger(`[SEMA] Semaphore service reloaded.`);
       span?.setAttribute("participants", ps.length);
       this.saveHistoricSemaphoreGroups();
     });
@@ -125,7 +126,7 @@ export class SemaphoreService {
       throw new Error("no database connection");
     }
 
-    console.log(`[SEMA] Semaphore service - diffing historic semaphore groups`);
+    logger(`[SEMA] Semaphore service - diffing historic semaphore groups`);
 
     const latestGroups = await fetchLatestSemaphoreGroups(this.dbPool);
 
@@ -138,7 +139,7 @@ export class SemaphoreService {
         correspondingLatestGroup == null ||
         correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
       ) {
-        console.log(
+        logger(
           `[SEMA] outdated semaphore group ${localGroup.group.id}` +
             ` - appending a new one into the database`
         );
@@ -152,7 +153,7 @@ export class SemaphoreService {
           )
         );
       } else {
-        console.log(
+        logger(
           `[SEMA] group '${localGroup.group.id}' is not outdated, not appending to group history`
         );
       }
@@ -191,15 +192,15 @@ export class SemaphoreService {
       groupsById.set(group.group.id.toString(), group);
     }
 
-    console.log(`[SEMA] initializing ${this.groups.length} groups`);
-    console.log(`[SEMA] inserting ${participants.length} participants`);
+    logger(`[SEMA] initializing ${this.groups.length} groups`);
+    logger(`[SEMA] inserting ${participants.length} participants`);
 
     // calculate which participants go into which groups
     for (const p of participants) {
       this.zuzaluParticipants[p.uuid] = p;
       const groupsOfThisParticipant = this.getZuzaluGroupsForRole(p.role);
       for (const namedGroup of groupsOfThisParticipant) {
-        console.log(
+        logger(
           `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
         );
         const participantsInGroup = groupIdsToParticipants.get(
@@ -215,7 +216,7 @@ export class SemaphoreService {
       const namedGroup = groupsById.get(entry[0]);
 
       if (namedGroup) {
-        console.log(
+        logger(
           `[SEMA] replacing group ${namedGroup.name} with ${groupParticipants.length} participants`
         );
         const participantIds = groupParticipants.map((p) => p.commitment);

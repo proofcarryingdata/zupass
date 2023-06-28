@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { traced } from "../../services/telemetryService";
+import { logger } from "../../util/logger";
 
 /**
  * Express middleware that traces all HTTP requests to HoneyComb. This
@@ -7,7 +8,7 @@ import { traced } from "../../services/telemetryService";
  * HTTP requests.
  */
 export function tracingMiddleware() {
-  console.log("[TRACING] setting up middleware");
+  logger("[TRACING] setting up middleware");
   return (req: Request, res: Response, next: NextFunction) => {
     traced(
       "Express",

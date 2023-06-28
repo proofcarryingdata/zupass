@@ -10,6 +10,7 @@ import {
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { RollbarService } from "./rollbarService";
@@ -62,7 +63,7 @@ export class UserService {
     force: boolean,
     response: Response
   ) {
-    console.log(
+    logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
 
@@ -93,18 +94,18 @@ export class UserService {
       throw new Error(`${email} already registered.`);
     }
     const stat = participant.commitment == null ? "NEW" : "EXISTING";
-    console.log(
+    logger(
       `Saved login token for ${stat} email=${email} commitment=${commitment}`
     );
 
     // Send an email with the login token.
     if (this._bypassEmail) {
-      console.log("[DEV] Bypassing email, returning token");
+      logger("[DEV] Bypassing email, returning token");
 
       response.json({ token });
     } else {
       const { name } = participant;
-      console.log(
+      logger(
         `[ZUID] Sending token=${token} to email=${email} name=${name}`
       );
       await this.emailService.sendPretixEmail(email, name, token);
@@ -120,7 +121,7 @@ export class UserService {
     res: Response
   ) {
     const { dbPool } = this.context;
-    console.log(
+    logger(
       `[ZUID] new-participant ${JSON.stringify({
         emailToken,
         email,
@@ -144,7 +145,7 @@ export class UserService {
       }
 
       // Save commitment to DB.
-      console.log(`[ZUID] Saving new commitment: ${commitment}`);
+      logger(`[ZUID] Saving new commitment: ${commitment}`);
       const uuid = await insertCommitment(dbPool, {
         email,
         commitment,
@@ -162,7 +163,7 @@ export class UserService {
       // Return participant, including UUID, back to Passport
       const zuParticipant = participant as ZuParticipant;
       const jsonP = JSON.stringify(zuParticipant);
-      console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
+      logger(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
 
       res.json(zuParticipant);
     } catch (e: any) {
@@ -172,7 +173,7 @@ export class UserService {
   }
 
   public async handleGetZuzaluParticipant(uuid: string, res: Response) {
-    console.log(`[ZUID] Fetching participant ${uuid}`);
+    logger(`[ZUID] Fetching participant ${uuid}`);
     const participant = this.semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);
     res.json(participant || null);
@@ -184,7 +185,7 @@ export class UserService {
     force: boolean,
     res: Response
   ) {
-    console.log(
+    logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
 
@@ -203,7 +204,7 @@ export class UserService {
       throw new Error(`${email} already registered.`);
     }
 
-    console.log(
+    logger(
       `Saved login token for ${
         existingCommitment === null ? "NEW" : "EXISTING"
       } email=${email} commitment=${commitment}`
@@ -211,10 +212,10 @@ export class UserService {
 
     // Send an email with the login token.
     if (devBypassEmail) {
-      console.log("[DEV] Bypassing email, returning token");
+      logger("[DEV] Bypassing email, returning token");
       res.json({ token });
     } else {
-      console.log(`[ZUID] Sending token=${token} to email=${email}`);
+      logger(`[ZUID] Sending token=${token} to email=${email}`);
       await this.emailService.sendPCDPassEmail(email, token);
       res.sendStatus(200);
     }
@@ -226,7 +227,7 @@ export class UserService {
     commitment: string,
     res: Response
   ) {
-    console.log(
+    logger(
       `[ZUID] new-participant ${JSON.stringify({
         token,
         email,
@@ -242,7 +243,7 @@ export class UserService {
       }
 
       // Save commitment to DB.
-      console.log(`[ZUID] Saving new commitment: ${commitment}`);
+      logger(`[ZUID] Saving new commitment: ${commitment}`);
       await insertCommitment(this.context.dbPool, { email, commitment });
 
       // Reload Merkle trees
@@ -251,7 +252,7 @@ export class UserService {
       // Return participant, including UUID, back to Passport
       const zuParticipant = await fetchCommitment(this.context.dbPool, email);
       const jsonP = JSON.stringify(zuParticipant);
-      console.log(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
+      logger(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
 
       res.json(zuParticipant);
     } catch (e: any) {
@@ -261,7 +262,7 @@ export class UserService {
   }
 
   public async handleGetPcdPassUser(uuid: string, res: Response) {
-    console.log(`[ZUID] Fetching participant ${uuid}`);
+    logger(`[ZUID] Fetching participant ${uuid}`);
     res.setHeader("Access-Control-Allow-Origin", "*");
     const participant = this.semaphoreService.getParticipant(uuid);
     if (!participant) res.status(404);

@@ -45,6 +45,7 @@
     "BYPASS_EMAIL_REGISTRATION",
     "ROLLBAR_TOKEN",
     "SW_ID",
-    "IS_ZUZALU"
+    "IS_ZUZALU",
+    "SUPPRESS_LOGGING"
   ]
 }

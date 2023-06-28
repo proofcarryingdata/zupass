@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { logger } from "../../util/logger";
 import { decodeString, normalizeEmail } from "../../util/util";
 
 export function initPCDPassRoutes(
@@ -7,7 +8,7 @@ export function initPCDPassRoutes(
   _context: ApplicationContext,
   { userService }: GlobalServices
 ) {
-  console.log("[INIT] Initializing PCDPass routes");
+  logger("[INIT] Initializing PCDPass routes");
 
   app.get("/pcdpass/", (req: Request, res: Response) => {
     res.sendStatus(200);

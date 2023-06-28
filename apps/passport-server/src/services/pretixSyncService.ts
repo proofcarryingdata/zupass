@@ -8,6 +8,7 @@ import { fetchPretixParticipants } from "../database/queries/pretix_users/fetchP
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { updateParticipant } from "../database/queries/pretix_users/updateParticipant";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import {
   participantsToMap,
   participantUpdatedFromPretix,
@@ -51,7 +52,7 @@ export class PretixSyncService {
         this._hasCompletedSyncSinceStarting = true;
       } catch (e: any) {
         this.rollbarService?.error(e);
-        console.error(e);
+        logger(e);
       }
       this.timeout = setTimeout(() => trySync(), 1000 * 60);
     };
@@ -71,11 +72,11 @@ export class PretixSyncService {
   async sync() {
     return traced(TRACE_SERVICE, "sync", async () => {
       const syncStart = Date.now();
-      console.log("[PRETIX] Sync start");
+      logger("[PRETIX] Sync start");
       const participants = await this.loadAllParticipants();
       const participantEmails = new Set(participants.map((p) => p.email));
 
-      console.log(
+      logger(
         `[PRETIX] loaded ${participants.length} Pretix participants (visitors, residents, and organizers)` +
           ` from Pretix, found ${participantEmails.size} unique emails`
       );
@@ -85,11 +86,11 @@ export class PretixSyncService {
       try {
         await this.saveParticipants(dbPool, participants);
       } catch (e) {
-        console.log("[PRETIX] failed to save participants");
+        logger("[PRETIX] failed to save participants");
       }
 
       const syncEnd = Date.now();
-      console.log(
+      logger(
         `[PRETIX] Sync end. Completed in ${Math.floor(
           (syncEnd - syncStart) / 1000
         )} seconds`
@@ -117,11 +118,11 @@ export class PretixSyncService {
       );
 
       // Step 1 of saving: insert participants that are new
-      console.log(
+      logger(
         `[PRETIX] Inserting ${newParticipants.length} new participants`
       );
       for (const participant of newParticipants) {
-        console.log(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
+        logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
         await insertPretixParticipant(dbClient, participant);
       }
 
@@ -136,14 +137,14 @@ export class PretixSyncService {
         });
 
       // For the participants that have changed, update them in the database.
-      console.log(
+      logger(
         `[PRETIX] Updating ${updatedParticipants.length} participants`
       );
       for (const updatedParticipant of updatedParticipants) {
         const oldParticipant = existingParticipantsByEmail.get(
           updatedParticipant.email
         );
-        console.log(
+        logger(
           `[PRETIX] Updating ${JSON.stringify(
             oldParticipant
           )} to ${JSON.stringify(updatedParticipant)}`
@@ -156,11 +157,11 @@ export class PretixSyncService {
       const removedParticipants = existingParticipants.filter(
         (existing) => !pretixParticipantsAsMap.has(existing.email)
       );
-      console.log(
+      logger(
         `[PRETIX] Deleting ${removedParticipants.length} participants`
       );
       for (const removedParticipant of removedParticipants) {
-        console.log(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
+        logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
         await deletePretixParticipant(dbClient, removedParticipant.email);
       }
 
@@ -181,7 +182,7 @@ export class PretixSyncService {
    */
   async loadAllParticipants(): Promise<PretixParticipant[]> {
     return traced(TRACE_SERVICE, "loadAllParticipants", async () => {
-      console.log(
+      logger(
         "[PRETIX] Fetching participants (visitors, residents, organizers)"
       );
 
@@ -202,7 +203,7 @@ export class PretixSyncService {
    */
   async loadResidents(): Promise<PretixParticipant[]> {
     return traced(TRACE_SERVICE, "loadResidents", async () => {
-      console.log("[PRETIX] Fetching residents");
+      logger("[PRETIX] Fetching residents");
 
       // Fetch orders
       const orders = await this.pretixAPI.fetchOrders(
@@ -214,7 +215,7 @@ export class PretixSyncService {
         (o) =>
           o.positions[0].item === this.pretixAPI.config.zuEventOrganizersItemID
       );
-      console.log(
+      logger(
         `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
       );
       const organizers = this.ordersToParticipants(
@@ -232,7 +233,7 @@ export class PretixSyncService {
       ).filter((p) => !orgEmails.has(p.email));
 
       // Return the combined list
-      console.log(
+      logger(
         `[PRETIX] loaded ${organizers.length} organizers, ${residents.length} residents`
       );
       return [...organizers, ...residents];
@@ -245,7 +246,7 @@ export class PretixSyncService {
    */
   async loadVisitors(): Promise<PretixParticipant[]> {
     return traced(TRACE_SERVICE, "loadVisitors", async () => {
-      console.log("[PRETIX] Fetching visitors");
+      logger("[PRETIX] Fetching visitors");
       const subevents = await this.pretixAPI.fetchSubevents(
         this.pretixAPI.config.zuVisitorEventID
       );
@@ -261,7 +262,7 @@ export class PretixSyncService {
 
       const visitors = this.deduplicateVisitorParticipants(visitorParticipants);
 
-      console.log(`[PRETIX] loaded ${visitors.length} visitors`);
+      logger(`[PRETIX] loaded ${visitors.length} visitors`);
 
       return visitors;
     });
@@ -359,7 +360,7 @@ export function startPretixSyncService(
   pretixAPI: IPretixAPI | null
 ): PretixSyncService | null {
   if (!pretixAPI) {
-    console.log("[PRETIX] can't start sync service - no api instantiated");
+    logger("[PRETIX] can't start sync service - no api instantiated");
     return null;
   }
 

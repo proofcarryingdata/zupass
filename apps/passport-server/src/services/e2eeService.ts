@@ -9,6 +9,7 @@ import {
   insertEncryptedStorage,
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 
 export class E2EEService {
@@ -24,7 +25,7 @@ export class E2EEService {
   }
 
   public async handleLoad(request: LoadE2EERequest, res: Response) {
-    console.log(`[E2EE] Loading ${request.blobKey}`);
+    logger(`[E2EE] Loading ${request.blobKey}`);
 
     try {
       const storageModel = await fetchEncryptedStorage(
@@ -33,7 +34,7 @@ export class E2EEService {
       );
 
       if (!storageModel) {
-        console.log(`can't load e2ee: never saved sync key ${request.blobKey}`);
+        logger(`can't load e2ee: never saved sync key ${request.blobKey}`);
         res.sendStatus(404);
         return;
       }
@@ -44,14 +45,14 @@ export class E2EEService {
 
       res.json(result);
     } catch (e) {
-      console.log(e);
+      logger(e);
       this.rollbarService?.error(e as Error);
       res.status(500);
     }
   }
 
   public async handleSave(request: SaveE2EERequest, res: Response) {
-    console.log(`[E2EE] Saving ${request.blobKey}`);
+    logger(`[E2EE] Saving ${request.blobKey}`);
 
     try {
       await insertEncryptedStorage(

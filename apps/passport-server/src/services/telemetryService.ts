@@ -4,6 +4,7 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
@@ -12,7 +13,7 @@ export async function startTelemetry(
   context: ApplicationContext
 ): Promise<void> {
   if (!context.honeyClient) {
-    console.log(
+    logger(
       "[INIT] Not starting telemetry service - missing Honeycomb instance."
     );
     return;
@@ -26,14 +27,14 @@ export async function startTelemetry(
     serviceName: "server-telemetry",
   });
 
-  console.log("[INIT] Starting telemetry");
+  logger("[INIT] Starting telemetry");
 
   return sdk
     .start()
     .then(() => {
-      console.log("[INIT] Tracing initialized");
+      logger("[INIT] Tracing initialized");
     })
-    .catch((error) => console.log("Error initializing tracing", error));
+    .catch((error) => logger("Error initializing tracing", error));
 }
 
 /**

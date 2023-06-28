@@ -22,7 +22,6 @@ describe("server-side proving functionality", function () {
   let application: PCDPass;
 
   this.beforeAll(async () => {
-    console.log("starting application");
     overrideEnvironment(zuzaluTestingEnv);
     application = await startTestingApp();
   });

@@ -1,5 +1,6 @@
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { logger } from "../../util/logger";
 import { decodeString, normalizeEmail } from "../../util/util";
 
 /**
@@ -10,7 +11,7 @@ export function initZuzaluRoutes(
   _context: ApplicationContext,
   { userService }: GlobalServices
 ): void {
-  console.log("[INIT] Initializing zuzalu routes");
+  logger("[INIT] Initializing zuzalu routes");
 
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.

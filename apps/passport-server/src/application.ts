@@ -15,6 +15,7 @@ import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry as startTelemetryService } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
 import { APIs, ApplicationContext, GlobalServices, PCDPass } from "./types";
+import { logger } from "./util/logger";
 
 export async function startApplication(
   apiOverrides?: Partial<APIs>
@@ -87,11 +88,11 @@ async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
   if (apiOverrides?.emailAPI) {
-    console.log("[INIT] overriding email client");
+    logger("[INIT] overriding email client");
     emailAPI = apiOverrides.emailAPI;
   } else {
     if (process.env.MAILGUN_API_KEY === undefined) {
-      console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
+      logger("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
       emailAPI = null;
     } else {
       emailAPI = { send: sendEmail };
@@ -101,7 +102,7 @@ async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
   let pretixAPI: PretixAPI | null = null;
 
   if (apiOverrides?.pretixAPI) {
-    console.log("[INIT] overriding pretix api");
+    logger("[INIT] overriding pretix api");
     pretixAPI = apiOverrides.pretixAPI;
   } else {
     pretixAPI = getPretixAPI();

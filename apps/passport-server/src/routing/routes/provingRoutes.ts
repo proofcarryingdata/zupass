@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import express, { NextFunction, Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { logger } from "../../util/logger";
 
 export function initPCDRoutes(
   app: express.Application,
@@ -17,7 +18,7 @@ export function initPCDRoutes(
   app.post(
     "/pcds/prove",
     async (req: Request, res: Response, next: NextFunction) => {
-      console.log("/pcds/prove received:", req.body);
+      logger("/pcds/prove received:", req.body);
       const request = req.body as ProveRequest;
       try {
         const pending: PendingPCD = await provingService.enqueueProofRequest(
@@ -25,7 +26,7 @@ export function initPCDRoutes(
         );
         res.json(pending);
       } catch (e) {
-        console.error("/pcds/prove error: ", e);
+        logger("/pcds/prove error: ", e);
         next(e);
       }
     }
@@ -38,7 +39,7 @@ export function initPCDRoutes(
       try {
         res.json(provingService.getSupportedPCDTypes());
       } catch (e) {
-        console.error("/pcds/supported error: ", e);
+        logger("/pcds/supported error: ", e);
         next(e);
       }
     }
@@ -47,14 +48,14 @@ export function initPCDRoutes(
   app.post(
     "/pcds/status",
     async (req: Request, res: Response, next: NextFunction) => {
-      console.log("/pcds/status received:", req.body);
+      logger("/pcds/status received:", req.body);
       const statusRequest = req.body as StatusRequest;
       try {
         const statusResponse: StatusResponse =
           provingService.getPendingPCDStatus(statusRequest.hash);
         res.json(statusResponse);
       } catch (e) {
-        console.error("/pcds/status error:", e);
+        logger("/pcds/status error:", e);
         next(e);
       }
     }

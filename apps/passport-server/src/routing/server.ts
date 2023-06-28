@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices } from "../types";
 import { IS_PROD } from "../util/isProd";
+import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
@@ -24,7 +25,10 @@ export async function startServer(
       const port = IS_PROD ? process.env.PORT : 3002;
       const app = express();
 
-      app.use(morgan("tiny"));
+      if (process.env.SUPPRESS_LOGGING !== 'true') {
+        app.use(morgan("tiny"));
+      }
+
       app.use(express.json());
       app.use(cors());
       app.use(tracingMiddleware());
@@ -45,8 +49,8 @@ export async function startServer(
           res: express.Response,
           _next: NextFunction
         ) => {
-          console.error(`[ERROR] ${req.method} ${req.url}`);
-          console.error(err.stack);
+          logger(`[ERROR] ${req.method} ${req.url}`);
+          logger(err.stack);
           res.status(500).send(err.message);
         }
       );
@@ -60,7 +64,7 @@ export async function startServer(
       });
 
       const server = app.listen(port, () => {
-        console.log(`[INIT] HTTP server listening on port ${port}`);
+        logger(`[INIT] HTTP server listening on port ${port}`);
         sendEvent(context, EventName.SERVER_START);
         resolve({ server, app });
       });

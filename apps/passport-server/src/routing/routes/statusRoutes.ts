@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { fetchStatus } from "../../database/queries/fetchStatus";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { logger } from "../../util/logger";
 
 export enum PretixSyncStatus {
   NotSynced = "NotSynced",
@@ -13,7 +14,7 @@ export function initStatusRoutes(
   context: ApplicationContext,
   { semaphoreService, pretixSyncService }: GlobalServices
 ) {
-  console.log("[INIT] Initializing status routes");
+  logger("[INIT] Initializing status routes");
   const { dbPool } = context;
 
   app.get("/pretix/status", async (req: Request, res: Response) => {
