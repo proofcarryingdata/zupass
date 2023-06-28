@@ -36,7 +36,7 @@ export interface PCDPass {
 }
 
 export interface APIs {
-  emailClient: IEmailAPI | null;
+  emailAPI: IEmailAPI | null;
   pretixAPI: IPretixAPI | null;
 }
 

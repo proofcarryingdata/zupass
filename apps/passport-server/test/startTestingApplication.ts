@@ -1,5 +1,7 @@
 import chai from "chai";
 import spies from "chai-spies";
+import { IEmailAPI } from "../src/apis/emailAPI";
+import { IPretixAPI } from "../src/apis/pretixAPI";
 import { startApplication } from "../src/application";
 import { APIs, PCDPass } from "../src/types";
 
@@ -10,8 +12,23 @@ export interface TestingApplication {
   apis?: Partial<APIs>;
 }
 
-export async function startTestingApp(): Promise<TestingApplication> {
-  const emailClient = { send: chai.spy.returns(Promise.resolve()) };
+export function mockAPIs(): APIs {
+  const emailAPI: IEmailAPI | null = {
+    send: chai.spy.returns(Promise.resolve()),
+  };
+
+  const pretixAPI: IPretixAPI | null = null;
+
+  return {
+    emailAPI,
+    pretixAPI,
+  };
+}
+
+export async function startTestingApp(
+  apiOverrides?: Partial<APIs>
+): Promise<TestingApplication> {
+  const apis = Object.assign(mockAPIs(), apiOverrides);
 
   const application = await startApplication(
     {
@@ -27,10 +44,8 @@ export async function startTestingApp(): Promise<TestingApplication> {
       HONEYCOMB_API_KEY: undefined,
       ROLLBAR_TOKEN: undefined,
     },
-    {
-      emailClient,
-    }
+    apis
   );
 
-  return { application, apis: { emailClient } };
+  return { application, apis };
 }

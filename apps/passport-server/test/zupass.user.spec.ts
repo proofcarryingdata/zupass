@@ -29,8 +29,8 @@ describe("logging into Zupass and syncing", function () {
 
   step("should be able to log in", async function () {
     user = await loginZupass(application);
-    if (apis?.emailClient) {
-      expect(apis.emailClient.send).to.be.called();
+    if (apis?.emailAPI) {
+      expect(apis.emailAPI.send).to.be.called();
     } else {
       throw new Error("expected email client to have been mocked");
     }

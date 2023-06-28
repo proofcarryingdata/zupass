@@ -61,7 +61,7 @@ export async function startApplication(
   const emailService = startEmailService(
     context,
     rollbarService,
-    apis.emailClient
+    apis.emailAPI
   );
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
@@ -119,7 +119,7 @@ async function defaultAPIs(): Promise<APIs> {
   const pretixAPI = getPretixAPI();
 
   return {
-    emailClient: emailAPI,
+    emailAPI: emailAPI,
     pretixAPI,
   };
 }
