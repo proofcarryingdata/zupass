@@ -6,11 +6,8 @@ import {
   StatusResponse,
 } from "@pcd/passport-interface";
 import chai, { expect } from "chai";
-import chaiHttp from "chai-http";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
-
-chai.use(chaiHttp);
 
 export async function sendProveRequest(
   application: PCDPass,

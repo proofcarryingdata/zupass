@@ -1,10 +1,7 @@
 import chai from "chai";
-import chaiHttp from "chai-http";
 import { PretixSyncStatus } from "../../src/routing/routes/statusRoutes";
 import { PCDPass } from "../../src/types";
 import { sleep } from "../../src/util/util";
-
-chai.use(chaiHttp);
 
 export async function waitForSync(
   application: PCDPass

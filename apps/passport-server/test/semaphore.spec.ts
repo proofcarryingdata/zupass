@@ -1,14 +1,11 @@
 import { ZuParticipant } from "@pcd/passport-interface";
-import chai, { expect } from "chai";
-import spies from "chai-spies";
+import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { loginPCDPass } from "./user/loginPCDPass";
 import { startTestingApp } from "./util/startTestingApplication";
-
-chai.use(spies);
 
 describe("semaphore service", function () {
   let application: PCDPass;

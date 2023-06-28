@@ -9,7 +9,6 @@ import {
 } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
-import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
@@ -45,6 +44,12 @@ export class UserService {
       process.env.NODE_ENV !== "production";
   }
 
+  public async getZuzaluPassportHolder(
+    email: string
+  ): Promise<PretixParticipant | null> {
+    return fetchPretixParticipant(this.context.dbPool, { email });
+  }
+
   public async getZuzaluTicketHolders(): Promise<PretixParticipant[]> {
     return fetchAllPretixParticipants(this.context.dbPool);
   }
@@ -74,7 +79,6 @@ export class UserService {
       });
     }
 
-    await insertEmailToken(dbPool, { email, token });
     const participant = await fetchPretixParticipant(dbPool, { email });
 
     if (participant == null) {

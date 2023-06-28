@@ -6,18 +6,17 @@ import { PCDPass } from "../../src/types";
 
 export async function loginZupass(
   application: PCDPass,
-  email: string
+  email: string,
+  force: boolean
 ): Promise<ZuParticipant> {
   const { userService, emailTokenService } = application.globalServices;
-
   const identity = new Identity();
   const commitment = identity.commitment.toString();
-
   const sendEmailResponse = httpMocks.createResponse();
   await userService.handleSendZuzaluEmail(
     email,
     commitment,
-    true,
+    force,
     sendEmailResponse
   );
 

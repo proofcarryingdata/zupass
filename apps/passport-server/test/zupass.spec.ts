@@ -1,6 +1,5 @@
 import { ZuParticipant } from "@pcd/passport-interface";
-import chai, { expect } from "chai";
-import spies from "chai-spies";
+import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
@@ -11,8 +10,6 @@ import { waitForSync } from "./pretix/waitForSync";
 import { loginZupass } from "./user/loginZupass";
 import { sync as testE2EESync } from "./user/sync";
 import { startTestingApp } from "./util/startTestingApplication";
-
-chai.use(spies);
 
 describe.only("Pretix sync should work", function () {
   this.timeout(0);
@@ -77,7 +74,7 @@ describe.only("Pretix sync should work", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await loginZupass(application, resident.email);
+      residentUser = await loginZupass(application, resident.email, false);
       if (application.apis.emailAPI) {
         expect(application.apis.emailAPI.send).to.be.called();
       } else {
@@ -131,14 +128,14 @@ describe.only("Pretix sync should work", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await loginZupass(application, visitor.email);
+      visitorUser = await loginZupass(application, visitor.email, false);
       if (application.apis.emailAPI) {
         expect(application.apis.emailAPI.send).to.be.called();
       } else {
         throw new Error("expected email client to have been mocked");
       }
 
-      organizerUser = await loginZupass(application, organizer.email);
+      organizerUser = await loginZupass(application, organizer.email, false);
       if (application.apis.emailAPI) {
         expect(application.apis.emailAPI.send).to.be.called();
       } else {
@@ -171,6 +168,32 @@ describe.only("Pretix sync should work", function () {
         application.globalServices.semaphoreService.groupOrganizers().group
           .members.length
       ).to.eq(1);
+    }
+  );
+
+  step(
+    "after a user has logged in once, they cannot login again without 'force'",
+    async function () {
+      const ticketHolders =
+        await application.globalServices.userService.getZuzaluTicketHolders();
+
+      const resident = ticketHolders.find(
+        (t) => t.role === ParticipantRole.Resident
+      );
+
+      if (!resident) {
+        // this shouldn't happen as we've inserted a resident via mock data
+        throw new Error("couldn't find a visitor or organizer to test with");
+      }
+
+      await expect(loginZupass(application, resident.email, false)).to
+        .eventually.be.rejected;
+
+      // if (application.apis.emailAPI) {
+      //   expect(application.apis.emailAPI.send).to.be.called();
+      // } else {
+      //   throw new Error("expected email client to have been mocked");
+      // }
     }
   );
 

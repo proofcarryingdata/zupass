@@ -7,16 +7,13 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import chai, { expect } from "chai";
-import spies from "chai-spies";
+import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
 import { startTestingApp } from "./util/startTestingApplication";
-
-chai.use(spies);
 
 describe("semaphore service", function () {
   this.timeout(0);

@@ -1,6 +1,5 @@
 import { ZuParticipant } from "@pcd/passport-interface";
-import chai, { expect } from "chai";
-import spies from "chai-spies";
+import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
@@ -9,8 +8,6 @@ import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-
-chai.use(spies);
 
 describe("logging into PCDPass and syncing", function () {
   let application: PCDPass;
