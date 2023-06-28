@@ -1,11 +1,12 @@
 import * as dotenv from "dotenv";
 import * as path from "path";
-import { sendEmail } from "./apis/emailAPI";
+import { IEmailAPI, sendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
+import { getPretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startE2EEService } from "./services/e2eeService";
-import { EmailClient, startEmailService } from "./services/emailService";
+import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startMetrics as startMetricsService } from "./services/metricsService";
 import { startPretixSyncService } from "./services/pretixSyncService";
@@ -54,7 +55,7 @@ export async function startApplication(
 
   startProvingService();
   startMetricsService(context);
-  startPretixSyncService(context, rollbarService);
+  startPretixSyncService(context, rollbarService, apis.pretixAPI);
 
   const provingService = await startProvingService();
   const emailService = startEmailService(
@@ -106,16 +107,19 @@ function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
 }
 
 async function defaultAPIs(): Promise<APIs> {
-  let emailClient: EmailClient | null = null;
+  let emailAPI: IEmailAPI | null = null;
 
   if (process.env.MAILGUN_API_KEY === undefined) {
     console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
-    emailClient = null;
+    emailAPI = null;
   } else {
-    emailClient = { send: sendEmail };
+    emailAPI = { send: sendEmail };
   }
 
+  const pretixAPI = getPretixAPI();
+
   return {
-    emailClient: emailClient,
+    emailClient: emailAPI,
+    pretixAPI,
   };
 }

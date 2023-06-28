@@ -2,8 +2,9 @@ import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
+import { IEmailAPI } from "./apis/emailAPI";
+import { IPretixAPI } from "./apis/pretixAPI";
 import { E2EEService } from "./services/e2eeService";
-import { EmailClient } from "./services/emailService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -35,7 +36,8 @@ export interface PCDPass {
 }
 
 export interface APIs {
-  emailClient: EmailClient | null;
+  emailClient: IEmailAPI | null;
+  pretixAPI: IPretixAPI | null;
 }
 
 export interface EnvironmentVariables {

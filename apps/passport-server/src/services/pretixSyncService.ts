@@ -1,14 +1,7 @@
 import { DateRange } from "@pcd/passport-interface";
 
 import { PoolClient } from "pg";
-import {
-  fetchOrders,
-  fetchSubevents,
-  getPretixConfig,
-  PretixConfig,
-  PretixOrder,
-  PretixSubevent,
-} from "../apis/pretixAPI";
+import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
 import { fetchPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipants";
@@ -29,31 +22,34 @@ const TRACE_SERVICE = "Pretix";
  */
 export function startPretixSyncService(
   context: ApplicationContext,
-  rollbarService: RollbarService
+  rollbarService: RollbarService,
+  pretixAPI: IPretixAPI | null
 ) {
-  const pretixConfig = getPretixConfig();
-  if (pretixConfig == null) return;
-  console.log("[PRETIX] Starting Pretix sync: " + JSON.stringify(pretixConfig));
-  trySync(pretixConfig);
-  async function trySync(config: PretixConfig) {
+  if (!pretixAPI) {
+    console.log("[PRETIX] can't start sync service - no api instantiated");
+    return;
+  }
+
+  trySync(pretixAPI);
+  async function trySync(api: IPretixAPI) {
     try {
-      await sync(context, config);
+      await sync(context, api);
     } catch (e: any) {
       rollbarService?.error(e);
       console.error(e);
     }
-    setTimeout(() => trySync(config), 1000 * 60);
+    setTimeout(() => trySync(api), 1000 * 60);
   }
 }
 
 /**
  * Synchronize Pretix state with Zupass state.
  */
-async function sync(context: ApplicationContext, pretixConfig: PretixConfig) {
+async function sync(context: ApplicationContext, pretixAPI: IPretixAPI) {
   return traced(TRACE_SERVICE, "sync", async () => {
     const syncStart = Date.now();
     console.log("[PRETIX] Sync start");
-    const participants = await loadAllParticipants(pretixConfig);
+    const participants = await loadAllParticipants(pretixAPI);
     const participantEmails = new Set(participants.map((p) => p.email));
 
     console.log(
@@ -156,7 +152,7 @@ async function saveParticipants(
  * Downloads the complete list of both visitors and residents from Pretix.
  */
 async function loadAllParticipants(
-  pretixConfig: PretixConfig
+  pretixConfig: IPretixAPI
 ): Promise<PretixParticipant[]> {
   return traced(TRACE_SERVICE, "loadAllParticipants", async () => {
     console.log(
@@ -178,18 +174,16 @@ async function loadAllParticipants(
 /**
  * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
  */
-async function loadResidents(
-  pretixConfig: PretixConfig
-): Promise<PretixParticipant[]> {
+async function loadResidents(api: IPretixAPI): Promise<PretixParticipant[]> {
   return traced(TRACE_SERVICE, "loadResidents", async () => {
     console.log("[PRETIX] Fetching residents");
 
     // Fetch orders
-    const orders = await fetchOrders(pretixConfig, pretixConfig.zuEventID);
+    const orders = await api.fetchOrders(api.config.zuEventID);
 
     // Extract organizers
     const orgOrders = orders.filter(
-      (o) => o.positions[0].item === pretixConfig.zuEventOrganizersItemID
+      (o) => o.positions[0].item === api.config.zuEventOrganizersItemID
     );
     console.log(
       `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
@@ -220,20 +214,12 @@ async function loadResidents(
  * Loads all visitors of Zuzalu. Visitors are defined as participants
  * who are not members of the main Zuzalu event in pretix.
  */
-async function loadVisitors(
-  pretixConfig: PretixConfig
-): Promise<PretixParticipant[]> {
+async function loadVisitors(api: IPretixAPI): Promise<PretixParticipant[]> {
   return traced(TRACE_SERVICE, "loadVisitors", async () => {
     console.log("[PRETIX] Fetching visitors");
-    const subevents = await fetchSubevents(
-      pretixConfig,
-      pretixConfig.zuVisitorEventID
-    );
+    const subevents = await api.fetchSubevents(api.config.zuVisitorEventID);
 
-    const visitorOrders = await fetchOrders(
-      pretixConfig,
-      pretixConfig.zuVisitorEventID
-    );
+    const visitorOrders = await api.fetchOrders(api.config.zuVisitorEventID);
 
     const visitorParticipants = ordersToParticipants(
       visitorOrders,
