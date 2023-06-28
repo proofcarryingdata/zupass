@@ -93,31 +93,41 @@ export class SemaphoreService {
 
   // Load participants from DB, rebuild semaphore groups
   public async reload(): Promise<void> {
-    return traced("Semaphore", "reload", async (span) => {
+    return traced("Semaphore", "reload", async () => {
       logger(`[SEMA] Reloading semaphore service...`);
-      const ps = await fetchPassportParticipants(this.dbPool);
-      logger(`[SEMA] Rebuilding groups, ${ps.length} total participants.`);
-      this.setZuzaluGroups(ps);
-      await this.reloadGenericGroup();
+
+      if (this.isZuzalu) {
+        await this.reloadZuzaluGroups();
+      } else {
+        await this.reloadGenericGroup();
+      }
+
       this.loaded = true;
+
       logger(`[SEMA] Semaphore service reloaded.`);
-      span?.setAttribute("participants", ps.length);
       this.saveHistoricSemaphoreGroups();
     });
   }
 
   private async reloadGenericGroup(): Promise<void> {
-    const allCommitments = await fetchAllCommitments(this.dbPool);
-    const namedGroup = this.getNamedGroup("5");
-    const newGroup = new Group(
-      namedGroup.group.id,
-      namedGroup.group.depth,
-      allCommitments.map((c) => c.commitment)
-    );
-    namedGroup.group = newGroup;
-    this.genericParticipants = {};
-    allCommitments.forEach((c) => {
-      this.genericParticipants[c.uuid] = c;
+    return traced("Semaphore", "reloadGenericGroup", async (span) => {
+      const allCommitments = await fetchAllCommitments(this.dbPool);
+      span?.setAttribute("participants", allCommitments.length);
+      logger(
+        `[SEMA] Rebuilding groups, ${allCommitments.length} total participants.`
+      );
+
+      const namedGroup = this.getNamedGroup("5");
+      const newGroup = new Group(
+        namedGroup.group.id,
+        namedGroup.group.depth,
+        allCommitments.map((c) => c.commitment)
+      );
+      namedGroup.group = newGroup;
+      this.genericParticipants = {};
+      allCommitments.forEach((c) => {
+        this.genericParticipants[c.uuid] = c;
+      });
     });
   }
 
@@ -179,55 +189,63 @@ export class SemaphoreService {
     return fetchLatestSemaphoreGroups(this.dbPool);
   }
 
-  private setZuzaluGroups(participants: PassportParticipant[]): void {
-    // reset participant state
-    this.zuzaluParticipants = {};
-    this.groups = SemaphoreService.createGroups();
+  private async reloadZuzaluGroups(): Promise<void> {
+    return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
+      const participants = await fetchPassportParticipants(this.dbPool);
+      span?.setAttribute("participants", participants.length);
+      logger(
+        `[SEMA] Rebuilding groups, ${participants.length} total participants.`
+      );
 
-    const groupIdsToParticipants: Map<string, PassportParticipant[]> =
-      new Map();
-    const groupsById: Map<string, NamedGroup> = new Map();
-    for (const group of this.groups) {
-      groupIdsToParticipants.set(group.group.id.toString(), []);
-      groupsById.set(group.group.id.toString(), group);
-    }
+      // reset participant state
+      this.zuzaluParticipants = {};
+      this.groups = SemaphoreService.createGroups();
 
-    logger(`[SEMA] initializing ${this.groups.length} groups`);
-    logger(`[SEMA] inserting ${participants.length} participants`);
-
-    // calculate which participants go into which groups
-    for (const p of participants) {
-      this.zuzaluParticipants[p.uuid] = p;
-      const groupsOfThisParticipant = this.getZuzaluGroupsForRole(p.role);
-      for (const namedGroup of groupsOfThisParticipant) {
-        logger(
-          `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
-        );
-        const participantsInGroup = groupIdsToParticipants.get(
-          namedGroup.group.id.toString()
-        );
-        participantsInGroup?.push(p);
+      const groupIdsToParticipants: Map<string, PassportParticipant[]> =
+        new Map();
+      const groupsById: Map<string, NamedGroup> = new Map();
+      for (const group of this.groups) {
+        groupIdsToParticipants.set(group.group.id.toString(), []);
+        groupsById.set(group.group.id.toString(), group);
       }
-    }
 
-    // based on the above calculation, instantiate each semaphore group
-    for (const entry of groupIdsToParticipants.entries()) {
-      const groupParticipants = entry[1];
-      const namedGroup = groupsById.get(entry[0]);
+      logger(`[SEMA] initializing ${this.groups.length} groups`);
+      logger(`[SEMA] inserting ${participants.length} participants`);
 
-      if (namedGroup) {
-        logger(
-          `[SEMA] replacing group ${namedGroup.name} with ${groupParticipants.length} participants`
-        );
-        const participantIds = groupParticipants.map((p) => p.commitment);
-        const newGroup = new Group(
-          namedGroup.group.id,
-          namedGroup.group.depth,
-          participantIds
-        );
-        namedGroup.group = newGroup;
+      // calculate which participants go into which groups
+      for (const p of participants) {
+        this.zuzaluParticipants[p.uuid] = p;
+        const groupsOfThisParticipant = this.getZuzaluGroupsForRole(p.role);
+        for (const namedGroup of groupsOfThisParticipant) {
+          logger(
+            `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
+          );
+          const participantsInGroup = groupIdsToParticipants.get(
+            namedGroup.group.id.toString()
+          );
+          participantsInGroup?.push(p);
+        }
       }
-    }
+
+      // based on the above calculation, instantiate each semaphore group
+      for (const entry of groupIdsToParticipants.entries()) {
+        const groupParticipants = entry[1];
+        const namedGroup = groupsById.get(entry[0]);
+
+        if (namedGroup) {
+          logger(
+            `[SEMA] replacing group ${namedGroup.name} with ${groupParticipants.length} participants`
+          );
+          const participantIds = groupParticipants.map((p) => p.commitment);
+          const newGroup = new Group(
+            namedGroup.group.id,
+            namedGroup.group.depth,
+            participantIds
+          );
+          namedGroup.group = newGroup;
+        }
+      }
+    });
   }
 
   // Get the semaphore groups for a participant role
