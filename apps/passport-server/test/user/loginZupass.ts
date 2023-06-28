@@ -3,7 +3,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
-import { randomEmail } from "../util";
+import { randomEmail } from "../util/util";
 
 export async function loginZupass(
   application: PCDPass

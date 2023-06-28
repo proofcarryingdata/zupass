@@ -1,10 +1,10 @@
 import chai from "chai";
 import spies from "chai-spies";
-import { IEmailAPI } from "../src/apis/emailAPI";
-import { IPretixAPI } from "../src/apis/pretixAPI";
-import { startApplication } from "../src/application";
-import { APIs, PCDPass } from "../src/types";
-import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
+import { IEmailAPI } from "../../src/apis/emailAPI";
+import { IPretixAPI } from "../../src/apis/pretixAPI";
+import { startApplication } from "../../src/application";
+import { APIs, PCDPass } from "../../src/types";
+import { getMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
 chai.use(spies);
 

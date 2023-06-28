@@ -5,8 +5,8 @@ import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
-import { startTestingApp } from "./startTestingApplication";
 import { loginPCDPass } from "./user/loginPCDPass";
+import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
 

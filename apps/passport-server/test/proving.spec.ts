@@ -14,7 +14,7 @@ import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
-import { startTestingApp } from "./startTestingApplication";
+import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
 

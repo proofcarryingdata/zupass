@@ -7,7 +7,6 @@ import {
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
-  ZuParticipant,
 } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "chai-spies";
@@ -15,10 +14,7 @@ import "mocha";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
 
-export async function sync(
-  application: PCDPass,
-  user: ZuParticipant
-): Promise<void> {
+export async function sync(application: PCDPass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const syncKey = await crypto.generateRandomKey();
 

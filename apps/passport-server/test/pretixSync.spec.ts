@@ -6,7 +6,7 @@ import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
 import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
-import { startTestingApp } from "./startTestingApplication";
+import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
 

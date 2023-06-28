@@ -7,7 +7,7 @@ import {
   PretixPosition,
   PretixSubevent,
 } from "../../src/apis/pretixAPI";
-import { randomEmail } from "../util";
+import { randomEmail } from "../util/util";
 
 export interface IMockPretixData {
   config: PretixConfig;
