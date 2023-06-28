@@ -99,7 +99,7 @@ export class EmailService {
       } catch (e: any) {
         logger(e);
         this.rollbarService?.error(e);
-        throw new Error(`Sendgrid error, failed to email ${to}`);
+        throw new Error(`Email send error, failed to email ${to}`);
       }
     });
   }
@@ -124,7 +124,7 @@ export class EmailService {
       } catch (e: any) {
         logger(e);
         this.rollbarService?.error(e);
-        throw new Error(`Sendgrid error, failed to email ${to}`);
+        throw new Error(`Email send error, failed to email ${to}`);
       }
     });
   }
