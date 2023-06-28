@@ -92,11 +92,23 @@ describe.only("Pretix sync should work", function () {
           .members.length
       ).to.eq(1);
 
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(residentUser.commitment)
+      ).to.eq(0);
+
       // organizers also count as residents
       expect(
         application.globalServices.semaphoreService.groupResidents().group
           .members.length
       ).to.eq(1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupResidents()
+          .group.indexOf(residentUser.commitment)
+      ).to.eq(0);
 
       expect(
         application.globalServices.semaphoreService.groupVisitors().group
@@ -153,6 +165,24 @@ describe.only("Pretix sync should work", function () {
           .members.length
       ).to.eq(3);
 
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(residentUser.commitment)
+      ).to.be.greaterThan(-1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(visitorUser.commitment)
+      ).to.be.greaterThan(-1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupParticipants()
+          .group.indexOf(organizerUser.commitment)
+      ).to.be.greaterThan(-1);
+
       // organizers also count as residents
       expect(
         application.globalServices.semaphoreService.groupResidents().group
@@ -160,14 +190,38 @@ describe.only("Pretix sync should work", function () {
       ).to.eq(2);
 
       expect(
+        application.globalServices.semaphoreService
+          .groupResidents()
+          .group.indexOf(residentUser.commitment)
+      ).to.be.greaterThan(-1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupResidents()
+          .group.indexOf(organizerUser.commitment)
+      ).to.be.greaterThan(-1);
+
+      expect(
         application.globalServices.semaphoreService.groupVisitors().group
           .members.length
       ).to.eq(1);
 
       expect(
+        application.globalServices.semaphoreService
+          .groupVisitors()
+          .group.indexOf(visitorUser.commitment)
+      ).to.be.greaterThan(-1);
+
+      expect(
         application.globalServices.semaphoreService.groupOrganizers().group
           .members.length
       ).to.eq(1);
+
+      expect(
+        application.globalServices.semaphoreService
+          .groupOrganizers()
+          .group.indexOf(organizerUser.commitment)
+      ).to.be.greaterThan(-1);
     }
   );
 
@@ -189,11 +243,7 @@ describe.only("Pretix sync should work", function () {
       await expect(loginZupass(application, resident.email, false)).to
         .eventually.be.rejected;
 
-      // if (application.apis.emailAPI) {
-      //   expect(application.apis.emailAPI.send).to.be.called();
-      // } else {
-      //   throw new Error("expected email client to have been mocked");
-      // }
+      residentUser = await loginZupass(application, resident.email, true);
     }
   );
 
