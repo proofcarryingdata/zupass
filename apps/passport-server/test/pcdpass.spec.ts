@@ -9,7 +9,7 @@ import { sync } from "./user/sync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("logging into PCDPass and syncing", function () {
+describe("pcd-pass functionality", function () {
   let application: PCDPass;
   let user: ZuParticipant;
 

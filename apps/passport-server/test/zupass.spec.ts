@@ -13,7 +13,7 @@ import { sync as testE2EESync } from "./user/sync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("Pretix sync should work", function () {
+describe("zupass functionality", function () {
   this.timeout(0);
 
   let application: PCDPass;

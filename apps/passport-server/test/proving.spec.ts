@@ -16,7 +16,7 @@ import { submitAndWaitForPendingPCD } from "./proving/proving";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("semaphore service", function () {
+describe("server-side proving functionality", function () {
   this.timeout(0);
 
   let application: PCDPass;
