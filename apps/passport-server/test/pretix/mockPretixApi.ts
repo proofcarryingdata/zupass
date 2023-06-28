@@ -13,13 +13,7 @@ export function getMockZuzaluPretixAPI(): IPretixAPI {
 
 export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
   return {
-    config: {
-      orgUrl: "no-url",
-      token: "fake-token",
-      zuEventID: "zu-event-id",
-      zuVisitorEventID: "zu-visitor-event-id",
-      zuEventOrganizersItemID: 0,
-    },
+    config: mockData.config,
     fetchOrders: async (eventID: string) => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
       console.log(`[MOCK] fetchOrders('${eventID}') =>`, result);
