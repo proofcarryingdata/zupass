@@ -55,6 +55,7 @@ describe("zupass functionality", function () {
         r: [],
         v: [],
         o: [],
+        g: [],
       });
     }
   );
@@ -91,6 +92,7 @@ describe("zupass functionality", function () {
         r: [residentUser.commitment],
         v: [],
         o: [],
+        g: [],
       });
     }
   );
@@ -138,6 +140,7 @@ describe("zupass functionality", function () {
         r: [residentUser.commitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment],
+        g: [],
       });
     }
   );
@@ -179,6 +182,7 @@ describe("zupass functionality", function () {
         r: [newResidentCommitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment],
+        g: [],
       });
     }
   );
@@ -215,6 +219,7 @@ describe("zupass functionality", function () {
         r: [],
         v: [],
         o: [],
+        g: [],
       });
     }
   );
