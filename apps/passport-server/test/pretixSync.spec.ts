@@ -1,11 +1,10 @@
-import { ZuParticipant } from "@pcd/passport-interface";
 import chai, { expect } from "chai";
 import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
-import { APIs, PCDPass } from "../src/types";
+import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
 import { startTestingApp } from "./startTestingApplication";
 
@@ -15,14 +14,10 @@ describe.only("Pretix sync should work", function () {
   this.timeout(0);
 
   let application: PCDPass;
-  let user: ZuParticipant;
-  let apis: Partial<APIs> | undefined;
 
   this.beforeAll(async () => {
     console.log("starting application");
-    const env = await startTestingApp();
-    application = env.application;
-    apis = env.apis;
+    application = await startTestingApp();
   });
 
   this.afterAll(async () => {

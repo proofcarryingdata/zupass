@@ -8,11 +8,6 @@ import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
 
 chai.use(spies);
 
-export interface TestingApplication {
-  application: PCDPass;
-  apis?: Partial<APIs>;
-}
-
 export function mockAPIs(): APIs {
   const emailAPI: IEmailAPI | null = {
     send: chai.spy.returns(Promise.resolve()),
@@ -28,8 +23,8 @@ export function mockAPIs(): APIs {
 
 export async function startTestingApp(
   apiOverrides?: Partial<APIs>
-): Promise<TestingApplication> {
-  const apis = Object.assign(mockAPIs(), apiOverrides);
+): Promise<PCDPass> {
+  const apis = () => Object.assign(mockAPIs(), apiOverrides);
 
   const application = await startApplication(
     {
@@ -44,9 +39,13 @@ export async function startTestingApp(
       NODE_ENV: "production",
       HONEYCOMB_API_KEY: undefined,
       ROLLBAR_TOKEN: undefined,
+      PRETIX_ORG_URL: "pretix_org_url",
+      PRETIX_TOKEN: "pretix_token",
+      PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
+      PRETIX_ZU_EVENT_ID: "zu_event_id",
     },
     apis
   );
 
-  return { application, apis };
+  return application;
 }

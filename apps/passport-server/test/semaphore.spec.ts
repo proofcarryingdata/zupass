@@ -4,7 +4,7 @@ import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
-import { APIs, PCDPass } from "../src/types";
+import { PCDPass } from "../src/types";
 import { startTestingApp } from "./startTestingApplication";
 import { loginPCDPass } from "./user/loginPCDPass";
 
@@ -13,13 +13,10 @@ chai.use(spies);
 describe("semaphore service", function () {
   let application: PCDPass;
   let user: ZuParticipant;
-  let apis: Partial<APIs> | undefined;
 
   this.beforeAll(async () => {
     console.log("starting application");
-    const env = await startTestingApp();
-    application = env.application;
-    apis = env.apis;
+    application = await startTestingApp();
   });
 
   this.afterAll(async () => {

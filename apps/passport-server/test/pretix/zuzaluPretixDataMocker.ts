@@ -1,5 +1,7 @@
 import { v4 as uuid } from "uuid";
 import {
+  getPretixConfig,
+  PretixConfig,
   PretixOrder,
   PretixPosition,
   PretixSubevent,
@@ -7,24 +9,21 @@ import {
 import { randomEmail } from "../util";
 
 export interface IMockPretixData {
+  config: PretixConfig;
   subEventsByParentEventId: Map<string, PretixSubevent[]>;
   ordersByEventId: Map<string, PretixOrder[]>;
 }
 
 export class ZuzaluPretixDataMocker {
   private autoincrementingId = 0;
-  /**
-   * Event containing all zuzalu residents and organizers
-   */
-  private zuEventId = "zuzalu-event-id";
-  /**
-   * Event series containing all visitor events - one per week
-   */
-  private zuVisitorEventId = "zuzalu-visitors-event-id";
-  private organizersItemId: number;
+  private config: PretixConfig;
 
   public constructor() {
-    this.organizersItemId = this.nextId();
+    const config = getPretixConfig();
+    if (!config) {
+      throw new Error("couldn't load pretix config from environment variables");
+    }
+    this.config = config;
   }
 
   public mockData(): IMockPretixData {
@@ -36,13 +35,16 @@ export class ZuzaluPretixDataMocker {
     const visitorOrders = [this.newVisitor(visitorSubevent)];
 
     const subEventsByParentEventId: Map<string, PretixSubevent[]> = new Map();
-    subEventsByParentEventId.set(this.zuVisitorEventId, [visitorSubevent]);
+    subEventsByParentEventId.set(this.config.zuVisitorEventID, [
+      visitorSubevent,
+    ]);
 
     const ordersByEventId: Map<string, PretixOrder[]> = new Map();
-    ordersByEventId.set(this.zuEventId, residentOrders);
-    ordersByEventId.set(this.zuVisitorEventId, visitorOrders);
+    ordersByEventId.set(this.config.zuEventID, residentOrders);
+    ordersByEventId.set(this.config.zuVisitorEventID, visitorOrders);
 
     return {
+      config: this.config,
       subEventsByParentEventId,
       ordersByEventId,
     };
@@ -84,7 +86,7 @@ export class ZuzaluPretixDataMocker {
         this.newPosition(
           orderId,
           email,
-          isOrganizer ? this.organizersItemId : this.nextId(),
+          isOrganizer ? this.config.zuEventOrganizersItemID : this.nextId(),
           this.nextId()
         ),
       ],
@@ -110,7 +112,11 @@ export class ZuzaluPretixDataMocker {
   }
 
   private nextId(): number {
-    return this.autoincrementingId++;
+    if (++this.autoincrementingId === this.config.zuEventOrganizersItemID) {
+      ++this.autoincrementingId;
+    }
+
+    return this.autoincrementingId;
   }
 
   private randomOrderCode(): string {

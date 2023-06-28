@@ -12,7 +12,7 @@ import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
-import { APIs, PCDPass } from "../src/types";
+import { PCDPass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
 import { startTestingApp } from "./startTestingApplication";
 
@@ -22,13 +22,10 @@ describe("semaphore service", function () {
   this.timeout(0);
 
   let application: PCDPass;
-  let apis: Partial<APIs> | undefined;
 
   this.beforeAll(async () => {
     console.log("starting application");
-    const env = await startTestingApp();
-    application = env.application;
-    apis = env.apis;
+    application = await startTestingApp();
   });
 
   this.afterAll(async () => {

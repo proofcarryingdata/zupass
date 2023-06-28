@@ -71,7 +71,7 @@ export class PretixAPI implements IPretixAPI {
   }
 }
 
-function getPretixConfig(): PretixConfig | null {
+export function getPretixConfig(): PretixConfig | null {
   // Make sure we can use the Pretix API.
   let pretixConfig: PretixConfig;
   try {
@@ -83,13 +83,11 @@ function getPretixConfig(): PretixConfig | null {
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
       zuEventOrganizersItemID: 151,
     };
-    console.log(
-      "[PRETIX] instantiating with config: " + JSON.stringify(pretixConfig)
-    );
+    console.log("[PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
   } catch (e) {
     console.error(
-      `[INIT] Missing environment variable ${e} required for pretix sync.`
+      `[INIT] missing environment variable ${e} required by pretix configuration`
     );
     return null;
   }

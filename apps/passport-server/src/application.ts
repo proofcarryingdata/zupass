@@ -2,7 +2,7 @@ import * as dotenv from "dotenv";
 import * as path from "path";
 import { IEmailAPI, sendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getPretixAPI } from "./apis/pretixAPI";
+import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startE2EEService } from "./services/e2eeService";
@@ -26,7 +26,7 @@ import { IS_PROD } from "./util/isProd";
 
 export async function startApplication(
   envOverrides?: Partial<EnvironmentVariables>,
-  apiOverrides?: Partial<APIs>
+  apiOverrides?: () => Partial<APIs>
 ): Promise<PCDPass> {
   const dotEnvPath = IS_PROD
     ? `/etc/secrets/.env`
@@ -89,7 +89,7 @@ export async function startApplication(
 
   const expressServer = await startServer(context, globalServices);
 
-  return { context, globalServices, expressContext: expressServer };
+  return { context, globalServices, apis, expressContext: expressServer };
 }
 
 export async function stopApplication(app?: PCDPass) {
@@ -118,31 +118,36 @@ function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
   console.log("[INIT] finished overriding environment variables");
 }
 
-async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {
-  console.log("[INIT] overriding apis");
-  const defaults = await defaultAPIs();
-  for (const entry of Object.entries(apiOverrides ?? {})) {
-    console.log("[INIT] overriding service", entry[0]);
-    defaults[entry[0] as keyof APIs] = entry[1] as any;
-  }
-  console.log("[INIT] finished overriding apis");
-  return defaults;
-}
+async function getOverridenApis(
+  apiOverrides?: () => Partial<APIs>
+): Promise<APIs> {
+  const overriden = apiOverrides && apiOverrides();
 
-async function defaultAPIs(): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
-  if (process.env.MAILGUN_API_KEY === undefined) {
-    console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
-    emailAPI = null;
+  if (overriden?.emailAPI) {
+    console.log("[INIT] overriding email client");
+    emailAPI = overriden.emailAPI;
   } else {
-    emailAPI = { send: sendEmail };
+    if (process.env.MAILGUN_API_KEY === undefined) {
+      console.log("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
+      emailAPI = null;
+    } else {
+      emailAPI = { send: sendEmail };
+    }
   }
 
-  const pretixAPI = getPretixAPI();
+  let pretixAPI: PretixAPI | null = null;
+
+  if (overriden?.pretixAPI) {
+    console.log("[INIT] overriding pretix api");
+    pretixAPI = overriden.pretixAPI;
+  } else {
+    pretixAPI = getPretixAPI();
+  }
 
   return {
-    emailAPI: emailAPI,
+    emailAPI,
     pretixAPI,
   };
 }
