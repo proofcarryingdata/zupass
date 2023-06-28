@@ -18,7 +18,9 @@ describe.only("Pretix sync should work", function () {
   this.timeout(0);
 
   let application: PCDPass;
-  let user: ZuParticipant;
+  let residentUser: ZuParticipant;
+  let visitorUser: ZuParticipant;
+  let organizerUser: ZuParticipant;
 
   this.beforeAll(async () => {
     console.log("starting application");
@@ -75,12 +77,100 @@ describe.only("Pretix sync should work", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      user = await loginZupass(application, resident.email);
+      residentUser = await loginZupass(application, resident.email);
       if (application.apis.emailAPI) {
         expect(application.apis.emailAPI.send).to.be.called();
       } else {
         throw new Error("expected email client to have been mocked");
       }
+    }
+  );
+
+  step(
+    "after a resident logs in, they should show up in the resident semaphore group and no other groups",
+    async function () {
+      // the mock data contains one resident, one visitor, and one organizer
+      expect(
+        application.globalServices.semaphoreService.groupParticipants().group
+          .members.length
+      ).to.eq(1);
+
+      // organizers also count as residents
+      expect(
+        application.globalServices.semaphoreService.groupResidents().group
+          .members.length
+      ).to.eq(1);
+
+      expect(
+        application.globalServices.semaphoreService.groupVisitors().group
+          .members.length
+      ).to.eq(0);
+
+      expect(
+        application.globalServices.semaphoreService.groupOrganizers().group
+          .members.length
+      ).to.eq(0);
+    }
+  );
+
+  step(
+    "logging in with the remaining two users should work",
+    async function () {
+      const ticketHolders =
+        await application.globalServices.userService.getZuzaluTicketHolders();
+
+      const visitor = ticketHolders.find(
+        (t) => t.role === ParticipantRole.Visitor
+      );
+      const organizer = ticketHolders.find(
+        (t) => t.role === ParticipantRole.Organizer
+      );
+
+      if (!visitor || !organizer) {
+        // this shouldn't happen as we've inserted a resident via mock data
+        throw new Error("couldn't find a visitor or organizer to test with");
+      }
+
+      visitorUser = await loginZupass(application, visitor.email);
+      if (application.apis.emailAPI) {
+        expect(application.apis.emailAPI.send).to.be.called();
+      } else {
+        throw new Error("expected email client to have been mocked");
+      }
+
+      organizerUser = await loginZupass(application, organizer.email);
+      if (application.apis.emailAPI) {
+        expect(application.apis.emailAPI.send).to.be.called();
+      } else {
+        throw new Error("expected email client to have been mocked");
+      }
+    }
+  );
+
+  step(
+    "after all three users log in, the semaphore groups should reflect their existence",
+    async function () {
+      // the mock data contains one resident, one visitor, and one organizer
+      expect(
+        application.globalServices.semaphoreService.groupParticipants().group
+          .members.length
+      ).to.eq(3);
+
+      // organizers also count as residents
+      expect(
+        application.globalServices.semaphoreService.groupResidents().group
+          .members.length
+      ).to.eq(2);
+
+      expect(
+        application.globalServices.semaphoreService.groupVisitors().group
+          .members.length
+      ).to.eq(1);
+
+      expect(
+        application.globalServices.semaphoreService.groupOrganizers().group
+          .members.length
+      ).to.eq(1);
     }
   );
 
