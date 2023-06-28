@@ -42,12 +42,13 @@ export async function loginZupass(
     newUserResponse
   );
 
-  const newUserResponseJson = newUserResponse._getJSONData();
+  const newUserResponseJson = newUserResponse._getJSONData() as ZuParticipant;
+
   expect(newUserResponseJson).to.haveOwnProperty("uuid");
   expect(newUserResponseJson).to.haveOwnProperty("commitment");
-  expect(newUserResponseJson).to.haveOwnProperty("participant_email");
+  expect(newUserResponseJson).to.haveOwnProperty("email");
   expect(newUserResponseJson.commitment).to.eq(commitment);
-  expect(newUserResponseJson.participant_email).to.eq(email);
+  expect(newUserResponseJson.email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
   await userService.handleGetPcdPassUser(

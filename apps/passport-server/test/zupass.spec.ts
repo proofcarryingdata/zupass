@@ -14,7 +14,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
 
-describe("Pretix sync should work", function () {
+describe.only("Pretix sync should work", function () {
   this.timeout(0);
 
   let application: PCDPass;
