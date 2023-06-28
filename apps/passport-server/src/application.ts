@@ -55,8 +55,12 @@ export async function startApplication(
 
   startProvingService();
   startMetricsService(context);
-  startPretixSyncService(context, rollbarService, apis.pretixAPI);
 
+  const pretixSyncService = startPretixSyncService(
+    context,
+    rollbarService,
+    apis.pretixAPI
+  );
   const provingService = await startProvingService();
   const emailService = startEmailService(
     context,
@@ -81,6 +85,7 @@ export async function startApplication(
     emailTokenService,
     rollbarService,
     provingService,
+    pretixSyncService,
   };
 
   const expressServer = await startServer(context, globalServices);
@@ -94,6 +99,7 @@ export async function stopApplication(app?: PCDPass) {
   app.expressContext.server.close();
   app.globalServices.provingService.stop();
   app.globalServices.semaphoreService.stop();
+  app.globalServices.pretixSyncService?.stop();
 }
 
 function overrideEnvironment(envOverrides?: Partial<EnvironmentVariables>) {
