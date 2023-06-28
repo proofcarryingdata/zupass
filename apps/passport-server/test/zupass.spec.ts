@@ -8,6 +8,7 @@ import { ParticipantRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
+import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginZupass } from "./user/loginZupass";
 import { sync as testE2EESync } from "./user/sync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
@@ -46,27 +47,12 @@ describe("zupass functionality", function () {
   step(
     "since nobody has logged in yet, all the semaphore groups should be empty",
     async function () {
-      // the mock data contains one resident, one visitor, and one organizer
-      expect(
-        application.services.semaphoreService.groupParticipants().group.members
-          .length
-      ).to.eq(0);
-
-      // organizers also count as residents
-      expect(
-        application.services.semaphoreService.groupResidents().group.members
-          .length
-      ).to.eq(0);
-
-      expect(
-        application.services.semaphoreService.groupVisitors().group.members
-          .length
-      ).to.eq(0);
-
-      expect(
-        application.services.semaphoreService.groupOrganizers().group.members
-          .length
-      ).to.eq(0);
+      expectSemaphore(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+      });
     }
   );
 
@@ -92,39 +78,12 @@ describe("zupass functionality", function () {
   step(
     "after a resident logs in, they should show up in the resident semaphore group and no other groups",
     async function () {
-      // the mock data contains one resident, one visitor, and one organizer
-      expect(
-        application.services.semaphoreService.groupParticipants().group.members
-          .length
-      ).to.eq(1);
-
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(residentUser.commitment)
-      ).to.eq(0);
-
-      // organizers also count as residents
-      expect(
-        application.services.semaphoreService.groupResidents().group.members
-          .length
-      ).to.eq(1);
-
-      expect(
-        application.services.semaphoreService
-          .groupResidents()
-          .group.indexOf(residentUser.commitment)
-      ).to.eq(0);
-
-      expect(
-        application.services.semaphoreService.groupVisitors().group.members
-          .length
-      ).to.eq(0);
-
-      expect(
-        application.services.semaphoreService.groupOrganizers().group.members
-          .length
-      ).to.eq(0);
+      expectSemaphore(application, {
+        p: [residentUser.commitment],
+        r: [residentUser.commitment],
+        v: [],
+        o: [],
+      });
     }
   );
 
@@ -157,69 +116,16 @@ describe("zupass functionality", function () {
   step(
     "after all three users log in, the semaphore groups should reflect their existence",
     async function () {
-      // the mock data contains one resident, one visitor, and one organizer
-      expect(
-        application.services.semaphoreService.groupParticipants().group.members
-          .length
-      ).to.eq(3);
-
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(residentUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(visitorUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(organizerUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      // organizers also count as residents
-      expect(
-        application.services.semaphoreService.groupResidents().group.members
-          .length
-      ).to.eq(2);
-
-      expect(
-        application.services.semaphoreService
-          .groupResidents()
-          .group.indexOf(residentUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      expect(
-        application.services.semaphoreService
-          .groupResidents()
-          .group.indexOf(organizerUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      expect(
-        application.services.semaphoreService.groupVisitors().group.members
-          .length
-      ).to.eq(1);
-
-      expect(
-        application.services.semaphoreService
-          .groupVisitors()
-          .group.indexOf(visitorUser.commitment)
-      ).to.be.greaterThan(-1);
-
-      expect(
-        application.services.semaphoreService.groupOrganizers().group.members
-          .length
-      ).to.eq(1);
-
-      expect(
-        application.services.semaphoreService
-          .groupOrganizers()
-          .group.indexOf(organizerUser.commitment)
-      ).to.be.greaterThan(-1);
+      expectSemaphore(application, {
+        p: [
+          residentUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment,
+        ],
+        r: [residentUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment],
+      });
     }
   );
 
@@ -243,24 +149,23 @@ describe("zupass functionality", function () {
 
       residentUser = await loginZupass(application, resident.email, true);
 
-      const oldCommitment = resident.commitment!;
-      const newCommitment = residentUser.commitment;
+      const oldResidentCommitment = resident.commitment!;
+      const newResidentCommitment = residentUser.commitment;
 
-      expect(oldCommitment != null).to.be.true;
-      expect(newCommitment != null).to.be.true;
-      expect(oldCommitment).to.not.eq(newCommitment);
+      expect(oldResidentCommitment != null).to.be.true;
+      expect(newResidentCommitment != null).to.be.true;
+      expect(oldResidentCommitment).to.not.eq(newResidentCommitment);
 
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(oldCommitment)
-      ).to.eq(-1);
-
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.indexOf(newCommitment)
-      ).to.be.greaterThan(-1);
+      expectSemaphore(application, {
+        p: [
+          newResidentCommitment,
+          visitorUser.commitment,
+          organizerUser.commitment,
+        ],
+        r: [newResidentCommitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment],
+      });
     }
   );
 
