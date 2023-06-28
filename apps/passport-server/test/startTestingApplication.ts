@@ -4,6 +4,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { IPretixAPI } from "../src/apis/pretixAPI";
 import { startApplication } from "../src/application";
 import { APIs, PCDPass } from "../src/types";
+import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
 
 chai.use(spies);
 
@@ -17,7 +18,7 @@ export function mockAPIs(): APIs {
     send: chai.spy.returns(Promise.resolve()),
   };
 
-  const pretixAPI: IPretixAPI | null = null;
+  const pretixAPI: IPretixAPI | null = getMockZuzaluPretixAPI();
 
   return {
     emailAPI,

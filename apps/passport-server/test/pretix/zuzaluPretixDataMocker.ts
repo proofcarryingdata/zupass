@@ -6,7 +6,7 @@ import {
 } from "../../src/apis/pretixAPI";
 import { randomEmail } from "../util";
 
-interface IMockPretixData {
+export interface IMockPretixData {
   subEventsByParentEventId: Map<string, PretixSubevent[]>;
   ordersByEventId: Map<string, PretixOrder[]>;
 }
@@ -27,7 +27,7 @@ export class ZuzaluPretixDataMocker {
     this.organizersItemId = this.nextId();
   }
 
-  mockData(): IMockPretixData {
+  public mockData(): IMockPretixData {
     const residentOrders: PretixOrder[] = [
       this.newResidentOrOrganizer(true),
       this.newResidentOrOrganizer(false),
@@ -48,7 +48,7 @@ export class ZuzaluPretixDataMocker {
     };
   }
 
-  newVisitorSubEvent(): PretixSubevent {
+  private newVisitorSubEvent(): PretixSubevent {
     return {
       id: this.nextId(),
       date_from: new Date(Date.now()).toString(),
@@ -56,7 +56,7 @@ export class ZuzaluPretixDataMocker {
     };
   }
 
-  newVisitor(subevent: PretixSubevent): PretixOrder {
+  private newVisitor(subevent: PretixSubevent): PretixOrder {
     const orderId = this.randomOrderCode();
     const email = randomEmail();
 
@@ -70,7 +70,7 @@ export class ZuzaluPretixDataMocker {
     };
   }
 
-  newResidentOrOrganizer(isOrganizer: boolean): PretixOrder {
+  private newResidentOrOrganizer(isOrganizer: boolean): PretixOrder {
     const orderId = this.randomOrderCode();
     const email = randomEmail();
 
@@ -91,7 +91,7 @@ export class ZuzaluPretixDataMocker {
     };
   }
 
-  newPosition(
+  private newPosition(
     orderId: string,
     email: string,
     itemId: number,
@@ -109,11 +109,11 @@ export class ZuzaluPretixDataMocker {
     };
   }
 
-  nextId(): number {
+  private nextId(): number {
     return this.autoincrementingId++;
   }
 
-  randomOrderCode(): string {
+  private randomOrderCode(): string {
     return uuid().substring(0, 5);
   }
 }
