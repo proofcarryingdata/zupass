@@ -4,7 +4,9 @@ import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
+import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { waitForSync } from "./pretix/waitForSync";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
@@ -27,6 +29,11 @@ describe("pcd-pass functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+  });
+
+  step("should not have a pretix service running", async function () {
+    const status = await waitForSync(application);
+    expect(status).to.eq(PretixSyncStatus.NoPretix);
   });
 
   step("email client should be mocked", async function () {
