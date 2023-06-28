@@ -1,7 +1,6 @@
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
-  getPretixConfig,
   PretixConfig,
   PretixOrder,
   PretixPosition,
@@ -19,12 +18,8 @@ export class ZuzaluPretixDataMocker {
   private autoincrementingId = 0;
   private config: PretixConfig;
 
-  public constructor() {
-    const config = getPretixConfig();
-    if (!config) {
-      throw new Error("couldn't load pretix config from environment variables");
-    }
-    this.config = config;
+  public constructor(pretixConfig: PretixConfig) {
+    this.config = pretixConfig;
   }
 
   public mockData(): IMockPretixData {

@@ -7,6 +7,7 @@ import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
+import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 chai.use(spies);
@@ -17,6 +18,7 @@ describe("logging into PCDPass and syncing", function () {
 
   this.beforeAll(async () => {
     console.log("starting application");
+    overrideEnvironment(pcdpassTestingEnv);
     application = await startTestingApp();
   });
 

@@ -1,11 +1,17 @@
-import { IPretixAPI } from "../../src/apis/pretixAPI";
+import { getPretixConfig, IPretixAPI } from "../../src/apis/pretixAPI";
 import {
   IMockPretixData,
   ZuzaluPretixDataMocker,
 } from "./zuzaluPretixDataMocker";
 
-export function getMockZuzaluPretixAPI(): IPretixAPI {
-  const mocker = new ZuzaluPretixDataMocker();
+export function getMockZuzaluPretixAPI(): IPretixAPI | null {
+  const config = getPretixConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  const mocker = new ZuzaluPretixDataMocker(config);
   const mockData = mocker.mockData();
   console.log("[MOCK] zuzalu pretix data", mockData);
   return getMockPretixAPI(mockData);
