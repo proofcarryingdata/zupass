@@ -43,6 +43,7 @@ export class PretixSyncService {
     const trySync = async () => {
       try {
         await this.sync();
+        this._hasCompletedSyncSinceStarting = true;
       } catch (e: any) {
         this.rollbarService?.error(e);
         console.error(e);

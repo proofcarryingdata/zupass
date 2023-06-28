@@ -2,6 +2,12 @@ import express, { Request, Response } from "express";
 import { fetchStatus } from "../../database/queries/fetchStatus";
 import { ApplicationContext, GlobalServices } from "../../types";
 
+export enum PretixSyncStatus {
+  NotSynced = "NotSynced",
+  Synced = "Synced",
+  NoPretix = "NoPretix",
+}
+
 export function initStatusRoutes(
   app: express.Application,
   context: ApplicationContext,
@@ -11,7 +17,15 @@ export function initStatusRoutes(
   const { dbPool } = context;
 
   app.get("/pretix/status", async (req: Request, res: Response) => {
-    res.send(pretixSyncService?.hasCompletedSyncSinceStarting);
+    if (pretixSyncService) {
+      res.send(
+        pretixSyncService.hasCompletedSyncSinceStarting
+          ? PretixSyncStatus.Synced
+          : PretixSyncStatus.NotSynced
+      );
+    } else {
+      res.send(PretixSyncStatus.NoPretix);
+    }
   });
 
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
