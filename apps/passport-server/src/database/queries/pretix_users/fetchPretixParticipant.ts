@@ -2,6 +2,14 @@ import { ClientBase, Pool } from "pg";
 import { PassportParticipant, PretixParticipant } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
+export async function fetchAllPretixParticipants(
+  client: ClientBase | Pool
+): Promise<PretixParticipant[]> {
+  const result = await sqlQuery(client, `select * from pretix_participants;`);
+
+  return result.rows;
+}
+
 /** Fetch a ticketed participant, with or without Passport yet. */
 export async function fetchPretixParticipant(
   client: ClientBase | Pool,
@@ -11,7 +19,7 @@ export async function fetchPretixParticipant(
     client,
     `\
 select 
-    e.email as email,
+    pretix_participants.email as email,
     name,
     role,
     residence,
@@ -19,7 +27,7 @@ select
     token
 from pretix_participants
 join email_tokens e on pretix_participants.email = e.email
-where e.email = $1;`,
+where pretix_participants.email = $1;`,
     [params.email]
   );
   return result.rows[0] || null;

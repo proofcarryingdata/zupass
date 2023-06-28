@@ -4,6 +4,7 @@ import spies from "chai-spies";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
+import { ParticipantRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
 import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
@@ -63,7 +64,18 @@ describe.only("Pretix sync should work", function () {
   step(
     "after pretix sync completes, a pretix user should be able to log in",
     async function () {
-      user = await loginZupass(application);
+      const ticketHolders =
+        await application.globalServices.userService.getZuzaluTicketHolders();
+      const resident = ticketHolders.find(
+        (t) => t.role === ParticipantRole.Resident
+      );
+
+      if (!resident) {
+        // this shouldn't happen as we've inserted a resident via mock data
+        throw new Error("couldn't find a resident to test with");
+      }
+
+      user = await loginZupass(application, resident.email);
       if (application.apis.emailAPI) {
         expect(application.apis.emailAPI.send).to.be.called();
       } else {

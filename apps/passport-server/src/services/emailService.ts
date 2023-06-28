@@ -26,12 +26,12 @@ export class EmailService {
   ): Promise<{ text: string; html: string }> {
     const textTemplate = (
       await readFile(
-        path.join(this.context.resourcesDir, "email/zuzalu/email.txt")
+        path.join(this.context.resourcesDir, "email/zupass/email.txt")
       )
     ).toString();
     const htmlTemplate = (
       await readFile(
-        path.join(this.context.resourcesDir, "email/zuzalu/email.html")
+        path.join(this.context.resourcesDir, "email/zupass/email.html")
       )
     ).toString();
 

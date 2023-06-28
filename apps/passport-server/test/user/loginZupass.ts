@@ -3,19 +3,19 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
 import { PCDPass } from "../../src/types";
-import { randomEmail } from "../util/util";
 
 export async function loginZupass(
-  application: PCDPass
+  application: PCDPass,
+  email: string
 ): Promise<ZuParticipant> {
   const { userService, emailTokenService } = application.globalServices;
-  const testEmail = randomEmail();
+
   const identity = new Identity();
   const commitment = identity.commitment.toString();
 
   const sendEmailResponse = httpMocks.createResponse();
   await userService.handleSendZuzaluEmail(
-    testEmail,
+    email,
     commitment,
     true,
     sendEmailResponse
@@ -30,14 +30,14 @@ export async function loginZupass(
     expect(sendEmailResponseJson).to.haveOwnProperty("token");
     token = sendEmailResponseJson.token;
   } else {
-    token = (await emailTokenService.getTokenForEmail(testEmail)) as string;
+    token = (await emailTokenService.getTokenForEmail(email)) as string;
     expect(token).to.not.eq(null);
   }
 
   const newUserResponse = httpMocks.createResponse();
   await userService.handleNewZuzaluParticipant(
     token,
-    testEmail,
+    email,
     commitment,
     newUserResponse
   );
@@ -47,7 +47,7 @@ export async function loginZupass(
   expect(newUserResponseJson).to.haveOwnProperty("commitment");
   expect(newUserResponseJson).to.haveOwnProperty("participant_email");
   expect(newUserResponseJson.commitment).to.eq(commitment);
-  expect(newUserResponseJson.participant_email).to.eq(testEmail);
+  expect(newUserResponseJson.participant_email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
   await userService.handleGetPcdPassUser(

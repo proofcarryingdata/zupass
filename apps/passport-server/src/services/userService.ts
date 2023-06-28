@@ -1,8 +1,12 @@
 import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import { Response } from "express";
 import next from "next";
+import { PretixParticipant } from "../database/models";
 import { fetchCommitment } from "../database/queries/fetchCommitment";
-import { fetchPretixParticipant } from "../database/queries/pretix_users/fetchPretixParticipant";
+import {
+  fetchAllPretixParticipants,
+  fetchPretixParticipant,
+} from "../database/queries/pretix_users/fetchPretixParticipant";
 import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import { insertEmailToken } from "../database/queries/setEmailToken";
@@ -39,6 +43,10 @@ export class UserService {
     this._bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+  }
+
+  public async getZuzaluTicketHolders(): Promise<PretixParticipant[]> {
+    return fetchAllPretixParticipants(this.context.dbPool);
   }
 
   public async handleSendZuzaluEmail(
