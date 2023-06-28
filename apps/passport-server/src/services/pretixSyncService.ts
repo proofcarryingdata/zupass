@@ -13,6 +13,7 @@ import {
   participantUpdatedFromPretix,
 } from "../util/participant";
 import { RollbarService } from "./rollbarService";
+import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 
 const TRACE_SERVICE = "Pretix";
@@ -20,6 +21,7 @@ const TRACE_SERVICE = "Pretix";
 export class PretixSyncService {
   private pretixAPI: IPretixAPI;
   private rollbarService: RollbarService;
+  private semaphoreService: SemaphoreService;
   private context: ApplicationContext;
   private timeout: NodeJS.Timeout | undefined;
   private _hasCompletedSyncSinceStarting: boolean;
@@ -31,10 +33,12 @@ export class PretixSyncService {
   public constructor(
     context: ApplicationContext,
     pretixAPI: IPretixAPI,
-    rollbarService: RollbarService
+    rollbarService: RollbarService,
+    semaphoreService: SemaphoreService
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
+    this.semaphoreService = semaphoreService;
     this.pretixAPI = pretixAPI;
     this._hasCompletedSyncSinceStarting = false;
   }
@@ -43,6 +47,7 @@ export class PretixSyncService {
     const trySync = async () => {
       try {
         await this.sync();
+        await this.semaphoreService.reload();
         this._hasCompletedSyncSinceStarting = true;
       } catch (e: any) {
         this.rollbarService?.error(e);
@@ -350,6 +355,7 @@ export class PretixSyncService {
 export function startPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService,
+  semaphoreService: SemaphoreService,
   pretixAPI: IPretixAPI | null
 ): PretixSyncService | null {
   if (!pretixAPI) {
@@ -360,8 +366,10 @@ export function startPretixSyncService(
   const pretixSyncService = new PretixSyncService(
     context,
     pretixAPI,
-    rollbarService
+    rollbarService,
+    semaphoreService
   );
+
   pretixSyncService.startSyncLoop();
   return pretixSyncService;
 }
