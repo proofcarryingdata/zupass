@@ -6,7 +6,7 @@ import { decodeString, normalizeEmail } from "../../util/util";
 export function initPCDPassRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService }: GlobalServices
+  { userService, rollbarService }: GlobalServices
 ): void {
   logger("[INIT] Initializing PCDPass routes");
 
@@ -21,7 +21,13 @@ export function initPCDPassRoutes(
     const commitment = decodeString(req.query.commitment, "commitment");
     const force = decodeString(req.query.force, "force") === "true";
 
-    await userService.handleSendPcdPassEmail(email, commitment, force, res);
+    try {
+      await userService.handleSendPcdPassEmail(email, commitment, force, res);
+    } catch (e: any) {
+      rollbarService?.error(e);
+      logger(e);
+      res.sendStatus(500);
+    }
   });
 
   // Check the token (sent to user's email), add a new participant.
@@ -30,13 +36,25 @@ export function initPCDPassRoutes(
     const email = normalizeEmail(decodeString(req.query.email, "email"));
     const commitment = decodeString(req.query.commitment, "commitment");
 
-    await userService.handleNewPcdPassUser(token, email, commitment, res);
+    try {
+      await userService.handleNewPcdPassUser(token, email, commitment, res);
+    } catch (e: any) {
+      rollbarService?.error(e);
+      logger(e);
+      res.sendStatus(500);
+    }
   });
 
   // Fetch a specific participant, given their public semaphore commitment.
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     const uuid = req.params.uuid;
 
-    await userService.handleGetPcdPassUser(uuid, res);
+    try {
+      await userService.handleGetPcdPassUser(uuid, res);
+    } catch (e: any) {
+      rollbarService?.error(e);
+      logger(e);
+      res.sendStatus(500);
+    }
   });
 }

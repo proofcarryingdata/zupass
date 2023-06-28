@@ -6,5 +6,6 @@ export function logger(...args: any[]): void {
     return;
   }
 
+  // eslint-disable-next-line no-console
   console.log(...args);
 }

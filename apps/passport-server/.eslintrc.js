@@ -1,6 +1,7 @@
 module.exports = {
   extends: ["@pcd/eslint-config-custom"],
   rules: {
+    "no-console": "error",
     // disable the rule for all files
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-member-accessibility": [
