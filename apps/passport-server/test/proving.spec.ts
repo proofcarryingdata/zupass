@@ -17,7 +17,7 @@ import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("server-side proving functionality", function () {
-  this.timeout(0);
+  this.timeout(15_000);
 
   let application: PCDPass;
 

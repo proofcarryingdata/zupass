@@ -10,6 +10,8 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("pcd-pass functionality", function () {
+  this.timeout(15_000);
+
   let application: PCDPass;
   let user: ZuParticipant;
 
