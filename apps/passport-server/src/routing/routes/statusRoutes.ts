@@ -66,6 +66,7 @@ export function initStatusRoutes(
         idle: dbPool.idleCount,
         waiting: dbPool.waitingCount,
       };
+
       const semaphore = {
         n_participants:
           semaphoreService.groupParticipants().group.members.length,

@@ -18,7 +18,6 @@ export function initSemaphoreRoutes(
       try {
         const id = decodeString(req.params.id, "id");
         const root = decodeString(req.params.root, "root");
-
         const historicGroupValid =
           await semaphoreService.getHistoricSemaphoreGroupValid(id, root);
 
@@ -39,7 +38,6 @@ export function initSemaphoreRoutes(
       try {
         const id = decodeString(req.params.id, "id");
         const root = decodeString(req.params.root, "root");
-
         const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
           id,
           root
@@ -86,6 +84,7 @@ export function initSemaphoreRoutes(
     try {
       const semaphoreId = decodeString(req.params.id, "id");
       const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
+
       if (namedGroup == null) {
         res.sendStatus(404);
         res.json(`Missing semaphore group ${semaphoreId}`);

@@ -61,9 +61,9 @@ export class E2EEService {
     request: SaveE2EERequest,
     res: Response
   ): Promise<void> {
-    logger(`[E2EE] Saving ${request.blobKey}`);
-
     try {
+      logger(`[E2EE] Saving ${request.blobKey}`);
+
       await insertEncryptedStorage(
         this.context,
         request.blobKey,
