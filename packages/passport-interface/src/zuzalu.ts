@@ -11,7 +11,6 @@ export interface ZuParticipant {
   /** Zuzalu-Specific Participant metadata */
   name?: string;
   role?: ParticipantRole;
-  residence?: string;
   visitor_date_ranges?: DateRange[];
 }
 

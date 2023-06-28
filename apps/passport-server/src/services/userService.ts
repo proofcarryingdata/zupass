@@ -79,7 +79,6 @@ export class UserService {
         email: email,
         name: "Test User",
         order_id: "",
-        residence: "atlantis",
         role: ParticipantRole.Resident,
         visitor_date_ranges: undefined,
       });

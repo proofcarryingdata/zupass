@@ -14,14 +14,13 @@ export async function insertPretixParticipant(
   const result = await sqlQuery(
     client,
     `\
-insert into pretix_participants (email, name, role, residence, order_id, visitor_date_ranges)
-values ($1, $2, $3, $4, $5, $6)
+insert into pretix_participants (email, name, role, order_id, visitor_date_ranges)
+values ($1, $2, $3, $4, $5)
 on conflict do nothing;`,
     [
       params.email,
       params.name,
       params.role,
-      params.residence,
       params.order_id,
       params.visitor_date_ranges === undefined
         ? undefined

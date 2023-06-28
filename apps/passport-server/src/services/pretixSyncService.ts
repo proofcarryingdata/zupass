@@ -313,7 +313,6 @@ export class PretixSyncService {
           role,
           email: (o.email || o.positions[0].attendee_email).toLowerCase(),
           name: o.positions[0].attendee_name,
-          residence: "", // TODO: not in pretix yet
           order_id: o.code,
           visitor_date_ranges: visitorDateRanges,
         } satisfies PretixParticipant;

@@ -24,7 +24,7 @@ export function ZuzaluCardBody({
 }) {
   const [state, _] = useContext(DispatchContext);
   const actualParticipant = participant ?? state.self;
-  const { role, name, email, residence } = actualParticipant;
+  const { role, name, email } = actualParticipant;
   const visitorStatus = getVisitorStatus(actualParticipant);
 
   return (
@@ -43,7 +43,6 @@ export function ZuzaluCardBody({
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
         <InfoLine>{email}</InfoLine>
-        <InfoLine>{residence}</InfoLine>
         <VisitorDateSection participant={actualParticipant} />
       </TextCenter>
       <Spacer h={24} />

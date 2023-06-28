@@ -8,6 +8,7 @@ import {
 import chai, { expect } from "chai";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
+import { sleep } from "../../src/util/util";
 
 export async function sendProveRequest(
   application: PCDPass,
@@ -64,6 +65,7 @@ export async function waitForSettledStatus(
   let responseBody = response.body as StatusResponse;
 
   while (!isSettledPendingPCDStatus(responseBody.status)) {
+    await sleep(500);
     response = await sendStatusRequest(application, statusRequest);
     responseBody = response.body as StatusResponse;
   }

@@ -17,7 +17,6 @@ select
     p.email as email,
     p.name as name,
     p.role as role,
-    p.residence as residence,
     p.order_id as order_id,
     c.commitment as commitment
 from pretix_participants p
@@ -44,7 +43,6 @@ select
     p.email as email,
     p.name as name,
     p.role as role,
-    p.residence as residence,
     p.order_id as order_id,
     c.commitment as commitment
 from pretix_participants p
@@ -69,7 +67,6 @@ select
     p.email,
     p.name,
     p.role,
-    p.residence,
     p.order_id
 from commitments c
 join pretix_participants p on c.participant_email=p.email
@@ -92,7 +89,6 @@ select
     p.email,
     p.name,
     p.role,
-    p.residence,
     p.order_id,
     p.visitor_date_ranges
 from pretix_participants p

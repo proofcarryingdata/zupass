@@ -13,7 +13,6 @@ export interface PretixParticipant {
   email: string;
   name: string;
   role: ParticipantRole;
-  residence: string;
   order_id: string;
   visitor_date_ranges?: DateRange[];
   commitment?: string;

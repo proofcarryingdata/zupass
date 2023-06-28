@@ -1,0 +1,1 @@
+alter table pretix_participants drop column residence;

@@ -11,7 +11,6 @@ describe("Passport encryption", function () {
       commitment: "a",
       email: "b",
       name: "c",
-      residence: "d",
       role: "e",
       uuid: "g",
     };
