@@ -1,9 +1,11 @@
 import Rollbar from "rollbar";
 import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
+import { RollbarService } from "./types";
 
-export type RollbarService = Rollbar | null;
-
+/**
+ * Responsible for error-reporting.
+ */
 export function startRollbarService(): RollbarService {
   let rollbarToken: string;
 

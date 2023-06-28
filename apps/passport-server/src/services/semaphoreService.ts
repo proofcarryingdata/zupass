@@ -3,6 +3,7 @@ import { Group } from "@semaphore-protocol/group";
 import { ClientBase, Pool } from "pg";
 import {
   CommitmentRow,
+  HistoricSemaphoreGroup,
   ParticipantRole,
   PassportParticipant,
 } from "../database/models";
@@ -10,7 +11,6 @@ import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
 import {
   fetchGroupByRoot,
   fetchLatestSemaphoreGroups,
-  HistoricSemaphoreGroup,
   insertNewSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
 import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
@@ -19,8 +19,8 @@ import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
 /**
- * This service maintains semaphore groups for all the categories of users
- * that PCDPass is aware of.
+ * Responsible for maintaining semaphore groups for all the categories of users
+ * that PCDPass/Zupass is aware of.
  */
 export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;

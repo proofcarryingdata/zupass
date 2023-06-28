@@ -6,6 +6,9 @@ import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
+/**
+ * Responsible for sending emails to users.
+ */
 export class EmailService {
   private context: ApplicationContext;
   private rollbarService: RollbarService;
@@ -65,7 +68,6 @@ export class EmailService {
     ).toString();
 
     const text = textTemplate.replace("{{token}}", token);
-
     const html = htmlTemplate.replace("{{token}}", token);
 
     return {

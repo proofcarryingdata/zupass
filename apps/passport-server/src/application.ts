@@ -17,6 +17,10 @@ import { startUserService } from "./services/userService";
 import { APIs, ApplicationContext, GlobalServices, PCDPass } from "./types";
 import { logger } from "./util/logger";
 
+/**
+ * Starts the server, all the appropriate services, routes, and instantiates
+ * the appropriate APIs if they have not been overriden by the caller.
+ */
 export async function startApplication(
   apiOverrides?: Partial<APIs>
 ): Promise<PCDPass> {
@@ -29,6 +33,7 @@ export async function startApplication(
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
+    publicResourcesDir: path.join(process.cwd(), "public"),
   };
 
   await startTelemetryService(context);

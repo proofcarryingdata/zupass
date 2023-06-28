@@ -14,6 +14,9 @@ import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
 import { logger } from "../util/logger";
 
+/**
+ * Responsible for server-side proving that can optionally be used by clients.
+ */
 export class ProvingService {
   /**
    * In-memory queue of ProveRequests that requested server-side proving.

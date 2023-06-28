@@ -12,6 +12,10 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 
+/**
+ * Responsible for storing an retrieving end to end encrypted
+ * backups of users' PCDs.
+ */
 export class E2EEService {
   private context: ApplicationContext;
   private rollbarService: RollbarService;

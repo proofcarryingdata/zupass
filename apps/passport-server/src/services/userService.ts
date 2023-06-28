@@ -13,9 +13,12 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
+import { RollbarService } from "./types";
 
+/**
+ * Responsible for high-level user-facing functionality like logging in.
+ */
 export class UserService {
   private context: ApplicationContext;
   private semaphoreService: SemaphoreService;

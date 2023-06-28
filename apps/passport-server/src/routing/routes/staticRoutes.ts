@@ -3,23 +3,20 @@ import * as path from "path";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 
-const staticResourcesPath = path.resolve(
-  path.join(__dirname, "../../../public")
-);
-const semaphoreResourcesPath = path.join(
-  staticResourcesPath,
-  "semaphore-artifacts"
-);
-
 export function initStaticRoutes(
   app: express.Application,
-  _context: ApplicationContext
+  context: ApplicationContext
 ): void {
   logger("[INIT] Initializing static routes");
 
+  const semaphoreResourcesPath = path.join(
+    context.publicResourcesDir,
+    "semaphore-artifacts"
+  );
+
   app.use(
     "/static",
-    express.static(staticResourcesPath, {
+    express.static(context.publicResourcesDir, {
       setHeaders(res, path, _stat) {
         if (path.startsWith(semaphoreResourcesPath)) {
           res.setHeader("Cache-Control", "max-age=31536000"); // one year

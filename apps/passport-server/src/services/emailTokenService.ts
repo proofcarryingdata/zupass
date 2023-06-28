@@ -3,6 +3,10 @@ import { insertEmailToken } from "../database/queries/setEmailToken";
 import { ApplicationContext } from "../types";
 import { generateEmailToken } from "../util/util";
 
+/**
+ * Responsible for generating, storing, and retrieving single-use
+ * tokens that users use for logging in.
+ */
 export class EmailTokenService {
   private context: ApplicationContext;
 

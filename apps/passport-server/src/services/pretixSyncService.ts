@@ -17,8 +17,11 @@ import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 
-const TRACE_SERVICE = "Pretix";
+const SERVICE_NAME_FOR_TRACING = "Pretix";
 
+/**
+ * Responsible for syncing users from Pretix into an internal representation.
+ */
 export class PretixSyncService {
   private pretixAPI: IPretixAPI;
   private rollbarService: RollbarService;
@@ -70,7 +73,7 @@ export class PretixSyncService {
    * Synchronize Pretix state with Zupass state.
    */
   async sync() {
-    return traced(TRACE_SERVICE, "sync", async () => {
+    return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
       const syncStart = Date.now();
       logger("[PRETIX] Sync start");
       const participants = await this.loadAllParticipants();
@@ -108,74 +111,78 @@ export class PretixSyncService {
     dbClient: ClientBase | Pool,
     pretixParticipants: PretixParticipant[]
   ) {
-    return traced(TRACE_SERVICE, "saveParticipants", async (span) => {
-      const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
-      const existingParticipants = await fetchAllPretixParticipants(dbClient);
-      const existingParticipantsByEmail =
-        participantsToMap(existingParticipants);
-      const newParticipants = pretixParticipants.filter(
-        (p) => !existingParticipantsByEmail.has(p.email)
-      );
-
-      // Step 1 of saving: insert participants that are new
-      logger(`[PRETIX] Inserting ${newParticipants.length} new participants`);
-      for (const participant of newParticipants) {
-        logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
-        await insertPretixParticipant(dbClient, participant);
-      }
-
-      // Step 2 of saving: update participants that have changed
-      // Filter to participants that existed before, and filter to those that have changed.
-      const updatedParticipants = pretixParticipants
-        .filter((p) => existingParticipantsByEmail.has(p.email))
-        .filter((p) => {
-          const oldParticipant = existingParticipantsByEmail.get(p.email)!;
-          const newParticipant = p;
-          return participantUpdatedFromPretix(oldParticipant, newParticipant);
-        });
-
-      // For the participants that have changed, update them in the database.
-      logger(`[PRETIX] Updating ${updatedParticipants.length} participants`);
-      for (const updatedParticipant of updatedParticipants) {
-        const oldParticipant = existingParticipantsByEmail.get(
-          updatedParticipant.email
+    return traced(
+      SERVICE_NAME_FOR_TRACING,
+      "saveParticipants",
+      async (span) => {
+        const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
+        const existingParticipants = await fetchAllPretixParticipants(dbClient);
+        const existingParticipantsByEmail =
+          participantsToMap(existingParticipants);
+        const newParticipants = pretixParticipants.filter(
+          (p) => !existingParticipantsByEmail.has(p.email)
         );
-        logger(
-          `[PRETIX] Updating ${JSON.stringify(
-            oldParticipant
-          )} to ${JSON.stringify(updatedParticipant)}`
+
+        // Step 1 of saving: insert participants that are new
+        logger(`[PRETIX] Inserting ${newParticipants.length} new participants`);
+        for (const participant of newParticipants) {
+          logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
+          await insertPretixParticipant(dbClient, participant);
+        }
+
+        // Step 2 of saving: update participants that have changed
+        // Filter to participants that existed before, and filter to those that have changed.
+        const updatedParticipants = pretixParticipants
+          .filter((p) => existingParticipantsByEmail.has(p.email))
+          .filter((p) => {
+            const oldParticipant = existingParticipantsByEmail.get(p.email)!;
+            const newParticipant = p;
+            return participantUpdatedFromPretix(oldParticipant, newParticipant);
+          });
+
+        // For the participants that have changed, update them in the database.
+        logger(`[PRETIX] Updating ${updatedParticipants.length} participants`);
+        for (const updatedParticipant of updatedParticipants) {
+          const oldParticipant = existingParticipantsByEmail.get(
+            updatedParticipant.email
+          );
+          logger(
+            `[PRETIX] Updating ${JSON.stringify(
+              oldParticipant
+            )} to ${JSON.stringify(updatedParticipant)}`
+          );
+          await updateParticipant(dbClient, updatedParticipant);
+        }
+
+        // Step 3 of saving: remove participants that don't exist in Pretix, but do
+        // exist in our database.
+        const removedParticipants = existingParticipants.filter(
+          (existing) => !pretixParticipantsAsMap.has(existing.email)
         );
-        await updateParticipant(dbClient, updatedParticipant);
-      }
+        logger(`[PRETIX] Deleting ${removedParticipants.length} participants`);
+        for (const removedParticipant of removedParticipants) {
+          logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
+          await deletePretixParticipant(dbClient, removedParticipant.email);
+        }
 
-      // Step 3 of saving: remove participants that don't exist in Pretix, but do
-      // exist in our database.
-      const removedParticipants = existingParticipants.filter(
-        (existing) => !pretixParticipantsAsMap.has(existing.email)
-      );
-      logger(`[PRETIX] Deleting ${removedParticipants.length} participants`);
-      for (const removedParticipant of removedParticipants) {
-        logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
-        await deletePretixParticipant(dbClient, removedParticipant.email);
+        span?.setAttribute("participantsInserted", newParticipants.length);
+        span?.setAttribute("participantsUpdated", updatedParticipants.length);
+        span?.setAttribute("participantsDeleted", removedParticipants.length);
+        span?.setAttribute(
+          "participantsTotal",
+          existingParticipants.length +
+            newParticipants.length -
+            removedParticipants.length
+        );
       }
-
-      span?.setAttribute("participantsInserted", newParticipants.length);
-      span?.setAttribute("participantsUpdated", updatedParticipants.length);
-      span?.setAttribute("participantsDeleted", removedParticipants.length);
-      span?.setAttribute(
-        "participantsTotal",
-        existingParticipants.length +
-          newParticipants.length -
-          removedParticipants.length
-      );
-    });
+    );
   }
 
   /**
    * Downloads the complete list of both visitors and residents from Pretix.
    */
   async loadAllParticipants(): Promise<PretixParticipant[]> {
-    return traced(TRACE_SERVICE, "loadAllParticipants", async () => {
+    return traced(SERVICE_NAME_FOR_TRACING, "loadAllParticipants", async () => {
       logger(
         "[PRETIX] Fetching participants (visitors, residents, organizers)"
       );
@@ -196,7 +203,7 @@ export class PretixSyncService {
    * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
    */
   async loadResidents(): Promise<PretixParticipant[]> {
-    return traced(TRACE_SERVICE, "loadResidents", async () => {
+    return traced(SERVICE_NAME_FOR_TRACING, "loadResidents", async () => {
       logger("[PRETIX] Fetching residents");
 
       // Fetch orders
@@ -239,7 +246,7 @@ export class PretixSyncService {
    * who are not members of the main Zuzalu event in pretix.
    */
   async loadVisitors(): Promise<PretixParticipant[]> {
-    return traced(TRACE_SERVICE, "loadVisitors", async () => {
+    return traced(SERVICE_NAME_FOR_TRACING, "loadVisitors", async () => {
       logger("[PRETIX] Fetching visitors");
       const subevents = await this.pretixAPI.fetchSubevents(
         this.pretixAPI.config.zuVisitorEventID

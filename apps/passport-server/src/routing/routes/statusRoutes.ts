@@ -1,13 +1,8 @@
 import express, { Request, Response } from "express";
 import { fetchStatus } from "../../database/queries/fetchStatus";
+import { PretixSyncStatus } from "../../services/types";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-
-export enum PretixSyncStatus {
-  NotSynced = "NotSynced",
-  Synced = "Synced",
-  NoPretix = "NoPretix",
-}
 
 export function initStatusRoutes(
   app: express.Application,

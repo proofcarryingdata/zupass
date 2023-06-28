@@ -10,3 +10,11 @@ export interface ExpressContext {
   app: Application;
   server: http.Server;
 }
+
+export enum PretixSyncStatus {
+  NotSynced = "NotSynced",
+  Synced = "Synced",
+  NoPretix = "NoPretix",
+}
+
+export type RollbarService = Rollbar | null;

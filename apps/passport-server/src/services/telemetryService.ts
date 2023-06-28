@@ -9,6 +9,10 @@ import { logger } from "../util/logger";
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
 
+/**
+ * Responsible for uploading telemetry data about the performance and usage
+ * of the server to Honeycomb for analysis.
+ */
 export async function startTelemetry(
   context: ApplicationContext
 ): Promise<void> {

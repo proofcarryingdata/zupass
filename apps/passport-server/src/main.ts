@@ -1,3 +1,8 @@
+// This file is the entry point of the server in development and production
+// but not testing. Its main purpose is to load environment variables
+// from a configuration file, and then just start the application immediately
+// after that.
+
 import dotenv from "dotenv";
 import path from "path";
 import { startApplication } from "./application";

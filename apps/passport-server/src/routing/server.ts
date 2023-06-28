@@ -25,7 +25,7 @@ export async function startServer(
       const port = IS_PROD ? process.env.PORT : 3002;
       const app = express();
 
-      if (process.env.SUPPRESS_LOGGING !== 'true') {
+      if (process.env.SUPPRESS_LOGGING !== "true") {
         app.use(morgan("tiny"));
       }
 
