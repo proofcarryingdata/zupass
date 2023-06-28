@@ -2,6 +2,7 @@ import { ZuParticipant } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
 import { expectSemaphore } from "./semaphore/checkSemaphore";
@@ -10,14 +11,15 @@ import { sync } from "./user/sync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe.only("pcd-pass functionality", function () {
+describe("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
   let user: ZuParticipant;
+  let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {
-    overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(pcdpassTestingEnv);
     application = await startTestingApp();
   });
 
@@ -25,13 +27,17 @@ describe.only("pcd-pass functionality", function () {
     await stopApplication(application);
   });
 
+  step("email client should be mocked", async function () {
+    if (!application.apis.emailAPI) {
+      throw new Error("no email client");
+    }
+    emailAPI = application.apis.emailAPI;
+    expect(emailAPI.send).to.be.spy;
+  });
+
   step("should be able to log in", async function () {
     user = await loginPCDPass(application);
-    if (application.apis?.emailAPI) {
-      expect(application.apis.emailAPI.send).to.be.called();
-    } else {
-      throw new Error("expected email client to have been mocked");
-    }
+    expect(emailAPI.send).to.have.been.called.exactly(1);
   });
 
   step("user should be able to sync end to end encryption", async function () {
@@ -43,7 +49,8 @@ describe.only("pcd-pass functionality", function () {
       p: [],
       r: [],
       v: [],
-      o: [user.commitment],
+      o: [],
+      g: [user.commitment],
     });
   });
 });

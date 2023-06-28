@@ -1,5 +1,6 @@
 import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
+import { newDatabase } from "./newDatabase";
 
 export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   NODE_ENV: "production",
@@ -29,9 +30,9 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_ZU_EVENT_ID: undefined,
 });
 
-export function overrideEnvironment(
+export async function overrideEnvironment(
   envOverrides?: Partial<EnvironmentVariables>
-): void {
+): Promise<void> {
   if (envOverrides?.SUPPRESS_LOGGING) {
     process.env.SUPPRESS_LOGGING = envOverrides.SUPPRESS_LOGGING;
   }
@@ -49,5 +50,8 @@ export function overrideEnvironment(
       delete process.env[entry[0]];
     }
   }
+
+  await newDatabase();
+
   logger("[INIT] finished overriding environment variables");
 }

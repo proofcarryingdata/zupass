@@ -81,7 +81,7 @@ export class E2EEService {
 export function startE2EEService(
   context: ApplicationContext,
   rollbarService: RollbarService
-): void {
+): E2EEService {
   const e2eeService = new E2EEService(context, rollbarService);
   return e2eeService;
 }
