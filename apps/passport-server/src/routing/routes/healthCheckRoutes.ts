@@ -6,7 +6,7 @@ export function initHealthcheckRoutes(
   app: express.Application,
   _context: ApplicationContext
 ): void {
-  logger("[INIT] Initializing health check routes");
+  logger("[INIT] initializing health check routes");
 
   app.get("/", async (req: Request, res: Response) => {
     res.send("PCD Passport Server - OK!");

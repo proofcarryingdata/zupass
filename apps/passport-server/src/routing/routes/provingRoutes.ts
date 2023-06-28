@@ -11,9 +11,9 @@ import { logger } from "../../util/logger";
 export function initPCDRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  globalServices: GlobalServices
+  { provingService, rollbarService }: GlobalServices
 ): void {
-  const { provingService, rollbarService } = globalServices;
+  logger("[INIT] initializing proving routes");
 
   app.post("/pcds/prove", async (req: Request, res: Response) => {
     logger("/pcds/prove received:", req.body);

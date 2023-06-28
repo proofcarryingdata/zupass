@@ -6,11 +6,10 @@ import { logger } from "../../util/logger";
 
 export function initStatusRoutes(
   app: express.Application,
-  context: ApplicationContext,
+  { dbPool }: ApplicationContext,
   { semaphoreService, pretixSyncService, rollbarService }: GlobalServices
 ): void {
-  logger("[INIT] Initializing status routes");
-  const { dbPool } = context;
+  logger("[INIT] initializing status routes");
 
   app.get("/pretix/status", async (req: Request, res: Response) => {
     try {

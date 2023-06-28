@@ -7,7 +7,7 @@ export function initStaticRoutes(
   app: express.Application,
   context: ApplicationContext
 ): void {
-  logger("[INIT] Initializing static routes");
+  logger("[INIT] initializing static content routes");
 
   const semaphoreResourcesPath = path.join(
     context.publicResourcesDir,

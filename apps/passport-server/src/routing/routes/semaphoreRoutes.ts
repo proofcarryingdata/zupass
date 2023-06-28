@@ -10,6 +10,8 @@ export function initSemaphoreRoutes(
   _context: ApplicationContext,
   { semaphoreService, rollbarService }: GlobalServices
 ): void {
+  logger("[INIT] initializing semaphore routes");
+
   app.get(
     "/semaphore/valid-historic/:id/:root",
     async (req: Request, res: Response) => {

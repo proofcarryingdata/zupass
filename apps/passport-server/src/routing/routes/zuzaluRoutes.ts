@@ -11,7 +11,7 @@ export function initZuzaluRoutes(
   _context: ApplicationContext,
   { userService, rollbarService }: GlobalServices
 ): void {
-  logger("[INIT] Initializing zuzalu routes");
+  logger("[INIT] initializing zuzalu routes");
 
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
