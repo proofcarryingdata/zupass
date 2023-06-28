@@ -92,6 +92,7 @@ export async function stopApplication(app?: PCDPass): Promise<void> {
   app.services.provingService.stop();
   app.services.semaphoreService.stop();
   app.services.pretixSyncService?.stop();
+  await app.context.dbPool.end();
 }
 
 async function getOverridenApis(apiOverrides?: Partial<APIs>): Promise<APIs> {

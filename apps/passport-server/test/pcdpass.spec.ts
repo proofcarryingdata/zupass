@@ -4,12 +4,13 @@ import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { PCDPass } from "../src/types";
+import { expectSemaphore } from "./semaphore/checkSemaphore";
 import { loginPCDPass } from "./user/loginPCDPass";
 import { sync } from "./user/sync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("pcd-pass functionality", function () {
+describe.only("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -38,8 +39,11 @@ describe("pcd-pass functionality", function () {
   });
 
   step("semaphore service should now be aware of the user", async function () {
-    const { semaphoreService } = application.services;
-    const genericGroup = semaphoreService.groupGeneric();
-    expect(genericGroup.group.indexOf(user.commitment)).to.be.above(-1);
+    expectSemaphore(application, {
+      p: [],
+      r: [],
+      v: [],
+      o: [user.commitment],
+    });
   });
 });
