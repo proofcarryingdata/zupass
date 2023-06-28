@@ -55,11 +55,6 @@ export async function startApplication(
   startProvingService();
   startMetricsService(context);
 
-  const pretixSyncService = startPretixSyncService(
-    context,
-    rollbarService,
-    apis.pretixAPI
-  );
   const provingService = await startProvingService();
   const emailService = startEmailService(
     context,
@@ -68,6 +63,12 @@ export async function startApplication(
   );
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
+  const pretixSyncService = startPretixSyncService(
+    context,
+    rollbarService,
+    semaphoreService,
+    apis.pretixAPI
+  );
   const userService = startUserService(
     context,
     semaphoreService,

@@ -21,11 +21,7 @@ export function mockAPIs(): APIs {
   };
 }
 
-export async function startTestingApp(
-  apiOverrides?: Partial<APIs>
-): Promise<PCDPass> {
-  const apis = () => Object.assign(mockAPIs(), apiOverrides);
-
+export async function startTestingApp(): Promise<PCDPass> {
   const application = await startApplication(
     {
       IS_ZUZALU: "false",
@@ -44,7 +40,7 @@ export async function startTestingApp(
       PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
       PRETIX_ZU_EVENT_ID: "zu_event_id",
     },
-    apis
+    mockAPIs
   );
 
   return application;

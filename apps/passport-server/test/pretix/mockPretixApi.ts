@@ -12,6 +12,8 @@ export function getMockZuzaluPretixAPI(): IPretixAPI {
 }
 
 export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
+  console.log("[MOCK] instantiating mock zuzalu pretix api");
+
   return {
     config: mockData.config,
     fetchOrders: async (eventID: string) => {
