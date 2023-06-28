@@ -3,7 +3,8 @@ run-name: Build and Test
 on: [push]
 jobs:
   Build-and-Test:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: larger-runners
     services:
       postgres:
         image: postgres
