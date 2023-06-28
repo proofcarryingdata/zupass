@@ -1,5 +1,5 @@
 import chai from "chai";
-import { PretixSyncStatus } from "../../src/routing/routes/statusRoutes";
+import { PretixSyncStatus } from "../../src/services/types";
 import { PCDPass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 

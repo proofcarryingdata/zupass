@@ -5,7 +5,7 @@ import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { ParticipantRole } from "../src/database/models";
-import { PretixSyncStatus } from "../src/routing/routes/statusRoutes";
+import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { waitForSync } from "./pretix/waitForSync";
 import { loginZupass } from "./user/loginZupass";

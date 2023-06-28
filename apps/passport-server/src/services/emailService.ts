@@ -3,8 +3,8 @@ import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
+import { RollbarService } from "./types";
 
 /**
  * Responsible for sending emails to users.

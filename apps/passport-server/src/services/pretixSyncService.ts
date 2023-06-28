@@ -13,9 +13,9 @@ import {
   participantsToMap,
   participantUpdatedFromPretix,
 } from "../util/participant";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
+import { RollbarService } from "./types";
 
 const SERVICE_NAME_FOR_TRACING = "Pretix";
 

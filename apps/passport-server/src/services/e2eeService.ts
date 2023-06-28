@@ -10,7 +10,7 @@ import {
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
+import { RollbarService } from "./types";
 
 /**
  * Responsible for storing an retrieving end to end encrypted

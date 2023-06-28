@@ -1,5 +1,6 @@
 import { Application } from "express";
 import * as http from "http";
+import Rollbar from "rollbar";
 import { ApplicationContext } from "../types";
 
 export interface Metric {
