@@ -72,7 +72,7 @@ export class PretixSyncService {
   /**
    * Synchronize Pretix state with Zupass state.
    */
-  async sync(): Promise<void> {
+  private async sync(): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
       const syncStart = Date.now();
       logger("[PRETIX] Sync start");
@@ -107,7 +107,7 @@ export class PretixSyncService {
    *   been changed.
    * - Delete participants that are no longer residents.
    */
-  async saveParticipants(
+  private async saveParticipants(
     dbClient: ClientBase | Pool,
     pretixParticipants: PretixParticipant[]
   ): Promise<void> {
@@ -181,7 +181,7 @@ export class PretixSyncService {
   /**
    * Downloads the complete list of both visitors and residents from Pretix.
    */
-  async loadAllParticipants(): Promise<PretixParticipant[]> {
+  private async loadAllParticipants(): Promise<PretixParticipant[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadAllParticipants", async () => {
       logger(
         "[PRETIX] Fetching participants (visitors, residents, organizers)"
@@ -202,7 +202,7 @@ export class PretixSyncService {
   /**
    * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
    */
-  async loadResidents(): Promise<PretixParticipant[]> {
+  private async loadResidents(): Promise<PretixParticipant[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadResidents", async () => {
       logger("[PRETIX] Fetching residents");
 
@@ -245,7 +245,7 @@ export class PretixSyncService {
    * Loads all visitors of Zuzalu. Visitors are defined as participants
    * who are not members of the main Zuzalu event in pretix.
    */
-  async loadVisitors(): Promise<PretixParticipant[]> {
+  private async loadVisitors(): Promise<PretixParticipant[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadVisitors", async () => {
       logger("[PRETIX] Fetching visitors");
       const subevents = await this.pretixAPI.fetchSubevents(
@@ -277,7 +277,7 @@ export class PretixSyncService {
    * `PretixParticipant` to equal to the date ranges of the visitor
    * subevent events they have in their order.
    */
-  ordersToParticipants(
+  private ordersToParticipants(
     orders: PretixOrder[],
     visitorSubEvents: PretixSubevent[],
     role: ParticipantRole
@@ -326,7 +326,7 @@ export class PretixSyncService {
    * into a single pretix participant zupass-side, so that a single user
    * on our end contains all the dates they have a visitor ticket to.
    */
-  deduplicateVisitorParticipants(
+  private deduplicateVisitorParticipants(
     visitors: PretixParticipant[]
   ): PretixParticipant[] {
     const dedupedVisitors: Map<string /* email */, PretixParticipant> =

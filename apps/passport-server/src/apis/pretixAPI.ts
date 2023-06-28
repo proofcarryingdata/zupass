@@ -18,7 +18,7 @@ export class PretixAPI implements IPretixAPI {
   }
 
   // Fetch all orders for a given event.
-  async fetchOrders(eventID: string): Promise<PretixOrder[]> {
+  public async fetchOrders(eventID: string): Promise<PretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async () => {
       const orders: PretixOrder[] = [];
 
@@ -30,9 +30,7 @@ export class PretixAPI implements IPretixAPI {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          logger(
-            `Error fetching ${url}: ${res.status} ${res.statusText}`
-          );
+          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
           break;
         }
         const page = await res.json();
@@ -45,7 +43,7 @@ export class PretixAPI implements IPretixAPI {
   }
 
   // Fetch all item types for a given event.
-  async fetchSubevents(eventID: string): Promise<PretixSubevent[]> {
+  public async fetchSubevents(eventID: string): Promise<PretixSubevent[]> {
     return traced(TRACE_SERVICE, "fetchSubevents", async () => {
       const orders: PretixSubevent[] = [];
 
@@ -57,9 +55,7 @@ export class PretixAPI implements IPretixAPI {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          logger(
-            `Error fetching ${url}: ${res.status} ${res.statusText}`
-          );
+          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
           break;
         }
         const page = await res.json();

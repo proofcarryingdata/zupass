@@ -57,7 +57,7 @@ export class ProvingService {
     return matching;
   }
 
-  async enqueueProofRequest(request: ProveRequest): Promise<PendingPCD> {
+  public async enqueueProofRequest(request: ProveRequest): Promise<PendingPCD> {
     const hash = hashProveRequest(request);
 
     // don't add identical proof requests to queue to prevent accidental or
@@ -96,7 +96,7 @@ export class ProvingService {
     return pending;
   }
 
-  getPendingPCDStatus(hash: string): StatusResponse {
+  public getPendingPCDStatus(hash: string): StatusResponse {
     const response = this.pendingPCDResponse.get(hash);
     if (response !== undefined) return response;
     return {
@@ -110,7 +110,7 @@ export class ProvingService {
    * Performs proof of current ProveRequest, and then checks if there are any other
    * proofs in the queue waiting to start.
    */
-  async serverProve(proveRequest: ProveRequest): Promise<void> {
+  private async serverProve(proveRequest: ProveRequest): Promise<void> {
     const currentHash = hashProveRequest(proveRequest);
 
     try {
@@ -156,7 +156,7 @@ export class ProvingService {
     }
   }
 
-  getSupportedPCDTypes(): SupportedPCDsResponse {
+  public getSupportedPCDTypes(): SupportedPCDsResponse {
     return {
       names: this.packages.map((p) => p.name),
     };
