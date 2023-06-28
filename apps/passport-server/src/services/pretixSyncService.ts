@@ -218,7 +218,6 @@ async function loadVisitors(api: IPretixAPI): Promise<PretixParticipant[]> {
   return traced(TRACE_SERVICE, "loadVisitors", async () => {
     console.log("[PRETIX] Fetching visitors");
     const subevents = await api.fetchSubevents(api.config.zuVisitorEventID);
-
     const visitorOrders = await api.fetchOrders(api.config.zuVisitorEventID);
 
     const visitorParticipants = ordersToParticipants(
