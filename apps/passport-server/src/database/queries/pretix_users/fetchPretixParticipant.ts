@@ -70,7 +70,7 @@ select
     p.order_id
 from commitments c
 join pretix_participants p on c.participant_email=p.email
-join email_tokens e on p.email = e.email
+left join email_tokens e on p.email = e.email
 where c.uuid = $1;`,
     [params.uuid]
   );
@@ -93,7 +93,7 @@ select
     p.visitor_date_ranges
 from pretix_participants p
 join commitments c on c.participant_email=p.email
-join email_tokens e on c.participant_email=e.email;`
+left join email_tokens e on c.participant_email=e.email;`
   );
   return result.rows;
 }
