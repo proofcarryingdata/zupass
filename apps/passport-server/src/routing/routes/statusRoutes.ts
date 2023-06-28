@@ -10,6 +10,8 @@ export function initStatusRoutes(
   console.log("[INIT] Initializing status routes");
   const { dbPool } = context;
 
+  app.get("/pretix/status", async (req: Request, res: Response) => {});
+
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     const db = await fetchStatus(dbPool);
