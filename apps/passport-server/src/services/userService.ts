@@ -203,7 +203,8 @@ export class UserService {
     );
 
     if (existingCommitment != null && !force) {
-      throw new Error(`${email} already registered.`);
+      res.status(500).send(`${email} already registered.`);
+      return;
     }
 
     logger(
