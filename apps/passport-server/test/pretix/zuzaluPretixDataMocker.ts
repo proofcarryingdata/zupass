@@ -1,3 +1,4 @@
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   getPretixConfig,
@@ -105,7 +106,7 @@ export class ZuzaluPretixDataMocker {
       positionid: this.nextId(),
       item: itemId,
       price: "",
-      attendee_name: "bob bobly",
+      attendee_name: this.randomName(),
       attendee_email: email,
       subevent: subevent,
     };
@@ -121,5 +122,18 @@ export class ZuzaluPretixDataMocker {
 
   private randomOrderCode(): string {
     return uuid().substring(0, 5);
+  }
+
+  private randomName(): string {
+    const firstNames = ["Bob", "Steve", "Gub", "Mob", "Flub", "Jib", "Grub"];
+    const lastNames = [
+      "Froby",
+      "Shmoby",
+      "Glowby",
+      "Brimby",
+      "Slimbo",
+      "Froggy",
+    ];
+    return _.sample(firstNames) + " " + _.sample(lastNames);
   }
 }
