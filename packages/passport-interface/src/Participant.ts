@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { User } from "./zuzalu";
 
-export async function fetchParticipant(
+export async function fetchUser(
   passportServerUrl: string,
   uuid: string
 ): Promise<User | null> {
@@ -30,7 +30,7 @@ export function useFetchParticipant(passportServerUrl: string, uuid?: string) {
 
       try {
         setLoading(true);
-        const participant = await fetchParticipant(passportServerUrl, uuid);
+        const participant = await fetchUser(passportServerUrl, uuid);
         setParticipant(participant);
       } catch (e) {
         setError(e as Error);

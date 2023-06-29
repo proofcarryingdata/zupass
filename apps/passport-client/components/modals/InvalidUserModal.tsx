@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { Button, H1 } from "../core";
 
-export function InvalidParticipantModal() {
+export function InvalidUserModal() {
   const [_state, dispatch] = useContext(DispatchContext);
   const onClick = useCallback(() => {
     dispatch({ type: "reset-passport" });

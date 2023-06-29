@@ -44,10 +44,10 @@ export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
 
-export function saveParticipantInvalid(participantInvalid: boolean) {
+export function saveUserInvalid(participantInvalid: boolean) {
   window.localStorage["participantInvalid"] = participantInvalid;
 }
 
-export function loadParticipantInvalid(): boolean {
+export function loadUserInvalid(): boolean {
   return JSON.parse(window.localStorage["participantInvalid"] ?? "false");
 }

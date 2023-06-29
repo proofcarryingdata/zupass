@@ -2,8 +2,8 @@ import { PCD } from "@pcd/pcd-types";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { usePackage } from "../../src/usePackage";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { ZuzaluCardBody } from "./ZuzaluCard";
 

@@ -23,13 +23,13 @@ import { getPackages } from "./pcdPackages";
  * to the server, end to end encrypted.
  */
 export async function uploadStorage(): Promise<void> {
-  const participant = loadSelf();
+  const user = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({
       pcds: await pcds.serializeAll(),
-      self: participant,
+      self: user,
     }),
     encryptionKey
   );

@@ -7,7 +7,7 @@ import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { InfoModal } from "./InfoModal";
-import { InvalidParticipantModal } from "./InvalidParticipantModal";
+import { InvalidUserModal } from "./InvalidUserModal";
 import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
@@ -57,7 +57,7 @@ function getModalBody(modal: ZuState["modal"]) {
     case "save-sync":
       return <SaveSyncModal />;
     case "invalid-participant":
-      return <InvalidParticipantModal />;
+      return <InvalidUserModal />;
     case "":
       return null;
     default:

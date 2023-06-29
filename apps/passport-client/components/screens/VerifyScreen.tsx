@@ -1,4 +1,4 @@
-import { fetchParticipant, User } from "@pcd/passport-interface";
+import { fetchUser, User } from "@pcd/passport-interface";
 import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName,
@@ -8,8 +8,8 @@ import { useLocation } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { decodeQRPayload } from "../../src/qr";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
@@ -151,21 +151,21 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   ) as ZuzaluQRPayload;
 
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const participant = await fetchParticipant(appConfig.passportServer, uuid);
+  const user = await fetchUser(appConfig.passportServer, uuid);
 
-  if (participant == null) {
+  if (user == null) {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant not found",
+      message: "User not found",
     };
   }
 
-  if (participant.commitment !== deserializedPCD.claim.identityCommitment) {
+  if (user.commitment !== deserializedPCD.claim.identityCommitment) {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant doesn't match proof",
+      message: "User doesn't match proof",
     };
   }
 
@@ -179,7 +179,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  const visitorStatus = getVisitorStatus(participant);
+  const visitorStatus = getVisitorStatus(user);
 
   if (
     visitorStatus !== undefined &&
@@ -193,5 +193,5 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  return { valid: true, type: "identity-proof", user: participant };
+  return { valid: true, type: "identity-proof", user: user };
 }

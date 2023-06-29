@@ -5,8 +5,8 @@ import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
 import { QR } from "./QR";
@@ -19,9 +19,9 @@ export function ZuzaluCardBody({
   user?: User;
 }) {
   const [state, _] = useContext(DispatchContext);
-  const actualParticipant = user ?? state.self;
-  const { role, name, email } = actualParticipant;
-  const visitorStatus = getVisitorStatus(actualParticipant);
+  const actualUser = user ?? state.self;
+  const { role, name, email } = actualUser;
+  const visitorStatus = getVisitorStatus(actualUser);
 
   return (
     <CardBody>
@@ -39,7 +39,7 @@ export function ZuzaluCardBody({
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
         <InfoLine>{email}</InfoLine>
-        <VisitorDateSection user={actualParticipant} />
+        <VisitorDateSection user={actualUser} />
       </TextCenter>
       <Spacer h={24} />
       <Footer

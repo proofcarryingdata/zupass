@@ -14,13 +14,13 @@ import {
   loadEncryptionKey,
   saveEncryptionKey,
   saveIdentity,
-  saveParticipantInvalid,
   savePCDs,
   saveSelf,
+  saveUserInvalid,
 } from "./localstorage";
-import { sanitizeDateRanges } from "./participant";
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
+import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
@@ -98,7 +98,7 @@ export async function dispatch(
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
-      return participantInvalid(update);
+      return userInvalid(update);
     case "sync":
       return sync(state, update);
     default:
@@ -160,18 +160,11 @@ async function login(
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(
-  participant: User,
-  state: ZuState,
-  update: ZuUpdate
-) {
+async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
-  console.log("Save self", identity, participant);
-  if (
-    identity == null ||
-    identity.commitment.toString() !== participant.commitment
-  ) {
+  console.log("Save self", identity, user);
+  if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
         title: "Invalid identity",
@@ -181,7 +174,7 @@ async function finishLogin(
   }
 
   // Save to local storage.
-  setSelf(participant, state, update);
+  setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
@@ -194,18 +187,18 @@ async function finishLogin(
 
 // Runs periodically, whenever we poll new participant info.
 async function setSelf(self: User, state: ZuState, update: ZuUpdate) {
-  let participantMismatched = false;
+  let userMismatched = false;
 
   if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
-    participantMismatched = true;
+    userMismatched = true;
   } else if (state.self && state.self.uuid !== self.uuid) {
-    console.log("Participant UUID mismatch");
-    participantMismatched = true;
+    console.log("User UUID mismatch");
+    userMismatched = true;
   }
 
-  if (participantMismatched) {
-    participantInvalid(update);
+  if (userMismatched) {
+    userInvalid(update);
     return;
   }
 
@@ -292,8 +285,8 @@ async function loadFromSync(
   window.location.hash = "#/";
 }
 
-function participantInvalid(update: ZuUpdate) {
-  saveParticipantInvalid(true);
+function userInvalid(update: ZuUpdate) {
+  saveUserInvalid(true);
   update({
     userInvalid: true,
     modal: "invalid-participant",

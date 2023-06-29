@@ -7,24 +7,25 @@ import {
 import { requestUser } from "./api/user";
 import { Dispatcher } from "./dispatch";
 
-// Starts polling the participant record, in the background.
-export async function pollParticipant(self: User, dispatch: Dispatcher) {
+// Starts polling the user from the server, in the background.
+export async function pollUser(self: User, dispatch: Dispatcher) {
   try {
     const response = await requestUser(self.uuid);
     if (!response.ok) {
       if (response.status === 404) {
-        // this participant was previously a valid participant, but now the
-        // app isn't able to find them, so we should log the user out of this passport.
+        // this user was previously a valid user, but now the
+        // app isn't able to find them, so we should log the
+        // user out of this passport.
         dispatch({ type: "participant-invalid" });
       }
-      console.log("[USER_POLL] Participant not found, skipping update");
+      console.log("[USER_POLL] User not found, skipping update");
       return;
     }
 
-    const participant = await response.json();
-    await dispatch({ type: "set-self", self: participant });
+    const user = await response.json();
+    await dispatch({ type: "set-self", self: user });
   } catch (e) {
-    console.error("[USER_POLL] Error polling participant", e);
+    console.error("[USER_POLL] Error polling user", e);
   }
 }
 
@@ -39,26 +40,26 @@ export enum VisitorStatus {
  * active at the current moment to be a 'valid' visitor. This function
  * checks the validity of the visitor, if they are a visitor.
  */
-export function getVisitorStatus(participant?: User):
+export function getVisitorStatus(user?: User):
   | {
       isVisitor: true;
       status: VisitorStatus;
     }
   | { isVisitor: false }
   | undefined {
-  if (participant === undefined) return undefined;
+  if (user === undefined) return undefined;
 
   const now = new Date();
 
-  if (participant.role === ZuzaluUserRole.Visitor) {
-    if (isDateInRanges(now, participant.visitor_date_ranges)) {
+  if (user.role === ZuzaluUserRole.Visitor) {
+    if (isDateInRanges(now, user.visitor_date_ranges)) {
       return {
         isVisitor: true,
         status: VisitorStatus.Current,
       };
     }
 
-    if (anyUpcomingDateRange(now, participant.visitor_date_ranges)) {
+    if (anyUpcomingDateRange(now, user.visitor_date_ranges)) {
       return { isVisitor: true, status: VisitorStatus.Upcoming };
     }
 
