@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import {
   BackgroundGlow,
@@ -84,7 +85,7 @@ export function LoginScreen() {
 }
 
 function LoginHeader() {
-  if (process.env.IS_ZUZALU) {
+  if (appConfig.isZuzalu) {
     return (
       <TextCenter>
         <H1>PASSPORT</H1>
