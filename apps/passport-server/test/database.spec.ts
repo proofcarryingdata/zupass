@@ -6,11 +6,13 @@ import { Pool } from "pg";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
+  fetchAllCommitments,
+  fetchCommitment,
+} from "../src/database/queries/commitments";
+import {
   fetchEmailToken,
   insertEmailToken,
 } from "../src/database/queries/emailToken";
-import { fetchAllCommitments } from "../src/database/queries/fetchAllCommitments";
-import { fetchCommitment } from "../src/database/queries/fetchCommitment";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
 import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {

@@ -7,7 +7,7 @@ import {
   LoggedInZuzaluUser,
   ZuzaluUserRole,
 } from "../database/models";
-import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
+import { fetchAllCommitments } from "../database/queries/commitments";
 import {
   fetchHistoricGroupByRoot,
   fetchLatestHistoricSemaphoreGroups,

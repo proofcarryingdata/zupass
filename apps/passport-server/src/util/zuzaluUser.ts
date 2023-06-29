@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { ZuzaluPretixTicket, ZuzaluUser } from "../database/models";
+import { ZuzaluPretixTicket } from "../database/models";
 
 /**
  * Sometimes the ticket we load from pretix is updated.
@@ -25,8 +25,8 @@ export function pretixTicketsDifferent(
 /**
  * Converts list of users to map indexed by email address.
  */
-export function usersToMapByEmail(
-  users: ZuzaluUser[]
-): Map<string, ZuzaluUser> {
+export function ticketsToMapByEmail(
+  users: ZuzaluPretixTicket[]
+): Map<string, ZuzaluPretixTicket> {
   return new Map(users.map((user) => [user.email, user]));
 }

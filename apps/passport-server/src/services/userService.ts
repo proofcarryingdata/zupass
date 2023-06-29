@@ -1,7 +1,7 @@
 import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Response } from "express";
 import { ZuzaluUser } from "../database/models";
-import { fetchCommitment } from "../database/queries/fetchCommitment";
+import { fetchCommitment } from "../database/queries/commitments";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,

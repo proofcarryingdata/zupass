@@ -1,5 +1,4 @@
 import { DateRange } from "@pcd/passport-interface";
-
 import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
@@ -9,7 +8,10 @@ import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tick
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { pretixTicketsDifferent, usersToMapByEmail } from "../util/zuzaluUser";
+import {
+  pretixTicketsDifferent,
+  ticketsToMapByEmail,
+} from "../util/zuzaluUser";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 import { RollbarService } from "./types";
@@ -118,9 +120,9 @@ export class PretixSyncService {
     pretixTickets: ZuzaluPretixTicket[]
   ): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
-      const pretixTicketsAsMap = usersToMapByEmail(pretixTickets);
+      const pretixTicketsAsMap = ticketsToMapByEmail(pretixTickets);
       const existingTickets = await fetchAllZuzaluUsers(dbClient);
-      const existingTicketsByEmail = usersToMapByEmail(existingTickets);
+      const existingTicketsByEmail = ticketsToMapByEmail(existingTickets);
       const newTickets = pretixTickets.filter(
         (p) => !existingTicketsByEmail.has(p.email)
       );
@@ -184,7 +186,7 @@ export class PretixSyncService {
       const residents = await this.loadResidents();
       const visitors = await this.loadVisitors();
 
-      const residentsAsMap = usersToMapByEmail(residents);
+      const residentsAsMap = ticketsToMapByEmail(residents);
       const nonResidentVisitors = visitors.filter(
         (v) => !residentsAsMap.has(v.email)
       );

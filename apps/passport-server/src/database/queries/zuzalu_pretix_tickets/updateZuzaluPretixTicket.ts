@@ -7,7 +7,11 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function updateZuzaluPretixTicket(
   client: ClientBase | Pool,
-  params: { email: string; role: string; visitor_date_ranges?: DateRange[] }
+  params: {
+    email: string;
+    role: string;
+    visitor_date_ranges?: DateRange[] | null;
+  }
 ): Promise<number> {
   const result = await sqlQuery(
     client,
