@@ -5,7 +5,7 @@ import { sqlQuery } from "../sqlQuery";
  * Fetches some status parameters based on the state of the database.
  */
 export async function fetchStatus(client: ClientBase | Pool): Promise<{
-  n_pretix_participants: number;
+  n_zuzalu_pretix_tickets: number;
   n_commitments: number;
   n_e2ee: number;
 }> {
@@ -13,7 +13,7 @@ export async function fetchStatus(client: ClientBase | Pool): Promise<{
     client,
     `\
 select 
-    (select count(*) from pretix_participants) as n_pretix_participants,
+    (select count(*) from zuzalu_pretix_tickets) as n_zuzalu_pretix_tickets,
     (select count(*) from commitments) as n_commitments,
     (select count(*) from e2ee) as n_e2ee
 ;`

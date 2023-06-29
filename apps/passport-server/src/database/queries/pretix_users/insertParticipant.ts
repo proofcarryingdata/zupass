@@ -14,7 +14,7 @@ export async function insertPretixParticipant(
   const result = await sqlQuery(
     client,
     `\
-insert into pretix_participants (email, name, role, order_id, visitor_date_ranges)
+insert into zuzalu_pretix_tickets (email, name, role, order_id, visitor_date_ranges)
 values ($1, $2, $3, $4, $5)
 on conflict do nothing;`,
     [

@@ -19,7 +19,7 @@ select
     p.role as role,
     p.order_id as order_id,
     c.commitment as commitment
-from pretix_participants p
+from zuzalu_pretix_tickets p
 left join commitments c on c.participant_email = p.email;
 `
   );
@@ -45,7 +45,7 @@ select
     p.role as role,
     p.order_id as order_id,
     c.commitment as commitment
-from pretix_participants p
+from zuzalu_pretix_tickets p
 left join commitments c on c.participant_email = p.email
 where p.email = $1;`,
     [email]
@@ -69,7 +69,7 @@ select
     p.role,
     p.order_id
 from commitments c
-join pretix_participants p on c.participant_email=p.email
+join zuzalu_pretix_tickets p on c.participant_email=p.email
 left join email_tokens e on p.email = e.email
 where c.uuid = $1;`,
     [params.uuid]
@@ -91,7 +91,7 @@ select
     p.role,
     p.order_id,
     p.visitor_date_ranges
-from pretix_participants p
+from zuzalu_pretix_tickets p
 join commitments c on c.participant_email=p.email
 left join email_tokens e on c.participant_email=e.email;`
   );

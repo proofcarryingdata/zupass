@@ -12,7 +12,7 @@ export async function updateParticipant(
   const result = await sqlQuery(
     client,
     `\
-update pretix_participants
+update zuzalu_pretix_tickets
 set role=$2, visitor_date_ranges=$3
 where email=$1;`,
     [

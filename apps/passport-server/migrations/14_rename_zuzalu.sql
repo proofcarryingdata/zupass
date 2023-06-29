@@ -1,0 +1,1 @@
+ALTER TABLE pretix_participants RENAME TO zuzalu_pretix_tickets;

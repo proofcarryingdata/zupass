@@ -9,7 +9,7 @@ export async function deletePretixParticipant(
   client: ClientBase | Pool,
   email: string
 ): Promise<void> {
-  await sqlQuery(client, `delete from pretix_participants where email = $1`, [
+  await sqlQuery(client, `delete from zuzalu_pretix_tickets where email = $1`, [
     email,
   ]);
 
