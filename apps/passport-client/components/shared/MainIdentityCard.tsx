@@ -145,11 +145,11 @@ function IdentityQR() {
         return;
       }
 
-      console.log(`[QR] generating zuzalu proof, timestamp ${timestamp}`);
+      console.log(`[QR] generating proof, timestamp ${timestamp}`);
       const pcd = await createQRProof(identity, uuid, timestamp);
       const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
       const stringified = JSON.stringify(serialized);
-      console.log(`[QR] generated zuzalu proof, length ${stringified.length}`);
+      console.log(`[QR] generated proof, length ${stringified.length}`);
 
       const qrPCD = encodeQRPayload(stringified);
       localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });

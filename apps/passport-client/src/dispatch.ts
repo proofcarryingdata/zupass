@@ -257,8 +257,6 @@ async function loadFromSync(
 
   await pcds.deserializeAllAndAdd(storage.pcds);
   // assumes that we only have one semaphore identity in the passport.
-  // todo: some metadata that identifies the zuzalu semaphore id as
-  // some sort of unique one
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;

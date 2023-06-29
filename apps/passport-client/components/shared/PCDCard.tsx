@@ -102,7 +102,7 @@ export function PCDCard({
 
 function CardFooter({
   pcd,
-  isMainIdentity: isZuzaluIdentity,
+  isMainIdentity,
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
@@ -119,7 +119,7 @@ function CardFooter({
     }
   }, [pcd, dispatch]);
 
-  if (isZuzaluIdentity) {
+  if (isMainIdentity) {
     return null;
   }
 
@@ -134,14 +134,14 @@ function CardFooter({
 
 function CardBody({
   pcd,
-  isMainIdentity: isZuzaluIdentity,
+  isMainIdentity,
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
   const [state] = useContext(DispatchContext);
 
-  if (isZuzaluIdentity) {
+  if (isMainIdentity) {
     return <MainIdentityCard showQrCode={true} />;
   }
 
