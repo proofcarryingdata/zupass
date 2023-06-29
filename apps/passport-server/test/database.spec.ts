@@ -147,7 +147,9 @@ describe("database reads and writes", function () {
   );
 
   step("updating a zuzalu ticket should work", async function () {
-    const update = {
+    const update: ZuzaluPretixTicket = {
+      order_id: testTicket.order_id,
+      name: testTicket.name,
       email: testTicket.email,
       role: otherRole,
       visitor_date_ranges: [
