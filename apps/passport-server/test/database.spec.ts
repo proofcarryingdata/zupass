@@ -11,6 +11,7 @@ import {
 } from "../src/database/queries/emailToken";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
 import {
+  fetchAllLoggedInZuzaluUsers,
   fetchLoggedInZuzaluUser,
   fetchZuzaluUser,
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
@@ -99,5 +100,8 @@ describe.only("pcd-pass functionality", function () {
     );
     expect(loggedinUser.uuid).to.eq(newUuid);
     expect(loggedinUser.commitment).to.eq(newCommitment);
+
+    const allZuzaluUsers = await fetchAllLoggedInZuzaluUsers(db);
+    expect(allZuzaluUsers).to.deep.eq([loggedinUser]);
   });
 });
