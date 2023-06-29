@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
@@ -17,15 +17,14 @@ export interface ZuState {
   pendingAction?: PendingAction;
   modal: "info" | "settings" | "save-sync" | "invalid-participant" | "";
 
-  // Participant metadata.
-  // TODO: reload from passport server on startup.
-  self?: ZuParticipant;
+  // User metadata.
+  self?: User;
 
   // If set, shows an error popover.
   error?: ZuError;
 
   // If set, the user has been invalidated server-side
-  participantInvalid?: boolean;
+  userInvalid?: boolean;
 
   uploadedUploadId?: string;
 

@@ -1,17 +1,14 @@
 import {
   DateRange,
   FullDateRange,
-  ParticipantRole,
-  ZuParticipant,
+  User,
+  ZuzaluUserRole,
 } from "@pcd/passport-interface";
 import { requestUser } from "./api/user";
 import { Dispatcher } from "./dispatch";
 
 // Starts polling the participant record, in the background.
-export async function pollParticipant(
-  self: ZuParticipant,
-  dispatch: Dispatcher
-) {
+export async function pollParticipant(self: User, dispatch: Dispatcher) {
   try {
     const response = await requestUser(self.uuid);
     if (!response.ok) {
@@ -42,7 +39,7 @@ export enum VisitorStatus {
  * active at the current moment to be a 'valid' visitor. This function
  * checks the validity of the visitor, if they are a visitor.
  */
-export function getVisitorStatus(participant?: ZuParticipant):
+export function getVisitorStatus(participant?: User):
   | {
       isVisitor: true;
       status: VisitorStatus;
@@ -53,7 +50,7 @@ export function getVisitorStatus(participant?: ZuParticipant):
 
   const now = new Date();
 
-  if (participant.role === ParticipantRole.Visitor) {
+  if (participant.role === ZuzaluUserRole.Visitor) {
     if (isDateInRanges(now, participant.visitor_date_ranges)) {
       return {
         isVisitor: true,

@@ -1,4 +1,4 @@
-import { fetchParticipant, ZuParticipant } from "@pcd/passport-interface";
+import { fetchParticipant, User } from "@pcd/passport-interface";
 import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName,
@@ -34,7 +34,7 @@ type VerifyType = "identity-proof" | "anon-proof";
 
 type VerifyResult =
   | { valid: false; type: VerifyType; message: string }
-  | { valid: true; type: "identity-proof"; participant: ZuParticipant }
+  | { valid: true; type: "identity-proof"; user: User }
   | { valid: true; type: "anon-proof"; role: string };
 
 // Shows whether a proof is valid. On success, shows the PCD claim visually.
@@ -119,7 +119,7 @@ function getCard(result: VerifyResult) {
         <CardHeader col="var(--accent-lite)">
           VERIFIED ZUZALU PASSPORT
         </CardHeader>
-        <ZuzaluCardBody showQrCode={false} participant={result.participant} />
+        <ZuzaluCardBody showQrCode={false} user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
   );
@@ -193,5 +193,5 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  return { valid: true, type: "identity-proof", participant };
+  return { valid: true, type: "identity-proof", user: participant };
 }

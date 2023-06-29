@@ -1,8 +1,4 @@
-import {
-  DateRange,
-  ParticipantRole,
-  ZuParticipant,
-} from "@pcd/passport-interface";
+import { DateRange, User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -17,13 +13,13 @@ import { QR } from "./QR";
 
 export function ZuzaluCardBody({
   showQrCode,
-  participant,
+  user,
 }: {
   showQrCode?: boolean;
-  participant?: ZuParticipant;
+  user?: User;
 }) {
   const [state, _] = useContext(DispatchContext);
-  const actualParticipant = participant ?? state.self;
+  const actualParticipant = user ?? state.self;
   const { role, name, email } = actualParticipant;
   const visitorStatus = getVisitorStatus(actualParticipant);
 
@@ -43,7 +39,7 @@ export function ZuzaluCardBody({
       <TextCenter>
         <H3 col="var(--primary-dark)">{name}</H3>
         <InfoLine>{email}</InfoLine>
-        <VisitorDateSection participant={actualParticipant} />
+        <VisitorDateSection user={actualParticipant} />
       </TextCenter>
       <Spacer h={24} />
       <Footer
@@ -59,17 +55,17 @@ export function ZuzaluCardBody({
   );
 }
 
-function VisitorDateSection({ participant }: { participant?: ZuParticipant }) {
-  if (!participant) return null;
-  if (participant.role !== ParticipantRole.Visitor) return null;
-  if (!participant.visitor_date_ranges) return null;
+function VisitorDateSection({ user }: { user?: User }) {
+  if (!user) return null;
+  if (user.role !== ZuzaluUserRole.Visitor) return null;
+  if (!user.visitor_date_ranges) return null;
 
   return (
     <>
       <InfoLine>
         <b>Visitor Dates:</b>
       </InfoLine>
-      {participant.visitor_date_ranges.map((range, i) => (
+      {user.visitor_date_ranges.map((range, i) => (
         <InfoLine key={i}>
           <DateRangeText range={range} />
         </InfoLine>

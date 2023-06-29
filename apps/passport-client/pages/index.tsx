@@ -140,7 +140,7 @@ async function loadInitialState(): Promise<ZuState> {
     pcds,
     identity,
     modal,
-    participantInvalid,
+    userInvalid: participantInvalid,
   };
 }
 

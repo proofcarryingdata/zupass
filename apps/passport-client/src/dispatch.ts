@@ -1,5 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
+import { EncryptedStorage, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -37,7 +37,7 @@ export type Action =
     }
   | {
       type: "set-self";
-      self: ZuParticipant;
+      self: User;
     }
   | {
       type: "set-modal";
@@ -138,11 +138,11 @@ async function login(
   state: ZuState,
   update: ZuUpdate
 ) {
-  let participant: ZuParticipant;
+  let user: User;
   try {
     const res = await submitNewUser(email, token, state.identity);
     if (!res.ok) throw new Error(await res.text());
-    participant = await res.json();
+    user = await res.json();
   } catch (e) {
     update({
       error: {
@@ -154,14 +154,14 @@ async function login(
     return;
   }
 
-  return finishLogin(participant, state, update);
+  return finishLogin(user, state, update);
 }
 
 /**
  * Runs the first time the user logs in with their email
  */
 async function finishLogin(
-  participant: ZuParticipant,
+  participant: User,
   state: ZuState,
   update: ZuUpdate
 ) {
@@ -193,7 +193,7 @@ async function finishLogin(
 }
 
 // Runs periodically, whenever we poll new participant info.
-async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
+async function setSelf(self: User, state: ZuState, update: ZuUpdate) {
   let participantMismatched = false;
 
   if (BigInt(self.commitment) !== state.identity.commitment) {
@@ -295,7 +295,7 @@ async function loadFromSync(
 function participantInvalid(update: ZuUpdate) {
   saveParticipantInvalid(true);
   update({
-    participantInvalid: true,
+    userInvalid: true,
     modal: "invalid-participant",
   });
 }

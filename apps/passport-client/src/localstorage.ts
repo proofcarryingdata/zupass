@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
@@ -24,14 +24,14 @@ export async function loadEncryptionKey(): Promise<string | undefined> {
   return window.localStorage["encryption_key"];
 }
 
-export function loadSelf(): ZuParticipant | undefined {
+export function loadSelf(): User | undefined {
   const self = window.localStorage["self"];
   if (self != null && self !== "") {
     return JSON.parse(self);
   }
 }
 
-export function saveSelf(self: ZuParticipant): void {
+export function saveSelf(self: User): void {
   window.localStorage["self"] = JSON.stringify(self);
 }
 
