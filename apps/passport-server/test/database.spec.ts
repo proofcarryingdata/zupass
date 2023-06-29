@@ -10,6 +10,7 @@ import {
   insertEmailToken,
 } from "../src/database/queries/emailToken";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
+import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
   fetchAllLoggedInZuzaluUsers,
   fetchLoggedInZuzaluUser,
@@ -140,5 +141,17 @@ describe.only("database reads and writes", function () {
       update.visitor_date_ranges
     );
     expect(update.role).to.not.eq(testTicket.role);
+  });
+
+  step("deleting a logged in zuzalu ticket should work", async function () {
+    const loggedinUser = await fetchZuzaluUser(db, testTicket.email);
+    if (!loggedinUser || !loggedinUser.uuid) {
+      throw new Error("expected there to be a logged in user");
+    }
+    await deleteZuzaluUser(db, testTicket.email);
+    expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
+    expect(
+      await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
+    ).to.eq(null);
   });
 });

@@ -36,7 +36,7 @@ left join commitments c on c.email = p.email;`
 export async function fetchZuzaluUser(
   client: ClientBase | Pool,
   email: string
-): Promise<ZuzaluUser | null> {
+): Promise<ZuzaluUser | LoggedInZuzaluUser | null> {
   const result = await sqlQuery(
     client,
     `\
