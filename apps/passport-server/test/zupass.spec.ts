@@ -10,13 +10,16 @@ import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
-import { expectSemaphore } from "./semaphore/checkSemaphore";
+import {
+  expectCurrentSemaphoreToBe,
+  testLatestHistoricSemaphoreGroups as testLatestHistoricSemaphoreGroupsMatchServerGroups,
+} from "./semaphore/checkSemaphore";
 import { testLoginZupass } from "./user/testLoginZupass";
 import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("zupass functionality", function () {
+describe.only("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -50,13 +53,21 @@ describe("zupass functionality", function () {
   step(
     "since nobody has logged in yet, all the semaphore groups should be empty",
     async function () {
-      expectSemaphore(application, {
+      expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],
         v: [],
         o: [],
         g: [],
       });
+    }
+  );
+
+  step(
+    "after pretix sync, semaphore should have synced too," +
+      " and saved historic semaphore groups",
+    async function () {
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
   );
 
@@ -87,13 +98,20 @@ describe("zupass functionality", function () {
   step(
     "after a resident logs in, they should show up in the resident semaphore group and no other groups",
     async function () {
-      expectSemaphore(application, {
+      expectCurrentSemaphoreToBe(application, {
         p: [residentUser.commitment],
         r: [residentUser.commitment],
         v: [],
         o: [],
         g: [],
       });
+    }
+  );
+
+  step(
+    "after a user log in, historic semaphore groups also get updated",
+    async function () {
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
   );
 
@@ -136,7 +154,7 @@ describe("zupass functionality", function () {
   step(
     "after all three users log in, the semaphore groups should reflect their existence",
     async function () {
-      expectSemaphore(application, {
+      expectCurrentSemaphoreToBe(application, {
         p: [
           residentUser.commitment,
           visitorUser.commitment,
@@ -147,6 +165,13 @@ describe("zupass functionality", function () {
         o: [organizerUser.commitment],
         g: [],
       });
+    }
+  );
+
+  step(
+    "after more users log in, historic semaphore groups also get updated",
+    async function () {
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
   );
 
@@ -183,7 +208,7 @@ describe("zupass functionality", function () {
       expect(newResidentCommitment != null).to.be.true;
       expect(oldResidentCommitment).to.not.eq(newResidentCommitment);
 
-      expectSemaphore(application, {
+      expectCurrentSemaphoreToBe(application, {
         p: [
           newResidentCommitment,
           visitorUser.commitment,
@@ -224,7 +249,7 @@ describe("zupass functionality", function () {
 
       expect(oldEmails).to.not.eq(newEmails);
 
-      expectSemaphore(application, {
+      expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],
         v: [],

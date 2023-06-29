@@ -7,7 +7,7 @@ import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
-import { expectSemaphore } from "./semaphore/checkSemaphore";
+import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { testUserSync } from "./user/testUserSync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
@@ -65,7 +65,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("semaphore service should now be aware of the user", async function () {
-    expectSemaphore(application, {
+    expectCurrentSemaphoreToBe(application, {
       p: [],
       r: [],
       v: [],

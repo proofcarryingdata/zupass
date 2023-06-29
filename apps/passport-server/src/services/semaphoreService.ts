@@ -9,9 +9,9 @@ import {
 } from "../database/models";
 import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
 import {
-  fetchGroupByRoot,
-  fetchLatestSemaphoreGroups,
-  insertNewSemaphoreGroup,
+  fetchHistoricGroupByRoot,
+  fetchLatestHistoricSemaphoreGroups,
+  insertNewHistoricSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
 import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
 import { ApplicationContext } from "../types";
@@ -105,7 +105,7 @@ export class SemaphoreService {
       this.loaded = true;
 
       logger(`[SEMA] Semaphore service reloaded.`);
-      this.saveHistoricSemaphoreGroups();
+      await this.saveHistoricSemaphoreGroups();
     });
   }
 
@@ -138,7 +138,7 @@ export class SemaphoreService {
 
     logger(`[SEMA] Semaphore service - diffing historic semaphore groups`);
 
-    const latestGroups = await fetchLatestSemaphoreGroups(this.dbPool);
+    const latestGroups = await fetchLatestHistoricSemaphoreGroups(this.dbPool);
 
     for (const localGroup of this.groups) {
       const correspondingLatestGroup = latestGroups.find(
@@ -154,7 +154,7 @@ export class SemaphoreService {
             ` - appending a new one into the database`
         );
 
-        await insertNewSemaphoreGroup(
+        await insertNewHistoricSemaphoreGroup(
           this.dbPool,
           localGroup.group.id.toString(),
           localGroup.group.root.toString(),
@@ -174,19 +174,23 @@ export class SemaphoreService {
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
-    return fetchGroupByRoot(this.dbPool, groupId, rootHash);
+    return fetchHistoricGroupByRoot(this.dbPool, groupId, rootHash);
   }
 
   public async getHistoricSemaphoreGroupValid(
     groupId: string,
     rootHash: string
   ): Promise<boolean> {
-    const group = await fetchGroupByRoot(this.dbPool, groupId, rootHash);
+    const group = await fetchHistoricGroupByRoot(
+      this.dbPool,
+      groupId,
+      rootHash
+    );
     return group !== undefined;
   }
 
   public async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
-    return fetchLatestSemaphoreGroups(this.dbPool);
+    return fetchLatestHistoricSemaphoreGroups(this.dbPool);
   }
 
   private async reloadZuzaluGroups(): Promise<void> {

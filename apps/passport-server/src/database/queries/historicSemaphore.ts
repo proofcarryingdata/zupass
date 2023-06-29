@@ -5,7 +5,7 @@ import { sqlQuery } from "../sqlQuery";
 /**
  * Fetches all the latest semaphore group states from the database.
  */
-export async function fetchLatestSemaphoreGroups(
+export async function fetchLatestHistoricSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
   const latestGroups = await sqlQuery(
@@ -19,14 +19,14 @@ export async function fetchLatestSemaphoreGroups(
     on groups.max_id = s1.id;`
   );
 
-  return latestGroups.rows.map(rowToGroup);
+  return latestGroups.rows.map(historicRowToGroup);
 }
 
 /**
  * Inserts an updated semaphore group to be the latest historic state for
  * a given group.
  */
-export async function insertNewSemaphoreGroup(
+export async function insertNewHistoricSemaphoreGroup(
   client: ClientBase | Pool,
   groupId: string,
   rootHash: string,
@@ -39,7 +39,7 @@ export async function insertNewSemaphoreGroup(
   );
 }
 
-export async function fetchGroupByRoot(
+export async function fetchHistoricGroupByRoot(
   client: ClientBase | Pool,
   groupId: string,
   rootHash: string
@@ -54,10 +54,10 @@ export async function fetchGroupByRoot(
     return undefined;
   }
 
-  return rowToGroup(result.rows[0]);
+  return historicRowToGroup(result.rows[0]);
 }
 
-function rowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
+function historicRowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
   return {
     id: row.id,
     groupId: row.groupid,

@@ -1,85 +1,99 @@
+import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { expect } from "chai";
+import { fetchLatestHistoricSemaphoreGroups } from "../../src/database/queries/historicSemaphore";
 import { PCDPass } from "../../src/types";
 
-export interface ExpectedSemaphoreGroups {
-  p?: string[]; // participants
-  r?: string[]; // residents
-  v?: string[]; // visitors
-  o?: string[]; // organizers
-  g?: string[]; // generic
+export interface SemaphoreGroups {
+  p: string[]; // participants
+  r: string[]; // residents
+  v: string[]; // visitors
+  o: string[]; // organizers
+  g: string[]; // generic
 }
 
-export function expectSemaphore(
-  application: PCDPass,
-  expected: ExpectedSemaphoreGroups
+export function expectGroupsEqual(
+  lhs: SemaphoreGroups,
+  rhs: SemaphoreGroups
 ): void {
-  const { p, r, v, o, g } = expected;
+  expect(new Set(...lhs.p)).to.deep.eq(new Set(...rhs.p));
+  expect(new Set(...lhs.r)).to.deep.eq(new Set(...rhs.r));
+  expect(new Set(...lhs.v)).to.deep.eq(new Set(...rhs.v));
+  expect(new Set(...lhs.o)).to.deep.eq(new Set(...rhs.o));
+  expect(new Set(...lhs.g)).to.deep.eq(new Set(...rhs.g));
+}
 
-  if (p) {
-    expect(p.length).to.eq(
-      application.services.semaphoreService.groupParticipants().group.members
-        .length
-    );
-    for (const u of p) {
-      expect(
-        application.services.semaphoreService
-          .groupParticipants()
-          .group.members.indexOf(u)
-      ).to.be.greaterThan(-1);
-    }
-  }
+export function expectCurrentSemaphoreToBe(
+  application: PCDPass,
+  expected: SemaphoreGroups
+): void {
+  const currentSemaphore = getCurrentSemaphoreServiceGroups(application);
+  expectGroupsEqual(currentSemaphore, expected);
+}
 
-  if (r) {
-    expect(r.length).to.eq(
-      application.services.semaphoreService.groupResidents().group.members
-        .length
-    );
-    for (const u of r) {
-      expect(
-        application.services.semaphoreService
-          .groupResidents()
-          .group.members.indexOf(u)
-      ).to.be.greaterThan(-1);
-    }
-  }
+export async function testLatestHistoricSemaphoreGroups(
+  application: PCDPass
+): Promise<void> {
+  const currentSemaphoreGroups = getCurrentSemaphoreServiceGroups(application);
 
-  if (v) {
-    expect(v.length).to.eq(
-      application.services.semaphoreService.groupVisitors().group.members.length
-    );
-    for (const u of v) {
-      expect(
-        application.services.semaphoreService
-          .groupVisitors()
-          .group.members.indexOf(u)
-      ).to.be.greaterThan(-1);
-    }
-  }
+  const latestHistoricSemaphoreGroups =
+    await getLatestHistoricalSemaphoreGroups(application);
 
-  if (o) {
-    expect(o.length).to.eq(
-      application.services.semaphoreService.groupOrganizers().group.members
-        .length
-    );
-    for (const u of o) {
-      expect(
-        application.services.semaphoreService
-          .groupOrganizers()
-          .group.members.indexOf(u)
-      ).to.be.greaterThan(-1);
-    }
-  }
+  expectGroupsEqual(latestHistoricSemaphoreGroups, currentSemaphoreGroups);
+}
 
-  if (g) {
-    expect(g.length).to.eq(
-      application.services.semaphoreService.groupGeneric().group.members.length
-    );
-    for (const u of g) {
-      expect(
-        application.services.semaphoreService
-          .groupGeneric()
-          .group.members.indexOf(u)
-      ).to.be.greaterThan(-1);
-    }
-  }
+function getCurrentSemaphoreServiceGroups(
+  application: PCDPass
+): SemaphoreGroups {
+  return {
+    g: application.services.semaphoreService
+      .groupGeneric()
+      .group.members.map((m) => m.toString()),
+    v: application.services.semaphoreService
+      .groupVisitors()
+      .group.members.map((m) => m.toString()),
+    o: application.services.semaphoreService
+      .groupOrganizers()
+      .group.members.map((m) => m.toString()),
+    p: application.services.semaphoreService
+      .groupParticipants()
+      .group.members.map((m) => m.toString()),
+    r: application.services.semaphoreService
+      .groupResidents()
+      .group.members.map((m) => m.toString()),
+  };
+}
+
+async function getLatestHistoricalSemaphoreGroups(
+  application: PCDPass
+): Promise<SemaphoreGroups> {
+  const latestGroups = await fetchLatestHistoricSemaphoreGroups(
+    application.context.dbPool
+  );
+
+  const parsedLatestGroups = latestGroups.map((g) =>
+    deserializeSemaphoreGroup(JSON.parse(g.serializedGroup))
+  );
+
+  return {
+    p:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "1")
+        ?.members?.map((m) => m.toString()) ?? [],
+    r:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "2")
+        ?.members?.map((m) => m.toString()) ?? [],
+    v:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "3")
+        ?.members?.map((m) => m.toString()) ?? [],
+    o:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "4")
+        ?.members?.map((m) => m.toString()) ?? [],
+    g:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "5")
+        ?.members?.map((m) => m.toString()) ?? [],
+  };
 }
