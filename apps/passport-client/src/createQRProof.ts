@@ -8,20 +8,20 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { uuidToBigint } from "./util";
 
-export interface ZuzaluQRPayload {
+export interface QRPayload {
   uuid: string;
   timestamp: number;
 }
 
 // Create a PCD proving that we own a given semaphore identity.
-export async function createZuzaluQRProof(
+export async function createQRProof(
   identity: Identity,
   uuid: string,
   timestamp: number
 ): Promise<SemaphoreSignaturePCD> {
   const { prove } = SemaphoreSignaturePCDPackage;
 
-  const payload: ZuzaluQRPayload = {
+  const payload: QRPayload = {
     uuid: uuidToBigint(uuid).toString(),
     timestamp,
   };

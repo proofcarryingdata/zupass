@@ -6,7 +6,7 @@ import { DispatchContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
-import { ZuzaluCardBody } from "./ZuzaluCard";
+import { MainIdentityCard } from "./MainIdentityCard";
 
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
@@ -142,7 +142,7 @@ function CardBody({
   const [state] = useContext(DispatchContext);
 
   if (isZuzaluIdentity) {
-    return <ZuzaluCardBody showQrCode={true} />;
+    return <MainIdentityCard showQrCode={true} />;
   }
 
   if (state.pcds.hasPackage(pcd.type)) {

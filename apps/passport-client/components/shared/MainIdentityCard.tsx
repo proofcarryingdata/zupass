@@ -3,7 +3,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { createZuzaluQRProof } from "../../src/createZuzaluQRProof";
+import { createQRProof } from "../../src/createQRProof";
 import { DispatchContext } from "../../src/dispatch";
 import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
@@ -11,7 +11,7 @@ import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
 import { QR } from "./QR";
 
-export function ZuzaluCardBody({
+export function MainIdentityCard({
   showQrCode,
   user,
 }: {
@@ -31,7 +31,7 @@ export function ZuzaluCardBody({
         ) && (
           <>
             <Spacer h={32} />
-            <ZuzaluQR />
+            <IdentityQR />
           </>
         )}
       <Spacer h={24} />
@@ -113,9 +113,9 @@ function highlight(role: string) {
 }
 
 /**
- * Generate a fresh Zuzalu identity-revealing proof every n ms.
- * We regenerate before the proof expires to allow for a few minutes of
- * clock skew between prover and verifier.
+ * Generate a fresh identity-revealing proof every n ms. We regenerate before
+ * the proof expires to allow for a few minutes of clock skew between prover
+ * and verifier.
  */
 const regenerateAfterMs = (appConfig.maxProofAge * 2) / 3;
 
@@ -124,7 +124,7 @@ interface QRPayload {
   qrPCD: string;
 }
 
-function ZuzaluQR() {
+function IdentityQR() {
   const [state] = useContext(DispatchContext);
   const { identity, self } = state;
   const { uuid } = self;
@@ -146,7 +146,7 @@ function ZuzaluQR() {
       }
 
       console.log(`[QR] generating zuzalu proof, timestamp ${timestamp}`);
-      const pcd = await createZuzaluQRProof(identity, uuid, timestamp);
+      const pcd = await createQRProof(identity, uuid, timestamp);
       const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
       const stringified = JSON.stringify(serialized);
       console.log(`[QR] generated zuzalu proof, length ${stringified.length}`);

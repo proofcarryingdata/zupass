@@ -6,7 +6,7 @@ import {
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
-import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
+import { QRPayload } from "../../src/createQRProof";
 import { DispatchContext } from "../../src/dispatch";
 import { decodeQRPayload } from "../../src/qr";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
@@ -22,12 +22,12 @@ import {
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { MainIdentityCard } from "../shared/MainIdentityCard";
 import {
   CardContainerExpanded,
   CardHeader,
   CardOutlineExpanded,
 } from "../shared/PCDCard";
-import { ZuzaluCardBody } from "../shared/ZuzaluCard";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
 type VerifyType = "identity-proof" | "anon-proof";
@@ -119,7 +119,7 @@ function getCard(result: VerifyResult) {
         <CardHeader col="var(--accent-lite)">
           VERIFIED ZUZALU PASSPORT
         </CardHeader>
-        <ZuzaluCardBody showQrCode={false} user={result.user} />
+        <MainIdentityCard showQrCode={false} user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
   );
@@ -146,9 +146,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   }
 
   // Verify identity proof
-  const payload = JSON.parse(
-    deserializedPCD.claim.signedMessage
-  ) as ZuzaluQRPayload;
+  const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
 
   const uuid = bigintToUuid(BigInt(payload.uuid));
   const user = await fetchUser(appConfig.passportServer, uuid);
