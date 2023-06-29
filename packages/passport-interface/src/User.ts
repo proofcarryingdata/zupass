@@ -14,15 +14,15 @@ export async function fetchUser(
   return (await res.json()) as User;
 }
 
-export function useFetchParticipant(passportServerUrl: string, uuid?: string) {
-  const [participant, setParticipant] = useState<User | null>(null);
+export function useFetchUser(passportServerUrl: string, uuid?: string) {
+  const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const doLoad = async () => {
       if (uuid == undefined) {
-        setParticipant(null);
+        setUser(null);
         setError(null);
         setLoading(false);
         return;
@@ -30,8 +30,8 @@ export function useFetchParticipant(passportServerUrl: string, uuid?: string) {
 
       try {
         setLoading(true);
-        const participant = await fetchUser(passportServerUrl, uuid);
-        setParticipant(participant);
+        const user = await fetchUser(passportServerUrl, uuid);
+        setUser(user);
       } catch (e) {
         setError(e as Error);
       } finally {
@@ -42,5 +42,5 @@ export function useFetchParticipant(passportServerUrl: string, uuid?: string) {
     doLoad();
   }, [passportServerUrl, uuid]);
 
-  return { participant, error, loading };
+  return { user, error, loading };
 }

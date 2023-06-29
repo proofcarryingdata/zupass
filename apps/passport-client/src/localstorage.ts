@@ -44,8 +44,8 @@ export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
 
-export function saveUserInvalid(participantInvalid: boolean) {
-  window.localStorage["participantInvalid"] = participantInvalid;
+export function saveUserInvalid(userInvalid: boolean) {
+  window.localStorage["participantInvalid"] = userInvalid;
 }
 
 export function loadUserInvalid(): boolean {

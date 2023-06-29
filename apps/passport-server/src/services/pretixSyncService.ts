@@ -2,11 +2,7 @@ import { DateRange } from "@pcd/passport-interface";
 
 import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
-import {
-  ZuzaluPretixTicket,
-  ZuzaluUser,
-  ZuzaluUserRole,
-} from "../database/models";
+import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
@@ -196,9 +192,9 @@ export class PretixSyncService {
   }
 
   /**
-   * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
+   * Loads those tickets for residents and organizers (not visitors) of Zuzalu.
    */
-  private async loadResidents(): Promise<ZuzaluUser[]> {
+  private async loadResidents(): Promise<ZuzaluPretixTicket[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadResidents", async () => {
       logger("[PRETIX] Fetching residents");
 
@@ -238,7 +234,7 @@ export class PretixSyncService {
   }
 
   /**
-   * Loads all visitors of Zuzalu. Visitors are defined as participants
+   * Loads all visitors of Zuzalu. Visitors are defined as those
    * who are not members of the main Zuzalu event in pretix.
    */
   private async loadVisitors(): Promise<ZuzaluPretixTicket[]> {
@@ -266,11 +262,11 @@ export class PretixSyncService {
   }
 
   /**
-   * Converts a given list of orders to participants, and sets
+   * Converts a given list of orders to tickets, and sets
    * all of their roles to equal the given role. When `subEvents`
    * is passed in as a parameter, cross-reference them with the
    * orders, and set the visitor date ranges for the new
-   * `PretixParticipant` to equal to the date ranges of the visitor
+   * `ZuzaluPretixTicket` to equal to the date ranges of the visitor
    * subevent events they have in their order.
    */
   private ordersToZuzaluTickets(
@@ -278,7 +274,7 @@ export class PretixSyncService {
     visitorSubEvents: PretixSubevent[],
     role: ZuzaluUserRole
   ): ZuzaluPretixTicket[] {
-    const participants: ZuzaluUser[] = orders
+    const tickets: ZuzaluPretixTicket[] = orders
       // check that they paid
       .filter((o) => o.status === "p")
       // an order can have more than one "position" (ticket)
@@ -311,19 +307,22 @@ export class PretixSyncService {
           name: o.positions[0].attendee_name,
           order_id: o.code,
           visitor_date_ranges: visitorDateRanges,
-        } satisfies ZuzaluUser;
+        } satisfies ZuzaluPretixTicket;
       });
 
-    return participants;
+    return tickets;
   }
 
   /**
    * Some visitors have multiple orders. These orders need to be merged
-   * into a single pretix participant zupass-side, so that a single user
+   * into a single pretix ticket passport-side, so that a single user
    * on our end contains all the dates they have a visitor ticket to.
    */
-  private deduplicateVisitorTickets(visitors: ZuzaluUser[]): ZuzaluUser[] {
-    const dedupedVisitors: Map<string /* email */, ZuzaluUser> = new Map();
+  private deduplicateVisitorTickets(
+    visitors: ZuzaluPretixTicket[]
+  ): ZuzaluPretixTicket[] {
+    const dedupedVisitors: Map<string /* email */, ZuzaluPretixTicket> =
+      new Map();
 
     for (const visitor of visitors) {
       const existingVisitor = dedupedVisitors.get(visitor.email);

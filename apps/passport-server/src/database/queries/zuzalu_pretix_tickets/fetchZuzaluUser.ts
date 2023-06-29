@@ -52,7 +52,7 @@ where p.email = $1;`,
   return result.rows[0] || null;
 }
 
-/** Fetch a participant who already has Passport installed. */
+/** Fetch a Zuzalu user who already has Passport installed. */
 export async function fetchLoggedInZuzaluUser(
   client: ClientBase | Pool,
   params: { uuid: string }
