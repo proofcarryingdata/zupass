@@ -1,7 +1,9 @@
-import { fetchEmailToken } from "../database/queries/fetchEmailToken";
-import { insertEmailToken } from "../database/queries/setEmailToken";
+import {
+  fetchEmailToken,
+  insertEmailToken,
+} from "../database/queries/emailToken";
 import { ApplicationContext } from "../types";
-import { generateEmailToken } from "../util/util";
+import { randomEmailToken } from "../util/util";
 
 /**
  * Responsible for generating, storing, and retrieving single-use
@@ -28,7 +30,7 @@ export class EmailTokenService {
   }
 
   public async saveNewTokenForEmail(email: string): Promise<string> {
-    const token = generateEmailToken();
+    const token = randomEmailToken();
     await insertEmailToken(this.context.dbPool, { email, token });
     return token;
   }
