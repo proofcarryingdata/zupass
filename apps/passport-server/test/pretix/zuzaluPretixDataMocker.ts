@@ -10,6 +10,7 @@ import { randomEmail } from "../util/util";
 
 export interface IMockPretixData {
   config: PretixConfig;
+  visitorSubevent: PretixSubevent;
   subEventsByParentEventId: Map<string, PretixSubevent[]>;
   ordersByEventId: Map<string, PretixOrder[]>;
 }
@@ -26,6 +27,46 @@ export class ZuzaluPretixDataMocker {
 
   public getMockData(): IMockPretixData {
     return this.mockData;
+  }
+
+  public addVisitor(): PretixOrder {
+    const newVisitor = this.newVisitor(this.mockData.visitorSubevent);
+    const visitorSeriesOrders =
+      this.mockData.ordersByEventId.get(
+        this.mockData.config.zuVisitorEventID
+      ) ?? [];
+    visitorSeriesOrders.push(newVisitor);
+    return newVisitor;
+  }
+
+  public removeVisitor(code: string): void {
+    let visitorSeriesOrders =
+      this.mockData.ordersByEventId.get(
+        this.mockData.config.zuVisitorEventID
+      ) ?? [];
+    visitorSeriesOrders = visitorSeriesOrders.filter((o) => o.code !== code);
+    this.mockData.ordersByEventId.set(
+      this.mockData.config.zuVisitorEventID,
+      visitorSeriesOrders
+    );
+  }
+
+  public addResidentOrOrganizer(isOrganizer: boolean): PretixOrder {
+    const newResident = this.newResidentOrOrganizer(isOrganizer);
+    const zuzaluEventOrders =
+      this.mockData.ordersByEventId.get(this.mockData.config.zuEventID) ?? [];
+    zuzaluEventOrders.push(newResident);
+    return newResident;
+  }
+
+  public removeResident(code: string): void {
+    let zuzaluEventOrders =
+      this.mockData.ordersByEventId.get(this.mockData.config.zuEventID) ?? [];
+    zuzaluEventOrders = zuzaluEventOrders.filter((o) => o.code !== code);
+    this.mockData.ordersByEventId.set(
+      this.mockData.config.zuEventID,
+      zuzaluEventOrders
+    );
   }
 
   private newMockData(): IMockPretixData {
@@ -49,6 +90,7 @@ export class ZuzaluPretixDataMocker {
       config: this.config,
       subEventsByParentEventId,
       ordersByEventId,
+      visitorSubevent,
     };
   }
 
