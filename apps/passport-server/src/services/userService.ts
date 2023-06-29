@@ -6,7 +6,7 @@ import { insertCommitment } from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser,
-} from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
+} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";

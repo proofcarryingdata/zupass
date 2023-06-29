@@ -13,7 +13,7 @@ import {
   fetchLatestHistoricSemaphoreGroups,
   insertNewHistoricSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
-import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
+import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";

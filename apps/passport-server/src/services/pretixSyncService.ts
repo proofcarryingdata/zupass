@@ -4,7 +4,7 @@ import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
-import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
+import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
