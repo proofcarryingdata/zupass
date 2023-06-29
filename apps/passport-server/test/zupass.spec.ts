@@ -3,13 +3,17 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
-import { IPretixAPI } from "../src/apis/pretixAPI";
+import { getPretixConfig } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
 import { ZuzaluUserRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
+import {
+  getMockPretixAPI,
+  newMockZuzaluPretixAPI,
+} from "./pretix/mockPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups as testLatestHistoricSemaphoreGroupsMatchServerGroups,
@@ -27,11 +31,22 @@ describe("zupass functionality", function () {
   let visitorUser: User;
   let organizerUser: User;
   let emailAPI: IEmailAPI;
-  let replacedPretixAPI: IPretixAPI;
+  let pretixMocker: ZuzaluPretixDataMocker;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
-    application = await startTestingApp();
+
+    const pretixConfig = getPretixConfig();
+
+    if (!pretixConfig) {
+      throw new Error(
+        "expected to be able to get a pretix config for zuzalu tests"
+      );
+    }
+
+    pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
+    const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
+    application = await startTestingApp({ pretixAPI });
   });
 
   this.afterAll(async () => {
@@ -232,11 +247,10 @@ describe("zupass functionality", function () {
       const oldTicketHolders =
         await application.services.userService.getZuzaluTicketHolders();
 
-      const newAPI = getMockZuzaluPretixAPI();
+      const newAPI = newMockZuzaluPretixAPI();
       if (!newAPI) {
         throw new Error("couldn't instantiate a new pretix api");
       }
-      replacedPretixAPI = newAPI;
       application.services.pretixSyncService?.replaceApi(newAPI);
       const syncStatus = await waitForPretixSyncStatus(application);
       expect(syncStatus).to.eq(PretixSyncStatus.Synced);

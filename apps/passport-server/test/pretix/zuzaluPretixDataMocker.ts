@@ -17,12 +17,18 @@ export interface IMockPretixData {
 export class ZuzaluPretixDataMocker {
   private autoincrementingId = 0;
   private config: PretixConfig;
+  private mockData: IMockPretixData;
 
   public constructor(pretixConfig: PretixConfig) {
     this.config = pretixConfig;
+    this.mockData = this.newMockData();
   }
 
-  public mockData(): IMockPretixData {
+  public getMockData(): IMockPretixData {
+    return this.mockData;
+  }
+
+  private newMockData(): IMockPretixData {
     const residentOrders: PretixOrder[] = [
       this.newResidentOrOrganizer(true),
       this.newResidentOrOrganizer(false),

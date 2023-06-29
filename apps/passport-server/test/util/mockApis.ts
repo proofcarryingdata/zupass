@@ -2,18 +2,31 @@ import chai from "chai";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import { IPretixAPI } from "../../src/apis/pretixAPI";
 import { APIs } from "../../src/types";
-import { getMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
+import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
-export function mockAPIs(): APIs {
-  const emailAPI: IEmailAPI | null = {
-    send: () => {
-      return Promise.resolve();
-    },
-  };
+export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
+  let emailAPI: IEmailAPI | null;
+  let pretixAPI: IPretixAPI | null;
 
-  chai.spy.on(emailAPI, "send");
+  if (apiOverrides?.emailAPI) {
+    emailAPI = apiOverrides.emailAPI;
+  } else {
+    emailAPI = {
+      send: (): Promise<void> => {
+        return Promise.resolve();
+      },
+    };
+  }
 
-  const pretixAPI: IPretixAPI | null = getMockZuzaluPretixAPI();
+  if (emailAPI) {
+    chai.spy.on(emailAPI, "send");
+  }
+
+  if (apiOverrides?.pretixAPI) {
+    pretixAPI = apiOverrides.pretixAPI;
+  } else {
+    pretixAPI = newMockZuzaluPretixAPI();
+  }
 
   return {
     emailAPI,

@@ -10,7 +10,7 @@ import {
   ZuzaluPretixDataMocker,
 } from "./zuzaluPretixDataMocker";
 
-export function getMockZuzaluPretixAPI(): IPretixAPI | null {
+export function newMockZuzaluPretixAPI(): IPretixAPI | null {
   const config = getPretixConfig();
 
   if (!config) {
@@ -18,7 +18,7 @@ export function getMockZuzaluPretixAPI(): IPretixAPI | null {
   }
 
   const mocker = new ZuzaluPretixDataMocker(config);
-  const mockData = mocker.mockData();
+  const mockData = mocker.getMockData();
   logger("[MOCK] zuzalu pretix data", mockData);
   return getMockPretixAPI(mockData);
 }
