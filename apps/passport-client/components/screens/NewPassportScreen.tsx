@@ -2,6 +2,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { requestConfirmationEmail } from "../../src/api/user";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { err } from "../../src/util";
 import {
@@ -104,12 +105,7 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
       >
         <Spacer h={64} />
         <TextCenter>
-          <H1>PASSPORT</H1>
-          <Spacer h={24} />
-          <ZuLogo />
-          <Spacer h={24} />
-          <H2>ZUZALU</H2>
-          <Spacer h={48} />
+          <Header />
           <PItalic>Generating passport...</PItalic>
           <PItalic>Sending verification email...</PItalic>
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
@@ -144,6 +140,28 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
       </BackgroundGlow>
     </AppContainer>
   );
+}
+
+function Header() {
+  if (!appConfig.isZuzalu) {
+    return (
+      <>
+        <H1>PCDPASS</H1>
+        <Spacer h={48} />
+      </>
+    );
+  } else {
+    return (
+      <>
+        <H1>PASSPORT</H1>
+        <Spacer h={24} />
+        <ZuLogo />
+        <Spacer h={24} />
+        <H2>ZUZALU</H2>
+        <Spacer h={48} />
+      </>
+    );
+  }
 }
 
 /**
