@@ -19,7 +19,7 @@ import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe.only("zupass functionality", function () {
+describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
