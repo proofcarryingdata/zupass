@@ -35,7 +35,7 @@ export class E2EEService {
     try {
       logger(`[E2EE] Loading ${request.blobKey}`);
       const storageModel = await fetchEncryptedStorage(
-        this.context,
+        this.context.dbPool,
         request.blobKey
       );
 
@@ -65,7 +65,7 @@ export class E2EEService {
       logger(`[E2EE] Saving ${request.blobKey}`);
 
       await insertEncryptedStorage(
-        this.context,
+        this.context.dbPool,
         request.blobKey,
         request.encryptedBlob
       );

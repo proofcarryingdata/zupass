@@ -8,7 +8,12 @@ import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllCommitments,
   fetchCommitment,
+  removeCommitment,
 } from "../src/database/queries/commitments";
+import {
+  fetchEncryptedStorage,
+  insertEncryptedStorage,
+} from "../src/database/queries/e2ee";
 import {
   fetchEmailToken,
   insertEmailToken,
@@ -26,7 +31,7 @@ import { randomEmailToken } from "../src/util/util";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
 
-describe.only("database reads and writes", function () {
+describe("database reads and writes", function () {
   this.timeout(15_000);
 
   let db: Pool;
@@ -183,5 +188,50 @@ describe.only("database reads and writes", function () {
     expect(await fetchZuzaluUser(db, testTicket.email)).to.not.eq(null);
     await deleteZuzaluUser(db, testTicket.email);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
+  });
+
+  step("e2ee should work", async function () {
+    const key = "key";
+    const value = "value";
+    await insertEncryptedStorage(db, key, value);
+    const insertedStorage = await fetchEncryptedStorage(db, key);
+    if (!insertedStorage) {
+      throw new Error("expected to be able to fetch a e2ee blob");
+    }
+    expect(insertedStorage.blob_key).to.eq(key);
+    expect(insertedStorage.encrypted_blob).to.eq(value);
+
+    const updatedValue = "value2";
+    expect(value).to.not.eq(updatedValue);
+    await insertEncryptedStorage(db, key, updatedValue);
+    const updatedStorage = await fetchEncryptedStorage(db, key);
+    if (!updatedStorage) {
+      throw new Error("expected to be able to fetch updated e2ee blog");
+    }
+    expect(updatedStorage.blob_key).to.eq(key);
+    expect(updatedStorage.encrypted_blob).to.eq(updatedValue);
+  });
+
+  step("pcdpass user representation should work", async function () {
+    const email = "pcdpassuser@test.com";
+    const commitment = new Identity().commitment.toString();
+    const uuid = await insertCommitment(db, {
+      commitment,
+      email,
+    });
+    if (!uuid) {
+      throw new Error("expected to be able to insert a commitment");
+    }
+    const insertedCommitment = await fetchCommitment(db, email);
+    if (!insertedCommitment) {
+      throw new Error("expected to be able to fetch an inserted commitment");
+    }
+    expect(insertedCommitment.commitment).to.eq(commitment);
+    expect(insertedCommitment.email).to.eq(email);
+    expect(insertedCommitment.uuid).to.eq(uuid);
+
+    await removeCommitment(db, email);
+    const deletedCommitment = await fetchCommitment(db, email);
+    expect(deletedCommitment).to.eq(null);
   });
 });

@@ -31,3 +31,15 @@ export async function fetchAllCommitments(
   const result = await sqlQuery(client, `select * from commitments`);
   return result.rows;
 }
+
+/**
+ * Deletes a commitment. For zuzalu users, this effectively logs them out of
+ * the passport app, though they are able to log in again. For non-zuzalu users,
+ * this also logs them out.
+ */
+export async function removeCommitment(
+  client: ClientBase | Pool,
+  email: string
+): Promise<void> {
+  await sqlQuery(client, "delete from commitments where email = $1", [email]);
+}
