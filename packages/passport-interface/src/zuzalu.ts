@@ -10,7 +10,7 @@ export interface User {
 
   /** Zuzalu-specific user metadata */
   name?: string;
-  role?: ZuzaluUserRole;
+  role?: ZuzaluUserRole | undefined;
   visitor_date_ranges?: DateRange[];
 }
 

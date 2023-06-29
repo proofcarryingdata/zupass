@@ -20,7 +20,6 @@ export function ZuzaluCardBody({
 }) {
   const [state, _] = useContext(DispatchContext);
   const actualUser = user ?? state.self;
-  const { role, name, email } = actualUser;
   const visitorStatus = getVisitorStatus(actualUser);
 
   return (
@@ -37,20 +36,23 @@ export function ZuzaluCardBody({
         )}
       <Spacer h={24} />
       <TextCenter>
-        <H3 col="var(--primary-dark)">{name}</H3>
-        <InfoLine>{email}</InfoLine>
+        <H3 col="var(--primary-dark)">{actualUser.name}</H3>
+        <InfoLine>{actualUser.email}</InfoLine>
         <VisitorDateSection user={actualUser} />
       </TextCenter>
       <Spacer h={24} />
-      <Footer
-        role={role}
-        notCurrent={
-          visitorStatus.isVisitor &&
-          visitorStatus.status !== VisitorStatus.Current
-        }
-      >
-        ZUZALU {role.toUpperCase()}
-      </Footer>
+      {appConfig.isZuzalu && (
+        <Footer
+          role={actualUser.role}
+          notCurrent={
+            visitorStatus &&
+            visitorStatus.isVisitor &&
+            visitorStatus.status !== VisitorStatus.Current
+          }
+        >
+          ZUZALU {actualUser.role.toUpperCase()}
+        </Footer>
+      )}
     </CardBody>
   );
 }
