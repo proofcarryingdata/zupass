@@ -31,6 +31,7 @@ describe.only("zupass functionality", function () {
   let residentUser: User;
   let visitorUser: User;
   let organizerUser: User;
+  let updatedToOrganizerUser: LoggedInZuzaluUser;
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
   let pretixService: PretixSyncService;
@@ -277,6 +278,63 @@ describe.only("zupass functionality", function () {
       }
 
       expect(user.name).to.eq(newName);
+    }
+  );
+
+  step(
+    "updating a ticket from resident to organizer should" +
+      " update them in zupass as well",
+    async function () {
+      const residents = pretixMocker.getResidentsOrOrganizers(false);
+      const firstResident = residents[0];
+      const userBefore = application.services.semaphoreService.getUserByEmail(
+        firstResident.email
+      ) as LoggedInZuzaluUser;
+      if (!firstResident || !userBefore) {
+        throw new Error("expected there to be at least one mocked user");
+      }
+
+      expect(userBefore.role).to.eq(ZuzaluUserRole.Resident);
+
+      pretixMocker.removeResidentOrOrganizer(firstResident.code);
+      const newOrganizer = pretixMocker.addResidentOrOrganizer(true);
+      pretixMocker.updateResidentOrOrganizer(newOrganizer.code, (o) => {
+        o.email = firstResident.email;
+        o.positions[0].attendee_email = firstResident.email;
+        o.positions[0].attendee_name = firstResident.positions[0].attendee_name;
+      });
+      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
+      await pretixService.trySync();
+
+      const userAfter = application.services.semaphoreService.getUserByEmail(
+        firstResident.email
+      ) as LoggedInZuzaluUser;
+
+      if (!userAfter) {
+        throw new Error("expected to be able to get user");
+      }
+
+      expect(userAfter.role).to.eq(ZuzaluUserRole.Organizer);
+
+      updatedToOrganizerUser = userAfter;
+    }
+  );
+
+  step(
+    "after pretix causes a user to update its role " +
+      "they should be moved to the correct semaphore group",
+    async function () {
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment,
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [],
+      });
     }
   );
 

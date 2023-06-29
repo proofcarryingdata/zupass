@@ -37,6 +37,14 @@ export class ZuzaluPretixDataMocker {
     return zuzaluEventOrders;
   }
 
+  public getResidentsOrOrganizers(organizers: boolean): PretixOrder[] {
+    return this.getResidentsAndOrganizers().filter((o) =>
+      organizers
+        ? o.positions[0].item === this.config.zuEventOrganizersItemID
+        : o.positions[0].item !== this.config.zuEventOrganizersItemID
+    );
+  }
+
   public getVistors(): PretixOrder[] {
     const visitorEventOrders =
       this.mockData.ordersByEventId.get(
@@ -103,7 +111,7 @@ export class ZuzaluPretixDataMocker {
     return newResident;
   }
 
-  public removeResident(code: string): void {
+  public removeResidentOrOrganizer(code: string): void {
     let zuzaluEventOrders =
       this.mockData.ordersByEventId.get(this.mockData.config.zuEventID) ?? [];
     zuzaluEventOrders = zuzaluEventOrders.filter((o) => o.code !== code);

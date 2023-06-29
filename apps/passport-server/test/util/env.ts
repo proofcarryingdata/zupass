@@ -18,7 +18,7 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_TOKEN: "pretix_token",
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
-  SUPPRESS_LOGGING: "false",
+  SUPPRESS_LOGGING: "true",
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
