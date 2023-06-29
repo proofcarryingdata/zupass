@@ -18,7 +18,9 @@ select
     p.name as name,
     p.role as role,
     p.order_id as order_id,
-    c.commitment as commitment
+    c.commitment as commitment,
+    c.uuid as uuid,
+    p.visitor_date_ranges as visitor_date_ranges,
 from zuzalu_pretix_tickets p
 left join commitments c on c.email = p.email;`
   );
