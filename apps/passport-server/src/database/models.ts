@@ -8,15 +8,15 @@ export interface ZuzaluPretixTicket {
   name: string;
   role: ZuzaluUserRole;
   order_id: string;
-  visitor_date_ranges?: DateRange[];
+  visitor_date_ranges?: DateRange[] | null;
 }
 
 /**
  * A zuzalu pretix-ticket-holder that may or may not have logged in yet.
  */
 export interface ZuzaluUser extends ZuzaluPretixTicket {
-  commitment?: string;
-  uuid?: string;
+  commitment: string | null;
+  uuid: string | null;
 }
 
 /**

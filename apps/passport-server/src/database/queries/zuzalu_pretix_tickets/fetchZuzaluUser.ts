@@ -45,7 +45,9 @@ select
     p.name as name,
     p.role as role,
     p.order_id as order_id,
-    c.commitment as commitment
+    c.commitment as commitment,
+    c.uuid as uuid,
+    p.visitor_date_ranges as visitor_date_ranges
 from zuzalu_pretix_tickets p
 left join commitments c on c.email = p.email
 where p.email = $1;`,
@@ -68,7 +70,8 @@ select
     p.email,
     p.name,
     p.role,
-    p.order_id
+    p.order_id,
+    p.visitor_date_ranges as visitor_date_ranges
 from commitments c
 join zuzalu_pretix_tickets p on c.email=p.email
 left join email_tokens e on p.email = e.email

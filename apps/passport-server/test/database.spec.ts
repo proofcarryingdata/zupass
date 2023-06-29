@@ -1,3 +1,4 @@
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -8,7 +9,11 @@ import {
   fetchEmailToken,
   insertEmailToken,
 } from "../src/database/queries/emailToken";
-import { fetchZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { insertCommitment } from "../src/database/queries/saveCommitment";
+import {
+  fetchLoggedInZuzaluUser,
+  fetchZuzaluUser,
+} from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { randomEmailToken } from "../src/util/util";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
@@ -51,7 +56,7 @@ describe.only("pcd-pass functionality", function () {
       name: "bob shmob",
       order_id: "ASD12",
       role: ZuzaluUserRole.Organizer,
-      visitor_date_ranges: undefined,
+      visitor_date_ranges: null,
     };
 
     await insertZuzaluPretixTicket(db, testTicket);
@@ -69,5 +74,30 @@ describe.only("pcd-pass functionality", function () {
     expect(insertedUser.visitor_date_ranges).to.deep.eq(
       testTicket.visitor_date_ranges
     );
+    expect(insertedUser.uuid).to.be.null;
+    expect(insertedUser.commitment).to.be.null;
+
+    const newIdentity = new Identity();
+    const newCommitment = newIdentity.commitment.toString();
+    const newUuid = await insertCommitment(db, {
+      email: testTicket.email,
+      commitment: newCommitment,
+    });
+
+    const loggedinUser = await fetchLoggedInZuzaluUser(db, { uuid: newUuid });
+    if (!loggedinUser) {
+      throw new Error("user didn't insert properly");
+    }
+
+    expect(loggedinUser).to.not.eq(null);
+    expect(loggedinUser.email).to.eq(testTicket.email);
+    expect(loggedinUser.name).to.eq(testTicket.name);
+    expect(loggedinUser.order_id).to.eq(testTicket.order_id);
+    expect(loggedinUser.role).to.eq(testTicket.role);
+    expect(loggedinUser.visitor_date_ranges).to.deep.eq(
+      testTicket.visitor_date_ranges
+    );
+    expect(loggedinUser.uuid).to.eq(newUuid);
+    expect(loggedinUser.commitment).to.eq(newCommitment);
   });
 });
