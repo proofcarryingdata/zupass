@@ -1,5 +1,6 @@
 import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { Modal } from "./Modal";
@@ -26,7 +27,7 @@ export function SaveSyncModal() {
     <Modal>
       <Wrap>
         <TextCenter>
-          <H2>WELCOME TO ZUPASS</H2>
+          <H2>WELCOME TO {appConfig.isZuzalu ? "ZUPASS" : "PCDPASS"}</H2>
         </TextCenter>
         <Spacer h={32} />
         <TextCenter>

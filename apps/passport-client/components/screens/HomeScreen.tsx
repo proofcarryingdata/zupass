@@ -67,7 +67,7 @@ export function HomeScreen() {
       selected = pcds.find((pcd) => pcd.id === selectedPCDID);
     }
 
-    // default to Zuzalu PCD if no valid PCD found
+    // default to first PCD if no selected PCD found
     if (selected === undefined) {
       selected = pcds[0];
     }
