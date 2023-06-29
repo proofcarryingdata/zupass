@@ -53,9 +53,9 @@ export async function testLoginPCDPass(
   const newUserResponseJson = newUserResponse._getJSONData();
   expect(newUserResponseJson).to.haveOwnProperty("uuid");
   expect(newUserResponseJson).to.haveOwnProperty("commitment");
-  expect(newUserResponseJson).to.haveOwnProperty("participant_email");
+  expect(newUserResponseJson).to.haveOwnProperty("email");
   expect(newUserResponseJson.commitment).to.eq(commitment);
-  expect(newUserResponseJson.participant_email).to.eq(email);
+  expect(newUserResponseJson.email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
   await userService.handleGetPcdPassUser(

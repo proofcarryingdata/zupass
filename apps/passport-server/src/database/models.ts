@@ -36,7 +36,7 @@ export enum ZuzaluUserRole {
 export interface CommitmentRow {
   uuid: string;
   commitment: string;
-  participant_email: string;
+  email: string;
 }
 
 export interface EncryptedStorageModel {

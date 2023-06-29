@@ -13,9 +13,5 @@ export async function deleteZuzaluUser(
     email,
   ]);
 
-  await sqlQuery(
-    client,
-    `delete from commitments where participant_email = $1`,
-    [email]
-  );
+  await sqlQuery(client, `delete from commitments where email = $1`, [email]);
 }
