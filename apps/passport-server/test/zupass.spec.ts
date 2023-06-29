@@ -253,6 +253,34 @@ describe.only("zupass functionality", function () {
   });
 
   step(
+    "updating a ticket's name should update the corresponding user",
+    async function () {
+      const participants = pretixMocker.getResidentsAndOrganizers();
+      const firstParticipant = participants[0];
+      if (!firstParticipant) {
+        throw new Error("expected there to be at least one mocked user");
+      }
+      const newName = "new random_name";
+      expect(newName).to.not.eq(firstParticipant.positions[0].attendee_name);
+
+      pretixMocker.updateResidentOrOrganizer(firstParticipant.code, (p) => {
+        p.positions[0].attendee_name = newName;
+      });
+      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
+      await pretixService.trySync();
+      const user = application.services.semaphoreService.getUserByEmail(
+        firstParticipant.email
+      ) as LoggedInZuzaluUser;
+
+      if (!user) {
+        throw new Error("expected to be able to get user");
+      }
+
+      expect(user.name).to.eq(newName);
+    }
+  );
+
+  step(
     "replace api and sync should cause all users to be replaced",
     async function () {
       const oldTicketHolders =
@@ -281,32 +309,6 @@ describe.only("zupass functionality", function () {
         o: [],
         g: [],
       });
-    }
-  );
-
-  step(
-    "updating a ticket should update the corresponding user",
-    async function () {
-      const participants = pretixMocker.getResidentsAndOrganizers();
-      const firstParticipant = participants[0];
-      if (!firstParticipant) {
-        throw new Error("expected there to be at least one mocked user");
-      }
-      const newName = "new random_name";
-      expect(newName).to.not.eq(firstParticipant.positions[0].attendee_name);
-
-      pretixMocker.updateResidentOrOrganizer(firstParticipant.code, (p) => {
-        p.positions[0].attendee_name = newName;
-      });
-      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
-      await pretixService.trySync();
-      const user = application.services.semaphoreService.getUserByEmail(
-        firstParticipant.email
-      ) as LoggedInZuzaluUser;
-      if (!user) {
-        throw new Error("expected to be able to get user");
-      }
-      expect(user.name).to.eq(newName);
     }
   );
 });

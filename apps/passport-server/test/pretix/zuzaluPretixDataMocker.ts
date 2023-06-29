@@ -6,6 +6,7 @@ import {
   PretixPosition,
   PretixSubevent,
 } from "../../src/apis/pretixAPI";
+import { logger } from "../../src/util/logger";
 import { randomEmail } from "../util/util";
 
 export interface IMockPretixData {
@@ -26,6 +27,7 @@ export class ZuzaluPretixDataMocker {
   }
 
   public getMockData(): IMockPretixData {
+    logger("[MOCK]", JSON.stringify(this.mockData, null, 2));
     return this.mockData;
   }
 

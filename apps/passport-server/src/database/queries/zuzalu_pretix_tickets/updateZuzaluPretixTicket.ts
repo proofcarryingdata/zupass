@@ -1,5 +1,5 @@
-import { DateRange } from "@pcd/passport-interface";
 import { ClientBase, Pool } from "pg";
+import { ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -7,17 +7,13 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function updateZuzaluPretixTicket(
   client: ClientBase | Pool,
-  params: {
-    email: string;
-    role: string;
-    visitor_date_ranges?: DateRange[] | null;
-  }
+  params: ZuzaluPretixTicket
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
 update zuzalu_pretix_tickets
-set role=$2, visitor_date_ranges=$3
+set role=$2, visitor_date_ranges=$3, name=$4
 where email=$1;`,
     [
       params.email,
@@ -25,6 +21,7 @@ where email=$1;`,
       params.visitor_date_ranges === undefined
         ? undefined
         : JSON.stringify(params.visitor_date_ranges),
+      params.name,
     ]
   );
   return result.rowCount;

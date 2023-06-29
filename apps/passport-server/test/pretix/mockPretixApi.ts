@@ -30,12 +30,18 @@ export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
     config: mockData.config,
     fetchOrders: async (eventID: string): Promise<PretixOrder[]> => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
-      logger(`[MOCK] fetchOrders('${eventID}') =>`, result);
+      logger(
+        `[MOCK] fetchOrders('${eventID}') =>`,
+        JSON.stringify(result, null, 2)
+      );
       return result;
     },
     fetchSubevents: async (parentId: string): Promise<PretixSubevent[]> => {
       const result = mockData.subEventsByParentEventId.get(parentId) ?? [];
-      logger(`[MOCK] fetchSubevents('${parentId}') =>`, result);
+      logger(
+        `[MOCK] fetchSubevents('${parentId}') =>`,
+        JSON.stringify(result, null, 2)
+      );
       return result;
     },
   };

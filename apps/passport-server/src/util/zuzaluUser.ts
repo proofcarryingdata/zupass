@@ -19,6 +19,10 @@ export function pretixTicketsDifferent(
     return true;
   }
 
+  if (oldTicket.name !== newTicket.name) {
+    return true;
+  }
+
   return false;
 }
 
