@@ -179,7 +179,7 @@ function ZuzaluQR() {
   return (
     <QRWrap>
       <QR value={qrLink} bgColor={qrBg} fgColor={qrFg} />
-      <QRLogoDone />
+      {appConfig.isZuzalu && <QRLogoDone />}
     </QRWrap>
   );
 }
