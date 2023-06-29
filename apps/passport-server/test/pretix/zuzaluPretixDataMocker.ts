@@ -29,6 +29,34 @@ export class ZuzaluPretixDataMocker {
     return this.mockData;
   }
 
+  public updateResidentOrOrganizer(
+    code: string,
+    update: (order: PretixOrder) => void
+  ): void {
+    const zuzaluEventOrders =
+      this.mockData.ordersByEventId.get(this.mockData.config.zuEventID) ?? [];
+    const order = zuzaluEventOrders.find((o) => o.code === code);
+    if (!order) {
+      throw new Error(`couldn't find order ${code}`);
+    }
+    update(order);
+  }
+
+  public updateVisitor(
+    code: string,
+    update: (order: PretixOrder) => void
+  ): void {
+    const visitorEventOrders =
+      this.mockData.ordersByEventId.get(
+        this.mockData.config.zuVisitorEventID
+      ) ?? [];
+    const order = visitorEventOrders.find((o) => o.code === code);
+    if (!order) {
+      throw new Error(`couldn't find order ${code}`);
+    }
+    update(order);
+  }
+
   public addVisitor(): PretixOrder {
     const newVisitor = this.newVisitor(this.mockData.visitorSubevent);
     const visitorSeriesOrders =
