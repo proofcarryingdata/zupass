@@ -92,8 +92,10 @@ export class PretixSyncService {
 
       try {
         await this.saveTickets(dbPool, tickets);
-      } catch (e) {
+      } catch (e: any) {
         logger("[PRETIX] failed to save tickets");
+        logger("[PRETIX]", e);
+        this.rollbarService?.error(e);
       }
 
       const syncEnd = Date.now();
