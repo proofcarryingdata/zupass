@@ -1,17 +1,16 @@
-import { ApplicationContext } from "../../types";
-import { query } from "../query";
+import { ClientBase, Pool } from "pg";
+import { EncryptedStorageModel } from "../models";
+import { sqlQuery } from "../sqlQuery";
 
-export interface EncryptedStorageModel {
-  blob_key: string;
-  encrypted_blob: string;
-}
-
-export async function getEncryptedStorage(
-  context: ApplicationContext,
+/**
+ * Returns the encrypted data stored with a given key.
+ */
+export async function fetchEncryptedStorage(
+  dbPool: Pool | ClientBase,
   blobKey: string
 ): Promise<EncryptedStorageModel | undefined> {
-  const results = await query(
-    context.dbPool,
+  const results = await sqlQuery(
+    dbPool,
     "select * from e2ee where blob_key = $1;",
     [blobKey]
   );
@@ -23,13 +22,16 @@ export async function getEncryptedStorage(
   return results.rows[0] as EncryptedStorageModel;
 }
 
-export async function setEncryptedStorage(
-  context: ApplicationContext,
+/**
+ * Replaces the encrypted data stored at a particular sync key.
+ */
+export async function insertEncryptedStorage(
+  dbPool: Pool | ClientBase,
   blobKey: string,
   encryptedBlob: string
-) {
-  await query(
-    context.dbPool,
+): Promise<void> {
+  await sqlQuery(
+    dbPool,
     "insert into e2ee(blob_key, encrypted_blob) values " +
       "($1, $2) on conflict(blob_key) do update set encrypted_blob = $2;",
     [blobKey, encryptedBlob]

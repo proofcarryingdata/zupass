@@ -9,7 +9,7 @@ import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import { PASSPORT_SERVER_URL, PASSPORT_URL } from "../../src/constants";
+import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -20,17 +20,21 @@ export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
-    PASSPORT_SERVER_URL
+    ZUPASS_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
 
-  const [signatureProofValid, setSignatureProofValid] = useState<boolean | undefined>();
+  const [signatureProofValid, setSignatureProofValid] = useState<
+    boolean | undefined
+  >();
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
 
-  const { signatureProof } =
-    useSemaphoreSignatureProof(pcdStr, onProofVerified);
+  const { signatureProof } = useSemaphoreSignatureProof(
+    pcdStr,
+    onProofVerified
+  );
 
   const [messageToSign, setMessageToSign] = useState<string>("");
   const [serverProving, setServerProving] = useState(false);
@@ -61,7 +65,7 @@ export default function Page() {
           onClick={useCallback(
             () =>
               openSemaphoreSignaturePopup(
-                PASSPORT_URL,
+                ZUPASS_URL,
                 window.location.origin + "/popup",
                 messageToSign,
                 serverProving

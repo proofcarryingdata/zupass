@@ -3,11 +3,16 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
+import Handlebars from "handlebars";
+import * as path from "path";
 import { v4 as uuid } from "uuid";
 
 dotenv.config();
 
+const IS_ZUZALU = process.env.IS_ZUZALU === "true";
+
 const define = {
+  "process.env.IS_ZUZALU": JSON.stringify(process.env.IS_ZUZALU ?? "false"),
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(
     process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
   ),
@@ -56,10 +61,10 @@ const serviceWorkerOpts: BuildOptions = {
   // themselves are served from.
   outdir: "public/",
   // Service workers are only updated when the binary contents of their
-  // files changes. The service worker for zupass.org uses this environment
+  // files changes. The service worker for the website uses this environment
   // variable, which causes its contents to be changed every time `build.ts`
   // is invoked, so that each new production deploy invalidates the previous
-  // service worker, which clears zupass.org application code (html, js, etc.),
+  // service worker, which clears the website's application code (html, js, etc.),
   // so that clients are not forever stuck on one version of the code.
   define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) },
 };
@@ -69,6 +74,9 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string) {
+  compileHtml();
+  compileFavicon();
+
   switch (command) {
     case "build":
       const passportRes = await build({ ...passportAppOpts, minify: true });
@@ -103,5 +111,33 @@ async function run(command: string) {
       break;
     default:
       throw new Error(`Unknown command ${command}`);
+  }
+}
+
+function compileHtml() {
+  const indexHtmlTemplateSource = fs
+    .readFileSync(path.join("public", "index.hbs"))
+    .toString();
+  const template = Handlebars.compile(indexHtmlTemplateSource);
+
+  const html = template({
+    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDPass",
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
+  });
+
+  fs.writeFileSync(path.join("public", "index.html"), html);
+}
+
+function compileFavicon() {
+  if (IS_ZUZALU) {
+    fs.copyFileSync(
+      path.join("public", "favicon-zupass.ico"),
+      path.join("public", "favicon.ico")
+    );
+  } else {
+    fs.copyFileSync(
+      path.join("public", "favicon-pcdpass.ico"),
+      path.join("public", "favicon.ico")
+    );
   }
 }

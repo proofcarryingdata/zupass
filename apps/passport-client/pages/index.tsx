@@ -19,14 +19,14 @@ import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
   loadIdentity,
-  loadParticipantInvalid,
   loadPCDs,
   loadSelf,
+  loadUserInvalid,
   saveIdentity,
 } from "../src/localstorage";
-import { pollParticipant } from "../src/participant";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
+import { pollUser } from "../src/user";
 
 class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
@@ -74,16 +74,16 @@ class App extends React.Component<object, ZuState> {
 
   startBackgroundJobs = () => {
     console.log("Starting background jobs...");
-    this.jobPollParticipant();
+    this.jobPollUser();
   };
 
-  // Poll for participant updates
-  jobPollParticipant = async () => {
-    console.log("[JOB] polling participant");
+  // Poll for user updates
+  jobPollUser = async () => {
+    console.log("[JOB] polling user");
     if (this.state?.self) {
-      await pollParticipant(this.state.self, this.dispatch);
+      await pollUser(this.state.self, this.dispatch);
     }
-    setTimeout(this.jobPollParticipant, 1000 * 60 * 5);
+    setTimeout(this.jobPollUser, 1000 * 60 * 5);
   };
 }
 
@@ -123,11 +123,11 @@ async function loadInitialState(): Promise<ZuState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
-  const participantInvalid = loadParticipantInvalid();
+  const userInvalid = loadUserInvalid();
 
   let modal = "" as ZuState["modal"];
 
-  if (participantInvalid) {
+  if (userInvalid) {
     modal = "invalid-participant";
   } else if (self != null && !localStorage["savedSyncKey"]) {
     console.log("Asking existing user to save their sync key...");
@@ -140,7 +140,7 @@ async function loadInitialState(): Promise<ZuState> {
     pcds,
     identity,
     modal,
-    participantInvalid,
+    userInvalid: userInvalid,
   };
 }
 

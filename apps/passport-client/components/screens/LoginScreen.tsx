@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   ChangeEvent,
   FormEvent,
@@ -7,6 +6,7 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import {
   BackgroundGlow,
@@ -51,18 +51,7 @@ export function LoginScreen() {
         to="var(--bg-dark-primary)"
       >
         <Spacer h={64} />
-        <TextCenter>
-          <H1>PASSPORT</H1>
-          <Spacer h={24} />
-          <ZuLogo />
-          <Spacer h={24} />
-          <H2>ZUZALU</H2>
-          <Spacer h={24} />
-          <Description>
-            This experimental passport uses zero-knowledge proofs to prove
-            Zuzalu citizenship without revealing who you are.
-          </Description>
-        </TextCenter>
+        <LoginHeader />
         <Spacer h={16} />
         <CenterColumn w={280}>
           <form onSubmit={onGenPass}>
@@ -92,6 +81,35 @@ export function LoginScreen() {
         <Spacer h={24} />
       </BackgroundGlow>
     </AppContainer>
+  );
+}
+
+function LoginHeader() {
+  if (appConfig.isZuzalu) {
+    return (
+      <TextCenter>
+        <H1>PASSPORT</H1>
+        <Spacer h={24} />
+        <ZuLogo />
+        <Spacer h={24} />
+        <H2>ZUZALU</H2>
+        <Spacer h={24} />
+        <Description>
+          This experimental passport uses zero-knowledge proofs to prove Zuzalu
+          citizenship without revealing who you are.
+        </Description>
+      </TextCenter>
+    );
+  }
+
+  return (
+    <TextCenter>
+      <H1>PCDPASS</H1>
+      <Description>
+        This experimental passport uses zero-knowledge proofs to prove aspects
+        of your identity to other websites.
+      </Description>
+    </TextCenter>
   );
 }
 

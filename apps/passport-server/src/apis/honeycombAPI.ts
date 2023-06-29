@@ -2,6 +2,7 @@
 /// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
 
 export function getHoneycombAPI(): Libhoney | null {
@@ -13,11 +14,11 @@ export function getHoneycombAPI(): Libhoney | null {
       dataset: "server-metrics",
     });
 
-    console.log("[INIT] Loaded a Honeycomb API");
+    logger("[INIT] Loaded a Honeycomb API");
 
     return api;
   } catch (e) {
-    console.log(
+    logger(
       `[INIT] Missing environment variable ${e} - skipping starting Honeycomb API`
     );
     return null;
@@ -33,7 +34,7 @@ export function sendEvent(
   context: ApplicationContext,
   eventName: EventName,
   eventData?: any
-) {
+): void {
   if (!context.honeyClient) return;
 
   const event = context.honeyClient.newEvent();

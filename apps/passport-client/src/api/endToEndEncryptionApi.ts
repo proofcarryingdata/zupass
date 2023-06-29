@@ -4,7 +4,7 @@ import {
   LoadE2EEResponse,
   SaveE2EERequest,
 } from "@pcd/passport-interface";
-import { config } from "../config";
+import { appConfig } from "../appConfig";
 
 export async function downloadEncryptedStorage(
   blobKey: string
@@ -13,7 +13,7 @@ export async function downloadEncryptedStorage(
     blobKey,
   };
 
-  const url = `${config.passportServer}/sync/load`;
+  const url = `${appConfig.passportServer}/sync/load`;
   console.log(`Loading ${url}`);
   const response = await fetch(url, {
     method: "POST",
@@ -45,7 +45,7 @@ export async function uploadEncryptedStorage(
     encryptedBlob: JSON.stringify(encryptedStorage),
   };
 
-  const url = `${config.passportServer}/sync/save`;
+  const url = `${appConfig.passportServer}/sync/save`;
   await fetch(url, {
     method: "POST",
     body: JSON.stringify(request),

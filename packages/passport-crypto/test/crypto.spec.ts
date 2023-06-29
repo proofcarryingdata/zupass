@@ -7,11 +7,10 @@ import { PCDCrypto } from "../src/passportCrypto";
 
 describe("Passport encryption", function () {
   it("Encryption and decryption works properly", async function () {
-    const testParticipant = {
+    const testUser = {
       commitment: "a",
       email: "b",
       name: "c",
-      residence: "d",
       role: "e",
       uuid: "g",
     };
@@ -25,7 +24,7 @@ describe("Passport encryption", function () {
     const encrypted = await passportEncrypt(
       JSON.stringify({
         pcds: await sourcePCDs.serializeAll(),
-        self: testParticipant,
+        self: testUser,
       }),
       encryptionKey
     );
@@ -35,6 +34,6 @@ describe("Passport encryption", function () {
 
     assert.equal(destinationPCDs.getAll().length, 1);
     assert.equal(destinationPCDs.getAll()[0].id, sourcePCDs.getAll()[0].id);
-    assert.deepEqual(decrypted.self, testParticipant);
+    assert.deepEqual(decrypted.self, testUser);
   });
 });

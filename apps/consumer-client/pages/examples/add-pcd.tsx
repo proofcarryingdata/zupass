@@ -15,7 +15,7 @@ import {
 } from "@simplewebauthn/server";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
 import { sendPassportRequest } from "../../src/util";
 
 /**
@@ -71,7 +71,7 @@ async function addGroupMembershipProofPCD() {
   const url = constructPassportPcdProveAndAddRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
-    PASSPORT_URL,
+    ZUPASS_URL,
     window.location.origin + "/popup",
     SemaphoreGroupPCDPackage.name,
     {
@@ -85,7 +85,7 @@ async function addGroupMembershipProofPCD() {
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: SEMAPHORE_GROUP_URL,
+        remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
         description: "The Semaphore group which you are proving you belong to.",
       },
       identity: {
@@ -119,7 +119,7 @@ async function addSignatureProofPCD() {
   const proofUrl = constructPassportPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
-    PASSPORT_URL,
+    ZUPASS_URL,
     window.location.origin + "/popup",
     SemaphoreSignaturePCDPackage.name,
     {
@@ -153,7 +153,7 @@ async function addIdentityPCD() {
   );
 
   const url = constructPassportPcdAddRequestUrl(
-    PASSPORT_URL,
+    ZUPASS_URL,
     window.location.origin + "/popup",
     serializedNewIdentity
   );
@@ -210,7 +210,7 @@ async function addWebAuthnPCD() {
 
   // Add new WebAuthn PCD to Passport.
   const url = constructPassportPcdAddRequestUrl(
-    PASSPORT_URL,
+    ZUPASS_URL,
     window.location.origin + "/popup",
     serializedNewCredential
   );

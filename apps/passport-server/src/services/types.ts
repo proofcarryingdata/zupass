@@ -1,13 +1,21 @@
+import { Application } from "express";
+import * as http from "http";
+import Rollbar from "rollbar";
 import { ApplicationContext } from "../types";
-
-export interface ServiceInitializer {
-  (context: ApplicationContext): void;
-}
 
 export interface Metric {
   (context: ApplicationContext): void;
 }
 
-export enum MetricName {
-  GITHUB_RATE_LIMIT = "GITHUB_RATE_LIMIT",
+export interface ExpressContext {
+  app: Application;
+  server: http.Server;
 }
+
+export enum PretixSyncStatus {
+  NotSynced = "NotSynced",
+  Synced = "Synced",
+  NoPretix = "NoPretix",
+}
+
+export type RollbarService = Rollbar | null;

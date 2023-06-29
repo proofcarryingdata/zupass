@@ -32,16 +32,16 @@ export function AppContainer({
 const Background = styled.div<{ color: string }>`
   background-color: ${(p) => p.color};
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   min-height: 100vh;
 `;
 
 const Container = styled.div`
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-direction: column;
-  height: 100%;
+  min-height: 100%;
   max-width: 420px;
   margin: 0 auto;
   position: relative;

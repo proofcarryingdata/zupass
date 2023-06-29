@@ -53,7 +53,7 @@ export function HomeScreen() {
     return state.pcds.getAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.pcds, state]);
-  const zuzaluPCDId = useMemo(() => {
+  const mainIdPCD = useMemo(() => {
     return pcds[0]?.id;
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState("");
@@ -67,7 +67,7 @@ export function HomeScreen() {
       selected = pcds.find((pcd) => pcd.id === selectedPCDID);
     }
 
-    // default to Zuzalu PCD if no valid PCD found
+    // default to first PCD if no selected PCD found
     if (selected === undefined) {
       selected = pcds[0];
     }
@@ -92,7 +92,7 @@ export function HomeScreen() {
                 <PCDCard
                   pcd={pcd}
                   expanded={pcd.id === selectedPCD?.id}
-                  isZuzaluIdentity={pcd.id === zuzaluPCDId}
+                  isMainIdentity={pcd.id === mainIdPCD}
                   onClick={() => {
                     setSelectedPCDID(pcd.id);
                   }}

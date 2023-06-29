@@ -6,6 +6,7 @@ import {
 import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
@@ -38,7 +39,9 @@ export function SyncExistingScreen() {
             title: "Sync failed",
             message:
               "Couldn't load end-to-end encrypted backup. " +
-              "If this is your first time using zupass.org, please generate a new passport instead.",
+              `If this is your first time using ${
+                appConfig.isZuzalu ? "zupass.org" : "pcdpass.xyz"
+              }, please generate a new passport instead.`,
           },
         });
         setIsLoading(false);

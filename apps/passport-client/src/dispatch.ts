@@ -1,5 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { EncryptedStorage, ZuParticipant } from "@pcd/passport-interface";
+import { EncryptedStorage, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -9,18 +9,18 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { config } from "./config";
+import { submitNewUser } from "./api/user";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
   saveIdentity,
-  saveParticipantInvalid,
   savePCDs,
   saveSelf,
+  saveUserInvalid,
 } from "./localstorage";
-import { sanitizeDateRanges } from "./participant";
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
+import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
@@ -37,7 +37,7 @@ export type Action =
     }
   | {
       type: "set-self";
-      self: ZuParticipant;
+      self: User;
     }
   | {
       type: "set-modal";
@@ -98,7 +98,7 @@ export async function dispatch(
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
-      return participantInvalid(update);
+      return userInvalid(update);
     case "sync":
       return sync(state, update);
     default:
@@ -138,20 +138,11 @@ async function login(
   state: ZuState,
   update: ZuUpdate
 ) {
-  // Verify the token, save the participant to local storage, redirect to
-  // the home page.
-  const query = new URLSearchParams({
-    email,
-    token,
-    commitment: state.identity.commitment.toString(),
-  }).toString();
-  const loginUrl = `${config.passportServer}/zuzalu/new-participant?${query}`;
-
-  let participant: ZuParticipant;
+  let user: User;
   try {
-    const res = await fetch(loginUrl);
+    const res = await submitNewUser(email, token, state.identity);
     if (!res.ok) throw new Error(await res.text());
-    participant = await res.json();
+    user = await res.json();
   } catch (e) {
     update({
       error: {
@@ -163,24 +154,17 @@ async function login(
     return;
   }
 
-  return finishLogin(participant, state, update);
+  return finishLogin(user, state, update);
 }
 
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(
-  participant: ZuParticipant,
-  state: ZuState,
-  update: ZuUpdate
-) {
+async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
-  console.log("Save self", identity, participant);
-  if (
-    identity == null ||
-    identity.commitment.toString() !== participant.commitment
-  ) {
+  console.log("Save self", identity, user);
+  if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
         title: "Invalid identity",
@@ -190,7 +174,7 @@ async function finishLogin(
   }
 
   // Save to local storage.
-  setSelf(participant, state, update);
+  setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
@@ -202,19 +186,19 @@ async function finishLogin(
 }
 
 // Runs periodically, whenever we poll new participant info.
-async function setSelf(self: ZuParticipant, state: ZuState, update: ZuUpdate) {
-  let participantMismatched = false;
+async function setSelf(self: User, state: ZuState, update: ZuUpdate) {
+  let userMismatched = false;
 
   if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
-    participantMismatched = true;
+    userMismatched = true;
   } else if (state.self && state.self.uuid !== self.uuid) {
-    console.log("Participant UUID mismatch");
-    participantMismatched = true;
+    console.log("User UUID mismatch");
+    userMismatched = true;
   }
 
-  if (participantMismatched) {
-    participantInvalid(update);
+  if (userMismatched) {
+    userInvalid(update);
     return;
   }
 
@@ -273,8 +257,6 @@ async function loadFromSync(
 
   await pcds.deserializeAllAndAdd(storage.pcds);
   // assumes that we only have one semaphore identity in the passport.
-  // todo: some metadata that identifies the zuzalu semaphore id as
-  // some sort of unique one
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
@@ -301,10 +283,10 @@ async function loadFromSync(
   window.location.hash = "#/";
 }
 
-function participantInvalid(update: ZuUpdate) {
-  saveParticipantInvalid(true);
+function userInvalid(update: ZuUpdate) {
+  saveUserInvalid(true);
   update({
-    participantInvalid: true,
+    userInvalid: true,
     modal: "invalid-participant",
   });
 }

@@ -1,12 +1,12 @@
 import {
-  openZuzaluMembershipPopup,
+  openGroupMembershipPopup,
   usePassportPopupMessages,
   useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
+import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PASSPORT_URL, SEMAPHORE_GROUP_URL } from "../../src/constants";
-import { useState } from "react";
+import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -23,9 +23,9 @@ export default function Page() {
 
   const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
-    SEMAPHORE_GROUP_URL,
+    ZUZALU_SEMAPHORE_GROUP_URL,
     "consumer-client",
-    onVerified,
+    onVerified
   );
 
   return (
@@ -60,10 +60,10 @@ export default function Page() {
       <ExampleContainer>
         <button
           onClick={() =>
-            openZuzaluMembershipPopup(
-              PASSPORT_URL,
+            openGroupMembershipPopup(
+              ZUPASS_URL,
               window.location.origin + "/popup",
-              SEMAPHORE_GROUP_URL,
+              ZUZALU_SEMAPHORE_GROUP_URL,
               "consumer-client"
             )
           }

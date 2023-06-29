@@ -1,75 +1,92 @@
 import cors from "cors";
-import express, { NextFunction } from "express";
+import express, { Application, NextFunction } from "express";
+import * as http from "http";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, GlobalServices } from "../types";
 import { IS_PROD } from "../util/isProd";
+import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
+import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
-import { initPCDRoutes } from "./routes/pcdRoutes";
+import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
+import { initPCDRoutes } from "./routes/provingRoutes";
+import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
+import { initStatusRoutes } from "./routes/statusRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
-import { RouteInitializer } from "./types";
-
-const routes: RouteInitializer[] = [
-  initHealthcheckRoutes,
-  initZuzaluRoutes,
-  initStaticRoutes,
-  initPCDRoutes,
-];
 
 export async function startServer(
-  context: ApplicationContext
-): Promise<express.Application> {
-  return new Promise<express.Application>((resolve, reject) => {
-    const port = IS_PROD ? process.env.PORT : 3002;
-    const app = express();
+  context: ApplicationContext,
+  globalServices: GlobalServices
+): Promise<{ app: Application; server: http.Server }> {
+  return new Promise<{ app: Application; server: http.Server }>(
+    (resolve, reject) => {
+      const port = IS_PROD ? process.env.PORT : 3002;
+      const app = express();
 
-    app.use(morgan("tiny"));
-    app.use(express.json());
-    app.use(cors());
-    app.use(tracingMiddleware());
-
-    routes.forEach((r) => r(app, context));
-
-    app.use(
-      cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-      })
-    );
-
-    app.use(
-      (
-        err: Error,
-        req: express.Request,
-        res: express.Response,
-        _next: NextFunction
-      ) => {
-        console.error(`[ERROR] ${req.method} ${req.url}`);
-        console.error(err.stack);
-        res.status(500).send(err.message);
+      if (process.env.SUPPRESS_LOGGING !== "true") {
+        app.use(morgan("tiny"));
       }
-    );
 
-    if (context.rollbar) {
-      app.use(context.rollbar.errorHandler);
-    }
+      app.use(express.json());
+      app.use(cors());
+      app.use(tracingMiddleware());
 
-    app.use((_req, res, _next) => {
-      res.status(404).send("Not a valid API route, refer to documentation.");
-    });
+      initAllRoutes(app, context, globalServices);
 
-    app
-      .listen(port, () => {
-        console.log(`[INIT] HTTP server listening on port ${port}`);
-        sendEvent(context, EventName.SERVER_START);
-        resolve(app);
-      })
-      .on("error", (e: Error) => {
-        reject(e);
+      app.use(
+        cors({
+          origin: "*",
+          methods: ["GET", "POST", "PUT", "DELETE"],
+        })
+      );
+
+      app.use(
+        (
+          err: Error,
+          req: express.Request,
+          res: express.Response,
+          _next: NextFunction
+        ) => {
+          logger(`[ERROR] ${req.method} ${req.url}`);
+          logger(err.stack);
+          res.status(500).send(err.message);
+        }
+      );
+
+      if (globalServices.rollbarService) {
+        app.use(globalServices.rollbarService.errorHandler);
+      }
+
+      app.use((_req, res, _next) => {
+        res.status(404).send("Not a valid API route, refer to documentation.");
       });
 
-    return app;
-  });
+      const server = app.listen(port, () => {
+        logger(`[INIT] HTTP server listening on port ${port}`);
+        sendEvent(context, EventName.SERVER_START);
+        resolve({ server, app });
+      });
+
+      server.on("error", (e: Error) => {
+        reject(e);
+      });
+    }
+  );
+}
+
+function initAllRoutes(
+  app: express.Application,
+  context: ApplicationContext,
+  globalServices: GlobalServices
+): void {
+  initStatusRoutes(app, context, globalServices);
+  initHealthcheckRoutes(app, context);
+  initSemaphoreRoutes(app, context, globalServices);
+  initE2EERoutes(app, context, globalServices);
+  initZuzaluRoutes(app, context, globalServices);
+  initPCDPassRoutes(app, context, globalServices);
+  initPCDRoutes(app, context, globalServices);
+  initStaticRoutes(app, context);
 }

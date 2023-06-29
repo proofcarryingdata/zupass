@@ -22,7 +22,7 @@ import { useSerializedPCD } from "./SerializedPCDIntegration";
  * @param signal Optional signal that user is anonymously attesting to
  * @param externalNullifier Optional unique identifier for this SemaphoreGroupPCD
  */
-export function openZuzaluMembershipPopup(
+export function openGroupMembershipPopup(
   urlToPassportWebsite: string,
   popupUrl: string,
   urlToSemaphoreGroup: string,

@@ -1,15 +1,15 @@
-import { fetchParticipant, ZuParticipant } from "@pcd/passport-interface";
+import { fetchUser, User } from "@pcd/passport-interface";
 import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName,
 } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { config } from "../../src/config";
-import { ZuzaluQRPayload } from "../../src/createZuzaluQRProof";
+import { appConfig } from "../../src/appConfig";
+import { QRPayload } from "../../src/createQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { decodeQRPayload } from "../../src/qr";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
@@ -22,19 +22,19 @@ import {
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { MainIdentityCard } from "../shared/MainIdentityCard";
 import {
   CardContainerExpanded,
   CardHeader,
   CardOutlineExpanded,
 } from "../shared/PCDCard";
-import { ZuzaluCardBody } from "../shared/ZuzaluCard";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
 type VerifyType = "identity-proof" | "anon-proof";
 
 type VerifyResult =
   | { valid: false; type: VerifyType; message: string }
-  | { valid: true; type: "identity-proof"; participant: ZuParticipant }
+  | { valid: true; type: "identity-proof"; user: User }
   | { valid: true; type: "anon-proof"; role: string };
 
 // Shows whether a proof is valid. On success, shows the PCD claim visually.
@@ -119,7 +119,7 @@ function getCard(result: VerifyResult) {
         <CardHeader col="var(--accent-lite)">
           VERIFIED ZUZALU PASSPORT
         </CardHeader>
-        <ZuzaluCardBody showQrCode={false} participant={result.participant} />
+        <MainIdentityCard showQrCode={false} user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
   );
@@ -146,32 +146,30 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   }
 
   // Verify identity proof
-  const payload = JSON.parse(
-    deserializedPCD.claim.signedMessage
-  ) as ZuzaluQRPayload;
+  const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
 
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const participant = await fetchParticipant(config.passportServer, uuid);
+  const user = await fetchUser(appConfig.passportServer, uuid);
 
-  if (participant == null) {
+  if (user == null) {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant not found",
+      message: "User not found",
     };
   }
 
-  if (participant.commitment !== deserializedPCD.claim.identityCommitment) {
+  if (user.commitment !== deserializedPCD.claim.identityCommitment) {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Participant doesn't match proof",
+      message: "User doesn't match proof",
     };
   }
 
   const timeDifferenceMs = Date.now() - payload.timestamp;
 
-  if (timeDifferenceMs >= config.maxProofAge) {
+  if (timeDifferenceMs >= appConfig.maxProofAge) {
     return {
       valid: false,
       type: "identity-proof",
@@ -179,7 +177,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  const visitorStatus = getVisitorStatus(participant);
+  const visitorStatus = getVisitorStatus(user);
 
   if (
     visitorStatus !== undefined &&
@@ -193,5 +191,5 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  return { valid: true, type: "identity-proof", participant };
+  return { valid: true, type: "identity-proof", user: user };
 }

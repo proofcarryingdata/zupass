@@ -1,18 +1,19 @@
 import { PCD } from "@pcd/pcd-types";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
-import { getVisitorStatus, VisitorStatus } from "../../src/participant";
 import { usePackage } from "../../src/usePackage";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
-import { ZuzaluCardBody } from "./ZuzaluCard";
+import { MainIdentityCard } from "./MainIdentityCard";
 
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
  * just the top of the card to allow stacking.
  */
 export function PCDCard({
-  isZuzaluIdentity,
+  isMainIdentity,
   pcd,
   expanded,
   onClick,
@@ -20,7 +21,7 @@ export function PCDCard({
 }: {
   pcd: PCD;
   expanded?: boolean;
-  isZuzaluIdentity?: boolean;
+  isMainIdentity?: boolean;
   onClick?: () => void;
   hideRemoveButton?: boolean;
 }) {
@@ -36,7 +37,9 @@ export function PCDCard({
   let header;
   let notCurrentVisitor = false;
 
-  if (isZuzaluIdentity) {
+  if (isMainIdentity && !appConfig.isZuzalu) {
+    header = "PCDPASS IDENTITY";
+  } else if (isMainIdentity) {
     const visitorStatus = getVisitorStatus(state.self);
 
     if (
@@ -78,9 +81,9 @@ export function PCDCard({
             {headerContent}
           </CardHeader>
           <CardBodyContainer>
-            <CardBody pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
             {!hideRemoveButton && (
-              <CardFooter pcd={pcd} isZuzaluIdentity={isZuzaluIdentity} />
+              <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
             )}
           </CardBodyContainer>
         </CardOutlineExpanded>
@@ -99,10 +102,10 @@ export function PCDCard({
 
 function CardFooter({
   pcd,
-  isZuzaluIdentity,
+  isMainIdentity,
 }: {
   pcd: PCD;
-  isZuzaluIdentity: boolean;
+  isMainIdentity: boolean;
 }) {
   const [_, dispatch] = useContext(DispatchContext);
 
@@ -116,7 +119,7 @@ function CardFooter({
     }
   }, [pcd, dispatch]);
 
-  if (isZuzaluIdentity) {
+  if (isMainIdentity) {
     return null;
   }
 
@@ -131,15 +134,15 @@ function CardFooter({
 
 function CardBody({
   pcd,
-  isZuzaluIdentity,
+  isMainIdentity,
 }: {
   pcd: PCD;
-  isZuzaluIdentity: boolean;
+  isMainIdentity: boolean;
 }) {
   const [state] = useContext(DispatchContext);
 
-  if (isZuzaluIdentity) {
-    return <ZuzaluCardBody showQrCode={true} />;
+  if (isMainIdentity) {
+    return <MainIdentityCard showQrCode={true} />;
   }
 
   if (state.pcds.hasPackage(pcd.type)) {

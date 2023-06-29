@@ -7,7 +7,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
-import { config } from "./config";
+import { appConfig } from "./appConfig";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
@@ -21,7 +21,7 @@ export async function getPackages() {
 }
 
 async function loadPackages(): Promise<PCDPackage[]> {
-  const SERVER_STATIC_URL = config.passportServer + "/static/";
+  const SERVER_STATIC_URL = appConfig.passportServer + "/static/";
 
   await SemaphoreGroupPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",

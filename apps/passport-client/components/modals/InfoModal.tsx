@@ -1,4 +1,4 @@
-import React from "react";
+import { appConfig } from "../../src/appConfig";
 import { CenterColumn, Spacer, TextCenter } from "../core";
 import { icons } from "../icons";
 
@@ -11,16 +11,35 @@ export function InfoModal() {
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={240}>
-        <TextCenter>
-          The Zuzalu Passport is a product of 0xPARC. For app support, contact{" "}
-          <a href="mailto:passport@0xparc.org">passport@0xparc.org</a>.
-        </TextCenter>
-        <Spacer h={16} />
-        <TextCenter>
-          For event or venue support, contact{" "}
-          <a href="mailto:support@zuzalu.org">support@zuzalu.org</a>.
-        </TextCenter>
+        {appConfig.isZuzalu ? <ZuzaluContent /> : <PCDPassContent />}
       </CenterColumn>
     </div>
+  );
+}
+
+function ZuzaluContent() {
+  return (
+    <>
+      <TextCenter>
+        The Zuzalu Passport is a product of 0xPARC. For app support, contact{" "}
+        <a href="mailto:passport@0xparc.org">passport@0xparc.org</a>.
+      </TextCenter>
+      <Spacer h={16} />
+      <TextCenter>
+        For event or venue support, contact{" "}
+        <a href="mailto:support@zuzalu.org">support@zuzalu.org</a>.
+      </TextCenter>
+    </>
+  );
+}
+
+function PCDPassContent() {
+  return (
+    <>
+      <TextCenter>
+        PCDPass is a product of 0xPARC. For app support, contact{" "}
+        <a href="mailto:passport@0xparc.org">passport@0xparc.org</a>.
+      </TextCenter>
+    </>
   );
 }

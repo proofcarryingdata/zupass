@@ -1,18 +1,14 @@
 import { ClientBase, Pool, QueryResultRow } from "pg";
-import { query } from "../query";
+import { HistoricSemaphoreGroup } from "../models";
+import { sqlQuery } from "../sqlQuery";
 
-export interface HistoricSemaphoreGroup {
-  id: number;
-  groupId: string;
-  rootHash: string;
-  serializedGroup: string;
-  timeCreated: string;
-}
-
-export async function getLatestSemaphoreGroups(
+/**
+ * Fetches all the latest semaphore group states from the database.
+ */
+export async function fetchLatestHistoricSemaphoreGroups(
   client: ClientBase | Pool
 ): Promise<HistoricSemaphoreGroup[]> {
-  const latestGroups = await query(
+  const latestGroups = await sqlQuery(
     client,
     `select s1.* from semaphore_history s1
     join (
@@ -23,28 +19,32 @@ export async function getLatestSemaphoreGroups(
     on groups.max_id = s1.id;`
   );
 
-  return latestGroups.rows.map(rowToGroup);
+  return latestGroups.rows.map(historicRowToGroup);
 }
 
-export async function insertNewSemaphoreGroup(
+/**
+ * Inserts an updated semaphore group to be the latest historic state for
+ * a given group.
+ */
+export async function insertNewHistoricSemaphoreGroup(
   client: ClientBase | Pool,
   groupId: string,
   rootHash: string,
   group: string
 ): Promise<void> {
-  await query(
+  await sqlQuery(
     client,
     `insert into semaphore_history(groupId, rootHash, serializedGroup) values($1, $2, $3);`,
     [groupId, rootHash, group]
   );
 }
 
-export async function getGroupByRoot(
+export async function fetchHistoricGroupByRoot(
   client: ClientBase | Pool,
   groupId: string,
   rootHash: string
 ): Promise<HistoricSemaphoreGroup | undefined> {
-  const result = await query(
+  const result = await sqlQuery(
     client,
     `select * from semaphore_history where groupId=$1 and rootHash=$2;`,
     [groupId, rootHash]
@@ -54,10 +54,10 @@ export async function getGroupByRoot(
     return undefined;
   }
 
-  return rowToGroup(result.rows[0]);
+  return historicRowToGroup(result.rows[0]);
 }
 
-function rowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
+function historicRowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
   return {
     id: row.id,
     groupId: row.groupid,

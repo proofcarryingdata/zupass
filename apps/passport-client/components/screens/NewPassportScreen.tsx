@@ -1,7 +1,8 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { config } from "../../src/config";
+import { requestConfirmationEmail } from "../../src/api/user";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { err } from "../../src/util";
 import {
@@ -104,12 +105,7 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
       >
         <Spacer h={64} />
         <TextCenter>
-          <H1>PASSPORT</H1>
-          <Spacer h={24} />
-          <ZuLogo />
-          <Spacer h={24} />
-          <H2>ZUZALU</H2>
-          <Spacer h={48} />
+          <Header />
           <PItalic>Generating passport...</PItalic>
           <PItalic>Sending verification email...</PItalic>
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
@@ -146,6 +142,28 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
   );
 }
 
+function Header() {
+  if (!appConfig.isZuzalu) {
+    return (
+      <>
+        <H1>PCDPASS</H1>
+        <Spacer h={48} />
+      </>
+    );
+  } else {
+    return (
+      <>
+        <H1>PASSPORT</H1>
+        <Spacer h={24} />
+        <ZuLogo />
+        <Spacer h={24} />
+        <H2>ZUZALU</H2>
+        <Spacer h={48} />
+      </>
+    );
+  }
+}
+
 /**
  * Server checks that email address is on the list, then sends the code. In the
  * case that verification emails are disabled on the server, also returns the
@@ -156,15 +174,8 @@ async function requestLoginCode(
   identity: Identity,
   force = false
 ): Promise<string | undefined> {
-  console.log(`Requesting email verification for ${email}, force=${force}...`);
-  const params = new URLSearchParams({
-    email,
-    commitment: identity.commitment.toString(),
-    force: force ? "true" : "false",
-  }).toString();
-  const url = `${config.passportServer}/zuzalu/send-login-email?${params}`;
-  const res = await fetch(url, { method: "POST" });
-  const responseText = await res.text();
+  const loginResponse = await requestConfirmationEmail(email, identity, force);
+  const responseText = await loginResponse.text();
 
   try {
     // in the case that email verification is disabled, we get back
@@ -177,7 +188,7 @@ async function requestLoginCode(
     console.log(e);
   }
 
-  if (res.ok) return undefined;
+  if (loginResponse.ok) return undefined;
 
   throw new Error(responseText);
 }

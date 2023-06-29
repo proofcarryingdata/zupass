@@ -1,10 +1,10 @@
 import { PendingPCD, ProveRequest } from "@pcd/passport-interface";
-import { config } from "../config";
+import { appConfig } from "../appConfig";
 
 export async function requestPendingPCD(
   serverReq: ProveRequest
 ): Promise<PendingPCD> {
-  const url = `${config.passportServer}/pcds/prove`;
+  const url = `${appConfig.passportServer}/pcds/prove`;
   const response = await fetch(url, {
     method: "POST",
     body: JSON.stringify(serverReq),
