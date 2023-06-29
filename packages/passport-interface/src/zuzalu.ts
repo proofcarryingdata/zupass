@@ -1,4 +1,4 @@
-export interface ZuParticipant {
+export interface User {
   /** Public UUID */
   uuid: string;
 
@@ -8,9 +8,9 @@ export interface ZuParticipant {
   /** Email address they used to register */
   email: string;
 
-  /** Zuzalu-Specific Participant metadata */
+  /** Zuzalu-specific user metadata */
   name?: string;
-  role?: ParticipantRole;
+  role?: ZuzaluUserRole;
   visitor_date_ranges?: DateRange[];
 }
 
@@ -24,7 +24,7 @@ export interface FullDateRange {
   date_to: string;
 }
 
-export enum ParticipantRole {
+export enum ZuzaluUserRole {
   Visitor = "visitor",
   Resident = "resident",
   Organizer = "organizer",

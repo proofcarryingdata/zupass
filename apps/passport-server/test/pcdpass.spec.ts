@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -22,7 +22,7 @@ describe("pcd-pass functionality", function () {
 
   const testEmail = randomEmail();
   let application: PCDPass;
-  let user: ZuParticipant;
+  let user: User;
   let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {

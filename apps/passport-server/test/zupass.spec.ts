@@ -1,11 +1,11 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { IPretixAPI } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
-import { ParticipantRole } from "../src/database/models";
+import { ZuzaluUserRole } from "../src/database/models";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import { getMockZuzaluPretixAPI } from "./pretix/mockPretixApi";
@@ -23,9 +23,9 @@ describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
-  let residentUser: ZuParticipant;
-  let visitorUser: ZuParticipant;
-  let organizerUser: ZuParticipant;
+  let residentUser: User;
+  let visitorUser: User;
+  let organizerUser: User;
   let emailAPI: IEmailAPI;
   let replacedPretixAPI: IPretixAPI;
 
@@ -77,7 +77,7 @@ describe("zupass functionality", function () {
       const ticketHolders =
         await application.services.userService.getZuzaluTicketHolders();
       const resident = ticketHolders.find(
-        (t) => t.role === ParticipantRole.Resident
+        (t) => t.role === ZuzaluUserRole.Resident
       );
 
       if (!resident) {
@@ -122,10 +122,10 @@ describe("zupass functionality", function () {
         await application.services.userService.getZuzaluTicketHolders();
 
       const visitor = ticketHolders.find(
-        (t) => t.role === ParticipantRole.Visitor
+        (t) => t.role === ZuzaluUserRole.Visitor
       );
       const organizer = ticketHolders.find(
-        (t) => t.role === ParticipantRole.Organizer
+        (t) => t.role === ZuzaluUserRole.Organizer
       );
 
       if (!visitor || !organizer) {
@@ -182,7 +182,7 @@ describe("zupass functionality", function () {
         await application.services.userService.getZuzaluTicketHolders();
 
       const resident = ticketHolders.find(
-        (t) => t.role === ParticipantRole.Resident
+        (t) => t.role === ZuzaluUserRole.Resident
       );
 
       if (!resident) {

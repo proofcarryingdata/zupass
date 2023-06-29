@@ -1,12 +1,12 @@
-import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
+import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Response } from "express";
-import { PretixParticipant } from "../database/models";
+import { ZuzaluUser } from "../database/models";
 import { fetchCommitment } from "../database/queries/fetchCommitment";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser,
-} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
+} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -49,11 +49,11 @@ export class UserService {
 
   public async getZuzaluPassportHolder(
     email: string
-  ): Promise<PretixParticipant | null> {
+  ): Promise<ZuzaluUser | null> {
     return fetchZuzaluUser(this.context.dbPool, email);
   }
 
-  public async getZuzaluTicketHolders(): Promise<Array<PretixParticipant>> {
+  public async getZuzaluTicketHolders(): Promise<Array<ZuzaluUser>> {
     return fetchAllZuzaluUsers(this.context.dbPool);
   }
 
@@ -76,24 +76,24 @@ export class UserService {
         email: email,
         name: "Test User",
         order_id: "",
-        role: ParticipantRole.Resident,
+        role: ZuzaluUserRole.Resident,
         visitor_date_ranges: undefined,
       });
     }
 
-    const participant = await fetchZuzaluUser(dbPool, email);
+    const user = await fetchZuzaluUser(dbPool, email);
 
-    if (participant == null) {
+    if (user == null) {
       throw new Error(`${email} doesn't have a ticket.`);
     } else if (
-      participant.commitment != null &&
-      participant.commitment !== commitment &&
+      user.commitment != null &&
+      user.commitment !== commitment &&
       !force
     ) {
       res.status(500).send(`${email} already registered.`);
       return;
     }
-    const stat = participant.commitment == null ? "NEW" : "EXISTING";
+    const stat = user.commitment == null ? "NEW" : "EXISTING";
     logger(
       `Saved login token for ${stat} email=${email} commitment=${commitment}`
     );
@@ -104,7 +104,7 @@ export class UserService {
 
       res.json({ token });
     } else {
-      const { name } = participant;
+      const { name } = user;
       logger(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
       await this.emailService.sendPretixEmail(email, name, token);
 
@@ -112,7 +112,7 @@ export class UserService {
     }
   }
 
-  public async handleNewZuzaluParticipant(
+  public async handleNewZuzaluUser(
     emailToken: string,
     email: string,
     commitment: string,
@@ -120,7 +120,7 @@ export class UserService {
   ): Promise<void> {
     const { dbPool } = this.context;
     logger(
-      `[ZUID] new-participant ${JSON.stringify({
+      `[ZUID] new-user ${JSON.stringify({
         emailToken,
         email,
         commitment,
@@ -128,9 +128,9 @@ export class UserService {
     );
 
     try {
-      const pretix = await fetchZuzaluUser(dbPool, email);
+      const user = await fetchZuzaluUser(dbPool, email);
 
-      if (pretix == null) {
+      if (user == null) {
         throw new Error(`Ticket for ${email} not found`);
       } else if (
         !(await this.emailTokenService.checkTokenCorrect(email, emailToken))
@@ -138,7 +138,7 @@ export class UserService {
         throw new Error(
           `Wrong token. If you got more than one email, use the latest one.`
         );
-      } else if (pretix.email !== email) {
+      } else if (user.email !== email) {
         throw new Error(`Email mismatch.`);
       }
 
@@ -151,19 +151,19 @@ export class UserService {
 
       // Reload Merkle trees
       await this.semaphoreService.reload();
-      const participant = this.semaphoreService.getParticipant(uuid);
-      if (participant == null) {
+      const newUser = this.semaphoreService.getUser(uuid);
+      if (newUser == null) {
         throw new Error(`${uuid} not found`);
-      } else if (participant.commitment !== commitment) {
+      } else if (newUser.commitment !== commitment) {
         throw new Error(`Commitment mismatch`);
       }
 
-      // Return participant, including UUID, back to Passport
-      const zuParticipant = participant as ZuParticipant;
-      const jsonP = JSON.stringify(zuParticipant);
-      logger(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
+      // Return user, including UUID, back to Passport
+      const zuzaluUser = newUser as User;
+      const jsonP = JSON.stringify(zuzaluUser);
+      logger(`[ZUID] Added new Zuzalu user: ${jsonP}`);
 
-      res.json(zuParticipant);
+      res.json(zuzaluUser);
     } catch (e: any) {
       logger(e);
       this.rollbarService?.error(e);
@@ -171,14 +171,11 @@ export class UserService {
     }
   }
 
-  public async handleGetZuzaluParticipant(
-    uuid: string,
-    res: Response
-  ): Promise<void> {
-    logger(`[ZUID] Fetching participant ${uuid}`);
-    const participant = this.semaphoreService.getParticipant(uuid);
-    if (!participant) res.status(404);
-    res.json(participant || null);
+  public async handleGetZuzaluUser(uuid: string, res: Response): Promise<void> {
+    logger(`[ZUID] Fetching user ${uuid}`);
+    const user = this.semaphoreService.getUser(uuid);
+    if (!user) res.status(404);
+    res.json(user || null);
   }
 
   public async handleSendPcdPassEmail(
@@ -231,7 +228,7 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(
-      `[ZUID] new-participant ${JSON.stringify({
+      `[ZUID] new-user ${JSON.stringify({
         token,
         email,
         commitment,
@@ -252,12 +249,12 @@ export class UserService {
       // Reload Merkle trees
       await this.semaphoreService.reload();
 
-      // Return participant, including UUID, back to Passport
-      const zuParticipant = await fetchCommitment(this.context.dbPool, email);
-      const jsonP = JSON.stringify(zuParticipant);
-      logger(`[ZUID] Added new Zuzalu participant: ${jsonP}`);
+      // Return user, including UUID, back to Passport
+      const newUser = await fetchCommitment(this.context.dbPool, email);
+      const jsonP = JSON.stringify(newUser);
+      logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
 
-      res.json(zuParticipant);
+      res.json(newUser);
     } catch (e: any) {
       logger(e);
       this.rollbarService?.error(e);
@@ -269,11 +266,11 @@ export class UserService {
     uuid: string,
     res: Response
   ): Promise<void> {
-    logger(`[ZUID] Fetching participant ${uuid}`);
+    logger(`[ZUID] Fetching user ${uuid}`);
     res.setHeader("Access-Control-Allow-Origin", "*");
-    const participant = this.semaphoreService.getParticipant(uuid);
-    if (!participant) res.status(404);
-    res.json(participant || null);
+    const user = this.semaphoreService.getUser(uuid);
+    if (!user) res.status(404);
+    res.json(user || null);
   }
 }
 

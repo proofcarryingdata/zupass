@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
@@ -9,7 +9,7 @@ export async function testLoginZupass(
   email: string,
   force: boolean,
   alreadyRegistered: boolean
-): Promise<ZuParticipant> {
+): Promise<User> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
@@ -42,14 +42,14 @@ export async function testLoginZupass(
   }
 
   const newUserResponse = httpMocks.createResponse();
-  await userService.handleNewZuzaluParticipant(
+  await userService.handleNewZuzaluUser(
     token,
     email,
     commitment,
     newUserResponse
   );
 
-  const newUserResponseJson = newUserResponse._getJSONData() as ZuParticipant;
+  const newUserResponseJson = newUserResponse._getJSONData() as User;
 
   expect(newUserResponseJson).to.haveOwnProperty("uuid");
   expect(newUserResponseJson).to.haveOwnProperty("commitment");

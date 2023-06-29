@@ -29,7 +29,7 @@ export function initPCDPassRoutes(
     }
   });
 
-  // Check the token (sent to user's email), add a new participant.
+  // Check the token (sent to user's email), add a new user.
   app.get("/pcdpass/new-participant", async (req: Request, res: Response) => {
     try {
       const token = decodeString(req.query.token, "token");
@@ -43,7 +43,7 @@ export function initPCDPassRoutes(
     }
   });
 
-  // Fetch a specific participant, given their public semaphore commitment.
+  // Fetch a specific user, given their public semaphore commitment.
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     try {
       const uuid = req.params.uuid;

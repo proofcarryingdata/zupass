@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
-import { ZuParticipant } from "./zuzalu";
+import { User } from "./zuzalu";
 
 export async function fetchParticipant(
   passportServerUrl: string,
   uuid: string
-): Promise<ZuParticipant | null> {
+): Promise<User | null> {
   // TODO: use consistent environment variables.
   const base = passportServerUrl + (passportServerUrl.endsWith("/") ? "" : "/");
   const url = base + "zuzalu/participant/" + uuid;
   console.log(`Fetching ${url}`);
   const res = await fetch(url);
   if (!res.ok) return null;
-  return (await res.json()) as ZuParticipant;
+  return (await res.json()) as User;
 }
 
 export function useFetchParticipant(passportServerUrl: string, uuid?: string) {
-  const [participant, setParticipant] = useState<ZuParticipant | null>(null);
+  const [participant, setParticipant] = useState<User | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(false);
 

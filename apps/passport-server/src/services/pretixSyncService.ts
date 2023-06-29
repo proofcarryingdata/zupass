@@ -2,17 +2,18 @@ import { DateRange } from "@pcd/passport-interface";
 
 import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
-import { ParticipantRole, PretixParticipant } from "../database/models";
+import {
+  ZuzaluPretixTicket,
+  ZuzaluUser,
+  ZuzaluUserRole,
+} from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
-import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
+import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import {
-  participantsToMap,
-  participantUpdatedFromPretix,
-} from "../util/participant";
+import { pretixTicketsDifferent, usersToMapByEmail } from "../util/zuzaluUser";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 import { RollbarService } from "./types";
@@ -83,20 +84,20 @@ export class PretixSyncService {
     return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
       const syncStart = Date.now();
       logger("[PRETIX] Sync start");
-      const participants = await this.loadAllParticipants();
-      const participantEmails = new Set(participants.map((p) => p.email));
+      const tickets = await this.loadAllTickets();
+      const ticketEmails = new Set(tickets.map((p) => p.email));
 
       logger(
-        `[PRETIX] loaded ${participants.length} Pretix participants (visitors, residents, and organizers)` +
-          ` from Pretix, found ${participantEmails.size} unique emails`
+        `[PRETIX] loaded ${tickets.length} Pretix tickets (visitors, residents, and organizers)` +
+          ` from Pretix, found ${ticketEmails.size} unique emails`
       );
 
       const { dbPool } = this.context;
 
       try {
-        await this.saveParticipants(dbPool, participants);
+        await this.saveTickets(dbPool, tickets);
       } catch (e) {
-        logger("[PRETIX] failed to save participants");
+        logger("[PRETIX] failed to save tickets");
       }
 
       const syncEnd = Date.now();
@@ -109,95 +110,83 @@ export class PretixSyncService {
   }
 
   /**
-   * - Insert new participants into the database.
-   * - Update role and visitor dates of existing participants, if they
+   * - Insert new tickets into the database.
+   * - Update role and visitor dates of existing tickets, if they
    *   been changed.
-   * - Delete participants that are no longer residents.
+   * - Delete tickets that are no longer residents.
    */
-  private async saveParticipants(
+  private async saveTickets(
     dbClient: ClientBase | Pool,
-    pretixParticipants: PretixParticipant[]
+    pretixTickets: ZuzaluPretixTicket[]
   ): Promise<void> {
-    return traced(
-      SERVICE_NAME_FOR_TRACING,
-      "saveParticipants",
-      async (span) => {
-        const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
-        const existingParticipants = await fetchAllZuzaluUsers(dbClient);
-        const existingParticipantsByEmail =
-          participantsToMap(existingParticipants);
-        const newParticipants = pretixParticipants.filter(
-          (p) => !existingParticipantsByEmail.has(p.email)
-        );
+    return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
+      const pretixTicketsAsMap = usersToMapByEmail(pretixTickets);
+      const existingTickets = await fetchAllZuzaluUsers(dbClient);
+      const existingTicketsByEmail = usersToMapByEmail(existingTickets);
+      const newTickets = pretixTickets.filter(
+        (p) => !existingTicketsByEmail.has(p.email)
+      );
 
-        // Step 1 of saving: insert participants that are new
-        logger(`[PRETIX] Inserting ${newParticipants.length} new participants`);
-        for (const participant of newParticipants) {
-          logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
-          await insertZuzaluPretixTicket(dbClient, participant);
-        }
-
-        // Step 2 of saving: update participants that have changed
-        // Filter to participants that existed before, and filter to those that have changed.
-        const updatedParticipants = pretixParticipants
-          .filter((p) => existingParticipantsByEmail.has(p.email))
-          .filter((p) => {
-            const oldParticipant = existingParticipantsByEmail.get(p.email)!;
-            const newParticipant = p;
-            return participantUpdatedFromPretix(oldParticipant, newParticipant);
-          });
-
-        // For the participants that have changed, update them in the database.
-        logger(`[PRETIX] Updating ${updatedParticipants.length} participants`);
-        for (const updatedParticipant of updatedParticipants) {
-          const oldParticipant = existingParticipantsByEmail.get(
-            updatedParticipant.email
-          );
-          logger(
-            `[PRETIX] Updating ${JSON.stringify(
-              oldParticipant
-            )} to ${JSON.stringify(updatedParticipant)}`
-          );
-          await updateZuzaluPretixTicket(dbClient, updatedParticipant);
-        }
-
-        // Step 3 of saving: remove participants that don't exist in Pretix, but do
-        // exist in our database.
-        const removedParticipants = existingParticipants.filter(
-          (existing) => !pretixParticipantsAsMap.has(existing.email)
-        );
-        logger(`[PRETIX] Deleting ${removedParticipants.length} participants`);
-        for (const removedParticipant of removedParticipants) {
-          logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
-          await deleteZuzaluUser(dbClient, removedParticipant.email);
-        }
-
-        span?.setAttribute("participantsInserted", newParticipants.length);
-        span?.setAttribute("participantsUpdated", updatedParticipants.length);
-        span?.setAttribute("participantsDeleted", removedParticipants.length);
-        span?.setAttribute(
-          "participantsTotal",
-          existingParticipants.length +
-            newParticipants.length -
-            removedParticipants.length
-        );
+      // Step 1 of saving: insert tickets that are new
+      logger(`[PRETIX] Inserting ${newTickets.length} new tickets`);
+      for (const ticket of newTickets) {
+        logger(`[PRETIX] Inserting ${JSON.stringify(ticket)}`);
+        await insertZuzaluPretixTicket(dbClient, ticket);
       }
-    );
+
+      // Step 2 of saving: update tickets that have changed
+      // Filter to tickets that existed before, and filter to those that have changed.
+      const updatedTickets = pretixTickets
+        .filter((p) => existingTicketsByEmail.has(p.email))
+        .filter((p) => {
+          const oldTicket = existingTicketsByEmail.get(p.email)!;
+          const newTicket = p;
+          return pretixTicketsDifferent(oldTicket, newTicket);
+        });
+
+      // For the tickets that have changed, update them in the database.
+      logger(`[PRETIX] Updating ${updatedTickets.length} tickets`);
+      for (const updatedTicket of updatedTickets) {
+        const oldTicket = existingTicketsByEmail.get(updatedTicket.email);
+        logger(
+          `[PRETIX] Updating ${JSON.stringify(oldTicket)} to ${JSON.stringify(
+            updatedTicket
+          )}`
+        );
+        await updateZuzaluPretixTicket(dbClient, updatedTicket);
+      }
+
+      // Step 3 of saving: remove users that don't have a ticket anymore
+      const removedTickets = existingTickets.filter(
+        (existing) => !pretixTicketsAsMap.has(existing.email)
+      );
+      logger(`[PRETIX] Deleting ${removedTickets.length} users`);
+      for (const removedTicket of removedTickets) {
+        logger(`[PRETIX] Deleting ${JSON.stringify(removedTicket)}`);
+        await deleteZuzaluUser(dbClient, removedTicket.email);
+      }
+
+      span?.setAttribute("ticketsInserted", newTickets.length);
+      span?.setAttribute("ticketsUpdated", updatedTickets.length);
+      span?.setAttribute("ticketsDeleted", removedTickets.length);
+      span?.setAttribute(
+        "ticketsTotal",
+        existingTickets.length + newTickets.length - removedTickets.length
+      );
+    });
   }
 
   /**
    * Downloads the complete list of both visitors and residents from Pretix.
    */
-  private async loadAllParticipants(): Promise<PretixParticipant[]> {
-    return traced(SERVICE_NAME_FOR_TRACING, "loadAllParticipants", async () => {
-      logger(
-        "[PRETIX] Fetching participants (visitors, residents, organizers)"
-      );
+  private async loadAllTickets(): Promise<ZuzaluPretixTicket[]> {
+    return traced(SERVICE_NAME_FOR_TRACING, "loadAllTickets", async () => {
+      logger("[PRETIX] Fetching tickets (visitors, residents, organizers)");
 
       const residents = await this.loadResidents();
       const visitors = await this.loadVisitors();
 
-      const residentsAsMap = participantsToMap(residents);
+      const residentsAsMap = usersToMapByEmail(residents);
       const nonResidentVisitors = visitors.filter(
         (v) => !residentsAsMap.has(v.email)
       );
@@ -209,7 +198,7 @@ export class PretixSyncService {
   /**
    * Loads those participants who are residents or organizers (not visitors) of Zuzalu.
    */
-  private async loadResidents(): Promise<PretixParticipant[]> {
+  private async loadResidents(): Promise<ZuzaluUser[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadResidents", async () => {
       logger("[PRETIX] Fetching residents");
 
@@ -226,18 +215,18 @@ export class PretixSyncService {
       logger(
         `[PRETIX] ${orgOrders.length} organizer / ${orders.length} total resident orders`
       );
-      const organizers = this.ordersToParticipants(
+      const organizers = this.ordersToZuzaluTickets(
         orgOrders,
         [],
-        ParticipantRole.Organizer
+        ZuzaluUserRole.Organizer
       );
       const orgEmails = new Set(organizers.map((p) => p.email));
 
       // Extract other residents
-      const residents = this.ordersToParticipants(
+      const residents = this.ordersToZuzaluTickets(
         orders,
         [],
-        ParticipantRole.Resident
+        ZuzaluUserRole.Resident
       ).filter((p) => !orgEmails.has(p.email));
 
       // Return the combined list
@@ -252,7 +241,7 @@ export class PretixSyncService {
    * Loads all visitors of Zuzalu. Visitors are defined as participants
    * who are not members of the main Zuzalu event in pretix.
    */
-  private async loadVisitors(): Promise<PretixParticipant[]> {
+  private async loadVisitors(): Promise<ZuzaluPretixTicket[]> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadVisitors", async () => {
       logger("[PRETIX] Fetching visitors");
       const subevents = await this.pretixAPI.fetchSubevents(
@@ -262,13 +251,13 @@ export class PretixSyncService {
         this.pretixAPI.config.zuVisitorEventID
       );
 
-      const visitorParticipants = this.ordersToParticipants(
+      const visitorTickets = this.ordersToZuzaluTickets(
         visitorOrders,
         subevents,
-        ParticipantRole.Visitor
+        ZuzaluUserRole.Visitor
       );
 
-      const visitors = this.deduplicateVisitorParticipants(visitorParticipants);
+      const visitors = this.deduplicateVisitorTickets(visitorTickets);
 
       logger(`[PRETIX] loaded ${visitors.length} visitors`);
 
@@ -284,12 +273,12 @@ export class PretixSyncService {
    * `PretixParticipant` to equal to the date ranges of the visitor
    * subevent events they have in their order.
    */
-  private ordersToParticipants(
+  private ordersToZuzaluTickets(
     orders: PretixOrder[],
     visitorSubEvents: PretixSubevent[],
-    role: ParticipantRole
-  ): PretixParticipant[] {
-    const participants: PretixParticipant[] = orders
+    role: ZuzaluUserRole
+  ): ZuzaluPretixTicket[] {
+    const participants: ZuzaluUser[] = orders
       // check that they paid
       .filter((o) => o.status === "p")
       // an order can have more than one "position" (ticket)
@@ -322,7 +311,7 @@ export class PretixSyncService {
           name: o.positions[0].attendee_name,
           order_id: o.code,
           visitor_date_ranges: visitorDateRanges,
-        } satisfies PretixParticipant;
+        } satisfies ZuzaluUser;
       });
 
     return participants;
@@ -333,11 +322,8 @@ export class PretixSyncService {
    * into a single pretix participant zupass-side, so that a single user
    * on our end contains all the dates they have a visitor ticket to.
    */
-  private deduplicateVisitorParticipants(
-    visitors: PretixParticipant[]
-  ): PretixParticipant[] {
-    const dedupedVisitors: Map<string /* email */, PretixParticipant> =
-      new Map();
+  private deduplicateVisitorTickets(visitors: ZuzaluUser[]): ZuzaluUser[] {
+    const dedupedVisitors: Map<string /* email */, ZuzaluUser> = new Map();
 
     for (const visitor of visitors) {
       const existingVisitor = dedupedVisitors.get(visitor.email);

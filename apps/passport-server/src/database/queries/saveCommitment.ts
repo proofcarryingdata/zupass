@@ -16,8 +16,6 @@ export async function insertCommitment(
   const { email, commitment } = params;
   logger(`Saving commitment email=${email} commitment=${commitment}`);
 
-  // Insert succeeds only if we already have a Pretix participant (but don't
-  // already have a commitment) for this email--due to foreign + unique keys.
   const insertResult = await sqlQuery(
     client,
     `\

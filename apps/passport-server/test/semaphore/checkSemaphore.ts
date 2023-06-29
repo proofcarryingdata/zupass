@@ -46,7 +46,7 @@ function getCurrentSemaphoreServiceGroups(
 ): SemaphoreGroups {
   return {
     g: application.services.semaphoreService
-      .groupGeneric()
+      .groupPCDPass()
       .group.members.map((m) => m.toString()),
     v: application.services.semaphoreService
       .groupVisitors()

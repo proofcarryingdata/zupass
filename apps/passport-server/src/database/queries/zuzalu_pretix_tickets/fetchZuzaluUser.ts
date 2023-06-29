@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PassportParticipant, PretixParticipant } from "../../models";
+import { LoggedInZuzaluUser, ZuzaluUser } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -9,7 +9,7 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function fetchAllZuzaluUsers(
   client: ClientBase | Pool
-): Promise<Array<PretixParticipant>> {
+): Promise<Array<ZuzaluUser>> {
   const result = await sqlQuery(
     client,
     `\
@@ -34,7 +34,7 @@ left join commitments c on c.participant_email = p.email;`
 export async function fetchZuzaluUser(
   client: ClientBase | Pool,
   email: string
-): Promise<PretixParticipant | null> {
+): Promise<ZuzaluUser | null> {
   const result = await sqlQuery(
     client,
     `\
@@ -56,7 +56,7 @@ where p.email = $1;`,
 export async function fetchLoggedInZuzaluUser(
   client: ClientBase | Pool,
   params: { uuid: string }
-): Promise<PassportParticipant | null> {
+): Promise<LoggedInZuzaluUser | null> {
   const result = await sqlQuery(
     client,
     `\
@@ -79,7 +79,7 @@ where c.uuid = $1;`,
 /** Fetch all participants who have a Passport. */
 export async function fetchAllLoggedInZuzaluUsers(
   client: ClientBase | Pool
-): Promise<PassportParticipant[]> {
+): Promise<LoggedInZuzaluUser[]> {
   const result = await client.query(
     `\
 select 

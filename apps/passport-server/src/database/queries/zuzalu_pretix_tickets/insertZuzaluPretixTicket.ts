@@ -1,5 +1,5 @@
 import { ClientBase, Pool } from "pg";
-import { PretixParticipant } from "../../models";
+import { ZuzaluUser } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -8,7 +8,7 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function insertZuzaluPretixTicket(
   client: ClientBase | Pool,
-  params: PretixParticipant
+  params: ZuzaluUser
 ): Promise<number> {
   const result = await sqlQuery(
     client,

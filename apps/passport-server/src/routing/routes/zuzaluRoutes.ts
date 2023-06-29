@@ -29,19 +29,14 @@ export function initZuzaluRoutes(
     }
   });
 
-  // Check the token (sent to user's email), add a new participant.
+  // Check the token (sent to user's email), add a new logged in zuzalu user.
   app.get("/zuzalu/new-participant", async (req: Request, res: Response) => {
     try {
       const token = decodeString(req.query.token, "token");
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
 
-      await userService.handleNewZuzaluParticipant(
-        token,
-        email,
-        commitment,
-        res
-      );
+      await userService.handleNewZuzaluUser(token, email, commitment, res);
     } catch (e: any) {
       logger(e);
       rollbarService?.error(e);
@@ -49,11 +44,11 @@ export function initZuzaluRoutes(
     }
   });
 
-  // Fetch a specific participant, given their public semaphore commitment.
+  // Fetch a specific zuzalu user, given their public semaphore commitment.
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     try {
       const uuid = req.params.uuid;
-      await userService.handleGetZuzaluParticipant(uuid, res);
+      await userService.handleGetZuzaluUser(uuid, res);
     } catch (e: any) {
       logger(e);
       rollbarService?.error(e);

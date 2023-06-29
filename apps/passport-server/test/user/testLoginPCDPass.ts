@@ -1,4 +1,4 @@
-import { ZuParticipant } from "@pcd/passport-interface";
+import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
@@ -9,7 +9,7 @@ export async function testLoginPCDPass(
   email: string,
   force: boolean,
   userAlreadyLoggedIn: boolean
-): Promise<ZuParticipant> {
+): Promise<User> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();

@@ -4,8 +4,8 @@ import { ClientBase, Pool } from "pg";
 import {
   CommitmentRow,
   HistoricSemaphoreGroup,
-  ParticipantRole,
-  PassportParticipant,
+  LoggedInZuzaluUser,
+  ZuzaluUserRole,
 } from "../database/models";
 import { fetchAllCommitments } from "../database/queries/fetchAllCommitments";
 import {
@@ -13,7 +13,7 @@ import {
   fetchLatestHistoricSemaphoreGroups,
   insertNewHistoricSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
-import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluPretixParticipant";
+import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -41,7 +41,7 @@ export class SemaphoreService {
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "Generic", group: new Group("5", 16) },
+      { name: "PCDPass Users", group: new Group("5", 16) },
     ];
   }
 
@@ -49,7 +49,7 @@ export class SemaphoreService {
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
   public groupVisitors = (): NamedGroup => this.getNamedGroup("3");
   public groupOrganizers = (): NamedGroup => this.getNamedGroup("4");
-  public groupGeneric = (): NamedGroup => this.getNamedGroup("5");
+  public groupPCDPass = (): NamedGroup => this.getNamedGroup("5");
 
   public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -57,14 +57,16 @@ export class SemaphoreService {
     return ret;
   }
 
-  // Zuzalu participants by UUID
-  private zuzaluParticipants = {} as Record<string, PassportParticipant>;
-  private genericParticipants = {} as Record<string, CommitmentRow>;
+  // Zuzalu users by UUID
+  private zuzaluUsers = {} as Record<string, LoggedInZuzaluUser>;
+  // PCDPass users by UUID
+  private pcdPassUsers = {} as Record<string, CommitmentRow>;
 
-  // Get a participant by UUID, or null if not found.
-  public getParticipant(
-    uuid: string
-  ): PassportParticipant | CommitmentRow | null {
+  /**
+   * Gets a user by unique identitifier. Only retrieves users that have logged in
+   * (which makes sense because only those users even have a uuid).
+   */
+  public getUser(uuid: string): LoggedInZuzaluUser | CommitmentRow | null {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -72,10 +74,10 @@ export class SemaphoreService {
     }
 
     if (this.isZuzalu) {
-      return this.zuzaluParticipants[uuid] || null;
+      return this.zuzaluUsers[uuid] || null;
     }
 
-    return this.genericParticipants[uuid] || null;
+    return this.pcdPassUsers[uuid] || null;
   }
 
   public start(): void {
@@ -91,7 +93,9 @@ export class SemaphoreService {
     }
   }
 
-  // Load participants from DB, rebuild semaphore groups
+  /**
+   * Load users from DB, rebuild semaphore groups
+   */
   public async reload(): Promise<void> {
     return traced("Semaphore", "reload", async () => {
       logger(`[SEMA] Reloading semaphore service...`);
@@ -104,18 +108,16 @@ export class SemaphoreService {
 
       this.loaded = true;
 
-      logger(`[SEMA] Semaphore service reloaded.`);
       await this.saveHistoricSemaphoreGroups();
+      logger(`[SEMA] Semaphore service reloaded.`);
     });
   }
 
   private async reloadGenericGroup(): Promise<void> {
     return traced("Semaphore", "reloadGenericGroup", async (span) => {
       const allCommitments = await fetchAllCommitments(this.dbPool);
-      span?.setAttribute("participants", allCommitments.length);
-      logger(
-        `[SEMA] Rebuilding groups, ${allCommitments.length} total participants.`
-      );
+      span?.setAttribute("users", allCommitments.length);
+      logger(`[SEMA] Rebuilding groups, ${allCommitments.length} total users.`);
 
       const namedGroup = this.getNamedGroup("5");
       const newGroup = new Group(
@@ -124,9 +126,9 @@ export class SemaphoreService {
         allCommitments.map((c) => c.commitment)
       );
       namedGroup.group = newGroup;
-      this.genericParticipants = {};
+      this.pcdPassUsers = {};
       allCommitments.forEach((c) => {
-        this.genericParticipants[c.uuid] = c;
+        this.pcdPassUsers[c.uuid] = c;
       });
     });
   }
@@ -195,56 +197,53 @@ export class SemaphoreService {
 
   private async reloadZuzaluGroups(): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
-      const participants = await fetchAllLoggedInZuzaluUsers(this.dbPool);
-      span?.setAttribute("participants", participants.length);
-      logger(
-        `[SEMA] Rebuilding groups, ${participants.length} total participants.`
-      );
+      const users = await fetchAllLoggedInZuzaluUsers(this.dbPool);
+      span?.setAttribute("users", users.length);
+      logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
-      // reset participant state
-      this.zuzaluParticipants = {};
+      // reset user state
+      this.zuzaluUsers = {};
       this.groups = SemaphoreService.createGroups();
 
-      const groupIdsToParticipants: Map<string, PassportParticipant[]> =
-        new Map();
+      const groupIdsToUsers: Map<string, LoggedInZuzaluUser[]> = new Map();
       const groupsById: Map<string, NamedGroup> = new Map();
       for (const group of this.groups) {
-        groupIdsToParticipants.set(group.group.id.toString(), []);
+        groupIdsToUsers.set(group.group.id.toString(), []);
         groupsById.set(group.group.id.toString(), group);
       }
 
       logger(`[SEMA] initializing ${this.groups.length} groups`);
-      logger(`[SEMA] inserting ${participants.length} participants`);
+      logger(`[SEMA] inserting ${users.length} users`);
 
-      // calculate which participants go into which groups
-      for (const p of participants) {
-        this.zuzaluParticipants[p.uuid] = p;
-        const groupsOfThisParticipant = this.getZuzaluGroupsForRole(p.role);
-        for (const namedGroup of groupsOfThisParticipant) {
+      // calculate which users go into which groups
+      for (const p of users) {
+        this.zuzaluUsers[p.uuid] = p;
+        const groupsOfThisUser = this.getZuzaluGroupsForRole(p.role);
+        for (const namedGroup of groupsOfThisUser) {
           logger(
             `[SEMA] Adding ${p.role} ${p.email} to sema group ${namedGroup.name}`
           );
-          const participantsInGroup = groupIdsToParticipants.get(
+          const usersInGroup = groupIdsToUsers.get(
             namedGroup.group.id.toString()
           );
-          participantsInGroup?.push(p);
+          usersInGroup?.push(p);
         }
       }
 
       // based on the above calculation, instantiate each semaphore group
-      for (const entry of groupIdsToParticipants.entries()) {
-        const groupParticipants = entry[1];
+      for (const entry of groupIdsToUsers.entries()) {
+        const groupUsers = entry[1];
         const namedGroup = groupsById.get(entry[0]);
 
         if (namedGroup) {
           logger(
-            `[SEMA] replacing group ${namedGroup.name} with ${groupParticipants.length} participants`
+            `[SEMA] replacing group ${namedGroup.name} with ${groupUsers.length} users`
           );
-          const participantIds = groupParticipants.map((p) => p.commitment);
+          const userIds = groupUsers.map((p) => p.commitment);
           const newGroup = new Group(
             namedGroup.group.id,
             namedGroup.group.depth,
-            participantIds
+            userIds
           );
           namedGroup.group = newGroup;
         }
@@ -253,17 +252,17 @@ export class SemaphoreService {
   }
 
   // Get the semaphore groups for a participant role
-  private getZuzaluGroupsForRole(role: ParticipantRole): NamedGroup[] {
+  private getZuzaluGroupsForRole(role: ZuzaluUserRole): NamedGroup[] {
     switch (role) {
-      case ParticipantRole.Organizer:
+      case ZuzaluUserRole.Organizer:
         return [
           this.groupParticipants(),
           this.groupOrganizers(),
           this.groupResidents(),
         ];
-      case ParticipantRole.Resident:
+      case ZuzaluUserRole.Resident:
         return [this.groupParticipants(), this.groupResidents()];
-      case ParticipantRole.Visitor:
+      case ZuzaluUserRole.Visitor:
         return [this.groupParticipants(), this.groupVisitors()];
       default:
         throw new Error(`unsupported role ${role}`);
