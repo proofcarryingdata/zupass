@@ -3,10 +3,10 @@ import { DateRange } from "@pcd/passport-interface";
 import { ClientBase, Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ParticipantRole, PretixParticipant } from "../database/models";
-import { deletePretixParticipant } from "../database/queries/pretix_users/deleteParticipant";
-import { fetchAllPretixParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
-import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
-import { updateParticipant } from "../database/queries/pretix_users/updateParticipant";
+import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
+import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
+import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
+import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
@@ -123,7 +123,7 @@ export class PretixSyncService {
       "saveParticipants",
       async (span) => {
         const pretixParticipantsAsMap = participantsToMap(pretixParticipants);
-        const existingParticipants = await fetchAllPretixParticipants(dbClient);
+        const existingParticipants = await fetchAllZuzaluUsers(dbClient);
         const existingParticipantsByEmail =
           participantsToMap(existingParticipants);
         const newParticipants = pretixParticipants.filter(
@@ -134,7 +134,7 @@ export class PretixSyncService {
         logger(`[PRETIX] Inserting ${newParticipants.length} new participants`);
         for (const participant of newParticipants) {
           logger(`[PRETIX] Inserting ${JSON.stringify(participant)}`);
-          await insertPretixParticipant(dbClient, participant);
+          await insertZuzaluPretixTicket(dbClient, participant);
         }
 
         // Step 2 of saving: update participants that have changed
@@ -158,7 +158,7 @@ export class PretixSyncService {
               oldParticipant
             )} to ${JSON.stringify(updatedParticipant)}`
           );
-          await updateParticipant(dbClient, updatedParticipant);
+          await updateZuzaluPretixTicket(dbClient, updatedParticipant);
         }
 
         // Step 3 of saving: remove participants that don't exist in Pretix, but do
@@ -169,7 +169,7 @@ export class PretixSyncService {
         logger(`[PRETIX] Deleting ${removedParticipants.length} participants`);
         for (const removedParticipant of removedParticipants) {
           logger(`[PRETIX] Deleting ${JSON.stringify(removedParticipant)}`);
-          await deletePretixParticipant(dbClient, removedParticipant.email);
+          await deleteZuzaluUser(dbClient, removedParticipant.email);
         }
 
         span?.setAttribute("participantsInserted", newParticipants.length);

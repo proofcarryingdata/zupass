@@ -3,11 +3,10 @@ import { PretixParticipant } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Insert a ticketed participant from pretix into the database, if
- * they have not been inserted yet. This does not insert an identity
- * commitment for them.
+ * Insert a zuzalu pretix ticket into the database, if they have not been
+ * inserted yet. This does not insert an identity commitment for them.
  */
-export async function insertPretixParticipant(
+export async function insertZuzaluPretixTicket(
   client: ClientBase | Pool,
   params: PretixParticipant
 ): Promise<number> {

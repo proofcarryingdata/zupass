@@ -2,12 +2,12 @@ import { ParticipantRole, ZuParticipant } from "@pcd/passport-interface";
 import { Response } from "express";
 import { PretixParticipant } from "../database/models";
 import { fetchCommitment } from "../database/queries/fetchCommitment";
-import {
-  fetchAllPretixParticipants,
-  fetchPretixParticipant,
-} from "../database/queries/pretix_users/fetchPretixParticipant";
-import { insertPretixParticipant } from "../database/queries/pretix_users/insertParticipant";
 import { insertCommitment } from "../database/queries/saveCommitment";
+import {
+  fetchAllZuzaluUsers,
+  fetchZuzaluUser,
+} from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
+import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { EmailService } from "./emailService";
@@ -50,11 +50,11 @@ export class UserService {
   public async getZuzaluPassportHolder(
     email: string
   ): Promise<PretixParticipant | null> {
-    return fetchPretixParticipant(this.context.dbPool, email);
+    return fetchZuzaluUser(this.context.dbPool, email);
   }
 
   public async getZuzaluTicketHolders(): Promise<Array<PretixParticipant>> {
-    return fetchAllPretixParticipants(this.context.dbPool);
+    return fetchAllZuzaluUsers(this.context.dbPool);
   }
 
   public async handleSendZuzaluEmail(
@@ -72,7 +72,7 @@ export class UserService {
     const token = await this.emailTokenService.saveNewTokenForEmail(email);
 
     if (this._bypassEmail) {
-      await insertPretixParticipant(dbPool, {
+      await insertZuzaluPretixTicket(dbPool, {
         email: email,
         name: "Test User",
         order_id: "",
@@ -81,7 +81,7 @@ export class UserService {
       });
     }
 
-    const participant = await fetchPretixParticipant(dbPool, email);
+    const participant = await fetchZuzaluUser(dbPool, email);
 
     if (participant == null) {
       throw new Error(`${email} doesn't have a ticket.`);
@@ -128,7 +128,7 @@ export class UserService {
     );
 
     try {
-      const pretix = await fetchPretixParticipant(dbPool, email);
+      const pretix = await fetchZuzaluUser(dbPool, email);
 
       if (pretix == null) {
         throw new Error(`Ticket for ${email} not found`);

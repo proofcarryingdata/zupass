@@ -3,9 +3,9 @@ import { ClientBase, Pool } from "pg";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Updates a pretix participant's email, role, and visitor date ranges.
+ * Updates a pretix ticket in our database.
  */
-export async function updateParticipant(
+export async function updateZuzaluPretixTicket(
   client: ClientBase | Pool,
   params: { email: string; role: string; visitor_date_ranges?: DateRange[] }
 ): Promise<number> {

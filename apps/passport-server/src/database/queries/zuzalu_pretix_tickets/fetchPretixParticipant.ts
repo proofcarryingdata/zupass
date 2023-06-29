@@ -7,7 +7,7 @@ import { sqlQuery } from "../../sqlQuery";
  * logged into the passport app. Includes their commitment, if they
  * have one.
  */
-export async function fetchAllPretixParticipants(
+export async function fetchAllZuzaluUsers(
   client: ClientBase | Pool
 ): Promise<Array<PretixParticipant>> {
   const result = await sqlQuery(
@@ -20,8 +20,7 @@ select
     p.order_id as order_id,
     c.commitment as commitment
 from zuzalu_pretix_tickets p
-left join commitments c on c.participant_email = p.email;
-`
+left join commitments c on c.participant_email = p.email;`
   );
 
   return result.rows;
@@ -32,7 +31,7 @@ left join commitments c on c.participant_email = p.email;
  * haven't logged into the passport app. Includes their commitment,
  * if they have one.
  */
-export async function fetchPretixParticipant(
+export async function fetchZuzaluUser(
   client: ClientBase | Pool,
   email: string
 ): Promise<PretixParticipant | null> {
@@ -54,7 +53,7 @@ where p.email = $1;`,
 }
 
 /** Fetch a participant who already has Passport installed. */
-export async function fetchPassportParticipant(
+export async function fetchLoggedInZuzaluUser(
   client: ClientBase | Pool,
   params: { uuid: string }
 ): Promise<PassportParticipant | null> {
@@ -78,7 +77,7 @@ where c.uuid = $1;`,
 }
 
 /** Fetch all participants who have a Passport. */
-export async function fetchPassportParticipants(
+export async function fetchAllLoggedInZuzaluUsers(
   client: ClientBase | Pool
 ): Promise<PassportParticipant[]> {
   const result = await client.query(

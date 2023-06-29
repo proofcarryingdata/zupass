@@ -13,7 +13,7 @@ import {
   fetchLatestHistoricSemaphoreGroups,
   insertNewHistoricSemaphoreGroup,
 } from "../database/queries/historicSemaphore";
-import { fetchPassportParticipants } from "../database/queries/pretix_users/fetchPretixParticipant";
+import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchPretixParticipant";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -195,7 +195,7 @@ export class SemaphoreService {
 
   private async reloadZuzaluGroups(): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
-      const participants = await fetchPassportParticipants(this.dbPool);
+      const participants = await fetchAllLoggedInZuzaluUsers(this.dbPool);
       span?.setAttribute("participants", participants.length);
       logger(
         `[SEMA] Rebuilding groups, ${participants.length} total participants.`
