@@ -335,6 +335,7 @@ describe("zupass functionality", function () {
         o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
         g: [],
       });
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
   );
 
