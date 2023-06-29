@@ -151,7 +151,7 @@ export class UserService {
 
       // Reload Merkle trees
       await this.semaphoreService.reload();
-      const newUser = this.semaphoreService.getUser(uuid);
+      const newUser = this.semaphoreService.getUserByUUID(uuid);
       if (newUser == null) {
         throw new Error(`${uuid} not found`);
       } else if (newUser.commitment !== commitment) {
@@ -173,7 +173,7 @@ export class UserService {
 
   public async handleGetZuzaluUser(uuid: string, res: Response): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
-    const user = this.semaphoreService.getUser(uuid);
+    const user = this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);
   }
@@ -268,7 +268,7 @@ export class UserService {
   ): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
     res.setHeader("Access-Control-Allow-Origin", "*");
-    const user = this.semaphoreService.getUser(uuid);
+    const user = this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);
   }

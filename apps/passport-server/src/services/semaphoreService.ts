@@ -57,16 +57,18 @@ export class SemaphoreService {
     return ret;
   }
 
-  // Zuzalu users by UUID
-  private zuzaluUsers = {} as Record<string, LoggedInZuzaluUser>;
-  // PCDPass users by UUID
-  private pcdPassUsers = {} as Record<string, CommitmentRow>;
+  private zuzaluUsersByUUID = {} as Record<string, LoggedInZuzaluUser>;
+  private zuzaluUsersByEmail = {} as Record<string, LoggedInZuzaluUser>;
+  private pcdPassUsersbyUUID = {} as Record<string, CommitmentRow>;
+  private pcdPassUsersByEmail = {} as Record<string, CommitmentRow>;
 
   /**
    * Gets a user by unique identitifier. Only retrieves users that have logged in
    * (which makes sense because only those users even have a uuid).
    */
-  public getUser(uuid: string): LoggedInZuzaluUser | CommitmentRow | null {
+  public getUserByUUID(
+    uuid: string
+  ): LoggedInZuzaluUser | CommitmentRow | null {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -74,10 +76,30 @@ export class SemaphoreService {
     }
 
     if (this.isZuzalu) {
-      return this.zuzaluUsers[uuid] || null;
+      return this.zuzaluUsersByUUID[uuid] || null;
     }
 
-    return this.pcdPassUsers[uuid] || null;
+    return this.pcdPassUsersbyUUID[uuid] || null;
+  }
+
+  /**
+   * Gets a user by unique identitifier. Only retrieves users that have logged in
+   * (which makes sense because only those users even have a uuid).
+   */
+  public getUserByEmail(
+    email: string
+  ): LoggedInZuzaluUser | CommitmentRow | null {
+    // prevents client from thinking the user has been logged out
+    // if semaphore service hasn't been initialized yet
+    if (!this.loaded) {
+      throw new Error("Semaphore service not loaded");
+    }
+
+    if (this.isZuzalu) {
+      return this.zuzaluUsersByEmail[email] || null;
+    }
+
+    return this.pcdPassUsersByEmail[email] || null;
   }
 
   public start(): void {
@@ -126,9 +148,10 @@ export class SemaphoreService {
         allCommitments.map((c) => c.commitment)
       );
       namedGroup.group = newGroup;
-      this.pcdPassUsers = {};
+      this.pcdPassUsersbyUUID = {};
       allCommitments.forEach((c) => {
-        this.pcdPassUsers[c.uuid] = c;
+        this.pcdPassUsersbyUUID[c.uuid] = c;
+        this.pcdPassUsersByEmail[c.email] = c;
       });
     });
   }
@@ -202,7 +225,8 @@ export class SemaphoreService {
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
       // reset user state
-      this.zuzaluUsers = {};
+      this.zuzaluUsersByUUID = {};
+      this.zuzaluUsersByEmail = {};
       this.groups = SemaphoreService.createGroups();
 
       const groupIdsToUsers: Map<string, LoggedInZuzaluUser[]> = new Map();
@@ -217,7 +241,8 @@ export class SemaphoreService {
 
       // calculate which users go into which groups
       for (const p of users) {
-        this.zuzaluUsers[p.uuid] = p;
+        this.zuzaluUsersByUUID[p.uuid] = p;
+        this.zuzaluUsersByEmail[p.email] = p;
         const groupsOfThisUser = this.getZuzaluGroupsForRole(p.role);
         for (const namedGroup of groupsOfThisUser) {
           logger(

@@ -29,6 +29,20 @@ export class ZuzaluPretixDataMocker {
     return this.mockData;
   }
 
+  public getResidentsAndOrganizers(): PretixOrder[] {
+    const zuzaluEventOrders =
+      this.mockData.ordersByEventId.get(this.mockData.config.zuEventID) ?? [];
+    return zuzaluEventOrders;
+  }
+
+  public getVistors(): PretixOrder[] {
+    const visitorEventOrders =
+      this.mockData.ordersByEventId.get(
+        this.mockData.config.zuVisitorEventID
+      ) ?? [];
+    return visitorEventOrders;
+  }
+
   public updateResidentOrOrganizer(
     code: string,
     update: (order: PretixOrder) => void

@@ -5,7 +5,8 @@ import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { getPretixConfig } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
-import { ZuzaluUserRole } from "../src/database/models";
+import { LoggedInZuzaluUser, ZuzaluUserRole } from "../src/database/models";
+import { PretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
@@ -23,7 +24,7 @@ import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe("zupass functionality", function () {
+describe.only("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -32,6 +33,7 @@ describe("zupass functionality", function () {
   let organizerUser: User;
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
+  let pretixService: PretixSyncService;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
@@ -47,6 +49,12 @@ describe("zupass functionality", function () {
     pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
     const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
     application = await startTestingApp({ pretixAPI });
+
+    if (!application.services.pretixSyncService) {
+      throw new Error("expected there to be a pretix sync service");
+    }
+
+    pretixService = application.services.pretixSyncService;
   });
 
   this.afterAll(async () => {
@@ -63,6 +71,9 @@ describe("zupass functionality", function () {
   step("pretix should sync to completion", async function () {
     const pretixSyncStatus = await waitForPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
+    // stop interval that polls the api so we have more granular control over
+    // testing the sync functionality
+    application.services.pretixSyncService?.stop();
   });
 
   step(
@@ -270,6 +281,32 @@ describe("zupass functionality", function () {
         o: [],
         g: [],
       });
+    }
+  );
+
+  step(
+    "updating a ticket should update the corresponding user",
+    async function () {
+      const participants = pretixMocker.getResidentsAndOrganizers();
+      const firstParticipant = participants[0];
+      if (!firstParticipant) {
+        throw new Error("expected there to be at least one mocked user");
+      }
+      const newName = "new random_name";
+      expect(newName).to.not.eq(firstParticipant.positions[0].attendee_name);
+
+      pretixMocker.updateResidentOrOrganizer(firstParticipant.code, (p) => {
+        p.positions[0].attendee_name = newName;
+      });
+      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
+      await pretixService.trySync();
+      const user = application.services.semaphoreService.getUserByEmail(
+        firstParticipant.email
+      ) as LoggedInZuzaluUser;
+      if (!user) {
+        throw new Error("expected to be able to get user");
+      }
+      expect(user.name).to.eq(newName);
     }
   );
 });
