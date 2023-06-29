@@ -9,6 +9,7 @@ import {
   fetchEmailToken,
   insertEmailToken,
 } from "../src/database/queries/emailToken";
+import { fetchAllCommitments } from "../src/database/queries/fetchAllCommitments";
 import { fetchCommitment } from "../src/database/queries/fetchCommitment";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
 import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
@@ -117,6 +118,24 @@ describe.only("database reads and writes", function () {
       expect(await fetchZuzaluUser(db, testTicket.email)).to.deep.eq(
         await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
       );
+    }
+  );
+
+  step(
+    "able to fetch commitment separately from logged in user",
+    async function () {
+      const loggedinUser = await fetchZuzaluUser(db, testTicket.email);
+      const commitment = await fetchCommitment(db, testTicket.email);
+
+      if (!loggedinUser || !commitment) {
+        throw new Error("couldn't find user or commitment");
+      }
+
+      expect(loggedinUser.commitment).to.eq(commitment.commitment);
+      expect(loggedinUser.email).to.eq(commitment.email);
+
+      const allCommitments = await fetchAllCommitments(db);
+      expect(allCommitments).to.deep.eq([commitment]);
     }
   );
 
