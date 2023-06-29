@@ -9,6 +9,7 @@ import {
   fetchEmailToken,
   insertEmailToken,
 } from "../src/database/queries/emailToken";
+import { fetchCommitment } from "../src/database/queries/fetchCommitment";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
 import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
@@ -153,5 +154,13 @@ describe.only("database reads and writes", function () {
     expect(
       await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
     ).to.eq(null);
+    expect(await fetchCommitment(db, testTicket.email)).to.eq(null);
+  });
+
+  step("deleting a non logged in user should work", async function () {
+    await insertZuzaluPretixTicket(db, testTicket);
+    expect(await fetchZuzaluUser(db, testTicket.email)).to.not.eq(null);
+    await deleteZuzaluUser(db, testTicket.email);
+    expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
   });
 });
