@@ -6,6 +6,7 @@ import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
+// todo get rid of these globals
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
 
