@@ -1,4 +1,4 @@
-import { ClientBase, Pool, QueryResult } from "pg";
+import { Pool, QueryResult } from "pg";
 import { traced } from "../services/telemetryService";
 
 /**
@@ -6,7 +6,7 @@ import { traced } from "../services/telemetryService";
  * its performance.
  */
 export function sqlQuery(
-  client: ClientBase | Pool,
+  client: Pool,
   query: string,
   args?: any[]
 ): Promise<QueryResult> {

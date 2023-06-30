@@ -1,4 +1,4 @@
-import { ClientBase, Pool, QueryResultRow } from "pg";
+import { Pool, QueryResultRow } from "pg";
 import { HistoricSemaphoreGroup } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../sqlQuery";
  * Fetches all the latest semaphore group states from the database.
  */
 export async function fetchLatestHistoricSemaphoreGroups(
-  client: ClientBase | Pool
+  client: Pool
 ): Promise<HistoricSemaphoreGroup[]> {
   const latestGroups = await sqlQuery(
     client,
@@ -27,7 +27,7 @@ export async function fetchLatestHistoricSemaphoreGroups(
  * a given group.
  */
 export async function insertNewHistoricSemaphoreGroup(
-  client: ClientBase | Pool,
+  client: Pool,
   groupId: string,
   rootHash: string,
   group: string
@@ -40,7 +40,7 @@ export async function insertNewHistoricSemaphoreGroup(
 }
 
 export async function fetchHistoricGroupByRoot(
-  client: ClientBase | Pool,
+  client: Pool,
   groupId: string,
   rootHash: string
 ): Promise<HistoricSemaphoreGroup | undefined> {

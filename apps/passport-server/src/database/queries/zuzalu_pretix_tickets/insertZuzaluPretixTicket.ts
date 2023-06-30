@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -7,7 +7,7 @@ import { sqlQuery } from "../../sqlQuery";
  * inserted yet. This does not insert an identity commitment for them.
  */
 export async function insertZuzaluPretixTicket(
-  client: ClientBase | Pool,
+  client: Pool,
   params: ZuzaluPretixTicket
 ): Promise<number> {
   const result = await sqlQuery(

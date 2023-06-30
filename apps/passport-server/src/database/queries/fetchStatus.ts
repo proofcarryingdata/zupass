@@ -1,10 +1,10 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { sqlQuery } from "../sqlQuery";
 
 /**
  * Fetches some status parameters based on the state of the database.
  */
-export async function fetchStatus(client: ClientBase | Pool): Promise<{
+export async function fetchStatus(client: Pool): Promise<{
   n_zuzalu_pretix_tickets: number;
   n_commitments: number;
   n_e2ee: number;

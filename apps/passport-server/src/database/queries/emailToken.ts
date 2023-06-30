@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -7,7 +7,7 @@ import { sqlQuery } from "../sqlQuery";
  * Zupass users and PCDPass users.
  */
 export async function fetchEmailToken(
-  client: Pool | ClientBase,
+  client: Pool,
   email: string
 ): Promise<string | null> {
   const result = await sqlQuery(
@@ -24,7 +24,7 @@ export async function fetchEmailToken(
  * Zupass users and PCDPass users.
  */
 export async function insertEmailToken(
-  client: ClientBase | Pool,
+  client: Pool,
   params: {
     email: string;
     token: string;

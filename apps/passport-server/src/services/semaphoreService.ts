@@ -1,6 +1,6 @@
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import {
   CommitmentRow,
   HistoricSemaphoreGroup,
@@ -25,7 +25,7 @@ import { traced } from "./telemetryService";
 export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
   private groups: NamedGroup[];
-  private dbPool: Pool | ClientBase;
+  private dbPool: Pool;
   private isZuzalu: boolean;
   private loaded = false;
 

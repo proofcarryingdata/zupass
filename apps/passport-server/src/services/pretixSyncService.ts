@@ -1,5 +1,5 @@
 import { DateRange } from "@pcd/passport-interface";
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
@@ -128,7 +128,7 @@ export class PretixSyncService {
    * - Delete tickets that are no longer residents.
    */
   private async saveTickets(
-    dbClient: ClientBase | Pool,
+    dbClient: Pool,
     pretixTickets: ZuzaluPretixTicket[]
   ): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {

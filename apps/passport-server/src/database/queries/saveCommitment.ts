@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
@@ -7,7 +7,7 @@ import { sqlQuery } from "../sqlQuery";
  * Returns the commitment UUID. Works for both Zupass users and PCDPass users.
  */
 export async function insertCommitment(
-  client: ClientBase | Pool,
+  client: Pool,
   params: {
     email: string;
     commitment: string;
