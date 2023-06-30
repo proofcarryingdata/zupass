@@ -4,7 +4,7 @@ import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
-import { startServices } from "./services";
+import { startServices, stopServices } from "./services";
 import { APIs, ApplicationContext, PCDPass } from "./types";
 import { logger } from "./util/logger";
 
@@ -40,12 +40,9 @@ export async function startApplication(
 
 export async function stopApplication(app?: PCDPass): Promise<void> {
   if (!app) return;
-
-  app.expressContext.server.close();
-  app.services.provingService.stop();
-  app.services.semaphoreService.stop();
-  app.services.pretixSyncService?.stop();
+  await stopServices(app.services);
   await app.context.dbPool.end();
+  app.expressContext.server.close();
 }
 
 async function getOverridenApis(

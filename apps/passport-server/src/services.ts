@@ -52,3 +52,9 @@ export async function startServices(
 
   return services;
 }
+
+export async function stopServices(services: GlobalServices): Promise<void> {
+  services.provingService.stop();
+  services.semaphoreService.stop();
+  services.pretixSyncService?.stop();
+}
