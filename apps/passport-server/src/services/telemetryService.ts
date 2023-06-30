@@ -63,6 +63,9 @@ export async function traced<T>(
   }
 
   return tracer.startActiveSpan(service + "." + method, async (span) => {
+    if (process.env.ROLLBAR_ENV_NAME) {
+      span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
+    }
     const result = await func(span);
     if (
       options == null ||
