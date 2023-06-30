@@ -164,7 +164,7 @@ export class UserService {
       logger(`[ZUID] Added new Zuzalu user: ${jsonP}`);
 
       res.json(zuzaluUser);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
       this.rollbarService?.reportError(e);
       res.sendStatus(500);
