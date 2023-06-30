@@ -30,6 +30,8 @@ export async function startApplication(
   const services = await startServices(context, apis);
   const expressServer = await startServer(context, services);
 
+  services.rollbarService?.log("Server started.");
+
   return {
     context,
     services,

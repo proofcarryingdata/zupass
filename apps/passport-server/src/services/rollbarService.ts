@@ -22,6 +22,10 @@ export class RollbarService {
   public initExpressMiddleware(app: Application): void {
     app.use(this.rollbar.errorHandler);
   }
+
+  public log(log: string): void {
+    this.rollbar.log(log);
+  }
 }
 
 /**
