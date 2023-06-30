@@ -37,13 +37,10 @@ export async function startApplication(
 
   const apis = await getOverridenApis(context, apiOverrides);
 
-  await startTelemetryService(context);
   const rollbarService = startRollbarService();
-
-  startProvingService();
+  await startTelemetryService(context);
   startMetricsService(context);
-
-  const provingService = await startProvingService();
+  const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(
     context,
     rollbarService,

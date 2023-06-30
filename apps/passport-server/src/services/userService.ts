@@ -12,8 +12,8 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
+import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
-import { RollbarService } from "./types";
 
 /**
  * Responsible for high-level user-facing functionality like logging in.
@@ -23,7 +23,7 @@ export class UserService {
   private semaphoreService: SemaphoreService;
   private emailTokenService: EmailTokenService;
   private emailService: EmailService;
-  private rollbarService: RollbarService;
+  private rollbarService: RollbarService | null;
   private _bypassEmail: boolean;
 
   public get bypassEmail(): boolean {
@@ -35,7 +35,7 @@ export class UserService {
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
     emailService: EmailService,
-    rollbarService: RollbarService
+    rollbarService: RollbarService | null
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
@@ -166,7 +166,7 @@ export class UserService {
       res.json(zuzaluUser);
     } catch (e: any) {
       logger(e);
-      this.rollbarService?.error(e);
+      this.rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   }
@@ -255,9 +255,9 @@ export class UserService {
       logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
 
       res.json(newUser);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      this.rollbarService?.error(e);
+      this.rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   }
@@ -279,7 +279,7 @@ export function startUserService(
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
-  rollbarService: RollbarService
+  rollbarService: RollbarService | null
 ): UserService {
   const userService = new UserService(
     context,

@@ -23,9 +23,9 @@ export function initPCDRoutes(
         request
       );
       res.json(pending);
-    } catch (e: any) {
+    } catch (e) {
       logger("/pcds/prove error: ", e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -34,9 +34,9 @@ export function initPCDRoutes(
     res.setHeader("Access-Control-Allow-Origin", "*");
     try {
       res.json(provingService.getSupportedPCDTypes());
-    } catch (e: any) {
+    } catch (e) {
       logger("/pcds/supported error: ", e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -48,9 +48,9 @@ export function initPCDRoutes(
         statusRequest.hash
       );
       res.json(statusResponse);
-    } catch (e: any) {
+    } catch (e) {
       logger("/pcds/status error:", e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });

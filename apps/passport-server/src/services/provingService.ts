@@ -13,11 +13,13 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
 import { logger } from "../util/logger";
+import { RollbarService } from "./rollbarService";
 
 /**
  * Responsible for server-side proving that can optionally be used by clients.
  */
 export class ProvingService {
+  private rollbarService: RollbarService | null;
   /**
    * In-memory queue of ProveRequests that requested server-side proving.
    */
@@ -42,6 +44,10 @@ export class ProvingService {
     JubJubSignaturePCDPackage,
     RLNPCDPackage,
   ];
+
+  public constructor(rollbarService: RollbarService | null) {
+    this.rollbarService = rollbarService;
+  }
 
   public stop(): void {
     this.queue = [];
@@ -128,6 +134,8 @@ export class ProvingService {
         error: undefined,
       });
     } catch (e: any) {
+      logger(e);
+      this.rollbarService?.reportError(e);
       this.pendingPCDResponse.set(currentHash, {
         status: PendingPCDStatus.ERROR,
         serializedPCD: undefined,
@@ -163,7 +171,9 @@ export class ProvingService {
   }
 }
 
-export async function startProvingService(): Promise<ProvingService> {
+export async function startProvingService(
+  rollbarService: RollbarService | null
+): Promise<ProvingService> {
   const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
 
   await SemaphoreGroupPCDPackage.init!({
@@ -176,6 +186,6 @@ export async function startProvingService(): Promise<ProvingService> {
     zkeyFilePath: fullPath + "/16.zkey",
   });
 
-  const provingService = new ProvingService();
+  const provingService = new ProvingService(rollbarService);
   return provingService;
 }

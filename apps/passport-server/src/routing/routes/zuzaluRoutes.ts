@@ -22,9 +22,9 @@ export function initZuzaluRoutes(
       const force = decodeString(req.query.force, "force") === "true";
 
       await userService.handleSendZuzaluEmail(email, commitment, force, res);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -37,9 +37,9 @@ export function initZuzaluRoutes(
       const commitment = decodeString(req.query.commitment, "commitment");
 
       await userService.handleNewZuzaluUser(token, email, commitment, res);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -49,9 +49,9 @@ export function initZuzaluRoutes(
     try {
       const uuid = req.params.uuid;
       await userService.handleGetZuzaluUser(uuid, res);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
