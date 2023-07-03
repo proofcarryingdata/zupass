@@ -3,14 +3,17 @@ import React from "react";
 import { Configuration } from "rollbar";
 
 export function RollbarProvider({ children }: { children: React.ReactNode }) {
-  if (process.env.ROLLBAR_TOKEN === undefined) {
+  if (
+    process.env.ROLLBAR_TOKEN === undefined ||
+    process.env.ROLLBAR_ENV_NAME === undefined
+  ) {
     console.log("[ROLLBAR] missing environment variable - not starting");
     return <>{children}</>;
   }
 
   const rollbarConfig: Configuration = {
     accessToken: process.env.ROLLBAR_TOKEN,
-    environment: process.env.NODE_ENV,
+    environment: process.env.ROLLBAR_ENV_NAME,
     captureUncaught: true,
     captureUnhandledRejections: true,
     payload: {

@@ -10,7 +10,7 @@ import {
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./types";
+import { RollbarService } from "./rollbarService";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
@@ -18,11 +18,11 @@ import { RollbarService } from "./types";
  */
 export class E2EEService {
   private context: ApplicationContext;
-  private rollbarService: RollbarService;
+  private rollbarService: RollbarService | null;
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService
+    rollbarService: RollbarService | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -52,7 +52,7 @@ export class E2EEService {
       res.json(result);
     } catch (e) {
       logger(e);
-      this.rollbarService?.error(e as Error);
+      this.rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   }
@@ -72,7 +72,8 @@ export class E2EEService {
 
       res.sendStatus(200);
     } catch (e) {
-      this.rollbarService?.error(e as Error);
+      logger(e);
+      this.rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   }
@@ -80,7 +81,7 @@ export class E2EEService {
 
 export function startE2EEService(
   context: ApplicationContext,
-  rollbarService: RollbarService
+  rollbarService: RollbarService | null
 ): E2EEService {
   const e2eeService = new E2EEService(context, rollbarService);
   return e2eeService;

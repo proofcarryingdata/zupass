@@ -8,8 +8,8 @@ import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { PretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
+import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
-import { RollbarService } from "./services/types";
 import { UserService } from "./services/userService";
 
 export interface ApplicationContext {
@@ -27,7 +27,7 @@ export interface GlobalServices {
   userService: UserService;
   e2eeService: E2EEService;
   emailTokenService: EmailTokenService;
-  rollbarService: RollbarService;
+  rollbarService: RollbarService | null;
   provingService: ProvingService;
   pretixSyncService: PretixSyncService | null;
 }

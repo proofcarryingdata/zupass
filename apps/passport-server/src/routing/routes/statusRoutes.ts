@@ -22,9 +22,9 @@ export function initStatusRoutes(
       } else {
         res.send(PretixSyncStatus.NoPretix);
       }
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -50,9 +50,9 @@ export function initStatusRoutes(
 
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(status, null, 2));
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -79,9 +79,9 @@ export function initStatusRoutes(
 
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify(status, null, 2));
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });

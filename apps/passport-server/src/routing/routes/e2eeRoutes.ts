@@ -19,8 +19,8 @@ export function initE2EERoutes(
       }
 
       await e2eeService.handleLoad(request, res);
-    } catch (e: any) {
-      rollbarService?.error(e);
+    } catch (e) {
+      rollbarService?.reportError(e);
       logger(e);
       res.sendStatus(500);
     }
@@ -30,8 +30,8 @@ export function initE2EERoutes(
     try {
       const request = req.body as SaveE2EERequest;
       await e2eeService.handleSave(request, res);
-    } catch (e: any) {
-      rollbarService?.error(e);
+    } catch (e) {
+      rollbarService?.reportError(e);
       logger(e);
       res.sendStatus(500);
     }

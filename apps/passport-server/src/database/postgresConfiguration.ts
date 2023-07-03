@@ -36,7 +36,7 @@ export function getDatabaseConfiguration(): PoolConfig {
 
     // Pool configuration
     connectionTimeoutMillis: 1_000,
-    idleTimeoutMillis: 10_000,
+    idleTimeoutMillis: 0,
     max: 8,
   };
 }

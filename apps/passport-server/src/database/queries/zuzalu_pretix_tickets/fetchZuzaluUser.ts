@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { LoggedInZuzaluUser, ZuzaluUser } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -8,7 +8,7 @@ import { sqlQuery } from "../../sqlQuery";
  * have one.
  */
 export async function fetchAllZuzaluUsers(
-  client: ClientBase | Pool
+  client: Pool
 ): Promise<Array<ZuzaluUser>> {
   const result = await sqlQuery(
     client,
@@ -34,7 +34,7 @@ left join commitments c on c.email = p.email;`
  * if they have one.
  */
 export async function fetchZuzaluUser(
-  client: ClientBase | Pool,
+  client: Pool,
   email: string
 ): Promise<ZuzaluUser | LoggedInZuzaluUser | null> {
   const result = await sqlQuery(
@@ -58,7 +58,7 @@ where p.email = $1;`,
 
 /** Fetch a Zuzalu user who already has Passport installed. */
 export async function fetchLoggedInZuzaluUser(
-  client: ClientBase | Pool,
+  client: Pool,
   params: { uuid: string }
 ): Promise<LoggedInZuzaluUser | null> {
   const result = await sqlQuery(
@@ -83,7 +83,7 @@ where c.uuid = $1;`,
 
 /** Fetch all participants who have a Passport. */
 export async function fetchAllLoggedInZuzaluUsers(
-  client: ClientBase | Pool
+  client: Pool
 ): Promise<LoggedInZuzaluUser[]> {
   const result = await client.query(
     `\

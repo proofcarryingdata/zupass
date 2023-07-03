@@ -1,5 +1,5 @@
 import { DateRange } from "@pcd/passport-interface";
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
@@ -12,9 +12,9 @@ import {
   pretixTicketsDifferent,
   ticketsToMapByEmail,
 } from "../util/zuzaluUser";
+import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
-import { RollbarService } from "./types";
 
 const SERVICE_NAME_FOR_TRACING = "Pretix";
 
@@ -23,7 +23,7 @@ const SERVICE_NAME_FOR_TRACING = "Pretix";
  */
 export class PretixSyncService {
   private pretixAPI: IPretixAPI;
-  private rollbarService: RollbarService;
+  private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
   private context: ApplicationContext;
   private timeout: NodeJS.Timeout | undefined;
@@ -36,7 +36,7 @@ export class PretixSyncService {
   public constructor(
     context: ApplicationContext,
     pretixAPI: IPretixAPI,
-    rollbarService: RollbarService,
+    rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
     this.context = context;
@@ -75,8 +75,8 @@ export class PretixSyncService {
       await this.sync();
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
-    } catch (e: any) {
-      this.rollbarService?.error(e);
+    } catch (e) {
+      this.rollbarService?.reportError(e);
       logger(e);
     }
   }
@@ -106,10 +106,10 @@ export class PretixSyncService {
 
       try {
         await this.saveTickets(dbPool, tickets);
-      } catch (e: any) {
+      } catch (e) {
         logger("[PRETIX] failed to save tickets");
         logger("[PRETIX]", e);
-        this.rollbarService?.error(e);
+        this.rollbarService?.reportError(e);
       }
 
       const syncEnd = Date.now();
@@ -128,7 +128,7 @@ export class PretixSyncService {
    * - Delete tickets that are no longer residents.
    */
   private async saveTickets(
-    dbClient: ClientBase | Pool,
+    dbClient: Pool,
     pretixTickets: ZuzaluPretixTicket[]
   ): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
@@ -363,7 +363,7 @@ export class PretixSyncService {
  */
 export function startPretixSyncService(
   context: ApplicationContext,
-  rollbarService: RollbarService,
+  rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
   pretixAPI: IPretixAPI | null
 ): PretixSyncService | null {

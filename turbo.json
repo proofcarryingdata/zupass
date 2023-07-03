@@ -46,6 +46,7 @@
     "ROLLBAR_TOKEN",
     "SW_ID",
     "IS_ZUZALU",
-    "SUPPRESS_LOGGING"
+    "SUPPRESS_LOGGING",
+    "ROLLBAR_ENV_NAME"
   ]
 }

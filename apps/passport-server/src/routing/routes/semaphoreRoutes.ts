@@ -24,9 +24,9 @@ export function initSemaphoreRoutes(
         res.json({
           valid: historicGroupValid,
         });
-      } catch (e: any) {
+      } catch (e) {
         logger(e);
-        rollbarService?.error(e);
+        rollbarService?.reportError(e);
         res.sendStatus(500);
       }
     }
@@ -50,9 +50,9 @@ export function initSemaphoreRoutes(
         }
 
         res.json(JSON.parse(historicGroup.serializedGroup));
-      } catch (e: any) {
+      } catch (e) {
         logger(e);
-        rollbarService?.error(e);
+        rollbarService?.reportError(e);
         res.sendStatus(500);
       }
     }
@@ -72,9 +72,9 @@ export function initSemaphoreRoutes(
       }
 
       res.json(matchingGroup.rootHash);
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });
@@ -93,9 +93,9 @@ export function initSemaphoreRoutes(
 
       res.setHeader("Access-Control-Allow-Origin", "*");
       res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
-      rollbarService?.error(e);
+      rollbarService?.reportError(e);
       res.sendStatus(500);
     }
   });

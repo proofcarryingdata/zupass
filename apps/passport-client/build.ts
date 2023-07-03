@@ -22,6 +22,13 @@ const define = {
         "process.env.ROLLBAR_TOKEN": JSON.stringify(process.env.ROLLBAR_TOKEN),
       }
     : {}),
+  ...(process.env.ROLLBAR_ENV_NAME !== undefined
+    ? {
+        "process.env.ROLLBAR_ENV_NAME": JSON.stringify(
+          process.env.ROLLBAR_ENV_NAME
+        ),
+      }
+    : {}),
 };
 
 const passportAppOpts: BuildOptions = {

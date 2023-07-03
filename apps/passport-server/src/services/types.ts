@@ -1,6 +1,5 @@
 import { Application } from "express";
 import * as http from "http";
-import Rollbar from "rollbar";
 import { ApplicationContext } from "../types";
 
 export interface Metric {
@@ -17,5 +16,3 @@ export enum PretixSyncStatus {
   Synced = "Synced",
   NoPretix = "NoPretix",
 }
-
-export type RollbarService = Rollbar | null;

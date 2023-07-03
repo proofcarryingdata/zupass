@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { EncryptedStorageModel } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../sqlQuery";
  * Returns the encrypted data stored with a given key.
  */
 export async function fetchEncryptedStorage(
-  dbPool: Pool | ClientBase,
+  dbPool: Pool,
   blobKey: string
 ): Promise<EncryptedStorageModel | undefined> {
   const results = await sqlQuery(
@@ -26,7 +26,7 @@ export async function fetchEncryptedStorage(
  * Replaces the encrypted data stored at a particular sync key.
  */
 export async function insertEncryptedStorage(
-  dbPool: Pool | ClientBase,
+  dbPool: Pool,
   blobKey: string,
   encryptedBlob: string
 ): Promise<void> {

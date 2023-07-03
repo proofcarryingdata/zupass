@@ -3,20 +3,20 @@ import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
-import { RollbarService } from "./types";
 
 /**
  * Responsible for sending emails to users.
  */
 export class EmailService {
   private context: ApplicationContext;
-  private rollbarService: RollbarService;
+  private rollbarService: RollbarService | null;
   private emailAPI: IEmailAPI | null;
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService,
+    rollbarService: RollbarService | null,
     emailClient: IEmailAPI | null
   ) {
     this.context = context;
@@ -96,9 +96,9 @@ export class EmailService {
           throw new Error("[EMAIL] no email client");
         }
         await this.emailAPI.send(msg);
-      } catch (e: any) {
+      } catch (e) {
         logger(e);
-        this.rollbarService?.error(e);
+        this.rollbarService?.reportError(e);
         throw new Error(`Email send error, failed to email ${to}`);
       }
     });
@@ -121,9 +121,9 @@ export class EmailService {
         }
 
         this.emailAPI.send(msg);
-      } catch (e: any) {
+      } catch (e) {
         logger(e);
-        this.rollbarService?.error(e);
+        this.rollbarService?.reportError(e);
         throw new Error(`Email send error, failed to email ${to}`);
       }
     });
@@ -132,7 +132,7 @@ export class EmailService {
 
 export function startEmailService(
   context: ApplicationContext,
-  rollbarService: RollbarService,
+  rollbarService: RollbarService | null,
   emailClient: IEmailAPI | null
 ): EmailService {
   const emailService = new EmailService(context, rollbarService, emailClient);

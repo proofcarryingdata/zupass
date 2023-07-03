@@ -22,8 +22,8 @@ export function initPCDPassRoutes(
       const commitment = decodeString(req.query.commitment, "commitment");
       const force = decodeString(req.query.force, "force") === "true";
       await userService.handleSendPcdPassEmail(email, commitment, force, res);
-    } catch (e: any) {
-      rollbarService?.error(e);
+    } catch (e) {
+      rollbarService?.reportError(e);
       logger(e);
       res.sendStatus(500);
     }
@@ -36,8 +36,8 @@ export function initPCDPassRoutes(
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
       await userService.handleNewPcdPassUser(token, email, commitment, res);
-    } catch (e: any) {
-      rollbarService?.error(e);
+    } catch (e) {
+      rollbarService?.reportError(e);
       logger(e);
       res.sendStatus(500);
     }
@@ -48,8 +48,8 @@ export function initPCDPassRoutes(
     try {
       const uuid = req.params.uuid;
       await userService.handleGetPcdPassUser(uuid, res);
-    } catch (e: any) {
-      rollbarService?.error(e);
+    } catch (e) {
+      rollbarService?.reportError(e);
       logger(e);
       res.sendStatus(500);
     }

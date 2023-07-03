@@ -1,4 +1,4 @@
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { CommitmentRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -8,7 +8,7 @@ import { sqlQuery } from "../sqlQuery";
  * users.
  */
 export async function fetchCommitment(
-  client: ClientBase | Pool,
+  client: Pool,
   email: string
 ): Promise<CommitmentRow | null> {
   const result = await sqlQuery(
@@ -26,7 +26,7 @@ export async function fetchCommitment(
  * logged in and have not been kicked out in any way.
  */
 export async function fetchAllCommitments(
-  client: Pool | ClientBase
+  client: Pool
 ): Promise<CommitmentRow[]> {
   const result = await sqlQuery(client, `select * from commitments`);
   return result.rows;
@@ -38,7 +38,7 @@ export async function fetchAllCommitments(
  * this also logs them out.
  */
 export async function removeCommitment(
-  client: ClientBase | Pool,
+  client: Pool,
   email: string
 ): Promise<void> {
   await sqlQuery(client, "delete from commitments where email = $1", [email]);

@@ -55,9 +55,7 @@ export async function startServer(
         }
       );
 
-      if (globalServices.rollbarService) {
-        app.use(globalServices.rollbarService.errorHandler);
-      }
+      globalServices.rollbarService?.initExpressMiddleware(app);
 
       app.use((_req, res, _next) => {
         res.status(404).send("Not a valid API route, refer to documentation.");
