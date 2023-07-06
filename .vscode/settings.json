@@ -8,5 +8,6 @@
     "*.env.example": "properties",
     "*.env.local.example": "properties"
   },
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
