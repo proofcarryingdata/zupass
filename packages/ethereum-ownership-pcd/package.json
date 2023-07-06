@@ -23,7 +23,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
-    "dev": "tsup --platform=browser src/index.ts --watch",
+    "dev": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build"

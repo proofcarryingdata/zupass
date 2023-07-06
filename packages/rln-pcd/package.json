@@ -24,7 +24,9 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --exit test/**/*.spec.ts",
     "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
-    "dev": "tsup --platform=browser src/index.ts --watch",
+    "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
+    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
+    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build"
   },
@@ -43,6 +45,7 @@
     "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
+    "concurrently": "^8.2.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
