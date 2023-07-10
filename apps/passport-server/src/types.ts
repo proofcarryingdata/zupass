@@ -6,6 +6,7 @@ import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
+import { MetricsService } from "./services/metricsService";
 import { PretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -30,6 +31,7 @@ export interface GlobalServices {
   rollbarService: RollbarService | null;
   provingService: ProvingService;
   pretixSyncService: PretixSyncService | null;
+  metricsService: MetricsService;
 }
 
 export interface PCDPass {
