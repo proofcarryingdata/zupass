@@ -88,10 +88,10 @@ export class MetricsService {
 /**
  * Responsible for collecting uploading metrics.
  */
-export async function startMetricsService(
+export function startMetricsService(
   context: ApplicationContext,
   rollbarService: RollbarService | null
-): Promise<MetricsService> {
+): MetricsService {
   logger("[INIT] Starting metrics");
   const metricsService = new MetricsService(context, rollbarService);
   metricsService.start();

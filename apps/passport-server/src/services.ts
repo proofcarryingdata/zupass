@@ -38,7 +38,7 @@ export async function startServices(
     rollbarService
   );
   const e2eeService = startE2EEService(context, rollbarService);
-  const metricsService = await startMetricsService(context, rollbarService);
+  const metricsService = startMetricsService(context, rollbarService);
   const services: GlobalServices = {
     semaphoreService,
     userService,
