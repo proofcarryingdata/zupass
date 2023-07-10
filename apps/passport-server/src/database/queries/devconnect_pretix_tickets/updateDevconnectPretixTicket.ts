@@ -12,7 +12,7 @@ export async function updateDevconnectPretixTicket(
   const result = await sqlQuery(
     client,
     `\
-update devconnect_pretix_ticket
+update devconnect_pretix_tickets
 set ticket_name=$2, event_id=$3, name=$4
 where email=$1;`,
     [params.email, params.ticket_name, params.event_id, params.name]

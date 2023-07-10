@@ -200,13 +200,25 @@ export class DevconnectPretixSyncService {
       const tickets: DevconnectPretixTicket[] = [];
       for (const organizer of this.pretixAPI.config.organizers) {
         for (const eventID of organizer.eventIDs) {
+          const items = await this.pretixAPI.fetchItems(
+            organizer.orgUrl,
+            organizer.token,
+            eventID
+          );
+          const itemNameByItemIDMap = new Map(
+            items.map((item) => [item.id, item.name.en])
+          );
           const pretixOrders = await this.pretixAPI.fetchOrders(
             organizer.orgUrl,
             organizer.token,
             eventID
           );
           tickets.push(
-            ...this.ordersToDevconnectTickets(pretixOrders, eventID, "test")
+            ...this.ordersToDevconnectTickets(
+              pretixOrders,
+              eventID,
+              itemNameByItemIDMap
+            )
           );
         }
       }
@@ -225,7 +237,7 @@ export class DevconnectPretixSyncService {
   private ordersToDevconnectTickets(
     orders: PretixOrder[],
     eventID: string,
-    ticketName: string
+    itemNameByItemIDMap: Map<number, string>
   ): DevconnectPretixTicket[] {
     const tickets: DevconnectPretixTicket[] = orders
       // check that they paid
@@ -238,7 +250,7 @@ export class DevconnectPretixSyncService {
       .filter((o) => !!(o.email || o.positions[0].attendee_email))
       .map((o) => {
         return {
-          ticket_name: ticketName,
+          ticket_name: itemNameByItemIDMap.get(o.positions[0].item) ?? "",
           email: (o.email || o.positions[0].attendee_email).toLowerCase(),
           name: o.positions[0].attendee_name,
           order_id: o.code,

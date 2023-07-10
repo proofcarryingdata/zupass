@@ -10,6 +10,11 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixOrder[]>;
+  fetchItems(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixItem[]>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
@@ -17,6 +22,34 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 
   public constructor(config: DevconnectPretixConfig) {
     this.config = config;
+  }
+
+  public async fetchItems(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixItem[]> {
+    return traced(TRACE_SERVICE, "fetchItems", async () => {
+      const items: DevconnectPretixItem[] = [];
+
+      // Fetch orders from paginated API
+      let url = `${orgUrl}/events/${eventID}/items/`;
+      while (url != null) {
+        logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+        const res = await fetch(url, {
+          headers: { Authorization: `Token ${token}` },
+        });
+        if (!res.ok) {
+          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
+          break;
+        }
+        const page = await res.json();
+        items.push(...page.results);
+        url = page.next;
+      }
+
+      return items;
+    });
   }
 
   // Fetch all orders for a given event.
@@ -86,6 +119,13 @@ export interface DevconnectPretixOrder {
   secret: string;
   email: string;
   positions: DevconnectPretixPosition[]; // should have exactly one
+}
+
+export interface DevconnectPretixItem {
+  id: number; // corresponds to "item" field in DevconnectPretixPosition
+  name: {
+    en: string; // English name of item
+  };
 }
 
 // Unclear why this is called a "position" rather than a ticket.
