@@ -2,8 +2,10 @@ import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
+import { IDevconnectPretixAPI } from "./apis/devconnectPretixAPI";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
+import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { PretixSyncService } from "./services/pretixSyncService";
@@ -30,6 +32,7 @@ export interface GlobalServices {
   rollbarService: RollbarService | null;
   provingService: ProvingService;
   pretixSyncService: PretixSyncService | null;
+  devconnectPretixSyncService: DevconnectPretixSyncService | null;
 }
 
 export interface PCDPass {
@@ -42,6 +45,7 @@ export interface PCDPass {
 export interface APIs {
   emailAPI: IEmailAPI | null;
   pretixAPI: IPretixAPI | null;
+  devconnectPretixAPI: IDevconnectPretixAPI | null;
 }
 
 export interface EnvironmentVariables {

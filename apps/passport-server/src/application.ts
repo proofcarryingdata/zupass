@@ -1,4 +1,8 @@
 import * as path from "path";
+import {
+  DevconnectPretixAPI,
+  getDevconnectPretixAPI,
+} from "./apis/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
@@ -76,8 +80,18 @@ async function getOverridenApis(
     }
   }
 
+  let devconnectPretixAPI: DevconnectPretixAPI | null = null;
+
+  if (apiOverrides?.devconnectPretixAPI) {
+    logger("[INIT] overriding devconnect pretix api");
+    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  } else {
+    devconnectPretixAPI = getDevconnectPretixAPI();
+  }
+
   return {
     emailAPI,
     pretixAPI,
+    devconnectPretixAPI,
   };
 }

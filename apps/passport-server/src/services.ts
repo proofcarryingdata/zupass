@@ -1,3 +1,4 @@
+import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
@@ -31,6 +32,12 @@ export async function startServices(
     semaphoreService,
     apis.pretixAPI
   );
+  const devconnectPretixSyncService = startDevconnectPretixSyncService(
+    context,
+    rollbarService,
+    semaphoreService,
+    apis.devconnectPretixAPI
+  );
   const userService = startUserService(
     context,
     semaphoreService,
@@ -48,6 +55,7 @@ export async function startServices(
     rollbarService,
     provingService,
     pretixSyncService,
+    devconnectPretixSyncService,
   };
 
   return services;
