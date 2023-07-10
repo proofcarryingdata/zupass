@@ -49,7 +49,7 @@ export class MetricsService {
       logger("[METRICS] collecting metrics");
       const metrics = await this.collectMetrics();
       logger("[METRICS] collected metrics", metrics);
-      this.reportMetrics(metrics);
+      await this.reportMetrics(metrics);
     } catch (e) {
       logger("[METRICS] error", e);
       this.rollbarService?.reportError(e);
