@@ -81,9 +81,7 @@ export class MetricsService {
         logger("[METRICS] reporting metrics");
       }
 
-      for (const entry of Object.entries(metrics)) {
-        const metricName = entry[0];
-        const metricValue = entry[1];
+      for (const [metricName, metricValue] of Object.entries(metrics)) {
         span.setAttribute(metricName, metricValue);
       }
     });
