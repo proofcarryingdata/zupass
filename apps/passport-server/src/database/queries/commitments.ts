@@ -43,3 +43,14 @@ export async function removeCommitment(
 ): Promise<void> {
   await sqlQuery(client, "delete from commitments where email = $1", [email]);
 }
+
+/**
+ * Fetches the amount of commitments saved in the database.
+ */
+export async function fetchCommitmentsCount(client: Pool): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    "select count(*) as count from commitments"
+  );
+  return result.rows[0].count;
+}

@@ -1,3 +1,4 @@
+import { fetchCommitmentsCount } from "../database/queries/commitments";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -36,8 +37,9 @@ export class MetricsService {
   }
 
   private async collectAndReportMetrics(): Promise<void> {
+    logger("[METRICS] collecting metrics");
     const metrics = await this.collectMetrics();
-
+    logger("[METRICS] collected metrics", metrics);
     this.reportMetrics(metrics).catch((e) => {
       logger("[METRICS] error reporting metrics");
     });
@@ -45,7 +47,7 @@ export class MetricsService {
 
   private async collectMetrics(): Promise<Metrics> {
     const metrics: Metrics = {
-      commitmentsCount: 0,
+      commitmentsCount: await fetchCommitmentsCount(this.context.dbPool),
     };
     return metrics;
   }
@@ -53,8 +55,12 @@ export class MetricsService {
   private async reportMetrics(metrics: Metrics): Promise<void> {
     traced("Metrics", "reportMetrics", async (span) => {
       if (!span) {
+        logger("[METRICS] couldn't report metrics - missing honeycomb client");
         return;
+      } else {
+        logger("[METRICS] reporting metrics");
       }
+
       for (const entry of Object.entries(metrics)) {
         const metricName = entry[0];
         const metricValue = entry[1];
