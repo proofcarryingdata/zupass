@@ -340,6 +340,82 @@ describe("zupass functionality", function () {
   );
 
   step(
+    "an error fetching orders via the PretixAPI should stop the sync from completing",
+    async () => {
+      const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
+        throwOnFetchOrders: true,
+      });
+      const pretixSyncService = application.services.pretixSyncService;
+
+      if (!pretixSyncService) {
+        throw new Error("expected there to be a pretix sync service running");
+      }
+
+      pretixSyncService.stop();
+      pretixSyncService.replaceApi(newAPI);
+      const successfulSync = await pretixSyncService.trySync();
+
+      expect(successfulSync).to.eq(false);
+    }
+  );
+
+  step(
+    "after a failed sync, the set of users should remain unchanged",
+    async () => {
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment,
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [],
+      });
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
+    }
+  );
+
+  step(
+    "an error fetching subevents via the PretixAPI should stop the sync from completing",
+    async () => {
+      const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
+        throwOnFetchSubevents: true,
+      });
+      const pretixSyncService = application.services.pretixSyncService;
+
+      if (!pretixSyncService) {
+        throw new Error("expected there to be a pretix sync service running");
+      }
+
+      pretixSyncService.stop();
+      pretixSyncService.replaceApi(newAPI);
+      const successfulSync = await pretixSyncService.trySync();
+
+      expect(successfulSync).to.eq(false);
+    }
+  );
+
+  step(
+    "after a failed sync, the set of users should remain unchanged",
+    async () => {
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment,
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [],
+      });
+      await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
+    }
+  );
+
+  step(
     "replace api and sync should cause all users to be replaced",
     async function () {
       const oldTicketHolders =
