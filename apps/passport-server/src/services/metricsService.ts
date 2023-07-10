@@ -1,5 +1,9 @@
 import { fetchCommitmentsCount } from "../database/queries/commitments";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
+import {
+  fetchAllZuzaluUsersCount,
+  fetchLoggedInZuzaluUserCount,
+} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -8,6 +12,8 @@ import { traced } from "./telemetryService";
 interface Metrics {
   commitmentsCount: number;
   e2eeCount: number;
+  zuzaluUsersCount: number;
+  loggedInZuzaluUsersCount: number;
 }
 
 export class MetricsService {
@@ -39,18 +45,25 @@ export class MetricsService {
   }
 
   private async collectAndReportMetrics(): Promise<void> {
-    logger("[METRICS] collecting metrics");
-    const metrics = await this.collectMetrics();
-    logger("[METRICS] collected metrics", metrics);
-    this.reportMetrics(metrics).catch((e) => {
-      logger("[METRICS] error reporting metrics");
-    });
+    try {
+      logger("[METRICS] collecting metrics");
+      const metrics = await this.collectMetrics();
+      logger("[METRICS] collected metrics", metrics);
+      this.reportMetrics(metrics);
+    } catch (e) {
+      logger("[METRICS] error", e);
+      this.rollbarService?.reportError(e);
+    }
   }
 
   private async collectMetrics(): Promise<Metrics> {
     const metrics: Metrics = {
       commitmentsCount: await fetchCommitmentsCount(this.context.dbPool),
       e2eeCount: await fetchE2EEStorageCount(this.context.dbPool),
+      zuzaluUsersCount: await fetchAllZuzaluUsersCount(this.context.dbPool),
+      loggedInZuzaluUsersCount: await fetchLoggedInZuzaluUserCount(
+        this.context.dbPool
+      ),
     };
     return metrics;
   }
