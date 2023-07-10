@@ -52,5 +52,5 @@ export async function fetchCommitmentsCount(client: Pool): Promise<number> {
     client,
     "select count(*) as count from commitments"
   );
-  return result.rows[0].count;
+  return parseInt(result.rows[0].count, 10);
 }

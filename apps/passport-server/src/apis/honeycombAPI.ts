@@ -11,7 +11,7 @@ export function getHoneycombAPI(): Libhoney | null {
 
     const api = new Libhoney({
       writeKey: honeycombApiKey,
-      dataset: "server-metrics",
+      dataset: "server-telemetry",
     });
 
     logger("[INIT] Loaded a Honeycomb API");
