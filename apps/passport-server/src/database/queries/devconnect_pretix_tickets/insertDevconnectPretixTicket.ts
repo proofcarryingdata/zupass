@@ -3,7 +3,7 @@ import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Insert a zuzalu pretix ticket into the database, if they have not been
+ * Insert a Devconnect pretix ticket into the database, if they have not been
  * inserted yet. This does not insert an identity commitment for them.
  */
 export async function insertDevconnectPretixTicket(
