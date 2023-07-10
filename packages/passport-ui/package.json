@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",

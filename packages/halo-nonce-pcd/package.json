@@ -14,7 +14,7 @@
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build"
   },
   "dependencies": {

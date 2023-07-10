@@ -22,7 +22,7 @@
   },
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
     "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
     "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
