@@ -1,4 +1,5 @@
 import { fetchCommitmentsCount } from "../database/queries/commitments";
+import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -6,6 +7,7 @@ import { traced } from "./telemetryService";
 
 interface Metrics {
   commitmentsCount: number;
+  e2eeCount: number;
 }
 
 export class MetricsService {
@@ -48,6 +50,7 @@ export class MetricsService {
   private async collectMetrics(): Promise<Metrics> {
     const metrics: Metrics = {
       commitmentsCount: await fetchCommitmentsCount(this.context.dbPool),
+      e2eeCount: await fetchE2EEStorageCount(this.context.dbPool),
     };
     return metrics;
   }
