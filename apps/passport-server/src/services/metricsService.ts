@@ -1,7 +1,6 @@
 import { fetchCommitmentsCount } from "../database/queries/commitments";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import {
-  fetchAllZuzaluUsersCount,
   fetchLoggedInZuzaluUserCount,
   fetchSyncedZuzaluTicketCount,
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
@@ -13,7 +12,6 @@ import { traced } from "./telemetryService";
 interface Metrics {
   commitmentsCount: number;
   e2eeCount: number;
-  zuzaluUsersCount: number;
   loggedInZuzaluUsersCount: number;
   zuzaluTicketsCount: number;
 }
@@ -64,7 +62,6 @@ export class MetricsService {
     const metrics: Metrics = {
       commitmentsCount: await fetchCommitmentsCount(db),
       e2eeCount: await fetchE2EEStorageCount(db),
-      zuzaluUsersCount: await fetchAllZuzaluUsersCount(db),
       loggedInZuzaluUsersCount: await fetchLoggedInZuzaluUserCount(db),
       zuzaluTicketsCount: await fetchSyncedZuzaluTicketCount(db),
     };

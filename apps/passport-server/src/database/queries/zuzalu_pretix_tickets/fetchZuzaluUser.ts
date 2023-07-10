@@ -29,23 +29,6 @@ left join commitments c on c.email = p.email;`
 }
 
 /**
- * Fetch the amount of users that have a ticket on pretix, even if they haven't
- * logged into the passport app.
- */
-export async function fetchAllZuzaluUsersCount(client: Pool): Promise<number> {
-  const result = await sqlQuery(
-    client,
-    `\
-select
-    count(*) as count
-from zuzalu_pretix_tickets p
-left join commitments c on c.email = p.email;`
-  );
-
-  return parseInt(result.rows[0].count, 10);
-}
-
-/**
  * Fetch a particular user that has a ticket on pretix, even if they
  * haven't logged into the passport app. Includes their commitment,
  * if they have one.
@@ -128,8 +111,7 @@ export async function fetchLoggedInZuzaluUserCount(
     `\
 select count(*) as count
 from zuzalu_pretix_tickets p
-join commitments c on c.email=p.email
-left join email_tokens e on c.email=e.email;`
+join commitments c on c.email=p.email`
   );
   return parseInt(result.rows[0].count, 10);
 }
