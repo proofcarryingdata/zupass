@@ -1,8 +1,11 @@
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
+import { traced } from "./telemetryService";
 
-interface Metrics {}
+interface Metrics {
+  commitmentsCount: number;
+}
 
 export class MetricsService {
   private static readonly COLLECTION_INTERVAL_MS = 1000 * 60;
@@ -41,11 +44,24 @@ export class MetricsService {
   }
 
   private async collectMetrics(): Promise<Metrics> {
-    const metrics: Metrics = {};
+    const metrics: Metrics = {
+      commitmentsCount: 0,
+    };
     return metrics;
   }
 
-  private async reportMetrics(metrics: Metrics): Promise<void> {}
+  private async reportMetrics(metrics: Metrics): Promise<void> {
+    traced("Metrics", "reportMetrics", async (span) => {
+      if (!span) {
+        return;
+      }
+      for (const entry of Object.entries(metrics)) {
+        const metricName = entry[0];
+        const metricValue = entry[1];
+        span.setAttribute(metricName, metricValue);
+      }
+    });
+  }
 }
 
 /**
