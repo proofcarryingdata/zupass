@@ -3,6 +3,7 @@ import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import {
   fetchAllZuzaluUsersCount,
   fetchLoggedInZuzaluUserCount,
+  fetchSyncedZuzaluTicketCount,
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -14,6 +15,7 @@ interface Metrics {
   e2eeCount: number;
   zuzaluUsersCount: number;
   loggedInZuzaluUsersCount: number;
+  zuzaluTicketsCount: number;
 }
 
 export class MetricsService {
@@ -57,14 +59,16 @@ export class MetricsService {
   }
 
   private async collectMetrics(): Promise<Metrics> {
+    const db = this.context.dbPool;
+
     const metrics: Metrics = {
-      commitmentsCount: await fetchCommitmentsCount(this.context.dbPool),
-      e2eeCount: await fetchE2EEStorageCount(this.context.dbPool),
-      zuzaluUsersCount: await fetchAllZuzaluUsersCount(this.context.dbPool),
-      loggedInZuzaluUsersCount: await fetchLoggedInZuzaluUserCount(
-        this.context.dbPool
-      ),
+      commitmentsCount: await fetchCommitmentsCount(db),
+      e2eeCount: await fetchE2EEStorageCount(db),
+      zuzaluUsersCount: await fetchAllZuzaluUsersCount(db),
+      loggedInZuzaluUsersCount: await fetchLoggedInZuzaluUserCount(db),
+      zuzaluTicketsCount: await fetchSyncedZuzaluTicketCount(db),
     };
+
     return metrics;
   }
 
