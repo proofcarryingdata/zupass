@@ -1,4 +1,5 @@
 import chai from "chai";
+import { IDevconnectPretixAPI } from "../../src/apis/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import { IPretixAPI } from "../../src/apis/pretixAPI";
 import { APIs } from "../../src/types";
@@ -7,6 +8,7 @@ import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let emailAPI: IEmailAPI | null;
   let pretixAPI: IPretixAPI | null;
+  let devconnectPretixAPI: IDevconnectPretixAPI | null;
 
   if (apiOverrides?.emailAPI) {
     emailAPI = apiOverrides.emailAPI;
@@ -28,8 +30,16 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     pretixAPI = newMockZuzaluPretixAPI();
   }
 
+  if (apiOverrides?.devconnectPretixAPI) {
+    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  } else {
+    // TODO: Add devconnect mock
+    devconnectPretixAPI = null;
+  }
+
   return {
     emailAPI,
     pretixAPI,
+    devconnectPretixAPI,
   };
 }
