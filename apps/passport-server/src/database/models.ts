@@ -19,6 +19,14 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
   uuid: string | null;
 }
 
+export interface DevconnectPretixTicket {
+  email: string;
+  name: string;
+  ticket_name: string;
+  order_id: string;
+  event_id: string;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that has logged in to the passport.
  */
