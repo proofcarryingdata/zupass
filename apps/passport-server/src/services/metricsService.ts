@@ -86,7 +86,7 @@ export class MetricsService {
 }
 
 /**
- * Responsible for uploading metrics. Currently unused.
+ * Responsible for collecting uploading metrics.
  */
 export async function startMetricsService(
   context: ApplicationContext,
