@@ -1,4 +1,4 @@
-import { User } from "@pcd/passport-interface";
+import { IssuedPCDsResponse, User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -105,6 +105,9 @@ describe.only("pcd-pass functionality", function () {
     "user should be able to be issued some PCDs from the server",
     async function () {
       const response = await requestIssuedPCDs(application, identity);
+      const responseBody = response.body as IssuedPCDsResponse;
+
+      expect(Array.isArray(responseBody.pcds)).to.eq(true);
       logger(response.body);
     }
   );
