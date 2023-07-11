@@ -8,6 +8,7 @@ import { fetchCommitmentByPublicCommitment } from "../database/queries/commitmen
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { normalizeEmail } from "../util/util";
+
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly rsaPrivateKey: NodeRSA;
