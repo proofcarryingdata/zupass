@@ -199,9 +199,9 @@ export class DevconnectPretixSyncService {
 
       const tickets: DevconnectPretixTicket[] = [];
       for (const organizer of this.pretixAPI.config.organizers) {
-        for (const eventID of organizer.eventIDs) {
+        for (const eventID of organizer.event_ids) {
           const items = await this.pretixAPI.fetchItems(
-            organizer.orgUrl,
+            organizer.organizer_url,
             organizer.token,
             eventID
           );
@@ -209,7 +209,7 @@ export class DevconnectPretixSyncService {
             items.map((item) => [item.id, item.name.en])
           );
           const pretixOrders = await this.pretixAPI.fetchOrders(
-            organizer.orgUrl,
+            organizer.organizer_url,
             organizer.token,
             eventID
           );

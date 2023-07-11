@@ -86,7 +86,7 @@ async function getOverridenApis(
     logger("[INIT] overriding devconnect pretix api");
     devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
   } else {
-    devconnectPretixAPI = getDevconnectPretixAPI();
+    devconnectPretixAPI = await getDevconnectPretixAPI(context.dbPool);
   }
 
   return {

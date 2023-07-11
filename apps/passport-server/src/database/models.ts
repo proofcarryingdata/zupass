@@ -59,3 +59,9 @@ export interface HistoricSemaphoreGroup {
   serializedGroup: string;
   timeCreated: string;
 }
+
+export interface PretixOrganizer {
+  organizer_url: string;
+  event_ids: string[];
+  token: string;
+}

@@ -1,3 +1,6 @@
+import { Pool } from "pg";
+import { PretixOrganizer } from "../database/models";
+import { fetchAllPretixOrganizers } from "../database/queries/pretix_organizers/fetchPretixOrganizers";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -82,26 +85,28 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   }
 }
 
-export function getDevconnectPretixConfig(): DevconnectPretixConfig | null {
+export async function getDevconnectPretixConfig(
+  dbClient: Pool
+): Promise<DevconnectPretixConfig | null> {
   // Make sure we can use the Pretix API.
   let pretixConfig: DevconnectPretixConfig;
   try {
+    const organizers = await fetchAllPretixOrganizers(dbClient);
     pretixConfig = {
-      // TODO: update
-      organizers: [],
+      organizers,
     };
     logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
   } catch (e) {
-    logger(
-      `[INIT] missing environment variable ${e} required by pretix configuration`
-    );
+    logger(`[INIT] error while querying pretix organizer configuration: ${e}`);
     return null;
   }
 }
 
-export function getDevconnectPretixAPI(): IDevconnectPretixAPI | null {
-  const config = getDevconnectPretixConfig();
+export async function getDevconnectPretixAPI(
+  dbClient: Pool
+): Promise<IDevconnectPretixAPI | null> {
+  const config = await getDevconnectPretixConfig(dbClient);
 
   if (config === null) {
     return null;
@@ -140,12 +145,6 @@ export interface DevconnectPretixPosition {
   subevent: number;
 }
 
-interface DevconnectPretixOrganizer {
-  orgUrl: string;
-  eventIDs: string[];
-  token: string;
-}
-
 export interface DevconnectPretixConfig {
-  organizers: DevconnectPretixOrganizer[];
+  organizers: PretixOrganizer[];
 }
