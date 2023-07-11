@@ -7,7 +7,7 @@ import chai from "chai";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
 
-export async function issuanceServiceEnabled(
+export async function requestIssuanceServiceEnabled(
   application: PCDPass
 ): Promise<boolean> {
   const response = await chai

@@ -9,7 +9,7 @@ import { LoggedInZuzaluUser, ZuzaluUserRole } from "../src/database/models";
 import { PretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { issuanceServiceEnabled } from "./issuance/issuance";
+import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import {
   getMockPretixAPI,
   newMockZuzaluPretixAPI,
@@ -79,7 +79,7 @@ describe("zupass functionality", function () {
   });
 
   step("should NOT have issuance service running", async function () {
-    const status = await issuanceServiceEnabled(application);
+    const status = await requestIssuanceServiceEnabled(application);
     expect(status).to.eq(false);
   });
 

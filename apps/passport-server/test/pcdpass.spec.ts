@@ -14,7 +14,7 @@ import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
-  issuanceServiceEnabled,
+  requestIssuanceServiceEnabled,
   requestIssuedPCDs,
   requestServerPublicKey,
 } from "./issuance/issuance";
@@ -49,7 +49,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should have issuance service running", async function () {
-    const status = await issuanceServiceEnabled(application);
+    const status = await requestIssuanceServiceEnabled(application);
     expect(status).to.eq(true);
   });
 
