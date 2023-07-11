@@ -4,6 +4,14 @@ import "mocha";
 import NodeRSA from "node-rsa";
 import { RSAPCD, RSAPCDPackage } from "../src";
 
+async function copyPcd(pcd: RSAPCD): Promise<RSAPCD> {
+  return await RSAPCDPackage.deserialize(
+    await (
+      await RSAPCDPackage.serialize(pcd)
+    ).pcd
+  );
+}
+
 describe("RSA signature PCD should work", function () {
   this.timeout(1000 * 30);
 
@@ -23,6 +31,8 @@ describe("RSA signature PCD should work", function () {
         value: message,
       },
     });
+
+    expect(await copyPcd(pcd)).to.deep.eq(pcd);
   });
 
   it("should be able to prove and verify with valid arguments", async function () {
@@ -36,5 +46,22 @@ describe("RSA signature PCD should work", function () {
     const deserializedValid = await RSAPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(pcd).to.deep.eq(deserialized);
+  });
+
+  it("should not verify a PCD that has been tampered with", async function () {
+    const tamperedMessage = await copyPcd(pcd);
+    tamperedMessage.claim.message += "a";
+    expect(await RSAPCDPackage.verify(tamperedMessage)).to.eq(false);
+
+    const tamperedSignature = await copyPcd(pcd);
+    tamperedSignature.proof.signature = "a" + tamperedSignature.proof.signature;
+    expect(await RSAPCDPackage.verify(tamperedSignature)).to.eq(false);
+
+    const tamperedPubKey = await copyPcd(pcd);
+    const lines = tamperedPubKey.proof.publicKey.split("\n");
+    lines[1] = lines[1].substring(4);
+    lines[1] += "asdf";
+    tamperedPubKey.proof.publicKey = lines.join("\n");
+    expect(await RSAPCDPackage.verify(tamperedPubKey)).to.eq(false);
   });
 });

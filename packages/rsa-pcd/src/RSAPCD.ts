@@ -63,7 +63,7 @@ export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
 
   const key = new NodeRSA(args.privateKey.value);
   const publicKey = key.exportKey("public");
-  const signature = "0x" + key.sign(args.signedMessage.value).toString("hex");
+  const signature = key.sign(args.signedMessage.value, "hex");
 
   return new RSAPCD(
     uuid(),
@@ -73,10 +73,18 @@ export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
 }
 
 export async function verify(pcd: RSAPCD): Promise<boolean> {
-  const publicKey = new NodeRSA(pcd.proof.publicKey, "public");
-  const signatureBuffer = Buffer.from(pcd.proof.signature.substring(2), "hex");
-  const valid = publicKey.verify(pcd.claim.message, signatureBuffer);
-  return valid;
+  try {
+    const publicKey = new NodeRSA(pcd.proof.publicKey, "public");
+    const valid = publicKey.verify(
+      Buffer.from(pcd.claim.message),
+      pcd.proof.signature,
+      "utf8",
+      "hex"
+    );
+    return valid;
+  } catch (e) {
+    return false;
+  }
 }
 
 export async function serialize(pcd: RSAPCD): Promise<SerializedPCD<RSAPCD>> {
