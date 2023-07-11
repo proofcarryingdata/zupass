@@ -3,6 +3,7 @@ import { IDevconnectPretixAPI } from "../../src/apis/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import { IPretixAPI } from "../../src/apis/pretixAPI";
 import { APIs } from "../../src/types";
+import { newMockDevconnectPretixAPI } from "../pretix/mockDevconnectPretixApi";
 import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
 export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
@@ -33,8 +34,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   if (apiOverrides?.devconnectPretixAPI) {
     devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
   } else {
-    // TODO: Add devconnect mock
-    devconnectPretixAPI = null;
+    devconnectPretixAPI = newMockDevconnectPretixAPI();
   }
 
   return {
