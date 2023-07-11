@@ -3,10 +3,10 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
+import { v4 as uuid } from "uuid";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly rsaPrivateKey: NodeRSA;
@@ -85,6 +85,10 @@ export class IssuanceService {
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         value: email,
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: uuid(),
       },
     });
 

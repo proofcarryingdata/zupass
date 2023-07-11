@@ -15,6 +15,7 @@ export const RSAPCDTypeName = "rsa-pcd";
 export interface RSAPCDArgs {
   privateKey: StringArgument;
   signedMessage: StringArgument;
+  id: StringArgument;
 }
 
 export interface RSAPCDClaim {
@@ -61,12 +62,13 @@ export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
     throw new Error("missing message to sign");
   }
 
+  const id = typeof args.id.value === "string" ? args.id.value : uuid();
   const key = new NodeRSA(args.privateKey.value);
   const publicKey = key.exportKey("public");
   const signature = key.sign(args.signedMessage.value, "hex");
 
   return new RSAPCD(
-    uuid(),
+    id,
     { message: args.signedMessage.value },
     { publicKey, signature }
   );

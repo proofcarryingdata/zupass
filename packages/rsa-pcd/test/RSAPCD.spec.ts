@@ -2,6 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
+import { v4 as uuid } from "uuid";
 import { RSAPCD, RSAPCDPackage } from "../src";
 
 async function copyPcd(pcd: RSAPCD): Promise<RSAPCD> {
@@ -30,9 +31,35 @@ describe("RSA signature PCD should work", function () {
         argumentType: ArgumentTypeName.String,
         value: message,
       },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: undefined,
+      },
     });
 
     expect(await copyPcd(pcd)).to.deep.eq(pcd);
+    expect(pcd.id).to.not.eq(undefined);
+  });
+
+  it("should be possible to set a custom id", async function () {
+    const customId = "asdf-" + uuid();
+
+    pcd = await RSAPCDPackage.prove({
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: exportedKey,
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: message,
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: customId,
+      },
+    });
+
+    expect(pcd.id).to.eq(customId);
   });
 
   it("should be able to prove and verify with valid arguments", async function () {
