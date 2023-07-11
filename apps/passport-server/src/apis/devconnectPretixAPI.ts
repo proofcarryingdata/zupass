@@ -7,7 +7,7 @@ import { logger } from "../util/logger";
 const TRACE_SERVICE = "Fetch";
 
 export interface IDevconnectPretixAPI {
-  config: DevconnectPretixConfig | DevconnectPretixConfig;
+  config: DevconnectPretixConfig;
   fetchOrders(
     orgUrl: string,
     token: string,
