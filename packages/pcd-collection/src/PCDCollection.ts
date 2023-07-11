@@ -71,7 +71,7 @@ export class PCDCollection {
     const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
     const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
 
-    for (const [id, pcd] of Object.entries(toAddMap)) {
+    for (const [id, pcd] of toAddMap.entries()) {
       if (currentMap.has(id) && !options?.upsert) {
         throw new Error(`pcd with id ${id} is already in this collection`);
       }
