@@ -1,3 +1,4 @@
+import NodeRSA from "node-rsa";
 import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
@@ -19,6 +20,9 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
   SUPPRESS_LOGGING: "true",
+  SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
+    new NodeRSA({ b: 2048 }).exportKey("private")
+  ).toString("base64"),
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
