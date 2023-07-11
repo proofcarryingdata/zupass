@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { IDevconnectPretixAPI } from "../apis/devconnectPretixAPI";
 import { PretixOrder } from "../apis/pretixAPI";
 import { DevconnectPretixTicket } from "../database/models";
-import { deleteDevconnectUser } from "../database/queries/devconnect_pretix_tickets/deleteDevconnectPretixTicket";
+import { deleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/deleteDevconnectPretixTicket";
 import { fetchAllDevconnectPretixTickets } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
@@ -175,7 +175,7 @@ export class DevconnectPretixSyncService {
       logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} users`);
       for (const removedTicket of removedTickets) {
         logger(`[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`);
-        await deleteDevconnectUser(dbClient, removedTicket.email);
+        await deleteDevconnectPretixTicket(dbClient, removedTicket.email);
       }
 
       span?.setAttribute("ticketsInserted", newTickets.length);

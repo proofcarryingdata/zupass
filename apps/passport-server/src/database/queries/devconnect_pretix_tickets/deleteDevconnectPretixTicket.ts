@@ -5,7 +5,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Delete a particular user that has a ticket in pretix, and also their
  * identity commitment, if they have logged into the passport.
  */
-export async function deleteDevconnectUser(
+export async function deleteDevconnectPretixTicket(
   client: Pool,
   email: string
 ): Promise<void> {
