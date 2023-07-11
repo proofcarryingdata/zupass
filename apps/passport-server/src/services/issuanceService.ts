@@ -10,14 +10,18 @@ import { logger } from "../util/logger";
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly rsaPrivateKey: NodeRSA;
+  private readonly exportedPrivateKey: string;
+  private readonly exportedPublicKey: string;
 
   public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
+    this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
+    this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
   }
 
   public getPublicKey(): string {
-    return this.rsaPrivateKey.exportKey("public");
+    return this.exportedPublicKey;
   }
 
   public async handleRequest(
@@ -76,7 +80,7 @@ export class IssuanceService {
     const ownershipPCD = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: this.rsaPrivateKey.exportKey("private"),
+        value: this.exportedPrivateKey,
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
