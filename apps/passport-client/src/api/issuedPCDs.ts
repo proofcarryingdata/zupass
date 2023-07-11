@@ -1,6 +1,11 @@
 import { IssuedPCDsRequest, IssuedPCDsResponse } from "@pcd/passport-interface";
 import { appConfig } from "../appConfig";
 
+/**
+ * Given the information the server knows about the user, it is able to
+ * 'issue' some pcds to the user. This function requests the set of PCDs
+ * that the server wants to 'issue' to the user.
+ */
 export async function requestIssuedPCDs(
   request: IssuedPCDsRequest
 ): Promise<IssuedPCDsResponse | undefined> {
