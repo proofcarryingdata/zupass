@@ -33,7 +33,7 @@ export interface GlobalServices {
   provingService: ProvingService;
   pretixSyncService: PretixSyncService | null;
   metricsService: MetricsService;
-  issuanceService: IssuanceService;
+  issuanceService: IssuanceService | null;
 }
 
 export interface PCDPass {

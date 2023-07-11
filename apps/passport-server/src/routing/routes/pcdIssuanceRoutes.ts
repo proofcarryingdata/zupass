@@ -12,6 +12,10 @@ export function initPCDIssuanceRoutes(
 
   app.post("/issue/", async (req: Request, res: Response) => {
     try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+
       const request = req.body as IssuedPCDsRequest;
       const response = await issuanceService.handleRequest(request);
       res.status(200).json(response);
