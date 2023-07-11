@@ -33,6 +33,10 @@ export class PCDCollection {
     return serialized;
   }
 
+  public async serializeAll(): Promise<SerializedPCD[]> {
+    return Promise.all(this.pcds.map(this.serialize.bind(this)));
+  }
+
   public async deserialize(serialized: SerializedPCD): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
     if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
@@ -61,10 +65,6 @@ export class PCDCollection {
     options?: { upsert?: boolean }
   ): Promise<void> {
     await this.deserializeAllAndAdd([serialized], options);
-  }
-
-  public async serializeAll(): Promise<SerializedPCD[]> {
-    return Promise.all(this.pcds.map(this.serialize.bind(this)));
   }
 
   public add(pcd: PCD, options?: { upsert?: boolean }) {

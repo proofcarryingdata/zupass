@@ -53,7 +53,14 @@ describe("PCDCollection", async function () {
       serializedPCDs
     );
 
+    expect(collection.size()).to.eq(3);
     expect(collection.getAll()).to.deep.eq(pcdList);
+    expect(collection.getAllIds()).to.deep.eq(pcdList.map(({ id }) => id));
+    expect(collection.getById(pcdList[0].id)).to.deep.eq(pcdList[0]);
+    expect(collection.getPCDsByType(RSAPCDPackage.name)).to.deep.eq(pcdList);
+    pcdList.forEach(({ id }) =>
+      expect(collection.hasPCDWithId(id)).to.eq(true)
+    );
   });
 
   it("Should error if you try to add a PCD with the same id", async function () {
@@ -112,5 +119,22 @@ describe("PCDCollection", async function () {
     const deserialized = await collection.deserialize(serialized);
 
     expect(pcd).to.deep.eq(deserialized);
+  });
+
+  it("should let you remove a pcd", async function () {
+    const pcdList = await Promise.all([newPCD(), newPCD(), newPCD()]);
+
+    const serializedPCDs = await Promise.all(
+      pcdList.map(RSAPCDPackage.serialize)
+    );
+
+    const collection = await PCDCollection.deserialize(
+      packages,
+      serializedPCDs
+    );
+
+    collection.remove(pcdList[0].id);
+
+    expect(collection.getAll()).to.deep.eq([pcdList[1], pcdList[2]]);
   });
 });
