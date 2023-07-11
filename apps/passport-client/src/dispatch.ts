@@ -60,6 +60,7 @@ export type Action =
       encryptionKey: string;
     }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
+  | { type: "loaded-issued-pcds"; pcds: SerializedPCD[] }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
@@ -93,6 +94,13 @@ export async function dispatch(
       return update({
         modal: action.modal,
       });
+    case "loaded-issued-pcds":
+      return Promise.all([
+        addPCDs(state, update, action.pcds, true),
+        update({
+          loadedIssuedPCDs: true,
+        }),
+      ]);
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
