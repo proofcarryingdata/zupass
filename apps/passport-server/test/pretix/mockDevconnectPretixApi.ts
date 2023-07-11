@@ -24,7 +24,7 @@ export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
 export function getDevconnectMockPretixAPI(
   mockData: IMockDevconnectPretixData
 ): IDevconnectPretixAPI {
-  logger("[MOCK] instantiating mock zuzalu pretix api");
+  logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
     config: {
