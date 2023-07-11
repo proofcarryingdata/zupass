@@ -86,7 +86,6 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <LoadingIssuedPCDs />
           {pcds.map((pcd) => {
             return (
               <div id={pcd.id} key={pcd.id}>
@@ -102,6 +101,7 @@ export function HomeScreen() {
               </div>
             );
           })}
+          <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
