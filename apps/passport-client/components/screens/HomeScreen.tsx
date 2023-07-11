@@ -6,6 +6,7 @@ import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
+import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
 import { PCDCard } from "../shared/PCDCard";
 
 /**
@@ -85,6 +86,7 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
+          <LoadingIssuedPCDs />
           {pcds.map((pcd) => {
             return (
               <div id={pcd.id} key={pcd.id}>
