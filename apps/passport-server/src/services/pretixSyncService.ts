@@ -63,21 +63,30 @@ export class PretixSyncService {
 
   public startSyncLoop(): void {
     const trySync = async (): Promise<void> => {
-      await this.trySync();
+      const success = await this.trySync();
+
+      if (success) {
+        logger(`[PRETIX] success`);
+      } else {
+        logger(`[PRETIX] failed to sync`);
+      }
+
       this.timeout = setTimeout(() => trySync(), 1000 * 60);
     };
 
     trySync();
   }
 
-  public async trySync(): Promise<void> {
+  public async trySync(): Promise<boolean> {
     try {
       await this.sync();
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
+      return true;
     } catch (e) {
       this.rollbarService?.reportError(e);
       logger(e);
+      return false;
     }
   }
 

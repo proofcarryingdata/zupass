@@ -30,8 +30,9 @@ export class PretixAPI implements IPretixAPI {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-          break;
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
         }
         const page = await res.json();
         orders.push(...page.results);
@@ -55,8 +56,9 @@ export class PretixAPI implements IPretixAPI {
           headers: { Authorization: `Token ${this.config.token}` },
         });
         if (!res.ok) {
-          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-          break;
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
         }
         const page = await res.json();
         orders.push(...page.results);

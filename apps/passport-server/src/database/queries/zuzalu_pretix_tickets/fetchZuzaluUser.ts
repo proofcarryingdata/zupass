@@ -101,3 +101,30 @@ left join email_tokens e on c.email=e.email;`
   );
   return result.rows;
 }
+
+/** Fetch a Zuzalu user who already has Passport installed. */
+export async function fetchLoggedInZuzaluUserCount(
+  client: Pool
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `\
+select count(*) as count
+from zuzalu_pretix_tickets p
+join commitments c on c.email=p.email`
+  );
+  return parseInt(result.rows[0].count, 10);
+}
+
+/**
+ * Fetch amount of tickets synced from Pretix.
+ */
+export async function fetchSyncedZuzaluTicketCount(
+  client: Pool
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `select count(*) as count from zuzalu_pretix_tickets`
+  );
+  return parseInt(result.rows[0].count, 10);
+}

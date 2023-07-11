@@ -37,3 +37,11 @@ export async function insertEncryptedStorage(
     [blobKey, encryptedBlob]
   );
 }
+
+/**
+ * Fetches the amount of end to end encrypted storage saved in this database.
+ */
+export async function fetchE2EEStorageCount(dbPool: Pool): Promise<number> {
+  const result = await sqlQuery(dbPool, `select count(*) as count from e2ee`);
+  return parseInt(result.rows[0].count, 10);
+}

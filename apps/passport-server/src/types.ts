@@ -8,6 +8,7 @@ import { IPretixAPI } from "./apis/pretixAPI";
 import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
+import { MetricsService } from "./services/metricsService";
 import { PretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -33,6 +34,7 @@ export interface GlobalServices {
   provingService: ProvingService;
   pretixSyncService: PretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
+  metricsService: MetricsService;
 }
 
 export interface PCDPass {

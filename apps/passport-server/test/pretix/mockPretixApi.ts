@@ -23,13 +23,22 @@ export function newMockZuzaluPretixAPI(): IPretixAPI | null {
   return getMockPretixAPI(mockData);
 }
 
-export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
+export function getMockPretixAPI(
+  mockData: IMockPretixData,
+  options?: {
+    throwOnFetchOrders?: boolean;
+    throwOnFetchSubevents?: boolean;
+  }
+): IPretixAPI {
   logger("[MOCK] instantiating mock zuzalu pretix api");
 
   return {
     config: mockData.config,
     fetchOrders: async (eventID: string): Promise<PretixOrder[]> => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
+      if (options?.throwOnFetchOrders) {
+        throw new Error(`[MOCK] throwing for 'fetchOrders'`);
+      }
       logger(
         `[MOCK] fetchOrders('${eventID}') =>`,
         JSON.stringify(result, null, 2)
@@ -38,6 +47,9 @@ export function getMockPretixAPI(mockData: IMockPretixData): IPretixAPI {
     },
     fetchSubevents: async (parentId: string): Promise<PretixSubevent[]> => {
       const result = mockData.subEventsByParentEventId.get(parentId) ?? [];
+      if (options?.throwOnFetchSubevents) {
+        throw new Error(`[MOCK] throwing for 'fetchSubevents'`);
+      }
       logger(
         `[MOCK] fetchSubevents('${parentId}') =>`,
         JSON.stringify(result, null, 2)
