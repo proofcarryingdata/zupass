@@ -15,6 +15,7 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -94,6 +95,11 @@ class App extends React.Component<object, ZuState> {
   };
 
   jobRequestIssuedPCDs = async () => {
+    if (appConfig.isZuzalu) {
+      console.log("[JOB] not getting issued PCDs");
+      return;
+    }
+
     console.log("[JOB] getting issued PCDs");
 
     try {
