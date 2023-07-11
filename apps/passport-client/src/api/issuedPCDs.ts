@@ -5,7 +5,7 @@ export async function requestIssuedPCDs(
   request: IssuedPCDsRequest
 ): Promise<IssuedPCDsResponse | undefined> {
   try {
-    const url = `${appConfig.passportServer}/pcds/prove`;
+    const url = `${appConfig.passportServer}/issue`;
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify(request),

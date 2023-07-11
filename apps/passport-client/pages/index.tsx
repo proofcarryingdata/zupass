@@ -75,21 +75,34 @@ class App extends React.Component<object, ZuState> {
   startBackgroundJobs = () => {
     console.log("Starting background jobs...");
     this.jobPollUser();
+    this.jobRequestIssuedPCDs();
   };
 
-  // Poll for user updates
   jobPollUser = async () => {
     console.log("[JOB] polling user");
-    if (this.state?.self) {
-      await pollUser(this.state.self, this.dispatch);
+
+    try {
+      if (this.state?.self) {
+        await pollUser(this.state.self, this.dispatch);
+      }
+    } catch (e) {
+      console.log("[JOB] failed poll user");
+      console.log(e);
     }
+
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
   };
 
   jobRequestIssuedPCDs = async () => {
     console.log("[JOB] getting issued PCDs");
-    if (this.state?.self) {
-      await getIssuedPCDs(this.state, this.dispatch);
+
+    try {
+      if (this.state?.self) {
+        await getIssuedPCDs(this.state, this.dispatch);
+      }
+    } catch (e) {
+      console.log("[JOB] failed to get issued PCDs");
+      console.log(e);
     }
   };
 }
