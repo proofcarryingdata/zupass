@@ -59,7 +59,7 @@ export type Action =
       storage: EncryptedStorage;
       encryptionKey: string;
     }
-  | { type: "add-pcd"; pcd: SerializedPCD }
+  | { type: "add-pcds"; pcds: SerializedPCD[] }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
@@ -93,8 +93,8 @@ export async function dispatch(
       return update({
         modal: action.modal,
       });
-    case "add-pcd":
-      return addPCD(state, update, action.pcd);
+    case "add-pcds":
+      return addPCDs(state, update, action.pcds);
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
@@ -225,18 +225,14 @@ function resetPassport() {
   window.location.reload();
 }
 
-async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
-  if (state.pcds.hasPackage(pcd.type)) {
-    const newPCD = await state.pcds.deserialize(pcd);
-    if (state.pcds.hasPCDWithId(newPCD.id)) {
-      throw new Error("This PCD has already been added to your passport");
-    }
-    await state.pcds.deserializeAndAdd(pcd);
-    await savePCDs(state.pcds);
-    update({ pcds: state.pcds });
-  } else {
-    throw new Error(`Can't add PCD: missing package ${pcd.type}`);
-  }
+async function addPCDs(
+  state: ZuState,
+  update: ZuUpdate,
+  pcds: SerializedPCD[]
+) {
+  await state.pcds.deserializeAllAndAdd(pcds);
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
 }
 
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {

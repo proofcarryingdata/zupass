@@ -76,7 +76,7 @@ export function AddHaloScreen({
   const onAddClick = useCallback(async () => {
     try {
       const serializedPCD = await HaLoNoncePCDPackage.serialize(pcd);
-      await dispatch({ type: "add-pcd", pcd: serializedPCD });
+      await dispatch({ type: "add-pcds", pcds: [serializedPCD] });
       setAdded(true);
     } catch (e) {
       await err(dispatch, "Error Adding PCD", e.message);
