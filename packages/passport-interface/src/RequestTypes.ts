@@ -93,10 +93,8 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
  */
 export interface IssuedPCDsRequest {
   /**
-   * A semaphore signature by the user who is requesting the data.
-   * TODO: importantly, come up with some sort of protocol by which
-   * arbitrary semaphore signatures can't be used to impersonate a
-   * given user.
+   * A semaphore signature by the user who is requesting the data. The
+   * signature is only accepted if it is of the string {@link ISSUANCE_STRING}.
    */
   userProof: SerializedPCD<SemaphoreSignaturePCD>;
 }
