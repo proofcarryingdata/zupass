@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rsa-pcd",
-  "version": "0.5.3",
+  "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",

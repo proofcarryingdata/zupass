@@ -15,6 +15,8 @@ export class IssuanceService {
       pcds: [],
     };
   }
+
+  private issueEmailOwnershipPCD(): Promise<void> {}
 }
 
 export function startIssuanceService(
