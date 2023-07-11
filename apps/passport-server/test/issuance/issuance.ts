@@ -7,6 +7,25 @@ import chai from "chai";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
 
+export async function requestServerPublicKey(
+  application: PCDPass
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const { expressContext } = application;
+    chai
+      .request(expressContext.app)
+      .get("/issue/public-key")
+      .send()
+      .then(async (r) => {
+        try {
+          resolve(r);
+        } catch (e) {
+          reject(e);
+        }
+      });
+  });
+}
+
 export async function requestIssuedPCDs(
   application: PCDPass,
   identity: Identity

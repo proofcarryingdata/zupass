@@ -4,11 +4,12 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import NodeRSA from "node-rsa";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { requestIssuedPCDs } from "./issuance/issuance";
+import { requestIssuedPCDs, requestServerPublicKey } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
@@ -100,6 +101,18 @@ describe.only("pcd-pass functionality", function () {
   step("user should be able to sync end to end encryption", async function () {
     await testUserSync(application);
   });
+
+  step(
+    "anyone should be able to request the server's public key",
+    async function () {
+      const publicKeyResponse = await requestServerPublicKey(application);
+      expect(publicKeyResponse.status).to.eq(200);
+      const publicKey = new NodeRSA(publicKeyResponse.text, "public");
+      expect(publicKey.getKeySize()).to.eq(2048);
+      expect(publicKey.isPublic(true)).to.eq(true);
+      expect(publicKey.isPrivate()).to.eq(false); // just to be safe
+    }
+  );
 
   step(
     "user should be able to be issued some PCDs from the server",
