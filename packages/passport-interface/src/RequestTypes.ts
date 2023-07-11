@@ -1,5 +1,6 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { ArgsOf, PCDPackage } from "@pcd/pcd-types";
+import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 
 export interface ProveRequest<T extends PCDPackage = PCDPackage> {
@@ -79,13 +80,25 @@ export interface LoadE2EEResponse {
   encryptedStorage: EncryptedPacket;
 }
 
+export const ISSUANCE_STRING = "DO NOT SIGN THIS!";
+
 /**
  * The POST request body of the client's request to the server which
  * asks for the PCDs that have been issued to the given user.
  */
-export interface IssuedPCDsRequest {}
+export interface IssuedPCDsRequest {
+  /**
+   * A semaphore signature by the user who is requesting the data.
+   * TODO: importantly, come up with some sort of protocol by which
+   * arbitrary semaphore signatures can't be used to impersonate a
+   * given user.
+   */
+  userProof: SerializedPCD<SemaphoreSignaturePCD>;
+}
 
 /**
  * The response body that the server responds with to an {@link IssuedPCDsRequest}.
  */
-export interface IssuedPCDsResponse {}
+export interface IssuedPCDsResponse {
+  pcds: SerializedPCD[];
+}
