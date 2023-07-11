@@ -1,10 +1,4 @@
-import {
-  FieldLabel,
-  HiddenText,
-  Separator,
-  Spacer,
-  TextContainer,
-} from "@pcd/passport-ui";
+import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { RSAPCD } from "./RSAPCD";
 
@@ -20,7 +14,7 @@ export function RSACardBody({ pcd }: { pcd: RSAPCD }) {
       <Spacer h={8} />
 
       <FieldLabel>RSA Public Key</FieldLabel>
-      <TextContainer>{pcd.proof.publicKey}</TextContainer>
+      <HiddenText text={pcd.proof.publicKey} />
     </Container>
   );
 }
