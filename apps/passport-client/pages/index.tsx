@@ -26,7 +26,7 @@ import {
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
-import { pollUser } from "../src/user";
+import { getIssuedPCDs, pollUser } from "../src/user";
 
 class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
@@ -84,6 +84,13 @@ class App extends React.Component<object, ZuState> {
       await pollUser(this.state.self, this.dispatch);
     }
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
+  };
+
+  jobRequestIssuedPCDs = async () => {
+    console.log("[JOB] getting issued PCDs");
+    if (this.state?.self) {
+      await getIssuedPCDs(this.state.self, this.dispatch);
+    }
   };
 }
 
