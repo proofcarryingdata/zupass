@@ -1,4 +1,8 @@
-import { IssuedPCDsResponse, User } from "@pcd/passport-interface";
+import {
+  ISSUANCE_STRING,
+  IssuedPCDsResponse,
+  User,
+} from "@pcd/passport-interface";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -127,7 +131,11 @@ describe("pcd-pass functionality", function () {
   step(
     "user should be able to be issued some PCDs from the server",
     async function () {
-      const response = await requestIssuedPCDs(application, identity);
+      const response = await requestIssuedPCDs(
+        application,
+        identity,
+        ISSUANCE_STRING
+      );
       const responseBody = response.body as IssuedPCDsResponse;
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
@@ -157,9 +165,17 @@ describe("pcd-pass functionality", function () {
     }
   );
 
-  step("issued pcds should have stabled ids", async function () {
-    const expressResponse1 = await requestIssuedPCDs(application, identity);
-    const expressResponse2 = await requestIssuedPCDs(application, identity);
+  step("issued pcds should have stable ids", async function () {
+    const expressResponse1 = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const expressResponse2 = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
     const response1 = expressResponse1.body as IssuedPCDsResponse;
     const response2 = expressResponse2.body as IssuedPCDsResponse;
     const pcd1 = await RSAPCDPackage.deserialize(response1.pcds[0].pcd);
@@ -171,4 +187,17 @@ describe("pcd-pass functionality", function () {
     expect(response1.pcds.length).to.eq(1);
     expect(response2.pcds.length).to.eq(1);
   });
+
+  step(
+    "shouldn't be able to issue pcds for the incorrect 'issuance string'",
+    async function () {
+      const expressResponse = await requestIssuedPCDs(
+        application,
+        identity,
+        "asdf"
+      );
+      const response = expressResponse.body as IssuedPCDsResponse;
+      expect(response.pcds).to.deep.eq([]);
+    }
+  );
 });

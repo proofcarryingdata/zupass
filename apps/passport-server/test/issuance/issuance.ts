@@ -39,7 +39,8 @@ export async function requestServerPublicKey(
 
 export async function requestIssuedPCDs(
   application: PCDPass,
-  identity: Identity
+  identity: Identity,
+  signedMessage: string
 ): Promise<Response> {
   const request: IssuedPCDsRequest = {
     userProof: await SemaphoreSignaturePCDPackage.serialize(
@@ -54,7 +55,7 @@ export async function requestIssuedPCDs(
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: "test string", // TODO: make this more secure
+          value: signedMessage,
         },
       })
     ),

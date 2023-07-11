@@ -1,5 +1,9 @@
 import { getHash } from "@pcd/passport-crypto";
-import { IssuedPCDsRequest, IssuedPCDsResponse } from "@pcd/passport-interface";
+import {
+  ISSUANCE_STRING,
+  IssuedPCDsRequest,
+  IssuedPCDsResponse,
+} from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -53,6 +57,13 @@ export class IssuanceService {
       );
       return null;
     }
+
+    if (deserializedSignature.claim.signedMessage !== ISSUANCE_STRING) {
+      // TODO: implement a challenge-response protocol? How secure is this?
+      logger(`can't issue PCDs, wrong message signed by user`);
+      return null;
+    }
+
     const requestingFor = deserializedSignature.claim.identityCommitment;
     const storedCommitment = await fetchCommitmentByPublicCommitment(
       this.context.dbPool,

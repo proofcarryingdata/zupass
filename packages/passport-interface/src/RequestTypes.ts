@@ -80,7 +80,12 @@ export interface LoadE2EEResponse {
   encryptedStorage: EncryptedPacket;
 }
 
-export const ISSUANCE_STRING = "DO NOT SIGN THIS!";
+/**
+ * The string the client must sign with the user's semaphore identity
+ * in order to be able to request the PCDs that the server wants to
+ * issue the user.
+ */
+export const ISSUANCE_STRING = "Issue me PCDs please.";
 
 /**
  * The POST request body of the client's request to the server which

@@ -1,6 +1,7 @@
 import {
   DateRange,
   FullDateRange,
+  ISSUANCE_STRING,
   IssuedPCDsRequest,
   User,
   ZuzaluUserRole,
@@ -27,7 +28,7 @@ export async function getIssuedPCDs(state: ZuState, dispatch: Dispatcher) {
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: "test message", // TODO: more secure version of this
+          value: ISSUANCE_STRING,
         },
       })
     ),
