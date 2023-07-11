@@ -27,7 +27,7 @@ export async function getIssuedPCDs(state: ZuState, dispatch: Dispatcher) {
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: "test message",
+          value: "test message", // TODO: more secure version of this
         },
       })
     ),
