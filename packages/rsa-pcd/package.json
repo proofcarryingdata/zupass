@@ -5,7 +5,6 @@
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "files": [
-    "./artifacts/*",
     "./src/*",
     "./dist/*",
     "./README.md"
