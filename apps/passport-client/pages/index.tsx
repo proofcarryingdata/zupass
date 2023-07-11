@@ -89,7 +89,7 @@ class App extends React.Component<object, ZuState> {
   jobRequestIssuedPCDs = async () => {
     console.log("[JOB] getting issued PCDs");
     if (this.state?.self) {
-      await getIssuedPCDs(this.state.self, this.dispatch);
+      await getIssuedPCDs(this.state, this.dispatch);
     }
   };
 }
