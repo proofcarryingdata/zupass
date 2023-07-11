@@ -29,6 +29,7 @@ describe.only("pcd-pass functionality", function () {
   let user: User;
   let identity: Identity;
   let emailAPI: IEmailAPI;
+  let publicKey: NodeRSA;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -107,7 +108,7 @@ describe.only("pcd-pass functionality", function () {
     async function () {
       const publicKeyResponse = await requestServerPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
-      const publicKey = new NodeRSA(publicKeyResponse.text, "public");
+      publicKey = new NodeRSA(publicKeyResponse.text, "public");
       expect(publicKey.getKeySize()).to.eq(2048);
       expect(publicKey.isPublic(true)).to.eq(true);
       expect(publicKey.isPrivate()).to.eq(false); // just to be safe
@@ -133,6 +134,17 @@ describe.only("pcd-pass functionality", function () {
 
       const verified = await RSAPCDPackage.verify(deserializedEmailPCD);
       expect(verified).to.eq(true);
+
+      const pcdPublicKey = new NodeRSA(
+        deserializedEmailPCD.proof.publicKey,
+        "public"
+      );
+      expect(pcdPublicKey.isPublic(true)).to.eq(true);
+      expect(pcdPublicKey.isPrivate()).to.eq(false);
+
+      expect(pcdPublicKey.exportKey("public")).to.eq(
+        publicKey.exportKey("public")
+      );
     }
   );
 });
