@@ -9,6 +9,7 @@ import { LoggedInZuzaluUser, ZuzaluUserRole } from "../src/database/models";
 import { PretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { issuanceServiceEnabled } from "./issuance/issuance";
 import {
   getMockPretixAPI,
   newMockZuzaluPretixAPI,
@@ -75,6 +76,11 @@ describe("zupass functionality", function () {
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
     application.services.pretixSyncService?.stop();
+  });
+
+  step("should NOT have issuance service running", async function () {
+    const status = await issuanceServiceEnabled(application);
+    expect(status).to.eq(false);
   });
 
   step(

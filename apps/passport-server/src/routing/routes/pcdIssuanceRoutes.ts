@@ -10,6 +10,10 @@ export function initPCDIssuanceRoutes(
 ): void {
   logger("[INIT] initializing PCD issuance routes");
 
+  app.get("/issue/enabled", async (req: Request, res: Response) => {
+    res.json(issuanceService != null);
+  });
+
   app.get("/issue/public-key", async (req: Request, res: Response) => {
     try {
       if (!issuanceService) {

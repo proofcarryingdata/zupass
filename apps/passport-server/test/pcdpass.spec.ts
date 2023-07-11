@@ -9,7 +9,11 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { requestIssuedPCDs, requestServerPublicKey } from "./issuance/issuance";
+import {
+  issuanceServiceEnabled,
+  requestIssuedPCDs,
+  requestServerPublicKey,
+} from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
@@ -38,6 +42,11 @@ describe("pcd-pass functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+  });
+
+  step("should have issuance service running", async function () {
+    const status = await issuanceServiceEnabled(application);
+    expect(status).to.eq(true);
   });
 
   step("should not have a pretix service running", async function () {

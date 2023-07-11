@@ -7,6 +7,17 @@ import chai from "chai";
 import { Response } from "superagent";
 import { PCDPass } from "../../src/types";
 
+export async function issuanceServiceEnabled(
+  application: PCDPass
+): Promise<boolean> {
+  const response = await chai
+    .request(application.expressContext.app)
+    .get("/issue/enabled")
+    .send();
+
+  return response.text === "true";
+}
+
 export async function requestServerPublicKey(
   application: PCDPass
 ): Promise<Response> {

@@ -91,6 +91,11 @@ export class IssuanceService {
 export function startIssuanceService(
   context: ApplicationContext
 ): IssuanceService | null {
+  if (context.isZuzalu) {
+    logger("[INIT] not starting issuance service for zuzalu");
+    return null;
+  }
+
   const pkey = loadPrivateKey();
 
   if (pkey == null) {
