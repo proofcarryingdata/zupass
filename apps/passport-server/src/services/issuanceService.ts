@@ -90,6 +90,7 @@ export function startIssuanceService(
   const pkey = loadPrivateKey();
 
   if (pkey == null) {
+    logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
 
@@ -101,11 +102,15 @@ function loadPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
   if (pkeyEnv == null) {
+    logger("[INIT] missing environment variable SERVER_RSA_PRIVATE_KEY_BASE64");
     return null;
   }
 
   try {
-    const key = new NodeRSA(pkeyEnv, "private");
+    const key = new NodeRSA(
+      Buffer.from(pkeyEnv, "base64").toString("utf-8"),
+      "private"
+    );
     return key;
   } catch (e) {
     logger("failed to parse RSA private key", e);

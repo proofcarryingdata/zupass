@@ -7,6 +7,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { logger } from "../src/util/logger";
 import { requestIssuedPCDs } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
@@ -103,8 +104,8 @@ describe.only("pcd-pass functionality", function () {
   step(
     "user should be able to be issued some PCDs from the server",
     async function () {
-      const response = requestIssuedPCDs(application, identity);
-      console.log((await response).body);
+      const response = await requestIssuedPCDs(application, identity);
+      logger(response.body);
     }
   );
 });
