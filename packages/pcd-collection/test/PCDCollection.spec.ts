@@ -95,4 +95,22 @@ describe("PCDCollection", async function () {
       pcdList[2],
     ]);
   });
+
+  it("should let you find package by name", async function () {
+    const collection = new PCDCollection(packages);
+    expect(collection.getPackage(RSAPCDPackage.name)).to.eq(RSAPCDPackage);
+    expect(collection.getPackage(RSAPCDPackage.name + "asdf")).to.eq(undefined);
+    expect(collection.hasPackage(RSAPCDPackage.name)).to.eq(true);
+    expect(collection.hasPackage(RSAPCDPackage.name + "asdf")).to.eq(false);
+  });
+
+  it("should let you serialize/deserialize a pcd", async function () {
+    const collection = new PCDCollection(packages);
+    const pcd = await newPCD();
+
+    const serialized = await collection.serialize(pcd);
+    const deserialized = await collection.deserialize(serialized);
+
+    expect(pcd).to.deep.eq(deserialized);
+  });
 });

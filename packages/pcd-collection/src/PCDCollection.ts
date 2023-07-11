@@ -10,9 +10,9 @@ export class PCDCollection {
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
 
-  public constructor(packages: PCDPackage[], pcds: PCD[]) {
+  public constructor(packages: PCDPackage[], pcds?: PCD[]) {
     this.packages = packages;
-    this.pcds = pcds;
+    this.pcds = pcds ?? [];
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(
