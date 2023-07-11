@@ -1,4 +1,5 @@
 import { IssuedPCDsRequest, IssuedPCDsResponse } from "@pcd/passport-interface";
+import { RSAPCD } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import { ApplicationContext } from "../types";
@@ -48,10 +49,20 @@ export class IssuanceService {
       return null;
     }
 
-    const newPCD = RSAPCD;
+    return storedCommitment.email;
   }
 
-  private issueEmailOwnershipPCD(request): Promise<void> {}
+  private async issueEmailOwnershipPCD(
+    request: IssuedPCDsRequest
+  ): Promise<RSAPCD | null> {
+    const email = await this.getUserEmailFromRequest(request);
+
+    if (email == null) {
+      return null;
+    }
+
+    return null;
+  }
 }
 
 export function startIssuanceService(

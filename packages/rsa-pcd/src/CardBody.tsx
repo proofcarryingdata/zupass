@@ -11,19 +11,16 @@ import { RSAPCD } from "./RSAPCD";
 export function RSACardBody({ pcd }: { pcd: RSAPCD }) {
   return (
     <Container>
-      <p>
-        This PCD represents a particular message that has been signed by a
-        particular Semaphore Identity.
-      </p>
+      <p>This PCD represents an RSA signature of some text</p>
 
       <Separator />
 
-      <FieldLabel>Commitment</FieldLabel>
-      <HiddenText text={pcd.claim.publicKey} />
+      <FieldLabel>Signed Message</FieldLabel>
+      <HiddenText text={pcd.claim.message} />
       <Spacer h={8} />
 
-      <FieldLabel>Signed Message</FieldLabel>
-      <TextContainer>{pcd.claim.message}</TextContainer>
+      <FieldLabel>RSA Public Key</FieldLabel>
+      <TextContainer>{pcd.proof.publicKey}</TextContainer>
     </Container>
   );
 }
