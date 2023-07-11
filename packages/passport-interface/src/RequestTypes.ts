@@ -78,3 +78,14 @@ export interface LoadE2EEResponse {
    */
   encryptedStorage: EncryptedPacket;
 }
+
+/**
+ * The POST request body of the client's request to the server which
+ * asks for the PCDs that have been issued to the given user.
+ */
+export interface IssuedPCDsRequest {}
+
+/**
+ * The response body that the server responds with to an {@link IssuedPCDsRequest}.
+ */
+export interface IssuedPCDsResponse {}
