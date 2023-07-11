@@ -1,4 +1,5 @@
 import { User } from "@pcd/passport-interface";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -6,6 +7,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { requestIssuedPCDs } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
@@ -17,12 +19,13 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
-describe("pcd-pass functionality", function () {
+describe.only("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   const testEmail = randomEmail();
   let application: PCDPass;
   let user: User;
+  let identity: Identity;
   let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {
@@ -48,7 +51,9 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    user = await testLoginPCDPass(application, testEmail, false, false);
+    const result = await testLoginPCDPass(application, testEmail, false, false);
+    user = result.user;
+    identity = result.identity;
     expect(emailAPI.send).to.have.been.called.exactly(1);
   });
 
@@ -69,7 +74,9 @@ describe("pcd-pass functionality", function () {
       await expect(
         testLoginPCDPass(application, testEmail, false, true)
       ).to.be.rejectedWith("already registered");
-      user = await testLoginPCDPass(application, testEmail, true, true);
+      const result = await testLoginPCDPass(application, testEmail, true, true);
+      user = result.user;
+      identity = result.identity;
       expect(emailAPI.send).to.have.been.called.exactly(2);
     }
   );
@@ -92,4 +99,12 @@ describe("pcd-pass functionality", function () {
   step("user should be able to sync end to end encryption", async function () {
     await testUserSync(application);
   });
+
+  step(
+    "user should be able to be issued some PCDs from the server",
+    async function () {
+      const response = requestIssuedPCDs(application, identity);
+      console.log((await response).body);
+    }
+  );
 });
