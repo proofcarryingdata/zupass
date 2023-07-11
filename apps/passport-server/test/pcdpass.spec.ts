@@ -1,4 +1,5 @@
 import { IssuedPCDsResponse, User } from "@pcd/passport-interface";
+import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -7,7 +8,6 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
-import { logger } from "../src/util/logger";
 import { requestIssuedPCDs } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
@@ -108,7 +108,18 @@ describe.only("pcd-pass functionality", function () {
       const responseBody = response.body as IssuedPCDsResponse;
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      logger(response.body);
+      expect(responseBody.pcds.length).to.eq(1);
+
+      const emailPCD = responseBody.pcds[0];
+
+      expect(emailPCD.type).to.eq(RSAPCDPackage.name);
+
+      const deserializedEmailPCD = await RSAPCDPackage.deserialize(
+        emailPCD.pcd
+      );
+
+      const verified = await RSAPCDPackage.verify(deserializedEmailPCD);
+      expect(verified).to.eq(true);
     }
   );
 });
