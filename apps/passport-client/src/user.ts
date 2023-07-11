@@ -1,48 +1,11 @@
 import {
   DateRange,
   FullDateRange,
-  ISSUANCE_STRING,
-  IssuedPCDsRequest,
   User,
   ZuzaluUserRole,
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { requestUser } from "./api/user";
 import { Dispatcher } from "./dispatch";
-import { ZuState } from "./state";
-
-export async function getIssuedPCDs(state: ZuState, dispatch: Dispatcher) {
-  const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: state.identity,
-            })
-          ),
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING,
-        },
-      })
-    ),
-  };
-
-  const issuedPcdsResponse = await requestIssuedPCDs(request);
-
-  if (!issuedPcdsResponse) {
-    console.log("[ISSUED PCDS] unable to get issued pcds");
-    return;
-  }
-
-  dispatch({ type: "loaded-issued-pcds", pcds: issuedPcdsResponse.pcds });
-}
 
 // Starts polling the user from the server, in the background.
 export async function pollUser(self: User, dispatch: Dispatcher) {

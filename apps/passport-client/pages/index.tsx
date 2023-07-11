@@ -15,7 +15,6 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
-import { appConfig } from "../src/appConfig";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -27,7 +26,7 @@ import {
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { ZuState } from "../src/state";
-import { getIssuedPCDs, pollUser } from "../src/user";
+import { pollUser } from "../src/user";
 
 class App extends React.Component<object, ZuState> {
   state = undefined as ZuState | undefined;
@@ -76,7 +75,6 @@ class App extends React.Component<object, ZuState> {
   startBackgroundJobs = () => {
     console.log("Starting background jobs...");
     this.jobPollUser();
-    this.jobRequestIssuedPCDs();
   };
 
   jobPollUser = async () => {
@@ -92,24 +90,6 @@ class App extends React.Component<object, ZuState> {
     }
 
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
-  };
-
-  jobRequestIssuedPCDs = async () => {
-    if (appConfig.isZuzalu) {
-      console.log("[JOB] not getting issued PCDs");
-      return;
-    }
-
-    console.log("[JOB] getting issued PCDs");
-
-    try {
-      if (this.state?.self) {
-        await getIssuedPCDs(this.state, this.dispatch);
-      }
-    } catch (e) {
-      console.log("[JOB] failed to get issued PCDs");
-      console.log(e);
-    }
   };
 }
 

@@ -31,6 +31,7 @@ export interface ZuState {
   downloadedPCDs?: boolean;
   downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
+  loadingIssuedPCDs?: boolean;
 }
 
 export interface ZuError {

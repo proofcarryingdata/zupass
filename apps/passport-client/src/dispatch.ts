@@ -10,6 +10,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { submitNewUser } from "./api/user";
+import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
@@ -21,7 +22,11 @@ import {
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
 import { sanitizeDateRanges } from "./user";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import {
+  downloadStorage,
+  loadIssuedPCDs,
+  uploadStorage,
+} from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -60,7 +65,6 @@ export type Action =
       encryptionKey: string;
     }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
-  | { type: "loaded-issued-pcds"; pcds: SerializedPCD[] }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
@@ -94,13 +98,6 @@ export async function dispatch(
       return update({
         modal: action.modal,
       });
-    case "loaded-issued-pcds":
-      return Promise.all([
-        addPCDs(state, update, action.pcds, true),
-        update({
-          loadedIssuedPCDs: true,
-        }),
-      ]);
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
@@ -346,6 +343,32 @@ async function sync(state: ZuState, update: ZuUpdate) {
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
+    return;
+  }
+
+  if (
+    !appConfig.isZuzalu &&
+    !state.loadedIssuedPCDs &&
+    !state.loadingIssuedPCDs
+  ) {
+    update({
+      loadingIssuedPCDs: true,
+    });
+    const pcds = await loadIssuedPCDs(state);
+    await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
+    update({
+      loadingIssuedPCDs: false,
+      loadedIssuedPCDs: true,
+      pcds: state.pcds,
+    });
+    return;
+  }
+
+  if (
+    !appConfig.isZuzalu &&
+    !state.loadedIssuedPCDs &&
+    state.loadingIssuedPCDs
+  ) {
     return;
   }
 
