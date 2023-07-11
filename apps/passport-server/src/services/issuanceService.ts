@@ -11,7 +11,9 @@ export class IssuanceService {
   public async handleRequest(
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
-    return {};
+    return {
+      pcds: [],
+    };
   }
 }
 
