@@ -156,4 +156,19 @@ describe("pcd-pass functionality", function () {
       );
     }
   );
+
+  step("issued pcds should have stabled ids", async function () {
+    const expressResponse1 = await requestIssuedPCDs(application, identity);
+    const expressResponse2 = await requestIssuedPCDs(application, identity);
+    const response1 = expressResponse1.body as IssuedPCDsResponse;
+    const response2 = expressResponse2.body as IssuedPCDsResponse;
+    const pcd1 = await RSAPCDPackage.deserialize(response1.pcds[0].pcd);
+    const pcd2 = await RSAPCDPackage.deserialize(response2.pcds[0].pcd);
+    expect(pcd1.id).to.eq(pcd2.id);
+    expect(pcd1.id).to.not.eq(undefined);
+    expect(pcd2.id).to.not.eq(undefined);
+    // in case we start issuing more pcds, this test should be updated
+    expect(response1.pcds.length).to.eq(1);
+    expect(response2.pcds.length).to.eq(1);
+  });
 });
