@@ -6,6 +6,8 @@ import {
   StringArgument,
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
+import NodeRSA from "node-rsa";
+import { v4 as uuid } from "uuid";
 import { RSACardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-pcd";
@@ -50,9 +52,32 @@ export class RSAPCD implements PCD<RSAPCDClaim, RSAPCDProof> {
   }
 }
 
-export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {}
+export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
+  if (args.privateKey.value == null) {
+    throw new Error("missing private key value");
+  }
 
-export async function verify(pcd: RSAPCD): Promise<boolean> {}
+  if (args.signedMessage.value == null) {
+    throw new Error("missing message to sign");
+  }
+
+  const key = new NodeRSA(args.privateKey.value);
+  const publicKey = key.exportKey("public");
+  const signature = "0x" + key.sign(args.signedMessage.value).toString("hex");
+
+  return new RSAPCD(
+    uuid(),
+    { message: args.signedMessage.value },
+    { publicKey, signature }
+  );
+}
+
+export async function verify(pcd: RSAPCD): Promise<boolean> {
+  const publicKey = new NodeRSA(pcd.proof.publicKey, "public");
+  const signatureBuffer = Buffer.from(pcd.proof.signature.substring(2), "hex");
+  const valid = publicKey.verify(pcd.claim.message, signatureBuffer);
+  return valid;
+}
 
 export async function serialize(pcd: RSAPCD): Promise<SerializedPCD<RSAPCD>> {
   return {

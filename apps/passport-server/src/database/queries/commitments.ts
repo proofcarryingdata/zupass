@@ -54,3 +54,23 @@ export async function fetchCommitmentsCount(client: Pool): Promise<number> {
   );
   return parseInt(result.rows[0].count, 10);
 }
+
+export async function fetchCommitmentByPublicCommitment(
+  client: Pool,
+  commitment: string
+): Promise<CommitmentRow | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+  select * from commitments
+  where commitment = $1;
+   `,
+    [commitment]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}
