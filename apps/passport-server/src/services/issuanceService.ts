@@ -16,6 +16,10 @@ export class IssuanceService {
     this.rsaPrivateKey = rsaPrivateKey;
   }
 
+  public getPublicKey(): string {
+    return this.rsaPrivateKey.exportKey("public");
+  }
+
   public async handleRequest(
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
