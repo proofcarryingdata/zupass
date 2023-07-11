@@ -67,6 +67,10 @@ export class PCDCollection {
     return Promise.all(this.pcds.map(this.serialize.bind(this)));
   }
 
+  public add(pcd: PCD, options?: { upsert?: boolean }) {
+    this.addAll([pcd], options);
+  }
+
   public addAll(pcds: PCD[], options?: { upsert?: boolean }) {
     const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
     const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
@@ -80,6 +84,10 @@ export class PCDCollection {
     }
 
     this.pcds = Array.from(currentMap.values());
+  }
+
+  public size(): number {
+    return this.pcds.length;
   }
 
   public getAll(): PCD[] {
