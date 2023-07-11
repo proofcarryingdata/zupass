@@ -40,7 +40,7 @@ export async function getIssuedPCDs(state: ZuState, dispatch: Dispatcher) {
     return;
   }
 
-  alert(`got issued PCDs ${issuedPcdsResponse.pcds.length}`);
+  dispatch({ type: "add-pcds", pcds: issuedPcdsResponse.pcds, upsert: true });
 }
 
 // Starts polling the user from the server, in the background.

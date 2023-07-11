@@ -59,7 +59,7 @@ export type Action =
       storage: EncryptedStorage;
       encryptionKey: string;
     }
-  | { type: "add-pcds"; pcds: SerializedPCD[] }
+  | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
@@ -94,7 +94,7 @@ export async function dispatch(
         modal: action.modal,
       });
     case "add-pcds":
-      return addPCDs(state, update, action.pcds);
+      return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
@@ -228,9 +228,10 @@ function resetPassport() {
 async function addPCDs(
   state: ZuState,
   update: ZuUpdate,
-  pcds: SerializedPCD[]
+  pcds: SerializedPCD[],
+  upsert?: boolean
 ) {
-  await state.pcds.deserializeAllAndAdd(pcds);
+  await state.pcds.deserializeAllAndAdd(pcds, { upsert });
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
 }
