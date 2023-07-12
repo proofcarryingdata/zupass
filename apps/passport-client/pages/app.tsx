@@ -2,16 +2,25 @@ import * as React from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
-import { API, APIContext, IServerAPI } from "../src/api/api";
+import { APIContext, IServerAPI } from "../src/api/api";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadInitialState } from "../src/loadInitialState";
 import { AppRouter } from "../src/router";
 import { ZuState } from "../src/state";
 import { pollUser } from "../src/user";
 
-export class App extends React.Component<unknown, ZuState> {
+export interface IAppProps {
+  api: IServerAPI;
+}
+
+export class App extends React.Component<IAppProps, ZuState> {
   public state = undefined as ZuState | undefined;
-  private api: IServerAPI = API;
+  private api: IServerAPI;
+
+  constructor(props: IAppProps) {
+    super(props);
+    this.api = props.api;
+  }
 
   public render() {
     const { state, dispatch: disp } = this;
