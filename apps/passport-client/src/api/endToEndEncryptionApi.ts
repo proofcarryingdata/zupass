@@ -6,7 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { appConfig } from "../appConfig";
 
-export async function downloadEncryptedStorage(
+export async function requestEncryptedStorage(
   blobKey: string
 ): Promise<EncryptedPacket | null> {
   const request: LoadE2EERequest = {
@@ -36,7 +36,7 @@ export async function downloadEncryptedStorage(
   return res.encryptedStorage as EncryptedPacket;
 }
 
-export async function uploadEncryptedStorage(
+export async function submitEncryptedStorage(
   blobKey: string,
   encryptedStorage: EncryptedPacket
 ): Promise<void> {

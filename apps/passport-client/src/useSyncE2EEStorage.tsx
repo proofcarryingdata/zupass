@@ -10,8 +10,8 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useMemo } from "react";
 import {
-  downloadEncryptedStorage,
-  uploadEncryptedStorage,
+  requestEncryptedStorage,
+  submitEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { DispatchContext } from "./dispatch";
@@ -41,7 +41,7 @@ export async function uploadStorage(): Promise<void> {
   );
 
   const blobKey = await getHash(encryptionKey);
-  return uploadEncryptedStorage(blobKey, encryptedStorage)
+  return submitEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
       console.log("[SYNC] uploaded e2ee storage");
     })
@@ -58,7 +58,7 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
   const encryptionKey = await loadEncryptionKey();
   const blobHash = await getHash(encryptionKey);
-  const storage = await downloadEncryptedStorage(blobHash);
+  const storage = await requestEncryptedStorage(blobHash);
 
   if (storage == null) {
     return null;

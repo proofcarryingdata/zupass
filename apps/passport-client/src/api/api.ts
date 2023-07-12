@@ -8,8 +8,8 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 import {
-  downloadEncryptedStorage,
-  uploadEncryptedStorage,
+  requestEncryptedStorage,
+  submitEncryptedStorage,
 } from "./endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./issuedPCDs";
 import { requestPendingPCD } from "./requestPendingPCD";
@@ -26,20 +26,20 @@ export const ServerApiContext = React.createContext<IServerApi | undefined>(
 );
 
 export const WebApi: IServerApi = {
-  downloadEncryptedStorage,
-  uploadEncryptedStorage,
+  requestEncryptedStorage,
   requestIssuedPCDs,
   requestPendingPCD,
-  requestUser,
   requestZuzaluConfirmationEmail,
-  submitNewZuzaluUser,
   requestGenericConfirmationEmail,
+  requestUser,
+  submitEncryptedStorage,
   submitNewGenericUser,
+  submitNewZuzaluUser,
 };
 
 export interface IServerApi {
-  downloadEncryptedStorage(blobKey: string): Promise<EncryptedPacket | null>;
-  uploadEncryptedStorage(
+  requestEncryptedStorage(blobKey: string): Promise<EncryptedPacket | null>;
+  submitEncryptedStorage(
     blobKey: string,
     encryptedStorage: EncryptedPacket
   ): Promise<void>;
