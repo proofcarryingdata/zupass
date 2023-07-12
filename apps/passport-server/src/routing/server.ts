@@ -9,6 +9,7 @@ import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
 import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
 import { initPCDRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
@@ -87,4 +88,5 @@ function initAllRoutes(
   initPCDPassRoutes(app, context, globalServices);
   initPCDRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
+  initPCDIssuanceRoutes(app, context, globalServices);
 }

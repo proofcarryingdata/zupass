@@ -77,12 +77,18 @@ class App extends React.Component<object, ZuState> {
     this.jobPollUser();
   };
 
-  // Poll for user updates
   jobPollUser = async () => {
     console.log("[JOB] polling user");
-    if (this.state?.self) {
-      await pollUser(this.state.self, this.dispatch);
+
+    try {
+      if (this.state?.self) {
+        await pollUser(this.state.self, this.dispatch);
+      }
+    } catch (e) {
+      console.log("[JOB] failed poll user");
+      console.log(e);
     }
+
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
   };
 }

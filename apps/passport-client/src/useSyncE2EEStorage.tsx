@@ -3,12 +3,17 @@ import {
   passportDecrypt,
   passportEncrypt,
 } from "@pcd/passport-crypto";
+import { ISSUANCE_STRING, IssuedPCDsRequest } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useMemo } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
 } from "./api/endToEndEncryptionApi";
+import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { DispatchContext } from "./dispatch";
 import {
   loadEncryptionKey,
@@ -17,6 +22,7 @@ import {
   savePCDs,
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { ZuState } from "./state";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -63,6 +69,36 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
   await pcds.deserializeAllAndAdd(decrypted.pcds);
   await savePCDs(pcds);
   return pcds;
+}
+
+export async function loadIssuedPCDs(state: ZuState): Promise<SerializedPCD[]> {
+  const request: IssuedPCDsRequest = {
+    userProof: await SemaphoreSignaturePCDPackage.serialize(
+      await SemaphoreSignaturePCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await SemaphoreIdentityPCDPackage.serialize(
+            await SemaphoreIdentityPCDPackage.prove({
+              identity: state.identity,
+            })
+          ),
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: ISSUANCE_STRING,
+        },
+      })
+    ),
+  };
+
+  const issuedPcdsResponse = await requestIssuedPCDs(request);
+
+  if (!issuedPcdsResponse) {
+    console.log("[ISSUED PCDS] unable to get issued pcds");
+    return [];
+  }
+
+  return issuedPcdsResponse.pcds;
 }
 
 export function useSyncE2EEStorage() {

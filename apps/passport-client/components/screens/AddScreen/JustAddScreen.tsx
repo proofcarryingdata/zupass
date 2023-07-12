@@ -29,7 +29,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   const onAddClick = useCallback(async () => {
     try {
-      await dispatch({ type: "add-pcd", pcd: request.pcd });
+      await dispatch({ type: "add-pcds", pcds: [request.pcd] });
       setAdded(true);
     } catch (e) {
       await err(dispatch, "Error Adding PCD", e.message);
