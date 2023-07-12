@@ -9,11 +9,7 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useMemo } from "react";
-import {
-  requestEncryptedStorage,
-  submitEncryptedStorage,
-} from "./api/endToEndEncryptionApi";
-import { requestIssuedPCDs } from "./api/issuedPCDs";
+import { IServerAPI } from "./api/api";
 import { DispatchContext } from "./dispatch";
 import {
   loadEncryptionKey,
@@ -28,7 +24,7 @@ import { ZuState } from "./state";
  * Uploads the state of this passport which is contained in localstorage
  * to the server, end to end encrypted.
  */
-export async function uploadStorage(): Promise<void> {
+export async function uploadStorage(api: IServerAPI): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
@@ -41,7 +37,8 @@ export async function uploadStorage(): Promise<void> {
   );
 
   const blobKey = await getHash(encryptionKey);
-  return submitEncryptedStorage(blobKey, encryptedStorage)
+  return api
+    .submitEncryptedStorage(blobKey, encryptedStorage)
     .then(() => {
       console.log("[SYNC] uploaded e2ee storage");
     })
@@ -54,11 +51,13 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage(): Promise<PCDCollection | null> {
+export async function downloadStorage(
+  api: IServerAPI
+): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
   const encryptionKey = await loadEncryptionKey();
   const blobHash = await getHash(encryptionKey);
-  const storage = await requestEncryptedStorage(blobHash);
+  const storage = await api.requestEncryptedStorage(blobHash);
 
   if (storage == null) {
     return null;
@@ -71,7 +70,10 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
   return pcds;
 }
 
-export async function loadIssuedPCDs(state: ZuState): Promise<SerializedPCD[]> {
+export async function loadIssuedPCDs(
+  state: ZuState,
+  api: IServerAPI
+): Promise<SerializedPCD[]> {
   const request: IssuedPCDsRequest = {
     userProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
@@ -91,7 +93,7 @@ export async function loadIssuedPCDs(state: ZuState): Promise<SerializedPCD[]> {
     ),
   };
 
-  const issuedPcdsResponse = await requestIssuedPCDs(request);
+  const issuedPcdsResponse = await api.requestIssuedPCDs(request);
 
   if (!issuedPcdsResponse) {
     console.log("[ISSUED PCDS] unable to get issued pcds");

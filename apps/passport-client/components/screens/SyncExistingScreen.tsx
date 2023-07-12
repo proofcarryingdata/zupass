@@ -5,7 +5,7 @@ import {
 } from "@pcd/passport-crypto";
 import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
-import { requestEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
+import { APIContext } from "../../src/api/api";
 import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
@@ -22,6 +22,7 @@ export function SyncExistingScreen() {
   const [_, dispatch] = useContext(DispatchContext);
   const [syncKey, setSyncKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const api = useContext(APIContext);
 
   const onSyncClick = useCallback(() => {
     const load = async () => {
@@ -30,7 +31,7 @@ export function SyncExistingScreen() {
         console.log("downloading e2ee storage...");
         setIsLoading(true);
         const blobHash = await getHash(syncKey);
-        storage = await requestEncryptedStorage(blobHash);
+        storage = await api.requestEncryptedStorage(blobHash);
       } catch (e: unknown) {
         console.error(e);
         dispatch({

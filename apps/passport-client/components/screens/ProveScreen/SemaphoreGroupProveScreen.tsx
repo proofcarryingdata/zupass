@@ -9,7 +9,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { APIContext } from "../../../src/api/api";
 import { DispatchContext } from "../../../src/dispatch";
 import {
   safeRedirect,
@@ -28,6 +28,7 @@ export function SemaphoreGroupProveScreen({
   const [group, setGroup] = useState<SerializedSemaphoreGroup | null>(null);
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
+  const api = useContext(APIContext);
   const isLoading = group === null;
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export function SemaphoreGroupProveScreen({
           pcdType: SemaphoreGroupPCDPackage.name,
           args: args,
         };
-        const pendingPCD = await requestPendingPCD(serverReq);
+        const pendingPCD = await api.requestPendingPCD(serverReq);
         safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;

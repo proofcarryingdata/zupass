@@ -1,34 +1,37 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../appConfig";
-
-export async function requestUser(uuid: string): Promise<Response> {
-  const url = `${appConfig.passportServer}/zuzalu/participant/${uuid}`;
-  const response = await fetch(url);
-  return response;
-}
+import { IServerAPI } from "./api";
 
 export async function requestConfirmationEmail(
+  api: IServerAPI,
   email: string,
   identity: Identity,
   force: boolean
 ): Promise<Response> {
   if (appConfig.isZuzalu) {
-    return requestZuzaluConfirmationEmail(email, identity, force);
+    return api.requestZuzaluConfirmationEmail(email, identity, force);
   }
 
-  return requestGenericConfirmationEmail(email, identity, force);
+  return api.requestGenericConfirmationEmail(email, identity, force);
 }
 
 export async function submitNewUser(
+  api: IServerAPI,
   email: string,
   token: string,
   identity: Identity
 ): Promise<Response> {
   if (appConfig.isZuzalu) {
-    return submitNewZuzaluUser(email, token, identity);
+    return api.submitNewZuzaluUser(email, token, identity);
   }
 
-  return submitNewGenericUser(email, token, identity);
+  return api.submitNewGenericUser(email, token, identity);
+}
+
+export async function requestUser(uuid: string): Promise<Response> {
+  const url = `${appConfig.passportServer}/zuzalu/participant/${uuid}`;
+  const response = await fetch(url);
+  return response;
 }
 
 export async function requestZuzaluConfirmationEmail(

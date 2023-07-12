@@ -4,13 +4,17 @@ import {
   User,
   ZuzaluUserRole,
 } from "@pcd/passport-interface";
-import { requestUser } from "./api/user";
+import { IServerAPI } from "./api/api";
 import { Dispatcher } from "./dispatch";
 
 // Starts polling the user from the server, in the background.
-export async function pollUser(self: User, dispatch: Dispatcher) {
+export async function pollUser(
+  self: User,
+  api: IServerAPI,
+  dispatch: Dispatcher
+) {
   try {
-    const response = await requestUser(self.uuid);
+    const response = await api.requestUser(self.uuid);
     if (!response.ok) {
       if (response.status === 404) {
         // this user was previously a valid user, but now the

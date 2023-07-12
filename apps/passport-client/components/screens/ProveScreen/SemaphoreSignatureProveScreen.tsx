@@ -14,7 +14,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { APIContext } from "../../../src/api/api";
 import { DispatchContext } from "../../../src/dispatch";
 import {
   safeRedirect,
@@ -32,6 +32,7 @@ export function SemaphoreSignatureProveScreen({
   // Create a zero-knowledge proof using the identity in DispatchContext
   const [state] = useContext(DispatchContext);
   const [proving, setProving] = useState(false);
+  const api = useContext(APIContext);
   const onProve = useCallback(async () => {
     try {
       setProving(true);
@@ -54,7 +55,7 @@ export function SemaphoreSignatureProveScreen({
           pcdType: SemaphoreSignaturePCDPackage.name,
           args: args,
         };
-        const pendingPCD = await requestPendingPCD(serverReq);
+        const pendingPCD = await api.requestPendingPCD(serverReq);
         safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
         const { prove, serialize } = SemaphoreSignaturePCDPackage;

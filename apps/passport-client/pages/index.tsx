@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
-import { ServerApiContext, WebApi } from "../src/api/api";
+import { API, APIContext, IServerAPI } from "../src/api/api";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -11,18 +11,9 @@ import { AppRouter } from "../src/router";
 import { ZuState } from "../src/state";
 import { pollUser } from "../src/user";
 
-class App extends React.Component<object, ZuState> {
+class App extends React.Component<unknown, ZuState> {
   public state = undefined as ZuState | undefined;
-  private readonly update = (diff: Pick<ZuState, keyof ZuState>) => {
-    console.log("App.update", diff);
-    this.setState(diff);
-  };
-  private readonly dispatch = (action: Action) =>
-    dispatch(action, this.state, this.update);
-
-  public componentDidMount() {
-    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
-  }
+  private api: IServerAPI = API;
 
   public render() {
     const { state, dispatch: disp } = this;
@@ -33,7 +24,7 @@ class App extends React.Component<object, ZuState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <ServerApiContext.Provider value={WebApi}>
+      <APIContext.Provider value={this.api}>
         <DispatchContext.Provider value={[state, disp]}>
           {!hasStack && <AppRouter />}
           {hasStack && (
@@ -44,8 +35,20 @@ class App extends React.Component<object, ZuState> {
             </HashRouter>
           )}
         </DispatchContext.Provider>
-      </ServerApiContext.Provider>
+      </APIContext.Provider>
     );
+  }
+
+  private readonly update = (diff: Pick<ZuState, keyof ZuState>) => {
+    console.log("App.update", diff);
+    this.setState(diff);
+  };
+
+  private readonly dispatch = (action: Action) =>
+    dispatch(action, this.state, this.api, this.update);
+
+  public componentDidMount() {
+    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
 
   // Create a React error boundary
@@ -69,7 +72,7 @@ class App extends React.Component<object, ZuState> {
 
     try {
       if (this.state?.self) {
-        await pollUser(this.state.self, this.dispatch);
+        await pollUser(this.state.self, this.api, this.dispatch);
       }
     } catch (e) {
       console.log("[JOB] failed poll user");

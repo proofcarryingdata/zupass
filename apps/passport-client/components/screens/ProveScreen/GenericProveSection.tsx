@@ -7,7 +7,7 @@ import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { useRollbar } from "@rollbar/react";
 import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { APIContext } from "../../../src/api/api";
 import { DispatchContext } from "../../../src/dispatch";
 import { nextFrame } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
@@ -34,6 +34,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   ) => void;
 }) {
   const rollbar = useRollbar();
+  const api = useContext(APIContext);
   const [state] = useContext(DispatchContext);
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(initialArgs)));
   const [error, setError] = useState<Error | undefined>();
@@ -53,7 +54,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           pcdType: pcdType,
           args: args,
         };
-        const pendingPCD = await requestPendingPCD(serverReq);
+        const pendingPCD = await api.requestPendingPCD(serverReq);
         onProve(undefined, undefined, pendingPCD);
       } else {
         const pcd = await pcdPackage.prove(args);

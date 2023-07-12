@@ -9,6 +9,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
+import { IServerAPI } from "./api/api";
 import { submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
 import {
@@ -75,6 +76,7 @@ export type ZuUpdate = (s: Partial<ZuState>) => void;
 export async function dispatch(
   action: Action,
   state: ZuState,
+  api: IServerAPI,
   update: ZuUpdate
 ) {
   console.log(`Dispatching ${action.type}`, action);

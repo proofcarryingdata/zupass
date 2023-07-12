@@ -21,11 +21,11 @@ import {
   submitNewZuzaluUser,
 } from "./user";
 
-export const ServerApiContext = React.createContext<IServerApi | undefined>(
+export const APIContext = React.createContext<IServerAPI | undefined>(
   undefined
 );
 
-export const WebApi: IServerApi = {
+export const API: IServerAPI = {
   requestEncryptedStorage,
   requestIssuedPCDs,
   requestPendingPCD,
@@ -37,7 +37,7 @@ export const WebApi: IServerApi = {
   submitNewZuzaluUser,
 };
 
-export interface IServerApi {
+export interface IServerAPI {
   requestEncryptedStorage(blobKey: string): Promise<EncryptedPacket | null>;
   submitEncryptedStorage(
     blobKey: string,
