@@ -6,6 +6,7 @@ import {
   ProveRequest,
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
+import React from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
@@ -19,6 +20,10 @@ import {
   submitNewGenericUser,
   submitNewZuzaluUser,
 } from "./user";
+
+export const ServerApiContext = React.createContext<IServerApi | undefined>(
+  undefined
+);
 
 export const WebApi: IServerApi = {
   downloadEncryptedStorage,
