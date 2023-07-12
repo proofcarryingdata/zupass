@@ -37,7 +37,7 @@ create table devconnect_pretix_events_info (
   event_name VARCHAR NOT NULL
 );
 create table devconnect_pretix_items_info (
-  item_id VARCHAR NOT NULL PRIMARY KEY,
+  item_id BIGINT NOT NULL PRIMARY KEY,
   event_id VARCHAR NOT NULL REFERENCES pretix_events_config(event_id),
   item_name VARCHAR NOT NULL
 );
