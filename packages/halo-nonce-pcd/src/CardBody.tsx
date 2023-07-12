@@ -1,14 +1,10 @@
 import { FieldLabel, Spacer, TextContainer } from "@pcd/passport-ui";
-import Airtable from "airtable";
-import { useEffect, useState } from "react";
+// import Airtable from "airtable";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { HaLoNoncePCD } from "./HaLoNoncePCD";
 
 // Read-only API key into Airtable with no sensitive data
-const base = new Airtable({
-  apiKey:
-    "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2",
-}).base("appJcTn3eQUXKQEKT");
 
 export function HaLoNonceCardBody({
   pcd,
@@ -21,6 +17,14 @@ export function HaLoNonceCardBody({
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [headerText, setHeaderText] = useState<string>("NFC STAMP");
 
+  const base = useMemo(() => {
+    // return new Airtable({
+    //   apiKey:
+    //     "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2",
+    // }).base("appJcTn3eQUXKQEKT");
+    return {} as any;
+  }, []);
+
   useEffect(() => {
     if (loadedAirtable) return;
 
@@ -29,7 +33,7 @@ export function HaLoNonceCardBody({
         fields: ["pubKeyHex", "imageUrl", "experienceName"],
       })
       .eachPage(
-        function page(records, fetchNextPage) {
+        function page(records: any, fetchNextPage: any) {
           for (const record of records) {
             if (record.get("pubKeyHex") === pcd.claim.pubkeyHex) {
               const recordImageUrl = record.get("imageUrl");
@@ -45,7 +49,7 @@ export function HaLoNonceCardBody({
           }
           fetchNextPage();
         },
-        function done(err) {
+        function done(err: any) {
           if (err) {
             console.error(err);
             return;
@@ -53,7 +57,7 @@ export function HaLoNonceCardBody({
           setLoadedAirtable(true);
         }
       );
-  }, [pcd.claim.pubkeyHex, loadedAirtable]);
+  }, [pcd.claim.pubkeyHex, loadedAirtable, base]);
 
   if (returnHeader) {
     return <>{headerText}</>;
