@@ -20,7 +20,7 @@ export function LoadingIssuedPCDs() {
       <LoaderContainer>
         <RippleLoader />
       </LoaderContainer>
-      <Label>Loading Issued PCDs</Label>
+      Loading Issued PCDs
     </Container>
   );
 }
@@ -34,13 +34,6 @@ const Container = styled.div`
   align-items: center;
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-`;
-
-const Label = styled.div`
-  /* flex-grow: 1; */
-  /* display: flex;
-  justify-content: center;
-  align-items: center; */
 `;
 
 const LoaderContainer = styled.div`
