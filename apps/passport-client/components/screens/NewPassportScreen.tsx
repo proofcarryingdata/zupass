@@ -1,6 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { APIContext, IServerAPI } from "../../src/api/api";
 import { requestConfirmationEmail } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
@@ -43,9 +44,10 @@ export function NewPassportScreen() {
 
 function SendEmailVerification({ email }: { email: string }) {
   const [state, dispatch] = useContext(DispatchContext);
-  const { identity } = state;
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
+  const { identity } = state;
+  const api = useContext(APIContext);
 
   // Request email verification from the server.
   const [emailSent, setEmailSent] = useState(false);
@@ -61,7 +63,7 @@ function SendEmailVerification({ email }: { email: string }) {
       }
     };
 
-    requestLoginCode(email, identity)
+    requestLoginCode(api, email, identity)
       .then(handleResult)
       .catch((e) => {
         const message = e.message as string;
@@ -74,7 +76,7 @@ This will clear your old passport.
 IF YOU STILL HAVE YOUR OLD PASSPORT, CANCEL 
 AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
           if (result) {
-            requestLoginCode(email, identity, true)
+            requestLoginCode(api, email, identity, true)
               .then(handleResult)
               .catch((e) => err(dispatch, "Email failed", e.message));
           } else {
@@ -85,7 +87,7 @@ AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
           err(dispatch, "Email failed", message);
         }
       });
-  }, [setEmailSent, dispatch, identity, triedSendingEmail, email]);
+  }, [setEmailSent, dispatch, identity, triedSendingEmail, email, api]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
@@ -170,11 +172,17 @@ function Header() {
  * confirmation code, so the client can automatically 'verify' the user.
  */
 async function requestLoginCode(
+  api: IServerAPI,
   email: string,
   identity: Identity,
   force = false
 ): Promise<string | undefined> {
-  const loginResponse = await requestConfirmationEmail(email, identity, force);
+  const loginResponse = await requestConfirmationEmail(
+    api,
+    email,
+    identity,
+    force
+  );
   const responseText = await loginResponse.text();
 
   try {

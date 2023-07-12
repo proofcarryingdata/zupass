@@ -85,7 +85,7 @@ export async function dispatch(
     case "new-passport":
       return genPassport(state.identity, action.email, update);
     case "login":
-      return login(action.email, action.token, state, update);
+      return login(action.email, action.token, state, api, update);
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
@@ -107,7 +107,7 @@ export async function dispatch(
     case "participant-invalid":
       return userInvalid(update);
     case "sync":
-      return sync(state, update);
+      return sync(state, api, update);
     default:
       console.error("Unknown action type", action);
   }
@@ -143,11 +143,12 @@ async function login(
   email: string,
   token: string,
   state: ZuState,
+  api: IServerAPI,
   update: ZuUpdate
 ) {
   let user: User;
   try {
-    const res = await submitNewUser(email, token, state.identity);
+    const res = await submitNewUser(api, email, token, state.identity);
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
   } catch (e) {
@@ -161,13 +162,18 @@ async function login(
     return;
   }
 
-  return finishLogin(user, state, update);
+  return finishLogin(user, state, api, update);
 }
 
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
+async function finishLogin(
+  user: User,
+  state: ZuState,
+  api: IServerAPI,
+  update: ZuUpdate
+) {
   // Verify that the identity is correct.
   const { identity } = state;
   console.log("Save self", identity, user);
@@ -184,7 +190,7 @@ async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
   setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
-  await uploadStorage();
+  await uploadStorage(api);
 
   window.location.hash = "#/";
 
@@ -308,7 +314,7 @@ function userInvalid(update: ZuUpdate) {
  *   passport is not currently uploading the current set of PCDs
  *   to e2ee, then uploads then to e2ee.
  */
-async function sync(state: ZuState, update: ZuUpdate) {
+async function sync(state: ZuState, api: IServerAPI, update: ZuUpdate) {
   console.log("[SYNC] calculating correct sync action");
 
   if ((await loadEncryptionKey()) == null) {
@@ -322,7 +328,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
       downloadingPCDs: true,
     });
 
-    const pcds = await downloadStorage();
+    const pcds = await downloadStorage(api);
 
     if (pcds != null) {
       update({
@@ -356,7 +362,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
     update({
       loadingIssuedPCDs: true,
     });
-    const pcds = await loadIssuedPCDs(state);
+    const pcds = await loadIssuedPCDs(state, api);
     await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
     update({
       loadingIssuedPCDs: false,
@@ -388,7 +394,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
   update({
     uploadingUploadId: uploadId,
   });
-  await uploadStorage();
+  await uploadStorage(api);
   update({
     uploadingUploadId: undefined,
     uploadedUploadId: uploadId,
