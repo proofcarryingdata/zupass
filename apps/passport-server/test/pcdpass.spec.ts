@@ -200,4 +200,17 @@ describe("pcd-pass functionality", function () {
       expect(response.pcds).to.deep.eq([]);
     }
   );
+
+  step(
+    "shouldn't be able to issue pcds for a user that doesn't exist",
+    async function () {
+      const expressResponse = await requestIssuedPCDs(
+        application,
+        new Identity(),
+        ISSUANCE_STRING
+      );
+      const response = expressResponse.body as IssuedPCDsResponse;
+      expect(response.pcds).to.deep.eq([]);
+    }
+  );
 });
