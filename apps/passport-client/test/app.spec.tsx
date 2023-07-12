@@ -8,6 +8,7 @@ describe("dispatcher", async function () {
   const mockApi = new MockServerAPI();
 
   it("should work", async function () {
-    const { getByTestId } = render(<App api={mockApi} />);
+    const { container } = render(<App api={mockApi} />);
+    console.log(container);
   });
 });
