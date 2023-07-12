@@ -5,7 +5,6 @@ import {
   DevconnectPretixPosition,
 } from "../../src/apis/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
-import { randomEmail } from "../util/util";
 
 export interface IMockDevconnectPretixData {
   ordersByEventId: Map<string, DevconnectPretixOrder[]>;
@@ -17,6 +16,13 @@ export const EVENT_C = "event-c";
 
 export const ITEM_1 = 1;
 export const ITEM_2 = 2;
+
+export const EMAIL_1 = "email-1";
+export const EMAIL_2 = "email-2";
+export const EMAIL_3 = "email-3";
+export const EMAIL_4 = "email-4";
+
+export const EMAIL_QUESTION_ID = 456;
 
 export class DevconnectPretixDataMocker {
   private autoincrementingId = 0;
@@ -44,8 +50,12 @@ export class DevconnectPretixDataMocker {
     update(order);
   }
 
-  public addOrder(eventID: string, itemID: number): DevconnectPretixOrder {
-    const newOrder = this.newPretixOrder(itemID);
+  public addOrder(
+    eventID: string,
+    orderEmail: string,
+    itemsAndEmails: [number, string | null][]
+  ): DevconnectPretixOrder {
+    const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
     const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
     eventOrders.push(newOrder);
     return newOrder;
@@ -58,46 +68,61 @@ export class DevconnectPretixDataMocker {
   }
 
   private newMockData(): IMockDevconnectPretixData {
-    const ordersEventA: DevconnectPretixOrder[] = [
-      this.newPretixOrder(ITEM_1),
-      this.newPretixOrder(ITEM_2),
+    // Share same orders across A, B, and C
+    const orders: DevconnectPretixOrder[] = [
+      // "Normal" one-item order -- EMAIL_4 pays for ITEM_1 with EMAIL_4 as attendee email
+      this.newPretixOrder(EMAIL_4, [[ITEM_1, EMAIL_4]]),
+      // Bulk order with many items testing edge cases
+      this.newPretixOrder(EMAIL_1, [
+        [ITEM_1, EMAIL_1],
+        [ITEM_1, EMAIL_2], // prioritize attendee email over purchaser email
+        [ITEM_1, EMAIL_2],
+        [ITEM_1, EMAIL_3],
+        [ITEM_1, null], // fall back to purchaser if attendee email is null
+        [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
+        [ITEM_2, EMAIL_1],
+        [ITEM_2, EMAIL_2],
+        [ITEM_2, null],
+      ]),
+      // Three-item order, testing ITEM_2 and override again
+      this.newPretixOrder(EMAIL_2, [
+        [ITEM_2, EMAIL_4],
+        [ITEM_2, null],
+        [ITEM_1, EMAIL_1], // should show up as EMAIL_1
+      ]),
     ];
-
-    const ordersEventB: DevconnectPretixOrder[] = [
-      this.newPretixOrder(ITEM_1),
-      this.newPretixOrder(ITEM_2),
-      this.newPretixOrder(ITEM_2),
-    ];
-
-    const ordersEventC: DevconnectPretixOrder[] = [];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
-    ordersByEventId.set(EVENT_A, ordersEventA);
-    ordersByEventId.set(EVENT_B, ordersEventB);
-    ordersByEventId.set(EVENT_C, ordersEventC);
+    ordersByEventId.set(EVENT_A, orders);
+    ordersByEventId.set(EVENT_B, orders);
+    ordersByEventId.set(EVENT_C, orders);
 
     return {
       ordersByEventId,
     };
   }
 
-  private newPretixOrder(item: number): DevconnectPretixOrder {
+  private newPretixOrder(
+    orderEmail: string,
+    itemsAndEmails: [number, string | null][] // array of (item, attendee email) tuples,
+  ): DevconnectPretixOrder {
     const orderId = this.randomOrderCode();
-    const email = randomEmail();
 
     return {
       code: orderId,
       status: "p",
       testmode: false,
       secret: "",
-      email: email,
-      positions: [this.newPosition(orderId, email, item, this.nextId())],
+      email: orderEmail,
+      positions: itemsAndEmails.map(([item, email]) =>
+        this.newPosition(orderId, email, item, this.nextId())
+      ),
     };
   }
 
   private newPosition(
     orderId: string,
-    email: string,
+    email: string | null,
     itemId: number,
     subevent: number
   ): DevconnectPretixPosition {
@@ -108,8 +133,17 @@ export class DevconnectPretixDataMocker {
       item: itemId,
       price: "",
       attendee_name: this.randomName(),
-      attendee_email: email,
+      attendee_email: null, // this is always `null` in the API response
       subevent: subevent,
+      answers: email
+        ? [
+            {
+              question: EMAIL_QUESTION_ID,
+              question_identifier: "ASDF",
+              answer: email,
+            },
+          ]
+        : [],
     };
   }
 

@@ -9,11 +9,7 @@ export function pretixTicketsDifferent(
   oldTicket: DevconnectPretixTicket,
   newTicket: DevconnectPretixTicket
 ): boolean {
-  if (oldTicket.ticket_name !== newTicket.ticket_name) {
-    return true;
-  }
-
-  if (!_.isEqual(oldTicket.event_id, newTicket.event_id)) {
+  if (!_.isEqual(new Set(oldTicket.item_ids), new Set(newTicket.item_ids))) {
     return true;
   }
 

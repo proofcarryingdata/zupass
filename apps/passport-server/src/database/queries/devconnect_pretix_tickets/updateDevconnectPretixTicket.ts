@@ -13,9 +13,15 @@ export async function updateDevconnectPretixTicket(
     client,
     `\
 update devconnect_pretix_tickets
-set ticket_name=$2, event_id=$3, name=$4
-where email=$1;`,
-    [params.email, params.ticket_name, params.event_id, params.name]
+set item_ids=$4, name=$5
+where email=$1 and event_id=$2 and organizer_url=$3;`,
+    [
+      params.email,
+      params.event_id,
+      params.organizer_url,
+      params.item_ids,
+      params.name,
+    ]
   );
   return result.rowCount;
 }

@@ -13,14 +13,14 @@ export async function insertDevconnectPretixTicket(
   const result = await sqlQuery(
     client,
     `\
-insert into devconnect_pretix_tickets (email, name, ticket_name, order_id, event_id)
+insert into devconnect_pretix_tickets (email, name, item_ids, organizer_url, event_id)
 values ($1, $2, $3, $4, $5)
 on conflict do nothing;`,
     [
       params.email,
       params.name,
-      params.ticket_name,
-      params.order_id,
+      params.item_ids,
+      params.organizer_url,
       params.event_id,
     ]
   );

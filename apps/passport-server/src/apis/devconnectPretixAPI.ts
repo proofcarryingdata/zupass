@@ -1,6 +1,6 @@
 import { Pool } from "pg";
-import { PretixOrganizer } from "../database/models";
-import { fetchAllPretixOrganizers } from "../database/queries/pretix_organizers/fetchPretixOrganizers";
+import { PretixOrganizersConfig } from "../database/models";
+import { fetchAllPretixOrganizersConfig } from "../database/queries/pretix_organizers_config/fetchPretixOrganizersConfig";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -85,16 +85,29 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   }
 }
 
+function pretixConfigDBToDevconnectPretixConfig(
+  pretixOrganizersDB: PretixOrganizersConfig[]
+): DevconnectPretixConfig {
+  return {
+    organizers: pretixOrganizersDB.map((organizerDB) => ({
+      orgURL: organizerDB.organizer_url,
+      events: organizerDB.events.map((eventDB) => ({
+        eventID: eventDB.event_id,
+        activeItemIDs: eventDB.active_item_ids,
+        attendeeEmailQuestionID: eventDB.attendee_email_question_id,
+      })),
+      token: organizerDB.token,
+    })),
+  };
+}
+
 export async function getDevconnectPretixConfig(
   dbClient: Pool
 ): Promise<DevconnectPretixConfig | null> {
-  // Make sure we can use the Pretix API.
-  let pretixConfig: DevconnectPretixConfig;
   try {
-    const organizers = await fetchAllPretixOrganizers(dbClient);
-    pretixConfig = {
-      organizers,
-    };
+    const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
+      await fetchAllPretixOrganizersConfig(dbClient)
+    );
     logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
   } catch (e) {
@@ -133,6 +146,12 @@ export interface DevconnectPretixItem {
   };
 }
 
+export interface DevconnectPretixAnswer {
+  question: number;
+  answer: string;
+  question_identifier: string;
+}
+
 // Unclear why this is called a "position" rather than a ticket.
 export interface DevconnectPretixPosition {
   id: number;
@@ -141,10 +160,23 @@ export interface DevconnectPretixPosition {
   item: number;
   price: string;
   attendee_name: string; // first and last
-  attendee_email: string;
+  attendee_email: string | null;
   subevent: number;
+  answers: DevconnectPretixAnswer[];
+}
+
+export interface DevconnectPretixEventConfig {
+  eventID: string;
+  activeItemIDs: number[]; // relevant item IDs that correspond to ticket products
+  attendeeEmailQuestionID: number; // question ID of "attendee email" question on items
+}
+
+export interface DevconnectPretixOrganizerConfig {
+  orgURL: string;
+  token: string;
+  events: DevconnectPretixEventConfig[];
 }
 
 export interface DevconnectPretixConfig {
-  organizers: PretixOrganizer[];
+  organizers: DevconnectPretixOrganizerConfig[];
 }

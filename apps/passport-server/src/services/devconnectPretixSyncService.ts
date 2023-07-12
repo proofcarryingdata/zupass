@@ -1,6 +1,8 @@
 import { Pool } from "pg";
-import { IDevconnectPretixAPI } from "../apis/devconnectPretixAPI";
-import { PretixOrder } from "../apis/pretixAPI";
+import {
+  DevconnectPretixOrder,
+  IDevconnectPretixAPI,
+} from "../apis/devconnectPretixAPI";
 import { DevconnectPretixTicket } from "../database/models";
 import { deleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/deleteDevconnectPretixTicket";
 import { fetchAllDevconnectPretixTickets } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -131,6 +133,7 @@ export class DevconnectPretixSyncService {
     dbClient: Pool,
     pretixTickets: DevconnectPretixTicket[]
   ): Promise<void> {
+    // TODO: FIX THIS (email, event_id, org_url etc)
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
       const pretixTicketsAsMap = ticketsToMapByEmail(pretixTickets);
       const existingTickets = await fetchAllDevconnectPretixTickets(dbClient);
@@ -199,17 +202,13 @@ export class DevconnectPretixSyncService {
 
       const tickets: DevconnectPretixTicket[] = [];
       for (const organizer of this.pretixAPI.config.organizers) {
-        for (const eventID of organizer.event_ids) {
-          const items = await this.pretixAPI.fetchItems(
-            organizer.organizer_url,
-            organizer.token,
-            eventID
-          );
-          const itemNameByItemIDMap = new Map(
-            items.map((item) => [item.id, item.name.en])
-          );
+        for (const {
+          eventID,
+          activeItemIDs,
+          attendeeEmailQuestionID,
+        } of organizer.events) {
           const pretixOrders = await this.pretixAPI.fetchOrders(
-            organizer.organizer_url,
+            organizer.orgURL,
             organizer.token,
             eventID
           );
@@ -217,7 +216,9 @@ export class DevconnectPretixSyncService {
             ...this.ordersToDevconnectTickets(
               pretixOrders,
               eventID,
-              itemNameByItemIDMap
+              organizer.orgURL,
+              activeItemIDs,
+              attendeeEmailQuestionID
             )
           );
         }
@@ -235,30 +236,51 @@ export class DevconnectPretixSyncService {
    * subevent events they have in their order.
    */
   private ordersToDevconnectTickets(
-    orders: PretixOrder[],
+    orders: DevconnectPretixOrder[],
     eventID: string,
-    itemNameByItemIDMap: Map<number, string>
+    organizerURL: string,
+    activeItemIDs: number[],
+    attendeeEmailQuestionID: number
   ): DevconnectPretixTicket[] {
-    const tickets: DevconnectPretixTicket[] = orders
-      // check that they paid
-      .filter((o) => o.status === "p")
-      // an order can have more than one "position" (ticket)
-      // for visitor orders--eg, paying for 3 individual 1-week tickets
-      .filter((o) => o.positions.length >= 1)
-      // check that they have an email and a name
-      .filter((o) => !!o.positions[0].attendee_name)
-      .filter((o) => !!(o.email || o.positions[0].attendee_email))
-      .map((o) => {
-        return {
-          ticket_name: itemNameByItemIDMap.get(o.positions[0].item) ?? "",
-          email: (o.email || o.positions[0].attendee_email).toLowerCase(),
-          name: o.positions[0].attendee_name,
-          order_id: o.code,
-          event_id: eventID,
-        } satisfies DevconnectPretixTicket;
-      });
+    // Go through all orders and aggregate all item IDs under
+    // the same (email, event_id, organizer_url) tuple. Since we're
+    // already fixing the event_id and organizer_url in this function,
+    // we just need to have the email as the key for this map.
+    const ticketsByEmail = new Map<string, DevconnectPretixTicket>();
 
-    return tickets;
+    for (const order of orders) {
+      // check that they paid
+      if (order.status !== "p") {
+        continue;
+      }
+      for (const { item, answers, attendee_name } of order.positions) {
+        if (activeItemIDs.includes(item)) {
+          // Try getting email from response to question; otherwise, default to email of purchaser
+          const attendeeEmailFromQuestion = answers.find(
+            (a) => a.question === attendeeEmailQuestionID
+          )?.answer;
+          const email = (
+            attendeeEmailFromQuestion || order.email
+          ).toLowerCase();
+
+          // Push item ID into ticket if exists; otherwise, create new ticket
+          const existingTicket = ticketsByEmail.get(email);
+          if (existingTicket) {
+            existingTicket.item_ids.push(item);
+          } else {
+            ticketsByEmail.set(email, {
+              event_id: eventID,
+              item_ids: [item],
+              organizer_url: organizerURL,
+              name: attendee_name,
+              email,
+            });
+          }
+        }
+      }
+    }
+
+    return [...ticketsByEmail.values()];
   }
 }
 /**

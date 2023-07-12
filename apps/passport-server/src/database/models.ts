@@ -22,9 +22,9 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
 export interface DevconnectPretixTicket {
   email: string;
   name: string;
-  ticket_name: string;
-  order_id: string;
   event_id: string;
+  organizer_url: string;
+  item_ids: number[];
 }
 
 /**
@@ -60,8 +60,15 @@ export interface HistoricSemaphoreGroup {
   timeCreated: string;
 }
 
-export interface PretixOrganizer {
+export interface PreventEventsConfig {
+  event_id: string;
+  active_item_ids: number[]; // relevant item IDs that correspond to ticket products
+  attendee_email_question_id: number; // question ID of "attendee email" question on items
+}
+
+//
+export interface PretixOrganizersConfig {
   organizer_url: string;
-  event_ids: string[];
   token: string;
+  events: PreventEventsConfig[];
 }

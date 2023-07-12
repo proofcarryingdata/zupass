@@ -8,8 +8,14 @@ import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
   DevconnectPretixDataMocker,
+  EMAIL_1,
+  EMAIL_2,
+  EMAIL_3,
+  EMAIL_4,
   EVENT_A,
   EVENT_B,
+  ITEM_1,
+  ITEM_2,
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
@@ -61,23 +67,64 @@ describe("devconnect functionality", function () {
   step(
     "after devconnect pretix sync, database should reflect devconnect pretix API",
     async function () {
-      const orders = await fetchAllDevconnectPretixTickets(
+      const tickets = await fetchAllDevconnectPretixTickets(
         application.context.dbPool
       );
-      expect(orders).to.have.length(5);
-      const ordersByTicketNameAndEventID = orders.map(
-        ({ event_id, ticket_name }) => ({
-          event_id,
-          ticket_name,
-        })
-      );
 
-      expect(ordersByTicketNameAndEventID).to.have.deep.members([
-        { ticket_name: "item-1", event_id: EVENT_A },
-        { ticket_name: "item-2", event_id: EVENT_A },
-        { ticket_name: "item-1", event_id: EVENT_B },
-        { ticket_name: "item-2", event_id: EVENT_B },
-        { ticket_name: "item-2", event_id: EVENT_B },
+      // Four unique emails, two events with active items. 4 * 2 = 8
+      // More details in comments below
+      expect(tickets).to.have.length(8);
+
+      const ticketsWithEmailEventAndItems = tickets.map((o) => ({
+        eventID: o.event_id,
+        email: o.email,
+        itemIDs: o.item_ids,
+      }));
+
+      expect(ticketsWithEmailEventAndItems).to.have.deep.members([
+        // Four tickets for event A because four unique emails
+        {
+          email: EMAIL_1,
+          itemIDs: [ITEM_1, ITEM_1, ITEM_1],
+          eventID: EVENT_A,
+        },
+        {
+          email: EMAIL_2,
+          itemIDs: [ITEM_1, ITEM_1],
+          eventID: EVENT_A,
+        },
+        {
+          email: EMAIL_3,
+          itemIDs: [ITEM_1],
+          eventID: EVENT_A,
+        },
+        {
+          email: EMAIL_4,
+          itemIDs: [ITEM_1],
+          eventID: EVENT_A,
+        },
+        // Four tickets for event B because four unique emails
+        {
+          email: EMAIL_1,
+          itemIDs: [ITEM_1, ITEM_1, ITEM_2, ITEM_2, ITEM_2, ITEM_1],
+          eventID: EVENT_B,
+        },
+        {
+          email: EMAIL_2,
+          itemIDs: [ITEM_1, ITEM_1, ITEM_2, ITEM_2],
+          eventID: EVENT_B,
+        },
+        {
+          email: EMAIL_3,
+          itemIDs: [ITEM_1],
+          eventID: EVENT_B,
+        },
+        {
+          email: EMAIL_4,
+          itemIDs: [ITEM_1, ITEM_2],
+          eventID: EVENT_B,
+        },
+        // None for event C, since no active items
       ]);
     }
   );

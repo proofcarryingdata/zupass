@@ -13,8 +13,12 @@ export async function fetchAllDevconnectPretixTickets(
   const result = await sqlQuery(
     client,
     `\
-select * from devconnect_pretix_tickets p;`
+      select * from devconnect_pretix_tickets;`
   );
 
-  return result.rows;
+  // Ensure item IDs are converted to numbers
+  return result.rows.map((row) => ({
+    ...row,
+    item_ids: row.item_ids.map(Number),
+  }));
 }
