@@ -1,6 +1,7 @@
 import * as React from "react";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AppContainer } from "../components/shared/AppContainer";
+import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { API, APIContext, IServerAPI } from "../src/api/api";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import { loadInitialState } from "../src/loadInitialState";
@@ -21,18 +22,20 @@ export class App extends React.Component<unknown, ZuState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <APIContext.Provider value={this.api}>
-        <DispatchContext.Provider value={[state, disp]}>
-          {!hasStack && <AppRouter />}
-          {hasStack && (
-            <HashRouter>
-              <Routes>
-                <Route path="*" element={<AppContainer bg="gray" />} />
-              </Routes>
-            </HashRouter>
-          )}
-        </DispatchContext.Provider>
-      </APIContext.Provider>
+      <RollbarProvider>
+        <APIContext.Provider value={this.api}>
+          <DispatchContext.Provider value={[state, disp]}>
+            {!hasStack && <AppRouter />}
+            {hasStack && (
+              <HashRouter>
+                <Routes>
+                  <Route path="*" element={<AppContainer bg="gray" />} />
+                </Routes>
+              </HashRouter>
+            )}
+          </DispatchContext.Provider>
+        </APIContext.Provider>
+      </RollbarProvider>
     );
   }
 
