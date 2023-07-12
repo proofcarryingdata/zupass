@@ -60,13 +60,14 @@ export interface HistoricSemaphoreGroup {
   timeCreated: string;
 }
 
+// Database representation of Pretix event configuration
 export interface PreventEventsConfig {
   event_id: string;
   active_item_ids: number[]; // relevant item IDs that correspond to ticket products
   attendee_email_question_id: number; // question ID of "attendee email" question on items
 }
 
-//
+// Database representation of Pretix organizer configuration
 export interface PretixOrganizersConfig {
   organizer_url: string;
   token: string;

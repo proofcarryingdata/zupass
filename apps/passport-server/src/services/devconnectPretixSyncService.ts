@@ -133,7 +133,6 @@ export class DevconnectPretixSyncService {
     dbClient: Pool,
     pretixTickets: DevconnectPretixTicket[]
   ): Promise<void> {
-    // TODO: FIX THIS (email, event_id, org_url etc)
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
       const pretixTicketsAsMap = ticketsToMapByEmail(pretixTickets);
       const existingTickets = await fetchAllDevconnectPretixTickets(dbClient);

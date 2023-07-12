@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { PretixOrganizersConfig } from "../../models";
+import { PretixOrganizersConfigDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -7,7 +7,7 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function fetchAllPretixOrganizersConfig(
   client: Pool
-): Promise<Array<PretixOrganizersConfig>> {
+): Promise<Array<PretixOrganizersConfigDB>> {
   const result = await sqlQuery(
     client,
     `\

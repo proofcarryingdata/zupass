@@ -165,12 +165,14 @@ export interface DevconnectPretixPosition {
   answers: DevconnectPretixAnswer[];
 }
 
+// In-memory representation of Pretix event configuration
 export interface DevconnectPretixEventConfig {
   eventID: string;
   activeItemIDs: number[]; // relevant item IDs that correspond to ticket products
   attendeeEmailQuestionID: number; // question ID of "attendee email" question on items
 }
 
+// In-memory representation of Pretix organizer configuration
 export interface DevconnectPretixOrganizerConfig {
   orgURL: string;
   token: string;
