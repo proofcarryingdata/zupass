@@ -2,13 +2,8 @@ import { Buffer } from "buffer";
 import { gzip, ungzip } from "pako";
 
 export function encodeQRPayload(unencoded: string): string {
-  console.log(`encoding payload with length ${unencoded.length}`);
   const compressedData = gzip(unencoded);
   const base64CompressedData = Buffer.from(compressedData).toString("base64");
-  console.log(
-    `Compressed: ${compressedData.length}, base64: ${base64CompressedData.length}`
-  );
-
   return base64CompressedData;
 }
 
