@@ -4,7 +4,7 @@ import "mocha";
 import { App } from "../pages/app";
 import { MockServerAPI } from "./api/mockServerApi";
 
-describe("dispatcher", async function () {
+describe("application", async function () {
   const mockApi = new MockServerAPI();
 
   it("should work", async function () {
