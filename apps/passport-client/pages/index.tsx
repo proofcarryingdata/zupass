@@ -1,18 +1,10 @@
-import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
-import {
-  loadEncryptionKey,
-  loadIdentity,
-  loadPCDs,
-  loadSelf,
-  loadUserInvalid,
-  saveIdentity,
-} from "../src/localstorage";
+import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppRouter } from "../src/router";
 import { ZuState } from "../src/state";
@@ -80,38 +72,6 @@ class App extends React.Component<object, ZuState> {
     }
 
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
-  };
-}
-
-async function loadInitialState(): Promise<ZuState> {
-  let identity = loadIdentity();
-  if (identity == null) {
-    console.log("Generating a new Semaphore identity...");
-    identity = new Identity();
-    saveIdentity(identity);
-  }
-
-  const self = loadSelf();
-  const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
-  const userInvalid = loadUserInvalid();
-
-  let modal = "" as ZuState["modal"];
-
-  if (userInvalid) {
-    modal = "invalid-participant";
-  } else if (self != null && !localStorage["savedSyncKey"]) {
-    console.log("Asking existing user to save their sync key...");
-    modal = "save-sync";
-  }
-
-  return {
-    self,
-    encryptionKey,
-    pcds,
-    identity,
-    modal,
-    userInvalid: userInvalid,
   };
 }
 
