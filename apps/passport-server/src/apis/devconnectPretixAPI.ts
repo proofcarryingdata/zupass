@@ -96,7 +96,6 @@ function pretixConfigDBToDevconnectPretixConfig(
       events: organizerDB.events.map((eventDB) => ({
         eventID: eventDB.event_id,
         activeItemIDs: eventDB.active_item_ids,
-        attendeeEmailQuestionID: eventDB.attendee_email_question_id,
       })),
       token: organizerDB.token,
     })),
@@ -148,12 +147,6 @@ export interface DevconnectPretixItem {
   };
 }
 
-export interface DevconnectPretixAnswer {
-  question: number;
-  answer: string;
-  question_identifier: string;
-}
-
 // Unclear why this is called a "position" rather than a ticket.
 export interface DevconnectPretixPosition {
   id: number;
@@ -164,14 +157,12 @@ export interface DevconnectPretixPosition {
   attendee_name: string; // first and last
   attendee_email: string | null;
   subevent: number;
-  answers: DevconnectPretixAnswer[];
 }
 
 // In-memory representation of Pretix event configuration
 export interface DevconnectPretixEventConfig {
   eventID: string;
   activeItemIDs: number[]; // relevant item IDs that correspond to ticket products
-  attendeeEmailQuestionID: number; // question ID of "attendee email" question on items
 }
 
 // In-memory representation of Pretix organizer configuration

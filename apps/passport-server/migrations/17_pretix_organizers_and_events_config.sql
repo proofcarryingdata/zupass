@@ -10,7 +10,5 @@ create table pretix_events_config (
   -- Event ID
   event_id VARCHAR NOT NULL PRIMARY KEY,
   -- Relevant item IDs that correspond to ticket products
-  active_item_ids BIGINT[] NOT NULL,
-  -- Question ID of "attendee email" question on items
-  attendee_email_question_id BIGINT NOT NULL
+  active_item_ids BIGINT[] NOT NULL
 );

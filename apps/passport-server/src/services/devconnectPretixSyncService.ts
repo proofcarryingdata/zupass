@@ -201,11 +201,7 @@ export class DevconnectPretixSyncService {
 
       const tickets: DevconnectPretixTicket[] = [];
       for (const organizer of this.pretixAPI.config.organizers) {
-        for (const {
-          eventID,
-          activeItemIDs,
-          attendeeEmailQuestionID,
-        } of organizer.events) {
+        for (const { eventID, activeItemIDs } of organizer.events) {
           const pretixOrders = await this.pretixAPI.fetchOrders(
             organizer.orgURL,
             organizer.token,
@@ -216,8 +212,7 @@ export class DevconnectPretixSyncService {
               pretixOrders,
               eventID,
               organizer.orgURL,
-              activeItemIDs,
-              attendeeEmailQuestionID
+              activeItemIDs
             )
           );
         }
@@ -238,8 +233,7 @@ export class DevconnectPretixSyncService {
     orders: DevconnectPretixOrder[],
     eventID: string,
     organizerURL: string,
-    activeItemIDs: number[],
-    attendeeEmailQuestionID: number
+    activeItemIDs: number[]
   ): DevconnectPretixTicket[] {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
@@ -252,15 +246,24 @@ export class DevconnectPretixSyncService {
       if (order.status !== "p") {
         continue;
       }
-      for (const { item, answers, attendee_name } of order.positions) {
+      for (const {
+        positionid,
+        item,
+        attendee_name,
+        attendee_email,
+      } of order.positions) {
         if (activeItemIDs.includes(item)) {
           // Try getting email from response to question; otherwise, default to email of purchaser
-          const attendeeEmailFromQuestion = answers.find(
-            (a) => a.question === attendeeEmailQuestionID
-          )?.answer;
-          const email = (
-            attendeeEmailFromQuestion || order.email
-          ).toLowerCase();
+          if (!attendee_email) {
+            logger(
+              "[DEVCONNECT PRETIX] encountered order position without attendee email",
+              {
+                orderCode: order.code,
+                positionID: positionid,
+              }
+            );
+          }
+          const email = (attendee_email || order.email).toLowerCase();
 
           // Push item ID into ticket if exists; otherwise, create new ticket
           const existingTicket = ticketsByEmail.get(email);

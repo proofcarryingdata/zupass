@@ -6,7 +6,6 @@ import {
 import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
-  EMAIL_QUESTION_ID,
   EVENT_A,
   EVENT_B,
   EVENT_C,
@@ -37,17 +36,14 @@ export function getDevconnectMockPretixAPI(
             {
               eventID: EVENT_A,
               activeItemIDs: [ITEM_1],
-              attendeeEmailQuestionID: EMAIL_QUESTION_ID,
             },
             {
               eventID: EVENT_B,
               activeItemIDs: [ITEM_1, ITEM_2],
-              attendeeEmailQuestionID: EMAIL_QUESTION_ID,
             },
             {
               eventID: EVENT_C,
               activeItemIDs: [],
-              attendeeEmailQuestionID: EMAIL_QUESTION_ID,
             },
           ],
         },

@@ -88,7 +88,7 @@ export class DevconnectPretixDataMocker {
       this.newPretixOrder(EMAIL_2, [
         [ITEM_2, EMAIL_4],
         [ITEM_2, null],
-        [ITEM_1, EMAIL_1], // should show up as EMAIL_1
+        [ITEM_1, EMAIL_1], // should show up under EMAIL_1
       ]),
     ];
 
@@ -122,7 +122,7 @@ export class DevconnectPretixDataMocker {
 
   private newPosition(
     orderId: string,
-    email: string | null,
+    attendeeEmail: string | null,
     itemId: number,
     subevent: number
   ): DevconnectPretixPosition {
@@ -133,17 +133,8 @@ export class DevconnectPretixDataMocker {
       item: itemId,
       price: "",
       attendee_name: this.randomName(),
-      attendee_email: null, // this is always `null` in the API response
+      attendee_email: attendeeEmail,
       subevent: subevent,
-      answers: email
-        ? [
-            {
-              question: EMAIL_QUESTION_ID,
-              question_identifier: "ASDF",
-              answer: email,
-            },
-          ]
-        : [],
     };
   }
 
