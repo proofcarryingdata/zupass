@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -7,13 +8,11 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function deleteDevconnectPretixTicket(
   client: Pool,
-  email: string
+  params: DevconnectPretixTicket
 ): Promise<void> {
   await sqlQuery(
     client,
-    `delete from devconnect_pretix_tickets where email = $1`,
-    [email]
+    `delete from devconnect_pretix_tickets where email=$1 and organizer_url=$2 and event_id=$3;`,
+    [params.email, params.organizer_url, params.event_id]
   );
-
-  await sqlQuery(client, `delete from commitments where email = $1`, [email]);
 }
