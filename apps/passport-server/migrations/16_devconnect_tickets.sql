@@ -21,5 +21,7 @@ create table devconnect_superusers (
    -- email address
   email VARCHAR NOT NULL PRIMARY KEY,
   -- Pretix event ID
-  event_id VARCHAR NOT NULL
-)
+  event_id VARCHAR NOT NULL,
+  -- URL of the Pretix organizer
+  organizer_url VARCHAR NOT NULL
+);

@@ -43,8 +43,9 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
           headers: { Authorization: `Token ${token}` },
         });
         if (!res.ok) {
-          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-          break;
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
         }
         const page = await res.json();
         items.push(...page.results);
@@ -72,8 +73,9 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
           headers: { Authorization: `Token ${token}` },
         });
         if (!res.ok) {
-          logger(`Error fetching ${url}: ${res.status} ${res.statusText}`);
-          break;
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
         }
         const page = await res.json();
         orders.push(...page.results);

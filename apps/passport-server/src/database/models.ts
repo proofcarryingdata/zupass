@@ -61,7 +61,7 @@ export interface HistoricSemaphoreGroup {
 }
 
 // Database representation of Pretix event configuration
-export interface PreventEventsConfig {
+export interface PretixEventsConfig {
   event_id: string;
   active_item_ids: number[]; // relevant item IDs that correspond to ticket products
   attendee_email_question_id: number; // question ID of "attendee email" question on items
@@ -71,5 +71,5 @@ export interface PreventEventsConfig {
 export interface PretixOrganizersConfig {
   organizer_url: string;
   token: string;
-  events: PreventEventsConfig[];
+  events: PretixEventsConfig[];
 }
