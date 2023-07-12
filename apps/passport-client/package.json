@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts{,x}"
+    "test": "ts-mocha --loader ../../node_modules/ts-node/esm/transpile-only.mjs --config ../../.mocharc.js --exit test/**/*.spec.ts{,x}"
   },
   "dependencies": {
     "@pcd/ethereum-ownership-pcd": "0.5.4",
