@@ -6,6 +6,31 @@ import {
   ProveRequest,
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
+import {
+  downloadEncryptedStorage,
+  uploadEncryptedStorage,
+} from "./endToEndEncryptionApi";
+import { requestIssuedPCDs } from "./issuedPCDs";
+import { requestPendingPCD } from "./requestPendingPCD";
+import {
+  requestGenericConfirmationEmail,
+  requestUser,
+  requestZuzaluConfirmationEmail,
+  submitNewGenericUser,
+  submitNewZuzaluUser,
+} from "./user";
+
+export const WebApi: IServerApi = {
+  downloadEncryptedStorage,
+  uploadEncryptedStorage,
+  requestIssuedPCDs,
+  requestPendingPCD,
+  requestUser,
+  requestZuzaluConfirmationEmail,
+  submitNewZuzaluUser,
+  requestGenericConfirmationEmail,
+  submitNewGenericUser,
+};
 
 export interface IServerApi {
   downloadEncryptedStorage(blobKey: string): Promise<EncryptedPacket | null>;
