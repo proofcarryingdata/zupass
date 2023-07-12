@@ -2,17 +2,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { AddScreen } from "../components/screens/AddScreen/AddScreen";
-import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
-import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
-import { HomeScreen } from "../components/screens/HomeScreen";
-import { LoginScreen } from "../components/screens/LoginScreen";
-import { MissingScreen } from "../components/screens/MissingScreen";
-import { NewPassportScreen } from "../components/screens/NewPassportScreen";
-import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
-import { ScanScreen } from "../components/screens/ScanScreen";
-import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
-import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
@@ -25,6 +14,7 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
+import { AppRouter } from "../src/router";
 import { ZuState } from "../src/state";
 import { pollUser } from "../src/user";
 
@@ -49,7 +39,7 @@ class App extends React.Component<object, ZuState> {
     const hasStack = state.error?.stack != null;
     return (
       <DispatchContext.Provider value={[state, disp]}>
-        {!hasStack && <Router />}
+        {!hasStack && <AppRouter />}
         {hasStack && (
           <HashRouter>
             <Routes>
@@ -91,31 +81,6 @@ class App extends React.Component<object, ZuState> {
 
     setTimeout(this.jobPollUser, 1000 * 60 * 5);
   };
-}
-
-function Router() {
-  return (
-    <HashRouter>
-      <Routes>
-        <Route path="/">
-          <Route index element={<HomeScreen />} />
-          <Route path="login" element={<LoginScreen />} />
-          <Route path="new-passport" element={<NewPassportScreen />} />
-          <Route
-            path="get-without-proving"
-            element={<GetWithoutProvingScreen />}
-          />
-          <Route path="halo" element={<HaloScreen />} />
-          <Route path="add" element={<AddScreen />} />
-          <Route path="prove" element={<ProveScreen />} />
-          <Route path="scan" element={<ScanScreen />} />
-          <Route path="sync-existing" element={<SyncExistingScreen />} />
-          <Route path="verify" element={<VerifyScreen />} />
-          <Route path="*" element={<MissingScreen />} />
-        </Route>
-      </Routes>
-    </HashRouter>
-  );
 }
 
 async function loadInitialState(): Promise<ZuState> {
