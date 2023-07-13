@@ -25,11 +25,15 @@ export class IssuanceService {
   private readonly exportedPrivateKey: string;
   private readonly exportedPublicKey: string;
 
+  // TODO: implement with database calls
+  private readonly usedTicketPCDIds: Set<string>;
+
   public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
+    this.usedTicketPCDIds = new Set();
   }
 
   public getPublicKey(): string {
@@ -64,12 +68,17 @@ export class IssuanceService {
         throw new Error("ticket was not signed with the right key");
       }
 
+      if (this.usedTicketPCDIds.has(ticketPCD.id)) {
+        throw new Error("this ticket has already been used");
+      }
+
       // TODO: load this from the database
       // make sure that the ticket has not been revoked
       // make sure that the ticket has bot already been used to check in
       const isTicketValid = true;
 
       if (isTicketValid) {
+        this.usedTicketPCDIds.add(ticketPCD.id);
         return {
           success: true,
         };
