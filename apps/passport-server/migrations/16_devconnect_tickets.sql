@@ -50,11 +50,11 @@ create table devconnect_pretix_events_info (
 );
 create table devconnect_pretix_items_info (
   id SERIAL PRIMARY KEY,
-  -- Item ID from Pretix API
+  -- item ID from Pretix API
   item_id VARCHAR NOT NULL UNIQUE,
   -- FK into `devconnect_pretix_events_info` table
   devconnect_pretix_events_info_id SERIAL NOT NULL REFERENCES devconnect_pretix_events_info(id),
-  -- Item name from Pretix API
+  -- item name from Pretix API
   item_name VARCHAR NOT NULL
 );
 
