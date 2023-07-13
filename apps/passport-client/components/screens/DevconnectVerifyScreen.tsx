@@ -1,3 +1,5 @@
+import { AppContainer } from "../shared/AppContainer";
+
 export function DevconnectVerifyScreen() {
-  return <div>verify</div>;
+  return <AppContainer bg={"primary"}>verify</AppContainer>;
 }
