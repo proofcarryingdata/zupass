@@ -13,6 +13,14 @@ import { RSATicketCardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-ticket-pcd";
 
+export interface ITicketData {
+  timestamp?: number;
+  eventName?: string;
+  ticketName?: string;
+  attendeeName?: string;
+  attendeeEmail?: string;
+}
+
 export interface RSATicketPCDArgs {
   id: StringArgument;
   rsaPCD: PCDArgument<RSATicketPCD>;
