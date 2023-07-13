@@ -4,7 +4,7 @@ import {
   IssuedPCDsResponse,
   User,
 } from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -33,7 +33,7 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
-describe.only("pcd-pass functionality", function () {
+describe("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   const testEmail = randomEmail();
@@ -209,6 +209,58 @@ describe.only("pcd-pass functionality", function () {
     expect(checkinResponse.status).to.eq(200);
     expect(checkinResponseBody.success).to.eq(true);
   });
+
+  step(
+    "should not able to check in with a ticket not signed by the server",
+    async function () {
+      const key = new NodeRSA({ b: 2048 });
+      const exportedKey = key.exportKey("private");
+      const message = "test message";
+      const rsaPCD = await RSAPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: exportedKey,
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: message,
+        },
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: undefined,
+        },
+      });
+      const ticket = await RSATicketPCDPackage.prove({
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: undefined,
+        },
+        rsaPCD: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await RSAPCDPackage.serialize(rsaPCD),
+        },
+      });
+
+      const checkinResponse = await requestCheckIn(application, ticket);
+      expect(checkinResponse.status).to.eq(500);
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has already been used to check in",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has been revoked",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
+    }
+  );
 
   step(
     "shouldn't be able to issue pcds for the incorrect 'issuance string'",
