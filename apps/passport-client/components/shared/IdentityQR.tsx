@@ -18,7 +18,7 @@ interface QRPayload {
  * the proof expires to allow for a few minutes of clock skew between prover
  * and verifier.
  */
-const regenerateAfterMs = (appConfig.maxProofAge * 2) / 3;
+const regenerateAfterMs = (appConfig.maxIdentityProofAgeMs * 2) / 3;
 
 export function IdentityQR() {
   const [state] = useContext(DispatchContext);
@@ -27,7 +27,10 @@ export function IdentityQR() {
 
   const [qrPayload, setQRPayload] = useState<QRPayload>(() => {
     const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
-    if (timestamp != null && Date.now() - timestamp < appConfig.maxProofAge) {
+    if (
+      timestamp != null &&
+      Date.now() - timestamp < appConfig.maxIdentityProofAgeMs
+    ) {
       console.log(`[QR] from localStorage, timestamp ${timestamp}`);
       return { timestamp, qrPCD };
     }
@@ -57,7 +60,10 @@ export function IdentityQR() {
   // Load or generate QR code on mount, then regenerate periodically
   useEffect(() => {
     maybeGenerateQR();
-    const interval = setInterval(maybeGenerateQR, appConfig.maxProofAge / 10);
+    const interval = setInterval(
+      maybeGenerateQR,
+      appConfig.maxIdentityProofAgeMs / 10
+    );
     return () => clearInterval(interval);
   }, [maybeGenerateQR]);
 

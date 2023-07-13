@@ -169,7 +169,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   const timeDifferenceMs = Date.now() - payload.timestamp;
 
-  if (timeDifferenceMs >= appConfig.maxProofAge) {
+  if (timeDifferenceMs >= appConfig.maxIdentityProofAgeMs) {
     return {
       valid: false,
       type: "identity-proof",
