@@ -1,5 +1,11 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { createQRProof } from "../../src/createQRProof";
@@ -8,9 +14,9 @@ import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
 import { icons } from "../icons";
 import { QR } from "./QR";
 
-interface QRPayload {
+interface SavedQRState {
   timestamp: number;
-  qrPCD: string;
+  payload: string;
 }
 
 /**
@@ -25,98 +31,104 @@ export function IdentityQR() {
   const { identity, self } = state;
   const { uuid } = self;
 
-  const [qrPayload, setQRPayload] = useState<QRPayload>(() => {
-    const { timestamp, qrPCD } = JSON.parse(localStorage["zuzaluQR"] || "{}");
-    if (
-      timestamp != null &&
-      Date.now() - timestamp < appConfig.maxIdentityProofAgeMs
-    ) {
-      console.log(`[QR] from localStorage, timestamp ${timestamp}`);
-      return { timestamp, qrPCD };
-    }
-  });
-
-  const maybeGenerateQR = useCallback(
-    async function () {
-      const timestamp = Date.now();
-      if (qrPayload && timestamp - qrPayload.timestamp < regenerateAfterMs) {
-        console.log(`[QR] not regenerating, timestamp ${timestamp}`);
-        return;
-      }
-
-      console.log(`[QR] generating proof, timestamp ${timestamp}`);
-      const pcd = await createQRProof(identity, uuid, timestamp);
-      const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
-      const stringified = JSON.stringify(serialized);
-      console.log(`[QR] generated proof, length ${stringified.length}`);
-
-      const qrPCD = encodeQRPayload(stringified);
-      localStorage["zuzaluQR"] = JSON.stringify({ timestamp, qrPCD });
-      setQRPayload({ timestamp, qrPCD });
-    },
-    [identity, qrPayload, uuid]
-  );
-
-  // Load or generate QR code on mount, then regenerate periodically
-  useEffect(() => {
-    maybeGenerateQR();
-    const interval = setInterval(
-      maybeGenerateQR,
-      appConfig.maxIdentityProofAgeMs / 10
-    );
-    return () => clearInterval(interval);
-  }, [maybeGenerateQR]);
-
-  if (qrPayload == null) {
-    return (
-      <QRWrap>
-        <QRLogoLoading />
-      </QRWrap>
-    );
-  }
-
-  const qrLink =
-    qrPayload === undefined
-      ? undefined
-      : makeEncodedVerifyLink(qrPayload.qrPCD);
+  const generate = useCallback(async () => {
+    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
+    const pcd = await createQRProof(identity, uuid, Date.now());
+    const serialized = await SemaphoreSignaturePCDPackage.serialize(pcd);
+    const serializedPCD = JSON.stringify(serialized);
+    console.log(`[QR] generated proof, length ${serializedPCD.length}`);
+    const encodedPCD = encodeQRPayload(serializedPCD);
+    const verifyLink = makeEncodedVerifyLink(encodedPCD);
+    return verifyLink;
+  }, [identity, uuid]);
 
   return (
-    <QRDisplay
-      value={qrLink}
-      isLoading={qrLink === undefined}
-      logoLoading={() => {
-        return <QRLogoLoading />;
-      }}
-      logoDone={() => {
-        return appConfig.isZuzalu && <QRLogoDone />;
-      }}
+    <QRDisplayWithRegenerateAndStorage
+      generateQRPayload={generate}
+      loadingLogo={<QRLogoLoading />}
+      loadedLogo={appConfig.isZuzalu ? <QRLogoDone /> : undefined}
+      maxAgeMs={appConfig.maxIdentityProofAgeMs}
+      uniqueId={"IDENTITY_ID"}
     />
   );
 }
 
+export function QRDisplayWithRegenerateAndStorage({
+  generateQRPayload,
+  maxAgeMs,
+  uniqueId,
+  loadingLogo,
+  loadedLogo,
+}: {
+  generateQRPayload: () => Promise<string>;
+  maxAgeMs: number;
+  uniqueId: string;
+  loadingLogo: React.ReactNode;
+  loadedLogo: React.ReactNode;
+}) {
+  const [savedState, setSavedState] = useState<SavedQRState | undefined>(() => {
+    const savedState = JSON.parse(
+      localStorage[uniqueId] || "{}"
+    ) as Partial<SavedQRState>;
+    console.log(
+      `[QR] loaded saved state for ${uniqueId}: ${JSON.stringify(savedState)}`
+    );
+
+    const { timestamp, payload } = savedState;
+
+    if (
+      timestamp != null &&
+      Date.now() - timestamp < maxAgeMs &&
+      payload !== undefined
+    ) {
+      console.log(`[QR] from localStorage, timestamp ${timestamp}`);
+      return { timestamp, payload: payload };
+    }
+
+    return undefined;
+  });
+
+  const maybeGenerateQR = useCallback(async () => {
+    const timestamp = Date.now();
+    if (savedState && timestamp - savedState.timestamp < regenerateAfterMs) {
+      console.log(`[QR] not regenerating, timestamp ${timestamp}`);
+      return;
+    }
+    console.log(`[QR] regenerating data ${timestamp}`);
+    const newData = await generateQRPayload();
+    const newSavedState: SavedQRState = { timestamp, payload: newData };
+    localStorage[uniqueId] = JSON.stringify(newSavedState);
+    setSavedState(newSavedState);
+  }, [generateQRPayload, savedState, uniqueId]);
+
+  useEffect(() => {
+    maybeGenerateQR();
+    const interval = setInterval(maybeGenerateQR, maxAgeMs / 10);
+    return () => clearInterval(interval);
+  }, [maxAgeMs, maybeGenerateQR]);
+
+  const logoOverlay = useMemo(() => {
+    return savedState ? loadedLogo : loadingLogo;
+  }, [loadedLogo, loadingLogo, savedState]);
+
+  console.log(`[QR] rendering ${savedState?.payload}`);
+
+  return <QRDisplay logoOverlay={logoOverlay} value={savedState?.payload} />;
+}
+
 export function QRDisplay({
   value,
-  isLoading,
-  logoDone,
-  logoLoading,
+  logoOverlay,
 }: {
   value?: string;
-  isLoading?: boolean;
-  logoDone?: () => React.ReactNode;
-  logoLoading?: () => React.ReactNode;
+  logoOverlay?: React.ReactNode;
 }) {
-  let logo = null;
-
-  if (isLoading === true && logoLoading) {
-    logo = logoLoading();
-  } else if (isLoading === false && logoDone) {
-    logo = logoDone();
-  }
-
   return (
     <QRWrap>
-      <QR value={value} bgColor={qrBg} fgColor={qrFg} />
-      {logo}
+      {value !== undefined && (
+        <QR value={value} bgColor={qrBg} fgColor={qrFg} />
+      )}
+      {logoOverlay}
     </QRWrap>
   );
 }
