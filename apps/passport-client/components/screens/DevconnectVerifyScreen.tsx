@@ -5,23 +5,58 @@ import {
   RSATicketPCD,
   RSATicketPCDPackage,
 } from "@pcd/rsa-ticket-pcd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
+import { requestCheckIn } from "../../src/api/checkinApi";
 import { sleep } from "../../src/util";
+import { Button } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
 export function DevconnectVerifyScreen() {
-  const decodedPCD = useDecodedPCD();
-  const ticketData = getTicketData(decodedPCD);
+  const ticket = useDecodedTicket();
+  const ticketData = getTicketData(ticket);
 
   return (
     <AppContainer bg={"primary"}>
       <Container>
         <TicketInfoSection ticketData={ticketData} />
-        <RawTicketData>{JSON.stringify(decodedPCD)}</RawTicketData>
+        <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
+        {ticket && <CheckInSection ticket={ticket} />}
       </Container>
     </AppContainer>
+  );
+}
+
+function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
+  const [checkedIn, setCheckedIn] = useState(false);
+  const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
+
+  const onVerifyClick = useCallback(() => {
+    verifyTicketOnServer(ticket)
+      .then((valid) => {
+        setCheckedIn(valid);
+        setFinishedCheckinAttempt(true);
+      })
+      .catch(() => {
+        console.log("failed to verify");
+        setFinishedCheckinAttempt(true);
+      });
+  }, [ticket]);
+
+  return (
+    <CheckinSectionContainer>
+      <Button onClick={onVerifyClick}>Verify</Button>
+      {finishedCheckinAttempt && (
+        <>
+          {checkedIn ? (
+            <CheckinSuccess>Checked In ✅</CheckinSuccess>
+          ) : (
+            <CheckinFailure>Failed to check in ❌</CheckinFailure>
+          )}
+        </>
+      )}
+    </CheckinSectionContainer>
   );
 }
 
@@ -37,7 +72,7 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
   );
 }
 
-function useDecodedPCD(): RSATicketPCD | undefined {
+function useDecodedTicket(): RSATicketPCD | undefined {
   const location = useLocation();
   const [decodedPCD, setDecodedPCD] = useState<RSATicketPCD | undefined>();
 
@@ -74,7 +109,17 @@ async function decodePCD(location): Promise<RSATicketPCD | undefined> {
   return undefined;
 }
 
-async function verifyTicketOnServer() {}
+async function verifyTicketOnServer(ticket: RSATicketPCD): Promise<boolean> {
+  try {
+    const response = await requestCheckIn({
+      ticket: await RSATicketPCDPackage.serialize(ticket),
+    });
+    return response.success === true;
+  } catch (e) {
+    console.log("failed to check in", e);
+    return false;
+  }
+}
 
 const Container = styled.div`
   margin-top: 64px;
@@ -94,5 +139,19 @@ const RawTicketData = styled.div`
   border-radius: 4px;
   padding: 4px;
   white-space: nowrap;
+  margin-top: 8px;
+`;
+
+const CheckinSuccess = styled.span`
+  color: green;
+  font-size: 1.5em;
+`;
+
+const CheckinFailure = styled.span`
+  color: red;
+  font-size: 1.5em;
+`;
+
+const CheckinSectionContainer = styled.div`
   margin-top: 8px;
 `;

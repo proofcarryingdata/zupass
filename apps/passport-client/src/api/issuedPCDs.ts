@@ -19,8 +19,8 @@ export async function requestIssuedPCDs(
         Accept: "application/json",
       },
     });
-    const pendingPCD = (await response.json()) as IssuedPCDsResponse;
-    return pendingPCD;
+    const issuedPCDResponse = (await response.json()) as IssuedPCDsResponse;
+    return issuedPCDResponse;
   } catch (e) {
     return undefined;
   }
