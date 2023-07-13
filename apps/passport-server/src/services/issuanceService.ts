@@ -5,7 +5,8 @@ import {
   IssuedPCDsResponse,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -36,8 +37,7 @@ export class IssuanceService {
     const pcds: SerializedPCD[] = [];
     const emailOwnershipPCD = await this.issueEmailOwnershipPCD(request);
     if (emailOwnershipPCD) {
-      const serializedPCD = await RSAPCDPackage.serialize(emailOwnershipPCD);
-      pcds.push(serializedPCD);
+      pcds.push(emailOwnershipPCD);
     }
     return { pcds };
   }
@@ -83,7 +83,7 @@ export class IssuanceService {
 
   private async issueEmailOwnershipPCD(
     request: IssuedPCDsRequest
-  ): Promise<RSAPCD | null> {
+  ): Promise<SerializedPCD | null> {
     const email = await this.getUserEmailFromRequest(request);
 
     if (email == null) {
@@ -92,7 +92,7 @@ export class IssuanceService {
 
     const stableId = await getHash("issued-email-" + normalizeEmail(email));
 
-    const ownershipPCD = await RSAPCDPackage.prove({
+    const rsaPcd = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
         value: this.exportedPrivateKey,
@@ -103,11 +103,26 @@ export class IssuanceService {
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: stableId,
+        value: undefined,
       },
     });
 
-    return ownershipPCD;
+    const rsaTicketPCD = await RSATicketPCDPackage.prove({
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: stableId,
+      },
+      rsaPCD: {
+        argumentType: ArgumentTypeName.PCD,
+        value: await RSAPCDPackage.serialize(rsaPcd),
+      },
+    });
+
+    const serializedTicketPCD = await RSATicketPCDPackage.serialize(
+      rsaTicketPCD
+    );
+
+    return serializedTicketPCD;
   }
 }
 
