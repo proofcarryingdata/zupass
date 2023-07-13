@@ -30,13 +30,6 @@ const [qrBg, qrFg] = (() => {
   }
 })();
 
-/**
- * Generate a fresh identity-revealing proof every n ms. We regenerate before
- * the proof expires to allow for a few minutes of clock skew between prover
- * and verifier.
- */
-const regenerateAfterMs = (appConfig.maxIdentityProofAgeMs * 2) / 3;
-
 export function IdentityQR() {
   const [state] = useContext(DispatchContext);
   const { identity, self } = state;
@@ -83,6 +76,13 @@ export function QRDisplayWithRegenerateAndStorage({
   fgColor?: string;
   bgColor?: string;
 }) {
+  /**
+   * Generate a fresh identity-revealing proof every n ms. We regenerate before
+   * the proof expires to allow for a few minutes of clock skew between prover
+   * and verifier.
+   */
+  const regenerateAfterMs = (maxAgeMs * 2) / 3;
+
   const [savedState, setSavedState] = useState<SavedQRState | undefined>(() => {
     const savedState = JSON.parse(
       localStorage[uniqueId] || "{}"
@@ -151,13 +151,14 @@ export function QRDisplay({
   fgColor?: string;
   bgColor?: string;
 }) {
+  console.log(`[QR] VALUE`, value);
   return (
     <QRWrap>
       {value !== undefined && (
         <QR
           value={value}
-          bgColor={fgColor ?? "black"}
-          fgColor={bgColor ?? "white"}
+          bgColor={bgColor ?? "#ffffff"}
+          fgColor={fgColor ?? "#000000"}
         />
       )}
       {logoOverlay}
