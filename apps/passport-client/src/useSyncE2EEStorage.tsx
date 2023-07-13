@@ -123,7 +123,7 @@ export function useHasUploaded() {
   const [state] = useContext(DispatchContext);
 
   const hasUploaded = useMemo(() => {
-    return state.uploadedUploadId === state.pcds.getUploadId();
+    return state.uploadedUploadId === state.pcds.getHash();
   }, [state]);
 
   return hasUploaded;

@@ -1,3 +1,4 @@
+import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 
 /**
@@ -98,8 +99,15 @@ export class PCDCollection {
     return this.getAll().map((pcd) => pcd.id);
   }
 
-  public getUploadId(): string {
-    return this.getAllIds().join(",");
+  /**
+   * Generates a unique hash based on the contents. This hash changes whenever
+   * the set of pcds, or the contents of the pcds changes.
+   */
+  public async getHash(): Promise<string> {
+    const allSerialized = await this.serializeAll();
+    const stringified = allSerialized.map((s) => JSON.stringify(s)).join("\n");
+    const hashed = await getHash(stringified);
+    return hashed;
   }
 
   public getById(id: string): PCD | undefined {

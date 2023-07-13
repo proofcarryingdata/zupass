@@ -77,8 +77,6 @@ export async function dispatch(
   state: ZuState,
   update: ZuUpdate
 ) {
-  console.log(`Dispatching ${action.type}`, action);
-
   switch (action.type) {
     case "new-passport":
       return genPassport(state.identity, action.email, update);
@@ -250,7 +248,7 @@ async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
 async function loadFromSync(
   encryptionKey: string,
   storage: EncryptedStorage,
-  state: ZuState,
+  currentState: ZuState,
   update: ZuUpdate
 ) {
   console.log("loading from sync", storage);
@@ -307,8 +305,6 @@ function userInvalid(update: ZuUpdate) {
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: ZuState, update: ZuUpdate) {
-  console.log("[SYNC] calculating correct sync action");
-
   if ((await loadEncryptionKey()) == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return;
@@ -327,7 +323,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
         downloadedPCDs: true,
         downloadingPCDs: false,
         pcds: pcds,
-        uploadedUploadId: pcds.getUploadId(),
+        uploadedUploadId: await pcds.getHash(),
       });
     } else {
       console.log(
@@ -356,6 +352,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
     });
     const pcds = await loadIssuedPCDs(state);
     await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
+    await savePCDs(state.pcds);
     update({
       loadingIssuedPCDs: false,
       loadedIssuedPCDs: true,
@@ -372,7 +369,7 @@ async function sync(state: ZuState, update: ZuUpdate) {
     return;
   }
 
-  const uploadId = state.pcds.getUploadId();
+  const uploadId = await state.pcds.getHash();
 
   if (
     state.uploadedUploadId === uploadId ||
