@@ -1,5 +1,5 @@
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { createQRProof } from "../../src/createQRProof";
@@ -75,13 +75,48 @@ export function IdentityQR() {
     );
   }
 
-  const qrLink = makeEncodedVerifyLink(qrPayload.qrPCD);
-  console.log(`Link, ${qrLink.length} bytes: ${qrLink}`);
+  const qrLink =
+    qrPayload === undefined
+      ? undefined
+      : makeEncodedVerifyLink(qrPayload.qrPCD);
+
+  return (
+    <QRDisplay
+      value={qrLink}
+      isLoading={qrLink === undefined}
+      logoLoading={() => {
+        return <QRLogoLoading />;
+      }}
+      logoDone={() => {
+        return appConfig.isZuzalu && <QRLogoDone />;
+      }}
+    />
+  );
+}
+
+export function QRDisplay({
+  value,
+  isLoading,
+  logoDone,
+  logoLoading,
+}: {
+  value?: string;
+  isLoading?: boolean;
+  logoDone?: () => React.ReactNode;
+  logoLoading?: () => React.ReactNode;
+}) {
+  let logo = null;
+
+  if (isLoading === true && logoLoading) {
+    logo = logoLoading();
+  } else if (isLoading === false && logoDone) {
+    logo = logoDone();
+  }
 
   return (
     <QRWrap>
-      <QR value={qrLink} bgColor={qrBg} fgColor={qrFg} />
-      {appConfig.isZuzalu && <QRLogoDone />}
+      <QR value={value} bgColor={qrBg} fgColor={qrFg} />
+      {logo}
     </QRWrap>
   );
 }
