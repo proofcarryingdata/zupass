@@ -3,7 +3,7 @@ import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
-import { RSATicketPCDPackage } from "../src";
+import { RSATicketPCD, RSATicketPCDPackage } from "../src";
 
 describe("RSA Ticket PCD should work", function () {
   this.timeout(1000 * 30);
@@ -12,6 +12,7 @@ describe("RSA Ticket PCD should work", function () {
   const exportedKey = key.exportKey("private");
   const message = "message to sign";
   let rsaPCD: RSAPCD;
+  let ticketPCD: RSATicketPCD;
 
   this.beforeAll(async () => {
     rsaPCD = await RSAPCDPackage.prove({
@@ -31,7 +32,7 @@ describe("RSA Ticket PCD should work", function () {
   });
 
   it("should be possible to set a custom id", async function () {
-    const ticketPCD = await RSATicketPCDPackage.prove({
+    ticketPCD = await RSATicketPCDPackage.prove({
       id: {
         argumentType: ArgumentTypeName.String,
         value: undefined,
@@ -44,5 +45,12 @@ describe("RSA Ticket PCD should work", function () {
 
     const valid = await RSATicketPCDPackage.verify(ticketPCD);
     expect(valid).to.eq(true);
+  });
+
+  it("should be possible to serialize and deserialize the pcd", async function () {
+    const serialized = await RSATicketPCDPackage.serialize(ticketPCD);
+    const deserialized = await RSATicketPCDPackage.deserialize(serialized.pcd);
+
+    expect(ticketPCD).to.deep.eq(deserialized);
   });
 });

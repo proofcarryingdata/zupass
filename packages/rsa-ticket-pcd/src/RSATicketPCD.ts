@@ -70,11 +70,13 @@ export async function verify(pcd: RSATicketPCD): Promise<boolean> {
 export async function serialize(
   pcd: RSATicketPCD
 ): Promise<SerializedPCD<RSATicketPCD>> {
+  const serializedRSAPCD = await RSAPCDPackage.serialize(pcd.proof.rsaPCD);
+
   return {
     type: RSAPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
-      rsaPCD: await RSAPCDPackage.serialize(pcd.proof.rsaPCD),
+      rsaPCD: serializedRSAPCD,
     }),
   } as SerializedPCD<RSATicketPCD>;
 }
@@ -82,7 +84,7 @@ export async function serialize(
 export async function deserialize(serialized: string): Promise<RSATicketPCD> {
   const deserializedWrapper = JSONBig().parse(serialized);
   const deserializedRSAPCD = await RSAPCDPackage.deserialize(
-    deserializedWrapper.rsaPCD
+    deserializedWrapper.rsaPCD.pcd
   );
   return new RSATicketPCD(
     deserializedWrapper.id,
