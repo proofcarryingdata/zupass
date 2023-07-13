@@ -190,6 +190,8 @@ export async function startProvingService(
     zkeyFilePath: fullPath + "/16.zkey",
   });
 
+  await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
+
   const provingService = new ProvingService(rollbarService);
   return provingService;
 }

@@ -1,10 +1,12 @@
 import {
+  CheckInResponse,
   ISSUANCE_STRING,
   IssuedPCDsResponse,
   User,
 } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -15,6 +17,7 @@ import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
+  requestCheckIn,
   requestIssuanceServiceEnabled,
   requestIssuedPCDs,
   requestServerPublicKey,
@@ -30,7 +33,7 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
-describe("pcd-pass functionality", function () {
+describe.only("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   const testEmail = randomEmail();
@@ -187,6 +190,24 @@ describe("pcd-pass functionality", function () {
     // in case we start issuing more pcds, this test should be updated
     expect(response1.pcds.length).to.eq(1);
     expect(response2.pcds.length).to.eq(1);
+  });
+
+  step("should be able to check in with a valid ticket", async function () {
+    const issueResponse = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
+    const serializedTicket = issueResponseBody
+      .pcds[0] as SerializedPCD<RSATicketPCD>;
+    const ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+
+    const checkinResponse = await requestCheckIn(application, ticket);
+    const checkinResponseBody = checkinResponse.body as CheckInResponse;
+
+    expect(checkinResponse.status).to.eq(200);
+    expect(checkinResponseBody.success).to.eq(true);
   });
 
   step(

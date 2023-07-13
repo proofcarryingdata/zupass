@@ -24,7 +24,7 @@ export interface ITicketData {
 }
 
 export interface RSATicketPCDInitArgs {
-  makeEncodedVerifyLink(encodedPCD: string): string;
+  makeEncodedVerifyLink?: (encodedPCD: string) => string;
 }
 
 export let initArgs: RSATicketPCDInitArgs;
