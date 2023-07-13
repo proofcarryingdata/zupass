@@ -1,4 +1,5 @@
 import { fetchUser, User } from "@pcd/passport-interface";
+import { decodeQRPayload } from "@pcd/passport-ui";
 import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName,
@@ -8,7 +9,6 @@ import { useLocation } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import { QRPayload } from "../../src/createQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { decodeQRPayload } from "../../src/qr";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
 import {

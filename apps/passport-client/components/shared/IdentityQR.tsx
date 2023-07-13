@@ -1,11 +1,14 @@
-import { QRDisplayWithRegenerateAndStorage } from "@pcd/passport-ui";
+import {
+  encodeQRPayload,
+  QRDisplayWithRegenerateAndStorage,
+} from "@pcd/passport-ui";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useContext } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { createQRProof } from "../../src/createQRProof";
 import { DispatchContext } from "../../src/dispatch";
-import { encodeQRPayload, makeEncodedVerifyLink } from "../../src/qr";
+import { makeEncodedVerifyLink } from "../../src/qr";
 import { icons } from "../icons";
 
 const [qrBg, qrFg] = (() => {

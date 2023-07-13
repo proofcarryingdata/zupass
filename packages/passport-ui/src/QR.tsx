@@ -1,6 +1,25 @@
+import { gzip, ungzip } from "pako";
 import qr from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+
+export function encodeQRPayload(unencoded: string): string {
+  console.log(`encoding payload with length ${unencoded.length}`);
+  const compressedData = gzip(unencoded);
+  const base64CompressedData = Buffer.from(compressedData).toString("base64");
+  console.log(
+    `Compressed: ${compressedData.length}, base64: ${base64CompressedData.length}`
+  );
+
+  return base64CompressedData;
+}
+
+export function decodeQRPayload(encoded: string): string {
+  const buffer = Buffer.from(encoded, "base64");
+  const unzippedBuffer = Buffer.from(ungzip(buffer));
+  const decodedBuffer = unzippedBuffer.toString("utf8");
+  return decodedBuffer;
+}
 
 interface SavedQRState {
   timestamp: number;
@@ -19,8 +38,8 @@ export function QRDisplayWithRegenerateAndStorage({
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
   uniqueId: string;
-  loadingLogo: React.ReactNode;
-  loadedLogo: React.ReactNode;
+  loadingLogo?: React.ReactNode;
+  loadedLogo?: React.ReactNode;
   fgColor?: string;
   bgColor?: string;
 }) {
