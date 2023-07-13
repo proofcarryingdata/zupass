@@ -7,6 +7,7 @@ import {
 } from "@pcd/rsa-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import styled from "styled-components";
 import { sleep } from "../../src/util";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -16,7 +17,10 @@ export function DevconnectVerifyScreen() {
 
   return (
     <AppContainer bg={"primary"}>
-      <TicketInfoSection ticketData={ticketData} />
+      <Container>
+        <TicketInfoSection ticketData={ticketData} />
+        <RawTicketData>{JSON.stringify(decodedPCD)}</RawTicketData>
+      </Container>
     </AppContainer>
   );
 }
@@ -69,3 +73,24 @@ async function decodePCD(location): Promise<RSATicketPCD | undefined> {
 
   return undefined;
 }
+
+const Container = styled.div`
+  margin-top: 64px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-dark);
+  background: white;
+  color: var(--bg-dark-primary);
+  width: 400px;
+  padding: 16px;
+  min-height: 300px;
+`;
+
+const RawTicketData = styled.div`
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid black;
+  border-radius: 4px;
+  padding: 4px;
+  white-space: nowrap;
+  margin-top: 8px;
+`;
