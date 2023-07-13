@@ -3,15 +3,7 @@ import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
-import { RSATicketPCD, RSATicketPCDPackage } from "../src";
-
-async function copyPcd(pcd: RSATicketPCD): Promise<RSATicketPCD> {
-  return await RSATicketPCDPackage.deserialize(
-    await (
-      await RSATicketPCDPackage.serialize(pcd)
-    ).pcd
-  );
-}
+import { RSATicketPCDPackage } from "../src";
 
 describe("RSA Ticket PCD should work", function () {
   this.timeout(1000 * 30);

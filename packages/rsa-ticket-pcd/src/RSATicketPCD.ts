@@ -6,6 +6,7 @@ import {
   SerializedPCD,
   StringArgument,
 } from "@pcd/pcd-types";
+import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { RSATicketCardBody } from "./CardBody";
@@ -20,7 +21,7 @@ export interface RSATicketPCDArgs {
 export interface RSATicketPCDClaim {}
 
 export interface RSATicketPCDProof {
-  rsaPCD: RSATicketPCD;
+  rsaPCD: RSAPCD;
 }
 
 export class RSATicketPCD implements PCD<RSATicketPCDClaim, RSATicketPCDProof> {
@@ -45,10 +46,8 @@ export async function prove(args: RSATicketPCDArgs): Promise<RSATicketPCD> {
     throw new Error("missing rsa pcd");
   }
 
-  const deserialized = await RSATicketPCDPackage.deserialize(
-    args.rsaPCD.value?.pcd
-  );
-  const valid = await RSATicketPCDPackage.verify(deserialized);
+  const deserialized = await RSAPCDPackage.deserialize(args.rsaPCD.value?.pcd);
+  const valid = await RSAPCDPackage.verify(deserialized);
 
   if (!valid) {
     throw new Error("supplied rsa pcd is not valid");
@@ -61,7 +60,7 @@ export async function prove(args: RSATicketPCDArgs): Promise<RSATicketPCD> {
 
 export async function verify(pcd: RSATicketPCD): Promise<boolean> {
   try {
-    const valid = await RSATicketPCDPackage.verify(pcd.proof.rsaPCD);
+    const valid = await RSAPCDPackage.verify(pcd.proof.rsaPCD);
     return valid;
   } catch (e) {
     return false;
@@ -75,14 +74,14 @@ export async function serialize(
     type: RSAPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
-      rsaPCD: await RSATicketPCDPackage.serialize(pcd.proof.rsaPCD),
+      rsaPCD: await RSAPCDPackage.serialize(pcd.proof.rsaPCD),
     }),
   } as SerializedPCD<RSATicketPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<RSATicketPCD> {
   const deserializedWrapper = JSONBig().parse(serialized);
-  const deserializedRSAPCD = await RSATicketPCDPackage.deserialize(
+  const deserializedRSAPCD = await RSAPCDPackage.deserialize(
     deserializedWrapper.rsaPCD
   );
   return new RSATicketPCD(
