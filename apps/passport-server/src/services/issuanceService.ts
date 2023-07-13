@@ -6,13 +6,12 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import { ITicketData, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { normalizeEmail } from "../util/util";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -90,7 +89,17 @@ export class IssuanceService {
       return null;
     }
 
-    const stableId = await getHash("issued-email-" + normalizeEmail(email));
+    // TODO: convert from pretix ticket to {@link ITicketData}
+    const ticketData: ITicketData = {
+      attendeeEmail: email,
+      attendeeName: "Test Name",
+      eventName: "Test Event",
+      ticketName: "GA",
+      timestamp: Date.now(),
+    };
+
+    const serializedTicketData = JSON.stringify(ticketData);
+    const stableId = await getHash("issued-ticket-" + serializedTicketData);
 
     const rsaPcd = await RSAPCDPackage.prove({
       privateKey: {
@@ -99,7 +108,7 @@ export class IssuanceService {
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: email,
+        value: JSON.stringify(ticketData),
       },
       id: {
         argumentType: ArgumentTypeName.String,
