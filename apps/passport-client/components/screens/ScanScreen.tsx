@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +27,7 @@ export function ScanScreen() {
         containerStyle={{ width: "100%" }}
       />
       <Spacer h={24} />
-      <TextCenter>Scan a passport to verify</TextCenter>
+      <TextCenter>Scan a ticket to verify</TextCenter>
     </AppContainer>
   );
 }

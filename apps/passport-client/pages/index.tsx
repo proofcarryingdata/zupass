@@ -3,6 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { DevconnectVerifyScreen } from "../components/screens/DevconnectVerifyScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -15,6 +16,7 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import { Action, dispatch, DispatchContext } from "../src/dispatch";
 import {
   loadEncryptionKey,
@@ -110,7 +112,12 @@ function Router() {
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
-          <Route path="verify" element={<VerifyScreen />} />
+          <Route
+            path="verify"
+            element={
+              appConfig.isZuzalu ? <VerifyScreen /> : <DevconnectVerifyScreen />
+            }
+          />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
