@@ -4,6 +4,7 @@ import {
   User,
 } from "@pcd/passport-interface";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -141,19 +142,19 @@ describe("pcd-pass functionality", function () {
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
       expect(responseBody.pcds.length).to.eq(1);
 
-      const emailPCD = responseBody.pcds[0];
+      const ticketPCD = responseBody.pcds[0];
 
-      expect(emailPCD.type).to.eq(RSAPCDPackage.name);
+      expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
 
-      const deserializedEmailPCD = await RSAPCDPackage.deserialize(
-        emailPCD.pcd
+      const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
       );
 
-      const verified = await RSAPCDPackage.verify(deserializedEmailPCD);
+      const verified = await RSATicketPCDPackage.verify(deserializedEmailPCD);
       expect(verified).to.eq(true);
 
       const pcdPublicKey = new NodeRSA(
-        deserializedEmailPCD.proof.publicKey,
+        deserializedEmailPCD.proof.rsaPCD.proof.publicKey,
         "public"
       );
       expect(pcdPublicKey.isPublic(true)).to.eq(true);
