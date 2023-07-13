@@ -22,22 +22,6 @@ create table pretix_events_config (
   active_item_ids VARCHAR[] NOT NULL
 );
 
--- Tickets with positions representing items that are configured to be active.
-create table devconnect_pretix_tickets (
-  id SERIAL PRIMARY KEY,
-   -- email address, derived from the `attendee_email` of the the positions in
-  --  each Pretix order
-  email VARCHAR NOT NULL,
-  -- full name, eg "Vitalik Buterin"
-  full_name VARCHAR NOT NULL,
-  -- FK into `devconnect_pretix_events_info` table
-  pretix_events_config_id SERIAL NOT NULL REFERENCES pretix_events_config(id),
-  -- active item IDs
-  item_ids VARCHAR[] NOT NULL,
-  -- each ticket will be unique on (email, pretix_events_config_id)
-  UNIQUE (email, pretix_events_config_id)
-);
-
 -- Tables for us to keep relevant data from the Pretix API synced. We want up-to-date
 -- info here in order to render relevant information to the user on the ticket, such as
 -- the event name and item name.
@@ -56,6 +40,22 @@ create table devconnect_pretix_items_info (
   devconnect_pretix_events_info_id SERIAL NOT NULL REFERENCES devconnect_pretix_events_info(id),
   -- item name from Pretix API
   item_name VARCHAR NOT NULL
+);
+
+-- Tickets with positions representing items that are configured to be active.
+create table devconnect_pretix_tickets (
+  id SERIAL PRIMARY KEY,
+  -- email address, derived from the `attendee_email` of the the positions in
+  -- each Pretix order
+  email VARCHAR NOT NULL,
+  -- full name, eg "Vitalik Buterin"
+  full_name VARCHAR NOT NULL,
+  -- FK into `devconnect_pretix_items_info` table
+  devconnect_pretix_items_info_id SERIAL NOT NULL REFERENCES devconnect_pretix_items_info(id),
+  -- we want tickets to be soft deleted
+  deleted_at TIMESTAMP,
+  -- each ticket will be unique on (email, pretix_events_config_id)
+  UNIQUE (email, devconnect_pretix_items_info_id, deleted_at)
 );
 
 -- Table container "privileged" users that can check status of ticketholders and
