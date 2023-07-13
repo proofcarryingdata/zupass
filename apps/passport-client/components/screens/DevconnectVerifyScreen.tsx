@@ -1,4 +1,5 @@
 import { decodeQRPayload } from "@pcd/passport-ui";
+import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { sleep } from "../../src/util";
@@ -14,9 +15,9 @@ export function DevconnectVerifyScreen() {
   );
 }
 
-function useDecodedPCD(): string | undefined {
+function useDecodedPCD(): RSATicketPCD | undefined {
   const location = useLocation();
-  const [decodedPCD, setDecodedPCD] = useState<string | undefined>();
+  const [decodedPCD, setDecodedPCD] = useState<RSATicketPCD | undefined>();
 
   useEffect(() => {
     (async () => {
@@ -29,7 +30,7 @@ function useDecodedPCD(): string | undefined {
   return decodedPCD;
 }
 
-async function decodePCD(location): Promise<string | undefined> {
+async function decodePCD(location): Promise<RSATicketPCD | undefined> {
   try {
     const params = new URLSearchParams(location.search);
     const encodedQRPayload = params.get("pcd");
@@ -39,7 +40,11 @@ async function decodePCD(location): Promise<string | undefined> {
     );
 
     const decodedQrPayload = decodeQRPayload(encodedQRPayload);
-    return decodedQrPayload;
+    const parsedQrPayload = JSON.parse(decodedQrPayload);
+    const decodedPCD = await RSATicketPCDPackage.deserialize(
+      parsedQrPayload.pcd
+    );
+    return decodedPCD;
   } catch (e) {
     console.log("error decoding pcd", e);
   }
