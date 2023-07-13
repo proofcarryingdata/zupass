@@ -1,6 +1,6 @@
 import { ITicketData, RSATicketPCD } from "./RSATicketPCD";
 
-export function getTicketData(pcd: RSATicketPCD): ITicketData {
+export function getTicketData(pcd?: RSATicketPCD): ITicketData {
   let ticketData: ITicketData = {};
   try {
     ticketData = JSON.parse(

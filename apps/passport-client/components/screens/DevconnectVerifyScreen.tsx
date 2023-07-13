@@ -1,5 +1,10 @@
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import {
+  getTicketData,
+  ITicketData,
+  RSATicketPCD,
+  RSATicketPCDPackage,
+} from "@pcd/rsa-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { sleep } from "../../src/util";
@@ -7,11 +12,24 @@ import { AppContainer } from "../shared/AppContainer";
 
 export function DevconnectVerifyScreen() {
   const decodedPCD = useDecodedPCD();
+  const ticketData = getTicketData(decodedPCD);
 
   return (
     <AppContainer bg={"primary"}>
-      {JSON.stringify(decodedPCD, null, 2)}
+      <TicketInfoSection ticketData={ticketData} />
     </AppContainer>
+  );
+}
+
+function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
+  return (
+    <div>
+      <div>{ticketData.eventName}</div>
+      <div>{ticketData.ticketName}</div>
+      <div>{ticketData.attendeeName}</div>
+      <div>{ticketData.attendeeEmail}</div>
+      <div>{ticketData.timestamp}</div>
+    </div>
   );
 }
 
