@@ -10,6 +10,7 @@ import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { RSATicketCardBody } from "./CardBody";
+import { getTicketData } from "./utils";
 
 export const RSAPCDTypeName = "rsa-ticket-pcd";
 
@@ -103,8 +104,15 @@ export async function deserialize(serialized: string): Promise<RSATicketPCD> {
 }
 
 export function getDisplayOptions(pcd: RSATicketPCD): DisplayOptions {
+  const ticketData = getTicketData(pcd);
+  let header = "Ticket";
+
+  if (ticketData.eventName && ticketData.ticketName) {
+    header = `${ticketData.eventName} (${ticketData.ticketName})`;
+  }
+
   return {
-    header: "Ticket ZZZ",
+    header: header,
     displayName: "ticket-" + pcd.id.substring(0, 4),
   };
 }

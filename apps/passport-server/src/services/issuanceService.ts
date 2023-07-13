@@ -92,8 +92,8 @@ export class IssuanceService {
     // TODO: convert from pretix ticket to {@link ITicketData}
     const ticketData: ITicketData = {
       attendeeEmail: email,
-      attendeeName: "Test Name",
-      eventName: "Test Event",
+      attendeeName: "Ivan Chub",
+      eventName: "ProgCrypto",
       ticketName: "GA",
       ticketId: "5",
       timestamp: Date.now(),

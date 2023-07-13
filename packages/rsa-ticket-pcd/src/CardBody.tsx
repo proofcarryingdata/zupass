@@ -4,27 +4,20 @@ import {
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import styled from "styled-components";
-import { ITicketData, RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
+import { RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
+import { getTicketData } from "./utils";
 
 export function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
-  let ticketData: ITicketData = {};
-  try {
-    ticketData = JSON.parse(
-      pcd?.proof?.rsaPCD?.claim?.message ?? "{}"
-    ) as ITicketData;
-  } catch (e) {
-    console.log("[TICKET] failed to parse");
-  }
+  const ticketData = getTicketData(pcd);
 
   return (
     <Container>
-      <div>{ticketData.eventName}</div>
-      <div>{ticketData.ticketName}</div>
-
       <TicketQR pcd={pcd} />
 
-      <div>{ticketData.attendeeName}</div>
-      <div>{ticketData.attendeeEmail}</div>
+      <TicketInfo>
+        <span>{ticketData.attendeeName}</span>
+        <span>{ticketData.attendeeEmail}</span>
+      </TicketInfo>
     </Container>
   );
 }
@@ -48,8 +41,16 @@ function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
   );
 }
 
-const Container = styled.div`
+const Container = styled.span`
   padding: 16px;
   overflow: hidden;
   width: 100%;
+`;
+
+const TicketInfo = styled.div`
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 `;
