@@ -15,6 +15,8 @@ describe("RSA Ticket PCD should work", function () {
   let ticketPCD: RSATicketPCD;
 
   this.beforeAll(async () => {
+    await RSATicketPCDPackage.init!({});
+
     rsaPCD = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
