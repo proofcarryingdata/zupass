@@ -4,7 +4,7 @@ import {
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import styled from "styled-components";
-import { RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
+import { initArgs, RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
 import { getTicketData } from "./utils";
 
 export function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
@@ -29,7 +29,8 @@ function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
     const serializedPCD = JSON.stringify(serialized);
     console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
-    return encodedPCD;
+    const verificationLink = initArgs.makeEncodedVerifyLink(encodedPCD);
+    return verificationLink;
   }, [pcd]);
 
   return (

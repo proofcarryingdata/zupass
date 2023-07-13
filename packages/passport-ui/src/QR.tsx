@@ -55,7 +55,9 @@ export function QRDisplayWithRegenerateAndStorage({
       localStorage[uniqueId] || "{}"
     ) as Partial<SavedQRState>;
     console.log(
-      `[QR] loaded saved state for ${uniqueId}: ${JSON.stringify(savedState)}`
+      `[QR] ('${uniqueId}') loaded saved state for ${uniqueId}: ${JSON.stringify(
+        savedState
+      )}`
     );
 
     const { timestamp, payload } = savedState;
@@ -65,7 +67,9 @@ export function QRDisplayWithRegenerateAndStorage({
       Date.now() - timestamp < maxAgeMs &&
       payload !== undefined
     ) {
-      console.log(`[QR] from localStorage, timestamp ${timestamp}`);
+      console.log(
+        `[QR] ('${uniqueId}') from localStorage, timestamp ${timestamp}`
+      );
       return { timestamp, payload: payload };
     }
 
@@ -75,10 +79,12 @@ export function QRDisplayWithRegenerateAndStorage({
   const maybeGenerateQR = useCallback(async () => {
     const timestamp = Date.now();
     if (savedState && timestamp - savedState.timestamp < regenerateAfterMs) {
-      console.log(`[QR] not regenerating, timestamp ${timestamp}`);
+      console.log(
+        `[QR] ('${uniqueId}') not regenerating, timestamp ${timestamp}`
+      );
       return;
     }
-    console.log(`[QR] regenerating data ${timestamp}`);
+    console.log(`[QR] ('${uniqueId}') regenerating data ${timestamp}`);
     const newData = await generateQRPayload();
     const newSavedState: SavedQRState = { timestamp, payload: newData };
     localStorage[uniqueId] = JSON.stringify(newSavedState);
@@ -95,7 +101,7 @@ export function QRDisplayWithRegenerateAndStorage({
     return savedState ? loadedLogo : loadingLogo;
   }, [loadedLogo, loadingLogo, savedState]);
 
-  console.log(`[QR] rendering ${savedState?.payload}`);
+  console.log(`[QR] ('${uniqueId}') rendering ${savedState?.payload}`);
 
   return (
     <QRDisplay
@@ -118,7 +124,6 @@ export function QRDisplay({
   fgColor?: string;
   bgColor?: string;
 }) {
-  console.log(`[QR] VALUE`, value);
   return (
     <QRWrap>
       {value !== undefined && (

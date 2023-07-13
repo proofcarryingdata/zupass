@@ -23,6 +23,15 @@ export interface ITicketData {
   ticketId?: string;
 }
 
+export interface RSATicketPCDInitArgs {
+  makeEncodedVerifyLink(encodedPCD: string): string;
+}
+
+export let initArgs: RSATicketPCDInitArgs;
+async function init(args: RSATicketPCDInitArgs): Promise<void> {
+  initArgs = args;
+}
+
 export interface RSATicketPCDArgs {
   id: StringArgument;
   rsaPCD: PCDArgument<RSATicketPCD>;
@@ -52,6 +61,10 @@ export class RSATicketPCD implements PCD<RSATicketPCDClaim, RSATicketPCDProof> {
 }
 
 export async function prove(args: RSATicketPCDArgs): Promise<RSATicketPCD> {
+  if (!initArgs) {
+    throw new Error("package not initialized");
+  }
+
   if (!args.rsaPCD.value?.pcd) {
     throw new Error("missing rsa pcd");
   }
@@ -69,6 +82,10 @@ export async function prove(args: RSATicketPCDArgs): Promise<RSATicketPCD> {
 }
 
 export async function verify(pcd: RSATicketPCD): Promise<boolean> {
+  if (!initArgs) {
+    throw new Error("package not initialized");
+  }
+
   try {
     const valid = await RSAPCDPackage.verify(pcd.proof.rsaPCD);
     return valid;
@@ -80,6 +97,10 @@ export async function verify(pcd: RSATicketPCD): Promise<boolean> {
 export async function serialize(
   pcd: RSATicketPCD
 ): Promise<SerializedPCD<RSATicketPCD>> {
+  if (!initArgs) {
+    throw new Error("package not initialized");
+  }
+
   const serializedRSAPCD = await RSAPCDPackage.serialize(pcd.proof.rsaPCD);
 
   return {
@@ -92,6 +113,10 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<RSATicketPCD> {
+  if (!initArgs) {
+    throw new Error("package not initialized");
+  }
+
   const deserializedWrapper = JSONBig().parse(serialized);
   const deserializedRSAPCD = await RSAPCDPackage.deserialize(
     deserializedWrapper.rsaPCD.pcd
@@ -104,6 +129,10 @@ export async function deserialize(serialized: string): Promise<RSATicketPCD> {
 }
 
 export function getDisplayOptions(pcd: RSATicketPCD): DisplayOptions {
+  if (!initArgs) {
+    throw new Error("package not initialized");
+  }
+
   const ticketData = getTicketData(pcd);
   let header = "Ticket";
 
@@ -124,11 +153,12 @@ export const RSATicketPCDPackage: PCDPackage<
   RSATicketPCDClaim,
   RSATicketPCDProof,
   RSATicketPCDArgs,
-  undefined
+  RSATicketPCDInitArgs
 > = {
   name: RSAPCDTypeName,
   renderCardBody: RSATicketCardBody,
   getDisplayOptions,
+  init,
   prove,
   verify,
   serialize,

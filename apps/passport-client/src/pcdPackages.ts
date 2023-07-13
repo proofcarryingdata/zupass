@@ -10,6 +10,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { appConfig } from "./appConfig";
+import { makeEncodedVerifyLink } from "./qr";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
@@ -43,6 +44,10 @@ async function loadPackages(): Promise<PCDPackage[]> {
   await RLNPCDPackage.init({
     wasmFilePath: SERVER_STATIC_URL + "rln-artifacts/16.wasm",
     zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey",
+  });
+
+  await RSATicketPCDPackage.init({
+    makeEncodedVerifyLink: makeEncodedVerifyLink,
   });
 
   return [
