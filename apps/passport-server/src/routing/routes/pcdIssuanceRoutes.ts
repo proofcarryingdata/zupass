@@ -34,7 +34,7 @@ export function initPCDIssuanceRoutes(
       }
 
       const request = req.body as IssuedPCDsRequest;
-      const response = await issuanceService.handleRequest(request);
+      const response = await issuanceService.handleIssueRequest(request);
       res.status(200).json(response);
     } catch (e) {
       rollbarService?.reportError(e);

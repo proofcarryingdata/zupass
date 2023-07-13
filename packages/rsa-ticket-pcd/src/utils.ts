@@ -1,3 +1,4 @@
+import NodeRSA from "node-rsa";
 import { ITicketData, RSATicketPCD } from "./RSATicketPCD";
 
 export function getTicketData(pcd?: RSATicketPCD): ITicketData {
@@ -11,4 +12,20 @@ export function getTicketData(pcd?: RSATicketPCD): ITicketData {
   }
 
   return ticketData;
+}
+
+export function getPublicKey(pcd?: RSATicketPCD): NodeRSA | undefined {
+  const encodedPublicKey = pcd?.proof?.rsaPCD?.proof?.publicKey;
+  if (!encodedPublicKey) {
+    return undefined;
+  }
+
+  try {
+    const key = new NodeRSA(encodedPublicKey, "public");
+    return key;
+  } catch (e) {
+    console.log("failed to deserialize key");
+  }
+
+  return undefined;
 }

@@ -1,12 +1,18 @@
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CheckInRequest,
+  CheckInResponse,
   ISSUANCE_STRING,
   IssuedPCDsRequest,
   IssuedPCDsResponse,
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { ITicketData, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import {
+  getPublicKey,
+  ITicketData,
+  RSATicketPCDPackage,
+} from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -30,7 +36,7 @@ export class IssuanceService {
     return this.exportedPublicKey;
   }
 
-  public async handleRequest(
+  public async handleIssueRequest(
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
     const pcds: SerializedPCD[] = [];
@@ -39,6 +45,42 @@ export class IssuanceService {
       pcds.push(emailOwnershipPCD);
     }
     return { pcds };
+  }
+
+  public async handleCheckInRequest(
+    request: CheckInRequest
+  ): Promise<CheckInResponse> {
+    try {
+      const ticketPCD = await RSATicketPCDPackage.deserialize(
+        request.ticket.pcd
+      );
+      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
+      if (!proofPublicKey) {
+        throw new Error("failed to get public key from proof");
+      }
+      const serverPublicKey = this.getPublicKey();
+
+      if (serverPublicKey !== proofPublicKey) {
+        throw new Error("ticket was not signed with the right key");
+      }
+
+      // TODO: load this from the database
+      // make sure that the ticket has not been revoked
+      // make sure that the ticket has bot already been used to check in
+      const isTicketValid = true;
+
+      if (isTicketValid) {
+        return {
+          success: true,
+        };
+      }
+
+      return {
+        success: false,
+      };
+    } catch (e) {
+      throw new Error("failed to check in");
+    }
   }
 
   private async getUserEmailFromRequest(

@@ -74,6 +74,8 @@ async function decodePCD(location): Promise<RSATicketPCD | undefined> {
   return undefined;
 }
 
+async function verifyTicketOnServer() {}
+
 const Container = styled.div`
   margin-top: 64px;
   border-radius: 12px;

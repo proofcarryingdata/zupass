@@ -1,5 +1,6 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { RSATicketPCD } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 
@@ -104,4 +105,12 @@ export interface IssuedPCDsRequest {
  */
 export interface IssuedPCDsResponse {
   pcds: SerializedPCD[];
+}
+
+export interface CheckInRequest {
+  ticket: SerializedPCD<RSATicketPCD>;
+}
+
+export interface CheckInResponse {
+  success: boolean;
 }
