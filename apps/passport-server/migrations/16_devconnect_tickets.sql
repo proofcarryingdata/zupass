@@ -61,7 +61,6 @@ create table devconnect_pretix_items_info (
 -- Table container "privileged" users that can check status of ticketholders and
 -- verify their authenticity. A user with a given email is able to verify a ticket
 -- if and only if (email, event) is contained in `devconnect_superusers`,
--- then the 
 create table devconnect_superusers (
   id SERIAL PRIMARY KEY,
    -- email address of superuser
