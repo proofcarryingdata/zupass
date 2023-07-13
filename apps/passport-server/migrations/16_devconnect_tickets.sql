@@ -52,10 +52,10 @@ create table devconnect_pretix_tickets (
   full_name VARCHAR NOT NULL,
   -- FK into `devconnect_pretix_items_info` table
   devconnect_pretix_items_info_id SERIAL NOT NULL REFERENCES devconnect_pretix_items_info(id),
-  -- column to indicate whether a ticket is "soft deleted"
-  is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+  -- we want tickets to be soft deleted
+  deleted_at TIMESTAMP,
   -- each ticket will be unique on (email, pretix_events_config_id)
-  UNIQUE (email, devconnect_pretix_items_info_id)
+  UNIQUE (email, devconnect_pretix_items_info_id, deleted_at)
 );
 
 -- Table container "privileged" users that can check status of ticketholders and
