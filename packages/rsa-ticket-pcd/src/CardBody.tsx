@@ -29,6 +29,9 @@ function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
     const serializedPCD = JSON.stringify(serialized);
     console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
+    if (!initArgs.makeEncodedVerifyLink) {
+      throw new Error("must provide makeEncodedVerifyLink");
+    }
     const verificationLink = initArgs.makeEncodedVerifyLink(encodedPCD);
     return verificationLink;
   }, [pcd]);
