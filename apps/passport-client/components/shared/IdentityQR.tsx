@@ -19,6 +19,17 @@ interface SavedQRState {
   payload: string;
 }
 
+const [qrBg, qrFg] = (() => {
+  try {
+    const style = getComputedStyle(document.body);
+    const bg = style.getPropertyValue("--white");
+    const fg = style.getPropertyValue("--bg-dark-primary");
+    return [bg, fg];
+  } catch (e) {
+    return ["white", "black"];
+  }
+})();
+
 /**
  * Generate a fresh identity-revealing proof every n ms. We regenerate before
  * the proof expires to allow for a few minutes of clock skew between prover
@@ -48,6 +59,8 @@ export function IdentityQR() {
       loadingLogo={<QRLogoLoading />}
       loadedLogo={appConfig.isZuzalu ? <QRLogoDone /> : undefined}
       maxAgeMs={appConfig.maxIdentityProofAgeMs}
+      fgColor={qrFg}
+      bgColor={qrBg}
       uniqueId={"IDENTITY_ID"}
     />
   );
@@ -59,12 +72,16 @@ export function QRDisplayWithRegenerateAndStorage({
   uniqueId,
   loadingLogo,
   loadedLogo,
+  fgColor,
+  bgColor,
 }: {
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
   uniqueId: string;
   loadingLogo: React.ReactNode;
   loadedLogo: React.ReactNode;
+  fgColor?: string;
+  bgColor?: string;
 }) {
   const [savedState, setSavedState] = useState<SavedQRState | undefined>(() => {
     const savedState = JSON.parse(
@@ -113,20 +130,35 @@ export function QRDisplayWithRegenerateAndStorage({
 
   console.log(`[QR] rendering ${savedState?.payload}`);
 
-  return <QRDisplay logoOverlay={logoOverlay} value={savedState?.payload} />;
+  return (
+    <QRDisplay
+      logoOverlay={logoOverlay}
+      value={savedState?.payload}
+      fgColor={fgColor}
+      bgColor={bgColor}
+    />
+  );
 }
 
 export function QRDisplay({
   value,
   logoOverlay,
+  fgColor,
+  bgColor,
 }: {
   value?: string;
   logoOverlay?: React.ReactNode;
+  fgColor?: string;
+  bgColor?: string;
 }) {
   return (
     <QRWrap>
       {value !== undefined && (
-        <QR value={value} bgColor={qrBg} fgColor={qrFg} />
+        <QR
+          value={value}
+          bgColor={fgColor ?? "black"}
+          fgColor={bgColor ?? "white"}
+        />
       )}
       {logoOverlay}
     </QRWrap>
@@ -150,13 +182,6 @@ const QRLogo = styled.img`
 
 // Style constants
 const qrSize = "300px";
-const [qrBg, qrFg] = (() => {
-  const style = getComputedStyle(document.body);
-  const bg = style.getPropertyValue("--white");
-  const fg = style.getPropertyValue("--bg-dark-primary");
-  return [bg, fg];
-})();
-
 const QRWrap = styled.div`
   position: relative;
   width: ${qrSize};
