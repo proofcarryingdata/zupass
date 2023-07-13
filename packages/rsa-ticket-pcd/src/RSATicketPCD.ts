@@ -19,6 +19,7 @@ export interface ITicketData {
   ticketName?: string;
   attendeeName?: string;
   attendeeEmail?: string;
+  ticketId?: string;
 }
 
 export interface RSATicketPCDArgs {

@@ -95,11 +95,12 @@ export class IssuanceService {
       attendeeName: "Test Name",
       eventName: "Test Event",
       ticketName: "GA",
+      ticketId: "5",
       timestamp: Date.now(),
     };
 
     const serializedTicketData = JSON.stringify(ticketData);
-    const stableId = await getHash("issued-ticket-" + serializedTicketData);
+    const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
     const rsaPcd = await RSAPCDPackage.prove({
       privateKey: {
@@ -108,7 +109,7 @@ export class IssuanceService {
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: JSON.stringify(ticketData),
+        value: serializedTicketData,
       },
       id: {
         argumentType: ArgumentTypeName.String,
