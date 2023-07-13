@@ -19,6 +19,7 @@
     "@pcd/pcd-collection": "0.5.3",
     "@pcd/pcd-types": "0.5.3",
     "@pcd/rln-pcd": "0.4.3",
+    "@pcd/rsa-pcd": "0.0.1",
     "@pcd/semaphore-group-pcd": "0.5.3",
     "@pcd/semaphore-identity-pcd": "0.5.3",
     "@pcd/webauthn-pcd": "0.5.3",

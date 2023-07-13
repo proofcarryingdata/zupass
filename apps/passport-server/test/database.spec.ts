@@ -8,6 +8,7 @@ import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllCommitments,
   fetchCommitment,
+  fetchCommitmentByPublicCommitment,
   removeCommitment,
 } from "../src/database/queries/commitments";
 import {
@@ -231,6 +232,10 @@ describe("database reads and writes", function () {
     expect(insertedCommitment.commitment).to.eq(commitment);
     expect(insertedCommitment.email).to.eq(email);
     expect(insertedCommitment.uuid).to.eq(uuid);
+
+    expect(await fetchCommitmentByPublicCommitment(db, commitment)).to.deep.eq(
+      insertedCommitment
+    );
 
     await removeCommitment(db, email);
     const deletedCommitment = await fetchCommitment(db, email);

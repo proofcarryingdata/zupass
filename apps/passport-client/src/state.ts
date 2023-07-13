@@ -27,12 +27,11 @@ export interface ZuState {
   userInvalid?: boolean;
 
   uploadedUploadId?: string;
-
   uploadingUploadId?: string;
-
   downloadedPCDs?: boolean;
-
   downloadingPCDs?: boolean;
+  loadedIssuedPCDs?: boolean;
+  loadingIssuedPCDs?: boolean;
 }
 
 export interface ZuError {

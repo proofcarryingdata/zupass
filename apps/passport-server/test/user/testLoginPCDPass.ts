@@ -9,7 +9,7 @@ export async function testLoginPCDPass(
   email: string,
   force: boolean,
   userAlreadyLoggedIn: boolean
-): Promise<User> {
+): Promise<{ user: User; identity: Identity }> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
@@ -62,9 +62,9 @@ export async function testLoginPCDPass(
     newUserResponseJson.uuid,
     getUserResponse
   );
-  const getUserResponseJson = getUserResponse._getJSONData();
+  const getUserResponseJson: User = getUserResponse._getJSONData();
 
   expect(getUserResponseJson).to.deep.eq(newUserResponseJson);
 
-  return getUserResponseJson;
+  return { user: getUserResponseJson, identity };
 }

@@ -6,6 +6,7 @@ import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
+import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
 import { PCDCard } from "../shared/PCDCard";
 
 /**
@@ -100,6 +101,7 @@ export function HomeScreen() {
               </div>
             );
           })}
+          <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>

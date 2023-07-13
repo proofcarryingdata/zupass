@@ -2,6 +2,7 @@ import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyn
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
+import { startIssuanceService } from "./services/issuanceService";
 import { startMetricsService } from "./services/metricsService";
 import { startPretixSyncService } from "./services/pretixSyncService";
 import { startProvingService } from "./services/provingService";
@@ -46,6 +47,7 @@ export async function startServices(
   );
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
+  const issuanceService = startIssuanceService(context);
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -56,6 +58,7 @@ export async function startServices(
     pretixSyncService,
     devconnectPretixSyncService,
     metricsService,
+    issuanceService,
   };
   return services;
 }

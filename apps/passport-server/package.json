@@ -18,6 +18,7 @@
     "@pcd/passport-interface": "0.5.3",
     "@pcd/pcd-types": "0.5.3",
     "@pcd/rln-pcd": "0.4.3",
+    "@pcd/rsa-pcd": "0.0.1",
     "@pcd/semaphore-group-pcd": "0.5.3",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",

@@ -10,6 +10,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { submitNewUser } from "./api/user";
+import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
@@ -21,7 +22,11 @@ import {
 import { getPackages } from "./pcdPackages";
 import { ZuError, ZuState } from "./state";
 import { sanitizeDateRanges } from "./user";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import {
+  downloadStorage,
+  loadIssuedPCDs,
+  uploadStorage,
+} from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -59,7 +64,7 @@ export type Action =
       storage: EncryptedStorage;
       encryptionKey: string;
     }
-  | { type: "add-pcd"; pcd: SerializedPCD }
+  | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
@@ -93,8 +98,8 @@ export async function dispatch(
       return update({
         modal: action.modal,
       });
-    case "add-pcd":
-      return addPCD(state, update, action.pcd);
+    case "add-pcds":
+      return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "participant-invalid":
@@ -225,18 +230,15 @@ function resetPassport() {
   window.location.reload();
 }
 
-async function addPCD(state: ZuState, update: ZuUpdate, pcd: SerializedPCD) {
-  if (state.pcds.hasPackage(pcd.type)) {
-    const newPCD = await state.pcds.deserialize(pcd);
-    if (state.pcds.hasPCDWithId(newPCD.id)) {
-      throw new Error("This PCD has already been added to your passport");
-    }
-    await state.pcds.deserializeAndAdd(pcd);
-    await savePCDs(state.pcds);
-    update({ pcds: state.pcds });
-  } else {
-    throw new Error(`Can't add PCD: missing package ${pcd.type}`);
-  }
+async function addPCDs(
+  state: ZuState,
+  update: ZuUpdate,
+  pcds: SerializedPCD[],
+  upsert?: boolean
+) {
+  await state.pcds.deserializeAllAndAdd(pcds, { upsert });
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
 }
 
 async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
@@ -341,6 +343,32 @@ async function sync(state: ZuState, update: ZuUpdate) {
   }
 
   if (state.downloadingPCDs || !state.downloadedPCDs) {
+    return;
+  }
+
+  if (
+    !appConfig.isZuzalu &&
+    !state.loadedIssuedPCDs &&
+    !state.loadingIssuedPCDs
+  ) {
+    update({
+      loadingIssuedPCDs: true,
+    });
+    const pcds = await loadIssuedPCDs(state);
+    await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
+    update({
+      loadingIssuedPCDs: false,
+      loadedIssuedPCDs: true,
+      pcds: state.pcds,
+    });
+    return;
+  }
+
+  if (
+    !appConfig.isZuzalu &&
+    !state.loadedIssuedPCDs &&
+    state.loadingIssuedPCDs
+  ) {
     return;
   }
 

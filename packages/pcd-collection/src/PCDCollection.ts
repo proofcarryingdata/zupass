@@ -10,9 +10,9 @@ export class PCDCollection {
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
 
-  public constructor(packages: PCDPackage[], pcds: PCD[]) {
+  public constructor(packages: PCDPackage[], pcds?: PCD[]) {
     this.packages = packages;
-    this.pcds = pcds;
+    this.pcds = pcds ?? [];
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(
@@ -33,6 +33,10 @@ export class PCDCollection {
     return serialized;
   }
 
+  public async serializeAll(): Promise<SerializedPCD[]> {
+    return Promise.all(this.pcds.map(this.serialize.bind(this)));
+  }
+
   public async deserialize(serialized: SerializedPCD): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
     if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
@@ -45,26 +49,45 @@ export class PCDCollection {
   }
 
   public async deserializeAllAndAdd(
-    serialized: SerializedPCD[]
+    serialized: SerializedPCD[],
+    options?: { upsert?: boolean }
   ): Promise<void> {
     const deserialized = await this.deserializeAll(serialized);
-    this.addAll(deserialized);
+    this.addAll(deserialized, options);
   }
 
   public async remove(id: string) {
     this.pcds = this.pcds.filter((pcd) => pcd.id !== id);
   }
 
-  public async deserializeAndAdd(serialized: SerializedPCD): Promise<void> {
-    await this.deserializeAllAndAdd([serialized]);
+  public async deserializeAndAdd(
+    serialized: SerializedPCD,
+    options?: { upsert?: boolean }
+  ): Promise<void> {
+    await this.deserializeAllAndAdd([serialized], options);
   }
 
-  public async serializeAll(): Promise<SerializedPCD[]> {
-    return Promise.all(this.pcds.map(this.serialize.bind(this)));
+  public add(pcd: PCD, options?: { upsert?: boolean }) {
+    this.addAll([pcd], options);
   }
 
-  public addAll(pcds: PCD[]) {
-    this.pcds.push(...pcds);
+  public addAll(pcds: PCD[], options?: { upsert?: boolean }) {
+    const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
+    const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
+
+    for (const [id, pcd] of toAddMap.entries()) {
+      if (currentMap.has(id) && !options?.upsert) {
+        throw new Error(`pcd with id ${id} is already in this collection`);
+      }
+
+      currentMap.set(id, pcd);
+    }
+
+    this.pcds = Array.from(currentMap.values());
+  }
+
+  public size(): number {
+    return this.pcds.length;
   }
 
   public getAll(): PCD[] {
@@ -99,7 +122,7 @@ export class PCDCollection {
     const pcds: PCD[] = await Promise.all(
       serializedPCDs.map(collection.deserialize.bind(collection))
     );
-    collection.addAll(pcds);
+    collection.addAll(pcds, { upsert: true });
     return collection;
   }
 }
