@@ -14,7 +14,7 @@ import { makeEncodedVerifyLink } from "./qr";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
-export async function getPackages() {
+export async function getPackages(): Promise<PCDPackage[]> {
   if (pcdPackages !== undefined) {
     return pcdPackages;
   }
