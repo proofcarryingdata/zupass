@@ -7,7 +7,12 @@ import { logger } from "../../util/logger";
 export function initStatusRoutes(
   app: express.Application,
   { dbPool }: ApplicationContext,
-  { semaphoreService, pretixSyncService, rollbarService }: GlobalServices
+  {
+    semaphoreService,
+    pretixSyncService,
+    rollbarService,
+    devconnectPretixSyncService,
+  }: GlobalServices
 ): void {
   logger("[INIT] initializing status routes");
 
@@ -16,6 +21,24 @@ export function initStatusRoutes(
       if (pretixSyncService) {
         res.send(
           pretixSyncService.hasCompletedSyncSinceStarting
+            ? PretixSyncStatus.Synced
+            : PretixSyncStatus.NotSynced
+        );
+      } else {
+        res.send(PretixSyncStatus.NoPretix);
+      }
+    } catch (e) {
+      logger(e);
+      rollbarService?.reportError(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/devconnect-pretix/status", async (req: Request, res: Response) => {
+    try {
+      if (devconnectPretixSyncService) {
+        res.send(
+          devconnectPretixSyncService.hasCompletedSyncSinceStarting
             ? PretixSyncStatus.Synced
             : PretixSyncStatus.NotSynced
         );

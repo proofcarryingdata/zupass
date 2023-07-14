@@ -19,6 +19,17 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
   uuid: string | null;
 }
 
+export interface DevconnectPretixTicket {
+  email: string;
+  full_name: string;
+  devconnect_pretix_items_info_id: number;
+  is_deleted: boolean;
+}
+
+export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
+  id: number;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that has logged in to the passport.
  */
@@ -50,4 +61,33 @@ export interface HistoricSemaphoreGroup {
   rootHash: string;
   serializedGroup: string;
   timeCreated: string;
+}
+
+// Database representation of Pretix event configuration
+export interface PretixEventsConfig {
+  id: number;
+  event_id: string;
+  pretix_organizers_config_id: number;
+  active_item_ids: string[]; // relevant item IDs that correspond to ticket products
+}
+
+// Database representation of Pretix organizer configuration
+export interface PretixOrganizersConfig {
+  id: number;
+  organizer_url: string;
+  token: string;
+  events: PretixEventsConfig[];
+}
+
+export interface PretixEventInfo {
+  id: number;
+  pretix_events_config_id: number;
+  event_name: string;
+}
+
+export interface PretixItemInfo {
+  id: number;
+  item_id: string;
+  devconnect_pretix_events_info_id: number;
+  item_name: string;
 }
