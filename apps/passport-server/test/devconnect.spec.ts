@@ -16,9 +16,9 @@ import {
   EMAIL_2,
   EMAIL_3,
   EMAIL_4,
-  EVENT_A,
-  EVENT_B,
-  EVENT_C,
+  EVENT_A_ID,
+  EVENT_B_ID,
+  EVENT_C_ID,
   ITEM_1,
   ITEM_2,
 } from "./pretix/devconnectPretixDataMocker";
@@ -141,7 +141,7 @@ describe("devconnect functionality", function () {
       (1, $2, '{ ${ITEM_1}, ${ITEM_2} }'),
       (1, $3, '{}')
     `,
-      [EVENT_A, EVENT_B, EVENT_C]
+      [EVENT_A_ID, EVENT_B_ID, EVENT_C_ID]
     );
 
     devconnectPretixMocker = new DevconnectPretixDataMocker();
@@ -264,11 +264,11 @@ describe("devconnect functionality", function () {
     // in EVENT_A.
     const ordersForEventA = devconnectPretixMocker
       .getMockData()
-      .ordersByEventId.get(EVENT_A)!;
+      .ordersByEventId.get(EVENT_A_ID)!;
     const orderWithEmail2And3 = ordersForEventA.find(
       (o) => o.email === EMAIL_1
     )!;
-    devconnectPretixMocker.removeOrder(EVENT_A, orderWithEmail2And3.code);
+    devconnectPretixMocker.removeOrder(EVENT_A_ID, orderWithEmail2And3.code);
     devconnectPretixSyncService.replaceApi(
       getDevconnectMockPretixAPI(devconnectPretixMocker.getMockData())
     );

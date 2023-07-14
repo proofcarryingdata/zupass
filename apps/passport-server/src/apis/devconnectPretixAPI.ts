@@ -171,6 +171,7 @@ export interface DevconnectPretixOrder {
 export interface DevconnectPretixItem {
   id: number; // corresponds to "item" field in DevconnectPretixPosition
   name: {
+    // TODO: Investigate what languages are necessary to support
     en: string; // English name of item
   };
 }

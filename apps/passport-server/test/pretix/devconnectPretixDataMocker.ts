@@ -11,9 +11,9 @@ export interface IMockDevconnectPretixData {
   eventNameByEventID: Map<string, string>;
 }
 
-export const EVENT_A = "event-a";
-export const EVENT_B = "event-b";
-export const EVENT_C = "event-c";
+export const EVENT_A_ID = "event-a";
+export const EVENT_B_ID = "event-b";
+export const EVENT_C_ID = "event-c";
 
 export const EVENT_A_NAME = "Event A";
 export const EVENT_B_NAME = "Event B";
@@ -100,14 +100,14 @@ export class DevconnectPretixDataMocker {
     ];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
-    ordersByEventId.set(EVENT_A, orders);
-    ordersByEventId.set(EVENT_B, orders);
-    ordersByEventId.set(EVENT_C, orders);
+    ordersByEventId.set(EVENT_A_ID, orders);
+    ordersByEventId.set(EVENT_B_ID, orders);
+    ordersByEventId.set(EVENT_C_ID, orders);
 
     const eventNameByEventID: Map<string, string> = new Map();
-    eventNameByEventID.set(EVENT_A, EVENT_A_NAME);
-    eventNameByEventID.set(EVENT_B, EVENT_B_NAME);
-    eventNameByEventID.set(EVENT_C, EVENT_C_NAME);
+    eventNameByEventID.set(EVENT_A_ID, EVENT_A_NAME);
+    eventNameByEventID.set(EVENT_B_ID, EVENT_B_NAME);
+    eventNameByEventID.set(EVENT_C_ID, EVENT_C_NAME);
 
     return {
       ordersByEventId,
