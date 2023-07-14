@@ -21,10 +21,13 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
 
 export interface DevconnectPretixTicket {
   email: string;
-  name: string;
-  event_id: string;
-  organizer_url: string;
-  item_ids: number[];
+  full_name: string;
+  devconnect_pretix_items_info_id: number;
+  is_deleted: boolean;
+}
+
+export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
+  id: number;
 }
 
 /**
@@ -62,13 +65,29 @@ export interface HistoricSemaphoreGroup {
 
 // Database representation of Pretix event configuration
 export interface PretixEventsConfig {
+  id: number;
   event_id: string;
-  active_item_ids: number[]; // relevant item IDs that correspond to ticket products
+  pretix_organizers_config_id: number;
+  active_item_ids: string[]; // relevant item IDs that correspond to ticket products
 }
 
 // Database representation of Pretix organizer configuration
 export interface PretixOrganizersConfig {
+  id: number;
   organizer_url: string;
   token: string;
   events: PretixEventsConfig[];
+}
+
+export interface PretixEventInfo {
+  id: number;
+  pretix_events_config_id: number;
+  event_name: string;
+}
+
+export interface PretixItemInfo {
+  id: number;
+  item_id: string;
+  devconnect_pretix_events_info_id: number;
+  item_name: string;
 }

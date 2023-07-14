@@ -3,6 +3,7 @@ import "mocha";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { fetchAllDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
@@ -21,6 +22,88 @@ import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+
+describe("devconnect configuration db tables", function () {
+  let application: PCDPass;
+
+  this.beforeAll(async () => {
+    await overrideEnvironment(pcdpassTestingEnv);
+    application = await startTestingApp();
+  });
+
+  this.afterAll(async () => {
+    await stopApplication(application);
+  });
+
+  step("test organizer config", async function () {
+    // Insert organizer 1
+    await sqlQuery(
+      application.context.dbPool,
+      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token1')"
+    );
+    // Should fail on
+    try {
+      await sqlQuery(
+        application.context.dbPool,
+        "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token2') returning id"
+      );
+      expect.fail();
+    } catch (e) {
+      // Should end up here
+    }
+    // Insert organizer 2
+    await sqlQuery(
+      application.context.dbPool,
+      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-2', 'token2')"
+    );
+    expect(
+      (
+        await sqlQuery(
+          application.context.dbPool,
+          "select id from pretix_organizers_config"
+        )
+      ).rowCount
+    ).to.equal(2);
+  });
+
+  step("test events config", async function () {
+    // Insert organizer 1 and 2 from previous test
+    // Insert event 1
+    await sqlQuery(
+      application.context.dbPool,
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
+    );
+    // Should fail on duplicate event id
+    try {
+      await sqlQuery(
+        application.context.dbPool,
+        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-1', '{}')"
+      );
+      expect.fail();
+    } catch (e) {
+      // Should end up here
+    }
+    // Insert it again with updated event-id
+    await sqlQuery(
+      application.context.dbPool,
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-2', '{}')"
+    );
+
+    // Insert with active item IDs
+    await sqlQuery(
+      application.context.dbPool,
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456}')"
+    );
+    expect(
+      (
+        await sqlQuery(
+          application.context.dbPool,
+          "select id from pretix_events_config"
+        )
+      ).rowCount
+    ).to.equal(3);
+  });
+});
 
 describe("devconnect functionality", function () {
   this.timeout(15_000);
@@ -45,6 +128,10 @@ describe("devconnect functionality", function () {
 
     _devconnectPretixSyncService =
       application.services.devconnectPretixSyncService;
+  });
+
+  this.afterAll(async () => {
+    await stopApplication(application);
   });
 
   step("email client should have been mocked", async function () {
@@ -73,12 +160,12 @@ describe("devconnect functionality", function () {
 
       // Four unique emails, two events with active items. 4 * 2 = 8
       // More details in comments below
-      expect(tickets).to.have.length(8);
+      expect(tickets).to.have.length(12);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
-        eventID: o.event_id,
         email: o.email,
-        itemIDs: o.item_ids,
+        itemInfoID: o.devconnect_pretix_items_info_id,
+        full_name: o.full_name,
       }));
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
@@ -129,7 +216,10 @@ describe("devconnect functionality", function () {
     }
   );
 
-  this.afterAll(async () => {
-    await stopApplication(application);
-  });
+  step(
+    "tickets sync when orders and items are updated or removed",
+    async function () {
+      // todo
+    }
+  );
 });

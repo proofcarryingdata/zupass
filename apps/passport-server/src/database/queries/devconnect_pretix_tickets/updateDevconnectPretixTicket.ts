@@ -13,14 +13,13 @@ export async function updateDevconnectPretixTicket(
     client,
     `\
 update devconnect_pretix_tickets
-set item_ids=$4, name=$5
-where email=$1 and event_id=$2 and organizer_url=$3;`,
+set full_name=$1, is_deleted=$2
+where email=$3 and devconnect_pretix_items_info_id=$4`,
     [
+      params.full_name,
+      params.is_deleted,
       params.email,
-      params.event_id,
-      params.organizer_url,
-      params.item_ids,
-      params.name,
+      params.devconnect_pretix_items_info_id,
     ]
   );
   return result.rowCount;

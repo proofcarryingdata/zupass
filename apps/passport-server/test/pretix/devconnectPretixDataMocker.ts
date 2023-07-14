@@ -8,14 +8,24 @@ import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
   ordersByEventId: Map<string, DevconnectPretixOrder[]>;
+  eventNameByEventID: Map<string, string>;
 }
 
 export const EVENT_A = "event-a";
 export const EVENT_B = "event-b";
 export const EVENT_C = "event-c";
 
-export const ITEM_1 = 1;
-export const ITEM_2 = 2;
+export const EVENT_A_NAME = "Event A";
+export const EVENT_B_NAME = "Event B";
+export const EVENT_C_NAME = "Event C";
+
+export const ITEM_1 = 456;
+export const ITEM_2 = 123;
+
+export const ORG_CONFIG_ID = 1;
+export const EVENT_A_CONFIG_ID = 1;
+export const EVENT_B_CONFIG_ID = 2;
+export const EVENT_C_CONFIG_ID = 3;
 
 export const EMAIL_1 = "email-1";
 export const EMAIL_2 = "email-2";
@@ -97,8 +107,14 @@ export class DevconnectPretixDataMocker {
     ordersByEventId.set(EVENT_B, orders);
     ordersByEventId.set(EVENT_C, orders);
 
+    const eventNameByEventID: Map<string, string> = new Map();
+    eventNameByEventID.set(EVENT_A, EVENT_A_NAME);
+    eventNameByEventID.set(EVENT_B, EVENT_B_NAME);
+    eventNameByEventID.set(EVENT_C, EVENT_C_NAME);
+
     return {
       ordersByEventId,
+      eventNameByEventID,
     };
   }
 

@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { PretixOrganizersConfig } from "../database/models";
-import { fetchAllPretixOrganizersConfig } from "../database/queries/pretix_organizers_config/fetchPretixOrganizersConfig";
+import { fetchPretixConfiguration as fetchPretixOrganizers } from "../database/queries/pretix_config/fetchPretixConfiguration";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -18,6 +18,11 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixItem[]>;
+  fetchEvent(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixEvent>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
@@ -25,6 +30,27 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 
   public constructor(config: DevconnectPretixConfig) {
     this.config = config;
+  }
+
+  public async fetchEvent(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixEvent> {
+    return traced(TRACE_SERVICE, "fetchItems", async () => {
+      // Fetch event API
+      const url = `${orgUrl}/events/${eventID}/`;
+      logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+      const res = await fetch(url, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      if (!res.ok) {
+        throw new Error(
+          `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+        );
+      }
+      return res.json();
+    });
   }
 
   public async fetchItems(
@@ -92,8 +118,10 @@ function pretixConfigDBToDevconnectPretixConfig(
 ): DevconnectPretixConfig {
   return {
     organizers: pretixOrganizersDB.map((organizerDB) => ({
+      id: organizerDB.id,
       orgURL: organizerDB.organizer_url,
       events: organizerDB.events.map((eventDB) => ({
+        id: eventDB.id,
         eventID: eventDB.event_id,
         activeItemIDs: eventDB.active_item_ids,
       })),
@@ -107,7 +135,7 @@ export async function getDevconnectPretixConfig(
 ): Promise<DevconnectPretixConfig | null> {
   try {
     const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
-      await fetchAllPretixOrganizersConfig(dbClient)
+      await fetchPretixOrganizers(dbClient)
     );
     logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
@@ -147,6 +175,13 @@ export interface DevconnectPretixItem {
   };
 }
 
+export interface DevconnectPretixEvent {
+  slug: string; // corresponds to "event_id" field in our dn
+  name: {
+    en: string; // English name of item
+  };
+}
+
 // Unclear why this is called a "position" rather than a ticket.
 export interface DevconnectPretixPosition {
   id: number;
@@ -161,12 +196,14 @@ export interface DevconnectPretixPosition {
 
 // In-memory representation of Pretix event configuration
 export interface DevconnectPretixEventConfig {
+  id: number;
   eventID: string;
-  activeItemIDs: number[]; // relevant item IDs that correspond to ticket products
+  activeItemIDs: string[]; // relevant item IDs that correspond to ticket products
 }
 
 // In-memory representation of Pretix organizer configuration
 export interface DevconnectPretixOrganizerConfig {
+  id: number;
   orgURL: string;
   token: string;
   events: DevconnectPretixEventConfig[];

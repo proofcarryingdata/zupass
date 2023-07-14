@@ -1,5 +1,5 @@
 import { Pool } from "pg";
-import { DevconnectPretixTicket } from "../../models";
+import { DevconnectPretixTicketDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /*
@@ -8,40 +8,33 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function fetchAllDevconnectPretixTickets(
   client: Pool
-): Promise<Array<DevconnectPretixTicket>> {
+): Promise<Array<DevconnectPretixTicketDB>> {
   const result = await sqlQuery(
     client,
     `\
       select * from devconnect_pretix_tickets;`
   );
 
-  // Ensure item IDs are converted to numbers
-  return result.rows.map((row) => ({
-    ...row,
-    item_ids: row.item_ids.map(Number),
-  }));
+  return result.rows;
 }
 
 /*
  * Fetch users by org and event that have a ticket on pretix, even if they haven't
  * logged into the passport app.
  */
-export async function fetchDevconnectPretixTicketsByOrgAndEvent(
+export async function fetchDevconnectPretixTicketsByEvent(
   client: Pool,
-  orgURL: string,
-  eventID: string
-): Promise<Array<DevconnectPretixTicket>> {
+  eventConfigID: number
+): Promise<Array<DevconnectPretixTicketDB>> {
   const result = await sqlQuery(
     client,
     `\
-      select * from devconnect_pretix_tickets
-      where organizer_url=$1 and event_id=$2;`,
-    [orgURL, eventID]
+    select t.* from devconnect_pretix_tickets t
+    join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+    join devconnect_pretix_events_info e on e.pretix_events_config_id = i.devconnect_pretix_events_info_id
+    where e.pretix_events_config_id = $1`,
+    [eventConfigID]
   );
 
-  // Ensure item IDs are converted to numbers
-  return result.rows.map((row) => ({
-    ...row,
-    item_ids: row.item_ids.map(Number),
-  }));
+  return result.rows;
 }
