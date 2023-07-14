@@ -1,5 +1,6 @@
-import { IssuedPCDsRequest } from "@pcd/passport-interface";
+import { CheckInRequest, IssuedPCDsRequest } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -67,6 +68,31 @@ export async function requestIssuedPCDs(
     chai
       .request(expressContext.app)
       .post("/issue")
+      .send(request)
+      .then(async (r) => {
+        try {
+          resolve(r);
+        } catch (e) {
+          reject(e);
+        }
+      });
+  });
+}
+
+export async function requestCheckIn(
+  application: PCDPass,
+  ticket: RSATicketPCD
+): Promise<Response> {
+  const request: CheckInRequest = {
+    ticket: await RSATicketPCDPackage.serialize(ticket),
+  };
+
+  return new Promise((resolve, reject) => {
+    const { expressContext } = application;
+
+    chai
+      .request(expressContext.app)
+      .post("/issue/check-in")
       .send(request)
       .then(async (r) => {
         try {

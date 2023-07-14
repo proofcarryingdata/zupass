@@ -1,4 +1,4 @@
-import { IssuedPCDsRequest } from "@pcd/passport-interface";
+import { CheckInRequest, IssuedPCDsRequest } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -34,7 +34,23 @@ export function initPCDIssuanceRoutes(
       }
 
       const request = req.body as IssuedPCDsRequest;
-      const response = await issuanceService.handleRequest(request);
+      const response = await issuanceService.handleIssueRequest(request);
+      res.status(200).json(response);
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.post("/issue/check-in", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+
+      const request = req.body as CheckInRequest;
+      const response = await issuanceService.handleCheckInRequest(request);
       res.status(200).json(response);
     } catch (e) {
       rollbarService?.reportError(e);

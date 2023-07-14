@@ -1,5 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
@@ -26,14 +26,6 @@ async function newPCD(id?: string) {
   });
 
   return pcd;
-}
-
-async function copyPcd(pcd: RSAPCD) {
-  return await RSAPCDPackage.deserialize(
-    (
-      await RSAPCDPackage.serialize(pcd)
-    ).pcd
-  );
 }
 
 describe("PCDCollection", async function () {
@@ -92,6 +84,8 @@ describe("PCDCollection", async function () {
       serializedPCDs
     );
 
+    const hash = collection.getHash();
+
     const replacement = await newPCD(pcdList[0].id);
 
     collection.add(replacement, { upsert: true });
@@ -101,6 +95,9 @@ describe("PCDCollection", async function () {
       pcdList[1],
       pcdList[2],
     ]);
+
+    const hashAfterEdit = collection.getHash();
+    expect(hashAfterEdit).to.not.eq(hash);
   });
 
   it("should let you find package by name", async function () {
@@ -132,9 +129,13 @@ describe("PCDCollection", async function () {
       packages,
       serializedPCDs
     );
+    const hash = collection.getHash();
 
     collection.remove(pcdList[0].id);
 
     expect(collection.getAll()).to.deep.eq([pcdList[1], pcdList[2]]);
+    const hashAfterEdit = collection.getHash();
+
+    expect(hashAfterEdit).to.not.eq(hash);
   });
 });

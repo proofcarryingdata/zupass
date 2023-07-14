@@ -8,7 +8,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage,
@@ -121,10 +121,17 @@ export function useLoggedIn() {
 
 export function useHasUploaded() {
   const [state] = useContext(DispatchContext);
+  const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
 
-  const hasUploaded = useMemo(() => {
-    return state.uploadedUploadId === state.pcds.getUploadId();
-  }, [state]);
+  useEffect(() => {
+    (async () => {
+      setHasUploaded(state.uploadedUploadId === (await state.pcds.getHash()));
+    })();
+  }, [state.pcds, state.uploadedUploadId]);
+
+  useEffect(() => {
+    setHasUploaded(undefined);
+  }, [state.uploadedUploadId]);
 
   return hasUploaded;
 }

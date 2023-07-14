@@ -9,6 +9,7 @@ import {
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
@@ -45,6 +46,7 @@ export class ProvingService {
     JubJubSignaturePCDPackage,
     RLNPCDPackage,
     RSAPCDPackage,
+    RSATicketPCDPackage,
   ];
 
   public constructor(rollbarService: RollbarService | null) {
@@ -187,6 +189,8 @@ export async function startProvingService(
     wasmFilePath: fullPath + "/16.wasm",
     zkeyFilePath: fullPath + "/16.zkey",
   });
+
+  await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
 
   const provingService = new ProvingService(rollbarService);
   return provingService;

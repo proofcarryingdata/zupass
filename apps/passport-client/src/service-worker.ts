@@ -7,12 +7,12 @@
  * source code, which happens each time production deploys.
  */
 const impermanentCache = [
-  "/",
-  "/favicon.ico",
-  "/index.html",
-  "/global-pcdpass.css",
-  "/global-zupass.css",
-  "/js/index.js",
+  // "/",
+  // "/favicon.ico",
+  // "/index.html",
+  // "/global-pcdpass.css",
+  // "/global-zupass.css",
+  // "/js/index.js",
 ];
 
 async function addResourcesToCache(resources: string[]): Promise<void> {

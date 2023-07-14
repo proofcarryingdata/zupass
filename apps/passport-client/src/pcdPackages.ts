@@ -3,16 +3,18 @@ import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { appConfig } from "./appConfig";
+import { makeEncodedVerifyLink } from "./qr";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
-export async function getPackages() {
+export async function getPackages(): Promise<PCDPackage[]> {
   if (pcdPackages !== undefined) {
     return pcdPackages;
   }
@@ -44,6 +46,10 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey",
   });
 
+  await RSATicketPCDPackage.init({
+    makeEncodedVerifyLink: makeEncodedVerifyLink,
+  });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -54,5 +60,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     WebAuthnPCDPackage,
     HaLoNoncePCDPackage,
     RSAPCDPackage,
+    RSATicketPCDPackage,
   ];
 }
