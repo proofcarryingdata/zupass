@@ -328,4 +328,12 @@ describe("devconnect functionality", function () {
       },
     ]);
   });
+
+  // TODO: More tests
+  // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
+  // 2. Test deleting positions within orders (not just entire orders).
+  // 3. Super comprehensive tests for database indices, making sure
+  //    all the unique indices are maintained.
+  // 4. Tests for flakey API responses for orders, items, and event. Test that
+  //    the function returns early but other events aren't affected.
 });
