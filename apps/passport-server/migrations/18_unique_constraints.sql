@@ -1,11 +1,15 @@
+-- this fixes some of the unique constraints that were causing
+-- issues if two org urls have the same event id, or if two events
+-- have the same item id
+
 -- remove item id unique constraint
-alter table devconnect_pretix_items_info
-drop column item_id,
-add column item_id VARCHAR NOT NULL,
-add unique (item_id, devconnect_pretix_events_info_id);
+ALTER TABLE devconnect_pretix_items_info
+DROP column item_id,
+ADD column item_id VARCHAR NOT NULL,
+ADD UNIQUE (item_id, devconnect_pretix_events_info_id);
 
 -- remove event id unique constraint, since multiple organizers
-alter table pretix_events_config
-drop column event_id,
-add column event_id VARCHAR NOT NULL,
-add unique (event_id, pretix_organizers_config_id);
+ALTER TABLE pretix_events_config
+DROP column event_id,
+ADD column event_id VARCHAR NOT NULL,
+ADD UNIQUE (event_id, pretix_organizers_config_id);
