@@ -8,14 +8,11 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import {
-  getPublicKey,
-  ITicketData,
-  RSATicketPCDPackage,
-} from "@pcd/rsa-ticket-pcd";
+import { getPublicKey, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
+import { fetchDevconnectPretixTicketsByEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
@@ -43,11 +40,7 @@ export class IssuanceService {
   public async handleIssueRequest(
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
-    const pcds: SerializedPCD[] = [];
-    const emailOwnershipPCD = await this.issueEmailOwnershipPCD(request);
-    if (emailOwnershipPCD) {
-      pcds.push(emailOwnershipPCD);
-    }
+    const pcds = await this.issueEmailOwnershipPCD(request);
     return { pcds };
   }
 
@@ -133,57 +126,69 @@ export class IssuanceService {
 
   private async issueEmailOwnershipPCD(
     request: IssuedPCDsRequest
-  ): Promise<SerializedPCD | null> {
+  ): Promise<SerializedPCD[]> {
     const email = await this.getUserEmailFromRequest(request);
 
     if (email == null) {
-      return null;
+      return [];
     }
 
-    // TODO: convert from pretix ticket to {@link ITicketData}
-    const ticketData: ITicketData = {
-      attendeeEmail: email,
-      attendeeName: "Ivan Chub",
-      eventName: "ProgCrypto",
-      ticketName: "GA",
-      ticketId: "5",
-      timestamp: Date.now(),
-    };
-
-    const serializedTicketData = JSON.stringify(ticketData);
-    const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
-
-    const rsaPcd = await RSAPCDPackage.prove({
-      privateKey: {
-        argumentType: ArgumentTypeName.String,
-        value: this.exportedPrivateKey,
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: serializedTicketData,
-      },
-      id: {
-        argumentType: ArgumentTypeName.String,
-        value: undefined,
-      },
-    });
-
-    const rsaTicketPCD = await RSATicketPCDPackage.prove({
-      id: {
-        argumentType: ArgumentTypeName.String,
-        value: stableId,
-      },
-      rsaPCD: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await RSAPCDPackage.serialize(rsaPcd),
-      },
-    });
-
-    const serializedTicketPCD = await RSATicketPCDPackage.serialize(
-      rsaTicketPCD
+    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
+      this.context.dbPool,
+      email
     );
 
-    return serializedTicketPCD;
+    return await Promise.all(
+      ticketsDB
+        // convert to ITicketData
+        .map((t) => ({
+          ticketId: t.id,
+          eventName: t.event_name,
+          ticketName: t.item_name,
+          timestamp: Date.now(),
+          attendeeEmail: email,
+          attendeeName: t.full_name,
+        }))
+        // convert to serialized ticket PCD
+        .map(async (ticketData) => {
+          const serializedTicketData = JSON.stringify(ticketData);
+          const stableId = await getHash(
+            "issued-ticket-" + ticketData.ticketId
+          );
+
+          const rsaPcd = await RSAPCDPackage.prove({
+            privateKey: {
+              argumentType: ArgumentTypeName.String,
+              value: this.exportedPrivateKey,
+            },
+            signedMessage: {
+              argumentType: ArgumentTypeName.String,
+              value: serializedTicketData,
+            },
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: undefined,
+            },
+          });
+
+          const rsaTicketPCD = await RSATicketPCDPackage.prove({
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: stableId,
+            },
+            rsaPCD: {
+              argumentType: ArgumentTypeName.PCD,
+              value: await RSAPCDPackage.serialize(rsaPcd),
+            },
+          });
+
+          const serializedTicketPCD = await RSATicketPCDPackage.serialize(
+            rsaTicketPCD
+          );
+
+          return serializedTicketPCD;
+        })
+    );
   }
 }
 
