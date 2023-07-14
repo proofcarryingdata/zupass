@@ -337,4 +337,5 @@ describe("devconnect functionality", function () {
   //    all the unique indices are maintained.
   // 4. Tests for flakey API responses for orders, items, and event. Test that
   //    the function returns early but other events aren't affected.
+  // 5. Test that cancelling positions and cancelling events should soft delete.
 });
