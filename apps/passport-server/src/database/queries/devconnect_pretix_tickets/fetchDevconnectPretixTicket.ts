@@ -12,7 +12,7 @@ export async function fetchAllDevconnectPretixTickets(
   const result = await sqlQuery(
     client,
     `\
-      select * from devconnect_pretix_tickets;`
+      select * from devconnect_pretix_tickets where is_deleted = FALSE;`
   );
 
   return result.rows;

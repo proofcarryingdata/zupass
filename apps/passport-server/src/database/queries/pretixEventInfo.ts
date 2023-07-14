@@ -49,7 +49,7 @@ export async function updatePretixEventsInfo(
   return result.rows;
 }
 
-export async function deletePretixItemInfo(
+export async function deletePretixEventsInfo(
   client: Pool,
   id: number
 ): Promise<void> {

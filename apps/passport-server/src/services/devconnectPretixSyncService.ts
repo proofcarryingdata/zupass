@@ -6,9 +6,9 @@ import {
   IDevconnectPretixAPI,
 } from "../apis/devconnectPretixAPI";
 import { DevconnectPretixTicket, PretixItemInfo } from "../database/models";
-import { deleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/deleteDevconnectPretixTicket";
 import { fetchDevconnectPretixTicketsByEvent } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
+import { softDeleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
@@ -356,7 +356,7 @@ export class DevconnectPretixSyncService {
           logger(
             `[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`
           );
-          await deleteDevconnectPretixTicket(dbClient, removedTicket);
+          await softDeleteDevconnectPretixTicket(dbClient, removedTicket);
         }
 
         span?.setAttribute("ticketsInserted", newTickets.length);
