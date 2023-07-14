@@ -20,6 +20,7 @@ export function DevconnectVerifyScreen() {
   return (
     <AppContainer bg={"primary"}>
       <Container>
+        <TicketHeaderSection ticketData={ticketData} />
         <TicketInfoSection ticketData={ticketData} />
         <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
         {ticket && <CheckInSection ticket={ticket} />}
@@ -46,7 +47,7 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
 
   return (
     <CheckinSectionContainer>
-      <Button onClick={onVerifyClick}>Verify</Button>
+      <Button onClick={onVerifyClick}>Check in</Button>
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
@@ -58,6 +59,16 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
       )}
     </CheckinSectionContainer>
   );
+}
+
+function TicketHeaderSection({ ticketData }: { ticketData: ITicketData }) {
+  if (ticketData.isRevoked) {
+    return <div>This ticket has been canceled 💀</div>;
+  }
+  if (ticketData.isConsumed) {
+    return <div>This ticket has already been scanned 😬</div>;
+  }
+  return <div>Please check in below!</div>;
 }
 
 function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {

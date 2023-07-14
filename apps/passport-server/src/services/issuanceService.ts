@@ -8,11 +8,16 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { getPublicKey, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import {
+  getPublicKey,
+  getTicketData,
+  RSATicketPCDPackage,
+} from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import { fetchDevconnectPretixTicketsByEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
@@ -51,6 +56,7 @@ export class IssuanceService {
       const ticketPCD = await RSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
+      const { ticketId } = getTicketData(ticketPCD);
       const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
       if (!proofPublicKey) {
         throw new Error("failed to get public key from proof");
@@ -65,12 +71,12 @@ export class IssuanceService {
         throw new Error("this ticket has already been used");
       }
 
-      // TODO: load this from the database
-      // make sure that the ticket has not been revoked
-      // make sure that the ticket has bot already been used to check in
-      const isTicketValid = true;
+      const successfullyConsumed = await consumeDevconnectPretixTicket(
+        this.context.dbPool,
+        ticketId
+      );
 
-      if (isTicketValid) {
+      if (successfullyConsumed) {
         this.usedTicketPCDIds.add(ticketPCD.id);
         return {
           success: true,
@@ -148,6 +154,8 @@ export class IssuanceService {
           timestamp: Date.now(),
           attendeeEmail: email,
           attendeeName: t.full_name,
+          isConsumed: t.is_consumed,
+          isDeleted: t.is_deleted,
         }))
         // convert to serialized ticket PCD
         .map(async (ticketData) => {

@@ -29,3 +29,14 @@ export function getPublicKey(pcd?: RSATicketPCD): NodeRSA | undefined {
 
   return undefined;
 }
+
+const INVALID_TICKET_QR_CODE_COLOR = "#d3d3d3";
+
+export function getQRCodeColorOverride(pcd: RSATicketPCD): string | undefined {
+  const ticketData = getTicketData(pcd);
+  if (ticketData.isConsumed || ticketData.isRevoked) {
+    return INVALID_TICKET_QR_CODE_COLOR;
+  }
+  // otherwise, don't override and use default
+  return undefined;
+}

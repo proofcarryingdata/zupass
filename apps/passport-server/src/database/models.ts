@@ -36,6 +36,7 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   extends DevconnectPretixTicketDB {
   event_name: string;
   item_name: string;
+  is_consumed: boolean;
 }
 
 /**

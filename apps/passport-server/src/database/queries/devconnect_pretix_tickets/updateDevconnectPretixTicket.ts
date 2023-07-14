@@ -24,3 +24,15 @@ where email=$3 and devconnect_pretix_items_info_id=$4`,
   );
   return result.rowCount;
 }
+
+export async function consumeDevconnectPretixTicket(
+  client: Pool,
+  id: string | undefined
+): Promise<boolean> {
+  const result = await sqlQuery(
+    client,
+    "update devconnect_pretix_tickets set is_consumed=TRUE where id=$1 and is_deleted = FALSE and is_consumed = FALSE returning id",
+    [id]
+  );
+  return result.rowCount === 1;
+}
