@@ -478,9 +478,14 @@ export function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
-  pretixAPI: IDevconnectPretixAPI | null
+  devconnectPretixAPI: IDevconnectPretixAPI | null
 ): DevconnectPretixSyncService | null {
-  if (!pretixAPI) {
+  if (context.isZuzalu) {
+    logger("[DEVCONNECT PRETIX] not starting service because IS_ZUZALU=true");
+    return null;
+  }
+
+  if (!devconnectPretixAPI) {
     logger(
       "[DEVCONNECT PRETIX] can't start sync service - no api instantiated"
     );
@@ -489,7 +494,7 @@ export function startDevconnectPretixSyncService(
 
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
-    pretixAPI,
+    devconnectPretixAPI,
     rollbarService,
     semaphoreService
   );
