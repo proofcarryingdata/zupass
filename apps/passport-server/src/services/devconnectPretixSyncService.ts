@@ -155,9 +155,13 @@ export class DevconnectPretixSyncService {
       } = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
       const existingEvent = await fetchPretixEventInfo(dbClient, eventConfigID);
       if (!existingEvent) {
-        insertPretixEventsInfo(dbClient, eventNameFromAPI, eventConfigID);
+        await insertPretixEventsInfo(dbClient, eventNameFromAPI, eventConfigID);
       } else {
-        updatePretixEventsInfo(dbClient, existingEvent.id, eventNameFromAPI);
+        await updatePretixEventsInfo(
+          dbClient,
+          existingEvent.id,
+          eventNameFromAPI
+        );
       }
     } catch (e) {
       logger(
@@ -180,6 +184,10 @@ export class DevconnectPretixSyncService {
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, activeItemIDs, id: eventConfigID } = event;
+    console.log({
+      event,
+      events: await fetchPretixEventInfo(dbClient, eventConfigID),
+    });
     try {
       const itemsFromAPI = await this.pretixAPI.fetchItems(
         orgURL,

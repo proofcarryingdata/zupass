@@ -11,7 +11,7 @@ export async function fetchPretixEventInfo(
     `\
       select *
       from devconnect_pretix_events_info
-      where id = $1`,
+      where pretix_events_config_id = $1`,
     [eventConfigID]
   );
 

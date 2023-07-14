@@ -23,9 +23,6 @@ export const ITEM_1 = 456;
 export const ITEM_2 = 123;
 
 export const ORG_CONFIG_ID = 1;
-export const EVENT_A_CONFIG_ID = 1;
-export const EVENT_B_CONFIG_ID = 2;
-export const EVENT_C_CONFIG_ID = 3;
 
 export const EMAIL_1 = "email-1";
 export const EMAIL_2 = "email-2";

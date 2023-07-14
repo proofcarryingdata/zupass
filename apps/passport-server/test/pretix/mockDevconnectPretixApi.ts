@@ -1,4 +1,5 @@
 import {
+  DevconnectPretixConfig,
   DevconnectPretixEvent,
   DevconnectPretixItem,
   DevconnectPretixOrder,
@@ -8,16 +9,40 @@ import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
   EVENT_A,
-  EVENT_A_CONFIG_ID,
   EVENT_B,
-  EVENT_B_CONFIG_ID,
   EVENT_C,
-  EVENT_C_CONFIG_ID,
   IMockDevconnectPretixData,
   ITEM_1,
   ITEM_2,
   ORG_CONFIG_ID,
 } from "./devconnectPretixDataMocker";
+
+export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
+  organizers: [
+    {
+      id: ORG_CONFIG_ID,
+      orgURL: "organizer-url",
+      token: "token",
+      events: [
+        {
+          id: 1,
+          eventID: EVENT_A,
+          activeItemIDs: [ITEM_1.toString()],
+        },
+        {
+          id: 2,
+          eventID: EVENT_B,
+          activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()],
+        },
+        {
+          id: 3,
+          eventID: EVENT_C,
+          activeItemIDs: [],
+        },
+      ],
+    },
+  ],
+};
 
 export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
   const mocker = new DevconnectPretixDataMocker();
@@ -32,34 +57,10 @@ export function getDevconnectMockPretixAPI(
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
-    config: {
-      organizers: [
-        {
-          id: ORG_CONFIG_ID,
-          orgURL: "organizer-url",
-          token: "token",
-          events: [
-            {
-              id: EVENT_A_CONFIG_ID,
-              eventID: EVENT_A,
-              activeItemIDs: [ITEM_1.toString()],
-            },
-            {
-              id: EVENT_B_CONFIG_ID,
-              eventID: EVENT_B,
-              activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()],
-            },
-            {
-              id: EVENT_C_CONFIG_ID,
-              eventID: EVENT_C,
-              activeItemIDs: [],
-            },
-          ],
-        },
-      ],
-    },
+    config: MOCK_PRETIX_API_CONFIG,
     fetchEvent: async (
       _orgURL: string,
+      _token: string,
       eventID: string
     ): Promise<DevconnectPretixEvent> => {
       const eventName = mockData.eventNameByEventID.get(eventID);

@@ -1,7 +1,10 @@
 import { expect } from "chai";
 import "mocha";
+import { Pool } from "pg";
+import { getDevconnectPretixConfig } from "../src/apis/devconnectPretixAPI";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
+import { getDB } from "../src/database/postgresPool";
 import { fetchAllDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
@@ -15,10 +18,14 @@ import {
   EMAIL_4,
   EVENT_A,
   EVENT_B,
+  EVENT_C,
   ITEM_1,
   ITEM_2,
 } from "./pretix/devconnectPretixDataMocker";
-import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
+import {
+  getDevconnectMockPretixAPI,
+  MOCK_PRETIX_API_CONFIG,
+} from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -73,11 +80,11 @@ describe("devconnect configuration db tables", function () {
       application.context.dbPool,
       "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
     );
-    // Should fail on duplicate event id
+    // Should fail on duplicate (event id, org id)
     try {
       await sqlQuery(
         application.context.dbPool,
-        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-1', '{}')"
+        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
       );
       expect.fail();
     } catch (e) {
@@ -112,9 +119,30 @@ describe("devconnect functionality", function () {
   let _emailAPI: IEmailAPI;
   let devconnectPretixMocker: DevconnectPretixDataMocker;
   let _devconnectPretixSyncService: DevconnectPretixSyncService;
+  let db: Pool;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
+    db = await getDB();
+
+    await sqlQuery(
+      db,
+      `
+    insert into pretix_organizers_config (organizer_url, token)
+    values ('organizer-url', 'token')
+    `
+    );
+    await sqlQuery(
+      db,
+      `
+    insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids)
+    values
+      (1, $1, '{ ${ITEM_1} }'),
+      (1, $2, '{ ${ITEM_1}, ${ITEM_2} }'),
+      (1, $3, '{}')
+    `,
+      [EVENT_A, EVENT_B, EVENT_C]
+    );
 
     devconnectPretixMocker = new DevconnectPretixDataMocker();
     const devconnectPretixAPI = getDevconnectMockPretixAPI(
@@ -132,6 +160,14 @@ describe("devconnect functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+    await db.end();
+  });
+
+  step("mock pretix api config matches load from DB", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    expect(devconnectPretixAPIConfigFromDB).to.deep.equal(
+      MOCK_PRETIX_API_CONFIG
+    );
   });
 
   step("email client should have been mocked", async function () {
@@ -158,60 +194,64 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      // Four unique emails, two events with active items. 4 * 2 = 8
-      // More details in comments below
-      expect(tickets).to.have.length(12);
+      // From our config, we have 3 separate events.
+      // Event A has Item 1 as an active item and 4 unique emails that use Item 1.
+      // Event B has Item 1 and 2 as active items; Item has 4 unique emails (just like event A),
+      // while Item 2 has 3 unique emails (there is no ITEM_2, EMAIL_3 pair)
+      // Event C has no tickets because it has no active items.
+      expect(tickets).to.have.length(11);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
         itemInfoID: o.devconnect_pretix_items_info_id,
-        full_name: o.full_name,
       }));
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         // Four tickets for event A because four unique emails
         {
           email: EMAIL_1,
-          itemIDs: [ITEM_1, ITEM_1, ITEM_1],
-          eventID: EVENT_A,
+          itemInfoID: 1, // Represents EVENT_A, ITEM_1
         },
         {
           email: EMAIL_2,
-          itemIDs: [ITEM_1, ITEM_1],
-          eventID: EVENT_A,
+          itemInfoID: 1,
         },
         {
           email: EMAIL_3,
-          itemIDs: [ITEM_1],
-          eventID: EVENT_A,
+          itemInfoID: 1,
         },
         {
           email: EMAIL_4,
-          itemIDs: [ITEM_1],
-          eventID: EVENT_A,
+          itemInfoID: 1,
         },
-        // Four tickets for event B because four unique emails
         {
           email: EMAIL_1,
-          itemIDs: [ITEM_1, ITEM_1, ITEM_2, ITEM_2, ITEM_2, ITEM_1],
-          eventID: EVENT_B,
+          itemInfoID: 2, // Represents EVENT_B, ITEM_1
         },
         {
           email: EMAIL_2,
-          itemIDs: [ITEM_1, ITEM_1, ITEM_2, ITEM_2],
-          eventID: EVENT_B,
+          itemInfoID: 2,
         },
         {
           email: EMAIL_3,
-          itemIDs: [ITEM_1],
-          eventID: EVENT_B,
+          itemInfoID: 2,
         },
         {
           email: EMAIL_4,
-          itemIDs: [ITEM_1, ITEM_2],
-          eventID: EVENT_B,
+          itemInfoID: 2,
         },
-        // None for event C, since no active items
+        {
+          email: EMAIL_1,
+          itemInfoID: 3, // Represents EVENT_A, ITEM_2
+        },
+        {
+          email: EMAIL_2,
+          itemInfoID: 3,
+        },
+        {
+          email: EMAIL_4,
+          itemInfoID: 3,
+        },
       ]);
     }
   );
@@ -219,7 +259,7 @@ describe("devconnect functionality", function () {
   step(
     "tickets sync when orders and items are updated or removed",
     async function () {
-      // todo
+      return;
     }
   );
 });
