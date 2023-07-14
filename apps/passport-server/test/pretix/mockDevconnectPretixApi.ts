@@ -8,8 +8,11 @@ import {
 import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
+  EVENT_A_CONFIG_ID,
   EVENT_A_ID,
+  EVENT_B_CONFIG_ID,
   EVENT_B_ID,
+  EVENT_C_CONFIG_ID,
   EVENT_C_ID,
   IMockDevconnectPretixData,
   ITEM_1,
@@ -26,17 +29,17 @@ export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
       token: "token",
       events: [
         {
-          id: 1,
+          id: EVENT_A_CONFIG_ID,
           eventID: EVENT_A_ID,
           activeItemIDs: [ITEM_1.toString()],
         },
         {
-          id: 2,
+          id: EVENT_B_CONFIG_ID,
           eventID: EVENT_B_ID,
           activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()],
         },
         {
-          id: 3,
+          id: EVENT_C_CONFIG_ID,
           eventID: EVENT_C_ID,
           activeItemIDs: [],
         },

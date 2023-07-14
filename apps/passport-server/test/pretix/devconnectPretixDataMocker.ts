@@ -15,6 +15,10 @@ export const EVENT_A_ID = "event-a";
 export const EVENT_B_ID = "event-b";
 export const EVENT_C_ID = "event-c";
 
+export const EVENT_A_CONFIG_ID = 1;
+export const EVENT_B_CONFIG_ID = 2;
+export const EVENT_C_CONFIG_ID = 3;
+
 export const EVENT_A_NAME = "Event A";
 export const EVENT_B_NAME = "Event B";
 export const EVENT_C_NAME = "Event C";

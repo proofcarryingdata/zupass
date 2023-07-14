@@ -6,6 +6,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
@@ -16,7 +17,9 @@ import {
   EMAIL_2,
   EMAIL_3,
   EMAIL_4,
+  EVENT_A_CONFIG_ID,
   EVENT_A_ID,
+  EVENT_B_CONFIG_ID,
   EVENT_B_ID,
   EVENT_C_ID,
   ITEM_1,
@@ -207,51 +210,61 @@ describe("devconnect functionality", function () {
         itemInfoID: o.devconnect_pretix_items_info_id,
       }));
 
+      // Get item info IDs for event A
+      const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
+        db,
+        EVENT_A_CONFIG_ID
+      );
+
+      // Get item info IDs for event B
+      const [{ id: item1EventBInfoID }, { id: item2EventBInfoID }] =
+        await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         // Four tickets for event A because four unique emails
         {
           email: EMAIL_1,
-          itemInfoID: 1, // Represents EVENT_A, ITEM_1
+          itemInfoID: item1EventAInfoID,
         },
         {
           email: EMAIL_2,
-          itemInfoID: 1,
+          itemInfoID: item1EventAInfoID,
         },
         {
           email: EMAIL_3,
-          itemInfoID: 1,
+          itemInfoID: item1EventAInfoID,
         },
         {
           email: EMAIL_4,
-          itemInfoID: 1,
+          itemInfoID: item1EventAInfoID,
         },
         {
           email: EMAIL_1,
-          itemInfoID: 2, // Represents EVENT_B, ITEM_1
+          itemInfoID: item1EventBInfoID, // Represents EVENT_B, ITEM_1
         },
         {
           email: EMAIL_2,
-          itemInfoID: 2,
+          itemInfoID: item1EventBInfoID,
         },
         {
           email: EMAIL_3,
-          itemInfoID: 2,
+          itemInfoID: item1EventBInfoID,
         },
         {
           email: EMAIL_4,
-          itemInfoID: 2,
+          itemInfoID: item1EventBInfoID,
         },
         {
           email: EMAIL_1,
-          itemInfoID: 3, // Represents EVENT_A, ITEM_2
+          itemInfoID: item2EventBInfoID, // Represents EVENT_A, ITEM_2
         },
         {
           email: EMAIL_2,
-          itemInfoID: 3,
+          itemInfoID: item2EventBInfoID,
         },
         {
           email: EMAIL_4,
-          itemInfoID: 3,
+          itemInfoID: item2EventBInfoID,
         },
       ]);
     }
@@ -288,44 +301,54 @@ describe("devconnect functionality", function () {
       itemInfoID: o.devconnect_pretix_items_info_id,
     }));
 
+    // Get item info IDs for event A
+    const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
+      db,
+      EVENT_A_CONFIG_ID
+    );
+
+    // Get item info IDs for event B
+    const [{ id: item1EventBInfoID }, { id: item2EventBInfoID }] =
+      await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       // Four tickets for event A because four unique emails
       {
         email: EMAIL_1,
-        itemInfoID: 1, // Represents EVENT_A, ITEM_1
+        itemInfoID: item1EventAInfoID,
       },
       // This is formerly where (EMAIL_2, ITEM_1) and (EMAIL_3, ITEM_1) were for EVENT_A
       {
         email: EMAIL_4,
-        itemInfoID: 1,
+        itemInfoID: item1EventAInfoID,
       },
       {
         email: EMAIL_1,
-        itemInfoID: 2, // Represents EVENT_B, ITEM_1
+        itemInfoID: item1EventBInfoID, // Represents EVENT_B, ITEM_1
       },
       {
         email: EMAIL_2,
-        itemInfoID: 2,
+        itemInfoID: item1EventBInfoID,
       },
       {
         email: EMAIL_3,
-        itemInfoID: 2,
+        itemInfoID: item1EventBInfoID,
       },
       {
         email: EMAIL_4,
-        itemInfoID: 2,
+        itemInfoID: item1EventBInfoID,
       },
       {
         email: EMAIL_1,
-        itemInfoID: 3, // Represents EVENT_A, ITEM_2
+        itemInfoID: item2EventBInfoID,
       },
       {
         email: EMAIL_2,
-        itemInfoID: 3,
+        itemInfoID: item2EventBInfoID,
       },
       {
         email: EMAIL_4,
-        itemInfoID: 3,
+        itemInfoID: item2EventBInfoID,
       },
     ]);
   });
