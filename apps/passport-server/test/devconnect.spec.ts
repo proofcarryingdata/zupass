@@ -125,6 +125,7 @@ describe("devconnect functionality", function () {
     await overrideEnvironment(pcdpassTestingEnv);
     db = await getDB();
 
+    // TODO: change these into functions with their own module
     await sqlQuery(
       db,
       `

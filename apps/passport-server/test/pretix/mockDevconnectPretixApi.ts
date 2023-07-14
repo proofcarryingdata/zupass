@@ -17,6 +17,7 @@ import {
   ORG_CONFIG_ID,
 } from "./devconnectPretixDataMocker";
 
+// TODO: move to a separate module, e.g. devconnectPretixApiConfigMockData
 export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
   organizers: [
     {
