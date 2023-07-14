@@ -184,10 +184,6 @@ export class DevconnectPretixSyncService {
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, activeItemIDs, id: eventConfigID } = event;
-    console.log({
-      event,
-      events: await fetchPretixEventInfo(dbClient, eventConfigID),
-    });
     try {
       const itemsFromAPI = await this.pretixAPI.fetchItems(
         orgURL,

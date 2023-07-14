@@ -48,7 +48,7 @@ describe("devconnect configuration db tables", function () {
       application.context.dbPool,
       "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token1')"
     );
-    // Should fail on
+    // Should fail on duplicate (organizer_url, token)
     try {
       await sqlQuery(
         application.context.dbPool,
