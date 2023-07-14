@@ -122,9 +122,14 @@ export class DevconnectPretixSyncService {
         }
       }
       try {
+        // Call sync for each event in separate threads - this helps
+        // parallelize waiting for the API responses. If any fail,
+        // we'll log this.
         await Promise.all(promises);
       } catch (e) {
-        logger("[DEVCONNECT PRETIX] failed to save tickets");
+        logger(
+          "[DEVCONNECT PRETIX] failed to save tickets for one or more events"
+        );
         logger("[DEVCONNECT PRETIX]", e);
         this.rollbarService?.reportError(e);
       }
