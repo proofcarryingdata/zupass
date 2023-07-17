@@ -35,6 +35,9 @@ export async function startApplication(
   const expressServer = await startServer(context, services);
 
   services.rollbarService?.log("Server started.");
+  services.discordService?.sendAlert(
+    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
+  );
 
   return {
     context,

@@ -28,6 +28,7 @@
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
     "cors": "^2.8.5",
+    "discord.js": "^14.11.0",
     "express": "^5.0.0-beta.1",
     "jubjub-signature-pcd": "0.0.5",
     "libhoney": "^4.0.1",

@@ -6,6 +6,7 @@ import { IDevconnectPretixAPI } from "./apis/devconnectPretixAPI";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
 import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
+import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
@@ -37,6 +38,7 @@ export interface GlobalServices {
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
+  discordService: DiscordService | null;
 }
 
 export interface PCDPass {
