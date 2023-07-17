@@ -83,8 +83,6 @@ export class UserService {
 
     const user = await fetchZuzaluUser(dbPool, email);
 
-    logger("USER", user);
-
     if (user == null) {
       const errMsg = `${email} doesn't have a ticket.`;
       logger(errMsg);

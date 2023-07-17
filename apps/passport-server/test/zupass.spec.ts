@@ -24,8 +24,9 @@ import { testLoginZupass } from "./user/testLoginZupass";
 import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { randomEmail } from "./util/util";
 
-describe.only("zupass functionality", function () {
+describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
@@ -121,8 +122,22 @@ describe.only("zupass functionality", function () {
       residentUser = await testLoginZupass(application, resident.email, {
         force: false,
         expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(1);
+    }
+  );
+
+  step(
+    "shouldn't be able to login if user's email doesn't have a ticket",
+    async function () {
+      expect(
+        await testLoginZupass(application, randomEmail(), {
+          force: false,
+          expectAlreadyRegistered: false,
+          expectDoesntHaveTicket: true,
+        })
+      ).to.eq(undefined);
     }
   );
 
@@ -171,12 +186,14 @@ describe.only("zupass functionality", function () {
       visitorUser = await testLoginZupass(application, visitor.email, {
         force: false,
         expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
       organizerUser = await testLoginZupass(application, organizer.email, {
         force: false,
         expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
@@ -229,12 +246,14 @@ describe.only("zupass functionality", function () {
         await testLoginZupass(application, resident.email, {
           force: false,
           expectAlreadyRegistered: true,
+          expectDoesntHaveTicket: false,
         })
       ).to.eq(undefined);
 
       residentUser = await testLoginZupass(application, resident.email, {
         force: true,
         expectAlreadyRegistered: true,
+        expectDoesntHaveTicket: false,
       });
 
       if (!residentUser || !visitorUser || !organizerUser) {
