@@ -7,9 +7,11 @@ import { PCDPass } from "../../src/types";
 export async function testLoginPCDPass(
   application: PCDPass,
   email: string,
-  force: boolean,
-  userAlreadyLoggedIn: boolean
-): Promise<{ user: User; identity: Identity }> {
+  {
+    force,
+    expectUserAlreadyLoggedIn,
+  }: { force: boolean; expectUserAlreadyLoggedIn: boolean }
+): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
@@ -21,12 +23,10 @@ export async function testLoginPCDPass(
     sendEmailResponse
   );
 
-  if (userAlreadyLoggedIn && !force) {
+  if (expectUserAlreadyLoggedIn && !force) {
     expect(sendEmailResponse.statusCode).to.eq(500);
-    expect(sendEmailResponse._getBuffer().toString()).to.contain(
-      "already registered"
-    );
-    throw new Error("already registeredd");
+    expect(sendEmailResponse._getData()).to.contain("already registered");
+    return undefined;
   } else {
     expect(sendEmailResponse.statusCode).to.eq(200);
   }

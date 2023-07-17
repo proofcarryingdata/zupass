@@ -71,7 +71,15 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(application, testEmail, false, false);
+    const result = await testLoginPCDPass(application, testEmail, {
+      force: false,
+      expectUserAlreadyLoggedIn: false,
+    });
+
+    if (!result?.user) {
+      throw new Error("expected a user");
+    }
+
     user = result.user;
     identity = result.identity;
     expect(emailAPI.send).to.have.been.called.exactly(1);
@@ -91,10 +99,22 @@ describe("pcd-pass functionality", function () {
   step(
     "should not be able to log in a 2nd time without force option",
     async function () {
-      await expect(
-        testLoginPCDPass(application, testEmail, false, true)
-      ).to.be.rejectedWith("already registered");
-      const result = await testLoginPCDPass(application, testEmail, true, true);
+      expect(
+        await testLoginPCDPass(application, testEmail, {
+          force: false,
+          expectUserAlreadyLoggedIn: true,
+        })
+      ).to.eq(undefined);
+
+      const result = await testLoginPCDPass(application, testEmail, {
+        force: true,
+        expectUserAlreadyLoggedIn: true,
+      });
+
+      if (!result?.user) {
+        throw new Error("exected a user");
+      }
+
       user = result.user;
       identity = result.identity;
       expect(emailAPI.send).to.have.been.called.exactly(2);
