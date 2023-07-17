@@ -22,7 +22,7 @@ import {
   savePCDs,
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { ZuState } from "./state";
+import { AppState } from "./state";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -71,7 +71,7 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
   return pcds;
 }
 
-export async function loadIssuedPCDs(state: ZuState): Promise<SerializedPCD[]> {
+export async function loadIssuedPCDs(state: AppState): Promise<SerializedPCD[]> {
   const request: IssuedPCDsRequest = {
     userProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({

@@ -27,12 +27,12 @@ import {
   saveIdentity,
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
-import { ZuState } from "../src/state";
+import { AppState } from "../src/state";
 import { pollUser } from "../src/user";
 
-class App extends React.Component<object, ZuState> {
-  state = undefined as ZuState | undefined;
-  update = (diff: Pick<ZuState, keyof ZuState>) => {
+class App extends React.Component<object, AppState> {
+  state = undefined as AppState | undefined;
+  update = (diff: Pick<AppState, keyof AppState>) => {
     console.log("App.update", diff);
     this.setState(diff);
   };
@@ -71,7 +71,7 @@ class App extends React.Component<object, ZuState> {
     if (shortStack.length < stack.length) shortStack += "...";
     return {
       error: { title: "Error", message, stack: shortStack },
-    } as Partial<ZuState>;
+    } as Partial<AppState>;
   }
 
   startBackgroundJobs = () => {
@@ -125,7 +125,7 @@ function Router() {
   );
 }
 
-async function loadInitialState(): Promise<ZuState> {
+async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
   if (identity == null) {
     console.log("Generating a new Semaphore identity...");
@@ -138,7 +138,7 @@ async function loadInitialState(): Promise<ZuState> {
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
 
-  let modal = "" as ZuState["modal"];
+  let modal = "" as AppState["modal"];
 
   if (userInvalid) {
     modal = "invalid-participant";

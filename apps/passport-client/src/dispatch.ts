@@ -20,7 +20,7 @@ import {
   saveUserInvalid,
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { ZuError, ZuState } from "./state";
+import { AppError, AppState } from "./state";
 import { sanitizeDateRanges } from "./user";
 import {
   downloadStorage,
@@ -46,11 +46,11 @@ export type Action =
     }
   | {
       type: "set-modal";
-      modal: ZuState["modal"];
+      modal: AppState["modal"];
     }
   | {
       type: "error";
-      error: ZuError;
+      error: AppError;
     }
   | {
       type: "clear-error";
@@ -68,13 +68,13 @@ export type Action =
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
-export const DispatchContext = createContext<[ZuState, Dispatcher]>([] as any);
+export const DispatchContext = createContext<[AppState, Dispatcher]>([] as any);
 
-export type ZuUpdate = (s: Partial<ZuState>) => void;
+export type ZuUpdate = (s: Partial<AppState>) => void;
 
 export async function dispatch(
   action: Action,
-  state: ZuState,
+  state: AppState,
   update: ZuUpdate
 ) {
   switch (action.type) {
@@ -138,7 +138,7 @@ async function genPassport(
 async function login(
   email: string,
   token: string,
-  state: ZuState,
+  state: AppState,
   update: ZuUpdate
 ) {
   let user: User;
@@ -163,7 +163,7 @@ async function login(
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
+async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
   console.log("Save self", identity, user);
@@ -189,7 +189,7 @@ async function finishLogin(user: User, state: ZuState, update: ZuUpdate) {
 }
 
 // Runs periodically, whenever we poll new participant info.
-async function setSelf(self: User, state: ZuState, update: ZuUpdate) {
+async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
 
   if (BigInt(self.commitment) !== state.identity.commitment) {
@@ -213,7 +213,7 @@ async function setSelf(self: User, state: ZuState, update: ZuUpdate) {
   update({ self }); // Update in-memory state.
 }
 
-function clearError(state: ZuState, update: ZuUpdate) {
+function clearError(state: AppState, update: ZuUpdate) {
   if (!state.error?.dismissToCurrentPage) {
     window.location.hash = "#/";
   }
@@ -229,7 +229,7 @@ function resetPassport() {
 }
 
 async function addPCDs(
-  state: ZuState,
+  state: AppState,
   update: ZuUpdate,
   pcds: SerializedPCD[],
   upsert?: boolean
@@ -239,7 +239,7 @@ async function addPCDs(
   update({ pcds: state.pcds });
 }
 
-async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
+async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
@@ -248,7 +248,7 @@ async function removePCD(state: ZuState, update: ZuUpdate, pcdId: string) {
 async function loadFromSync(
   encryptionKey: string,
   storage: EncryptedStorage,
-  currentState: ZuState,
+  currentState: AppState,
   update: ZuUpdate
 ) {
   console.log("loading from sync", storage);
@@ -304,7 +304,7 @@ function userInvalid(update: ZuUpdate) {
  *   passport is not currently uploading the current set of PCDs
  *   to e2ee, then uploads then to e2ee.
  */
-async function sync(state: ZuState, update: ZuUpdate) {
+async function sync(state: AppState, update: ZuUpdate) {
   if ((await loadEncryptionKey()) == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return;

@@ -1,14 +1,14 @@
 import { useCallback, useContext } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { ZuState } from "../../src/state";
+import { AppState } from "../../src/state";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 
 export function AppHeader() {
   const [_, dispatch] = useContext(DispatchContext);
   const setModal = useCallback(
-    (modal: ZuState["modal"]) =>
+    (modal: AppState["modal"]) =>
       dispatch({
         type: "set-modal",
         modal,

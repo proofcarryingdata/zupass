@@ -1,7 +1,7 @@
 import React, { ReactNode, useCallback, useContext, useEffect } from "react";
 import styled, { css } from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
-import { ZuState } from "../../src/state";
+import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
@@ -44,11 +44,11 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   );
 }
 
-function isModalDismissable(modal: ZuState["modal"]) {
+function isModalDismissable(modal: AppState["modal"]) {
   return !["save-sync", "invalid-participant"].includes(modal);
 }
 
-function getModalBody(modal: ZuState["modal"]) {
+function getModalBody(modal: AppState["modal"]) {
   switch (modal) {
     case "info":
       return <InfoModal />;

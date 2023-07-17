@@ -1,13 +1,13 @@
 import * as React from "react";
 import styled from "styled-components";
-import { ZuError } from "../../src/state";
+import { AppError } from "../../src/state";
 import { Button, H1, PreWrap, Spacer } from "../core";
 
 export function ErrorPopup({
   error,
   onClose,
 }: {
-  error: ZuError;
+  error: AppError;
   onClose: () => void;
 }) {
   return (

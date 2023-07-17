@@ -7,7 +7,7 @@ export type PendingAction =
   | { type: "new-passport"; email: string }
   | { type: "save-sync-key" };
 
-export interface ZuState {
+export interface AppState {
   // Zuzalu semaphore identity.
   identity: Identity;
   pcds: PCDCollection;
@@ -21,7 +21,7 @@ export interface ZuState {
   self?: User;
 
   // If set, shows an error popover.
-  error?: ZuError;
+  error?: AppError;
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;
@@ -34,7 +34,7 @@ export interface ZuState {
   loadingIssuedPCDs?: boolean;
 }
 
-export interface ZuError {
+export interface AppError {
   /** Big title, should be under 40 chars */
   title: string;
   /** Useful explanation, avoid "Something went wrong." */
