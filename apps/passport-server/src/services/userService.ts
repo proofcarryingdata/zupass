@@ -84,7 +84,8 @@ export class UserService {
     const user = await fetchZuzaluUser(dbPool, email);
 
     if (user == null) {
-      throw new Error(`${email} doesn't have a ticket.`);
+      res.status(500).send(`${email} doesn't have a ticket.`);
+      return;
     } else if (
       user.commitment != null &&
       user.commitment !== commitment &&
