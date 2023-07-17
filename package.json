@@ -22,7 +22,7 @@
     "clean": "turbo run clean --parallel"
   },
   "devDependencies": {
-    "prettier": "latest",
+    "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2"
   },
   "engines": {
@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
+    "@types/react": "^18.0.22",
     "turbo": "^1.8.5"
   },
   "resolutions": {
