@@ -15,6 +15,7 @@ export function initStatusRoutes(
   }: GlobalServices
 ): void {
   logger("[INIT] initializing status routes");
+  const startTime = Date.now();
 
   app.get("/pretix/status", async (req: Request, res: Response) => {
     try {
@@ -107,5 +108,11 @@ export function initStatusRoutes(
       rollbarService?.reportError(e);
       res.sendStatus(500);
     }
+  });
+
+  app.get("/status/uptime", async (req: Request, res: Response) => {
+    const currentTime = Date.now();
+    const uptimeSeconds = Math.round((currentTime - startTime) / 1000) + "s";
+    res.send(uptimeSeconds);
   });
 }
