@@ -118,12 +118,9 @@ describe.only("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await testLoginZupass(
-        application,
-        resident.email,
-        false,
-        false
-      );
+      residentUser = await testLoginZupass(application, resident.email, false, {
+        expectAlreadyRegistered: false,
+      });
       expect(emailAPI.send).to.have.been.called.exactly(1);
     }
   );
@@ -170,19 +167,16 @@ describe.only("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await testLoginZupass(
-        application,
-        visitor.email,
-        false,
-        false
-      );
+      visitorUser = await testLoginZupass(application, visitor.email, false, {
+        expectAlreadyRegistered: false,
+      });
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
       organizerUser = await testLoginZupass(
         application,
         organizer.email,
         false,
-        false
+        { expectAlreadyRegistered: false }
       );
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
@@ -232,15 +226,14 @@ describe.only("zupass functionality", function () {
       }
 
       expect(
-        await testLoginZupass(application, resident.email, false, true)
+        await testLoginZupass(application, resident.email, false, {
+          expectAlreadyRegistered: true,
+        })
       ).to.eq(undefined);
 
-      residentUser = await testLoginZupass(
-        application,
-        resident.email,
-        true,
-        true
-      );
+      residentUser = await testLoginZupass(application, resident.email, true, {
+        expectAlreadyRegistered: true,
+      });
 
       if (!residentUser || !visitorUser || !organizerUser) {
         throw new Error("expected user");
