@@ -1,4 +1,3 @@
-import { Application } from "express";
 import Rollbar from "rollbar";
 import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
@@ -17,10 +16,6 @@ export class RollbarService {
 
   public reportError(e: any): void {
     this.rollbar.error(e);
-  }
-
-  public initExpressMiddleware(app: Application): void {
-    app.use(this.rollbar.errorHandler);
   }
 
   public log(log: string): void {
