@@ -1,3 +1,5 @@
+import validator from "email-validator";
+
 /**
  * Returns a promise that resolves after `ms` milliseconds.
  */
@@ -52,4 +54,8 @@ export function randomEmailToken(): string {
   const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
   if (token.length !== 6) throw new Error("Unreachable");
   return token;
+}
+
+export function validateEmail(email: string): boolean {
+  return validator.validate(email);
 }
