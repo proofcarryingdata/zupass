@@ -10,7 +10,7 @@ export async function startServer(
   context: ApplicationContext
 ): Promise<express.Application> {
   return new Promise<express.Application>((resolve, reject) => {
-    const port = process.env.PORT;
+    const port = process.env.PORT ?? 3003;
     const app = express();
     app.use(morgan("tiny"));
 
