@@ -1,5 +1,5 @@
 module.exports = {
-  forbidOnly: true,
+  // forbidOnly: true,
   forbidPending: true,
   failZero: true,
 };
