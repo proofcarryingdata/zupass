@@ -1,5 +1,17 @@
 # @pcd/passport-crypto
 
+## 0.6.0
+
+### Minor Changes
+
+- Updated packages
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.6.0
+  - @pcd/semaphore-identity-pcd@0.6.0
+
 ## 0.5.3
 
 ### Patch Changes

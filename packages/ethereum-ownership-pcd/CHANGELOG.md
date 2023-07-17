@@ -1,5 +1,19 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.6.0
+
+### Minor Changes
+
+- Updated packages
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-ui@0.6.0
+  - @pcd/pcd-types@0.6.0
+  - @pcd/semaphore-identity-pcd@0.6.0
+  - @pcd/semaphore-signature-pcd@0.6.0
+
 ## 0.5.4
 
 ### Patch Changes

@@ -1,5 +1,18 @@
 # passport-server
 
+## 0.0.16
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/ethereum-ownership-pcd@0.6.0
+  - @pcd/passport-interface@0.6.0
+  - @pcd/pcd-types@0.6.0
+  - @pcd/rln-pcd@0.5.0
+  - @pcd/rsa-pcd@0.1.0
+  - @pcd/rsa-ticket-pcd@0.1.0
+  - @pcd/semaphore-group-pcd@0.6.0
+
 ## 0.0.15
 
 ### Patch Changes

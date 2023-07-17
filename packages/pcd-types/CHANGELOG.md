@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.6.0
+
+### Minor Changes
+
+- Updated packages
+
 ## 0.5.3
 
 ### Patch Changes

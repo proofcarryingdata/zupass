@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.6.0
+
+### Minor Changes
+
+- Updated packages
+
 ## 0.5.2
 
 ### Patch Changes
