@@ -24,14 +24,15 @@ import { testLoginZupass } from "./user/testLoginZupass";
 import { testUserSync as testE2EESync } from "./user/testUserSync";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { randomEmail } from "./util/util";
 
 describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDPass;
-  let residentUser: User;
-  let visitorUser: User;
-  let organizerUser: User;
+  let residentUser: User | undefined;
+  let visitorUser: User | undefined;
+  let organizerUser: User | undefined;
   let updatedToOrganizerUser: LoggedInZuzaluUser;
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
@@ -118,19 +119,35 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await testLoginZupass(
-        application,
-        resident.email,
-        false,
-        false
-      );
+      residentUser = await testLoginZupass(application, resident.email, {
+        force: false,
+        expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
+      });
       expect(emailAPI.send).to.have.been.called.exactly(1);
+    }
+  );
+
+  step(
+    "shouldn't be able to login if user's email doesn't have a ticket",
+    async function () {
+      expect(
+        await testLoginZupass(application, randomEmail(), {
+          force: false,
+          expectAlreadyRegistered: false,
+          expectDoesntHaveTicket: true,
+        })
+      ).to.eq(undefined);
     }
   );
 
   step(
     "after a resident logs in, they should show up in the resident semaphore group and no other groups",
     async function () {
+      if (!residentUser) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [residentUser.commitment],
         r: [residentUser.commitment],
@@ -142,7 +159,7 @@ describe("zupass functionality", function () {
   );
 
   step(
-    "after a user log in, historic semaphore groups also get updated",
+    "after a user logs in, historic semaphore groups also get updated",
     async function () {
       await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
@@ -166,20 +183,18 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await testLoginZupass(
-        application,
-        visitor.email,
-        false,
-        false
-      );
+      visitorUser = await testLoginZupass(application, visitor.email, {
+        force: false,
+        expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
+      });
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
-      organizerUser = await testLoginZupass(
-        application,
-        organizer.email,
-        false,
-        false
-      );
+      organizerUser = await testLoginZupass(application, organizer.email, {
+        force: false,
+        expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
+      });
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
   );
@@ -187,6 +202,10 @@ describe("zupass functionality", function () {
   step(
     "after all three users log in, the semaphore groups should reflect their existence",
     async function () {
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           residentUser.commitment,
@@ -223,16 +242,23 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      await expect(
-        testLoginZupass(application, resident.email, false, true)
-      ).to.be.rejectedWith("already registered");
+      expect(
+        await testLoginZupass(application, resident.email, {
+          force: false,
+          expectAlreadyRegistered: true,
+          expectDoesntHaveTicket: false,
+        })
+      ).to.eq(undefined);
 
-      residentUser = await testLoginZupass(
-        application,
-        resident.email,
-        true,
-        true
-      );
+      residentUser = await testLoginZupass(application, resident.email, {
+        force: true,
+        expectAlreadyRegistered: true,
+        expectDoesntHaveTicket: false,
+      });
+
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
 
       const oldResidentCommitment = resident.commitment!;
       const newResidentCommitment = residentUser.commitment;
@@ -330,6 +356,10 @@ describe("zupass functionality", function () {
     "after pretix causes a user to update its role " +
       "they should be moved to the correct semaphore group",
     async function () {
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           updatedToOrganizerUser.commitment,
@@ -368,6 +398,10 @@ describe("zupass functionality", function () {
   step(
     "after a failed sync, the set of users should remain unchanged",
     async () => {
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           updatedToOrganizerUser.commitment,
@@ -406,6 +440,10 @@ describe("zupass functionality", function () {
   step(
     "after a failed sync, the set of users should remain unchanged",
     async () => {
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           updatedToOrganizerUser.commitment,

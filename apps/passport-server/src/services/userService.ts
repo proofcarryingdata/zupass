@@ -84,13 +84,14 @@ export class UserService {
     const user = await fetchZuzaluUser(dbPool, email);
 
     if (user == null) {
-      throw new Error(`${email} doesn't have a ticket.`);
-    } else if (
-      user.commitment != null &&
-      user.commitment !== commitment &&
-      !force
-    ) {
-      res.status(500).send(`${email} already registered.`);
+      const errMsg = `${email} doesn't have a ticket.`;
+      logger(errMsg);
+      res.status(500).send(errMsg);
+      return;
+    } else if (user.commitment != null && !force) {
+      const errMsg = `${email} already registered.`;
+      logger("[ZUID]", errMsg);
+      res.status(500).send(errMsg);
       return;
     }
     const stat = user.commitment == null ? "NEW" : "EXISTING";
@@ -164,10 +165,10 @@ export class UserService {
       logger(`[ZUID] Added new Zuzalu user: ${jsonP}`);
 
       res.json(zuzaluUser);
-    } catch (e) {
+    } catch (e: any) {
       logger(e);
       this.rollbarService?.reportError(e);
-      res.sendStatus(500);
+      res.status(500).send(e.message);
     }
   }
 

@@ -7,9 +7,16 @@ import { PCDPass } from "../../src/types";
 export async function testLoginZupass(
   application: PCDPass,
   email: string,
-  force: boolean,
-  alreadyRegistered: boolean
-): Promise<User> {
+  {
+    force,
+    expectAlreadyRegistered,
+    expectDoesntHaveTicket,
+  }: {
+    expectAlreadyRegistered: boolean;
+    force: boolean;
+    expectDoesntHaveTicket: boolean;
+  }
+): Promise<User | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
@@ -21,11 +28,14 @@ export async function testLoginZupass(
     sendEmailResponse
   );
 
-  if (alreadyRegistered && !force) {
+  if (expectDoesntHaveTicket) {
     expect(sendEmailResponse.statusCode).to.eq(500);
-    expect(sendEmailResponse._getBuffer().toString()).to.contain(
-      "already registered"
-    );
+    expect(sendEmailResponse._getData()).to.contain("doesn't have a ticket");
+    return undefined;
+  } else if (expectAlreadyRegistered && !force) {
+    expect(sendEmailResponse.statusCode).to.eq(500);
+    expect(sendEmailResponse._getData()).to.contain("already registered");
+    return undefined;
   } else {
     expect(sendEmailResponse.statusCode).to.eq(200);
   }
