@@ -11,10 +11,12 @@ export async function testLoginZupass(
     force,
     expectAlreadyRegistered,
     expectDoesntHaveTicket,
+    expectEmailInvalid,
   }: {
     expectAlreadyRegistered: boolean;
     force: boolean;
     expectDoesntHaveTicket: boolean;
+    expectEmailInvalid: boolean;
   }
 ): Promise<User | undefined> {
   const { userService, emailTokenService } = application.services;
@@ -28,7 +30,11 @@ export async function testLoginZupass(
     sendEmailResponse
   );
 
-  if (expectDoesntHaveTicket) {
+  if (expectEmailInvalid) {
+    expect(sendEmailResponse.statusCode).to.eq(500);
+    expect(sendEmailResponse._getData()).to.contain("is not a valid email");
+    return undefined;
+  } else if (expectDoesntHaveTicket) {
     expect(sendEmailResponse.statusCode).to.eq(500);
     expect(sendEmailResponse._getData()).to.contain("doesn't have a ticket");
     return undefined;

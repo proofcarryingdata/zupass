@@ -123,6 +123,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
+        expectEmailInvalid: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(1);
     }
@@ -136,10 +137,22 @@ describe("zupass functionality", function () {
           force: false,
           expectAlreadyRegistered: false,
           expectDoesntHaveTicket: true,
+          expectEmailInvalid: false,
         })
       ).to.eq(undefined);
     }
   );
+
+  step("shouldn't be able to login if with invalid email", async function () {
+    expect(
+      await testLoginZupass(application, "test", {
+        force: false,
+        expectAlreadyRegistered: false,
+        expectDoesntHaveTicket: false,
+        expectEmailInvalid: true,
+      })
+    ).to.eq(undefined);
+  });
 
   step(
     "after a resident logs in, they should show up in the resident semaphore group and no other groups",
@@ -187,6 +200,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
+        expectEmailInvalid: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
@@ -194,6 +208,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
+        expectEmailInvalid: false,
       });
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
@@ -247,6 +262,7 @@ describe("zupass functionality", function () {
           force: false,
           expectAlreadyRegistered: true,
           expectDoesntHaveTicket: false,
+          expectEmailInvalid: false,
         })
       ).to.eq(undefined);
 
@@ -254,6 +270,7 @@ describe("zupass functionality", function () {
         force: true,
         expectAlreadyRegistered: true,
         expectDoesntHaveTicket: false,
+        expectEmailInvalid: false,
       });
 
       if (!residentUser || !visitorUser || !organizerUser) {
