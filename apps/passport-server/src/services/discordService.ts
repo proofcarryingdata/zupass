@@ -21,7 +21,12 @@ export class DiscordService {
   }
 
   public async sendAlert(msg: string): Promise<void> {
-    traced("Discord", "sendAlert", async (span) => {
+    if (process.env.NODE_ENV !== "production") {
+      logger("[DISCORD] not in production, not sending alert");
+      return;
+    }
+
+    traced("Discord", "sendAlert", async () => {
       logger(`[DISCORD] sending alert ${msg}`);
       this.alertsChannel?.send(msg);
     });
