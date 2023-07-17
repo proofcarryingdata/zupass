@@ -283,7 +283,6 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
-    res.setHeader("Access-Control-Allow-Origin", "*");
     const user = this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);

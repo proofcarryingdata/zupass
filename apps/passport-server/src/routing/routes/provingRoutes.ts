@@ -31,7 +31,6 @@ export function initProvingRoutes(
   });
 
   app.get("/pcds/supported", async (req: Request, res: Response) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
     try {
       res.json(provingService.getSupportedPCDTypes());
     } catch (e) {

@@ -91,7 +91,6 @@ export function initSemaphoreRoutes(
         return;
       }
 
-      res.setHeader("Access-Control-Allow-Origin", "*");
       res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
     } catch (e) {
       logger(e);

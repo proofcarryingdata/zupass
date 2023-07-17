@@ -55,7 +55,6 @@ export function initStatusRoutes(
 
   app.get("/zuzalu/status", async (req: Request, res: Response) => {
     try {
-      res.setHeader("Access-Control-Allow-Origin", "*");
       const db = await fetchStatus(dbPool);
       const db_pool = {
         total: dbPool.totalCount,
@@ -83,7 +82,6 @@ export function initStatusRoutes(
 
   app.get("/pcdpass/status", async (req: Request, res: Response) => {
     try {
-      res.setHeader("Access-Control-Allow-Origin", "*");
       const db = await fetchStatus(dbPool);
       const db_pool = {
         total: dbPool.totalCount,
