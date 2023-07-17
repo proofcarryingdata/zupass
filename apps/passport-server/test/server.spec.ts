@@ -28,4 +28,9 @@ describe("web server functionality", function () {
     const response = await makeGetRequest(application, "/");
     expect(response.status).to.eq(200);
   });
+
+  it("should respond with uptime", async function () {
+    const response = await makeGetRequest(application, "/status/uptime");
+    expect(response.status).to.eq(200);
+  });
 });
