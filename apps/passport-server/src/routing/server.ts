@@ -11,7 +11,7 @@ import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
 import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
-import { initPCDRoutes } from "./routes/provingRoutes";
+import { initProvingRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
@@ -80,7 +80,7 @@ function initAllRoutes(
   initE2EERoutes(app, context, globalServices);
   initZuzaluRoutes(app, context, globalServices);
   initPCDPassRoutes(app, context, globalServices);
-  initPCDRoutes(app, context, globalServices);
+  initProvingRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
 }

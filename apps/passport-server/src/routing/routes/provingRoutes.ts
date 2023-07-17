@@ -8,7 +8,7 @@ import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 
-export function initPCDRoutes(
+export function initProvingRoutes(
   app: express.Application,
   _context: ApplicationContext,
   { provingService, rollbarService }: GlobalServices
