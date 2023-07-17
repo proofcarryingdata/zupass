@@ -10,7 +10,12 @@ export async function testLoginPCDPass(
   {
     force,
     expectUserAlreadyLoggedIn,
-  }: { force: boolean; expectUserAlreadyLoggedIn: boolean }
+    expectEmailIncorrect,
+  }: {
+    force: boolean;
+    expectUserAlreadyLoggedIn: boolean;
+    expectEmailIncorrect: boolean;
+  }
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
@@ -23,7 +28,11 @@ export async function testLoginPCDPass(
     sendEmailResponse
   );
 
-  if (expectUserAlreadyLoggedIn && !force) {
+  if (expectEmailIncorrect) {
+    expect(sendEmailResponse.statusCode).to.eq(500);
+    expect(sendEmailResponse._getData()).to.contain("is not a valid email");
+    return undefined;
+  } else if (expectUserAlreadyLoggedIn && !force) {
     expect(sendEmailResponse.statusCode).to.eq(500);
     expect(sendEmailResponse._getData()).to.contain("already registered");
     return undefined;
