@@ -4,11 +4,11 @@ import {
   ProveRequest,
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { useRollbar } from "@rollbar/react";
 import { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
 import { DispatchContext } from "../../../src/dispatch";
+import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -33,7 +33,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pendingPCD: PendingPCD | undefined
   ) => void;
 }) {
-  const rollbar = useRollbar();
+  const rollbar = useAppRollbar();
   const [state] = useContext(DispatchContext);
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(initialArgs)));
   const [error, setError] = useState<Error | undefined>();
