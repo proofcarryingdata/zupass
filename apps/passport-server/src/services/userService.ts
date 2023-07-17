@@ -10,6 +10,7 @@ import {
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { validateEmail } from "../util/util";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { RollbarService } from "./rollbarService";
@@ -66,6 +67,13 @@ export class UserService {
     logger(
       `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
     );
+
+    if (!validateEmail(email)) {
+      const errMsg = `${email} is not a valid email`;
+      logger(errMsg);
+      res.status(500).send(errMsg);
+      return;
+    }
 
     const { dbPool } = this.context;
 
@@ -192,6 +200,13 @@ export class UserService {
     const devBypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+
+    if (!validateEmail(email)) {
+      const errMsg = `${email} is not a valid email`;
+      logger(errMsg);
+      res.status(500).send(errMsg);
+      return;
+    }
 
     const token = await this.emailTokenService.saveNewTokenForEmail(email);
 
