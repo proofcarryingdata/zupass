@@ -7,8 +7,10 @@ import { PCDPass } from "../../src/types";
 export async function testLoginZupass(
   application: PCDPass,
   email: string,
-  force: boolean,
-  { expectAlreadyRegistered }: { expectAlreadyRegistered: boolean }
+  {
+    force,
+    expectAlreadyRegistered,
+  }: { expectAlreadyRegistered: boolean; force: boolean }
 ): Promise<User | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
