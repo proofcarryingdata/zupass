@@ -69,7 +69,7 @@ export class UserService {
     );
 
     if (!validateEmail(email)) {
-      const errMsg = `${email} is not a valid email`;
+      const errMsg = `'${email}' is not a valid email`;
       logger(errMsg);
       res.status(500).send(errMsg);
       return;
@@ -202,7 +202,7 @@ export class UserService {
       process.env.NODE_ENV !== "production";
 
     if (!validateEmail(email)) {
-      const errMsg = `${email} is not a valid email`;
+      const errMsg = `'${email}' is not a valid email`;
       logger(errMsg);
       res.status(500).send(errMsg);
       return;
