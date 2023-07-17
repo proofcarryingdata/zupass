@@ -1,4 +1,5 @@
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
+import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
@@ -16,8 +17,9 @@ export async function startServices(
   context: ApplicationContext,
   apis: APIs
 ): Promise<GlobalServices> {
-  const rollbarService = startRollbarService();
   await startTelemetry(context);
+  const discordService = await startDiscordService();
+  const rollbarService = startRollbarService();
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(
     context,
@@ -59,6 +61,7 @@ export async function startServices(
     devconnectPretixSyncService,
     metricsService,
     issuanceService,
+    discordService,
   };
   return services;
 }
