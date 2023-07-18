@@ -5,7 +5,7 @@ import { getDevconnectPretixConfig } from "../src/apis/devconnectPretixAPI";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { fetchAllDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
@@ -194,7 +194,7 @@ describe("devconnect functionality", function () {
   step(
     "after devconnect pretix sync, database should reflect devconnect pretix API",
     async function () {
-      const tickets = await fetchAllDevconnectPretixTickets(
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
         application.context.dbPool
       );
 
@@ -289,7 +289,7 @@ describe("devconnect functionality", function () {
 
     await devconnectPretixSyncService.trySync();
 
-    const tickets = await fetchAllDevconnectPretixTickets(
+    const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
       application.context.dbPool
     );
 
