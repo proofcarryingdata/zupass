@@ -40,8 +40,8 @@ export interface EthereumGroupPCDInitArgs {
   zkeyFilePath: string;
   wasmFilePath: string;
 
-  addrMembershipConfig?: ProverConfig;
-  pubkeyMembershipConfig?: ProverConfig;
+  addrMembershipConfig: ProverConfig;
+  pubkeyMembershipConfig: ProverConfig;
 }
 
 export interface EthereumGroupPCDArgs {
@@ -98,14 +98,8 @@ export class EthereumGroupPCD
   }
 }
 
-let addrMembershipConfig: ProverConfig = {
-  circuit: __dirname.concat("/../artifacts/addr_membership.circuit"),
-  witnessGenWasm: __dirname.concat("/../artifacts/addr_membership.wasm"),
-};
-let pubkeyMembershipConfig: ProverConfig = {
-  circuit: __dirname.concat("/../artifacts/pubkey_membership.circuit"),
-  witnessGenWasm: __dirname.concat("/../artifacts/pubkey_membership.wasm"),
-};
+let addrMembershipConfig: ProverConfig;
+let pubkeyMembershipConfig: ProverConfig;
 let addrProver: MembershipProver;
 let pubkeyProver: MembershipProver;
 let addrVerifier: MembershipVerifier;

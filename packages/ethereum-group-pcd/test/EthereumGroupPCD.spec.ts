@@ -130,9 +130,19 @@ describe("Ethereum Group PCD", function () {
   this.timeout(2 * 60 * 1000);
 
   this.beforeAll(async function () {
+    const addrMembershipConfig = {
+      circuit: __dirname.concat("/../artifacts/addr_membership.circuit"),
+      witnessGenWasm: __dirname.concat("/../artifacts/addr_membership.wasm"),
+    };
+    const pubkeyMembershipConfig = {
+      circuit: __dirname.concat("/../artifacts/pubkey_membership.circuit"),
+      witnessGenWasm: __dirname.concat("/../artifacts/pubkey_membership.wasm"),
+    };
     await EthereumGroupPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
+      addrMembershipConfig,
+      pubkeyMembershipConfig,
     });
     ethGroupPCD = await happyPathEthGroupPCD(GroupType.PUBLICKEY);
   });
