@@ -164,6 +164,7 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 
 ## For Developers: Adding a new PCD Type
 
+
 ### `PCDPackage`
 
 Zupass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by Zupass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
@@ -191,6 +192,8 @@ Here are a few example pull requests that integrate a new `PCDPackage` into Zupa
 - https://github.com/proofcarryingdata/zupass/pull/134
 - https://github.com/proofcarryingdata/zupass/pull/154
 
+The Zupass team reserves the right to reject any proposed PCD according to our discretion.
+
 ### Internal vs. External
 
 Some `PCDPackage` implementations live inside of the Zupass repository:
@@ -202,4 +205,10 @@ Others live outside off the Zupass repository:
 
 The choice between Internal and External is yours to make. In either case, we will review the code for security vulnerabilities, testing, code quality, and documentation.
 
-The Zupass team reserves the right to reject any proposed PCD according to our discretion.
+### Testing
+
+We recommend that you add an example for how a developer may create and consume your new type of PCD in the `consumer-client` app included in this repository. Check out how other PCDs have done this by navigating to http://localhost:3001/ after running `yarn dev` in the root of your project - this is where the `consumer-client` application lives.
+
+We also recommend that you create a comprehensive test suite for your new PCD, so that we can be confident in your implementation. A few test suites we think are good can be found in the following PCD implementations:
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-group-pcd/test/SemaphoreGroupPCD.spec.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/test/RSAPCD.spec.ts
