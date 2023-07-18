@@ -147,12 +147,59 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 
 ## For Developers: Zupass Production Deployments
 
-### Passport
+### Zupass
 
 - static site is deployed to https://zupass.org/
-- server is deployed to https://api.pcd-passport.com/
+- server is deployed to https://api.zupass.com/
+
+### PCDPass
+
+- static site is deployed to https://pcdpass.xyz/
+- server is deployed to https://api.pcdpass.xyz/
 
 ### Example PCD App
 
 - static site is deployed to https://consumer-client.onrender.com/
 - server is deployed to https://consumer-server.onrender.com
+
+## For Developers: Adding a new PCD Type
+
+### `PCDPackage`
+
+Zupass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by Zupass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
+
+https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd-types/src/pcd.ts#L34-L49
+
+Two example implementations of a `PCDPackage` that works with Zupass are:
+
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/src/RSAPCD.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-identity-pcd/src/SemaphoreIdentityPCD.ts
+
+### Integrating with Zupass
+
+In order for a new type of PCD to work with Zupass, its implementation must be added as a dependency of the apps `passport-server` and `passport-client` in the Zupass repository. This can be done by editing their respective `package.json`s.
+
+Next, the PCD implementation (as represented by its `PCDPackage`) must be added to a few places in the `Zupass` codebase:
+
+- on the client: https://github.com/proofcarryingdata/zupass/blob/main/apps/passport-client/src/pcdPackages.ts
+- on the server: https://github.com/proofcarryingdata/zupass/blob/main/apps/passport-server/src/services/provingService.ts
+
+Adding the new `PCDPackage` to the appropriate places is necessary for Zupass to be able to 'handle' the new type of PCD correctly.
+
+Here are a few example pull requests that integrate a new `PCDPackage` into Zupass are:
+- https://github.com/proofcarryingdata/zupass/pull/290
+- https://github.com/proofcarryingdata/zupass/pull/134
+- https://github.com/proofcarryingdata/zupass/pull/154
+
+### Internal vs. External
+
+Some `PCDPackage` implementations live inside of the Zupass repository:
+- https://github.com/proofcarryingdata/zupass/pull/290
+- https://github.com/proofcarryingdata/zupass/pull/134
+
+Others live outside off the Zupass repository:
+- https://github.com/proofcarryingdata/zupass/pull/154
+
+The choice between Internal and External is yours to make. In either case, we will review the code for security vulnerabilities, testing, code quality, and documentation.
+
+The Zupass team reserves the right to reject any proposed PCD according to our discretion.
