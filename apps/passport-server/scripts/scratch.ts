@@ -1,4 +1,4 @@
-/* eslint-disable turbo/no-undeclared-env-vars */
+/* eslint-disable */
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../src/util/logger";
 import * as path from "path";
