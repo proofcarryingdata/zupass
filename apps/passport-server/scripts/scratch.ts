@@ -26,6 +26,8 @@ async function scratch(): Promise<void> {
     items.forEach((i) => {
       logger(`  ITEM id: '${i.id}'; name: '${i.name.en}'`);
     });
+    const itemsStr = `  ITEMS: {${items.map((i) => i.id).join(", ")}}`;
+    logger(itemsStr);
   }
 
   logger();
