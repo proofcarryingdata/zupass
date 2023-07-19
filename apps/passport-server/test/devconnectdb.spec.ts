@@ -11,6 +11,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { v4 as uuid } from "uuid";
+import { first } from "lodash";
 
 describe.only("database reads and writes", function () {
   this.timeout(15_000);
@@ -19,6 +20,7 @@ describe.only("database reads and writes", function () {
 
   const testOrganizerUrl = "https://www.example.com/test";
   const testToken = uuid();
+  const testEventId = "test-id";
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -47,11 +49,25 @@ describe.only("database reads and writes", function () {
   step(
     "should be able to insert a new event for that organizer",
     async function () {
-      await insertPretixEventConfig(db, "1", ["1", "2", "3"], "new_event_id");
+      await insertPretixEventConfig(db, "1", ["1", "2", "3"], testEventId);
     }
   );
 
   step("should be able to get pretix configuration", async function () {
-    const config = await fetchPretixConfiguration(db);
+    const configs = await fetchPretixConfiguration(db);
+    const firstConfig = configs[0];
+
+    expect(configs.length).to.eq(1);
+    expect(firstConfig.token).to.eq(testToken);
+    expect(firstConfig.id).to.eq(1);
+    expect(firstConfig.organizer_url).to.eq(testOrganizerUrl);
+    expect(firstConfig.events).to.deep.eq([
+      {
+        id: 1,
+        pretix_organizers_config_id: 1,
+        active_item_ids: ["1", "2", "3"],
+        event_id: testEventId
+      }
+    ]);
   });
 });
