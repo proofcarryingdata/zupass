@@ -1,16 +1,32 @@
+import {
+  CheckInResponse,
+  ISSUANCE_STRING,
+  IssuedPCDsResponse,
+  User,
+} from "@pcd/passport-interface";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
+import NodeRSA from "node-rsa";
 import { Pool } from "pg";
 import { getDevconnectPretixConfig } from "../src/apis/devconnectPretixAPI";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { fetchAllDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import {
+  requestCheckIn,
+  requestIssuedPCDs,
+  requestServerPublicKey,
+} from "./issuance/issuance";
 import {
   DevconnectPretixDataMocker,
   EMAIL_1,
@@ -30,6 +46,7 @@ import {
   MOCK_PRETIX_API_CONFIG,
 } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
+import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
@@ -194,7 +211,7 @@ describe("devconnect functionality", function () {
   step(
     "after devconnect pretix sync, database should reflect devconnect pretix API",
     async function () {
-      const tickets = await fetchAllDevconnectPretixTickets(
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
         application.context.dbPool
       );
 
@@ -289,7 +306,7 @@ describe("devconnect functionality", function () {
 
     await devconnectPretixSyncService.trySync();
 
-    const tickets = await fetchAllDevconnectPretixTickets(
+    const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
       application.context.dbPool
     );
 
@@ -352,6 +369,199 @@ describe("devconnect functionality", function () {
       },
     ]);
   });
+
+  let user: User;
+  let identity: Identity;
+  let publicKey: NodeRSA;
+
+  step(
+    "anyone should be able to request the server's public key",
+    async function () {
+      const publicKeyResponse = await requestServerPublicKey(application);
+      expect(publicKeyResponse.status).to.eq(200);
+      publicKey = new NodeRSA(publicKeyResponse.text, "public");
+      expect(publicKey.getKeySize()).to.eq(2048);
+      expect(publicKey.isPublic(true)).to.eq(true);
+      expect(publicKey.isPrivate()).to.eq(false); // just to be safe
+    }
+  );
+
+  step("should be able to log in", async function () {
+    const result = await testLoginPCDPass(application, EMAIL_1, {
+      expectEmailIncorrect: false,
+      expectUserAlreadyLoggedIn: false,
+      force: false,
+    });
+
+    if (!result) {
+      throw new Error("failed to log in");
+    }
+
+    user = result.user;
+    identity = result.identity;
+  });
+
+  step(
+    "user should be able to be issued some PCDs from the server",
+    async function () {
+      const response = await requestIssuedPCDs(
+        application,
+        identity,
+        ISSUANCE_STRING
+      );
+      const responseBody = response.body as IssuedPCDsResponse;
+
+      expect(Array.isArray(responseBody.pcds)).to.eq(true);
+      // EMAIL_1 has three tickets
+      expect(responseBody.pcds.length).to.eq(3);
+
+      const ticketPCD = responseBody.pcds[0];
+
+      expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
+
+      const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
+      );
+
+      const verified = await RSATicketPCDPackage.verify(deserializedEmailPCD);
+      expect(verified).to.eq(true);
+
+      const pcdPublicKey = new NodeRSA(
+        deserializedEmailPCD.proof.rsaPCD.proof.publicKey,
+        "public"
+      );
+      expect(pcdPublicKey.isPublic(true)).to.eq(true);
+      expect(pcdPublicKey.isPrivate()).to.eq(false);
+
+      expect(pcdPublicKey.exportKey("public")).to.eq(
+        publicKey.exportKey("public")
+      );
+    }
+  );
+
+  step("issued pcds should have stable ids", async function () {
+    const expressResponse1 = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const expressResponse2 = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const response1 = expressResponse1.body as IssuedPCDsResponse;
+    const response2 = expressResponse2.body as IssuedPCDsResponse;
+
+    const pcds1 = await Promise.all(
+      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+    );
+    const pcds2 = await Promise.all(
+      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+    );
+
+    expect(pcds1.length).to.eq(pcds2.length);
+
+    pcds1.forEach((_, i) => {
+      expect(pcds1[i].id).to.eq(pcds2[i].id);
+    });
+  });
+
+  step("should be able to check in with a valid ticket", async function () {
+    const issueResponse = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
+    const serializedTicket = issueResponseBody
+      .pcds[0] as SerializedPCD<RSATicketPCD>;
+    const ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+
+    const checkinResponse = await requestCheckIn(application, ticket);
+    const checkinResponseBody = checkinResponse.body as CheckInResponse;
+
+    expect(checkinResponse.status).to.eq(200);
+    expect(checkinResponseBody.success).to.eq(true);
+  });
+
+  step(
+    "should not able to check in with a ticket not signed by the server",
+    async function () {
+      const key = new NodeRSA({ b: 2048 });
+      const exportedKey = key.exportKey("private");
+      const message = "test message";
+      const rsaPCD = await RSAPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: exportedKey,
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: message,
+        },
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: undefined,
+        },
+      });
+      const ticket = await RSATicketPCDPackage.prove({
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: undefined,
+        },
+        rsaPCD: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await RSAPCDPackage.serialize(rsaPCD),
+        },
+      });
+
+      const checkinResponse = await requestCheckIn(application, ticket);
+      expect(checkinResponse.status).to.eq(500);
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has already been used to check in",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has been revoked",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
+    }
+  );
+
+  step(
+    "shouldn't be able to issue pcds for the incorrect 'issuance string'",
+    async function () {
+      const expressResponse = await requestIssuedPCDs(
+        application,
+        identity,
+        "asdf"
+      );
+      const response = expressResponse.body as IssuedPCDsResponse;
+      expect(response.pcds).to.deep.eq([]);
+    }
+  );
+
+  step(
+    "shouldn't be able to issue pcds for a user that doesn't exist",
+    async function () {
+      const expressResponse = await requestIssuedPCDs(
+        application,
+        new Identity(),
+        ISSUANCE_STRING
+      );
+      const response = expressResponse.body as IssuedPCDsResponse;
+      expect(response.pcds).to.deep.eq([]);
+    }
+  );
 
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.

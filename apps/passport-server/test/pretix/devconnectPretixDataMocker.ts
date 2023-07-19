@@ -28,10 +28,10 @@ export const ITEM_2 = 123;
 
 export const ORG_CONFIG_ID = 1;
 
-export const EMAIL_1 = "email-1";
-export const EMAIL_2 = "email-2";
-export const EMAIL_3 = "email-3";
-export const EMAIL_4 = "email-4";
+export const EMAIL_1 = "email-1@test.com";
+export const EMAIL_2 = "email-2@test.com";
+export const EMAIL_3 = "email-3@test.com";
+export const EMAIL_4 = "email-4@test.com";
 
 export const EMAIL_QUESTION_ID = 456;
 

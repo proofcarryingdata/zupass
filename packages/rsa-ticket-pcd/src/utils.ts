@@ -8,7 +8,7 @@ export function getTicketData(pcd?: RSATicketPCD): ITicketData {
       pcd?.proof?.rsaPCD?.claim?.message ?? "{}"
     ) as ITicketData;
   } catch (e) {
-    console.log("[TICKET] failed to parse");
+    //
   }
 
   return ticketData;
@@ -27,5 +27,16 @@ export function getPublicKey(pcd?: RSATicketPCD): NodeRSA | undefined {
     console.log("failed to deserialize key");
   }
 
+  return undefined;
+}
+
+const INVALID_TICKET_QR_CODE_COLOR = "#d3d3d3";
+
+export function getQRCodeColorOverride(pcd: RSATicketPCD): string | undefined {
+  const ticketData = getTicketData(pcd);
+  if (ticketData.isConsumed || ticketData.isRevoked) {
+    return INVALID_TICKET_QR_CODE_COLOR;
+  }
+  // otherwise, don't override and use default
   return undefined;
 }

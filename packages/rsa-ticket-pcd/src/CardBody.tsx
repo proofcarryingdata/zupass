@@ -5,7 +5,7 @@ import {
 import { useCallback } from "react";
 import styled from "styled-components";
 import { initArgs, RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
-import { getTicketData } from "./utils";
+import { getQRCodeColorOverride, getTicketData } from "./utils";
 
 export function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
   const ticketData = getTicketData(pcd);
@@ -41,6 +41,7 @@ function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
       generateQRPayload={generate}
       maxAgeMs={1000 * 60}
       uniqueId={pcd.id}
+      fgColor={getQRCodeColorOverride(pcd)}
     />
   );
 }

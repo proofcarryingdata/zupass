@@ -10,12 +10,15 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import {
   getPublicKey,
+  getTicketData,
   ITicketData,
   RSATicketPCDPackage,
 } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
+import { fetchDevconnectPretixTicketsByEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
@@ -25,15 +28,11 @@ export class IssuanceService {
   private readonly exportedPrivateKey: string;
   private readonly exportedPublicKey: string;
 
-  // TODO: implement with database calls
-  private readonly usedTicketPCDIds: Set<string>;
-
   public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
-    this.usedTicketPCDIds = new Set();
   }
 
   public getPublicKey(): string {
@@ -43,11 +42,7 @@ export class IssuanceService {
   public async handleIssueRequest(
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
-    const pcds: SerializedPCD[] = [];
-    const emailOwnershipPCD = await this.issueEmailOwnershipPCD(request);
-    if (emailOwnershipPCD) {
-      pcds.push(emailOwnershipPCD);
-    }
+    const pcds = await this.issueDevconnectPretixTicketPCDs(request);
     return { pcds };
   }
 
@@ -58,6 +53,10 @@ export class IssuanceService {
       const ticketPCD = await RSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
+      const { ticketId } = getTicketData(ticketPCD);
+      if (!ticketId) {
+        throw new Error("ticketId field not found in rsaPCD");
+      }
       const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
       if (!proofPublicKey) {
         throw new Error("failed to get public key from proof");
@@ -68,26 +67,25 @@ export class IssuanceService {
         throw new Error("ticket was not signed with the right key");
       }
 
-      if (this.usedTicketPCDIds.has(ticketPCD.id)) {
-        throw new Error("this ticket has already been used");
-      }
+      const successfullyConsumed = await consumeDevconnectPretixTicket(
+        this.context.dbPool,
+        ticketId
+      );
 
-      // TODO: load this from the database
-      // make sure that the ticket has not been revoked
-      // make sure that the ticket has bot already been used to check in
-      const isTicketValid = true;
-
-      if (isTicketValid) {
-        this.usedTicketPCDIds.add(ticketPCD.id);
+      if (successfullyConsumed) {
         return {
           success: true,
         };
       }
 
+      logger(
+        "Ticket either does not exist, has already been consumed, or has been revoked"
+      );
       return {
         success: false,
       };
     } catch (e) {
+      logger("Error when consuming devconnect ticket", { error: e });
       throw new Error("failed to check in");
     }
   }
@@ -131,25 +129,9 @@ export class IssuanceService {
     return storedCommitment.email;
   }
 
-  private async issueEmailOwnershipPCD(
-    request: IssuedPCDsRequest
-  ): Promise<SerializedPCD | null> {
-    const email = await this.getUserEmailFromRequest(request);
-
-    if (email == null) {
-      return null;
-    }
-
-    // TODO: convert from pretix ticket to {@link ITicketData}
-    const ticketData: ITicketData = {
-      attendeeEmail: email,
-      attendeeName: "Ivan Chub",
-      eventName: "ProgCrypto",
-      ticketName: "GA",
-      ticketId: "5",
-      timestamp: Date.now(),
-    };
-
+  private async ticketDataToSerializedPCD(
+    ticketData: ITicketData
+  ): Promise<SerializedPCD> {
     const serializedTicketData = JSON.stringify(ticketData);
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
@@ -184,6 +166,43 @@ export class IssuanceService {
     );
 
     return serializedTicketPCD;
+  }
+
+  /**
+   * Fetch all DevconnectPretixTicket entities under a given user's email.
+   */
+  private async issueDevconnectPretixTicketPCDs(
+    request: IssuedPCDsRequest
+  ): Promise<SerializedPCD[]> {
+    const email = await this.getUserEmailFromRequest(request);
+
+    if (email == null) {
+      return [];
+    }
+
+    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
+      this.context.dbPool,
+      email
+    );
+
+    const serializedPCDs = await Promise.all(
+      ticketsDB
+        // convert to ITicketData
+        .map((t) => ({
+          ticketId: t.id.toString(),
+          eventName: t.event_name,
+          ticketName: t.item_name,
+          timestamp: Date.now(),
+          attendeeEmail: email,
+          attendeeName: t.full_name,
+          isConsumed: t.is_consumed,
+          isDeleted: t.is_deleted,
+        }))
+        // convert to serialized ticket PCD
+        .map((ticketData) => this.ticketDataToSerializedPCD(ticketData))
+    );
+
+    return serializedPCDs;
   }
 }
 

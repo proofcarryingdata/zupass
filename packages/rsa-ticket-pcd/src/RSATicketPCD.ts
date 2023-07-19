@@ -21,6 +21,8 @@ export interface ITicketData {
   attendeeName?: string;
   attendeeEmail?: string;
   ticketId?: string;
+  isConsumed?: boolean;
+  isRevoked?: boolean;
 }
 
 export interface RSATicketPCDInitArgs {
@@ -136,7 +138,11 @@ export function getDisplayOptions(pcd: RSATicketPCD): DisplayOptions {
   const ticketData = getTicketData(pcd);
   let header = "Ticket";
 
-  if (ticketData.eventName && ticketData.ticketName) {
+  if (ticketData.isRevoked) {
+    header = `[CANCELED] ${ticketData.eventName} (${ticketData.ticketName})`;
+  } else if (ticketData.isConsumed) {
+    header = `[SCANNED] ${ticketData.eventName} (${ticketData.ticketName})`;
+  } else if (ticketData.eventName && ticketData.ticketName) {
     header = `${ticketData.eventName} (${ticketData.ticketName})`;
   }
 

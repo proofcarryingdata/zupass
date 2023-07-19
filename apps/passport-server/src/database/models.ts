@@ -30,6 +30,15 @@ export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
   id: number;
 }
 
+// DevconnectPretixTicket with all relevant fields for ticket PCD included,
+// namely the `event_name` and `item_name`
+export interface DevconnectPretixTicketDBWithEmailAndItem
+  extends DevconnectPretixTicketDB {
+  event_name: string;
+  item_name: string;
+  is_consumed: boolean;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that has logged in to the passport.
  */

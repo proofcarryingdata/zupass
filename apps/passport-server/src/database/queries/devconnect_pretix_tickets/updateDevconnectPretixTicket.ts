@@ -24,3 +24,22 @@ where email=$3 and devconnect_pretix_items_info_id=$4`,
   );
   return result.rowCount;
 }
+
+/**
+ * Updates a non-deleted, unconsumed pretix ticket in our database
+ * to toggle on `is_consumed` state, returning the row if it exists.
+ */
+export async function consumeDevconnectPretixTicket(
+  client: Pool,
+  id: string | undefined
+): Promise<boolean> {
+  const result = await sqlQuery(
+    client,
+    `update devconnect_pretix_tickets
+    set is_consumed=TRUE
+    where id=$1 and is_deleted=FALSE and is_consumed=FALSE
+    returning id`,
+    [id]
+  );
+  return result.rowCount === 1;
+}
