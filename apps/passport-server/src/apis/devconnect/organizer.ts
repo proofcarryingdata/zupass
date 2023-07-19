@@ -1,0 +1,55 @@
+import { Pool } from "pg";
+import { PretixOrganizersConfig } from "../../database/models";
+import { fetchPretixConfiguration } from "../../database/queries/pretix_config/fetchPretixConfiguration";
+import { logger } from "../../util/logger";
+
+export async function getDevconnectPretixConfig(
+  dbClient: Pool,
+): Promise<DevconnectPretixConfig | null> {
+  try {
+    const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
+      await fetchPretixConfiguration(dbClient),
+    );
+    logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
+    return pretixConfig;
+  } catch (e) {
+    logger(`[INIT] error while querying pretix organizer configuration: ${e}`);
+    return null;
+  }
+}
+
+function pretixConfigDBToDevconnectPretixConfig(
+  pretixOrganizersDB: PretixOrganizersConfig[],
+): DevconnectPretixConfig {
+  return {
+    organizers: pretixOrganizersDB.map((organizerDB) => ({
+      id: organizerDB.id,
+      orgURL: organizerDB.organizer_url,
+      events: organizerDB.events.map((eventDB) => ({
+        id: eventDB.id,
+        eventID: eventDB.event_id,
+        activeItemIDs: eventDB.active_item_ids,
+      })),
+      token: organizerDB.token,
+    })),
+  };
+}
+
+// In-memory representation of Pretix event configuration
+export interface DevconnectPretixEventConfig {
+  id: number;
+  eventID: string;
+  activeItemIDs: string[]; // relevant item IDs that correspond to ticket products
+}
+
+// In-memory representation of Pretix organizer configuration
+export interface DevconnectPretixOrganizerConfig {
+  id: number;
+  orgURL: string;
+  token: string;
+  events: DevconnectPretixEventConfig[];
+}
+
+export interface DevconnectPretixConfig {
+  organizers: DevconnectPretixOrganizerConfig[];
+}

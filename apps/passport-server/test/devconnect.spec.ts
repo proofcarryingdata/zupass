@@ -12,7 +12,7 @@ import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "pg";
-import { getDevconnectPretixConfig } from "../src/apis/devconnectPretixAPI";
+import { getDevconnectPretixConfig } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
@@ -66,13 +66,13 @@ describe("devconnect configuration db tables", function () {
     // Insert organizer 1
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token1')"
+      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token1')",
     );
     // Should fail on duplicate (organizer_url, token)
     try {
       await sqlQuery(
         application.context.dbPool,
-        "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token2') returning id"
+        "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token2') returning id",
       );
       expect.fail();
     } catch (e) {
@@ -81,15 +81,15 @@ describe("devconnect configuration db tables", function () {
     // Insert organizer 2
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-2', 'token2')"
+      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-2', 'token2')",
     );
     expect(
       (
         await sqlQuery(
           application.context.dbPool,
-          "select id from pretix_organizers_config"
+          "select id from pretix_organizers_config",
         )
-      ).rowCount
+      ).rowCount,
     ).to.equal(2);
   });
 
@@ -98,13 +98,13 @@ describe("devconnect configuration db tables", function () {
     // Insert event 1
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')",
     );
     // Should fail on duplicate (event id, org id)
     try {
       await sqlQuery(
         application.context.dbPool,
-        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
+        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')",
       );
       expect.fail();
     } catch (e) {
@@ -113,21 +113,21 @@ describe("devconnect configuration db tables", function () {
     // Insert it again with updated event-id
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-2', '{}')"
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-2', '{}')",
     );
 
     // Insert with active item IDs
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456}')"
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456}')",
     );
     expect(
       (
         await sqlQuery(
           application.context.dbPool,
-          "select id from pretix_events_config"
+          "select id from pretix_events_config",
         )
-      ).rowCount
+      ).rowCount,
     ).to.equal(3);
   });
 });
@@ -151,7 +151,7 @@ describe("devconnect functionality", function () {
       `
     insert into pretix_organizers_config (organizer_url, token)
     values ('organizer-url', 'token')
-    `
+    `,
     );
     await sqlQuery(
       db,
@@ -162,12 +162,12 @@ describe("devconnect functionality", function () {
       (1, $2, '{ ${ITEM_1}, ${ITEM_2} }'),
       (1, $3, '{}')
     `,
-      [EVENT_A_ID, EVENT_B_ID, EVENT_C_ID]
+      [EVENT_A_ID, EVENT_B_ID, EVENT_C_ID],
     );
 
     devconnectPretixMocker = new DevconnectPretixDataMocker();
     const devconnectPretixAPI = getDevconnectMockPretixAPI(
-      devconnectPretixMocker.getMockData()
+      devconnectPretixMocker.getMockData(),
     );
     application = await startTestingApp({ devconnectPretixAPI });
 
@@ -187,7 +187,7 @@ describe("devconnect functionality", function () {
   step("mock pretix api config matches load from DB", async function () {
     const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
     expect(devconnectPretixAPIConfigFromDB).to.deep.equal(
-      MOCK_PRETIX_API_CONFIG
+      MOCK_PRETIX_API_CONFIG,
     );
   });
 
@@ -200,7 +200,7 @@ describe("devconnect functionality", function () {
 
   step("devconnect pretix status should sync to completion", async function () {
     const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
+      application,
     );
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
@@ -212,7 +212,7 @@ describe("devconnect functionality", function () {
     "after devconnect pretix sync, database should reflect devconnect pretix API",
     async function () {
       const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
-        application.context.dbPool
+        application.context.dbPool,
       );
 
       // From our config, we have 3 separate events.
@@ -230,7 +230,7 @@ describe("devconnect functionality", function () {
       // Get item info IDs for event A
       const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
         db,
-        EVENT_A_CONFIG_ID
+        EVENT_A_CONFIG_ID,
       );
 
       // Get item info IDs for event B
@@ -284,7 +284,7 @@ describe("devconnect functionality", function () {
           itemInfoID: item2EventBInfoID,
         },
       ]);
-    }
+    },
   );
 
   step("removing an order causes soft deletion of ticket", async function () {
@@ -297,17 +297,17 @@ describe("devconnect functionality", function () {
       .getMockData()
       .ordersByEventId.get(EVENT_A_ID)!;
     const orderWithEmail2And3 = ordersForEventA.find(
-      (o) => o.email === EMAIL_1
+      (o) => o.email === EMAIL_1,
     )!;
     devconnectPretixMocker.removeOrder(EVENT_A_ID, orderWithEmail2And3.code);
     devconnectPretixSyncService.replaceApi(
-      getDevconnectMockPretixAPI(devconnectPretixMocker.getMockData())
+      getDevconnectMockPretixAPI(devconnectPretixMocker.getMockData()),
     );
 
     await devconnectPretixSyncService.trySync();
 
     const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
-      application.context.dbPool
+      application.context.dbPool,
     );
 
     // Because two tickets are removed - see comment above
@@ -321,7 +321,7 @@ describe("devconnect functionality", function () {
     // Get item info IDs for event A
     const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
       db,
-      EVENT_A_CONFIG_ID
+      EVENT_A_CONFIG_ID,
     );
 
     // Get item info IDs for event B
@@ -383,7 +383,7 @@ describe("devconnect functionality", function () {
       expect(publicKey.getKeySize()).to.eq(2048);
       expect(publicKey.isPublic(true)).to.eq(true);
       expect(publicKey.isPrivate()).to.eq(false); // just to be safe
-    }
+    },
   );
 
   step("should be able to log in", async function () {
@@ -407,7 +407,7 @@ describe("devconnect functionality", function () {
       const response = await requestIssuedPCDs(
         application,
         identity,
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
       );
       const responseBody = response.body as IssuedPCDsResponse;
 
@@ -420,7 +420,7 @@ describe("devconnect functionality", function () {
       expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
 
       const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
-        ticketPCD.pcd
+        ticketPCD.pcd,
       );
 
       const verified = await RSATicketPCDPackage.verify(deserializedEmailPCD);
@@ -428,36 +428,36 @@ describe("devconnect functionality", function () {
 
       const pcdPublicKey = new NodeRSA(
         deserializedEmailPCD.proof.rsaPCD.proof.publicKey,
-        "public"
+        "public",
       );
       expect(pcdPublicKey.isPublic(true)).to.eq(true);
       expect(pcdPublicKey.isPrivate()).to.eq(false);
 
       expect(pcdPublicKey.exportKey("public")).to.eq(
-        publicKey.exportKey("public")
+        publicKey.exportKey("public"),
       );
-    }
+    },
   );
 
   step("issued pcds should have stable ids", async function () {
     const expressResponse1 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
     );
     const expressResponse2 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
     );
     const response1 = expressResponse1.body as IssuedPCDsResponse;
     const response2 = expressResponse2.body as IssuedPCDsResponse;
 
     const pcds1 = await Promise.all(
-      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd)),
     );
     const pcds2 = await Promise.all(
-      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd)),
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -471,7 +471,7 @@ describe("devconnect functionality", function () {
     const issueResponse = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
     const serializedTicket = issueResponseBody
@@ -518,7 +518,7 @@ describe("devconnect functionality", function () {
 
       const checkinResponse = await requestCheckIn(application, ticket);
       expect(checkinResponse.status).to.eq(500);
-    }
+    },
   );
 
   step(
@@ -526,7 +526,7 @@ describe("devconnect functionality", function () {
     async function () {
       // TODO
       expect(true).to.eq(true);
-    }
+    },
   );
 
   step(
@@ -534,7 +534,7 @@ describe("devconnect functionality", function () {
     async function () {
       // TODO
       expect(true).to.eq(true);
-    }
+    },
   );
 
   step(
@@ -543,11 +543,11 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         identity,
-        "asdf"
+        "asdf",
       );
       const response = expressResponse.body as IssuedPCDsResponse;
       expect(response.pcds).to.deep.eq([]);
-    }
+    },
   );
 
   step(
@@ -556,11 +556,11 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         new Identity(),
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
       );
       const response = expressResponse.body as IssuedPCDsResponse;
       expect(response.pcds).to.deep.eq([]);
-    }
+    },
   );
 
   // TODO: More tests

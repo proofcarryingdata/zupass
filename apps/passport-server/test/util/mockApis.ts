@@ -1,5 +1,5 @@
 import chai from "chai";
-import { IDevconnectPretixAPI } from "../../src/apis/devconnectPretixAPI";
+import { IDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import { IPretixAPI } from "../../src/apis/pretixAPI";
 import { APIs } from "../../src/types";

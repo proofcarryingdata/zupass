@@ -15,7 +15,7 @@ import { APIs, ApplicationContext, GlobalServices } from "./types";
 
 export async function startServices(
   context: ApplicationContext,
-  apis: APIs
+  apis: APIs,
 ): Promise<GlobalServices> {
   await startTelemetry(context);
   const discordService = await startDiscordService();
@@ -24,7 +24,7 @@ export async function startServices(
   const emailService = startEmailService(
     context,
     rollbarService,
-    apis.emailAPI
+    apis.emailAPI,
   );
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
@@ -32,20 +32,20 @@ export async function startServices(
     context,
     rollbarService,
     semaphoreService,
-    apis.pretixAPI
+    apis.pretixAPI,
   );
-  const devconnectPretixSyncService = startDevconnectPretixSyncService(
+  const devconnectPretixSyncService = await startDevconnectPretixSyncService(
     context,
     rollbarService,
     semaphoreService,
-    apis.devconnectPretixAPI
+    apis.devconnectPretixAPI,
   );
   const userService = startUserService(
     context,
     semaphoreService,
     emailTokenService,
     emailService,
-    rollbarService
+    rollbarService,
   );
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);

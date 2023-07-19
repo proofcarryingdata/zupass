@@ -1,10 +1,14 @@
 import { Pool } from "pg";
 import {
-  DevconnectPretixEventConfig,
   DevconnectPretixOrder,
-  DevconnectPretixOrganizerConfig,
   IDevconnectPretixAPI,
-} from "../apis/devconnectPretixAPI";
+} from "../apis/devconnect/devconnectPretixAPI";
+import {
+  DevconnectPretixConfig,
+  DevconnectPretixEventConfig,
+  DevconnectPretixOrganizerConfig,
+  getDevconnectPretixConfig,
+} from "../apis/devconnect/organizer";
 import { DevconnectPretixTicket, PretixItemInfo } from "../database/models";
 import { fetchDevconnectPretixTicketsByEvent } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
@@ -39,6 +43,7 @@ const SERVICE_NAME_FOR_TRACING = "Devconnect Pretix";
  */
 export class DevconnectPretixSyncService {
   private pretixAPI: IDevconnectPretixAPI;
+  private pretixConfig: DevconnectPretixConfig;
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
   private context: ApplicationContext;
@@ -52,6 +57,7 @@ export class DevconnectPretixSyncService {
   public constructor(
     context: ApplicationContext,
     pretixAPI: IDevconnectPretixAPI,
+    pretixConfig: DevconnectPretixConfig,
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService,
   ) {
@@ -59,6 +65,7 @@ export class DevconnectPretixSyncService {
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
     this.pretixAPI = pretixAPI;
+    this.pretixConfig = pretixConfig;
     this._hasCompletedSyncSinceStarting = false;
   }
 
@@ -114,7 +121,7 @@ export class DevconnectPretixSyncService {
       const { dbPool } = this.context;
 
       const promises = [];
-      for (const organizer of this.pretixAPI.config.organizers) {
+      for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
           promises.push(
             this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event),
@@ -474,12 +481,12 @@ export class DevconnectPretixSyncService {
 /**
  * Kick off a period sync from Pretix into PCDPassport
  */
-export function startDevconnectPretixSyncService(
+export async function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
   devconnectPretixAPI: IDevconnectPretixAPI | null,
-): DevconnectPretixSyncService | null {
+): Promise<DevconnectPretixSyncService | null> {
   if (context.isZuzalu) {
     logger("[DEVCONNECT PRETIX] not starting service because IS_ZUZALU=true");
     return null;
@@ -492,9 +499,18 @@ export function startDevconnectPretixSyncService(
     return null;
   }
 
+  const devconnectPretixConfig = await getDevconnectPretixConfig(
+    context.dbPool,
+  );
+
+  if (!devconnectPretixConfig) {
+    return null;
+  }
+
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
     devconnectPretixAPI,
+    devconnectPretixConfig,
     rollbarService,
     semaphoreService,
   );

@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixOrder,
   DevconnectPretixPosition,
-} from "../../src/apis/devconnectPretixAPI";
+} from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
@@ -51,7 +51,7 @@ export class DevconnectPretixDataMocker {
   public updateOrder(
     eventID: string,
     code: string,
-    update: (order: DevconnectPretixOrder) => void
+    update: (order: DevconnectPretixOrder) => void,
   ): void {
     const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
     const order = eventOrders.find((o) => o.code === code);
@@ -64,7 +64,7 @@ export class DevconnectPretixDataMocker {
   public addOrder(
     eventID: string,
     orderEmail: string,
-    itemsAndEmails: [number, string | null][]
+    itemsAndEmails: [number, string | null][],
   ): DevconnectPretixOrder {
     const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
     const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
@@ -121,7 +121,7 @@ export class DevconnectPretixDataMocker {
 
   private newPretixOrder(
     orderEmail: string,
-    itemsAndEmails: [number, string | null][] // array of (item, attendee email) tuples,
+    itemsAndEmails: [number, string | null][], // array of (item, attendee email) tuples,
   ): DevconnectPretixOrder {
     const orderId = this.randomOrderCode();
 
@@ -132,7 +132,7 @@ export class DevconnectPretixDataMocker {
       secret: "",
       email: orderEmail,
       positions: itemsAndEmails.map(([item, email]) =>
-        this.newPosition(orderId, email, item, this.nextId())
+        this.newPosition(orderId, email, item, this.nextId()),
       ),
     };
   }
@@ -141,7 +141,7 @@ export class DevconnectPretixDataMocker {
     orderId: string,
     attendeeEmail: string | null,
     itemId: number,
-    subevent: number
+    subevent: number,
   ): DevconnectPretixPosition {
     return {
       id: this.nextId(),

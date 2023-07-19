@@ -2,7 +2,7 @@ import * as path from "path";
 import {
   DevconnectPretixAPI,
   getDevconnectPretixAPI,
-} from "./apis/devconnectPretixAPI";
+} from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
@@ -17,7 +17,7 @@ import { logger } from "./util/logger";
  * the appropriate APIs if they have not been overriden by the caller.
  */
 export async function startApplication(
-  apiOverrides?: Partial<APIs>
+  apiOverrides?: Partial<APIs>,
 ): Promise<PCDPass> {
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
@@ -36,7 +36,7 @@ export async function startApplication(
 
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(
-    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
+    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`,
   );
 
   return {
@@ -56,7 +56,7 @@ export async function stopApplication(app?: PCDPass): Promise<void> {
 
 async function getOverridenApis(
   context: ApplicationContext,
-  apiOverrides?: Partial<APIs>
+  apiOverrides?: Partial<APIs>,
 ): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
@@ -89,7 +89,7 @@ async function getOverridenApis(
     logger("[INIT] overriding devconnect pretix api");
     devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
   } else {
-    devconnectPretixAPI = await getDevconnectPretixAPI(context.dbPool);
+    devconnectPretixAPI = await getDevconnectPretixAPI();
   }
 
   return {

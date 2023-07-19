@@ -1,10 +1,10 @@
 import {
-  DevconnectPretixConfig,
   DevconnectPretixEvent,
   DevconnectPretixItem,
   DevconnectPretixOrder,
   IDevconnectPretixAPI,
-} from "../../src/apis/devconnectPretixAPI";
+} from "../../src/apis/devconnect/devconnectPretixAPI";
+import { DevconnectPretixConfig } from "../../src/apis/devconnect/organizer";
 import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
@@ -56,16 +56,15 @@ export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
 }
 
 export function getDevconnectMockPretixAPI(
-  mockData: IMockDevconnectPretixData
+  mockData: IMockDevconnectPretixData,
 ): IDevconnectPretixAPI {
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
-    config: MOCK_PRETIX_API_CONFIG,
     fetchEvent: async (
       _orgURL: string,
       _token: string,
-      eventID: string
+      eventID: string,
     ): Promise<DevconnectPretixEvent> => {
       const eventName = mockData.eventNameByEventID.get(eventID);
       if (eventName) {
@@ -88,12 +87,12 @@ export function getDevconnectMockPretixAPI(
     fetchOrders: async (
       _orgUrl: string,
       _token: string,
-      eventID: string
+      eventID: string,
     ): Promise<DevconnectPretixOrder[]> => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
       logger(
         `[MOCK] fetchOrders('${eventID}') =>`,
-        JSON.stringify(result, null, 2)
+        JSON.stringify(result, null, 2),
       );
       return result;
     },
