@@ -31,7 +31,7 @@ export class PretixAPI implements IPretixAPI {
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
           );
         }
         const page = await res.json();
@@ -57,7 +57,7 @@ export class PretixAPI implements IPretixAPI {
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
           );
         }
         const page = await res.json();
@@ -82,11 +82,13 @@ export function getPretixConfig(): PretixConfig | null {
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
       zuEventOrganizersItemID: 151,
     };
-    logger("[PRETIX] read config: " + JSON.stringify(pretixConfig));
+    logger(
+      "[ZUZALU PRETIX] read config: " + JSON.stringify(pretixConfig, null, 2),
+    );
     return pretixConfig;
   } catch (e) {
     logger(
-      `[INIT] missing environment variable ${e} required by pretix configuration`
+      `[INIT] missing environment variable ${e} required by pretix configuration`,
     );
     return null;
   }

@@ -208,7 +208,9 @@ export class DevconnectPretixSyncService {
       // If any do not exist under active items, log an error and stop syncing.
       if (activeItemIDs.some((i) => !newItemIDsSet.has(i))) {
         throw new Error(
-          `One or more of event's active items no longer exist on Pretix`,
+          `One or more of event's active items no longer exist on Pretix.\n` +
+            `old event set: ${activeItemIDs.join(",")}\n` +
+            `new event set: ${Array.from(newItemIDsSet).join(",")}\n`,
         );
       }
       const newActiveItems = itemsFromAPI.filter((i) =>
@@ -457,10 +459,11 @@ export class DevconnectPretixSyncService {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
-              "[DEVCONNECT PRETIX] encountered order position without attendee email",
+              `[DEVCONNECT PRETIX] encountered order position without attendee email, defaulting to order email`,
               {
                 orderCode: order.code,
                 positionID: positionid,
+                orderEmail: order.email,
               },
             );
           }
@@ -506,6 +509,14 @@ export async function startDevconnectPretixSyncService(
   if (!devconnectPretixConfig) {
     return null;
   }
+
+  logger(
+    `[DEVCONNECT PRETIX] initializing with configuration: ${JSON.stringify(
+      devconnectPretixConfig,
+      null,
+      2,
+    )}`,
+  );
 
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
