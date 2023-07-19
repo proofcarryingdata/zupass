@@ -15,7 +15,10 @@ import {
   fetchPretixItemsInfoByEvent,
   insertPretixItemsInfo
 } from "../src/database/queries/pretixItemInfo";
-import { insertPretixEventsInfo } from "../src/database/queries/pretixEventInfo";
+import {
+  fetchPretixEventInfo,
+  insertPretixEventsInfo
+} from "../src/database/queries/pretixEventInfo";
 
 describe.only("database reads and writes", function () {
   this.timeout(15_000);
@@ -97,6 +100,9 @@ describe.only("database reads and writes", function () {
       expectedEventId
     );
     expect(eventsInfoId).to.eq(expectedEventInfoId);
+    const eventsInfoFromDb = await fetchPretixEventInfo(db, eventsInfoId);
+    expect(eventsInfoFromDb?.event_name).to.eq(testEventName);
+    expect(eventsInfoFromDb?.pretix_events_config_id).to.eq(expectedEventId);
   });
 
   step("should be able to insert pretix item information", async function () {
