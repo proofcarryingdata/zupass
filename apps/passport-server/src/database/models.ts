@@ -50,7 +50,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 export enum ZuzaluUserRole {
   Visitor = "visitor",
   Resident = "resident",
-  Organizer = "organizer",
+  Organizer = "organizer"
 }
 
 export interface CommitmentRow {
@@ -86,6 +86,12 @@ export interface PretixOrganizersConfig {
   organizer_url: string;
   token: string;
   events: PretixEventsConfig[];
+}
+
+export interface PretixOrganizerRow {
+  id: number;
+  organizer_url: string;
+  token: string;
 }
 
 export interface PretixEventInfo {
