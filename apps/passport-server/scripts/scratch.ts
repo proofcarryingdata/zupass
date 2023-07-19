@@ -20,9 +20,14 @@ async function scratch(): Promise<void> {
 
   logger();
   logger(`EVENTS: ${orgUrl}`);
-  events.forEach((e) => {
-    logger(`EVENT: name: '${e.name.en}'; 'slug: ${e.slug}'`);
-  });
+  for (const e of events) {
+    const items = await api.fetchItems(orgUrl, token, e.slug);
+    logger(`EVENT name: '${e.name.en}'; slug: '${e.slug}'`);
+    items.forEach((i) => {
+      logger(`  ITEM id: '${i.id}'; name: '${i.name.en}'`);
+    });
+  }
+
   logger();
 }
 
