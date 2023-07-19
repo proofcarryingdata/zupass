@@ -15,11 +15,11 @@ let tracer: Tracer | null;
  * of the server to Honeycomb for analysis.
  */
 export async function startTelemetry(
-  context: ApplicationContext,
+  context: ApplicationContext
 ): Promise<void> {
   if (!context.honeyClient) {
     logger(
-      "[INIT] Not starting telemetry service - missing Honeycomb instance.",
+      "[INIT] Not starting telemetry service - missing Honeycomb instance."
     );
     return;
   }
@@ -29,7 +29,7 @@ export async function startTelemetry(
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
-    serviceName: "server-telemetry",
+    serviceName: "server-telemetry"
   });
 
   logger("[INIT] Starting telemetry");
@@ -56,7 +56,7 @@ export async function traced<T>(
   func: (span?: Span) => Promise<T>,
   options?: {
     autoEndSpan?: boolean; // default true
-  },
+  }
 ): Promise<T> {
   if (!honeyClient || !tracer) {
     return func();

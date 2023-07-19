@@ -2,7 +2,7 @@ import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixOrder,
-  DevconnectPretixPosition,
+  DevconnectPretixPosition
 } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
 
@@ -51,7 +51,7 @@ export class DevconnectPretixDataMocker {
   public updateOrder(
     eventID: string,
     code: string,
-    update: (order: DevconnectPretixOrder) => void,
+    update: (order: DevconnectPretixOrder) => void
   ): void {
     const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
     const order = eventOrders.find((o) => o.code === code);
@@ -64,7 +64,7 @@ export class DevconnectPretixDataMocker {
   public addOrder(
     eventID: string,
     orderEmail: string,
-    itemsAndEmails: [number, string | null][],
+    itemsAndEmails: [number, string | null][]
   ): DevconnectPretixOrder {
     const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
     const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
@@ -93,14 +93,14 @@ export class DevconnectPretixDataMocker {
         [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
-        [ITEM_2, null],
+        [ITEM_2, null]
       ]),
       // Three-item order, testing ITEM_2 and override again
       this.newPretixOrder(EMAIL_2, [
         [ITEM_2, EMAIL_4],
         [ITEM_2, null],
-        [ITEM_1, EMAIL_1], // should show up under EMAIL_1
-      ]),
+        [ITEM_1, EMAIL_1] // should show up under EMAIL_1
+      ])
     ];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
@@ -115,13 +115,13 @@ export class DevconnectPretixDataMocker {
 
     return {
       ordersByEventId,
-      eventNameByEventID,
+      eventNameByEventID
     };
   }
 
   private newPretixOrder(
     orderEmail: string,
-    itemsAndEmails: [number, string | null][], // array of (item, attendee email) tuples,
+    itemsAndEmails: [number, string | null][] // array of (item, attendee email) tuples,
   ): DevconnectPretixOrder {
     const orderId = this.randomOrderCode();
 
@@ -132,8 +132,8 @@ export class DevconnectPretixDataMocker {
       secret: "",
       email: orderEmail,
       positions: itemsAndEmails.map(([item, email]) =>
-        this.newPosition(orderId, email, item, this.nextId()),
-      ),
+        this.newPosition(orderId, email, item, this.nextId())
+      )
     };
   }
 
@@ -141,7 +141,7 @@ export class DevconnectPretixDataMocker {
     orderId: string,
     attendeeEmail: string | null,
     itemId: number,
-    subevent: number,
+    subevent: number
   ): DevconnectPretixPosition {
     return {
       id: this.nextId(),
@@ -151,7 +151,7 @@ export class DevconnectPretixDataMocker {
       price: "",
       attendee_name: this.randomName(),
       attendee_email: attendeeEmail,
-      subevent: subevent,
+      subevent: subevent
     };
   }
 
@@ -171,7 +171,7 @@ export class DevconnectPretixDataMocker {
       "Glowby",
       "Brimby",
       "Slimbo",
-      "Froggy",
+      "Froggy"
     ];
     return _.sample(firstNames) + " " + _.sample(lastNames);
   }

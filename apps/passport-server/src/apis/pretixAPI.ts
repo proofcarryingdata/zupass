@@ -27,11 +27,11 @@ export class PretixAPI implements IPretixAPI {
       while (url != null) {
         logger(`[PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${this.config.token}` },
+          headers: { Authorization: `Token ${this.config.token}` }
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
           );
         }
         const page = await res.json();
@@ -53,11 +53,11 @@ export class PretixAPI implements IPretixAPI {
       while (url != null) {
         logger(`[PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${this.config.token}` },
+          headers: { Authorization: `Token ${this.config.token}` }
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
           );
         }
         const page = await res.json();
@@ -80,15 +80,15 @@ export function getPretixConfig(): PretixConfig | null {
       zuEventID: requireEnv("PRETIX_ZU_EVENT_ID"),
       zuVisitorEventID: requireEnv("PRETIX_VISITOR_EVENT_ID"),
       // See https://beta.ticketh.xyz/control/event/zuzalu/zuzalu/items/151/
-      zuEventOrganizersItemID: 151,
+      zuEventOrganizersItemID: 151
     };
     logger(
-      "[ZUZALU PRETIX] read config: " + JSON.stringify(pretixConfig, null, 2),
+      "[ZUZALU PRETIX] read config: " + JSON.stringify(pretixConfig, null, 2)
     );
     return pretixConfig;
   } catch (e) {
     logger(
-      `[INIT] missing environment variable ${e} required by pretix configuration`,
+      `[INIT] missing environment variable ${e} required by pretix configuration`
     );
     return null;
   }

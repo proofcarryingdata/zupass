@@ -7,28 +7,28 @@ export interface IDevconnectPretixAPI {
   fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixOrder[]>;
   fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixItem[]>;
   fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixEvent>;
   fetchAllEvents(
     orgUrl: string,
-    token: string,
+    token: string
   ): Promise<DevconnectPretixEvent[]>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchAllEvents(
     orgUrl: string,
-    token: string,
+    token: string
   ): Promise<DevconnectPretixEvent[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const events: DevconnectPretixEvent[] = [];
@@ -38,11 +38,11 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
           );
         }
         const page = await res.json();
@@ -57,18 +57,18 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixEvent> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
       const res = await fetch(url, {
-        headers: { Authorization: `Token ${token}` },
+        headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
         throw new Error(
-          `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+          `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
         );
       }
       return res.json();
@@ -78,7 +78,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixItem[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const items: DevconnectPretixItem[] = [];
@@ -88,11 +88,11 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
           );
         }
         const page = await res.json();
@@ -108,7 +108,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string,
+    eventID: string
   ): Promise<DevconnectPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async () => {
       const orders: DevconnectPretixOrder[] = [];
@@ -118,11 +118,11 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
-            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`,
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
           );
         }
         const page = await res.json();

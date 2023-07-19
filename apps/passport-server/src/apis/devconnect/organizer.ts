@@ -4,11 +4,11 @@ import { fetchPretixConfiguration } from "../../database/queries/pretix_config/f
 import { logger } from "../../util/logger";
 
 export async function getDevconnectPretixConfig(
-  dbClient: Pool,
+  dbClient: Pool
 ): Promise<DevconnectPretixConfig | null> {
   try {
     const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
-      await fetchPretixConfiguration(dbClient),
+      await fetchPretixConfiguration(dbClient)
     );
     logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
     return pretixConfig;
@@ -19,7 +19,7 @@ export async function getDevconnectPretixConfig(
 }
 
 function pretixConfigDBToDevconnectPretixConfig(
-  pretixOrganizersDB: PretixOrganizersConfig[],
+  pretixOrganizersDB: PretixOrganizersConfig[]
 ): DevconnectPretixConfig {
   return {
     organizers: pretixOrganizersDB.map((organizerDB) => ({
@@ -28,10 +28,10 @@ function pretixConfigDBToDevconnectPretixConfig(
       events: organizerDB.events.map((eventDB) => ({
         id: eventDB.id,
         eventID: eventDB.event_id,
-        activeItemIDs: eventDB.active_item_ids,
+        activeItemIDs: eventDB.active_item_ids
       })),
-      token: organizerDB.token,
-    })),
+      token: organizerDB.token
+    }))
   };
 }
 

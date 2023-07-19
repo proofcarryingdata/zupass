@@ -17,7 +17,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     emailAPI = {
       send: (): Promise<void> => {
         return Promise.resolve();
-      },
+      }
     };
   }
 
@@ -40,6 +40,6 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI,
+    devconnectPretixAPI
   };
 }
