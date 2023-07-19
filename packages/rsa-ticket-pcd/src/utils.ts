@@ -7,9 +7,7 @@ export function getTicketData(pcd?: RSATicketPCD): ITicketData {
     ticketData = JSON.parse(
       pcd?.proof?.rsaPCD?.claim?.message ?? "{}"
     ) as ITicketData;
-  } catch (e) {
-    console.log("[TICKET] failed to parse");
-  }
+  } catch (e) {}
 
   return ticketData;
 }
