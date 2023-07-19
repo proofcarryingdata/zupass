@@ -1,10 +1,10 @@
 import {
-  DevconnectPretixConfig,
   DevconnectPretixEvent,
   DevconnectPretixItem,
   DevconnectPretixOrder,
-  IDevconnectPretixAPI,
-} from "../../src/apis/devconnectPretixAPI";
+  IDevconnectPretixAPI
+} from "../../src/apis/devconnect/devconnectPretixAPI";
+import { DevconnectPretixConfig } from "../../src/apis/devconnect/organizer";
 import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
@@ -17,7 +17,7 @@ import {
   IMockDevconnectPretixData,
   ITEM_1,
   ITEM_2,
-  ORG_CONFIG_ID,
+  ORG_CONFIG_ID
 } from "./devconnectPretixDataMocker";
 
 // TODO: move to a separate module, e.g. devconnectPretixApiConfigMockData
@@ -31,21 +31,21 @@ export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
         {
           id: EVENT_A_CONFIG_ID,
           eventID: EVENT_A_ID,
-          activeItemIDs: [ITEM_1.toString()],
+          activeItemIDs: [ITEM_1.toString()]
         },
         {
           id: EVENT_B_CONFIG_ID,
           eventID: EVENT_B_ID,
-          activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()],
+          activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()]
         },
         {
           id: EVENT_C_CONFIG_ID,
           eventID: EVENT_C_ID,
-          activeItemIDs: [],
-        },
-      ],
-    },
-  ],
+          activeItemIDs: []
+        }
+      ]
+    }
+  ]
 };
 
 export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
@@ -61,7 +61,15 @@ export function getDevconnectMockPretixAPI(
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
-    config: MOCK_PRETIX_API_CONFIG,
+    fetchAllEvents: async (
+      _orgURL: string,
+      _token: string
+    ): Promise<DevconnectPretixEvent[]> => {
+      return [...mockData.eventNameByEventID.entries()].map((e) => ({
+        slug: e[0],
+        name: { en: e[1] }
+      }));
+    },
     fetchEvent: async (
       _orgURL: string,
       _token: string,
@@ -71,7 +79,7 @@ export function getDevconnectMockPretixAPI(
       if (eventName) {
         return {
           slug: eventID,
-          name: { en: eventName },
+          name: { en: eventName }
         };
       }
       throw new Error("404 event not found");
@@ -81,8 +89,8 @@ export function getDevconnectMockPretixAPI(
         { id: ITEM_1, name: { en: "item-1" } },
         {
           id: ITEM_2,
-          name: { en: "item-2" },
-        },
+          name: { en: "item-2" }
+        }
       ];
     },
     fetchOrders: async (
@@ -96,6 +104,6 @@ export function getDevconnectMockPretixAPI(
         JSON.stringify(result, null, 2)
       );
       return result;
-    },
+    }
   };
 }

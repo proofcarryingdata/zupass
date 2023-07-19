@@ -2,7 +2,7 @@ import {
   CheckInResponse,
   ISSUANCE_STRING,
   IssuedPCDsResponse,
-  User,
+  User
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -12,7 +12,7 @@ import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "pg";
-import { getDevconnectPretixConfig } from "../src/apis/devconnectPretixAPI";
+import { getDevconnectPretixConfig } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
@@ -25,7 +25,7 @@ import { PCDPass } from "../src/types";
 import {
   requestCheckIn,
   requestIssuedPCDs,
-  requestServerPublicKey,
+  requestServerPublicKey
 } from "./issuance/issuance";
 import {
   DevconnectPretixDataMocker,
@@ -39,11 +39,11 @@ import {
   EVENT_B_ID,
   EVENT_C_ID,
   ITEM_1,
-  ITEM_2,
+  ITEM_2
 } from "./pretix/devconnectPretixDataMocker";
 import {
   getDevconnectMockPretixAPI,
-  MOCK_PRETIX_API_CONFIG,
+  MOCK_PRETIX_API_CONFIG
 } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
@@ -224,7 +224,7 @@ describe("devconnect functionality", function () {
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
-        itemInfoID: o.devconnect_pretix_items_info_id,
+        itemInfoID: o.devconnect_pretix_items_info_id
       }));
 
       // Get item info IDs for event A
@@ -241,48 +241,48 @@ describe("devconnect functionality", function () {
         // Four tickets for event A because four unique emails
         {
           email: EMAIL_1,
-          itemInfoID: item1EventAInfoID,
+          itemInfoID: item1EventAInfoID
         },
         {
           email: EMAIL_2,
-          itemInfoID: item1EventAInfoID,
+          itemInfoID: item1EventAInfoID
         },
         {
           email: EMAIL_3,
-          itemInfoID: item1EventAInfoID,
+          itemInfoID: item1EventAInfoID
         },
         {
           email: EMAIL_4,
-          itemInfoID: item1EventAInfoID,
+          itemInfoID: item1EventAInfoID
         },
         {
           email: EMAIL_1,
-          itemInfoID: item1EventBInfoID, // Represents EVENT_B, ITEM_1
+          itemInfoID: item1EventBInfoID // Represents EVENT_B, ITEM_1
         },
         {
           email: EMAIL_2,
-          itemInfoID: item1EventBInfoID,
+          itemInfoID: item1EventBInfoID
         },
         {
           email: EMAIL_3,
-          itemInfoID: item1EventBInfoID,
+          itemInfoID: item1EventBInfoID
         },
         {
           email: EMAIL_4,
-          itemInfoID: item1EventBInfoID,
+          itemInfoID: item1EventBInfoID
         },
         {
           email: EMAIL_1,
-          itemInfoID: item2EventBInfoID, // Represents EVENT_A, ITEM_2
+          itemInfoID: item2EventBInfoID // Represents EVENT_A, ITEM_2
         },
         {
           email: EMAIL_2,
-          itemInfoID: item2EventBInfoID,
+          itemInfoID: item2EventBInfoID
         },
         {
           email: EMAIL_4,
-          itemInfoID: item2EventBInfoID,
-        },
+          itemInfoID: item2EventBInfoID
+        }
       ]);
     }
   );
@@ -315,7 +315,7 @@ describe("devconnect functionality", function () {
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
-      itemInfoID: o.devconnect_pretix_items_info_id,
+      itemInfoID: o.devconnect_pretix_items_info_id
     }));
 
     // Get item info IDs for event A
@@ -332,41 +332,41 @@ describe("devconnect functionality", function () {
       // Four tickets for event A because four unique emails
       {
         email: EMAIL_1,
-        itemInfoID: item1EventAInfoID,
+        itemInfoID: item1EventAInfoID
       },
       // This is formerly where (EMAIL_2, ITEM_1) and (EMAIL_3, ITEM_1) were for EVENT_A
       {
         email: EMAIL_4,
-        itemInfoID: item1EventAInfoID,
+        itemInfoID: item1EventAInfoID
       },
       {
         email: EMAIL_1,
-        itemInfoID: item1EventBInfoID, // Represents EVENT_B, ITEM_1
+        itemInfoID: item1EventBInfoID // Represents EVENT_B, ITEM_1
       },
       {
         email: EMAIL_2,
-        itemInfoID: item1EventBInfoID,
+        itemInfoID: item1EventBInfoID
       },
       {
         email: EMAIL_3,
-        itemInfoID: item1EventBInfoID,
+        itemInfoID: item1EventBInfoID
       },
       {
         email: EMAIL_4,
-        itemInfoID: item1EventBInfoID,
+        itemInfoID: item1EventBInfoID
       },
       {
         email: EMAIL_1,
-        itemInfoID: item2EventBInfoID,
+        itemInfoID: item2EventBInfoID
       },
       {
         email: EMAIL_2,
-        itemInfoID: item2EventBInfoID,
+        itemInfoID: item2EventBInfoID
       },
       {
         email: EMAIL_4,
-        itemInfoID: item2EventBInfoID,
-      },
+        itemInfoID: item2EventBInfoID
+      }
     ]);
   });
 
@@ -390,7 +390,7 @@ describe("devconnect functionality", function () {
     const result = await testLoginPCDPass(application, EMAIL_1, {
       expectEmailIncorrect: false,
       expectUserAlreadyLoggedIn: false,
-      force: false,
+      force: false
     });
 
     if (!result) {
@@ -494,26 +494,26 @@ describe("devconnect functionality", function () {
       const rsaPCD = await RSAPCDPackage.prove({
         privateKey: {
           argumentType: ArgumentTypeName.String,
-          value: exportedKey,
+          value: exportedKey
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: message,
+          value: message
         },
         id: {
           argumentType: ArgumentTypeName.String,
-          value: undefined,
-        },
+          value: undefined
+        }
       });
       const ticket = await RSATicketPCDPackage.prove({
         id: {
           argumentType: ArgumentTypeName.String,
-          value: undefined,
+          value: undefined
         },
         rsaPCD: {
           argumentType: ArgumentTypeName.PCD,
-          value: await RSAPCDPackage.serialize(rsaPCD),
-        },
+          value: await RSAPCDPackage.serialize(rsaPCD)
+        }
       });
 
       const checkinResponse = await requestCheckIn(application, ticket);

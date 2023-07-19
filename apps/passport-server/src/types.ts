@@ -2,7 +2,7 @@ import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "pg";
-import { IDevconnectPretixAPI } from "./apis/devconnectPretixAPI";
+import { IDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
 import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";

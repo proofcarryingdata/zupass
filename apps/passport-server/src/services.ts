@@ -34,7 +34,7 @@ export async function startServices(
     semaphoreService,
     apis.pretixAPI
   );
-  const devconnectPretixSyncService = startDevconnectPretixSyncService(
+  const devconnectPretixSyncService = await startDevconnectPretixSyncService(
     context,
     rollbarService,
     semaphoreService,
@@ -61,7 +61,7 @@ export async function startServices(
     devconnectPretixSyncService,
     metricsService,
     issuanceService,
-    discordService,
+    discordService
   };
   return services;
 }

@@ -1,13 +1,9 @@
-import { Pool } from "pg";
-import { PretixOrganizersConfig } from "../database/models";
-import { fetchPretixConfiguration as fetchPretixOrganizers } from "../database/queries/pretix_config/fetchPretixConfiguration";
-import { traced } from "../services/telemetryService";
-import { logger } from "../util/logger";
+import { traced } from "../../services/telemetryService";
+import { logger } from "../../util/logger";
 
 const TRACE_SERVICE = "Fetch";
 
 export interface IDevconnectPretixAPI {
-  config: DevconnectPretixConfig;
   fetchOrders(
     orgUrl: string,
     token: string,
@@ -23,13 +19,39 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEvent>;
+  fetchAllEvents(
+    orgUrl: string,
+    token: string
+  ): Promise<DevconnectPretixEvent[]>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
-  public config: DevconnectPretixConfig;
+  public async fetchAllEvents(
+    orgUrl: string,
+    token: string
+  ): Promise<DevconnectPretixEvent[]> {
+    return traced(TRACE_SERVICE, "fetchItems", async () => {
+      const events: DevconnectPretixEvent[] = [];
 
-  public constructor(config: DevconnectPretixConfig) {
-    this.config = config;
+      // Fetch orders from paginated API
+      let url = `${orgUrl}/events`;
+      while (url != null) {
+        logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+        const res = await fetch(url, {
+          headers: { Authorization: `Token ${token}` }
+        });
+        if (!res.ok) {
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
+        }
+        const page = await res.json();
+        events.push(...page.results);
+        url = page.next;
+      }
+
+      return events;
+    });
   }
 
   public async fetchEvent(
@@ -42,7 +64,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
       const res = await fetch(url, {
-        headers: { Authorization: `Token ${token}` },
+        headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
         throw new Error(
@@ -66,7 +88,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -96,7 +118,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
         const res = await fetch(url, {
-          headers: { Authorization: `Token ${token}` },
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -113,48 +135,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   }
 }
 
-function pretixConfigDBToDevconnectPretixConfig(
-  pretixOrganizersDB: PretixOrganizersConfig[]
-): DevconnectPretixConfig {
-  return {
-    organizers: pretixOrganizersDB.map((organizerDB) => ({
-      id: organizerDB.id,
-      orgURL: organizerDB.organizer_url,
-      events: organizerDB.events.map((eventDB) => ({
-        id: eventDB.id,
-        eventID: eventDB.event_id,
-        activeItemIDs: eventDB.active_item_ids,
-      })),
-      token: organizerDB.token,
-    })),
-  };
-}
-
-export async function getDevconnectPretixConfig(
-  dbClient: Pool
-): Promise<DevconnectPretixConfig | null> {
-  try {
-    const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
-      await fetchPretixOrganizers(dbClient)
-    );
-    logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
-    return pretixConfig;
-  } catch (e) {
-    logger(`[INIT] error while querying pretix organizer configuration: ${e}`);
-    return null;
-  }
-}
-
-export async function getDevconnectPretixAPI(
-  dbClient: Pool
-): Promise<IDevconnectPretixAPI | null> {
-  const config = await getDevconnectPretixConfig(dbClient);
-
-  if (config === null) {
-    return null;
-  }
-
-  const api = new DevconnectPretixAPI(config);
+export async function getDevconnectPretixAPI(): Promise<IDevconnectPretixAPI | null> {
+  const api = new DevconnectPretixAPI();
   return api;
 }
 
@@ -193,23 +175,4 @@ export interface DevconnectPretixPosition {
   attendee_name: string; // first and last
   attendee_email: string | null;
   subevent: number;
-}
-
-// In-memory representation of Pretix event configuration
-export interface DevconnectPretixEventConfig {
-  id: number;
-  eventID: string;
-  activeItemIDs: string[]; // relevant item IDs that correspond to ticket products
-}
-
-// In-memory representation of Pretix organizer configuration
-export interface DevconnectPretixOrganizerConfig {
-  id: number;
-  orgURL: string;
-  token: string;
-  events: DevconnectPretixEventConfig[];
-}
-
-export interface DevconnectPretixConfig {
-  organizers: DevconnectPretixOrganizerConfig[];
 }

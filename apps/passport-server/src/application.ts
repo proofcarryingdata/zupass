@@ -1,8 +1,8 @@
 import * as path from "path";
 import {
   DevconnectPretixAPI,
-  getDevconnectPretixAPI,
-} from "./apis/devconnectPretixAPI";
+  getDevconnectPretixAPI
+} from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
@@ -27,7 +27,7 @@ export async function startApplication(
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
-    publicResourcesDir: path.join(process.cwd(), "public"),
+    publicResourcesDir: path.join(process.cwd(), "public")
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
@@ -43,7 +43,7 @@ export async function startApplication(
     context,
     services,
     apis,
-    expressContext: expressServer,
+    expressContext: expressServer
   };
 }
 
@@ -89,12 +89,12 @@ async function getOverridenApis(
     logger("[INIT] overriding devconnect pretix api");
     devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
   } else {
-    devconnectPretixAPI = await getDevconnectPretixAPI(context.dbPool);
+    devconnectPretixAPI = await getDevconnectPretixAPI();
   }
 
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI,
+    devconnectPretixAPI
   };
 }

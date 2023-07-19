@@ -29,7 +29,7 @@ export async function startTelemetry(
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
-    serviceName: "server-telemetry",
+    serviceName: "server-telemetry"
   });
 
   logger("[INIT] Starting telemetry");

@@ -2,8 +2,8 @@ import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixOrder,
-  DevconnectPretixPosition,
-} from "../../src/apis/devconnectPretixAPI";
+  DevconnectPretixPosition
+} from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
@@ -93,14 +93,14 @@ export class DevconnectPretixDataMocker {
         [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
-        [ITEM_2, null],
+        [ITEM_2, null]
       ]),
       // Three-item order, testing ITEM_2 and override again
       this.newPretixOrder(EMAIL_2, [
         [ITEM_2, EMAIL_4],
         [ITEM_2, null],
-        [ITEM_1, EMAIL_1], // should show up under EMAIL_1
-      ]),
+        [ITEM_1, EMAIL_1] // should show up under EMAIL_1
+      ])
     ];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
@@ -115,7 +115,7 @@ export class DevconnectPretixDataMocker {
 
     return {
       ordersByEventId,
-      eventNameByEventID,
+      eventNameByEventID
     };
   }
 
@@ -133,7 +133,7 @@ export class DevconnectPretixDataMocker {
       email: orderEmail,
       positions: itemsAndEmails.map(([item, email]) =>
         this.newPosition(orderId, email, item, this.nextId())
-      ),
+      )
     };
   }
 
@@ -151,7 +151,7 @@ export class DevconnectPretixDataMocker {
       price: "",
       attendee_name: this.randomName(),
       attendee_email: attendeeEmail,
-      subevent: subevent,
+      subevent: subevent
     };
   }
 
@@ -171,7 +171,7 @@ export class DevconnectPretixDataMocker {
       "Glowby",
       "Brimby",
       "Slimbo",
-      "Froggy",
+      "Froggy"
     ];
     return _.sample(firstNames) + " " + _.sample(lastNames);
   }
