@@ -61,6 +61,15 @@ export function getDevconnectMockPretixAPI(
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
+    fetchAllEvents: async (
+      _orgURL: string,
+      _token: string,
+    ): Promise<DevconnectPretixEvent[]> => {
+      return [...mockData.eventNameByEventID.entries()].map((e) => ({
+        slug: e[0],
+        name: { en: e[1] },
+      }));
+    },
     fetchEvent: async (
       _orgURL: string,
       _token: string,

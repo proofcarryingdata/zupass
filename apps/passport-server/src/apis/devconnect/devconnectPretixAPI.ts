@@ -19,6 +19,10 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string,
   ): Promise<DevconnectPretixEvent>;
+  fetchAllEvents(
+    orgUrl: string,
+    token: string,
+  ): Promise<DevconnectPretixEvent[]>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
