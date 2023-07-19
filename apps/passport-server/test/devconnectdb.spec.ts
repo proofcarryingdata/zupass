@@ -19,6 +19,8 @@ import {
   fetchPretixEventInfo,
   insertPretixEventsInfo
 } from "../src/database/queries/pretixEventInfo";
+import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
+import { randomEmail } from "./util/util";
 
 describe.only("database reads and writes", function () {
   this.timeout(15_000);
@@ -37,6 +39,8 @@ describe.only("database reads and writes", function () {
   const expectedOrgId = 1;
   const expectedEventId = 1;
   const expectedEventInfoId = 1;
+  const ticketName = "UserFirst UserLast";
+  const ticketEmail = randomEmail();
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -126,8 +130,17 @@ describe.only("database reads and writes", function () {
     }
   });
 
-  step(
-    "should be able to insert pretix event information",
-    async function () {}
-  );
+  step("should be able to insert pretix event information", async function () {
+    const insertedTicket = await insertDevconnectPretixTicket(db, {
+      devconnect_pretix_items_info_id: 1,
+      email: ticketEmail,
+      full_name: ticketName,
+      is_deleted: false
+    });
+
+    expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
+    expect(insertedTicket.email).to.eq(ticketEmail);
+    expect(insertedTicket.full_name).to.eq(ticketName);
+    expect(insertedTicket.is_deleted).to.eq(false);
+  });
 });

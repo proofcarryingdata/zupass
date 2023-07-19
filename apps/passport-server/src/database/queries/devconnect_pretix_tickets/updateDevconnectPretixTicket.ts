@@ -19,7 +19,7 @@ where email=$3 and devconnect_pretix_items_info_id=$4`,
       params.full_name,
       params.is_deleted,
       params.email,
-      params.devconnect_pretix_items_info_id,
+      params.devconnect_pretix_items_info_id
     ]
   );
   return result.rowCount;
