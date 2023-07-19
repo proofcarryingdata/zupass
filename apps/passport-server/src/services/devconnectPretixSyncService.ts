@@ -1,13 +1,13 @@
 import { Pool } from "pg";
 import {
   DevconnectPretixOrder,
-  IDevconnectPretixAPI,
+  IDevconnectPretixAPI
 } from "../apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
   DevconnectPretixEventConfig,
   DevconnectPretixOrganizerConfig,
-  getDevconnectPretixConfig,
+  getDevconnectPretixConfig
 } from "../apis/devconnect/organizer";
 import { DevconnectPretixTicket, PretixItemInfo } from "../database/models";
 import { fetchDevconnectPretixTicketsByEvent } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -17,19 +17,19 @@ import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pre
 import {
   fetchPretixEventInfo,
   insertPretixEventsInfo,
-  updatePretixEventsInfo,
+  updatePretixEventsInfo
 } from "../database/queries/pretixEventInfo";
 import {
   deletePretixItemInfo,
   fetchPretixItemsInfoByEvent,
   insertPretixItemsInfo,
-  updatePretixItemsInfo,
+  updatePretixItemsInfo
 } from "../database/queries/pretixItemInfo";
 import { ApplicationContext } from "../types";
 import {
   getEmailAndItemKey,
   pretixTicketsDifferent,
-  ticketsToMapByEmailAndItem,
+  ticketsToMapByEmailAndItem
 } from "../util/devconnectTicket";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -59,7 +59,7 @@ export class DevconnectPretixSyncService {
     pretixAPI: IDevconnectPretixAPI,
     pretixConfig: DevconnectPretixConfig,
     rollbarService: RollbarService | null,
-    semaphoreService: SemaphoreService,
+    semaphoreService: SemaphoreService
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -124,7 +124,7 @@ export class DevconnectPretixSyncService {
       for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
           promises.push(
-            this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event),
+            this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event)
           );
         }
       }
@@ -135,7 +135,7 @@ export class DevconnectPretixSyncService {
         await Promise.all(promises);
       } catch (e) {
         logger(
-          "[DEVCONNECT PRETIX] failed to save tickets for one or more events",
+          "[DEVCONNECT PRETIX] failed to save tickets for one or more events"
         );
         logger("[DEVCONNECT PRETIX]", e);
         this.rollbarService?.reportError(e);
@@ -144,8 +144,8 @@ export class DevconnectPretixSyncService {
       const syncEnd = Date.now();
       logger(
         `[DEVCONNECT PRETIX] Sync end. Completed in ${Math.floor(
-          (syncEnd - syncStart) / 1000,
-        )} seconds`,
+          (syncEnd - syncStart) / 1000
+        )} seconds`
       );
     });
   }
@@ -157,13 +157,13 @@ export class DevconnectPretixSyncService {
   private async saveEventInfo(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig,
+    event: DevconnectPretixEventConfig
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, id: eventConfigID } = event;
     try {
       const {
-        name: { en: eventNameFromAPI },
+        name: { en: eventNameFromAPI }
       } = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
       const existingEvent = await fetchPretixEventInfo(dbClient, eventConfigID);
       if (!existingEvent) {
@@ -172,13 +172,13 @@ export class DevconnectPretixSyncService {
         await updatePretixEventsInfo(
           dbClient,
           existingEvent.id,
-          eventNameFromAPI,
+          eventNameFromAPI
         );
       }
     } catch (e) {
       logger(
         `[DEVCONNECT PRETIX] error while syncing event for ${orgURL} and ${eventID}, skipping update`,
-        { error: e },
+        { error: e }
       );
       return false;
     }
@@ -192,7 +192,7 @@ export class DevconnectPretixSyncService {
   private async saveItemsInfo(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig,
+    event: DevconnectPretixEventConfig
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, activeItemIDs, id: eventConfigID } = event;
@@ -200,7 +200,7 @@ export class DevconnectPretixSyncService {
       const itemsFromAPI = await this.pretixAPI.fetchItems(
         orgURL,
         token,
-        eventID,
+        eventID
       );
       const newItemIDsSet = new Set(itemsFromAPI.map((i) => i.id.toString()));
       const activeItemIDsSet = new Set(activeItemIDs);
@@ -210,25 +210,25 @@ export class DevconnectPretixSyncService {
         throw new Error(
           `One or more of event's active items no longer exist on Pretix.\n` +
             `old event set: ${activeItemIDs.join(",")}\n` +
-            `new event set: ${Array.from(newItemIDsSet).join(",")}\n`,
+            `new event set: ${Array.from(newItemIDsSet).join(",")}\n`
         );
       }
       const newActiveItems = itemsFromAPI.filter((i) =>
-        activeItemIDsSet.has(i.id.toString()),
+        activeItemIDsSet.has(i.id.toString())
       );
 
       const newActiveItemsByItemID = new Map(
-        newActiveItems.map((i) => [i.id.toString(), i]),
+        newActiveItems.map((i) => [i.id.toString(), i])
       );
       const existingItemsInfo = await fetchPretixItemsInfoByEvent(
         dbClient,
-        eventConfigID,
+        eventConfigID
       );
       const existingItemsInfoByItemID = new Map(
-        existingItemsInfo.map((i) => [i.item_id, i]),
+        existingItemsInfo.map((i) => [i.item_id, i])
       );
       const itemsToInsert = newActiveItems.filter(
-        (i) => !existingItemsInfoByItemID.has(i.id.toString()),
+        (i) => !existingItemsInfoByItemID.has(i.id.toString())
       );
 
       // Step 1 of saving: insert items that are new
@@ -239,7 +239,7 @@ export class DevconnectPretixSyncService {
           dbClient,
           item.id.toString(),
           eventConfigID,
-          item.name.en,
+          item.name.en
         );
       }
 
@@ -258,15 +258,15 @@ export class DevconnectPretixSyncService {
         const oldItem = existingItemsInfoByItemID.get(item.id.toString())!;
         logger(
           `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
-            oldItem,
-          )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`,
+            oldItem
+          )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
         );
         await updatePretixItemsInfo(dbClient, oldItem.id, item.name.en);
       }
 
       // Step 3 of saving: remove items that are not active anymore
       const itemsToRemove = existingItemsInfo.filter(
-        (existing) => !newActiveItemsByItemID.has(existing.item_id),
+        (existing) => !newActiveItemsByItemID.has(existing.item_id)
       );
       logger(`[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} items`);
       for (const item of itemsToRemove) {
@@ -276,7 +276,7 @@ export class DevconnectPretixSyncService {
     } catch (e) {
       logger(
         `[DEVCONNECT PRETIX] error while syncing items for ${orgURL} and ${eventID}, skipping update`,
-        { error: e },
+        { error: e }
       );
       return false;
     }
@@ -291,7 +291,7 @@ export class DevconnectPretixSyncService {
   private async saveTickets(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig,
+    event: DevconnectPretixEventConfig
   ): Promise<boolean> {
     return traced(SERVICE_NAME_FOR_TRACING, "loadAllTickets", async (span) => {
       const { orgURL, token } = organizer;
@@ -304,28 +304,28 @@ export class DevconnectPretixSyncService {
         // Fetch updated version after DB updates
         const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
           dbClient,
-          eventConfigID,
+          eventConfigID
         );
 
         const tickets = this.ordersToDevconnectTickets(
           pretixOrders,
-          updatedItemsInfo,
+          updatedItemsInfo
         );
 
         const newTicketsByEmailAndItem = ticketsToMapByEmailAndItem(tickets);
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           dbClient,
-          eventConfigID,
+          eventConfigID
         );
         const existingTicketsByEmailAndItem =
           ticketsToMapByEmailAndItem(existingTickets);
         const newTickets = tickets.filter(
-          (t) => !existingTicketsByEmailAndItem.has(getEmailAndItemKey(t)),
+          (t) => !existingTicketsByEmailAndItem.has(getEmailAndItemKey(t))
         );
 
         // Step 1 of saving: insert tickets that are new
         logger(
-          `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`,
+          `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`
         );
         for (const ticket of newTickets) {
           logger(`[DEVCONNECT PRETIX] Inserting ${JSON.stringify(ticket)}`);
@@ -336,11 +336,11 @@ export class DevconnectPretixSyncService {
         // Filter to tickets that existed before, and filter to those that have changed.
         const updatedTickets = tickets
           .filter((t) =>
-            existingTicketsByEmailAndItem.has(getEmailAndItemKey(t)),
+            existingTicketsByEmailAndItem.has(getEmailAndItemKey(t))
           )
           .filter((t) => {
             const oldTicket = existingTicketsByEmailAndItem.get(
-              getEmailAndItemKey(t),
+              getEmailAndItemKey(t)
             )!;
             const newTicket = t;
             return pretixTicketsDifferent(oldTicket, newTicket);
@@ -350,12 +350,12 @@ export class DevconnectPretixSyncService {
         logger(`[DEVCONNECT PRETIX] Updating ${updatedTickets.length} tickets`);
         for (const updatedTicket of updatedTickets) {
           const oldTicket = existingTicketsByEmailAndItem.get(
-            getEmailAndItemKey(updatedTicket),
+            getEmailAndItemKey(updatedTicket)
           );
           logger(
             `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
-              oldTicket,
-            )} to ${JSON.stringify(updatedTicket)}`,
+              oldTicket
+            )} to ${JSON.stringify(updatedTicket)}`
           );
           await updateDevconnectPretixTicket(dbClient, updatedTicket);
         }
@@ -363,12 +363,12 @@ export class DevconnectPretixSyncService {
         // Step 3 of saving: remove users that don't have a ticket anymore
         const removedTickets = existingTickets.filter(
           (existing) =>
-            !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing)),
+            !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
         );
         logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} users`);
         for (const removedTicket of removedTickets) {
           logger(
-            `[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`,
+            `[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`
           );
           await softDeleteDevconnectPretixTicket(dbClient, removedTicket);
         }
@@ -378,12 +378,12 @@ export class DevconnectPretixSyncService {
         span?.setAttribute("ticketsDeleted", removedTickets.length);
         span?.setAttribute(
           "ticketsTotal",
-          existingTickets.length + newTickets.length - removedTickets.length,
+          existingTickets.length + newTickets.length - removedTickets.length
         );
       } catch (e) {
         logger(
           `[DEVCONNECT PRETIX] error while syncing for ${orgURL} and ${eventID}, skipping update`,
-          { error: e },
+          { error: e }
         );
         return false;
       }
@@ -397,7 +397,7 @@ export class DevconnectPretixSyncService {
   private async syncAllPretixForOrganizerAndEvent(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig,
+    event: DevconnectPretixEventConfig
   ): Promise<void> {
     const { orgURL } = organizer;
     const { eventID } = event;
@@ -406,14 +406,14 @@ export class DevconnectPretixSyncService {
 
     if (!(await this.saveEventInfo(dbClient, organizer, event))) {
       logger(
-        `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`,
+        `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
     if (!(await this.saveItemsInfo(dbClient, organizer, event))) {
       logger(
-        `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`,
+        `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
@@ -434,7 +434,7 @@ export class DevconnectPretixSyncService {
    */
   private ordersToDevconnectTickets(
     orders: DevconnectPretixOrder[],
-    itemsInfo: PretixItemInfo[],
+    itemsInfo: PretixItemInfo[]
   ): DevconnectPretixTicket[] {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
@@ -452,7 +452,7 @@ export class DevconnectPretixSyncService {
         positionid,
         item,
         attendee_name,
-        attendee_email,
+        attendee_email
       } of order.positions) {
         const existingItem = itemsInfoByItemID.get(item.toString());
         if (existingItem) {
@@ -463,8 +463,8 @@ export class DevconnectPretixSyncService {
               {
                 orderCode: order.code,
                 positionID: positionid,
-                orderEmail: order.email,
-              },
+                orderEmail: order.email
+              }
             );
           }
           const email = (attendee_email || order.email).toLowerCase();
@@ -473,7 +473,7 @@ export class DevconnectPretixSyncService {
             email,
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
-            is_deleted: false,
+            is_deleted: false
           });
         }
       }
@@ -488,7 +488,7 @@ export async function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
-  devconnectPretixAPI: IDevconnectPretixAPI | null,
+  devconnectPretixAPI: IDevconnectPretixAPI | null
 ): Promise<DevconnectPretixSyncService | null> {
   if (context.isZuzalu) {
     logger("[DEVCONNECT PRETIX] not starting service because IS_ZUZALU=true");
@@ -497,13 +497,13 @@ export async function startDevconnectPretixSyncService(
 
   if (!devconnectPretixAPI) {
     logger(
-      "[DEVCONNECT PRETIX] can't start sync service - no api instantiated",
+      "[DEVCONNECT PRETIX] can't start sync service - no api instantiated"
     );
     return null;
   }
 
   const devconnectPretixConfig = await getDevconnectPretixConfig(
-    context.dbPool,
+    context.dbPool
   );
 
   if (!devconnectPretixConfig) {
@@ -514,8 +514,8 @@ export async function startDevconnectPretixSyncService(
     `[DEVCONNECT PRETIX] initializing with configuration: ${JSON.stringify(
       devconnectPretixConfig,
       null,
-      2,
-    )}`,
+      2
+    )}`
   );
 
   const pretixSyncService = new DevconnectPretixSyncService(
@@ -523,7 +523,7 @@ export async function startDevconnectPretixSyncService(
     devconnectPretixAPI,
     devconnectPretixConfig,
     rollbarService,
-    semaphoreService,
+    semaphoreService
   );
 
   pretixSyncService.startSyncLoop();

@@ -1,7 +1,7 @@
 import * as path from "path";
 import {
   DevconnectPretixAPI,
-  getDevconnectPretixAPI,
+  getDevconnectPretixAPI
 } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -17,7 +17,7 @@ import { logger } from "./util/logger";
  * the appropriate APIs if they have not been overriden by the caller.
  */
 export async function startApplication(
-  apiOverrides?: Partial<APIs>,
+  apiOverrides?: Partial<APIs>
 ): Promise<PCDPass> {
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
@@ -27,7 +27,7 @@ export async function startApplication(
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
-    publicResourcesDir: path.join(process.cwd(), "public"),
+    publicResourcesDir: path.join(process.cwd(), "public")
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
@@ -36,14 +36,14 @@ export async function startApplication(
 
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(
-    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`,
+    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
   );
 
   return {
     context,
     services,
     apis,
-    expressContext: expressServer,
+    expressContext: expressServer
   };
 }
 
@@ -56,7 +56,7 @@ export async function stopApplication(app?: PCDPass): Promise<void> {
 
 async function getOverridenApis(
   context: ApplicationContext,
-  apiOverrides?: Partial<APIs>,
+  apiOverrides?: Partial<APIs>
 ): Promise<APIs> {
   let emailAPI: IEmailAPI | null = null;
 
@@ -95,6 +95,6 @@ async function getOverridenApis(
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI,
+    devconnectPretixAPI
   };
 }
