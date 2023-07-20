@@ -5,7 +5,10 @@ import { Pool } from "pg";
 import { v4 as uuid } from "uuid";
 import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
-import { fetchDevconnectPretixTicketsByEmail } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchDevconnectPretixTicketsByEmail,
+  fetchDevconnectPretixTicketsByEvent
+} from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import {
   consumeDevconnectPretixTicket,
@@ -43,7 +46,7 @@ describe.only("database reads and writes", function () {
     { id: "3", name: "Item Three" }
   ];
   const expectedOrgId = 1;
-  const expectedEventId = 1;
+  const expectedEventConfigId = 1;
   const expectedEventInfoId = 1;
   const ticketName = "UserFirst UserLast";
   const ticketEmail = randomEmail();
@@ -81,7 +84,7 @@ describe.only("database reads and writes", function () {
         testItemInfos.map((item) => item.id),
         testEventId
       );
-      expect(eventId).to.eq(expectedEventId);
+      expect(eventId).to.eq(expectedEventConfigId);
     }
   );
 
@@ -107,12 +110,14 @@ describe.only("database reads and writes", function () {
     const eventsInfoId = await insertPretixEventsInfo(
       db,
       testEventName,
-      expectedEventId
+      expectedEventConfigId
     );
     expect(eventsInfoId).to.eq(expectedEventInfoId);
     const eventsInfoFromDb = await fetchPretixEventInfo(db, eventsInfoId);
     expect(eventsInfoFromDb?.event_name).to.eq(testEventName);
-    expect(eventsInfoFromDb?.pretix_events_config_id).to.eq(expectedEventId);
+    expect(eventsInfoFromDb?.pretix_events_config_id).to.eq(
+      expectedEventConfigId
+    );
   });
 
   step("should be able to insert pretix item information", async function () {
@@ -127,7 +132,10 @@ describe.only("database reads and writes", function () {
       expect(itemInfoId).to.eq(expectedId++);
     }
 
-    const dbItemInfos = await fetchPretixItemsInfoByEvent(db, expectedEventId);
+    const dbItemInfos = await fetchPretixItemsInfoByEvent(
+      db,
+      expectedEventConfigId
+    );
     expect(dbItemInfos.length).to.eq(testItemInfos.length);
 
     for (let i = 0; i < dbItemInfos.length; i++) {
@@ -188,5 +196,15 @@ describe.only("database reads and writes", function () {
     );
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
+  });
+
+  step("fetching tickets by event should work", async function () {
+    const fetchedTickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      expectedEventConfigId
+    );
+
+    expect(fetchedTickets.length).to.eq(1);
+    expect(fetchedTickets[0].email).to.eq(ticketEmail);
   });
 });
