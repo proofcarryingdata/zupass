@@ -31,7 +31,7 @@ import {
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
 
-describe.only("database reads and writes", function () {
+describe("database reads and writes", function () {
   this.timeout(15_000);
 
   let db: Pool;
