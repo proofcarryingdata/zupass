@@ -2,7 +2,21 @@ import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../appConfig";
 
 export async function requestUser(uuid: string): Promise<Response> {
+  if (appConfig.isZuzalu) {
+    return requestZuzaluUser(uuid);
+  }
+
+  return requestPCDPassUser(uuid);
+}
+
+export async function requestZuzaluUser(uuid: string): Promise<Response> {
   const url = `${appConfig.passportServer}/zuzalu/participant/${uuid}`;
+  const response = await fetch(url);
+  return response;
+}
+
+export async function requestPCDPassUser(uuid: string): Promise<Response> {
+  const url = `${appConfig.passportServer}/pcdpass/participant/${uuid}`;
   const response = await fetch(url);
   return response;
 }
@@ -39,7 +53,7 @@ export async function requestZuzaluConfirmationEmail(
   const params = new URLSearchParams({
     email,
     commitment: identity.commitment.toString(),
-    force: force ? "true" : "false",
+    force: force ? "true" : "false"
   }).toString();
   const url = `${appConfig.passportServer}/zuzalu/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
@@ -56,7 +70,7 @@ export async function submitNewZuzaluUser(
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identity.commitment.toString(),
+    commitment: identity.commitment.toString()
   }).toString();
   const loginUrl = `${appConfig.passportServer}/zuzalu/new-participant?${query}`;
 
@@ -73,7 +87,7 @@ export async function requestGenericConfirmationEmail(
   const params = new URLSearchParams({
     email,
     commitment: identity.commitment.toString(),
-    force: force ? "true" : "false",
+    force: force ? "true" : "false"
   }).toString();
   const url = `${appConfig.passportServer}/pcdpass/send-login-email?${params}`;
   const res = await fetch(url, { method: "POST" });
@@ -90,7 +104,7 @@ export async function submitNewGenericUser(
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identity.commitment.toString(),
+    commitment: identity.commitment.toString()
   }).toString();
   const loginUrl = `${appConfig.passportServer}/pcdpass/new-participant?${query}`;
 
