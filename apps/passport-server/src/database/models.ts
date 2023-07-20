@@ -37,6 +37,7 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   event_name: string;
   item_name: string;
   is_consumed: boolean;
+  pretix_events_config_id: number;
 }
 
 export interface DevconnectSuperuser {

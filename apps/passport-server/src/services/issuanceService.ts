@@ -188,16 +188,20 @@ export class IssuanceService {
     const serializedPCDs = await Promise.all(
       ticketsDB
         // convert to ITicketData
-        .map((t) => ({
-          ticketId: t.id.toString(),
-          eventName: t.event_name,
-          ticketName: t.item_name,
-          timestamp: Date.now(),
-          attendeeEmail: email,
-          attendeeName: t.full_name,
-          isConsumed: t.is_consumed,
-          isDeleted: t.is_deleted
-        }))
+        .map(
+          (t) =>
+            ({
+              ticketId: t.id.toString(),
+              eventName: t.event_name,
+              ticketName: t.item_name,
+              timestamp: Date.now(),
+              attendeeEmail: email,
+              attendeeName: t.full_name,
+              isConsumed: t.is_consumed,
+              isRevoked: t.is_deleted,
+              eventConfigId: t.pretix_events_config_id
+            }) satisfies ITicketData
+        )
         // convert to serialized ticket PCD
         .map((ticketData) => this.ticketDataToSerializedPCD(ticketData))
     );

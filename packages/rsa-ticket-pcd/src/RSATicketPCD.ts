@@ -4,7 +4,7 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
@@ -17,6 +17,7 @@ export const RSAPCDTypeName = "rsa-ticket-pcd";
 export interface ITicketData {
   timestamp?: number;
   eventName?: string;
+  eventConfigId?: number;
   ticketName?: string;
   attendeeName?: string;
   attendeeEmail?: string;
@@ -109,8 +110,8 @@ export async function serialize(
     type: RSAPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
-      rsaPCD: serializedRSAPCD,
-    }),
+      rsaPCD: serializedRSAPCD
+    })
   } as SerializedPCD<RSATicketPCD>;
 }
 
@@ -148,7 +149,7 @@ export function getDisplayOptions(pcd: RSATicketPCD): DisplayOptions {
 
   return {
     header: header,
-    displayName: "ticket-" + pcd.id.substring(0, 4),
+    displayName: "ticket-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -168,5 +169,5 @@ export const RSATicketPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };
