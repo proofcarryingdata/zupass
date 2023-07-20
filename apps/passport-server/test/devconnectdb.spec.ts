@@ -8,7 +8,8 @@ import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
-  fetchDevconnectSuperusers
+  fetchDevconnectSuperusers,
+  fetchDevconnectSuperusersForEvent
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import {
@@ -28,7 +29,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 
-describe.only("database reads and writes", function () {
+describe.only("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
 
   let db: Pool;
@@ -325,7 +326,7 @@ describe.only("database reads and writes", function () {
     expect(actualEmailSet).to.deep.eq(expectedEmailSet);
   });
 
-  step("fetching superusers should work", async function () {
+  step("fetching all superusers should work", async function () {
     const dbSuperUsers = await fetchDevconnectSuperusers(db);
     const expectedSuperUsers = [testTickets[1], testTickets[3]];
 
@@ -334,4 +335,16 @@ describe.only("database reads and writes", function () {
 
     expect(dbEmailSet).to.deep.eq(expectedEmailSet);
   });
+
+  step(
+    "fetching superusers for a particular event should work",
+    async function () {
+      const progCryptoSuperUsers = await fetchDevconnectSuperusersForEvent(
+        db,
+        testEvents[0].expectedInternalId
+      );
+      expect(progCryptoSuperUsers.length).to.eq(1);
+      expect(progCryptoSuperUsers[0].email).to.eq(testTickets[1].email);
+    }
+  );
 });
