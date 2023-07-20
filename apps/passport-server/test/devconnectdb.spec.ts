@@ -7,7 +7,8 @@ import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectPretixTicketsByEmail,
-  fetchDevconnectPretixTicketsByEvent
+  fetchDevconnectPretixTicketsByEvent,
+  fetchDevconnectSuperusers
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import {
@@ -279,5 +280,11 @@ describe.only("database reads and writes", function () {
     );
 
     expect(actualEmailSet).to.deep.eq(expectedEmailSet);
+  });
+
+  step("fetching superusers should work", async function () {
+    const superusers = await fetchDevconnectSuperusers(db);
+    expect(superusers.length).to.eq(1);
+    expect(superusers[0].email).to.eq(testTickets[1].email);
   });
 });
