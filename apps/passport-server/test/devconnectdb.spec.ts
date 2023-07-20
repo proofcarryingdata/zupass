@@ -105,6 +105,13 @@ describe.only("database reads and writes", function () {
       isSuperUser: false,
       internalEventId: 3,
       expectedInternalItemId: 5
+    },
+    {
+      id: "6",
+      name: "ThirdParty Super",
+      isSuperUser: true,
+      internalEventId: 3,
+      expectedInternalItemId: 6
     }
   ];
 
@@ -123,6 +130,11 @@ describe.only("database reads and writes", function () {
       name: "ThirdParty Attendee",
       email: "thirdparty-attendee@test.com",
       internalItemInfoId: 5
+    },
+    {
+      name: "ThirdParty SuperUser",
+      email: "thirdparty-attendee@test.com",
+      internalItemInfoId: 6
     }
   ];
 
@@ -314,8 +326,12 @@ describe.only("database reads and writes", function () {
   });
 
   step("fetching superusers should work", async function () {
-    const superusers = await fetchDevconnectSuperusers(db);
-    expect(superusers.length).to.eq(1);
-    expect(superusers[0].email).to.eq(testTickets[1].email);
+    const dbSuperUsers = await fetchDevconnectSuperusers(db);
+    const expectedSuperUsers = [testTickets[1], testTickets[3]];
+
+    const dbEmailSet = new Set(dbSuperUsers.map((t) => t.email));
+    const expectedEmailSet = new Set(expectedSuperUsers.map((t) => t.email));
+
+    expect(dbEmailSet).to.deep.eq(expectedEmailSet);
   });
 });
