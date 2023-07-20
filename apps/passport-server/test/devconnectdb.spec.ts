@@ -9,6 +9,7 @@ import {
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusers,
+  fetchDevconnectSuperusersForEmail,
   fetchDevconnectSuperusersForEvent
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
@@ -345,6 +346,18 @@ describe.only("database reads and writes for devconnect ticket features", functi
       );
       expect(progCryptoSuperUsers.length).to.eq(1);
       expect(progCryptoSuperUsers[0].email).to.eq(testTickets[1].email);
+    }
+  );
+
+  step(
+    "fetching superusers for a particular email address should work",
+    async function () {
+      const superUsersForEmail = await fetchDevconnectSuperusersForEmail(
+        db,
+        testTickets[1].email
+      );
+      expect(superUsersForEmail.length).to.eq(1);
+      expect(superUsersForEmail[0].email).to.eq(testTickets[1].email);
     }
   );
 });

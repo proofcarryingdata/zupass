@@ -99,3 +99,25 @@ and ec.id = $1
 
   return rows;
 }
+
+export async function fetchDevconnectSuperusersForEmail(
+  client: Pool,
+  email: string
+): Promise<Array<DevconnectPretixTicketDBWithEmailAndItem>> {
+  const result = await sqlQuery(
+    client,
+    `
+select * from devconnect_pretix_tickets t
+join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
+join pretix_events_config ec on ec.id = e.pretix_events_config_id
+where i.item_id = ANY(ec.superuser_item_ids)
+and t.email = $1
+    `,
+    [email]
+  );
+
+  const rows = result.rows;
+
+  return rows;
+}
