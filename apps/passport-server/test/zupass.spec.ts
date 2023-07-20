@@ -318,9 +318,9 @@ describe("zupass functionality", function () {
       });
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
-      const user = application.services.semaphoreService.getUserByEmail(
+      const user = (await application.services.semaphoreService.getUserByEmail(
         firstParticipant.email
-      ) as LoggedInZuzaluUser;
+      )) as LoggedInZuzaluUser;
 
       if (!user) {
         throw new Error("expected to be able to get user");
@@ -336,9 +336,10 @@ describe("zupass functionality", function () {
     async function () {
       const residents = pretixMocker.getResidentsOrOrganizers(false);
       const firstResident = residents[0];
-      const userBefore = application.services.semaphoreService.getUserByEmail(
-        firstResident.email
-      ) as LoggedInZuzaluUser;
+      const userBefore =
+        (await application.services.semaphoreService.getUserByEmail(
+          firstResident.email
+        )) as LoggedInZuzaluUser;
       if (!firstResident || !userBefore) {
         throw new Error("expected there to be at least one mocked user");
       }
@@ -355,9 +356,10 @@ describe("zupass functionality", function () {
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
 
-      const userAfter = application.services.semaphoreService.getUserByEmail(
-        firstResident.email
-      ) as LoggedInZuzaluUser;
+      const userAfter =
+        (await application.services.semaphoreService.getUserByEmail(
+          firstResident.email
+        )) as LoggedInZuzaluUser;
 
       if (!userAfter) {
         throw new Error("expected to be able to get user");

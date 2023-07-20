@@ -4,11 +4,13 @@ import { Pool } from "pg";
 import {
   CommitmentRow,
   HistoricSemaphoreGroup,
+  LoggedinPCDPassUser,
   LoggedInZuzaluUser,
   ZuzaluUserRole
 } from "../database/models";
 import {
   fetchAllCommitments,
+  fetchCommitment,
   fetchCommitmentByUuid
 } from "../database/queries/commitments";
 import { fetchDevconnectSuperusersForEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -72,7 +74,7 @@ export class SemaphoreService {
    */
   public async getUserByUUID(
     uuid: string
-  ): Promise<LoggedInZuzaluUser | CommitmentRow | null> {
+  ): Promise<LoggedInZuzaluUser | LoggedinPCDPassUser | null> {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -94,18 +96,23 @@ export class SemaphoreService {
       commitment.email
     );
 
-    superuserPrivilages[0].devconnect_pretix_items_info_id;
+    const pcdpassUser: LoggedinPCDPassUser = {
+      ...commitment,
+      superuserEventConfigIds: superuserPrivilages.map(
+        (s) => s.pretix_events_config_id
+      )
+    };
 
-    return this.pcdPassUsersbyUUID[uuid] || null;
+    return pcdpassUser;
   }
 
   /**
    * Gets a user by unique identitifier. Only retrieves users that have logged in
    * (which makes sense because only those users even have a uuid).
    */
-  public getUserByEmail(
+  public async getUserByEmail(
     email: string
-  ): LoggedInZuzaluUser | CommitmentRow | null {
+  ): Promise<LoggedInZuzaluUser | LoggedinPCDPassUser | null> {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -116,7 +123,25 @@ export class SemaphoreService {
       return this.zuzaluUsersByEmail[email] || null;
     }
 
-    return this.pcdPassUsersByEmail[email] || null;
+    const commitment = await fetchCommitment(this.dbPool, email);
+
+    if (!commitment) {
+      throw new Error("no user with that email exists");
+    }
+
+    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+      this.dbPool,
+      commitment.email
+    );
+
+    const pcdpassUser: LoggedinPCDPassUser = {
+      ...commitment,
+      superuserEventConfigIds: superuserPrivilages.map(
+        (s) => s.pretix_events_config_id
+      )
+    };
+
+    return pcdpassUser;
   }
 
   public start(): void {

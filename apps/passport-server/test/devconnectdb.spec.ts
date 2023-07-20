@@ -30,7 +30,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 
-describe.only("database reads and writes for devconnect ticket features", function () {
+describe("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
 
   let db: Pool;

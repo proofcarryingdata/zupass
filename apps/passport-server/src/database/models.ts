@@ -63,7 +63,9 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   commitment: string;
 }
 
-export interface LoggedinPCDPassUser extends CommitmentRow {}
+export interface LoggedinPCDPassUser extends CommitmentRow {
+  superuserEventConfigIds: number[];
+}
 
 export enum ZuzaluUserRole {
   Visitor = "visitor",

@@ -1,11 +1,12 @@
 import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Response } from "express";
-import { ZuzaluUser } from "../database/models";
+import { LoggedinPCDPassUser, ZuzaluUser } from "../database/models";
 import { fetchCommitment } from "../database/queries/commitments";
+import { fetchDevconnectSuperusersForEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
-  fetchZuzaluUser,
+  fetchZuzaluUser
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
@@ -85,7 +86,7 @@ export class UserService {
         name: "Test User",
         order_id: "",
         role: ZuzaluUserRole.Resident,
-        visitor_date_ranges: undefined,
+        visitor_date_ranges: undefined
       });
     }
 
@@ -132,7 +133,7 @@ export class UserService {
       `[ZUID] new-user ${JSON.stringify({
         emailToken,
         email,
-        commitment,
+        commitment
       })}`
     );
 
@@ -155,12 +156,12 @@ export class UserService {
       logger(`[ZUID] Saving new commitment: ${commitment}`);
       const uuid = await insertCommitment(dbPool, {
         email,
-        commitment,
+        commitment
       });
 
       // Reload Merkle trees
       await this.semaphoreService.reload();
-      const newUser = this.semaphoreService.getUserByUUID(uuid);
+      const newUser = await this.semaphoreService.getUserByUUID(uuid);
       if (newUser == null) {
         throw new Error(`${uuid} not found`);
       } else if (newUser.commitment !== commitment) {
@@ -182,7 +183,7 @@ export class UserService {
 
   public async handleGetZuzaluUser(uuid: string, res: Response): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
-    const user = this.semaphoreService.getUserByUUID(uuid);
+    const user = await this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);
   }
@@ -247,7 +248,7 @@ export class UserService {
       `[ZUID] new-user ${JSON.stringify({
         token,
         email,
-        commitment,
+        commitment
       })}`
     );
 
@@ -266,11 +267,27 @@ export class UserService {
       await this.semaphoreService.reload();
 
       // Return user, including UUID, back to Passport
-      const newUser = await fetchCommitment(this.context.dbPool, email);
-      const jsonP = JSON.stringify(newUser);
-      logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
+      const commitmentRow = await fetchCommitment(this.context.dbPool, email);
 
-      res.json(newUser);
+      if (!commitmentRow) {
+        throw new Error("no user with that email exists");
+      }
+
+      const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+        this.context.dbPool,
+        commitmentRow.email
+      );
+
+      const pcdpassUser: LoggedinPCDPassUser = {
+        ...commitmentRow,
+        superuserEventConfigIds: superuserPrivilages.map(
+          (s) => s.pretix_events_config_id
+        )
+      };
+
+      const jsonP = JSON.stringify(pcdpassUser);
+      logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
+      res.json(pcdpassUser);
     } catch (e) {
       logger(e);
       this.rollbarService?.reportError(e);
@@ -283,7 +300,7 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
-    const user = this.semaphoreService.getUserByUUID(uuid);
+    const user = await this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);
   }
