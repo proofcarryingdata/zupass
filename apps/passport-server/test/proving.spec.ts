@@ -1,7 +1,7 @@
 import {
   PendingPCDStatus,
   ProveRequest,
-  StatusResponse,
+  StatusResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -35,7 +35,7 @@ describe("server-side proving functionality", function () {
     async function () {
       const proveRequest: ProveRequest = {
         args: {},
-        pcdType: "",
+        pcdType: ""
       };
 
       await submitAndWaitForPendingPCD(application, proveRequest, async (r) => {
@@ -55,16 +55,16 @@ describe("server-side proving functionality", function () {
             pcdType: SemaphoreIdentityPCDPackage.name,
             value: await SemaphoreIdentityPCDPackage.serialize(
               await SemaphoreIdentityPCDPackage.prove({
-                identity: new Identity(),
+                identity: new Identity()
               })
-            ),
+            )
           },
           signedMessage: {
             argumentType: ArgumentTypeName.String,
-            value: "test",
-          },
+            value: "test"
+          }
         },
-        pcdType: SemaphoreSignaturePCDPackage.name,
+        pcdType: SemaphoreSignaturePCDPackage.name
       };
 
       const expectedResult = await SemaphoreSignaturePCDPackage.prove(

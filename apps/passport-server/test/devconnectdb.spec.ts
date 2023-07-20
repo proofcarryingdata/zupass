@@ -2,7 +2,17 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "pg";
+import { v4 as uuid } from "uuid";
 import { getDB } from "../src/database/postgresPool";
+import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
+import {
+  fetchPretixEventInfo,
+  insertPretixEventsInfo
+} from "../src/database/queries/pretixEventInfo";
+import {
+  fetchPretixItemsInfoByEvent,
+  insertPretixItemsInfo
+} from "../src/database/queries/pretixItemInfo";
 import { fetchPretixConfiguration } from "../src/database/queries/pretix_config/fetchPretixConfiguration";
 import {
   getAllOrganizers,
@@ -10,16 +20,6 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
-import { v4 as uuid } from "uuid";
-import {
-  fetchPretixItemsInfoByEvent,
-  insertPretixItemsInfo
-} from "../src/database/queries/pretixItemInfo";
-import {
-  fetchPretixEventInfo,
-  insertPretixEventsInfo
-} from "../src/database/queries/pretixEventInfo";
-import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { randomEmail } from "./util/util";
 
 describe.only("database reads and writes", function () {
