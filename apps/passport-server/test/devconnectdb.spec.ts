@@ -41,9 +41,10 @@ describe("database reads and writes", function () {
   const testEventId = "test-id";
   const testEventName = "Test Event";
   const testItemInfos = [
-    { id: "1", name: "Item One" },
-    { id: "2", name: "Item Two" },
-    { id: "3", name: "Item Three" }
+    { id: "1", name: "Item One", isSuperUser: false },
+    { id: "2", name: "Item Two", isSuperUser: false },
+    { id: "3", name: "Item Three", isSuperUser: false },
+    { id: "4", name: "Superuser Item", isSuperUser: true }
   ];
   const expectedOrgId = 1;
   const expectedEventConfigId = 1;
@@ -82,6 +83,7 @@ describe("database reads and writes", function () {
         db,
         expectedOrgId,
         testItemInfos.map((item) => item.id),
+        testItemInfos.filter((item) => item.isSuperUser).map((item) => item.id),
         testEventId
       );
       expect(eventId).to.eq(expectedEventConfigId);
@@ -101,7 +103,10 @@ describe("database reads and writes", function () {
         id: 1,
         pretix_organizers_config_id: 1,
         active_item_ids: testItemInfos.map((item) => item.id),
-        event_id: testEventId
+        event_id: testEventId,
+        superuser_item_ids: testItemInfos
+          .filter((item) => item.isSuperUser)
+          .map((item) => item.id)
       }
     ]);
   });
