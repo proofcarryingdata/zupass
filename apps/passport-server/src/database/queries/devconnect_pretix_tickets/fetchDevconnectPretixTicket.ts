@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import {
   DevconnectPretixTicketDB,
-  DevconnectPretixTicketDBWithEmailAndItem,
+  DevconnectPretixTicketDBWithEmailAndItem
 } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -57,4 +57,23 @@ export async function fetchDevconnectPretixTicketsByEmail(
     [email]
   );
   return result.rows;
+}
+
+export async function fetchDevconnectSuperusers(
+  client: Pool
+): Promise<Array<DevconnectPretixTicketDBWithEmailAndItem>> {
+  const result = await sqlQuery(
+    client,
+    `
+select * from devconnect_pretix_tickets t
+join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
+join pretix_events_config ec on ec.id = e.pretix_events_config_id
+where i.item_id = ANY(ec.superuser_item_ids);
+    `
+  );
+
+  const rows = result.rows;
+
+  return rows;
 }
