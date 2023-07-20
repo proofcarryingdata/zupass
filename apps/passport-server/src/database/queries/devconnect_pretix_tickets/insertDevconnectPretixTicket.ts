@@ -9,19 +9,20 @@ import { sqlQuery } from "../../sqlQuery";
 export async function insertDevconnectPretixTicket(
   client: Pool,
   params: DevconnectPretixTicket
-): Promise<number> {
+): Promise<DevconnectPretixTicket> {
   const result = await sqlQuery(
     client,
     `\
 insert into devconnect_pretix_tickets (email, full_name, devconnect_pretix_items_info_id, is_deleted)
 values ($1, $2, $3, $4)
-on conflict do nothing;`,
+on conflict do nothing
+returning *`,
     [
       params.email,
       params.full_name,
       params.devconnect_pretix_items_info_id,
-      params.is_deleted,
+      params.is_deleted
     ]
   );
-  return result.rowCount;
+  return result.rows[0];
 }

@@ -11,7 +11,7 @@ import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
-  testLatestHistoricSemaphoreGroups,
+  testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { testUserSync } from "./user/testUserSync";
@@ -59,7 +59,7 @@ describe("pcd-pass functionality", function () {
     const result = await testLoginPCDPass(application, testEmail, {
       force: false,
       expectUserAlreadyLoggedIn: false,
-      expectEmailIncorrect: false,
+      expectEmailIncorrect: false
     });
 
     if (!result?.user) {
@@ -78,7 +78,7 @@ describe("pcd-pass functionality", function () {
         await testLoginPCDPass(application, "test", {
           force: false,
           expectUserAlreadyLoggedIn: false,
-          expectEmailIncorrect: true,
+          expectEmailIncorrect: true
         })
       ).to.eq(undefined);
     }
@@ -90,7 +90,7 @@ describe("pcd-pass functionality", function () {
       r: [],
       v: [],
       o: [],
-      g: [user.commitment],
+      g: [user.commitment]
     });
     await testLatestHistoricSemaphoreGroups(application);
   });
@@ -102,14 +102,14 @@ describe("pcd-pass functionality", function () {
         await testLoginPCDPass(application, testEmail, {
           force: false,
           expectUserAlreadyLoggedIn: true,
-          expectEmailIncorrect: false,
+          expectEmailIncorrect: false
         })
       ).to.eq(undefined);
 
       const result = await testLoginPCDPass(application, testEmail, {
         force: true,
         expectUserAlreadyLoggedIn: true,
-        expectEmailIncorrect: false,
+        expectEmailIncorrect: false
       });
 
       if (!result?.user) {
@@ -131,7 +131,7 @@ describe("pcd-pass functionality", function () {
         r: [],
         v: [],
         o: [],
-        g: [user.commitment],
+        g: [user.commitment]
       });
       await testLatestHistoricSemaphoreGroups(application);
     }

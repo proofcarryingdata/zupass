@@ -12,13 +12,13 @@ import { PCDPass } from "../src/types";
 import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import {
   getMockPretixAPI,
-  newMockZuzaluPretixAPI,
+  newMockZuzaluPretixAPI
 } from "./pretix/mockPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
   expectCurrentSemaphoreToBe,
-  testLatestHistoricSemaphoreGroups as testLatestHistoricSemaphoreGroupsMatchServerGroups,
+  testLatestHistoricSemaphoreGroups as testLatestHistoricSemaphoreGroupsMatchServerGroups
 } from "./semaphore/checkSemaphore";
 import { testLoginZupass } from "./user/testLoginZupass";
 import { testUserSync as testE2EESync } from "./user/testUserSync";
@@ -92,7 +92,7 @@ describe("zupass functionality", function () {
         r: [],
         v: [],
         o: [],
-        g: [],
+        g: []
       });
     }
   );
@@ -123,7 +123,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
-        expectEmailInvalid: false,
+        expectEmailInvalid: false
       });
       expect(emailAPI.send).to.have.been.called.exactly(1);
     }
@@ -137,7 +137,7 @@ describe("zupass functionality", function () {
           force: false,
           expectAlreadyRegistered: false,
           expectDoesntHaveTicket: true,
-          expectEmailInvalid: false,
+          expectEmailInvalid: false
         })
       ).to.eq(undefined);
     }
@@ -149,7 +149,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
-        expectEmailInvalid: true,
+        expectEmailInvalid: true
       })
     ).to.eq(undefined);
   });
@@ -166,7 +166,7 @@ describe("zupass functionality", function () {
         r: [residentUser.commitment],
         v: [],
         o: [],
-        g: [],
+        g: []
       });
     }
   );
@@ -200,7 +200,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
-        expectEmailInvalid: false,
+        expectEmailInvalid: false
       });
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
@@ -208,7 +208,7 @@ describe("zupass functionality", function () {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
-        expectEmailInvalid: false,
+        expectEmailInvalid: false
       });
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
@@ -225,12 +225,12 @@ describe("zupass functionality", function () {
         p: [
           residentUser.commitment,
           visitorUser.commitment,
-          organizerUser.commitment,
+          organizerUser.commitment
         ],
         r: [residentUser.commitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment],
-        g: [],
+        g: []
       });
     }
   );
@@ -262,7 +262,7 @@ describe("zupass functionality", function () {
           force: false,
           expectAlreadyRegistered: true,
           expectDoesntHaveTicket: false,
-          expectEmailInvalid: false,
+          expectEmailInvalid: false
         })
       ).to.eq(undefined);
 
@@ -270,7 +270,7 @@ describe("zupass functionality", function () {
         force: true,
         expectAlreadyRegistered: true,
         expectDoesntHaveTicket: false,
-        expectEmailInvalid: false,
+        expectEmailInvalid: false
       });
 
       if (!residentUser || !visitorUser || !organizerUser) {
@@ -288,12 +288,12 @@ describe("zupass functionality", function () {
         p: [
           newResidentCommitment,
           visitorUser.commitment,
-          organizerUser.commitment,
+          organizerUser.commitment
         ],
         r: [newResidentCommitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment],
-        g: [],
+        g: []
       });
     }
   );
@@ -381,12 +381,12 @@ describe("zupass functionality", function () {
         p: [
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
-          organizerUser.commitment,
+          organizerUser.commitment
         ],
         r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
-        g: [],
+        g: []
       });
       await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
@@ -396,7 +396,7 @@ describe("zupass functionality", function () {
     "an error fetching orders via the PretixAPI should stop the sync from completing",
     async () => {
       const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
-        throwOnFetchOrders: true,
+        throwOnFetchOrders: true
       });
       const pretixSyncService = application.services.pretixSyncService;
 
@@ -423,12 +423,12 @@ describe("zupass functionality", function () {
         p: [
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
-          organizerUser.commitment,
+          organizerUser.commitment
         ],
         r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
-        g: [],
+        g: []
       });
       await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
@@ -438,7 +438,7 @@ describe("zupass functionality", function () {
     "an error fetching subevents via the PretixAPI should stop the sync from completing",
     async () => {
       const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
-        throwOnFetchSubevents: true,
+        throwOnFetchSubevents: true
       });
       const pretixSyncService = application.services.pretixSyncService;
 
@@ -465,12 +465,12 @@ describe("zupass functionality", function () {
         p: [
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
-          organizerUser.commitment,
+          organizerUser.commitment
         ],
         r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
         v: [visitorUser.commitment],
         o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
-        g: [],
+        g: []
       });
       await testLatestHistoricSemaphoreGroupsMatchServerGroups(application);
     }
@@ -503,7 +503,7 @@ describe("zupass functionality", function () {
         r: [],
         v: [],
         o: [],
-        g: [],
+        g: []
       });
     }
   );
