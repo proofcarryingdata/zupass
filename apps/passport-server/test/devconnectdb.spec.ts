@@ -4,7 +4,9 @@ import { step } from "mocha-steps";
 import { Pool } from "pg";
 import { v4 as uuid } from "uuid";
 import { getDB } from "../src/database/postgresPool";
+import { fetchDevconnectPretixTicketsByEmail } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
+import { updateDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
   insertPretixEventsInfo
@@ -130,17 +132,37 @@ describe.only("database reads and writes", function () {
     }
   });
 
-  step("should be able to insert pretix event information", async function () {
-    const insertedTicket = await insertDevconnectPretixTicket(db, {
-      devconnect_pretix_items_info_id: 1,
-      email: ticketEmail,
-      full_name: ticketName,
-      is_deleted: false
-    });
+  const newTicket = {
+    devconnect_pretix_items_info_id: 1,
+    email: ticketEmail,
+    full_name: ticketName,
+    is_deleted: false
+  };
+
+  step("should be able to add a ticket", async function () {
+    const insertedTicket = await insertDevconnectPretixTicket(db, newTicket);
 
     expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
     expect(insertedTicket.email).to.eq(ticketEmail);
     expect(insertedTicket.full_name).to.eq(ticketName);
     expect(insertedTicket.is_deleted).to.eq(false);
+  });
+
+  step("should be able update a ticket", async function () {
+    const updatedTicket = { ...newTicket };
+
+    const loadedUpdatedTicket = await updateDevconnectPretixTicket(
+      db,
+      updatedTicket
+    );
+
+    console.log(loadedUpdatedTicket);
+
+    const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      updatedTicket.email
+    );
+
+    expect(fetchedTickets.length).to.eq(1);
   });
 });

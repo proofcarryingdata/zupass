@@ -8,13 +8,14 @@ import { sqlQuery } from "../../sqlQuery";
 export async function updateDevconnectPretixTicket(
   client: Pool,
   params: DevconnectPretixTicket
-): Promise<number> {
+): Promise<DevconnectPretixTicket> {
   const result = await sqlQuery(
     client,
     `\
 update devconnect_pretix_tickets
 set full_name=$1, is_deleted=$2
-where email=$3 and devconnect_pretix_items_info_id=$4`,
+where email=$3 and devconnect_pretix_items_info_id=$4
+returning *`,
     [
       params.full_name,
       params.is_deleted,
@@ -22,7 +23,7 @@ where email=$3 and devconnect_pretix_items_info_id=$4`,
       params.devconnect_pretix_items_info_id
     ]
   );
-  return result.rowCount;
+  return result.rows[0];
 }
 
 /**
