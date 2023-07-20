@@ -5,13 +5,17 @@ import {
   CommitmentRow,
   HistoricSemaphoreGroup,
   LoggedInZuzaluUser,
-  ZuzaluUserRole,
+  ZuzaluUserRole
 } from "../database/models";
-import { fetchAllCommitments } from "../database/queries/commitments";
+import {
+  fetchAllCommitments,
+  fetchCommitmentByUuid
+} from "../database/queries/commitments";
+import { fetchDevconnectSuperusersForEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   fetchHistoricGroupByRoot,
   fetchLatestHistoricSemaphoreGroups,
-  insertNewHistoricSemaphoreGroup,
+  insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
 import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
@@ -41,7 +45,7 @@ export class SemaphoreService {
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "PCDPass Users", group: new Group("5", 16) },
+      { name: "PCDPass Users", group: new Group("5", 16) }
     ];
   }
 
@@ -66,9 +70,9 @@ export class SemaphoreService {
    * Gets a user by unique identitifier. Only retrieves users that have logged in
    * (which makes sense because only those users even have a uuid).
    */
-  public getUserByUUID(
+  public async getUserByUUID(
     uuid: string
-  ): LoggedInZuzaluUser | CommitmentRow | null {
+  ): Promise<LoggedInZuzaluUser | CommitmentRow | null> {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -78,6 +82,19 @@ export class SemaphoreService {
     if (this.isZuzalu) {
       return this.zuzaluUsersByUUID[uuid] || null;
     }
+
+    const commitment = await fetchCommitmentByUuid(this.dbPool, uuid);
+
+    if (!commitment) {
+      throw new Error("no user with that email exists");
+    }
+
+    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+      this.dbPool,
+      commitment.email
+    );
+
+    superuserPrivilages[0].devconnect_pretix_items_info_id;
 
     return this.pcdPassUsersbyUUID[uuid] || null;
   }
@@ -283,7 +300,7 @@ export class SemaphoreService {
         return [
           this.groupParticipants(),
           this.groupOrganizers(),
-          this.groupResidents(),
+          this.groupResidents()
         ];
       case ZuzaluUserRole.Resident:
         return [this.groupParticipants(), this.groupResidents()];

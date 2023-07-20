@@ -39,6 +39,22 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   is_consumed: boolean;
 }
 
+export interface DevconnectSuperuser {
+  ticket_id: number;
+  email: string;
+  full_name: string;
+  is_deleted: boolean;
+  is_consumed: boolean;
+  devconnect_pretix_items_info_id: number;
+  devconnect_pretix_events_info_id: number;
+  item_name: string;
+  item_id: string;
+  pretix_events_config_id: number;
+  pretix_organizers_config_id: number;
+  event_name: string;
+  event_id: string;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that has logged in to the passport.
  */
@@ -46,6 +62,8 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
   commitment: string;
 }
+
+export interface LoggedinPCDPassUser extends CommitmentRow {}
 
 export enum ZuzaluUserRole {
   Visitor = "visitor",
