@@ -83,7 +83,11 @@ describe.only("database reads and writes", function () {
   ];
 
   const testTickets = [
-    { name: "UserFirst UserLast", email: randomEmail(), internalItemId: "1" }
+    {
+      name: "UserFirst UserLast",
+      email: randomEmail(),
+      internalItemInfoId: 1
+    }
   ];
 
   this.beforeAll(async () => {
@@ -192,24 +196,29 @@ describe.only("database reads and writes", function () {
     }
   });
 
-  const newTicket = {
-    devconnect_pretix_items_info_id: 1,
-    email: randomEmail(),
-    full_name: "First Last",
-    is_deleted: false
-  };
-
-  step("should be able to add a ticket", async function () {
-    const insertedTicket = await insertDevconnectPretixTicket(db, newTicket);
-    expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
-    expect(insertedTicket.email).to.eq(newTicket.email);
-    expect(insertedTicket.full_name).to.eq(newTicket.full_name);
-    expect(insertedTicket.is_deleted).to.eq(false);
+  step("should be able to add tickets", async function () {
+    for (const ticket of testTickets) {
+      const insertedTicket = await insertDevconnectPretixTicket(db, {
+        devconnect_pretix_items_info_id: ticket.internalItemInfoId,
+        email: ticket.email,
+        full_name: ticket.name,
+        is_deleted: false
+      });
+      expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
+      expect(insertedTicket.email).to.eq(ticket.email);
+      expect(insertedTicket.full_name).to.eq(ticket.name);
+      expect(insertedTicket.is_deleted).to.eq(false);
+    }
   });
 
   step("should be able update a ticket", async function () {
+    const existingTicket = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testTickets[0].email
+    );
+
     const updatedTicket: DevconnectPretixTicket = {
-      ...newTicket,
+      ...existingTicket[0],
       full_name: "New Fullname"
     };
 
@@ -229,9 +238,14 @@ describe.only("database reads and writes", function () {
   });
 
   step("should be able to consume a ticket", async function () {
+    const existingTicket = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testTickets[0].email
+    );
+
     const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
       db,
-      newTicket.email
+      existingTicket[0].email
     );
     const firstTicket = fetchedTickets[0];
     expect(firstTicket.is_consumed).to.eq(false);
@@ -240,7 +254,7 @@ describe.only("database reads and writes", function () {
 
     const afterConsumptionTickets = await fetchDevconnectPretixTicketsByEmail(
       db,
-      newTicket.email
+      existingTicket[0].email
     );
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
@@ -253,6 +267,6 @@ describe.only("database reads and writes", function () {
     );
 
     expect(fetchedTickets.length).to.eq(1);
-    expect(fetchedTickets[0].email).to.eq(newTicket.email);
+    expect(fetchedTickets[0].email).to.eq(testTickets[0].email);
   });
 });
