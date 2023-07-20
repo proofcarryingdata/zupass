@@ -37,7 +37,12 @@ describe.only("database reads and writes", function () {
     {
       expectedInternalId: 1,
       token: uuid(),
-      organizerUrl: "https://www.example.com/test"
+      organizerUrl: "https://www.example.com/0xparc-organizer"
+    },
+    {
+      expectedInternalId: 2,
+      token: uuid(),
+      organizerUrl: "https://www.example.com/thirdparty-organizer"
     }
   ];
 
@@ -46,39 +51,60 @@ describe.only("database reads and writes", function () {
       expectedInternalId: 1,
       expectedInternalInfoId: 1,
       organizerInternalId: 1,
-      eventId: "0xp-event",
+      eventId: "progcrypto",
       eventName: "ProgCrypto"
+    },
+    {
+      expectedInternalId: 2,
+      expectedInternalInfoId: 2,
+      organizerInternalId: 1,
+      eventId: "aw",
+      eventName: "AW"
+    },
+    {
+      expectedInternalId: 3,
+      expectedInternalInfoId: 3,
+      organizerInternalId: 2,
+      eventId: "third-party",
+      eventName: "ThirdParty Event"
     }
   ];
 
   const testItems = [
     {
       id: "1",
-      name: "Item One",
+      name: "ProgCrypto GA",
       isSuperUser: false,
       internalEventId: 1,
       expectedInternalItemId: 1
     },
     {
       id: "2",
-      name: "Item Two",
+      name: "ProgCrypto Guest",
       isSuperUser: false,
       internalEventId: 1,
       expectedInternalItemId: 2
     },
     {
       id: "3",
-      name: "Item Three",
+      name: "ProgCrypto Builder",
       isSuperUser: false,
       internalEventId: 1,
       expectedInternalItemId: 3
     },
     {
       id: "4",
-      name: "Superuser Item",
+      name: "ProgCrypto Organizer",
       isSuperUser: true,
       internalEventId: 1,
       expectedInternalItemId: 4
+    },
+    {
+      id: "5",
+      name: "ThirdParty Attendee",
+      isSuperUser: false,
+      internalEventId: 3,
+      expectedInternalItemId: 5
     }
   ];
 
@@ -92,6 +118,11 @@ describe.only("database reads and writes", function () {
       name: "Super User1",
       email: "user-two@test.com",
       internalItemInfoId: 4
+    },
+    {
+      name: "ThirdParty Attendee",
+      email: "thirdparty-attendee@test.com",
+      internalItemInfoId: 5
     }
   ];
 
