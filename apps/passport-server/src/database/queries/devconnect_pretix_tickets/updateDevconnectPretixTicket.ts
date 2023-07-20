@@ -32,7 +32,7 @@ returning *`,
  */
 export async function consumeDevconnectPretixTicket(
   client: Pool,
-  id: string | undefined
+  id: number
 ): Promise<boolean> {
   const result = await sqlQuery(
     client,

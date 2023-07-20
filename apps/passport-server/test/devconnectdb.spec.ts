@@ -7,7 +7,10 @@ import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import { fetchDevconnectPretixTicketsByEmail } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
-import { updateDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import {
+  consumeDevconnectPretixTicket,
+  updateDevconnectPretixTicket
+} from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
   insertPretixEventsInfo
@@ -142,7 +145,6 @@ describe.only("database reads and writes", function () {
 
   step("should be able to add a ticket", async function () {
     const insertedTicket = await insertDevconnectPretixTicket(db, newTicket);
-
     expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
     expect(insertedTicket.email).to.eq(ticketEmail);
     expect(insertedTicket.full_name).to.eq(ticketName);
@@ -170,5 +172,21 @@ describe.only("database reads and writes", function () {
     expect(loadedUpdatedTicket.full_name).to.eq(fetchedTickets[0].full_name);
   });
 
-  step("should be able to consume a ticket", async function () {});
+  step("should be able to consume a ticket", async function () {
+    const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      ticketEmail
+    );
+    const firstTicket = fetchedTickets[0];
+    expect(firstTicket.is_consumed).to.eq(false);
+
+    await consumeDevconnectPretixTicket(db, firstTicket.id);
+
+    const afterConsumptionTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      ticketEmail
+    );
+    const firstTicketAfterConsumption = afterConsumptionTickets[0];
+    expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
+  });
 });
