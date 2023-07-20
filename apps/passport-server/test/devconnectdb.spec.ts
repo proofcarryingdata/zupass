@@ -3,6 +3,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "pg";
 import { v4 as uuid } from "uuid";
+import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import { fetchDevconnectPretixTicketsByEmail } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
@@ -149,14 +150,15 @@ describe.only("database reads and writes", function () {
   });
 
   step("should be able update a ticket", async function () {
-    const updatedTicket = { ...newTicket };
+    const updatedTicket: DevconnectPretixTicket = {
+      ...newTicket,
+      full_name: "New Fullname"
+    };
 
     const loadedUpdatedTicket = await updateDevconnectPretixTicket(
       db,
       updatedTicket
     );
-
-    console.log(loadedUpdatedTicket);
 
     const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
       db,
@@ -164,5 +166,9 @@ describe.only("database reads and writes", function () {
     );
 
     expect(fetchedTickets.length).to.eq(1);
+    expect(updatedTicket.full_name).to.eq(fetchedTickets[0].full_name);
+    expect(loadedUpdatedTicket.full_name).to.eq(fetchedTickets[0].full_name);
   });
+
+  step("should be able to consume a ticket", async function () {});
 });
