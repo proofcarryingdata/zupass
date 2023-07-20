@@ -4,7 +4,7 @@ import {
   CheckInResponse,
   ISSUANCE_STRING,
   IssuedPCDsRequest,
-  IssuedPCDsResponse,
+  IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -12,7 +12,7 @@ import {
   getPublicKey,
   getTicketData,
   ITicketData,
-  RSATicketPCDPackage,
+  RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
@@ -69,12 +69,12 @@ export class IssuanceService {
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
-        ticketId
+        parseInt(ticketId, 10)
       );
 
       if (successfullyConsumed) {
         return {
-          success: true,
+          success: true
         };
       }
 
@@ -82,7 +82,7 @@ export class IssuanceService {
         "Ticket either does not exist, has already been consumed, or has been revoked"
       );
       return {
-        success: false,
+        success: false
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
@@ -138,27 +138,27 @@ export class IssuanceService {
     const rsaPcd = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: this.exportedPrivateKey,
+        value: this.exportedPrivateKey
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: serializedTicketData,
+        value: serializedTicketData
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
-      },
+        value: undefined
+      }
     });
 
     const rsaTicketPCD = await RSATicketPCDPackage.prove({
       id: {
         argumentType: ArgumentTypeName.String,
-        value: stableId,
+        value: stableId
       },
       rsaPCD: {
         argumentType: ArgumentTypeName.PCD,
-        value: await RSAPCDPackage.serialize(rsaPcd),
-      },
+        value: await RSAPCDPackage.serialize(rsaPcd)
+      }
     });
 
     const serializedTicketPCD = await RSATicketPCDPackage.serialize(
@@ -196,7 +196,7 @@ export class IssuanceService {
           attendeeEmail: email,
           attendeeName: t.full_name,
           isConsumed: t.is_consumed,
-          isDeleted: t.is_deleted,
+          isDeleted: t.is_deleted
         }))
         // convert to serialized ticket PCD
         .map((ticketData) => this.ticketDataToSerializedPCD(ticketData))
