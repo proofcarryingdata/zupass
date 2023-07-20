@@ -26,7 +26,6 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
-import { randomEmail } from "./util/util";
 
 describe.only("database reads and writes", function () {
   this.timeout(15_000);
@@ -85,8 +84,13 @@ describe.only("database reads and writes", function () {
   const testTickets = [
     {
       name: "UserFirst UserLast",
-      email: randomEmail(),
+      email: "user-one@test.com",
       internalItemInfoId: 1
+    },
+    {
+      name: "Super User1",
+      email: "user-two@test.com",
+      internalItemInfoId: 4
     }
   ];
 
@@ -204,7 +208,9 @@ describe.only("database reads and writes", function () {
         full_name: ticket.name,
         is_deleted: false
       });
-      expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(1);
+      expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
+        ticket.internalItemInfoId
+      );
       expect(insertedTicket.email).to.eq(ticket.email);
       expect(insertedTicket.full_name).to.eq(ticket.name);
       expect(insertedTicket.is_deleted).to.eq(false);
@@ -266,7 +272,12 @@ describe.only("database reads and writes", function () {
       testEvents[0].expectedInternalId
     );
 
-    expect(fetchedTickets.length).to.eq(1);
-    expect(fetchedTickets[0].email).to.eq(testTickets[0].email);
+    expect(fetchedTickets.length).to.eq(2);
+    const actualEmailSet = new Set(fetchedTickets.map((t) => t.email));
+    const expectedEmailSet = new Set(
+      [testTickets[0], testTickets[1]].map((t) => t.email)
+    );
+
+    expect(actualEmailSet).to.deep.eq(expectedEmailSet);
   });
 });
