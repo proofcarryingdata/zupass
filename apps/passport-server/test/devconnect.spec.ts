@@ -517,7 +517,12 @@ describe("devconnect functionality", function () {
       });
 
       const checkinResponse = await requestCheckIn(application, ticket);
-      expect(checkinResponse.status).to.eq(500);
+      const responseBody = checkinResponse.body as CheckInResponse;
+      expect(checkinResponse.status).to.eq(200);
+      expect(responseBody.success).to.eq(false);
+      if (!responseBody.success) {
+        expect(responseBody.error.name === "InvalidSignature");
+      }
     }
   );
 
