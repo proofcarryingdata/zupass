@@ -15,7 +15,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { DispatchContext } from "../../src/dispatch";
@@ -174,7 +174,9 @@ function useDecodedTicket(): RSATicketPCD | undefined {
   return decodedPCD;
 }
 
-async function decodePCD(location): Promise<RSATicketPCD | undefined> {
+async function decodePCD(
+  location: Location
+): Promise<RSATicketPCD | undefined> {
   try {
     const params = new URLSearchParams(location.search);
     const encodedQRPayload = params.get("pcd");
@@ -235,16 +237,6 @@ const Container = styled.div`
   color: var(--bg-dark-primary);
   width: 400px;
   padding: 16px;
-`;
-
-const RawTicketData = styled.div`
-  width: 100%;
-  overflow: hidden;
-  border: 1px solid black;
-  border-radius: 4px;
-  padding: 4px;
-  white-space: nowrap;
-  margin-top: 8px;
 `;
 
 const CheckinSuccess = styled.span`
