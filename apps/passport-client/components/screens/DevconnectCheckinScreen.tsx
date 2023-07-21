@@ -3,7 +3,7 @@ import {
   CheckTicketResponse,
   ISSUANCE_STRING
 } from "@pcd/passport-interface";
-import { decodeQRPayload } from "@pcd/passport-ui";
+import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   getTicketData,
@@ -21,6 +21,7 @@ import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { DispatchContext } from "../../src/dispatch";
 import { sleep } from "../../src/util";
 import { Button } from "../core";
+import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 
 export function DevconnectCheckinScreen() {
@@ -29,22 +30,39 @@ export function DevconnectCheckinScreen() {
     useCheckTicket(ticket);
   const ticketData = getTicketData(ticket);
 
-  return (
-    <AppContainer bg={"primary"}>
-      <Container>
-        <div>
-          checking ticket: {checkingTicket ? "true" : "false"}
-          <br />
-          checking ticket status: {JSON.stringify(checkTicketResponse, null, 2)}
-        </div>
-        <br />
-        <TicketHeaderSection ticketData={ticketData} />
-        <TicketInfoSection ticketData={ticketData} />
-        <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
-        {ticket && <CheckInSection ticket={ticket} />}
-      </Container>
-    </AppContainer>
-  );
+  let content = null;
+
+  if (checkingTicket) {
+    content = (
+      <div>
+        <Spacer h={32} />
+        <RippleLoader />
+      </div>
+    );
+  } else {
+    content = (
+      <>
+        <AppContainer bg={"primary"}>
+          <Container>
+            {content}
+            <div>
+              checking ticket: {checkingTicket ? "true" : "false"}
+              <br />
+              checking ticket status:{" "}
+              {JSON.stringify(checkTicketResponse, null, 2)}
+            </div>
+            <br />
+            <TicketHeaderSection ticketData={ticketData} />
+            <TicketInfoSection ticketData={ticketData} />
+            <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
+            {ticket && <CheckInSection ticket={ticket} />}
+          </Container>
+        </AppContainer>
+      </>
+    );
+  }
+
+  return <>{content}</>;
 }
 
 function useCheckTicket(ticket: RSATicketPCD | undefined): {
