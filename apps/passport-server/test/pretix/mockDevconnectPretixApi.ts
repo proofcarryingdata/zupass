@@ -98,6 +98,10 @@ export function getDevconnectMockPretixAPI(
         {
           id: ITEM_2,
           name: { en: "item-2" }
+        },
+        {
+          id: ITEM_3,
+          name: { en: "item-3" }
         }
       ];
     },
