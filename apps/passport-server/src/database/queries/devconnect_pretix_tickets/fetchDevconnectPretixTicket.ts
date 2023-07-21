@@ -43,6 +43,26 @@ export async function fetchDevconnectPretixTicketsByEvent(
   return result.rows;
 }
 
+/*
+ * Fetch a devconnect ticket by its unique internal id.
+ */
+export async function fetchDevconnectPretixTicketByTicketId(
+  client: Pool,
+  ticketId: number
+): Promise<DevconnectPretixTicketDB | undefined> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select t.* from devconnect_pretix_tickets t
+    join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+    join devconnect_pretix_events_info e on e.pretix_events_config_id = i.devconnect_pretix_events_info_id
+    where t.id = $1`,
+    [ticketId]
+  );
+
+  return result.rows[0];
+}
+
 export async function fetchDevconnectPretixTicketsByEmail(
   client: Pool,
   email: string

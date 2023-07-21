@@ -20,7 +20,10 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
-import { fetchDevconnectPretixTicketsByEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchDevconnectPretixTicketByTicketId,
+  fetchDevconnectPretixTicketsByEmail
+} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -130,7 +133,32 @@ export class IssuanceService {
         };
       }
 
-      // TODO: check not revoked or consumed
+      const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
+        this.context.dbPool,
+        parseInt(ticketId ?? "", 10)
+      );
+
+      if (!ticketInDb) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
+
+      if (ticketInDb.is_deleted) {
+        return {
+          success: false,
+          error: { name: "TicketRevoked", revokedTimestamp: Date.now() }
+        };
+      }
+
+      if (ticketInDb.is_consumed) {
+        return {
+          success: false,
+          error: { name: "AlreadyCheckedIn", checkinTimestamp: Date.now() }
+        };
+      }
+
       return { success: true };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });

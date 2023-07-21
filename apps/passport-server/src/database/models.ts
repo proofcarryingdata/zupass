@@ -24,6 +24,7 @@ export interface DevconnectPretixTicket {
   full_name: string;
   devconnect_pretix_items_info_id: number;
   is_deleted: boolean;
+  is_consumed: boolean;
 }
 
 export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
@@ -36,7 +37,6 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   extends DevconnectPretixTicketDB {
   event_name: string;
   item_name: string;
-  is_consumed: boolean;
   pretix_events_config_id: number;
 }
 
