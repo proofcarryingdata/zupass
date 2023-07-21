@@ -522,7 +522,7 @@ describe("devconnect functionality", function () {
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
     const serializedTicket = issueResponseBody
-      .pcds[0] as SerializedPCD<RSATicketPCD>;
+      .pcds[2] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(

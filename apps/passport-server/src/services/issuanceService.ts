@@ -89,7 +89,7 @@ export class IssuanceService {
         );
 
       const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) => perm.pretix_events_config_id === 1
+        (perm) => perm.pretix_events_config_id === ticketData.eventConfigId
       );
 
       if (!relevantSuperUserPermission) {
