@@ -40,18 +40,14 @@ export function DevconnectCheckinScreen() {
       </div>
     );
   } else {
-    if (checkTicketResponse.success) {
+    if (checkTicketResponse.success === true) {
       content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
     } else {
       content = (
         <>
           <AppContainer bg={"primary"}>
             <Container>
-              {content}
-              <div>
-                checking ticket status:{" "}
-                {JSON.stringify(checkTicketResponse, null, 2)}
-              </div>
+              <div>{checkTicketResponse.error.name}</div>
             </Container>
           </AppContainer>
         </>
