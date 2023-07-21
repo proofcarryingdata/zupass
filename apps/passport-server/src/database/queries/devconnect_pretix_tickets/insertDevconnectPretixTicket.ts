@@ -13,15 +13,17 @@ export async function insertDevconnectPretixTicket(
   const result = await sqlQuery(
     client,
     `\
-insert into devconnect_pretix_tickets (email, full_name, devconnect_pretix_items_info_id, is_deleted)
-values ($1, $2, $3, $4)
+insert into devconnect_pretix_tickets
+(email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed)
+values ($1, $2, $3, $4, $5)
 on conflict do nothing
 returning *`,
     [
       params.email,
       params.full_name,
       params.devconnect_pretix_items_info_id,
-      params.is_deleted
+      params.is_deleted,
+      params.is_consumed
     ]
   );
   return result.rows[0];

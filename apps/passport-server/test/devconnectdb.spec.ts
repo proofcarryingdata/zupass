@@ -252,7 +252,8 @@ describe("database reads and writes for devconnect ticket features", function ()
         devconnect_pretix_items_info_id: ticket.internalItemInfoId,
         email: ticket.email,
         full_name: ticket.name,
-        is_deleted: false
+        is_deleted: false,
+        is_consumed: false
       });
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
         ticket.internalItemInfoId
@@ -260,6 +261,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       expect(insertedTicket.email).to.eq(ticket.email);
       expect(insertedTicket.full_name).to.eq(ticket.name);
       expect(insertedTicket.is_deleted).to.eq(false);
+      expect(insertedTicket.is_consumed).to.eq(false);
     }
   });
 
