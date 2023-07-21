@@ -1,4 +1,5 @@
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
+import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
@@ -33,7 +34,9 @@ export function SettingsModal() {
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={280}>
-        <LinkButton to="/scan">Verify a Passport</LinkButton>
+        <LinkButton to="/scan">
+          {appConfig.isZuzalu ? "Verify a Passport" : "Check Someone In"}
+        </LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>
           {justCopied ? "Copied" : "Copy Key for Sync"}
