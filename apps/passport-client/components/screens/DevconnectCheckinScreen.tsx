@@ -79,6 +79,8 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
       <div>{ticketData.attendeeName}</div>
       <div>{ticketData.attendeeEmail}</div>
       <div>{ticketData.timestamp}</div>
+      <div>{ticketData.eventConfigId}</div>
+      <div>{ticketData.ticketId}</div>
     </div>
   );
 }
