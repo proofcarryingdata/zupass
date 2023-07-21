@@ -52,7 +52,6 @@ export function DevconnectCheckinScreen() {
                 checking ticket status:{" "}
                 {JSON.stringify(checkTicketResponse, null, 2)}
               </div>
-              <br />
             </Container>
           </AppContainer>
         </>
@@ -111,25 +110,34 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
 }
 
 function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
+  const [checkingIn, setCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const [state] = useContext(DispatchContext);
 
-  const onVerifyClick = useCallback(() => {
+  const onCheckInClick = useCallback(() => {
+    if (checkingIn) {
+      return;
+    }
+    setCheckingIn(true);
     checkinTicket(state.identity, ticket)
       .then((response) => {
         setCheckedIn(response.success);
         setFinishedCheckinAttempt(true);
+        setCheckingIn(false);
       })
       .catch(() => {
         console.log("failed to verify");
         setFinishedCheckinAttempt(true);
+        setCheckingIn(false);
       });
-  }, [state.identity, ticket]);
+  }, [checkingIn, state.identity, ticket]);
 
   return (
     <CheckinSectionContainer>
-      <Button onClick={onVerifyClick}>Check in</Button>
+      <Button onClick={onCheckInClick} disabled={checkingIn}>
+        {checkingIn ? "Checking In..." : "Check In"}
+      </Button>
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
