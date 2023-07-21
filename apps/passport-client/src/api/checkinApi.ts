@@ -39,7 +39,8 @@ export async function requestCheckIn(
 }
 
 /**
- * Tries to check the user in.
+ * Does NOT check in the user, rather checks whether
+ * the ticket is valid and can be used to check in.
  */
 export async function requestCheckTicket(
   request: CheckTicketRequest
