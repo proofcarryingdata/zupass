@@ -118,6 +118,7 @@ export type CheckTicketResponse =
   | { success: false; error: TicketError };
 
 export type TicketError =
+  | { name: "NotSuperuser" }
   | {
       name: "AlreadyCheckedIn";
       checkinTimestamp: number;
