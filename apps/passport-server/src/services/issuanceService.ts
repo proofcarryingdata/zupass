@@ -109,14 +109,6 @@ export class IssuanceService {
     ticketPCD: RSATicketPCD
   ): Promise<CheckTicketResponse> {
     try {
-      const { ticketId } = getTicketData(ticketPCD);
-      if (!ticketId) {
-        return {
-          success: false,
-          error: { name: "InvalidTicket" }
-        };
-      }
-
       const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
       if (!proofPublicKey) {
         return {
@@ -130,6 +122,14 @@ export class IssuanceService {
         return {
           success: false,
           error: { name: "InvalidSignature" }
+        };
+      }
+
+      const { ticketId } = getTicketData(ticketPCD);
+      if (!ticketId) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
         };
       }
 

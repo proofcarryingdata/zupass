@@ -467,6 +467,7 @@ describe("devconnect functionality", function () {
     });
   });
 
+  let ticket: RSATicketPCD;
   step("should be able to check in with a valid ticket", async function () {
     const issueResponse = await requestIssuedPCDs(
       application,
@@ -476,7 +477,7 @@ describe("devconnect functionality", function () {
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
     const serializedTicket = issueResponseBody
       .pcds[0] as SerializedPCD<RSATicketPCD>;
-    const ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+    ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(application, ticket);
     const checkinResponseBody = checkinResponse.body as CheckInResponse;
@@ -484,6 +485,20 @@ describe("devconnect functionality", function () {
     expect(checkinResponse.status).to.eq(200);
     expect(checkinResponseBody.success).to.eq(true);
   });
+
+  step(
+    "should not be able to check in with a ticket that has already been used to check in",
+    async function () {
+      const checkinResponse = await requestCheckIn(application, ticket);
+      const checkinResponseBody = checkinResponse.body as CheckInResponse;
+
+      expect(checkinResponse.status).to.eq(200);
+      expect(checkinResponseBody.success).to.eq(false);
+      if (!checkinResponseBody.success) {
+        expect(checkinResponseBody.error.name).to.eq("AlreadyCheckedIn");
+      }
+    }
+  );
 
   step(
     "should not able to check in with a ticket not signed by the server",
@@ -521,7 +536,7 @@ describe("devconnect functionality", function () {
       expect(checkinResponse.status).to.eq(200);
       expect(responseBody.success).to.eq(false);
       if (!responseBody.success) {
-        expect(responseBody.error.name === "InvalidSignature");
+        expect(responseBody.error.name).to.eq("InvalidSignature");
       }
     }
   );
