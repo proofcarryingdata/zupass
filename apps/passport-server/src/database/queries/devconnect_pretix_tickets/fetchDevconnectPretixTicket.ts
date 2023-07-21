@@ -93,10 +93,7 @@ join pretix_events_config ec on ec.id = e.pretix_events_config_id
 where i.item_id = ANY(ec.superuser_item_ids);
     `
   );
-
-  const rows = result.rows;
-
-  return rows;
+  return result.rows;
 }
 
 export async function fetchDevconnectSuperusersForEvent(
@@ -115,10 +112,7 @@ and ec.id = $1
     `,
     [eventConfigID]
   );
-
-  const rows = result.rows;
-
-  return rows;
+  return result.rows;
 }
 
 export async function fetchDevconnectSuperusersForEmail(
@@ -137,8 +131,5 @@ and t.email = $1
     `,
     [email]
   );
-
-  const rows = result.rows;
-
-  return rows;
+  return result.rows;
 }
