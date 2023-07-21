@@ -131,9 +131,10 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
 
   return (
     <CheckinSectionContainer>
-      <Button onClick={onCheckInClick} disabled={checkingIn}>
-        {checkingIn ? "Checking In..." : "Check In"}
-      </Button>
+      {!checkingIn && !finishedCheckinAttempt && (
+        <Button onClick={onCheckInClick}>Check In</Button>
+      )}
+      {checkingIn && <RippleLoader />}
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
