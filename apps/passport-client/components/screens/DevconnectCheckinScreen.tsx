@@ -1,3 +1,4 @@
+import { CheckTicketResponse } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import {
   getTicketData,
@@ -8,18 +9,25 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { requestCheckIn } from "../../src/api/checkinApi";
+import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { sleep } from "../../src/util";
 import { Button } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
 export function DevconnectCheckinScreen() {
   const ticket = useDecodedTicket();
+  const { loading: checkingTicket, response: checkTicketResponse } =
+    useCheckTicket(ticket);
   const ticketData = getTicketData(ticket);
 
   return (
     <AppContainer bg={"primary"}>
       <Container>
+        <div>
+          checking ticket: {checkingTicket}
+          <br />
+          checking ticket status: {JSON.stringify(checkTicketResponse, null, 2)}
+        </div>
         <TicketHeaderSection ticketData={ticketData} />
         <TicketInfoSection ticketData={ticketData} />
         <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
@@ -27,6 +35,36 @@ export function DevconnectCheckinScreen() {
       </Container>
     </AppContainer>
   );
+}
+
+function useCheckTicket(ticket: RSATicketPCD | undefined): {
+  loading: boolean;
+  response: CheckTicketResponse;
+} {
+  const [loading, setLoading] = useState(true);
+  const [response, setResponse] = useState<CheckTicketResponse | undefined>();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (!ticket) {
+          return;
+        }
+        setLoading(true);
+        const checkResponse = await requestCheckTicket({
+          ticket: await RSATicketPCDPackage.serialize(ticket)
+        });
+        setResponse(checkResponse);
+        setLoading(false);
+      } catch (e) {
+        console.log(e);
+        setLoading(false);
+        setResponse({ success: false, error: { name: "ServerError" } });
+      }
+    })();
+  }, [ticket]);
+
+  return { loading, response };
 }
 
 function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {

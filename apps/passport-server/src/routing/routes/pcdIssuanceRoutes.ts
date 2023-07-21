@@ -43,6 +43,22 @@ export function initPCDIssuanceRoutes(
     }
   });
 
+  app.post("/issue/check-ticket", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+
+      const request = req.body as CheckInRequest;
+      const response = await issuanceService.handleCheckInRequest(request);
+      res.status(200).json(response);
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
   app.post("/issue/check-in", async (req: Request, res: Response) => {
     try {
       if (!issuanceService) {

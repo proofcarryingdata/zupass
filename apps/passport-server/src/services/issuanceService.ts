@@ -2,6 +2,8 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
   CheckInResponse,
+  CheckTicketRequest,
+  CheckTicketResponse,
   ISSUANCE_STRING,
   IssuedPCDsRequest,
   IssuedPCDsResponse
@@ -12,6 +14,7 @@ import {
   getPublicKey,
   getTicketData,
   ITicketData,
+  RSATicketPCD,
   RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -53,23 +56,18 @@ export class IssuanceService {
       const ticketPCD = await RSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
-      const { ticketId } = getTicketData(ticketPCD);
-      if (!ticketId) {
-        throw new Error("ticketId field not found in rsaPCD");
-      }
-      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
-      if (!proofPublicKey) {
-        throw new Error("failed to get public key from proof");
-      }
-      const serverPublicKey = this.getPublicKey();
 
-      if (serverPublicKey !== proofPublicKey) {
-        throw new Error("ticket was not signed with the right key");
+      const ticketValid = await this.checkTicket(ticketPCD);
+
+      if (!ticketValid.success) {
+        return ticketValid;
       }
+
+      const ticketData = getTicketData(ticketPCD);
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
-        parseInt(ticketId, 10)
+        parseInt(ticketData.ticketId ?? "", 10)
       );
 
       if (successfullyConsumed) {
@@ -78,15 +76,69 @@ export class IssuanceService {
         };
       }
 
-      logger(
-        "Ticket either does not exist, has already been consumed, or has been revoked"
-      );
       return {
-        success: false
+        success: false,
+        error: { name: "ServerError" }
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
       throw new Error("failed to check in");
+    }
+  }
+
+  public async handleCheckTicketRequest(
+    request: CheckTicketRequest
+  ): Promise<CheckTicketResponse> {
+    try {
+      const ticketPCD = await RSATicketPCDPackage.deserialize(
+        request.ticket.pcd
+      );
+      return this.checkTicket(ticketPCD);
+    } catch (e) {
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
+    }
+  }
+
+  public async checkTicket(
+    ticketPCD: RSATicketPCD
+  ): Promise<CheckTicketResponse> {
+    try {
+      const { ticketId } = getTicketData(ticketPCD);
+      if (!ticketId) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
+
+      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
+      if (!proofPublicKey) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
+      }
+
+      const serverPublicKey = this.getPublicKey();
+      if (serverPublicKey !== proofPublicKey) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
+      }
+
+      // TODO: check not revoked or consumed
+      return { success: true };
+    } catch (e) {
+      logger("Error when consuming devconnect ticket", { error: e });
+
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
     }
   }
 
