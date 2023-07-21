@@ -40,29 +40,44 @@ export function DevconnectCheckinScreen() {
       </div>
     );
   } else {
-    content = (
-      <>
-        <AppContainer bg={"primary"}>
-          <Container>
-            {content}
-            <div>
-              checking ticket: {checkingTicket ? "true" : "false"}
+    if (checkTicketResponse.success) {
+      content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
+    } else {
+      content = (
+        <>
+          <AppContainer bg={"primary"}>
+            <Container>
+              {content}
+              <div>
+                checking ticket status:{" "}
+                {JSON.stringify(checkTicketResponse, null, 2)}
+              </div>
               <br />
-              checking ticket status:{" "}
-              {JSON.stringify(checkTicketResponse, null, 2)}
-            </div>
-            <br />
-            <TicketHeaderSection ticketData={ticketData} />
-            <TicketInfoSection ticketData={ticketData} />
-            <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
-            {ticket && <CheckInSection ticket={ticket} />}
-          </Container>
-        </AppContainer>
-      </>
-    );
+            </Container>
+          </AppContainer>
+        </>
+      );
+    }
   }
 
   return <>{content}</>;
+}
+
+function UserReadyForCheckin({
+  ticketData,
+  ticket
+}: {
+  ticketData: ITicketData;
+  ticket: RSATicketPCD;
+}) {
+  return (
+    <AppContainer bg={"primary"}>
+      <Container>
+        <TicketInfoSection ticketData={ticketData} />
+        <CheckInSection ticket={ticket} />
+      </Container>
+    </AppContainer>
+  );
 }
 
 function useCheckTicket(ticket: RSATicketPCD | undefined): {
@@ -126,16 +141,6 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
       )}
     </CheckinSectionContainer>
   );
-}
-
-function TicketHeaderSection({ ticketData }: { ticketData: ITicketData }) {
-  if (ticketData.isRevoked) {
-    return <div>This ticket has been canceled 💀</div>;
-  }
-  if (ticketData.isConsumed) {
-    return <div>This ticket has already been scanned 😬</div>;
-  }
-  return <div>Please check in below!</div>;
 }
 
 function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
@@ -243,7 +248,6 @@ const Container = styled.div`
   color: var(--bg-dark-primary);
   width: 400px;
   padding: 16px;
-  min-height: 300px;
 `;
 
 const RawTicketData = styled.div`
