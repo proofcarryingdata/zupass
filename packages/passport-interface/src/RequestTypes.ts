@@ -130,6 +130,7 @@ export type TicketError =
   | { name: "ServerError" };
 
 export interface CheckInRequest {
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
   ticket: SerializedPCD<RSATicketPCD>;
 }
 

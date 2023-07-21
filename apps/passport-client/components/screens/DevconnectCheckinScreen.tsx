@@ -1,15 +1,24 @@
-import { CheckTicketResponse } from "@pcd/passport-interface";
+import {
+  CheckInResponse,
+  CheckTicketResponse,
+  ISSUANCE_STRING
+} from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   getTicketData,
   ITicketData,
   RSATicketPCD,
   RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
-import { useCallback, useEffect, useState } from "react";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { Identity } from "@semaphore-protocol/identity";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
+import { DispatchContext } from "../../src/dispatch";
 import { sleep } from "../../src/util";
 import { Button } from "../core";
 import { AppContainer } from "../shared/AppContainer";
@@ -24,10 +33,11 @@ export function DevconnectCheckinScreen() {
     <AppContainer bg={"primary"}>
       <Container>
         <div>
-          checking ticket: {checkingTicket}
+          checking ticket: {checkingTicket ? "true" : "false"}
           <br />
           checking ticket status: {JSON.stringify(checkTicketResponse, null, 2)}
         </div>
+        <br />
         <TicketHeaderSection ticketData={ticketData} />
         <TicketInfoSection ticketData={ticketData} />
         <RawTicketData>{JSON.stringify(ticket)}</RawTicketData>
@@ -70,18 +80,19 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
 function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
+  const [state] = useContext(DispatchContext);
 
   const onVerifyClick = useCallback(() => {
-    verifyTicketOnServer(ticket)
-      .then((valid) => {
-        setCheckedIn(valid);
+    checkinTicket(state.identity, ticket)
+      .then((response) => {
+        setCheckedIn(response.success);
         setFinishedCheckinAttempt(true);
       })
       .catch(() => {
         console.log("failed to verify");
         setFinishedCheckinAttempt(true);
       });
-  }, [ticket]);
+  }, [state.identity, ticket]);
 
   return (
     <CheckinSectionContainer>
@@ -160,9 +171,43 @@ async function decodePCD(location): Promise<RSATicketPCD | undefined> {
   return undefined;
 }
 
-async function verifyTicketOnServer(ticket: RSATicketPCD): Promise<boolean> {
+async function checkinTicket(
+  checkerIdentity: Identity,
+  ticket: RSATicketPCD
+): Promise<CheckInResponse> {
   try {
     const response = await requestCheckIn({
+      ticket: await RSATicketPCDPackage.serialize(ticket),
+      checkerProof: await SemaphoreSignaturePCDPackage.serialize(
+        await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity: checkerIdentity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: ISSUANCE_STRING
+          }
+        })
+      )
+    });
+    return response;
+  } catch (e) {
+    console.log("failed to check in", e);
+    return { success: false, error: { name: "ServerError" } };
+  }
+}
+
+async function verifyTicketOnServer(
+  checkerIdentity: Identity,
+  ticket: RSATicketPCD
+): Promise<boolean> {
+  try {
+    const response = await requestCheckTicket({
       ticket: await RSATicketPCDPackage.serialize(ticket)
     });
     return response.success === true;

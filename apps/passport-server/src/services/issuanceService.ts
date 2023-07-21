@@ -17,12 +17,17 @@ import {
   RSATicketPCD,
   RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
+import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectPretixTicketByTicketId,
-  fetchDevconnectPretixTicketsByEmail
+  fetchDevconnectPretixTicketsByEmail,
+  fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
@@ -67,6 +72,29 @@ export class IssuanceService {
       }
 
       const ticketData = getTicketData(ticketPCD);
+
+      const checker = await this.checkUserExists(request.checkerProof);
+
+      if (!checker) {
+        return {
+          success: false,
+          error: { name: "NotSuperuser" }
+        };
+      }
+
+      const checkerSuperUserPermissions =
+        await fetchDevconnectSuperusersForEmail(
+          this.context.dbPool,
+          checker.email
+        );
+
+      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
+        (perm) => perm.pretix_events_config_id === 1
+      );
+
+      if (!relevantSuperUserPermission) {
+        return { success: false, error: { name: "NotSuperuser" } };
+      }
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
@@ -161,7 +189,7 @@ export class IssuanceService {
 
       return { success: true };
     } catch (e) {
-      logger("Error when consuming devconnect ticket", { error: e });
+      logger("Error when checking ticket", { error: e });
 
       return {
         success: false,
@@ -170,11 +198,11 @@ export class IssuanceService {
     }
   }
 
-  private async getUserEmailFromRequest(
-    request: IssuedPCDsRequest
-  ): Promise<string | null> {
+  private async checkUserExists(
+    proof: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<CommitmentRow | null> {
     const deserializedSignature =
-      await SemaphoreSignaturePCDPackage.deserialize(request.userProof.pcd);
+      await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
       deserializedSignature
     );
@@ -187,7 +215,6 @@ export class IssuanceService {
     }
 
     if (deserializedSignature.claim.signedMessage !== ISSUANCE_STRING) {
-      // TODO: implement a challenge-response protocol? How secure is this?
       logger(`can't issue PCDs, wrong message signed by user`);
       return null;
     }
@@ -206,7 +233,7 @@ export class IssuanceService {
       return null;
     }
 
-    return storedCommitment.email;
+    return storedCommitment;
   }
 
   private async ticketDataToSerializedPCD(
@@ -254,7 +281,8 @@ export class IssuanceService {
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
   ): Promise<SerializedPCD[]> {
-    const email = await this.getUserEmailFromRequest(request);
+    const commitment = await this.checkUserExists(request.userProof);
+    const email = commitment?.email;
 
     if (email == null) {
       return [];

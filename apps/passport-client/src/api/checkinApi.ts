@@ -22,10 +22,19 @@ export async function requestCheckIn(
         Accept: "application/json"
       }
     });
+    if (response.status !== 200) {
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
+    }
     const checkinResponse = (await response.json()) as CheckInResponse;
     return checkinResponse;
   } catch (e) {
-    return undefined;
+    return {
+      success: false,
+      error: { name: "ServerError" }
+    };
   }
 }
 
@@ -45,9 +54,18 @@ export async function requestCheckTicket(
         Accept: "application/json"
       }
     });
+    if (response.status !== 200) {
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
+    }
     const checkinResponse = (await response.json()) as CheckInResponse;
     return checkinResponse;
   } catch (e) {
-    return undefined;
+    return {
+      success: false,
+      error: { name: "ServerError" }
+    };
   }
 }
