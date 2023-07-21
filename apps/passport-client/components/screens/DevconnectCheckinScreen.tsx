@@ -3,7 +3,7 @@ import {
   getTicketData,
   ITicketData,
   RSATicketPCD,
-  RSATicketPCDPackage,
+  RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
@@ -13,7 +13,7 @@ import { sleep } from "../../src/util";
 import { Button } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
-export function DevconnectVerifyScreen() {
+export function DevconnectCheckinScreen() {
   const ticket = useDecodedTicket();
   const ticketData = getTicketData(ticket);
 
@@ -123,7 +123,7 @@ async function decodePCD(location): Promise<RSATicketPCD | undefined> {
 async function verifyTicketOnServer(ticket: RSATicketPCD): Promise<boolean> {
   try {
     const response = await requestCheckIn({
-      ticket: await RSATicketPCDPackage.serialize(ticket),
+      ticket: await RSATicketPCDPackage.serialize(ticket)
     });
     return response.success === true;
   } catch (e) {
