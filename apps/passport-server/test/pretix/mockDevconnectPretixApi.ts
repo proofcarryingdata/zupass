@@ -17,6 +17,7 @@ import {
   IMockDevconnectPretixData,
   ITEM_1,
   ITEM_2,
+  ITEM_3,
   ORG_CONFIG_ID
 } from "./devconnectPretixDataMocker";
 
@@ -31,17 +32,24 @@ export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
         {
           id: EVENT_A_CONFIG_ID,
           eventID: EVENT_A_ID,
-          activeItemIDs: [ITEM_1.toString()]
+          activeItemIDs: [ITEM_1.toString()],
+          superuserItemIds: []
         },
         {
           id: EVENT_B_CONFIG_ID,
           eventID: EVENT_B_ID,
-          activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()]
+          activeItemIDs: [
+            ITEM_1.toString(),
+            ITEM_2.toString(),
+            ITEM_3.toString()
+          ],
+          superuserItemIds: [ITEM_3.toString()]
         },
         {
           id: EVENT_C_CONFIG_ID,
           eventID: EVENT_C_ID,
-          activeItemIDs: []
+          activeItemIDs: [],
+          superuserItemIds: []
         }
       ]
     }

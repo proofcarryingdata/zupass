@@ -99,6 +99,7 @@ export interface PretixEventsConfig {
   event_id: string;
   pretix_organizers_config_id: number;
   active_item_ids: string[]; // relevant item IDs that correspond to ticket products
+  superuser_item_ids: string[];
 }
 
 // Database representation of Pretix organizer configuration

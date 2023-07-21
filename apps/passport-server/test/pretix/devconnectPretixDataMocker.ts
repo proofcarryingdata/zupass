@@ -25,6 +25,7 @@ export const EVENT_C_NAME = "Event C";
 
 export const ITEM_1 = 456;
 export const ITEM_2 = 123;
+export const ITEM_3 = 789;
 
 export const ORG_CONFIG_ID = 1;
 

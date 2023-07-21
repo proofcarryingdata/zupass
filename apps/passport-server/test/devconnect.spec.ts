@@ -119,7 +119,7 @@ describe("devconnect configuration db tables", function () {
     // Insert with active item IDs
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456}')"
+      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456, 789}')"
     );
     expect(
       (

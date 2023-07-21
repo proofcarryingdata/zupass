@@ -227,21 +227,6 @@ async function checkinTicket(
   }
 }
 
-async function verifyTicketOnServer(
-  checkerIdentity: Identity,
-  ticket: RSATicketPCD
-): Promise<boolean> {
-  try {
-    const response = await requestCheckTicket({
-      ticket: await RSATicketPCDPackage.serialize(ticket)
-    });
-    return response.success === true;
-  } catch (e) {
-    console.log("failed to check in", e);
-    return false;
-  }
-}
-
 const Container = styled.div`
   margin-top: 64px;
   border-radius: 12px;

@@ -1,4 +1,8 @@
-import { CheckInRequest, IssuedPCDsRequest } from "@pcd/passport-interface";
+import {
+  CheckInRequest,
+  ISSUANCE_STRING,
+  IssuedPCDsRequest
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -50,16 +54,16 @@ export async function requestIssuedPCDs(
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity,
+              identity
             })
-          ),
+          )
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: signedMessage,
-        },
+          value: signedMessage
+        }
       })
-    ),
+    )
   };
 
   return new Promise((resolve, reject) => {
@@ -81,10 +85,27 @@ export async function requestIssuedPCDs(
 
 export async function requestCheckIn(
   application: PCDPass,
-  ticket: RSATicketPCD
+  ticket: RSATicketPCD,
+  checkerIdentity: Identity
 ): Promise<Response> {
   const request: CheckInRequest = {
     ticket: await RSATicketPCDPackage.serialize(ticket),
+    checkerProof: await SemaphoreSignaturePCDPackage.serialize(
+      await SemaphoreSignaturePCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await SemaphoreIdentityPCDPackage.serialize(
+            await SemaphoreIdentityPCDPackage.prove({
+              identity: checkerIdentity
+            })
+          )
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: ISSUANCE_STRING
+        }
+      })
+    )
   };
 
   return new Promise((resolve, reject) => {
