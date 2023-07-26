@@ -2,7 +2,7 @@ import { Pool } from "pg";
 import { PretixEventInfo, PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
-export async function fetchPretixEventInfo(
+export async function fetchPretixEventInfoByEventConfig(
   client: Pool,
   eventConfigID: number
 ): Promise<PretixEventInfo | null> {

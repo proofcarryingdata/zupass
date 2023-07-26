@@ -15,7 +15,7 @@ import { insertDevconnectPretixTicket } from "../database/queries/devconnect_pre
 import { softDeleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
-  fetchPretixEventInfo,
+  fetchPretixEventInfoByEventConfig,
   insertPretixEventsInfo,
   updatePretixEventsInfo
 } from "../database/queries/pretixEventInfo";
@@ -159,11 +159,15 @@ export class DevconnectPretixSyncService {
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, id: eventConfigID } = event;
+
     try {
       const {
         name: { en: eventNameFromAPI }
       } = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
-      const existingEvent = await fetchPretixEventInfo(dbClient, eventConfigID);
+      const existingEvent = await fetchPretixEventInfoByEventConfig(
+        dbClient,
+        eventConfigID
+      );
       if (!existingEvent) {
         await insertPretixEventsInfo(dbClient, eventNameFromAPI, eventConfigID);
       } else {
@@ -195,7 +199,10 @@ export class DevconnectPretixSyncService {
     const { orgURL, token } = organizer;
     const { eventID, activeItemIDs, id: eventConfigID } = event;
 
-    const eventInfo = await fetchPretixEventInfo(dbClient, eventConfigID);
+    const eventInfo = await fetchPretixEventInfoByEventConfig(
+      dbClient,
+      eventConfigID
+    );
     if (!eventInfo) {
       throw new Error(
         `couldn't find an event info matching event config id ${eventConfigID}`
@@ -303,7 +310,10 @@ export class DevconnectPretixSyncService {
       const { orgURL, token } = organizer;
       const { eventID, id: eventConfigID } = event;
 
-      const eventInfo = await fetchPretixEventInfo(dbClient, eventConfigID);
+      const eventInfo = await fetchPretixEventInfoByEventConfig(
+        dbClient,
+        eventConfigID
+      );
       if (!eventInfo) {
         throw new Error(
           `couldn't find an event info matching event config id ${eventConfigID}`
