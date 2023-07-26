@@ -10,7 +10,7 @@ import {
   getDevconnectPretixConfig
 } from "../apis/devconnect/organizer";
 import { DevconnectPretixTicket, PretixItemInfo } from "../database/models";
-import { fetchDevconnectPretixTicketsByEvent } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { fetchDevconnectPretixTicketsByEventConfig } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
@@ -21,7 +21,7 @@ import {
 } from "../database/queries/pretixEventInfo";
 import {
   deletePretixItemInfo,
-  fetchPretixItemsInfoByEvent,
+  fetchPretixItemsInfoByEventInfo,
   insertPretixItemsInfo,
   updatePretixItemsInfo
 } from "../database/queries/pretixItemInfo";
@@ -123,9 +123,7 @@ export class DevconnectPretixSyncService {
       const promises = [];
       for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
-          promises.push(
-            this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event)
-          );
+          promises.push(this.syncEvent(dbPool, organizer, event));
         }
       }
       try {
@@ -154,7 +152,7 @@ export class DevconnectPretixSyncService {
    * Sync, and update data for Pretix event.
    * Returns whether update was successful.
    */
-  private async saveEventInfo(
+  private async syncEventInfo(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -189,7 +187,7 @@ export class DevconnectPretixSyncService {
    * Sync, check, and update data for Pretix active items under event.
    * Returns whether update was successful.
    */
-  private async saveItemsInfo(
+  private async syncItemsInfo(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -228,7 +226,7 @@ export class DevconnectPretixSyncService {
       const newActiveItemsByItemID = new Map(
         newActiveItems.map((i) => [i.id.toString(), i])
       );
-      const existingItemsInfo = await fetchPretixItemsInfoByEvent(
+      const existingItemsInfo = await fetchPretixItemsInfoByEventInfo(
         dbClient,
         eventInfo.id
       );
@@ -296,7 +294,7 @@ export class DevconnectPretixSyncService {
    * Sync and update data for Pretix tickets under event.
    * Returns whether update was successful.
    */
-  private async saveTickets(
+  private async syncTickets(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -317,7 +315,7 @@ export class DevconnectPretixSyncService {
         pretixOrders = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
         // Fetch updated version after DB updates
-        const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
+        const updatedItemsInfo = await fetchPretixItemsInfoByEventInfo(
           dbClient,
           eventInfo.id
         );
@@ -328,7 +326,7 @@ export class DevconnectPretixSyncService {
         );
 
         const newTicketsByEmailAndItem = ticketsToMapByEmailAndItem(tickets);
-        const existingTickets = await fetchDevconnectPretixTicketsByEvent(
+        const existingTickets = await fetchDevconnectPretixTicketsByEventConfig(
           dbClient,
           eventConfigID
         );
@@ -409,7 +407,7 @@ export class DevconnectPretixSyncService {
   /**
    * Syncs tickets from Pretix API for a given organizer and event
    */
-  private async syncAllPretixForOrganizerAndEvent(
+  private async syncEvent(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -419,21 +417,21 @@ export class DevconnectPretixSyncService {
 
     logger(`[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`);
 
-    if (!(await this.saveEventInfo(dbClient, organizer, event))) {
+    if (!(await this.syncEventInfo(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
-    if (!(await this.saveItemsInfo(dbClient, organizer, event))) {
+    if (!(await this.syncItemsInfo(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
-    if (!(await this.saveTickets(dbClient, organizer, event))) {
+    if (!(await this.syncTickets(dbClient, organizer, event))) {
       logger(`[DEVCONNECT PRETIX] error updating tickets`);
       return;
     }
@@ -469,8 +467,8 @@ export class DevconnectPretixSyncService {
         attendee_name,
         attendee_email
       } of order.positions) {
-        const existingItem = itemsInfoByItemID.get(item.toString());
-        if (existingItem) {
+        const existingItemInfo = itemsInfoByItemID.get(item.toString());
+        if (existingItemInfo) {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
@@ -487,7 +485,7 @@ export class DevconnectPretixSyncService {
           tickets.push({
             email,
             full_name: attendee_name,
-            devconnect_pretix_items_info_id: existingItem.id,
+            devconnect_pretix_items_info_id: existingItemInfo.id,
             is_deleted: false,
             is_consumed: false
           });

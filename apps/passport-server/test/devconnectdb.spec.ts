@@ -7,7 +7,7 @@ import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectPretixTicketsByEmail,
-  fetchDevconnectPretixTicketsByEvent,
+  fetchDevconnectPretixTicketsByEventConfig,
   fetchDevconnectSuperusers,
   fetchDevconnectSuperusersForEmail,
   fetchDevconnectSuperusersForEvent
@@ -315,7 +315,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   });
 
   step("fetching tickets by event should work", async function () {
-    const fetchedTickets = await fetchDevconnectPretixTicketsByEvent(
+    const fetchedTickets = await fetchDevconnectPretixTicketsByEventConfig(
       db,
       testEvents[0].expectedInternalId
     );

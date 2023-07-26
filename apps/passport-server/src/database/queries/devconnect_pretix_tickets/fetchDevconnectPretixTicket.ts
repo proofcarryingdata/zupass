@@ -26,7 +26,7 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
  * Fetch users by org and event that have a ticket on pretix, even if they haven't
  * logged into the passport app.
  */
-export async function fetchDevconnectPretixTicketsByEvent(
+export async function fetchDevconnectPretixTicketsByEventConfig(
   client: Pool,
   eventConfigID: number
 ): Promise<Array<DevconnectPretixTicketDB>> {

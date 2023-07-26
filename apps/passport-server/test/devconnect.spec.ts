@@ -17,7 +17,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
+import { fetchPretixItemsInfoByEventInfo } from "../src/database/queries/pretixItemInfo";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
@@ -243,7 +243,7 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
-      const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
+      const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEventInfo(
         db,
         EVENT_A_CONFIG_ID
       );
@@ -253,7 +253,7 @@ describe("devconnect functionality", function () {
         { id: item1EventBInfoID },
         { id: item2EventBInfoID },
         { id: item3EventBInfoID }
-      ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+      ] = await fetchPretixItemsInfoByEventInfo(db, EVENT_B_CONFIG_ID);
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         // Four tickets for event A because four unique emails
@@ -341,7 +341,7 @@ describe("devconnect functionality", function () {
     }));
 
     // Get item info IDs for event A
-    const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
+    const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEventInfo(
       db,
       EVENT_A_CONFIG_ID
     );
@@ -351,7 +351,7 @@ describe("devconnect functionality", function () {
       { id: item1EventBInfoID },
       { id: item2EventBInfoID },
       { id: item3EventBInfoID }
-    ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+    ] = await fetchPretixItemsInfoByEventInfo(db, EVENT_B_CONFIG_ID);
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       // Four tickets for event A because four unique emails

@@ -2,9 +2,9 @@ import { Pool } from "pg";
 import { PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
-export async function fetchPretixItemsInfoByEvent(
+export async function fetchPretixItemsInfoByEventInfo(
   client: Pool,
-  eventConfigID: number
+  eventInfoId: number
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
     client,
@@ -12,7 +12,7 @@ export async function fetchPretixItemsInfoByEvent(
       select *
       from devconnect_pretix_items_info
       where devconnect_pretix_events_info_id = $1`,
-    [eventConfigID]
+    [eventInfoId]
   );
 
   return result.rows;
