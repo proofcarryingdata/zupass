@@ -258,9 +258,13 @@ export class DevconnectPretixSyncService {
         );
 
         // Step 1 of saving: insert items that are new
-        logger(`[DEVCONNECT PRETIX] Inserting ${itemsToInsert.length} items`);
+        logger(
+          `[DEVCONNECT PRETIX] Inserting ${itemsToInsert.length} item infos`
+        );
         for (const item of itemsToInsert) {
-          logger(`[DEVCONNECT PRETIX] Inserting ${JSON.stringify(item)}`);
+          logger(
+            `[DEVCONNECT PRETIX] Inserting item info ${JSON.stringify(item)}`
+          );
           await insertPretixItemsInfo(
             this.db,
             item.id.toString(),
@@ -279,11 +283,13 @@ export class DevconnectPretixSyncService {
           });
 
         // For the active item that have changed, update them in the database.
-        logger(`[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} items`);
+        logger(
+          `[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} item infos`
+        );
         for (const item of itemsToUpdate) {
           const oldItem = existingItemsInfoByItemID.get(item.id.toString())!;
           logger(
-            `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
+            `[DEVCONNECT PRETIX] Updating item info ${JSON.stringify(
               oldItem
             )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
           );
@@ -294,9 +300,13 @@ export class DevconnectPretixSyncService {
         const itemsToRemove = existingItemsInfo.filter(
           (existing) => !newActiveItemsByItemID.has(existing.item_id)
         );
-        logger(`[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} items`);
+        logger(
+          `[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} item infos`
+        );
         for (const item of itemsToRemove) {
-          logger(`[DEVCONNECT PRETIX] Deleting ${JSON.stringify(item)}`);
+          logger(
+            `[DEVCONNECT PRETIX] Deleting item info ${JSON.stringify(item)}`
+          );
           await deletePretixItemInfo(this.db, item.id);
         }
       } catch (e) {
@@ -362,7 +372,9 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`
         );
         for (const ticket of newTickets) {
-          logger(`[DEVCONNECT PRETIX] Inserting ${JSON.stringify(ticket)}`);
+          logger(
+            `[DEVCONNECT PRETIX] Inserting ticket ${JSON.stringify(ticket)}`
+          );
           await insertDevconnectPretixTicket(this.db, ticket);
         }
 
@@ -387,22 +399,24 @@ export class DevconnectPretixSyncService {
             getEmailAndItemKey(updatedTicket)
           );
           logger(
-            `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
+            `[DEVCONNECT PRETIX] Updating ticket ${JSON.stringify(
               oldTicket
             )} to ${JSON.stringify(updatedTicket)}`
           );
           await updateDevconnectPretixTicket(this.db, updatedTicket);
         }
 
-        // Step 3 of saving: remove users that don't have a ticket anymore
+        // Step 3 of saving: soft delete tickets that don't exist anymore
         const removedTickets = existingTickets.filter(
           (existing) =>
             !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
         );
-        logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} users`);
+        logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} tickets`);
         for (const removedTicket of removedTickets) {
           logger(
-            `[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`
+            `[DEVCONNECT PRETIX] Deleting ticket ${JSON.stringify(
+              removedTicket
+            )}`
           );
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
@@ -447,7 +461,7 @@ export class DevconnectPretixSyncService {
 
       if (!(await this.syncItemInfos(organizer, event))) {
         logger(
-          `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
+          `[DEVCONNECT PRETIX] aborting sync due to error in updating item info`
         );
         return;
       }
