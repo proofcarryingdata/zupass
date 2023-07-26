@@ -473,7 +473,8 @@ export class DevconnectPretixSyncService {
             email,
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
-            is_deleted: false
+            is_deleted: false,
+            is_consumed: false
           });
         }
       }

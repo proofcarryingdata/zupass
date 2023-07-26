@@ -25,6 +25,7 @@ export const EVENT_C_NAME = "Event C";
 
 export const ITEM_1 = 456;
 export const ITEM_2 = 123;
+export const ITEM_3 = 789;
 
 export const ORG_CONFIG_ID = 1;
 
@@ -93,7 +94,8 @@ export class DevconnectPretixDataMocker {
         [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
-        [ITEM_2, null]
+        [ITEM_2, null],
+        [ITEM_3, EMAIL_2]
       ]),
       // Three-item order, testing ITEM_2 and override again
       this.newPretixOrder(EMAIL_2, [

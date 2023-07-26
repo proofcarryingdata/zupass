@@ -21,6 +21,24 @@ export async function fetchCommitment(
 }
 
 /**
+ * Fetches the identity commitment row corresponding to a particular
+ * email from the database. Works for both Zupass users and PCDPass
+ * users.
+ */
+export async function fetchCommitmentByUuid(
+  client: Pool,
+  uuid: string
+): Promise<CommitmentRow | null> {
+  const result = await sqlQuery(
+    client,
+    `select * from commitments where uuid = $1`,
+    [uuid]
+  );
+
+  return result.rows[0] || null;
+}
+
+/**
  * Fetches all the identity commitments and their associated user ids
  * from the database. This is basically the list of people who have
  * logged in and have not been kicked out in any way.

@@ -107,10 +107,31 @@ export interface IssuedPCDsResponse {
   pcds: SerializedPCD[];
 }
 
-export interface CheckInRequest {
+export interface CheckTicketRequest {
   ticket: SerializedPCD<RSATicketPCD>;
 }
 
-export interface CheckInResponse {
-  success: boolean;
+export type CheckTicketResponse =
+  | {
+      success: true;
+    }
+  | { success: false; error: TicketError };
+
+export type TicketError =
+  | { name: "NotSuperuser" }
+  | {
+      name: "AlreadyCheckedIn";
+      checkinTimestamp: number;
+    }
+  | { name: "InvalidSignature" }
+  | { name: "InvalidTicket" }
+  | { name: "TicketRevoked"; revokedTimestamp: number }
+  | { name: "NetworkError" }
+  | { name: "ServerError" };
+
+export interface CheckInRequest {
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  ticket: SerializedPCD<RSATicketPCD>;
 }
+
+export type CheckInResponse = CheckTicketResponse;

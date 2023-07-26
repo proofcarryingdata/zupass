@@ -22,16 +22,20 @@ function pretixConfigDBToDevconnectPretixConfig(
   pretixOrganizersDB: PretixOrganizersConfig[]
 ): DevconnectPretixConfig {
   return {
-    organizers: pretixOrganizersDB.map((organizerDB) => ({
-      id: organizerDB.id,
-      orgURL: organizerDB.organizer_url,
-      events: organizerDB.events.map((eventDB) => ({
-        id: eventDB.id,
-        eventID: eventDB.event_id,
-        activeItemIDs: eventDB.active_item_ids
-      })),
-      token: organizerDB.token
-    }))
+    organizers: pretixOrganizersDB.map(
+      (organizerDB) =>
+        ({
+          id: organizerDB.id,
+          orgURL: organizerDB.organizer_url,
+          events: organizerDB.events.map((eventDB) => ({
+            id: eventDB.id,
+            eventID: eventDB.event_id,
+            activeItemIDs: eventDB.active_item_ids,
+            superuserItemIds: eventDB.superuser_item_ids
+          })),
+          token: organizerDB.token
+        }) satisfies DevconnectPretixOrganizerConfig
+    )
   };
 }
 
@@ -40,6 +44,7 @@ export interface DevconnectPretixEventConfig {
   id: number;
   eventID: string;
   activeItemIDs: string[]; // relevant item IDs that correspond to ticket products
+  superuserItemIds: string[]; // subset of activeItemIDs representing products only superusers have
 }
 
 // In-memory representation of Pretix organizer configuration

@@ -39,7 +39,8 @@ import {
   EVENT_B_ID,
   EVENT_C_ID,
   ITEM_1,
-  ITEM_2
+  ITEM_2,
+  ITEM_3
 } from "./pretix/devconnectPretixDataMocker";
 import {
   getDevconnectMockPretixAPI,
@@ -98,13 +99,19 @@ describe("devconnect configuration db tables", function () {
     // Insert event 1
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
+      `insert into pretix_events_config 
+      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
+      values 
+      (1, 'event-1', '{}', '{}')`
     );
     // Should fail on duplicate (event id, org id)
     try {
       await sqlQuery(
         application.context.dbPool,
-        "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-1', '{}')"
+        `insert into pretix_events_config 
+        (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
+        values 
+        (1, 'event-1', '{}', '{}')`
       );
       expect.fail();
     } catch (e) {
@@ -113,13 +120,19 @@ describe("devconnect configuration db tables", function () {
     // Insert it again with updated event-id
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (3, 'event-2', '{}')"
+      `insert into pretix_events_config 
+      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
+      values 
+      (3, 'event-2', '{}', '{}')`
     );
 
     // Insert with active item IDs
     await sqlQuery(
       application.context.dbPool,
-      "insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids) values (1, 'event-3', '{123, 456}')"
+      `insert into pretix_events_config
+      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
+      values 
+      (1, 'event-3', '{123, 456, 789}', '{789}')`
     );
     expect(
       (
@@ -156,11 +169,12 @@ describe("devconnect functionality", function () {
     await sqlQuery(
       db,
       `
-    insert into pretix_events_config (pretix_organizers_config_id, event_id, active_item_ids)
+    insert into pretix_events_config 
+    (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
     values
-      (1, $1, '{ ${ITEM_1} }'),
-      (1, $2, '{ ${ITEM_1}, ${ITEM_2} }'),
-      (1, $3, '{}')
+      (1, $1, '{ ${ITEM_1} }', '{}'),
+      (1, $2, '{ ${ITEM_1}, ${ITEM_2}, ${ITEM_3} }', '{${ITEM_3}}'),
+      (1, $3, '{}', '{}')
     `,
       [EVENT_A_ID, EVENT_B_ID, EVENT_C_ID]
     );
@@ -219,8 +233,9 @@ describe("devconnect functionality", function () {
       // Event A has Item 1 as an active item and 4 unique emails that use Item 1.
       // Event B has Item 1 and 2 as active items; Item has 4 unique emails (just like event A),
       // while Item 2 has 3 unique emails (there is no ITEM_2, EMAIL_3 pair)
+      // Event B also has a superuser ticket for EMAIL_2 and ITEM_3
       // Event C has no tickets because it has no active items.
-      expect(tickets).to.have.length(11);
+      expect(tickets).to.have.length(12);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -234,8 +249,11 @@ describe("devconnect functionality", function () {
       );
 
       // Get item info IDs for event B
-      const [{ id: item1EventBInfoID }, { id: item2EventBInfoID }] =
-        await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+      const [
+        { id: item1EventBInfoID },
+        { id: item2EventBInfoID },
+        { id: item3EventBInfoID }
+      ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         // Four tickets for event A because four unique emails
@@ -282,6 +300,10 @@ describe("devconnect functionality", function () {
         {
           email: EMAIL_4,
           itemInfoID: item2EventBInfoID
+        },
+        {
+          email: EMAIL_2,
+          itemInfoID: item3EventBInfoID
         }
       ]);
     }
@@ -311,7 +333,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    expect(tickets).to.have.length(9);
+    expect(tickets).to.have.length(10);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
@@ -325,8 +347,11 @@ describe("devconnect functionality", function () {
     );
 
     // Get item info IDs for event B
-    const [{ id: item1EventBInfoID }, { id: item2EventBInfoID }] =
-      await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+    const [
+      { id: item1EventBInfoID },
+      { id: item2EventBInfoID },
+      { id: item3EventBInfoID }
+    ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       // Four tickets for event A because four unique emails
@@ -366,6 +391,10 @@ describe("devconnect functionality", function () {
       {
         email: EMAIL_4,
         itemInfoID: item2EventBInfoID
+      },
+      {
+        email: EMAIL_2,
+        itemInfoID: item3EventBInfoID
       }
     ]);
   });
@@ -467,6 +496,24 @@ describe("devconnect functionality", function () {
     });
   });
 
+  let checkerUser: User;
+  let checkerIdentity: Identity;
+  step("should be able to log in", async function () {
+    const result = await testLoginPCDPass(application, EMAIL_2, {
+      expectEmailIncorrect: false,
+      expectUserAlreadyLoggedIn: false,
+      force: false
+    });
+
+    if (!result) {
+      throw new Error("failed to log in");
+    }
+
+    checkerUser = result.user;
+    checkerIdentity = result.identity;
+  });
+
+  let ticket: RSATicketPCD;
   step("should be able to check in with a valid ticket", async function () {
     const issueResponse = await requestIssuedPCDs(
       application,
@@ -475,15 +522,38 @@ describe("devconnect functionality", function () {
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
     const serializedTicket = issueResponseBody
-      .pcds[0] as SerializedPCD<RSATicketPCD>;
-    const ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+      .pcds[2] as SerializedPCD<RSATicketPCD>;
+    ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
-    const checkinResponse = await requestCheckIn(application, ticket);
+    const checkinResponse = await requestCheckIn(
+      application,
+      ticket,
+      checkerIdentity
+    );
     const checkinResponseBody = checkinResponse.body as CheckInResponse;
 
     expect(checkinResponse.status).to.eq(200);
+    expect((checkinResponseBody as any)["error"]).to.eq(undefined);
     expect(checkinResponseBody.success).to.eq(true);
   });
+
+  step(
+    "should not be able to check in with a ticket that has already been used to check in",
+    async function () {
+      const checkinResponse = await requestCheckIn(
+        application,
+        ticket,
+        checkerIdentity
+      );
+      const checkinResponseBody = checkinResponse.body as CheckInResponse;
+
+      expect(checkinResponse.status).to.eq(200);
+      expect(checkinResponseBody.success).to.eq(false);
+      if (!checkinResponseBody.success) {
+        expect(checkinResponseBody.error.name).to.eq("AlreadyCheckedIn");
+      }
+    }
+  );
 
   step(
     "should not able to check in with a ticket not signed by the server",
@@ -516,8 +586,17 @@ describe("devconnect functionality", function () {
         }
       });
 
-      const checkinResponse = await requestCheckIn(application, ticket);
-      expect(checkinResponse.status).to.eq(500);
+      const checkinResponse = await requestCheckIn(
+        application,
+        ticket,
+        checkerIdentity
+      );
+      const responseBody = checkinResponse.body as CheckInResponse;
+      expect(checkinResponse.status).to.eq(200);
+      expect(responseBody.success).to.eq(false);
+      if (!responseBody.success) {
+        expect(responseBody.error.name).to.eq("InvalidSignature");
+      }
     }
   );
 

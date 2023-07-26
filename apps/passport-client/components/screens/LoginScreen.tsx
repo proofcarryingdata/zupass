@@ -3,7 +3,7 @@ import {
   FormEvent,
   useCallback,
   useContext,
-  useState,
+  useState
 } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
@@ -18,7 +18,7 @@ import {
   HR,
   Spacer,
   TextCenter,
-  ZuLogo,
+  ZuLogo
 } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
@@ -32,7 +32,7 @@ export function LoginScreen() {
       e.preventDefault();
       dispatch({
         type: "new-passport",
-        email: email.toLocaleLowerCase("en-US"),
+        email: email.toLocaleLowerCase("en-US")
       });
     },
     [dispatch, email]
@@ -75,8 +75,12 @@ export function LoginScreen() {
         <Spacer h={24} />
         <CenterColumn w={280}>
           <LinkButton to={"/sync-existing"}>Login with Sync Key</LinkButton>
-          <Spacer h={8} />
-          <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
+          {appConfig.isZuzalu && (
+            <>
+              <Spacer h={8} />
+              <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
+            </>
+          )}
         </CenterColumn>
         <Spacer h={24} />
       </BackgroundGlow>

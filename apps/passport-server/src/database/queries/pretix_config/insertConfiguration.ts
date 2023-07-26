@@ -29,13 +29,28 @@ export async function insertPretixEventConfig(
   db: Pool,
   organizerConfigId: number,
   activeItemIds: string[],
+  superuserItemIds: string[],
   eventId: string
 ): Promise<number> {
+  const activeItemIdsSet = new Set(activeItemIds);
+  superuserItemIds.forEach((superId) => {
+    if (!activeItemIdsSet.has(superId)) {
+      throw new Error(
+        "super user item id must be included in the active item ids set"
+      );
+    }
+  });
+
   const result = await sqlQuery(
     db,
-    `insert into pretix_events_config(pretix_organizers_config_id, active_item_ids, event_id) ` +
-      `values ($1, $2, $3) returning id`,
-    [organizerConfigId, `{${activeItemIds.join(",")}}`, eventId]
+    `insert into pretix_events_config(pretix_organizers_config_id, active_item_ids, event_id, superuser_item_ids) ` +
+      `values ($1, $2, $3, $4) returning id`,
+    [
+      organizerConfigId,
+      `{${activeItemIds.join(",")}}`,
+      eventId,
+      `{${superuserItemIds.join(",")}}`
+    ]
   );
   return result.rows[0].id;
 }

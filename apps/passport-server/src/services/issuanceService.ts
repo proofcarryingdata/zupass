@@ -2,6 +2,8 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
   CheckInResponse,
+  CheckTicketRequest,
+  CheckTicketResponse,
   ISSUANCE_STRING,
   IssuedPCDsRequest,
   IssuedPCDsResponse
@@ -12,12 +14,21 @@ import {
   getPublicKey,
   getTicketData,
   ITicketData,
+  RSATicketPCD,
   RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import NodeRSA from "node-rsa";
+import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
-import { fetchDevconnectPretixTicketsByEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchDevconnectPretixTicketByTicketId,
+  fetchDevconnectPretixTicketsByEmail,
+  fetchDevconnectSuperusersForEmail
+} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -53,23 +64,41 @@ export class IssuanceService {
       const ticketPCD = await RSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
-      const { ticketId } = getTicketData(ticketPCD);
-      if (!ticketId) {
-        throw new Error("ticketId field not found in rsaPCD");
-      }
-      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
-      if (!proofPublicKey) {
-        throw new Error("failed to get public key from proof");
-      }
-      const serverPublicKey = this.getPublicKey();
 
-      if (serverPublicKey !== proofPublicKey) {
-        throw new Error("ticket was not signed with the right key");
+      const ticketValid = await this.checkTicket(ticketPCD);
+
+      if (!ticketValid.success) {
+        return ticketValid;
+      }
+
+      const ticketData = getTicketData(ticketPCD);
+
+      const checker = await this.checkUserExists(request.checkerProof);
+
+      if (!checker) {
+        return {
+          success: false,
+          error: { name: "NotSuperuser" }
+        };
+      }
+
+      const checkerSuperUserPermissions =
+        await fetchDevconnectSuperusersForEmail(
+          this.context.dbPool,
+          checker.email
+        );
+
+      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
+        (perm) => perm.pretix_events_config_id === ticketData.eventConfigId
+      );
+
+      if (!relevantSuperUserPermission) {
+        return { success: false, error: { name: "NotSuperuser" } };
       }
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
-        parseInt(ticketId, 10)
+        parseInt(ticketData.ticketId ?? "", 10)
       );
 
       if (successfullyConsumed) {
@@ -78,11 +107,9 @@ export class IssuanceService {
         };
       }
 
-      logger(
-        "Ticket either does not exist, has already been consumed, or has been revoked"
-      );
       return {
-        success: false
+        success: false,
+        error: { name: "ServerError" }
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
@@ -90,11 +117,92 @@ export class IssuanceService {
     }
   }
 
-  private async getUserEmailFromRequest(
-    request: IssuedPCDsRequest
-  ): Promise<string | null> {
+  public async handleCheckTicketRequest(
+    request: CheckTicketRequest
+  ): Promise<CheckTicketResponse> {
+    try {
+      const ticketPCD = await RSATicketPCDPackage.deserialize(
+        request.ticket.pcd
+      );
+      return this.checkTicket(ticketPCD);
+    } catch (e) {
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
+    }
+  }
+
+  public async checkTicket(
+    ticketPCD: RSATicketPCD
+  ): Promise<CheckTicketResponse> {
+    try {
+      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
+      if (!proofPublicKey) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
+      }
+
+      const serverPublicKey = this.getPublicKey();
+      if (serverPublicKey !== proofPublicKey) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
+      }
+
+      const { ticketId } = getTicketData(ticketPCD);
+      if (!ticketId) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
+
+      const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
+        this.context.dbPool,
+        parseInt(ticketId ?? "", 10)
+      );
+
+      if (!ticketInDb) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
+
+      if (ticketInDb.is_deleted) {
+        return {
+          success: false,
+          error: { name: "TicketRevoked", revokedTimestamp: Date.now() }
+        };
+      }
+
+      if (ticketInDb.is_consumed) {
+        return {
+          success: false,
+          error: { name: "AlreadyCheckedIn", checkinTimestamp: Date.now() }
+        };
+      }
+
+      return { success: true };
+    } catch (e) {
+      logger("Error when checking ticket", { error: e });
+
+      return {
+        success: false,
+        error: { name: "ServerError" }
+      };
+    }
+  }
+
+  private async checkUserExists(
+    proof: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<CommitmentRow | null> {
     const deserializedSignature =
-      await SemaphoreSignaturePCDPackage.deserialize(request.userProof.pcd);
+      await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
       deserializedSignature
     );
@@ -107,7 +215,6 @@ export class IssuanceService {
     }
 
     if (deserializedSignature.claim.signedMessage !== ISSUANCE_STRING) {
-      // TODO: implement a challenge-response protocol? How secure is this?
       logger(`can't issue PCDs, wrong message signed by user`);
       return null;
     }
@@ -126,7 +233,7 @@ export class IssuanceService {
       return null;
     }
 
-    return storedCommitment.email;
+    return storedCommitment;
   }
 
   private async ticketDataToSerializedPCD(
@@ -174,7 +281,8 @@ export class IssuanceService {
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
   ): Promise<SerializedPCD[]> {
-    const email = await this.getUserEmailFromRequest(request);
+    const commitment = await this.checkUserExists(request.userProof);
+    const email = commitment?.email;
 
     if (email == null) {
       return [];
@@ -188,16 +296,20 @@ export class IssuanceService {
     const serializedPCDs = await Promise.all(
       ticketsDB
         // convert to ITicketData
-        .map((t) => ({
-          ticketId: t.id.toString(),
-          eventName: t.event_name,
-          ticketName: t.item_name,
-          timestamp: Date.now(),
-          attendeeEmail: email,
-          attendeeName: t.full_name,
-          isConsumed: t.is_consumed,
-          isDeleted: t.is_deleted
-        }))
+        .map(
+          (t) =>
+            ({
+              ticketId: t.id.toString(),
+              eventName: t.event_name,
+              ticketName: t.item_name,
+              timestamp: Date.now(),
+              attendeeEmail: email,
+              attendeeName: t.full_name,
+              isConsumed: t.is_consumed,
+              isRevoked: t.is_deleted,
+              eventConfigId: t.pretix_events_config_id
+            }) satisfies ITicketData
+        )
         // convert to serialized ticket PCD
         .map((ticketData) => this.ticketDataToSerializedPCD(ticketData))
     );

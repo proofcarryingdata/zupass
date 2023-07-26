@@ -3,7 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
-import { DevconnectVerifyScreen } from "../components/screens/DevconnectVerifyScreen";
+import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -24,7 +24,7 @@ import {
   loadPCDs,
   loadSelf,
   loadUserInvalid,
-  saveIdentity,
+  saveIdentity
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState } from "../src/state";
@@ -70,7 +70,7 @@ class App extends React.Component<object, AppState> {
     let shortStack = stack.substring(0, 280);
     if (shortStack.length < stack.length) shortStack += "...";
     return {
-      error: { title: "Error", message, stack: shortStack },
+      error: { title: "Error", message, stack: shortStack }
     } as Partial<AppState>;
   }
 
@@ -115,7 +115,11 @@ function Router() {
           <Route
             path="verify"
             element={
-              appConfig.isZuzalu ? <VerifyScreen /> : <DevconnectVerifyScreen />
+              appConfig.isZuzalu ? (
+                <VerifyScreen />
+              ) : (
+                <DevconnectCheckinScreen />
+              )
             }
           />
           <Route path="*" element={<MissingScreen />} />
@@ -153,7 +157,7 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    userInvalid: userInvalid,
+    userInvalid: userInvalid
   };
 }
 

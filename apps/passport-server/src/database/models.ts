@@ -24,6 +24,7 @@ export interface DevconnectPretixTicket {
   full_name: string;
   devconnect_pretix_items_info_id: number;
   is_deleted: boolean;
+  is_consumed: boolean;
 }
 
 export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
@@ -36,7 +37,23 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   extends DevconnectPretixTicketDB {
   event_name: string;
   item_name: string;
+  pretix_events_config_id: number;
+}
+
+export interface DevconnectSuperuser {
+  ticket_id: number;
+  email: string;
+  full_name: string;
+  is_deleted: boolean;
   is_consumed: boolean;
+  devconnect_pretix_items_info_id: number;
+  devconnect_pretix_events_info_id: number;
+  item_name: string;
+  item_id: string;
+  pretix_events_config_id: number;
+  pretix_organizers_config_id: number;
+  event_name: string;
+  event_id: string;
 }
 
 /**
@@ -45,6 +62,10 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
 export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
   commitment: string;
+}
+
+export interface LoggedinPCDPassUser extends CommitmentRow {
+  superuserEventConfigIds: number[];
 }
 
 export enum ZuzaluUserRole {
@@ -78,6 +99,7 @@ export interface PretixEventsConfig {
   event_id: string;
   pretix_organizers_config_id: number;
   active_item_ids: string[]; // relevant item IDs that correspond to ticket products
+  superuser_item_ids: string[];
 }
 
 // Database representation of Pretix organizer configuration
