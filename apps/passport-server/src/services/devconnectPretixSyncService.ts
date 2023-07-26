@@ -373,7 +373,7 @@ export class DevconnectPretixSyncService {
             `[DEVCONNECT PRETIX] Inserting ticket ` +
               `email: ${ticket.email} ` +
               `itemInfoId: '${ticket.devconnect_pretix_items_info_id}' ` +
-              `name: '${ticket.full_name}' is_consumed: ${ticket.is_consumed} ` +
+              `name: '${ticket.full_name}' is_consumed: '${ticket.is_consumed}' ` +
               `is_deleted: '${ticket.is_deleted}'`
           );
           await insertDevconnectPretixTicket(dbClient, ticket);
