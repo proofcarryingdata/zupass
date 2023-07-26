@@ -35,7 +35,7 @@ export async function fetchDevconnectPretixTicketsByEventConfig(
     `\
     select t.* from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
-    join devconnect_pretix_events_info e on e.pretix_events_config_id = i.devconnect_pretix_events_info_id
+    join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
     where e.pretix_events_config_id = $1`,
     [eventConfigID]
   );
@@ -55,7 +55,7 @@ export async function fetchDevconnectPretixTicketByTicketId(
     `\
     select t.* from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
-    join devconnect_pretix_events_info e on e.pretix_events_config_id = i.devconnect_pretix_events_info_id
+    join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
     where t.id = $1`,
     [ticketId]
   );

@@ -127,6 +127,7 @@ export class DevconnectPretixSyncService {
       for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
           promises.push(this.syncEvent(dbPool, organizer, event));
+          // break;
         }
       }
       try {
@@ -360,6 +361,7 @@ export class DevconnectPretixSyncService {
         );
 
         logger("existingTickets", existingTickets);
+        logger("freshly calculated tickets", tickets);
 
         const existingTicketsByEmailAndItem =
           ticketsToMapByEmailAndItem(existingTickets);
@@ -371,6 +373,9 @@ export class DevconnectPretixSyncService {
         // Step 1 of saving: insert tickets that are new
         logger(
           `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`
+        );
+        logger(
+          `[DEVCONNECT PRETIX] ${existingTickets.length} existing tickets; ${tickets.length} freshly calculated tickets`
         );
         for (const ticket of newTickets) {
           logger(
@@ -479,7 +484,7 @@ export class DevconnectPretixSyncService {
   }
 
   /**
-   * Converts a given list of orders to tickets.
+   * Converts a given list of orders to tickets. Deduplicates tickets.
    */
   private ordersToDevconnectTickets(
     orders: DevconnectPretixOrder[],
@@ -531,7 +536,16 @@ export class DevconnectPretixSyncService {
         }
       }
     }
-    return tickets;
+
+    const uniqueTickets: Map<string, DevconnectPretixTicket> = new Map();
+
+    for (const ticket of tickets) {
+      logger("KEY", getEmailAndItemKey(ticket));
+      uniqueTickets.set(getEmailAndItemKey(ticket), ticket);
+    }
+    logger("COMPARISON", uniqueTickets.size, tickets.length);
+
+    return Array.from(uniqueTickets.values());
   }
 }
 /**
