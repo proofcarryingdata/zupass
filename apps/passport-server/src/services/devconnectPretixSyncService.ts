@@ -46,7 +46,6 @@ export class DevconnectPretixSyncService {
   private pretixConfig: DevconnectPretixConfig;
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
-  private context: ApplicationContext;
   private db: Pool;
   private timeout: NodeJS.Timeout | undefined;
   private _hasCompletedSyncSinceStarting: boolean;
@@ -62,7 +61,6 @@ export class DevconnectPretixSyncService {
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
-    this.context = context;
     this.db = context.dbPool;
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
