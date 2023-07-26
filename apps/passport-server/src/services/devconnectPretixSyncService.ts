@@ -358,8 +358,12 @@ export class DevconnectPretixSyncService {
           dbClient,
           eventConfigID
         );
+
+        logger("existingTickets", existingTickets);
+
         const existingTicketsByEmailAndItem =
           ticketsToMapByEmailAndItem(existingTickets);
+
         const newTickets = tickets.filter(
           (t) => !existingTicketsByEmailAndItem.has(getEmailAndItemKey(t))
         );
@@ -410,7 +414,8 @@ export class DevconnectPretixSyncService {
         // Step 3 of saving: remove tickets no longer exist in pretix
         const removedTickets = existingTickets.filter(
           (existing) =>
-            !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
+            !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing)) &&
+            !existing.is_deleted
         );
         logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} tickets`);
         for (const removedTicket of removedTickets) {
