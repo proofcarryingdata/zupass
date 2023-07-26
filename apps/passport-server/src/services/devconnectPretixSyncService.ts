@@ -240,17 +240,17 @@ export class DevconnectPretixSyncService {
       );
 
       const newActiveItemsByItemID = new Map(
-        newActiveItems.map((i) => [i.id.toString(), i])
+        newActiveItems.map((item) => [item.id.toString(), item])
       );
-      const existingItemsInfo = await fetchPretixItemsInfoByEventInfo(
+      const existingItemInfos = await fetchPretixItemsInfoByEventInfo(
         dbClient,
         eventInfo.id
       );
-      const existingItemsInfoByItemID = new Map(
-        existingItemsInfo.map((i) => [i.item_id, i])
+      const existingItemInfosByItemID = new Map(
+        existingItemInfos.map((item) => [item.item_id, item])
       );
       const itemsToInsert = newActiveItems.filter(
-        (i) => !existingItemsInfoByItemID.has(i.id.toString())
+        (i) => !existingItemInfosByItemID.has(i.id.toString())
       );
 
       // Step 1 of saving: insert items that are new
@@ -268,16 +268,16 @@ export class DevconnectPretixSyncService {
       // Step 2 of saving: update items that have changed
       // Filter to items that existed before, and filter to those that have changed.
       const itemsToUpdate = newActiveItems
-        .filter((i) => existingItemsInfoByItemID.has(i.id.toString()))
+        .filter((i) => existingItemInfosByItemID.has(i.id.toString()))
         .filter((i) => {
-          const oldItem = existingItemsInfoByItemID.get(i.id.toString())!;
+          const oldItem = existingItemInfosByItemID.get(i.id.toString())!;
           return oldItem.item_name !== i.name.en;
         });
 
       // For the active item that have changed, update them in the database.
       logger(`[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} items`);
       for (const item of itemsToUpdate) {
-        const oldItem = existingItemsInfoByItemID.get(item.id.toString())!;
+        const oldItem = existingItemInfosByItemID.get(item.id.toString())!;
         logger(
           `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
             oldItem
@@ -287,7 +287,7 @@ export class DevconnectPretixSyncService {
       }
 
       // Step 3 of saving: remove items that are not active anymore
-      const itemsToRemove = existingItemsInfo.filter(
+      const itemsToRemove = existingItemInfos.filter(
         (existing) => !newActiveItemsByItemID.has(existing.item_id)
       );
       logger(`[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} items`);
@@ -329,20 +329,20 @@ export class DevconnectPretixSyncService {
         );
       }
 
-      let pretixOrders: DevconnectPretixOrder[];
       try {
-        pretixOrders = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
+        const pretixOrders = await this.pretixAPI.fetchOrders(
+          orgURL,
+          token,
+          eventID
+        );
 
         // Fetch updated version after DB updates
-        const updatedItemsInfo = await fetchPretixItemsInfoByEventInfo(
+        const itemInfos = await fetchPretixItemsInfoByEventInfo(
           dbClient,
           eventInfo.id
         );
 
-        const tickets = this.ordersToDevconnectTickets(
-          pretixOrders,
-          updatedItemsInfo
-        );
+        const tickets = this.ordersToDevconnectTickets(pretixOrders, itemInfos);
 
         const newTicketsByEmailAndItem = ticketsToMapByEmailAndItem(tickets);
         const existingTickets = await fetchDevconnectPretixTicketsByEventConfig(
@@ -457,22 +457,19 @@ export class DevconnectPretixSyncService {
   }
 
   /**
-   * Converts a given list of orders to tickets, and sets
-   * all of their roles to equal the given role. When `subEvents`
-   * is passed in as a parameter, cross-reference them with the
-   * orders, and set the visitor date ranges for the new
-   * `DevconnectPretixTicket` to equal to the date ranges of the visitor
-   * subevent events they have in their order.
+   * Converts a given list of orders to tickets.
    */
   private ordersToDevconnectTickets(
     orders: DevconnectPretixOrder[],
-    itemsInfo: PretixItemInfo[]
+    itemInfos: PretixItemInfo[]
   ): DevconnectPretixTicket[] {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
     // already fixing the event_id and organizer_url in this function,
     // we just need to have the email as the key for this map.
-    const itemsInfoByItemID = new Map(itemsInfo.map((i) => [i.item_id, i]));
+    const itemsInfoByItemID = new Map(
+      itemInfos.map((item) => [item.item_id, item])
+    );
     const tickets: DevconnectPretixTicket[] = [];
 
     for (const order of orders) {
