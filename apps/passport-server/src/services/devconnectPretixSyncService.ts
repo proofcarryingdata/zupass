@@ -36,7 +36,7 @@ import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 
-const SERVICE_NAME_FOR_TRACING = "Devconnect Pretix";
+const NAME = "Devconnect Pretix";
 
 /**
  * Responsible for syncing users from Pretix into an internal representation.
@@ -124,7 +124,7 @@ export class DevconnectPretixSyncService {
    * reflects the state in Pretix.
    */
   private async sync(): Promise<void> {
-    return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
+    return traced(NAME, "sync", async () => {
       const syncStart = Date.now();
 
       const eventSyncPromises = []; // one per organizer-event pair
@@ -165,7 +165,7 @@ export class DevconnectPretixSyncService {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<boolean> {
-    return traced(SERVICE_NAME_FOR_TRACING, "syncEventInfos", async (span) => {
+    return traced(NAME, "syncEventInfos", async (span) => {
       const { orgURL, token } = organizer;
       const { eventID, id: eventConfigID } = event;
 
@@ -210,7 +210,7 @@ export class DevconnectPretixSyncService {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<boolean> {
-    return traced(SERVICE_NAME_FOR_TRACING, "syncItemInfos", async (span) => {
+    return traced(NAME, "syncItemInfos", async (span) => {
       const { orgURL, token } = organizer;
       const { eventID, activeItemIDs, id: eventConfigID } = event;
 
@@ -319,7 +319,7 @@ export class DevconnectPretixSyncService {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<boolean> {
-    return traced(SERVICE_NAME_FOR_TRACING, "syncTickets", async (span) => {
+    return traced(NAME, "syncTickets", async (span) => {
       const { orgURL, token } = organizer;
       const { eventID, id: eventConfigID } = event;
 
@@ -432,37 +432,31 @@ export class DevconnectPretixSyncService {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<void> {
-    return traced(
-      SERVICE_NAME_FOR_TRACING,
-      "syncAllPretixForOrganizerAndEvent",
-      async (span) => {
-        const { orgURL } = organizer;
-        const { eventID } = event;
+    return traced(NAME, "syncAllPretixForOrganizerAndEvent", async (span) => {
+      const { orgURL } = organizer;
+      const { eventID } = event;
 
+      logger(`[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`);
+
+      if (!(await this.syncEventInfos(organizer, event))) {
         logger(
-          `[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`
+          `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
         );
-
-        if (!(await this.syncEventInfos(organizer, event))) {
-          logger(
-            `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
-          );
-          return;
-        }
-
-        if (!(await this.syncItemInfos(organizer, event))) {
-          logger(
-            `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
-          );
-          return;
-        }
-
-        if (!(await this.syncTickets(organizer, event))) {
-          logger(`[DEVCONNECT PRETIX] error updating tickets`);
-          return;
-        }
+        return;
       }
-    );
+
+      if (!(await this.syncItemInfos(organizer, event))) {
+        logger(
+          `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
+        );
+        return;
+      }
+
+      if (!(await this.syncTickets(organizer, event))) {
+        logger(`[DEVCONNECT PRETIX] error updating tickets`);
+        return;
+      }
+    });
   }
 
   /**
