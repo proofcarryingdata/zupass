@@ -141,7 +141,7 @@ export class DevconnectPretixSyncService {
         await Promise.all(eventSyncPromises);
       } catch (e) {
         logger(
-          "[DEVCONNECT PRETIX] failed to save tickets for one or more events",
+          "[DEVCONNECT PRETIX] Failed to save tickets for one or more events",
           e
         );
         this.rollbarService?.reportError(e);
@@ -192,7 +192,7 @@ export class DevconnectPretixSyncService {
         }
       } catch (e) {
         logger(
-          `[DEVCONNECT PRETIX] error while syncing event for ${orgURL} and ${eventID}, skipping update`,
+          `[DEVCONNECT PRETIX] Error while syncing event for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
         return false;
@@ -219,7 +219,7 @@ export class DevconnectPretixSyncService {
 
         if (!eventInfo) {
           throw new Error(
-            `couldn't find an event info matching event config id ${eventConfigID}`
+            `Couldn't find an event info matching event config id ${eventConfigID}`
           );
         }
 
@@ -311,7 +311,7 @@ export class DevconnectPretixSyncService {
         }
       } catch (e) {
         logger(
-          `[DEVCONNECT PRETIX] error while syncing items for ${orgURL} and ${eventID}, skipping update`,
+          `[DEVCONNECT PRETIX] Error while syncing items for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
         return false;
@@ -339,7 +339,7 @@ export class DevconnectPretixSyncService {
 
         if (!eventInfo) {
           throw new Error(
-            `couldn't find an event info matching event config id ${eventConfigID}`
+            `Couldn't find an event info matching event config id ${eventConfigID}`
           );
         }
 
@@ -450,24 +450,24 @@ export class DevconnectPretixSyncService {
       const { orgURL } = organizer;
       const { eventID } = event;
 
-      logger(`[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`);
+      logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${orgURL} and ${eventID}`);
 
       if (!(await this.syncEventInfos(organizer, event))) {
         logger(
-          `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
+          `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
         );
         return;
       }
 
       if (!(await this.syncItemInfos(organizer, event))) {
         logger(
-          `[DEVCONNECT PRETIX] aborting sync due to error in updating item info`
+          `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
         );
         return;
       }
 
       if (!(await this.syncTickets(organizer, event))) {
-        logger(`[DEVCONNECT PRETIX] error updating tickets`);
+        logger(`[DEVCONNECT PRETIX] Error updating tickets`);
         return;
       }
     });
@@ -508,7 +508,7 @@ export class DevconnectPretixSyncService {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
-              `[DEVCONNECT PRETIX] encountered order position without attendee email, defaulting to order email`,
+              `[DEVCONNECT PRETIX] Encountered order position without attendee email, defaulting to order email`,
               {
                 orderCode: order.code,
                 positionID: positionid,
@@ -542,13 +542,13 @@ export async function startDevconnectPretixSyncService(
   devconnectPretixAPI: IDevconnectPretixAPI | null
 ): Promise<DevconnectPretixSyncService | null> {
   if (context.isZuzalu) {
-    logger("[DEVCONNECT PRETIX] not starting service because IS_ZUZALU=true");
+    logger("[DEVCONNECT PRETIX] Not starting service because IS_ZUZALU=true");
     return null;
   }
 
   if (!devconnectPretixAPI) {
     logger(
-      "[DEVCONNECT PRETIX] can't start sync service - no api instantiated"
+      "[DEVCONNECT PRETIX] Can't start sync service - no api instantiated"
     );
     return null;
   }
@@ -560,14 +560,6 @@ export async function startDevconnectPretixSyncService(
   if (!devconnectPretixConfig) {
     return null;
   }
-
-  logger(
-    `[DEVCONNECT PRETIX] initializing with configuration: ${JSON.stringify(
-      devconnectPretixConfig,
-      null,
-      2
-    )}`
-  );
 
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
