@@ -21,7 +21,7 @@ export async function fetchPretixItemsInfoByEvent(
 export async function insertPretixItemsInfo(
   client: Pool,
   item_id: string,
-  event_config_id: number,
+  event_info_id: number,
   item_name: string
 ): Promise<number> {
   const result = await sqlQuery(
@@ -30,7 +30,7 @@ export async function insertPretixItemsInfo(
       insert into devconnect_pretix_items_info (item_id, devconnect_pretix_events_info_id, item_name)
       values ($1, $2, $3)
       returning id`,
-    [item_id, event_config_id, item_name]
+    [item_id, event_info_id, item_name]
   );
   return result.rows[0].id;
 }
