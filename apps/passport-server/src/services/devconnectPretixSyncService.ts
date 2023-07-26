@@ -152,7 +152,7 @@ export class DevconnectPretixSyncService {
    * Sync, and update data for Pretix event.
    * Returns whether update was successful.
    */
-  private async syncEventInfo(
+  private async syncEventInfos(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -191,7 +191,7 @@ export class DevconnectPretixSyncService {
    * Sync, check, and update data for Pretix active items under event.
    * Returns whether update was successful.
    */
-  private async syncItemsInfo(
+  private async syncItemInfos(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -427,14 +427,14 @@ export class DevconnectPretixSyncService {
 
     logger(`[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`);
 
-    if (!(await this.syncEventInfo(dbClient, organizer, event))) {
+    if (!(await this.syncEventInfos(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
-    if (!(await this.syncItemsInfo(dbClient, organizer, event))) {
+    if (!(await this.syncItemInfos(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
