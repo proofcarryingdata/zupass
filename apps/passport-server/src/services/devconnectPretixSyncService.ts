@@ -196,7 +196,16 @@ export class DevconnectPretixSyncService {
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, activeItemIDs, id: eventConfigID } = event;
+
     try {
+      const eventInfo = await fetchPretixEventInfo(dbClient, eventConfigID);
+
+      if (!eventInfo) {
+        throw new Error(
+          `couldn't find an event info matching event config id ${eventConfigID}`
+        );
+      }
+
       const itemsFromAPI = await this.pretixAPI.fetchItems(
         orgURL,
         token,
@@ -222,7 +231,7 @@ export class DevconnectPretixSyncService {
       );
       const existingItemsInfo = await fetchPretixItemsInfoByEvent(
         dbClient,
-        eventConfigID
+        eventInfo.id
       );
       const existingItemsInfoByItemID = new Map(
         existingItemsInfo.map((i) => [i.item_id, i])
@@ -238,7 +247,7 @@ export class DevconnectPretixSyncService {
         await insertPretixItemsInfo(
           dbClient,
           item.id.toString(),
-          eventConfigID,
+          eventInfo.id,
           item.name.en
         );
       }
@@ -299,12 +308,20 @@ export class DevconnectPretixSyncService {
 
       let pretixOrders: DevconnectPretixOrder[];
       try {
+        const eventInfo = await fetchPretixEventInfo(dbClient, eventConfigID);
+
+        if (!eventInfo) {
+          throw new Error(
+            `couldn't find an event info matching event config id ${eventConfigID}`
+          );
+        }
+
         pretixOrders = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
         // Fetch updated version after DB updates
         const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
           dbClient,
-          eventConfigID
+          eventInfo.id
         );
 
         const tickets = this.ordersToDevconnectTickets(
