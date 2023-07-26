@@ -42,6 +42,8 @@ const SERVICE_NAME_FOR_TRACING = "Devconnect Pretix";
  * Responsible for syncing users from Pretix into an internal representation.
  */
 export class DevconnectPretixSyncService {
+  private static readonly SYNC_INTERVAL_MS = 1000 * 60;
+
   private pretixAPI: IDevconnectPretixAPI;
   private pretixConfig: DevconnectPretixConfig;
   private rollbarService: RollbarService | null;
@@ -89,7 +91,10 @@ export class DevconnectPretixSyncService {
 
     const trySync = async (): Promise<void> => {
       await this.trySync();
-      this.timeout = setTimeout(() => trySync(), 1000 * 60);
+      this.timeout = setTimeout(
+        () => trySync(),
+        DevconnectPretixSyncService.SYNC_INTERVAL_MS
+      );
     };
 
     trySync();
