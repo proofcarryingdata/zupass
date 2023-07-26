@@ -505,12 +505,13 @@ export class DevconnectPretixSyncService {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
-              `[DEVCONNECT PRETIX] encountered order position without attendee email, defaulting to order email`,
-              {
-                orderCode: order.code,
-                positionID: positionid,
-                orderEmail: order.email
-              }
+              `[DEVCONNECT PRETIX] encountered order position without attendee email, defaulting to order email ${JSON.stringify(
+                {
+                  orderCode: order.code,
+                  positionID: positionid,
+                  orderEmail: order.email
+                }
+              )}`
             );
           }
           const email = (attendee_email || order.email).toLowerCase();
