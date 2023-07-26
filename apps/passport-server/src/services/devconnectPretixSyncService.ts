@@ -523,11 +523,11 @@ export class DevconnectPretixSyncService {
           if (!attendee_email) {
             logger(
               `[DEVCONNECT PRETIX] Encountered order position without attendee email, defaulting to order email`,
-              {
+              JSON.stringify({
                 orderCode: order.code,
                 positionID: positionid,
                 orderEmail: order.email
-              }
+              })
             );
           }
           const email = (attendee_email || order.email).toLowerCase();
