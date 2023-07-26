@@ -259,11 +259,13 @@ export class DevconnectPretixSyncService {
 
         // Step 1 of saving: insert items that are new
         logger(
-          `[DEVCONNECT PRETIX] Inserting ${itemsToInsert.length} item infos`
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Inserting ${itemsToInsert.length} item infos`
         );
         for (const item of itemsToInsert) {
           logger(
-            `[DEVCONNECT PRETIX] Inserting item info ${JSON.stringify(item)}`
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Inserting item info ${JSON.stringify(item)}`
           );
           await insertPretixItemsInfo(
             this.db,
@@ -284,12 +286,14 @@ export class DevconnectPretixSyncService {
 
         // For the active item that have changed, update them in the database.
         logger(
-          `[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} item infos`
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
         );
         for (const item of itemsToUpdate) {
           const oldItem = existingItemsInfoByItemID.get(item.id.toString())!;
           logger(
-            `[DEVCONNECT PRETIX] Updating item info ${JSON.stringify(
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Updating item info ${JSON.stringify(
               oldItem
             )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
           );
@@ -301,11 +305,13 @@ export class DevconnectPretixSyncService {
           (existing) => !newActiveItemsByItemID.has(existing.item_id)
         );
         logger(
-          `[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} item infos`
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}]  Deleting ${itemsToRemove.length} item infos`
         );
         for (const item of itemsToRemove) {
           logger(
-            `[DEVCONNECT PRETIX] Deleting item info ${JSON.stringify(item)}`
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Deleting item info ${JSON.stringify(item)}`
           );
           await deletePretixItemInfo(this.db, item.id);
         }
@@ -369,11 +375,13 @@ export class DevconnectPretixSyncService {
 
         // Step 1 of saving: insert tickets that are new
         logger(
-          `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Inserting ${newTickets.length} new tickets`
         );
         for (const ticket of newTickets) {
           logger(
-            `[DEVCONNECT PRETIX] Inserting ticket ${JSON.stringify(ticket)}`
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Inserting ticket ${JSON.stringify(ticket)}`
           );
           await insertDevconnectPretixTicket(this.db, ticket);
         }
@@ -393,15 +401,19 @@ export class DevconnectPretixSyncService {
           });
 
         // For the tickets that have changed, update them in the database.
-        logger(`[DEVCONNECT PRETIX] Updating ${updatedTickets.length} tickets`);
+        logger(
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
+        );
         for (const updatedTicket of updatedTickets) {
           const oldTicket = existingTicketsByEmailAndItem.get(
             getEmailAndItemKey(updatedTicket)
           );
           logger(
-            `[DEVCONNECT PRETIX] Updating ticket ${JSON.stringify(
-              oldTicket
-            )} to ${JSON.stringify(updatedTicket)}`
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
+              updatedTicket
+            )}`
           );
           await updateDevconnectPretixTicket(this.db, updatedTicket);
         }
@@ -411,12 +423,14 @@ export class DevconnectPretixSyncService {
           (existing) =>
             !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
         );
-        logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} tickets`);
+        logger(
+          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
+        );
         for (const removedTicket of removedTickets) {
           logger(
-            `[DEVCONNECT PRETIX] Deleting ticket ${JSON.stringify(
-              removedTicket
-            )}`
+            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+              eventInfo.event_name
+            }] Deleting ticket ${JSON.stringify(removedTicket)}`
           );
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
