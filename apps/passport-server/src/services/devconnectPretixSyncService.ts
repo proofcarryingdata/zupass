@@ -111,37 +111,38 @@ export class DevconnectPretixSyncService {
   }
 
   /**
-   * Synchronize Pretix state with PCDPassport state.
+   * Download Pretix state, and apply a diff to our state so that it
+   * reflects the state in Pretix.
    */
   private async sync(): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
-      const syncStart = Date.now();
       logger("[DEVCONNECT PRETIX] Sync start");
 
+      const syncStart = Date.now();
       const { dbPool } = this.context;
 
-      const promises = [];
+      const syncPromises = [];
+
       for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
-          promises.push(
+          syncPromises.push(
             this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event)
           );
         }
       }
+
       try {
-        // Call sync for each event in separate threads - this helps
-        // parallelize waiting for the API responses. If any fail,
-        // we'll log this.
-        await Promise.all(promises);
+        await Promise.all(syncPromises);
       } catch (e) {
         logger(
-          "[DEVCONNECT PRETIX] failed to save tickets for one or more events"
+          "[DEVCONNECT PRETIX] failed to save tickets for one or more events",
+          e
         );
-        logger("[DEVCONNECT PRETIX]", e);
         this.rollbarService?.reportError(e);
       }
 
       const syncEnd = Date.now();
+
       logger(
         `[DEVCONNECT PRETIX] Sync end. Completed in ${Math.floor(
           (syncEnd - syncStart) / 1000
@@ -154,13 +155,14 @@ export class DevconnectPretixSyncService {
    * Sync, and update data for Pretix event.
    * Returns whether update was successful.
    */
-  private async saveEventInfo(
+  private async syncEventInfos(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<boolean> {
     const { orgURL, token } = organizer;
     const { eventID, id: eventConfigID } = event;
+
     try {
       const {
         name: { en: eventNameFromAPI }
@@ -182,6 +184,7 @@ export class DevconnectPretixSyncService {
       );
       return false;
     }
+
     return true;
   }
 
@@ -189,7 +192,7 @@ export class DevconnectPretixSyncService {
    * Sync, check, and update data for Pretix active items under event.
    * Returns whether update was successful.
    */
-  private async saveItemsInfo(
+  private async syncItemInfos(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
@@ -297,12 +300,12 @@ export class DevconnectPretixSyncService {
    * Sync and update data for Pretix tickets under event.
    * Returns whether update was successful.
    */
-  private async saveTickets(
+  private async syncTickets(
     dbClient: Pool,
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<boolean> {
-    return traced(SERVICE_NAME_FOR_TRACING, "loadAllTickets", async (span) => {
+    return traced(SERVICE_NAME_FOR_TRACING, "syncTickets", async (span) => {
       const { orgURL, token } = organizer;
       const { eventID, id: eventConfigID } = event;
 
@@ -421,21 +424,21 @@ export class DevconnectPretixSyncService {
 
     logger(`[DEVCONNECT PRETIX] syncing Pretix for ${orgURL} and ${eventID}`);
 
-    if (!(await this.saveEventInfo(dbClient, organizer, event))) {
+    if (!(await this.syncEventInfos(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
-    if (!(await this.saveItemsInfo(dbClient, organizer, event))) {
+    if (!(await this.syncItemInfos(dbClient, organizer, event))) {
       logger(
         `[DEVCONNECT PRETIX] aborting sync due to error in updating event info`
       );
       return;
     }
 
-    if (!(await this.saveTickets(dbClient, organizer, event))) {
+    if (!(await this.syncTickets(dbClient, organizer, event))) {
       logger(`[DEVCONNECT PRETIX] error updating tickets`);
       return;
     }
@@ -499,6 +502,7 @@ export class DevconnectPretixSyncService {
     return tickets;
   }
 }
+
 /**
  * Kick off a period sync from Pretix into PCDPassport
  */
