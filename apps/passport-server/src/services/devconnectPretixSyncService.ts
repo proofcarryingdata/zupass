@@ -85,6 +85,8 @@ export class DevconnectPretixSyncService {
   }
 
   public startSyncLoop(): void {
+    logger(`[DEVCONNECT PRETIX] Starting sync loop`);
+
     const trySync = async (): Promise<void> => {
       await this.trySync();
       this.timeout = setTimeout(() => trySync(), 1000 * 60);
@@ -95,12 +97,13 @@ export class DevconnectPretixSyncService {
 
   public async trySync(): Promise<void> {
     try {
+      logger(`[DEVCONNECT PRETIX] Trying to sync`);
       await this.sync();
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
     } catch (e) {
       this.rollbarService?.reportError(e);
-      logger(e);
+      logger(`[DEVCONNECT PRETIX] Sync failed`, e);
     }
   }
 
@@ -254,9 +257,13 @@ export class DevconnectPretixSyncService {
       );
 
       // Step 1 of saving: insert items that are new
-      logger(`[DEVCONNECT PRETIX] Inserting ${itemsToInsert.length} items`);
+      logger(
+        `[DEVCONNECT PRETIX] Inserting ${itemsToInsert.length} item infos`
+      );
       for (const item of itemsToInsert) {
-        logger(`[DEVCONNECT PRETIX] Inserting ${JSON.stringify(item)}`);
+        logger(
+          `[DEVCONNECT PRETIX] Inserting item info id: '${item.id}', eventInfoId: '${eventInfo.id}' itemName: ${item.name.en} `
+        );
         await insertPretixItemsInfo(
           dbClient,
           item.id.toString(),
@@ -275,11 +282,11 @@ export class DevconnectPretixSyncService {
         });
 
       // For the active item that have changed, update them in the database.
-      logger(`[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} items`);
+      logger(`[DEVCONNECT PRETIX] Updating ${itemsToUpdate.length} item infos`);
       for (const item of itemsToUpdate) {
         const oldItem = existingItemInfosByItemID.get(item.id.toString())!;
         logger(
-          `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
+          `[DEVCONNECT PRETIX] Updating item info ${JSON.stringify(
             oldItem
           )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
         );
@@ -290,9 +297,11 @@ export class DevconnectPretixSyncService {
       const itemsToRemove = existingItemInfos.filter(
         (existing) => !newActiveItemsByItemID.has(existing.item_id)
       );
-      logger(`[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} items`);
+      logger(`[DEVCONNECT PRETIX] Deleting ${itemsToRemove.length} item infos`);
       for (const item of itemsToRemove) {
-        logger(`[DEVCONNECT PRETIX] Deleting ${JSON.stringify(item)}`);
+        logger(
+          `[DEVCONNECT PRETIX] Deleting item info ${JSON.stringify(item)}`
+        );
         await deletePretixItemInfo(dbClient, item.id);
       }
     } catch (e) {
@@ -360,7 +369,13 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] Inserting ${newTickets.length} new tickets`
         );
         for (const ticket of newTickets) {
-          logger(`[DEVCONNECT PRETIX] Inserting ${JSON.stringify(ticket)}`);
+          logger(
+            `[DEVCONNECT PRETIX] Inserting ticket ` +
+              `email: ${ticket.email} ` +
+              `itemInfoId: '${ticket.devconnect_pretix_items_info_id}' ` +
+              `name: '${ticket.full_name}' is_consumed: ${ticket.is_consumed} ` +
+              `is_deleted: '${ticket.is_deleted}'`
+          );
           await insertDevconnectPretixTicket(dbClient, ticket);
         }
 
@@ -385,22 +400,24 @@ export class DevconnectPretixSyncService {
             getEmailAndItemKey(updatedTicket)
           );
           logger(
-            `[DEVCONNECT PRETIX] Updating ${JSON.stringify(
+            `[DEVCONNECT PRETIX] Updating ticket ${JSON.stringify(
               oldTicket
             )} to ${JSON.stringify(updatedTicket)}`
           );
           await updateDevconnectPretixTicket(dbClient, updatedTicket);
         }
 
-        // Step 3 of saving: remove users that don't have a ticket anymore
+        // Step 3 of saving: remove tickets no longer exist in pretix
         const removedTickets = existingTickets.filter(
           (existing) =>
             !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
         );
-        logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} users`);
+        logger(`[DEVCONNECT PRETIX] Deleting ${removedTickets.length} tickets`);
         for (const removedTicket of removedTickets) {
           logger(
-            `[DEVCONNECT PRETIX] Deleting ${JSON.stringify(removedTicket)}`
+            `[DEVCONNECT PRETIX] Deleting ticket ${JSON.stringify(
+              removedTicket
+            )}`
           );
           await softDeleteDevconnectPretixTicket(dbClient, removedTicket);
         }

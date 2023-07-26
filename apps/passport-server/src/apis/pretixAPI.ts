@@ -25,7 +25,7 @@ export class PretixAPI implements IPretixAPI {
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
-        logger(`[PRETIX] Fetching ${url}`);
+        logger(`[PRETIX] Fetching orders ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }
         });
@@ -51,7 +51,7 @@ export class PretixAPI implements IPretixAPI {
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/subevents/`;
       while (url != null) {
-        logger(`[PRETIX] Fetching ${url}`);
+        logger(`[PRETIX] Fetching subevents ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }
         });
