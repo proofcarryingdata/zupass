@@ -85,6 +85,8 @@ export class DevconnectPretixSyncService {
   }
 
   public startSyncLoop(): void {
+    logger("[DEVCONNECT PRETIX] Starting sync loop");
+
     const trySync = async (): Promise<void> => {
       await this.trySync();
       this.timeout = setTimeout(() => trySync(), 1000 * 60);
@@ -95,12 +97,14 @@ export class DevconnectPretixSyncService {
 
   public async trySync(): Promise<void> {
     try {
+      logger("[DEVCONNECT PRETIX] Sync start");
       await this.sync();
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
+      logger("[DEVCONNECT PRETIX] Sync successful");
     } catch (e) {
       this.rollbarService?.reportError(e);
-      logger(e);
+      logger("[DEVCONNECT PRETIX] Sync failed", e);
     }
   }
 
@@ -116,23 +120,21 @@ export class DevconnectPretixSyncService {
    */
   private async sync(): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "sync", async () => {
-      logger("[DEVCONNECT PRETIX] Sync start");
-
       const syncStart = Date.now();
       const { dbPool } = this.context;
 
-      const syncPromises = [];
+      const eventSyncPromises = []; // one per organizer-event pair
 
       for (const organizer of this.pretixConfig.organizers) {
         for (const event of organizer.events) {
-          syncPromises.push(
+          eventSyncPromises.push(
             this.syncAllPretixForOrganizerAndEvent(dbPool, organizer, event)
           );
         }
       }
 
       try {
-        await Promise.all(syncPromises);
+        await Promise.all(eventSyncPromises);
       } catch (e) {
         logger(
           "[DEVCONNECT PRETIX] failed to save tickets for one or more events",
