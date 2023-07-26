@@ -16,8 +16,8 @@ import { softDeleteDevconnectPretixTicket } from "../database/queries/devconnect
 import { updateDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfoByEventConfig,
-  insertPretixEventsInfo,
-  updatePretixEventsInfo
+  insertPretixEventsInfo as insertPretixEventInfo,
+  updatePretixEventsInfo as updatePretixEventInfo
 } from "../database/queries/pretixEventInfo";
 import {
   deletePretixItemInfo,
@@ -161,20 +161,28 @@ export class DevconnectPretixSyncService {
     const { eventID, id: eventConfigID } = event;
 
     try {
-      const {
-        name: { en: eventNameFromAPI }
-      } = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
-      const existingEvent = await fetchPretixEventInfoByEventConfig(
+      const eventFromPretix = await this.pretixAPI.fetchEvent(
+        orgURL,
+        token,
+        eventID
+      );
+
+      const eventFromDatabase = await fetchPretixEventInfoByEventConfig(
         dbClient,
         eventConfigID
       );
-      if (!existingEvent) {
-        await insertPretixEventsInfo(dbClient, eventNameFromAPI, eventConfigID);
-      } else {
-        await updatePretixEventsInfo(
+
+      if (!eventFromDatabase) {
+        await insertPretixEventInfo(
           dbClient,
-          existingEvent.id,
-          eventNameFromAPI
+          eventFromPretix.name.en,
+          eventConfigID
+        );
+      } else {
+        await updatePretixEventInfo(
+          dbClient,
+          eventFromDatabase.id,
+          eventFromPretix.name.en
         );
       }
     } catch (e) {
@@ -203,6 +211,7 @@ export class DevconnectPretixSyncService {
       dbClient,
       eventConfigID
     );
+
     if (!eventInfo) {
       throw new Error(
         `couldn't find an event info matching event config id ${eventConfigID}`
