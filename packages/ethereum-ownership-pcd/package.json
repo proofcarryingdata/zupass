@@ -23,7 +23,9 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
-    "dev": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
+    "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
+    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
+    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build"

@@ -17,30 +17,9 @@ import {
   SemaphoreSignaturePCDPackage,
 } from "@pcd/semaphore-signature-pcd";
 import { ethers } from "ethers";
-import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { SemaphoreIdentityCardBody as EthereumOwnershipCardBody } from "./CardBody";
-
-/**
- * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
- * so that they cannot be reused by malicious actors across different
- * applications.
- */
-export const STATIC_ETH_PCD_NULLIFIER = generateMessageHash(
-  "hardcoded-nullifier"
-);
-
-/**
- * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
- * @param signal The initial message.
- * @returns The outputted hash, fed in as a signal to the Semaphore proof.
- */
-export function generateMessageHash(signal: string): bigint {
-  // right shift to fit into a field element, which is 254 bits long
-  // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> BigInt(8);
-}
+import { EthereumOwnershipCardBody } from "./CardBody";
 
 export const EthereumOwnershipPCDTypeName = "ethereum-ownership-pcd";
 
@@ -55,9 +34,6 @@ export interface EthereumOwnershipPCDInitArgs {
   wasmFilePath: string;
 }
 
-// We hardcode the externalNullifer to also be your identityCommitment
-// so that your nullifier for specific groups is not revealed when
-// a SemaphoreSignaturePCD is requested from a consumer application.
 export interface EthereumOwnershipPCDArgs {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   ethereumAddress: StringArgument;
@@ -121,10 +97,11 @@ export async function prove(
   const deserializedIdentity = await SemaphoreIdentityPCDPackage.deserialize(
     args.identity.value.pcd
   );
+  const message = deserializedIdentity.claim.identity.commitment.toString();
 
   const address = ethers.utils.getAddress(
     ethers.utils.verifyMessage(
-      deserializedIdentity.claim.identity.commitment.toString(),
+      message,
       args.ethereumSignatureOfCommitment.value
     )
   );

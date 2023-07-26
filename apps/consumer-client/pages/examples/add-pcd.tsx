@@ -1,18 +1,30 @@
 import {
+  EthereumGroupPCDPackage,
+  getRawPubKeyBuffer,
+  GroupType,
+} from "@pcd/ethereum-group-pcd";
+import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import {
   constructPassportPcdAddRequestUrl,
   constructPassportPcdProveAndAddRequestUrl,
+  openSignedZuzaluSignInPopup,
+  usePassportPopupMessages,
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
+import { Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
 import { Identity } from "@semaphore-protocol/identity";
 import { startRegistration } from "@simplewebauthn/browser";
 import {
   generateRegistrationOptions,
   verifyRegistrationResponse,
 } from "@simplewebauthn/server";
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import { useEffect, useState } from "react";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
@@ -62,8 +74,182 @@ export default function Page() {
         <button onClick={addWebAuthnPCD}>
           add a new webauthn credential to the passport
         </button>
+        <br />
+        <br />
+        <AddEthAddrPCDButton />
+        <br />
+        <br />
+        <AddEthGroupPCDButton />
       </ExampleContainer>
     </div>
+  );
+}
+
+function AddEthAddrPCDButton() {
+  const [pcdStr] = usePassportPopupMessages();
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    if (!pcdStr) return;
+    if (!isActive) return;
+
+    const parsed = JSON.parse(pcdStr) as SerializedPCD;
+
+    const ethereum = (window as any).ethereum;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    if (!ethereum) {
+      alert("Please install MetaMask to use this dApp!");
+    }
+
+    (async function () {
+      await ethereum.request({ method: "eth_requestAccounts" });
+      const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
+      const signature = await provider
+        .getSigner()
+        .signMessage(pcd.claim.identityCommitment);
+
+      const popupUrl = window.location.origin + "/popup";
+
+      const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+        typeof EthereumOwnershipPCDPackage
+      >(ZUPASS_URL, popupUrl, EthereumOwnershipPCDPackage.name, {
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: SemaphoreIdentityPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          description:
+            "The Semaphore Identity which you are proving owns the given Ethereum address.",
+        },
+        ethereumAddress: {
+          argumentType: ArgumentTypeName.String,
+          value: await provider.getSigner().getAddress(),
+        },
+        ethereumSignatureOfCommitment: {
+          argumentType: ArgumentTypeName.String,
+          value: signature,
+        },
+      });
+
+      sendPassportRequest(proofUrl);
+    })();
+
+    setIsActive(false);
+  }, [pcdStr, isActive]);
+
+  return (
+    <button
+      onClick={() => {
+        setIsActive(true);
+        zupassSignIn("eth-pcd");
+      }}
+    >
+      add a new Ethereum address to the passport
+    </button>
+  );
+}
+
+async function zupassSignIn(originalSiteName: string) {
+  openSignedZuzaluSignInPopup(
+    ZUPASS_URL,
+    window.location.origin + "/popup",
+    originalSiteName
+  );
+}
+
+function AddEthGroupPCDButton() {
+  const [pcdStr] = usePassportPopupMessages();
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    if (!pcdStr) return;
+    if (!isActive) return;
+
+    const parsed = JSON.parse(pcdStr) as SerializedPCD;
+
+    const ethereum = (window as any).ethereum;
+    const provider = new ethers.providers.Web3Provider(ethereum);
+    if (!ethereum) {
+      alert("Please install MetaMask to use this dApp!");
+    }
+
+    (async function () {
+      await ethereum.request({ method: "eth_requestAccounts" });
+      const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
+
+      const msgHash = Buffer.from(
+        ethers.utils.hashMessage(pcd.claim.identityCommitment).slice(2),
+        "hex"
+      );
+      const signatureOfIdentityCommitment = await provider
+        .getSigner()
+        .signMessage(pcd.claim.identityCommitment);
+
+      const poseidon = new Poseidon();
+      await poseidon.initWasm();
+      const treeDepth = 20; // Provided circuits have tree depth = 20
+      const pubKeyTree = new Tree(treeDepth, poseidon);
+
+      // Add some public keys to the tree
+      for (const member of [
+        "0x04b4d5188949bf70c4db5e965a9ea67b80407e8ee7fa3a260ccf86e9c0395fe82cba155fdff55829b3c862322aba402d00b563861b603879ee8ae211c34257d4ad",
+        "0x042d21e6aa2021a991a82d08591fa0528d0bebe4ac9a34d851a74507327d930dec217380bd602fe48a143bb21106ab274d6a51aff396f0e4f7e1e3a8a673d46d83",
+      ]) {
+        pubKeyTree.insert(poseidon.hashPubKey(getRawPubKeyBuffer(member)));
+      }
+      // Add the prover's public key to the tree
+      const proverPubkeyBuffer: Buffer = getRawPubKeyBuffer(
+        ethers.utils.recoverPublicKey(msgHash, signatureOfIdentityCommitment)
+      );
+      pubKeyTree.insert(poseidon.hashPubKey(proverPubkeyBuffer));
+      const pubKeyIndex = pubKeyTree.indexOf(
+        poseidon.hashPubKey(proverPubkeyBuffer)
+      ); // == 2 in this test
+
+      // Prove membership of the prover's public key in the tree
+      const merkleProof = pubKeyTree.createProof(pubKeyIndex);
+
+      const popupUrl = window.location.origin + "/popup";
+      const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+        typeof EthereumGroupPCDPackage
+      >(ZUPASS_URL, popupUrl, EthereumGroupPCDPackage.name, {
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: SemaphoreIdentityPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          description:
+            "The Semaphore Identity which you are signing the message.",
+        },
+        groupType: {
+          argumentType: ArgumentTypeName.String,
+          value: GroupType.PUBLICKEY,
+        },
+        signatureOfIdentityCommitment: {
+          argumentType: ArgumentTypeName.String,
+          value: signatureOfIdentityCommitment,
+        },
+        merkleProof: {
+          argumentType: ArgumentTypeName.String,
+          value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof),
+        },
+      });
+
+      sendPassportRequest(proofUrl);
+    })();
+
+    setIsActive(false);
+  }, [pcdStr, isActive]);
+
+  return (
+    <button
+      onClick={() => {
+        setIsActive(true);
+        zupassSignIn("eth-group-pcd");
+      }}
+    >
+      add a new Ethereum Group Membership to the passport
+    </button>
   );
 }
 

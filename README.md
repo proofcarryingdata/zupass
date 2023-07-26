@@ -124,6 +124,8 @@ Some of these packages are used to share development configuration between the d
 - [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
 - [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
 - [`@pcd/webauthn-pcd`](packages/webauthn-pcd): a pcd that can be used to make claims about [WebAuthn](https://webauthn.guide/) attestations, i.e. signing a particular challenge with a fingerprint, Yubikey, or another [authorization gesture](https://www.w3.org/TR/webauthn-2/#authorization-gesture).
+- [`@pcd/ethereum-ownership-pcd`](packages/ethereum-ownership-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address.
+- [`@pcd/ethereum-group-pcd`](packages/ethereum-group-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address or public key that is part of a merkle group of addresses or public keys, without revealing the specific one.
 - ... more to come!
 
 #### shared code packages
