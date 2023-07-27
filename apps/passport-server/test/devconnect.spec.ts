@@ -290,11 +290,7 @@ describe("devconnect functionality", function () {
       .getMockData()
       .ordersByEventId.get(EVENT_A_ID)!;
 
-    console.log("ORDER_LENGTH", ordersForEventA.length);
-
     const lastOrder = ordersForEventA.find((o) => o.email === EMAIL_2)!;
-
-    console.log("LAST_ORDER", lastOrder);
 
     devconnectPretixMocker.removeOrder(EVENT_A_ID, lastOrder.code);
     devconnectPretixSyncService.replaceApi(
