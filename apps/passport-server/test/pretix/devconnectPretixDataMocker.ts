@@ -80,38 +80,30 @@ export class DevconnectPretixDataMocker {
   }
 
   private newMockData(): IMockDevconnectPretixData {
-    // Share same orders across A, B, and C
     const eventAOrders: DevconnectPretixOrder[] = [
-      // "Normal" one-item order -- EMAIL_4 pays for ITEM_1 with EMAIL_4 as attendee email
       this.newPretixOrder(EMAIL_4, [[ITEM_1, EMAIL_4]]),
-      // Bulk order with many items testing edge cases
       this.newPretixOrder(EMAIL_1, [
         [ITEM_1, EMAIL_1],
-        [ITEM_1, EMAIL_2], // prioritize attendee email over purchaser email
-        [ITEM_1, EMAIL_2], // duplicate ticket - this is ok
+        [ITEM_1, EMAIL_2],
+        [ITEM_1, EMAIL_2],
         [ITEM_1, EMAIL_3],
-        [ITEM_1, null], // fall back to purchaser if attendee email is null. this is another duplicate ticket
-        [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
+        [ITEM_1, null],
+        [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
         [ITEM_2, null],
         [ITEM_3, EMAIL_2],
         [ITEM_2, EMAIL_4]
       ]),
-      // Three-item order, testing ITEM_2 and override again
       this.newPretixOrder(EMAIL_2, [
         [ITEM_2, EMAIL_4],
         [ITEM_2, null],
-        [ITEM_1, EMAIL_1] // another duplicate ticket
+        [ITEM_1, EMAIL_1]
       ])
     ];
 
-    const eventBOrders: DevconnectPretixOrder[] = [
-      // this.newPretixOrder(EMAIL_1, [[ITEM_1, EMAIL_1]])
-    ];
-    const eventCOrders: DevconnectPretixOrder[] = [
-      //
-    ];
+    const eventBOrders: DevconnectPretixOrder[] = [];
+    const eventCOrders: DevconnectPretixOrder[] = [];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
     ordersByEventId.set(EVENT_A_ID, eventAOrders);
