@@ -95,7 +95,8 @@ export class DevconnectPretixDataMocker {
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
         [ITEM_2, null],
-        [ITEM_3, EMAIL_2]
+        [ITEM_3, EMAIL_2],
+        [ITEM_2, EMAIL_4]
       ]),
       // Three-item order, testing ITEM_2 and override again
       this.newPretixOrder(EMAIL_2, [

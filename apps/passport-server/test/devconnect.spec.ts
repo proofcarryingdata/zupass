@@ -35,7 +35,6 @@ import {
   EMAIL_4,
   EVENT_A_CONFIG_ID,
   EVENT_A_ID,
-  EVENT_B_CONFIG_ID,
   EVENT_B_ID,
   EVENT_C_ID,
   ITEM_1,
@@ -172,7 +171,7 @@ describe("devconnect functionality", function () {
     insert into pretix_events_config 
     (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
     values
-      (1, $1, '{ ${ITEM_1} }', '{}'),
+      (1, $1, '{ ${ITEM_1}, ${ITEM_2} }', '{ ${ITEM_2} }'),
       (1, $2, '{ ${ITEM_1}, ${ITEM_2}, ${ITEM_3} }', '{${ITEM_3}}'),
       (1, $3, '{}', '{}')
     `,
@@ -229,7 +228,7 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      expect(tickets).to.have.length(7);
+      expect(tickets).to.have.length(14);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -237,20 +236,8 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
-      const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
-        db,
-        EVENT_A_CONFIG_ID
-      );
-
-      // Get item info IDs for event B
-      const [
-        { id: item1EventBInfoID },
-        { id: item2EventBInfoID },
-        { id: item3EventBInfoID }
-      ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
-
-      [EMAIL_1, EMAIL_2, EMAIL_3, EMAIL_4];
-      [item1EventAInfoID, item1EventBInfoID, item3EventBInfoID];
+      const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+        await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         {
@@ -279,6 +266,34 @@ describe("devconnect functionality", function () {
         },
         {
           email: EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_1,
           itemInfoID: item1EventAInfoID
         }
       ]);
@@ -304,7 +319,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    expect(tickets).to.have.length(6);
+    expect(tickets).to.have.length(11);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
@@ -312,17 +327,8 @@ describe("devconnect functionality", function () {
     }));
 
     // Get item info IDs for event A
-    const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
-      db,
-      EVENT_A_CONFIG_ID
-    );
-
-    // Get item info IDs for event B
-    const [
-      { id: item1EventBInfoID },
-      { id: item2EventBInfoID },
-      { id: item3EventBInfoID }
-    ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+    const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+      await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       {
@@ -348,6 +354,26 @@ describe("devconnect functionality", function () {
       {
         email: EMAIL_1,
         itemInfoID: item1EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_2,
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_4,
+        itemInfoID: item2EventAInfoID
       }
     ]);
   });
@@ -474,8 +500,10 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
+
+    console.log(issueResponseBody.pcds);
     const serializedTicket = issueResponseBody
-      .pcds[2] as SerializedPCD<RSATicketPCD>;
+      .pcds[0] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
