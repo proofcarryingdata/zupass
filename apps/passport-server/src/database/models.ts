@@ -25,6 +25,7 @@ export interface DevconnectPretixTicket {
   devconnect_pretix_items_info_id: number;
   is_deleted: boolean;
   is_consumed: boolean;
+  position_id: string;
 }
 
 export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {

@@ -14,14 +14,9 @@ export async function updateDevconnectPretixTicket(
     `\
 update devconnect_pretix_tickets
 set full_name=$1, is_deleted=$2
-where email=$3 and devconnect_pretix_items_info_id=$4
+where position_id=$3
 returning *`,
-    [
-      params.full_name,
-      params.is_deleted,
-      params.email,
-      params.devconnect_pretix_items_info_id
-    ]
+    [params.full_name, params.is_deleted, params.position_id]
   );
   return result.rows[0];
 }

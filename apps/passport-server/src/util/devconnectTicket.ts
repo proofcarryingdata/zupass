@@ -18,31 +18,3 @@ export function pretixTicketsDifferent(
 
   return false;
 }
-
-// Delimiter between strings in a Map key. This should be
-// a character that is not used in the strings being joined
-// together.
-const KEY_DELIMITER = ",";
-
-// TODO: validation and sanitization
-export type EmailAndItemInfoID = string;
-
-/**
- * Gets the key needed to index into a Map<EmailAndItemInfoID, DevconnectPretixTicket>.
- */
-export function getEmailAndItemKey(
-  ticket: DevconnectPretixTicket
-): EmailAndItemInfoID {
-  return [ticket.email, ticket.devconnect_pretix_items_info_id].join(
-    KEY_DELIMITER
-  );
-}
-
-/**
- * Converts list of users to map indexed by email address and item info ID.
- */
-export function ticketsToMapByEmailAndItem(
-  tickets: DevconnectPretixTicket[]
-): Map<EmailAndItemInfoID, DevconnectPretixTicket> {
-  return new Map(tickets.map((t) => [getEmailAndItemKey(t), t]));
-}

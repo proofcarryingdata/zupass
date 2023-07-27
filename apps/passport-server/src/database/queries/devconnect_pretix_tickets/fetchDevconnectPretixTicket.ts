@@ -72,8 +72,9 @@ export async function fetchDevconnectPretixTicketsByEmail(
     `\
     select t.*, e.event_name, i.item_name, e.pretix_events_config_id as pretix_events_config_id from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
-    join devconnect_pretix_events_info e on e.pretix_events_config_id = i.devconnect_pretix_events_info_id
+    join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
     where t.email = $1
+    order by t.id asc
     `,
     [email]
   );

@@ -117,26 +117,38 @@ describe("database reads and writes for devconnect ticket features", function ()
     }
   ];
 
-  const testTickets = [
+  const testTickets: DevconnectPretixTicket[] = [
     {
-      name: "UserFirst UserLast",
+      full_name: "UserFirst UserLast",
       email: "user-one@test.com",
-      internalItemInfoId: 1
+      devconnect_pretix_items_info_id: 1,
+      is_consumed: false,
+      is_deleted: false,
+      position_id: "1000"
     },
     {
-      name: "Super User1",
+      full_name: "Super User1",
       email: "user-two@test.com",
-      internalItemInfoId: 4
+      devconnect_pretix_items_info_id: 4,
+      is_consumed: false,
+      is_deleted: false,
+      position_id: "1001"
     },
     {
-      name: "ThirdParty Attendee",
+      full_name: "ThirdParty Attendee",
       email: "thirdparty-attendee@test.com",
-      internalItemInfoId: 5
+      devconnect_pretix_items_info_id: 5,
+      is_consumed: false,
+      is_deleted: false,
+      position_id: "1002"
     },
     {
-      name: "ThirdParty SuperUser",
+      full_name: "ThirdParty SuperUser",
       email: "thirdparty-attendee@test.com",
-      internalItemInfoId: 6
+      devconnect_pretix_items_info_id: 6,
+      is_consumed: false,
+      is_deleted: false,
+      position_id: "1003"
     }
   ];
 
@@ -248,18 +260,12 @@ describe("database reads and writes for devconnect ticket features", function ()
 
   step("should be able to add tickets", async function () {
     for (const ticket of testTickets) {
-      const insertedTicket = await insertDevconnectPretixTicket(db, {
-        devconnect_pretix_items_info_id: ticket.internalItemInfoId,
-        email: ticket.email,
-        full_name: ticket.name,
-        is_deleted: false,
-        is_consumed: false
-      });
+      const insertedTicket = await insertDevconnectPretixTicket(db, ticket);
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
-        ticket.internalItemInfoId
+        ticket.devconnect_pretix_items_info_id
       );
       expect(insertedTicket.email).to.eq(ticket.email);
-      expect(insertedTicket.full_name).to.eq(ticket.name);
+      expect(insertedTicket.full_name).to.eq(ticket.full_name);
       expect(insertedTicket.is_deleted).to.eq(false);
       expect(insertedTicket.is_consumed).to.eq(false);
     }

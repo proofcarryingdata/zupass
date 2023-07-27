@@ -172,7 +172,7 @@ describe("devconnect functionality", function () {
     insert into pretix_events_config 
     (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
     values
-      (1, $1, '{ ${ITEM_1} }', '{}'),
+      (1, $1, '{ ${ITEM_1}, ${ITEM_2} }', '{ ${ITEM_2} }'),
       (1, $2, '{ ${ITEM_1}, ${ITEM_2}, ${ITEM_3} }', '{${ITEM_3}}'),
       (1, $3, '{}', '{}')
     `,
@@ -229,13 +229,7 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      // From our config, we have 3 separate events.
-      // Event A has Item 1 as an active item and 4 unique emails that use Item 1.
-      // Event B has Item 1 and 2 as active items; Item has 4 unique emails (just like event A),
-      // while Item 2 has 3 unique emails (there is no ITEM_2, EMAIL_3 pair)
-      // Event B also has a superuser ticket for EMAIL_2 and ITEM_3
-      // Event C has no tickets because it has no active items.
-      expect(tickets).to.have.length(12);
+      expect(tickets).to.have.length(15);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -243,22 +237,26 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
-      const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
-        db,
-        EVENT_A_CONFIG_ID
-      );
+      const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+        await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
 
       // Get item info IDs for event B
-      const [
-        { id: item1EventBInfoID },
-        { id: item2EventBInfoID },
-        { id: item3EventBInfoID }
-      ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+      const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
+        db,
+        EVENT_B_CONFIG_ID
+      );
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
-        // Four tickets for event A because four unique emails
+        {
+          email: EMAIL_4,
+          itemInfoID: item1EventAInfoID
+        },
         {
           email: EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: EMAIL_2,
           itemInfoID: item1EventAInfoID
         },
         {
@@ -270,58 +268,57 @@ describe("devconnect functionality", function () {
           itemInfoID: item1EventAInfoID
         },
         {
-          email: EMAIL_4,
+          email: EMAIL_1,
           itemInfoID: item1EventAInfoID
         },
         {
           email: EMAIL_1,
-          itemInfoID: item1EventBInfoID // Represents EVENT_B, ITEM_1
-        },
-        {
-          email: EMAIL_2,
-          itemInfoID: item1EventBInfoID
-        },
-        {
-          email: EMAIL_3,
-          itemInfoID: item1EventBInfoID
-        },
-        {
-          email: EMAIL_4,
-          itemInfoID: item1EventBInfoID
+          itemInfoID: item2EventAInfoID
         },
         {
           email: EMAIL_1,
-          itemInfoID: item2EventBInfoID // Represents EVENT_A, ITEM_2
+          itemInfoID: item2EventAInfoID
         },
         {
           email: EMAIL_2,
-          itemInfoID: item2EventBInfoID
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item2EventAInfoID
         },
         {
           email: EMAIL_4,
-          itemInfoID: item2EventBInfoID
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_4,
+          itemInfoID: item2EventAInfoID
         },
         {
           email: EMAIL_2,
-          itemInfoID: item3EventBInfoID
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item1EventBInfoID
         }
       ]);
     }
   );
 
   step("removing an order causes soft deletion of ticket", async function () {
-    // Simulate removing order - in this instance, we remove an order from
-    // EVENT_A1 with EMAIL_1 as the purchaser that contains the only positions
-    // that have EMAIL_2 and EMAIL_3 for ITEM_1. Removing this order, then,
-    // would cause (EMAIL_2, ITEM_1) and (EMAIL_3, ITEM_1) to be soft deleted
-    // in EVENT_A.
     const ordersForEventA = devconnectPretixMocker
       .getMockData()
       .ordersByEventId.get(EVENT_A_ID)!;
-    const orderWithEmail2And3 = ordersForEventA.find(
-      (o) => o.email === EMAIL_1
-    )!;
-    devconnectPretixMocker.removeOrder(EVENT_A_ID, orderWithEmail2And3.code);
+
+    const lastOrder = ordersForEventA.find((o) => o.email === EMAIL_2)!;
+
+    devconnectPretixMocker.removeOrder(EVENT_A_ID, lastOrder.code);
     devconnectPretixSyncService.replaceApi(
       getDevconnectMockPretixAPI(devconnectPretixMocker.getMockData())
     );
@@ -333,7 +330,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    expect(tickets).to.have.length(10);
+    expect(tickets).to.have.length(12);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
@@ -341,60 +338,63 @@ describe("devconnect functionality", function () {
     }));
 
     // Get item info IDs for event A
-    const [{ id: item1EventAInfoID }] = await fetchPretixItemsInfoByEvent(
-      db,
-      EVENT_A_CONFIG_ID
-    );
+    const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+      await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
 
     // Get item info IDs for event B
-    const [
-      { id: item1EventBInfoID },
-      { id: item2EventBInfoID },
-      { id: item3EventBInfoID }
-    ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
+    const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
+      db,
+      EVENT_B_CONFIG_ID
+    );
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
-      // Four tickets for event A because four unique emails
-      {
-        email: EMAIL_1,
-        itemInfoID: item1EventAInfoID
-      },
-      // This is formerly where (EMAIL_2, ITEM_1) and (EMAIL_3, ITEM_1) were for EVENT_A
       {
         email: EMAIL_4,
         itemInfoID: item1EventAInfoID
       },
       {
         email: EMAIL_1,
-        itemInfoID: item1EventBInfoID // Represents EVENT_B, ITEM_1
+        itemInfoID: item1EventAInfoID
       },
       {
         email: EMAIL_2,
-        itemInfoID: item1EventBInfoID
+        itemInfoID: item1EventAInfoID
+      },
+      {
+        email: EMAIL_2,
+        itemInfoID: item1EventAInfoID
       },
       {
         email: EMAIL_3,
-        itemInfoID: item1EventBInfoID
-      },
-      {
-        email: EMAIL_4,
-        itemInfoID: item1EventBInfoID
+        itemInfoID: item1EventAInfoID
       },
       {
         email: EMAIL_1,
-        itemInfoID: item2EventBInfoID
+        itemInfoID: item1EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
       },
       {
         email: EMAIL_2,
-        itemInfoID: item2EventBInfoID
+        itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item2EventAInfoID
       },
       {
         email: EMAIL_4,
-        itemInfoID: item2EventBInfoID
+        itemInfoID: item2EventAInfoID
       },
       {
-        email: EMAIL_2,
-        itemInfoID: item3EventBInfoID
+        email: EMAIL_1,
+        itemInfoID: item1EventBInfoID
       }
     ]);
   });
@@ -441,8 +441,10 @@ describe("devconnect functionality", function () {
       const responseBody = response.body as IssuedPCDsResponse;
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // EMAIL_1 has three tickets
-      expect(responseBody.pcds.length).to.eq(3);
+      // important to note users are issued tickets pcd tickets even for
+      // tickets that no longer exist, so they can be displayed
+      // as 'revoked' on the client
+      expect(responseBody.pcds.length).to.eq(7);
 
       const ticketPCD = responseBody.pcds[0];
 
@@ -521,8 +523,9 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
+
     const serializedTicket = issueResponseBody
-      .pcds[2] as SerializedPCD<RSATicketPCD>;
+      .pcds[1] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(

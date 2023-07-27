@@ -12,7 +12,7 @@ export async function softDeleteDevconnectPretixTicket(
 ): Promise<void> {
   await sqlQuery(
     client,
-    `update devconnect_pretix_tickets set is_deleted=TRUE where email=$1 and devconnect_pretix_items_info_id=$2`,
-    [params.email, params.devconnect_pretix_items_info_id]
+    `update devconnect_pretix_tickets set is_deleted=TRUE where position_id = $1`,
+    [params.position_id]
   );
 }
