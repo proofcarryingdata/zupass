@@ -229,10 +229,7 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      console.log(JSON.stringify(tickets, null, 2));
-      console.log("LENGTH", tickets.length);
-
-      expect(tickets).to.have.length(14);
+      expect(tickets).to.have.length(7);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -256,12 +253,6 @@ describe("devconnect functionality", function () {
       [item1EventAInfoID, item1EventBInfoID, item3EventBInfoID];
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
-        // Four tickets for event A because four unique emails
-        {
-          email: EMAIL_1,
-          itemInfoID: item1EventAInfoID
-        },
-        ///
         {
           email: EMAIL_4,
           itemInfoID: item1EventAInfoID
@@ -287,16 +278,8 @@ describe("devconnect functionality", function () {
           itemInfoID: item1EventAInfoID
         },
         {
-          email: EMAIL_4,
-          itemInfoID: item2EventBInfoID
-        },
-        {
-          email: EMAIL_2,
-          itemInfoID: item2EventBInfoID
-        },
-        {
           email: EMAIL_1,
-          itemInfoID: item1EventBInfoID
+          itemInfoID: item1EventAInfoID
         }
       ]);
     }

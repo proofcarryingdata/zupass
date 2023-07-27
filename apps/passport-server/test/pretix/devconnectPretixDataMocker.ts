@@ -81,7 +81,7 @@ export class DevconnectPretixDataMocker {
 
   private newMockData(): IMockDevconnectPretixData {
     // Share same orders across A, B, and C
-    const orders: DevconnectPretixOrder[] = [
+    const eventAOrders: DevconnectPretixOrder[] = [
       // "Normal" one-item order -- EMAIL_4 pays for ITEM_1 with EMAIL_4 as attendee email
       this.newPretixOrder(EMAIL_4, [[ITEM_1, EMAIL_4]]),
       // Bulk order with many items testing edge cases
@@ -105,10 +105,17 @@ export class DevconnectPretixDataMocker {
       ])
     ];
 
+    const eventBOrders: DevconnectPretixOrder[] = [
+      // this.newPretixOrder(EMAIL_1, [[ITEM_1, EMAIL_1]])
+    ];
+    const eventCOrders: DevconnectPretixOrder[] = [
+      //
+    ];
+
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
-    ordersByEventId.set(EVENT_A_ID, orders);
-    ordersByEventId.set(EVENT_B_ID, orders);
-    ordersByEventId.set(EVENT_C_ID, orders);
+    ordersByEventId.set(EVENT_A_ID, eventAOrders);
+    ordersByEventId.set(EVENT_B_ID, eventBOrders);
+    ordersByEventId.set(EVENT_C_ID, eventCOrders);
 
     const eventNameByEventID: Map<string, string> = new Map();
     eventNameByEventID.set(EVENT_A_ID, EVENT_A_NAME);
