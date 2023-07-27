@@ -35,6 +35,7 @@ import {
   EMAIL_4,
   EVENT_A_CONFIG_ID,
   EVENT_A_ID,
+  EVENT_B_CONFIG_ID,
   EVENT_B_ID,
   EVENT_C_ID,
   ITEM_1,
@@ -228,7 +229,7 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      expect(tickets).to.have.length(14);
+      expect(tickets).to.have.length(15);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -238,6 +239,12 @@ describe("devconnect functionality", function () {
       // Get item info IDs for event A
       const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
         await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
+
+      // Get item info IDs for event B
+      const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
+        db,
+        EVENT_B_CONFIG_ID
+      );
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         {
@@ -295,6 +302,10 @@ describe("devconnect functionality", function () {
         {
           email: EMAIL_1,
           itemInfoID: item1EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item1EventBInfoID
         }
       ]);
     }
@@ -319,7 +330,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    expect(tickets).to.have.length(11);
+    expect(tickets).to.have.length(12);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
@@ -329,6 +340,12 @@ describe("devconnect functionality", function () {
     // Get item info IDs for event A
     const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
       await fetchPretixItemsInfoByEvent(db, EVENT_A_CONFIG_ID);
+
+    // Get item info IDs for event B
+    const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
+      db,
+      EVENT_B_CONFIG_ID
+    );
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       {
@@ -374,6 +391,10 @@ describe("devconnect functionality", function () {
       {
         email: EMAIL_4,
         itemInfoID: item2EventAInfoID
+      },
+      {
+        email: EMAIL_1,
+        itemInfoID: item1EventBInfoID
       }
     ]);
   });
@@ -420,11 +441,10 @@ describe("devconnect functionality", function () {
       const responseBody = response.body as IssuedPCDsResponse;
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // EMAIL_1 has six tickets
       // important to note users are issued tickets pcd tickets even for
       // tickets that no longer exist, so they can be displayed
       // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(6);
+      expect(responseBody.pcds.length).to.eq(7);
 
       const ticketPCD = responseBody.pcds[0];
 
@@ -505,7 +525,7 @@ describe("devconnect functionality", function () {
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
 
     const serializedTicket = issueResponseBody
-      .pcds[0] as SerializedPCD<RSATicketPCD>;
+      .pcds[1] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
