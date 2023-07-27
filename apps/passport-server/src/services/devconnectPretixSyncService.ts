@@ -26,11 +26,7 @@ import {
   updatePretixItemsInfo
 } from "../database/queries/pretixItemInfo";
 import { ApplicationContext } from "../types";
-import {
-  getEmailAndItemKey,
-  pretixTicketsDifferent,
-  ticketsToMapByEmailAndItem
-} from "../util/devconnectTicket";
+import { pretixTicketsDifferent } from "../util/devconnectTicket";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
@@ -362,15 +358,18 @@ export class DevconnectPretixSyncService {
           updatedItemsInfo
         );
 
-        const newTicketsByEmailAndItem = ticketsToMapByEmailAndItem(tickets);
+        const newTicketsByPositionId = new Map(
+          tickets.map((t) => [t.position_id, t])
+        );
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
           eventConfigID
         );
-        const existingTicketsByEmailAndItem =
-          ticketsToMapByEmailAndItem(existingTickets);
+        const existingTicketsByPositionId = new Map(
+          existingTickets.map((t) => [t.position_id, t])
+        );
         const newTickets = tickets.filter(
-          (t) => !existingTicketsByEmailAndItem.has(getEmailAndItemKey(t))
+          (t) => !existingTicketsByPositionId.has(t.position_id)
         );
 
         // Step 1 of saving: insert tickets that are new
@@ -389,13 +388,9 @@ export class DevconnectPretixSyncService {
         // Step 2 of saving: update tickets that have changed
         // Filter to tickets that existed before, and filter to those that have changed.
         const updatedTickets = tickets
-          .filter((t) =>
-            existingTicketsByEmailAndItem.has(getEmailAndItemKey(t))
-          )
+          .filter((t) => existingTicketsByPositionId.has(t.position_id))
           .filter((t) => {
-            const oldTicket = existingTicketsByEmailAndItem.get(
-              getEmailAndItemKey(t)
-            )!;
+            const oldTicket = existingTicketsByPositionId.get(t.position_id)!;
             const newTicket = t;
             return pretixTicketsDifferent(oldTicket, newTicket);
           });
@@ -405,8 +400,8 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
         );
         for (const updatedTicket of updatedTickets) {
-          const oldTicket = existingTicketsByEmailAndItem.get(
-            getEmailAndItemKey(updatedTicket)
+          const oldTicket = existingTicketsByPositionId.get(
+            updatedTicket.position_id
           );
           logger(
             `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
@@ -420,8 +415,7 @@ export class DevconnectPretixSyncService {
 
         // Step 3 of saving: soft delete tickets that don't exist anymore
         const removedTickets = existingTickets.filter(
-          (existing) =>
-            !newTicketsByEmailAndItem.has(getEmailAndItemKey(existing))
+          (existing) => !newTicketsByPositionId.has(existing.position_id)
         );
         logger(
           `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
