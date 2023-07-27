@@ -537,7 +537,8 @@ export class DevconnectPretixSyncService {
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
             is_deleted: false,
-            is_consumed: false
+            is_consumed: false,
+            position_id: positionid.toString()
           });
         }
       }

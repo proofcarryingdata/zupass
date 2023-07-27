@@ -253,7 +253,8 @@ describe("database reads and writes for devconnect ticket features", function ()
         email: ticket.email,
         full_name: ticket.name,
         is_deleted: false,
-        is_consumed: false
+        is_consumed: false,
+        position_id: "999"
       });
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
         ticket.internalItemInfoId
