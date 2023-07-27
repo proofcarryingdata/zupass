@@ -304,7 +304,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    // expect(tickets).to.have.length(6);
+    expect(tickets).to.have.length(6);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
