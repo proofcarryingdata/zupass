@@ -353,13 +353,13 @@ export class DevconnectPretixSyncService {
           eventInfo.id
         );
 
-        const tickets = this.ordersToDevconnectTickets(
+        const ticketsFromPretix = this.ordersToDevconnectTickets(
           pretixOrders,
           updatedItemsInfo
         );
 
         const newTicketsByPositionId = new Map(
-          tickets.map((t) => [t.position_id, t])
+          ticketsFromPretix.map((t) => [t.position_id, t])
         );
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
@@ -368,7 +368,7 @@ export class DevconnectPretixSyncService {
         const existingTicketsByPositionId = new Map(
           existingTickets.map((t) => [t.position_id, t])
         );
-        const newTickets = tickets.filter(
+        const newTickets = ticketsFromPretix.filter(
           (t) => !existingTicketsByPositionId.has(t.position_id)
         );
 
@@ -387,7 +387,7 @@ export class DevconnectPretixSyncService {
 
         // Step 2 of saving: update tickets that have changed
         // Filter to tickets that existed before, and filter to those that have changed.
-        const updatedTickets = tickets
+        const updatedTickets = ticketsFromPretix
           .filter((t) => existingTicketsByPositionId.has(t.position_id))
           .filter((t) => {
             const oldTicket = existingTicketsByPositionId.get(t.position_id)!;

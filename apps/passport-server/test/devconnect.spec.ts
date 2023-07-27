@@ -420,8 +420,11 @@ describe("devconnect functionality", function () {
       const responseBody = response.body as IssuedPCDsResponse;
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // EMAIL_1 has three tickets
-      expect(responseBody.pcds.length).to.eq(3);
+      // EMAIL_1 has six tickets
+      // important to note users are issued tickets pcd tickets even for
+      // tickets that no longer exist, so they can be displayed
+      // as 'revoked' on the client
+      expect(responseBody.pcds.length).to.eq(6);
 
       const ticketPCD = responseBody.pcds[0];
 
@@ -501,7 +504,6 @@ describe("devconnect functionality", function () {
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
 
-    console.log(issueResponseBody.pcds);
     const serializedTicket = issueResponseBody
       .pcds[0] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
