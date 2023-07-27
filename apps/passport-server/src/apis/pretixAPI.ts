@@ -83,7 +83,8 @@ export function getPretixConfig(): PretixConfig | null {
       zuEventOrganizersItemID: 151
     };
     logger(
-      "[ZUZALU PRETIX] read config: " + JSON.stringify(pretixConfig, null, 2)
+      "[ZUZALU PRETIX] read config: ",
+      JSON.stringify(pretixConfig, null, 2)
     );
     return pretixConfig;
   } catch (e) {

@@ -10,7 +10,10 @@ export async function getDevconnectPretixConfig(
     const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
       await fetchPretixConfiguration(dbClient)
     );
-    logger("[DEVCONNECT PRETIX] read config: " + JSON.stringify(pretixConfig));
+    logger(
+      "[DEVCONNECT PRETIX] read config: " +
+        JSON.stringify(pretixConfig, null, 2)
+    );
     return pretixConfig;
   } catch (e) {
     logger(`[INIT] error while querying pretix organizer configuration: ${e}`);

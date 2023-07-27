@@ -36,7 +36,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       // Fetch orders from paginated API
       let url = `${orgUrl}/events`;
       while (url != null) {
-        logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+        logger(`[DEVCONNECT PRETIX] Fetching events: ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
@@ -62,7 +62,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
-      logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+      logger(`[DEVCONNECT PRETIX] Fetching event: ${url}`);
       const res = await fetch(url, {
         headers: { Authorization: `Token ${token}` }
       });
@@ -86,7 +86,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/items/`;
       while (url != null) {
-        logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+        logger(`[DEVCONNECT PRETIX] Fetching items: ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
@@ -116,7 +116,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
-        logger(`[DEVCONNECT PRETIX] Fetching ${url}`);
+        logger(`[DEVCONNECT PRETIX] Fetching orders ${url}`);
         const res = await fetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
