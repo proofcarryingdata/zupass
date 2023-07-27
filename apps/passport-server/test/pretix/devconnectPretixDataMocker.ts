@@ -88,9 +88,9 @@ export class DevconnectPretixDataMocker {
       this.newPretixOrder(EMAIL_1, [
         [ITEM_1, EMAIL_1],
         [ITEM_1, EMAIL_2], // prioritize attendee email over purchaser email
-        [ITEM_1, EMAIL_2],
+        [ITEM_1, EMAIL_2], // duplicate ticket - this is ok
         [ITEM_1, EMAIL_3],
-        [ITEM_1, null], // fall back to purchaser if attendee email is null
+        [ITEM_1, null], // fall back to purchaser if attendee email is null. this is another duplicate ticket
         [ITEM_2, EMAIL_1], // this and others below should be ignored in EVENT_A because ITEM_2 is not active
         [ITEM_2, EMAIL_1],
         [ITEM_2, EMAIL_2],
@@ -101,7 +101,7 @@ export class DevconnectPretixDataMocker {
       this.newPretixOrder(EMAIL_2, [
         [ITEM_2, EMAIL_4],
         [ITEM_2, null],
-        [ITEM_1, EMAIL_1] // should show up under EMAIL_1
+        [ITEM_1, EMAIL_1] // another duplicate ticket
       ])
     ];
 

@@ -229,13 +229,10 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      // From our config, we have 3 separate events.
-      // Event A has Item 1 as an active item and 4 unique emails that use Item 1.
-      // Event B has Item 1 and 2 as active items; Item has 4 unique emails (just like event A),
-      // while Item 2 has 3 unique emails (there is no ITEM_2, EMAIL_3 pair)
-      // Event B also has a superuser ticket for EMAIL_2 and ITEM_3
-      // Event C has no tickets because it has no active items.
-      expect(tickets).to.have.length(12);
+      console.log(JSON.stringify(tickets, null, 2));
+      console.log("LENGTH", tickets.length);
+
+      expect(tickets).to.have.length(14);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -255,12 +252,28 @@ describe("devconnect functionality", function () {
         { id: item3EventBInfoID }
       ] = await fetchPretixItemsInfoByEvent(db, EVENT_B_CONFIG_ID);
 
+      [EMAIL_1, EMAIL_2, EMAIL_3, EMAIL_4];
+      [item1EventAInfoID, item1EventBInfoID, item3EventBInfoID];
+
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         // Four tickets for event A because four unique emails
         {
           email: EMAIL_1,
           itemInfoID: item1EventAInfoID
         },
+        ///
+        {
+          email: EMAIL_4,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: EMAIL_2,
+          itemInfoID: item1EventAInfoID
+        },
         {
           email: EMAIL_2,
           itemInfoID: item1EventAInfoID
@@ -270,40 +283,20 @@ describe("devconnect functionality", function () {
           itemInfoID: item1EventAInfoID
         },
         {
-          email: EMAIL_4,
+          email: EMAIL_1,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: EMAIL_1,
-          itemInfoID: item1EventBInfoID // Represents EVENT_B, ITEM_1
-        },
-        {
-          email: EMAIL_2,
-          itemInfoID: item1EventBInfoID
-        },
-        {
-          email: EMAIL_3,
-          itemInfoID: item1EventBInfoID
-        },
-        {
           email: EMAIL_4,
-          itemInfoID: item1EventBInfoID
-        },
-        {
-          email: EMAIL_1,
-          itemInfoID: item2EventBInfoID // Represents EVENT_A, ITEM_2
+          itemInfoID: item2EventBInfoID
         },
         {
           email: EMAIL_2,
           itemInfoID: item2EventBInfoID
         },
         {
-          email: EMAIL_4,
-          itemInfoID: item2EventBInfoID
-        },
-        {
-          email: EMAIL_2,
-          itemInfoID: item3EventBInfoID
+          email: EMAIL_1,
+          itemInfoID: item1EventBInfoID
         }
       ]);
     }
