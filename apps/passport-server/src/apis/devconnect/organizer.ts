@@ -44,7 +44,7 @@ function pretixConfigDBToDevconnectPretixConfig(
 
 // In-memory representation of Pretix event configuration
 export interface DevconnectPretixEventConfig {
-  id: number;
+  id: string;
   eventID: string;
   activeItemIDs: string[]; // relevant item IDs that correspond to ticket products
   superuserItemIds: string[]; // subset of activeItemIDs representing products only superusers have
@@ -52,7 +52,7 @@ export interface DevconnectPretixEventConfig {
 
 // In-memory representation of Pretix organizer configuration
 export interface DevconnectPretixOrganizerConfig {
-  id: number;
+  id: string;
   orgURL: string;
   token: string;
   events: DevconnectPretixEventConfig[];

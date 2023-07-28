@@ -17,7 +17,7 @@ export const RSAPCDTypeName = "rsa-ticket-pcd";
 export interface ITicketData {
   timestamp?: number;
   eventName?: string;
-  eventConfigId?: number;
+  eventConfigId?: string;
   ticketName?: string;
   attendeeName?: string;
   attendeeEmail?: string;

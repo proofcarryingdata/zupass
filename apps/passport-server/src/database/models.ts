@@ -22,14 +22,14 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
 export interface DevconnectPretixTicket {
   email: string;
   full_name: string;
-  devconnect_pretix_items_info_id: number;
+  devconnect_pretix_items_info_id: string;
   is_deleted: boolean;
   is_consumed: boolean;
   position_id: string;
 }
 
 export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
-  id: number;
+  id: string;
 }
 
 // DevconnectPretixTicket with all relevant fields for ticket PCD included,
@@ -38,21 +38,21 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   extends DevconnectPretixTicketDB {
   event_name: string;
   item_name: string;
-  pretix_events_config_id: number;
+  pretix_events_config_id: string;
 }
 
 export interface DevconnectSuperuser {
-  ticket_id: number;
+  ticket_id: string;
   email: string;
   full_name: string;
   is_deleted: boolean;
   is_consumed: boolean;
-  devconnect_pretix_items_info_id: number;
-  devconnect_pretix_events_info_id: number;
+  devconnect_pretix_items_info_id: string;
+  devconnect_pretix_events_info_id: string;
   item_name: string;
   item_id: string;
-  pretix_events_config_id: number;
-  pretix_organizers_config_id: number;
+  pretix_events_config_id: string;
+  pretix_organizers_config_id: string;
   event_name: string;
   event_id: string;
 }
@@ -66,7 +66,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 }
 
 export interface LoggedinPCDPassUser extends CommitmentRow {
-  superuserEventConfigIds: number[];
+  superuserEventConfigIds: string[];
 }
 
 export enum ZuzaluUserRole {
@@ -96,36 +96,36 @@ export interface HistoricSemaphoreGroup {
 
 // Database representation of Pretix event configuration
 export interface PretixEventsConfig {
-  id: number;
+  id: string;
   event_id: string;
-  pretix_organizers_config_id: number;
+  pretix_organizers_config_id: string;
   active_item_ids: string[]; // relevant item IDs that correspond to ticket products
   superuser_item_ids: string[];
 }
 
 // Database representation of Pretix organizer configuration
 export interface PretixOrganizersConfig {
-  id: number;
+  id: string;
   organizer_url: string;
   token: string;
   events: PretixEventsConfig[];
 }
 
 export interface PretixOrganizerRow {
-  id: number;
+  id: string;
   organizer_url: string;
   token: string;
 }
 
 export interface PretixEventInfo {
-  id: number;
-  pretix_events_config_id: number;
+  id: string;
+  pretix_events_config_id: string;
   event_name: string;
 }
 
 export interface PretixItemInfo {
-  id: number;
+  id: string;
   item_id: string;
-  devconnect_pretix_events_info_id: number;
+  devconnect_pretix_events_info_id: string;
   item_name: string;
 }

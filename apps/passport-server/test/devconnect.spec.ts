@@ -20,6 +20,7 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import {
   insertPretixEventConfig,
@@ -49,10 +50,10 @@ describe("devconnect functionality", function () {
 
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let db: Pool;
-  let organizerConfigId: number;
-  let eventAConfigId: number;
-  let eventBConfigId: number;
-  let eventCConfigId: number;
+  let organizerConfigId: string;
+  let eventAConfigId: string;
+  let eventBConfigId: string;
+  let eventCConfigId: string;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -111,24 +112,24 @@ describe("devconnect functionality", function () {
     expect(devconnectPretixAPIConfigFromDB).to.deep.equal({
       organizers: [
         {
-          id: 1,
+          id: organizerConfigId,
           orgURL: "organizer-url",
           token: "token",
           events: [
             {
-              id: 1,
+              id: eventAConfigId,
               eventID: "event-a",
               superuserItemIds: ["10002"],
               activeItemIDs: ["10001", "10002"]
             },
             {
-              id: 2,
+              id: eventBConfigId,
               eventID: "event-b",
               activeItemIDs: ["10003"],
               superuserItemIds: ["10003"]
             },
             {
-              id: 3,
+              id: eventCConfigId,
               eventID: "event-c",
               activeItemIDs: [],
               superuserItemIds: []
@@ -171,13 +172,21 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
+      const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+      if (!eventAItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
       const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
-        await fetchPretixItemsInfoByEvent(db, eventAConfigId);
+        await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
 
       // Get item info IDs for event B
+      const eventBItemInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventBItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
       const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
         db,
-        eventBConfigId
+        eventBItemInfo.id
       );
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
@@ -270,14 +279,12 @@ describe("devconnect functionality", function () {
     }));
 
     // Get item info IDs for event A
+    const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+    if (!eventAItemInfo) {
+      throw new Error("expected to be able to fetch corresponding item info");
+    }
     const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
-      await fetchPretixItemsInfoByEvent(db, eventAConfigId);
-
-    // Get item info IDs for event B
-    const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
-      db,
-      eventBConfigId
-    );
+      await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       {

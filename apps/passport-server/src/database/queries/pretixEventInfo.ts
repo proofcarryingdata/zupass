@@ -4,7 +4,7 @@ import { sqlQuery } from "../sqlQuery";
 
 export async function fetchPretixEventInfo(
   client: Pool,
-  eventConfigID: number
+  eventConfigID: string
 ): Promise<PretixEventInfo | null> {
   const result = await sqlQuery(
     client,
@@ -21,8 +21,8 @@ export async function fetchPretixEventInfo(
 export async function insertPretixEventsInfo(
   client: Pool,
   eventName: string,
-  eventsConfigID: number
-): Promise<number> {
+  eventsConfigID: string
+): Promise<string> {
   const result = await sqlQuery(
     client,
     `\
@@ -36,7 +36,7 @@ export async function insertPretixEventsInfo(
 
 export async function updatePretixEventsInfo(
   client: Pool,
-  id: number,
+  id: string,
   eventName: string
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(

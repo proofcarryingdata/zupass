@@ -98,7 +98,7 @@ export class IssuanceService {
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
-        parseInt(ticketData.ticketId ?? "", 10)
+        ticketData.ticketId ?? ""
       );
 
       if (successfullyConsumed) {
@@ -163,7 +163,7 @@ export class IssuanceService {
 
       const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
         this.context.dbPool,
-        parseInt(ticketId ?? "", 10)
+        ticketId
       );
 
       if (!ticketInDb) {
