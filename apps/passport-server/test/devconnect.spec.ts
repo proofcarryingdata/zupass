@@ -230,7 +230,7 @@ describe("devconnect functionality", function () {
   step("removing an order causes soft deletion of ticket", async function () {
     const ordersForEventA = devconnectPretixMocker
       .getMockData()
-      .ordersByEventId.get(EVENT_A_ID)!;
+      .ordersByEventID.get(EVENT_A_ID)!;
 
     const lastOrder = ordersForEventA.find((o) => o.email === EMAIL_2)!;
 
