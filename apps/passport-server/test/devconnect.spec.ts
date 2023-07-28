@@ -86,7 +86,7 @@ describe("devconnect functionality", function () {
     eventBConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [ITEM_1 + "", ITEM_2 + "", ITEM_3 + ""],
+      [ITEM_3 + ""],
       [ITEM_3 + ""],
       EVENT_B_ID
     );
@@ -149,7 +149,7 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      expect(tickets).to.have.length(15);
+      expect(tickets).to.have.length(14);
 
       const ticketsWithEmailEventAndItems = tickets.map((o) => ({
         email: o.email,
@@ -222,10 +222,6 @@ describe("devconnect functionality", function () {
         {
           email: EMAIL_1,
           itemInfoID: item1EventAInfoID
-        },
-        {
-          email: EMAIL_1,
-          itemInfoID: item1EventBInfoID
         }
       ]);
     }
@@ -250,7 +246,7 @@ describe("devconnect functionality", function () {
     );
 
     // Because two tickets are removed - see comment above
-    expect(tickets).to.have.length(12);
+    expect(tickets).to.have.length(11);
 
     const ticketsWithEmailEventAndItems = tickets.map((o) => ({
       email: o.email,
@@ -311,10 +307,6 @@ describe("devconnect functionality", function () {
       {
         email: EMAIL_4,
         itemInfoID: item2EventAInfoID
-      },
-      {
-        email: EMAIL_1,
-        itemInfoID: item1EventBInfoID
       }
     ]);
   });
@@ -364,7 +356,7 @@ describe("devconnect functionality", function () {
       // important to note users are issued tickets pcd tickets even for
       // tickets that no longer exist, so they can be displayed
       // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(7);
+      expect(responseBody.pcds.length).to.eq(6);
 
       const ticketPCD = responseBody.pcds[0];
 

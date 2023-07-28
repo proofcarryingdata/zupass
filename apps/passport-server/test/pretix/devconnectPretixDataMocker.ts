@@ -92,9 +92,7 @@ export class DevconnectPretixDataMocker {
       ])
     ];
 
-    const eventBOrders: DevconnectPretixOrder[] = [
-      this.newPretixOrder(EMAIL_1, [[ITEM_1, EMAIL_1]])
-    ];
+    const eventBOrders: DevconnectPretixOrder[] = [];
     const eventCOrders: DevconnectPretixOrder[] = [];
 
     const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();

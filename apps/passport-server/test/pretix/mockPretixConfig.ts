@@ -41,11 +41,7 @@ export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
         {
           id: EVENT_B_CONFIG_ID,
           eventID: EVENT_B_ID,
-          activeItemIDs: [
-            ITEM_1.toString(),
-            ITEM_2.toString(),
-            ITEM_3.toString()
-          ],
+          activeItemIDs: [ITEM_3.toString()],
           superuserItemIds: [ITEM_3.toString()]
         },
         {
