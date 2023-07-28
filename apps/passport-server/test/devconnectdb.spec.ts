@@ -54,7 +54,7 @@ interface ITestItem {
   _eventIdx: number;
 }
 
-describe.only("database reads and writes for devconnect ticket features", function () {
+describe("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
 
   let db: Pool;
