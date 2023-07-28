@@ -47,7 +47,7 @@ interface ITestEvent {
 
 interface ITestItem {
   dbId: string;
-  dbEventId: string;
+  dbEventInfoId: string;
   itemId: string;
   itemName: string;
   isSuperUser: boolean;
@@ -115,7 +115,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
   const testItems: ITestItem[] = [
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "pg-ga",
       itemName: "ProgCrypto GA",
       isSuperUser: false,
@@ -123,7 +123,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     },
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "pg-guest",
       itemName: "ProgCrypto Guest",
       isSuperUser: false,
@@ -131,7 +131,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     },
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "pg-builder",
       itemName: "ProgCrypto Builder",
       isSuperUser: false,
@@ -139,7 +139,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     },
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "pg-organizer",
       itemName: "ProgCrypto Organizer",
       isSuperUser: true,
@@ -147,7 +147,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     },
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "tp-attendee",
       itemName: "ThirdParty Attendee",
       isSuperUser: false,
@@ -155,7 +155,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     },
     {
       dbId: "",
-      dbEventId: "",
+      dbEventInfoId: "",
       itemId: "tp-super",
       itemName: "ThirdParty Super",
       isSuperUser: true,
@@ -198,7 +198,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
     }
   ];
 
-  step("should be able to insert organizers", async function () {
+  step("should be able to insert organizer configs", async function () {
     for (const organizer of testOrganizers) {
       const id = await insertPretixOrganizerConfig(
         db,
@@ -213,31 +213,32 @@ describe.only("database reads and writes for devconnect ticket features", functi
   });
 
   step(
-    "should be able to insert corresponding event configs",
+    "should be able to insert corresponding event_config",
     async function () {
       for (let i = 0; i < testEvents.length; i++) {
         const event = testEvents[i];
+        const organizer = testOrganizers[event._organizerIdx];
+
+        const items = testItems.filter((item) => item._eventIdx === i);
+        const superItems = items.filter((item) => item.isSuperUser);
 
         const eventConfigId = await insertPretixEventConfig(
           db,
-          testOrganizers[event._organizerIdx].dbId,
-          testItems
-            .filter((item) => item._eventIdx === i)
-            .map((item) => item.itemId),
-          testItems
-            .filter((item) => item._eventIdx === i)
-            .filter((item) => item.isSuperUser)
-            .map((item) => item.itemId),
+          organizer.dbId,
+          items.map((item) => item.itemId),
+          superItems.map((item) => item.itemId),
           event.eventId
         );
 
         event.dbEventConfigId = eventConfigId;
+        event.dbOrganizerId = organizer.dbId;
+
         expect(typeof event.dbEventConfigId).to.eq("string");
       }
     }
   );
 
-  step("should be able to insert pretix event information", async function () {
+  step("should be able to insert pretix event_info", async function () {
     for (let i = 0; i < testEvents.length; i++) {
       const event = testEvents[i];
 
@@ -272,7 +273,7 @@ describe.only("database reads and writes for devconnect ticket features", functi
         itemInfo.itemName
       );
 
-      itemInfo.dbEventId = event.dbEventConfigId;
+      itemInfo.dbEventInfoId = event.dbEventInfoId;
       itemInfo.dbId = itemInfoId;
     }
   });
@@ -293,16 +294,16 @@ describe.only("database reads and writes for devconnect ticket features", functi
         testEvents
           .filter((e) => e.dbOrganizerId === organizer.dbId)
           .map((e) => ({
-            id: e.dbOrganizerId,
+            id: e.dbEventConfigId,
             pretix_organizers_config_id: organizer.dbId,
             active_item_ids: testItems
-              .filter((item) => item.dbEventId === e.dbEventConfigId)
+              .filter((item) => item.dbEventInfoId === e.dbEventInfoId)
               .map((item) => item.itemId),
             event_id: e.eventId,
             superuser_item_ids: testItems
               .filter(
                 (item) =>
-                  item.dbEventId === e.dbEventConfigId && item.isSuperUser
+                  item.dbEventInfoId === e.dbEventInfoId && item.isSuperUser
               )
               .map((item) => item.itemId)
           }))
