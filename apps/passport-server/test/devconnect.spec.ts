@@ -138,30 +138,43 @@ describe("devconnect functionality", function () {
   let devconnectPretixMocker: DevconnectPretixDataMocker;
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let db: Pool;
+  let organizerConfigId: number;
+  let eventAConfigId: number;
+  let eventBConfigId: number;
+  let eventCConfigId: number;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
     db = await getDB();
 
-    // TODO: change these into functions with their own module
-    await sqlQuery(
+    organizerConfigId = await insertPretixOrganizerConfig(
       db,
-      `
-    insert into pretix_organizers_config (organizer_url, token)
-    values ('organizer-url', 'token')
-    `
+      "organizer-url",
+      "token"
     );
-    await sqlQuery(
+
+    eventAConfigId = await insertPretixEventConfig(
       db,
-      `
-    insert into pretix_events_config 
-    (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
-    values
-      (1, $1, '{ ${ITEM_1}, ${ITEM_2} }', '{ ${ITEM_2} }'),
-      (1, $2, '{ ${ITEM_1}, ${ITEM_2}, ${ITEM_3} }', '{${ITEM_3}}'),
-      (1, $3, '{}', '{}')
-    `,
-      [EVENT_A_ID, EVENT_B_ID, EVENT_C_ID]
+      organizerConfigId,
+      [ITEM_1 + "", ITEM_2 + ""],
+      [ITEM_2 + ""],
+      EVENT_A_ID
+    );
+
+    eventBConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [ITEM_1 + "", ITEM_2 + "", ITEM_3 + ""],
+      [ITEM_3 + ""],
+      EVENT_B_ID
+    );
+
+    eventCConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [],
+      [],
+      EVENT_C_ID
     );
 
     devconnectPretixMocker = new DevconnectPretixDataMocker();
