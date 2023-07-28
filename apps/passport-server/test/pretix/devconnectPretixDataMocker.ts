@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  DevconnectPretixEvent,
   DevconnectPretixItem,
   DevconnectPretixOrder,
   DevconnectPretixPosition
@@ -20,9 +21,19 @@ import {
 } from "./mockPretixConfig";
 
 export interface IMockDevconnectPretixData {
+  // aggregate data for simpler querying
   ordersByEventID: Map<string, DevconnectPretixOrder[]>;
   eventNameByEventID: Map<string, string>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
+
+  // specific data for easier testing
+  eventAItem1: DevconnectPretixItem;
+  eventAItem2: DevconnectPretixItem;
+  eventBItem3: DevconnectPretixItem;
+
+  eventA: DevconnectPretixEvent;
+  eventB: DevconnectPretixEvent;
+  eventC: DevconnectPretixEvent;
 }
 
 export class DevconnectPretixDataMocker {
@@ -69,6 +80,10 @@ export class DevconnectPretixDataMocker {
   }
 
   private newMockData(): IMockDevconnectPretixData {
+    const eventA = this.newEvent("Event A", "event-a");
+    const eventB = this.newEvent("Event B", "event-b");
+    const eventC = this.newEvent("Event C", "event-c");
+
     const eventAItem1 = this.newItem("item-1");
     const eventAItem2 = this.newItem("item-2");
     const eventBItem3 = this.newItem("item-3");
@@ -115,7 +130,20 @@ export class DevconnectPretixDataMocker {
     return {
       ordersByEventID,
       eventNameByEventID,
-      itemsByEventID
+      itemsByEventID,
+      eventAItem1,
+      eventAItem2,
+      eventBItem3,
+      eventA,
+      eventB,
+      eventC
+    };
+  }
+
+  private newEvent(name: string, slug: string): DevconnectPretixEvent {
+    return {
+      name: { en: name },
+      slug
     };
   }
 
