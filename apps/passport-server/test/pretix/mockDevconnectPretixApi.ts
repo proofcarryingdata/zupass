@@ -4,57 +4,12 @@ import {
   DevconnectPretixOrder,
   IDevconnectPretixAPI
 } from "../../src/apis/devconnect/devconnectPretixAPI";
-import { DevconnectPretixConfig } from "../../src/apis/devconnect/organizer";
 import { logger } from "../../src/util/logger";
 import {
   DevconnectPretixDataMocker,
-  EVENT_A_CONFIG_ID,
-  EVENT_A_ID,
-  EVENT_B_CONFIG_ID,
-  EVENT_B_ID,
-  EVENT_C_CONFIG_ID,
-  EVENT_C_ID,
-  IMockDevconnectPretixData,
-  ITEM_1,
-  ITEM_2,
-  ITEM_3,
-  ORG_CONFIG_ID
+  IMockDevconnectPretixData
 } from "./devconnectPretixDataMocker";
-
-// TODO: move to a separate module, e.g. devconnectPretixApiConfigMockData
-export const MOCK_PRETIX_API_CONFIG: DevconnectPretixConfig = {
-  organizers: [
-    {
-      id: ORG_CONFIG_ID,
-      orgURL: "organizer-url",
-      token: "token",
-      events: [
-        {
-          id: EVENT_A_CONFIG_ID,
-          eventID: EVENT_A_ID,
-          activeItemIDs: [ITEM_1.toString(), ITEM_2.toString()],
-          superuserItemIds: [ITEM_2.toString()]
-        },
-        {
-          id: EVENT_B_CONFIG_ID,
-          eventID: EVENT_B_ID,
-          activeItemIDs: [
-            ITEM_1.toString(),
-            ITEM_2.toString(),
-            ITEM_3.toString()
-          ],
-          superuserItemIds: [ITEM_3.toString()]
-        },
-        {
-          id: EVENT_C_CONFIG_ID,
-          eventID: EVENT_C_ID,
-          activeItemIDs: [],
-          superuserItemIds: []
-        }
-      ]
-    }
-  ]
-};
+import { ITEM_1, ITEM_2, ITEM_3 } from "./mockPretixConfig";
 
 export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
   const mocker = new DevconnectPretixDataMocker();

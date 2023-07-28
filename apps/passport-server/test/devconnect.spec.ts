@@ -27,8 +27,9 @@ import {
   requestIssuedPCDs,
   requestServerPublicKey
 } from "./issuance/issuance";
+import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
+import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import {
-  DevconnectPretixDataMocker,
   EMAIL_1,
   EMAIL_2,
   EMAIL_3,
@@ -40,12 +41,9 @@ import {
   EVENT_C_ID,
   ITEM_1,
   ITEM_2,
-  ITEM_3
-} from "./pretix/devconnectPretixDataMocker";
-import {
-  getDevconnectMockPretixAPI,
+  ITEM_3,
   MOCK_PRETIX_API_CONFIG
-} from "./pretix/mockDevconnectPretixApi";
+} from "./pretix/mockPretixConfig";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
