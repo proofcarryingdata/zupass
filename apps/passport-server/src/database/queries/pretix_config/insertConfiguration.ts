@@ -6,7 +6,7 @@ export async function insertPretixOrganizerConfig(
   db: Pool,
   organizerUrl: string,
   token: string
-): Promise<number> {
+): Promise<string> {
   const id = await sqlQuery(
     db,
     `insert into pretix_organizers_config(organizer_url, token) ` +
@@ -27,11 +27,11 @@ export async function getAllOrganizers(
 
 export async function insertPretixEventConfig(
   db: Pool,
-  organizerConfigId: number,
+  organizerConfigId: string,
   activeItemIds: string[],
   superuserItemIds: string[],
   eventId: string
-): Promise<number> {
+): Promise<string> {
   const activeItemIdsSet = new Set(activeItemIds);
   superuserItemIds.forEach((superId) => {
     if (!activeItemIdsSet.has(superId)) {

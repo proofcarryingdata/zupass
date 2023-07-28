@@ -21,9 +21,9 @@ export async function fetchPretixItemsInfoByEvent(
 export async function insertPretixItemsInfo(
   client: Pool,
   item_id: string,
-  eventInfoId: number,
+  eventInfoId: string,
   item_name: string
-): Promise<number> {
+): Promise<string> {
   const result = await sqlQuery(
     client,
     `\

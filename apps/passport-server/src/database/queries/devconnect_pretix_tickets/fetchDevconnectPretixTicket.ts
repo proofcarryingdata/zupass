@@ -28,7 +28,7 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
  */
 export async function fetchDevconnectPretixTicketsByEvent(
   client: Pool,
-  eventConfigID: number
+  eventConfigID: string
 ): Promise<Array<DevconnectPretixTicketDB>> {
   const result = await sqlQuery(
     client,
@@ -48,7 +48,7 @@ export async function fetchDevconnectPretixTicketsByEvent(
  */
 export async function fetchDevconnectPretixTicketByTicketId(
   client: Pool,
-  ticketId: number
+  ticketId: string
 ): Promise<DevconnectPretixTicketDB | undefined> {
   const result = await sqlQuery(
     client,
@@ -99,7 +99,7 @@ where i.item_id = ANY(ec.superuser_item_ids);
 
 export async function fetchDevconnectSuperusersForEvent(
   client: Pool,
-  eventConfigID: number
+  eventConfigID: string
 ): Promise<Array<DevconnectSuperuser>> {
   const result = await sqlQuery(
     client,
