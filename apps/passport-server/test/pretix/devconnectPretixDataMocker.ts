@@ -7,7 +7,6 @@ import {
   DevconnectPretixPosition
 } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
-import { EMAIL_1, EMAIL_2, EMAIL_3, EMAIL_4 } from "./mockPretixConfig";
 
 export interface IMockDevconnectPretixData {
   // aggregate data for simpler querying
@@ -23,6 +22,11 @@ export interface IMockDevconnectPretixData {
   eventA: DevconnectPretixEvent;
   eventB: DevconnectPretixEvent;
   eventC: DevconnectPretixEvent;
+
+  EMAIL_1: string;
+  EMAIL_2: string;
+  EMAIL_3: string;
+  EMAIL_4: string;
 }
 
 export class DevconnectPretixDataMocker {
@@ -33,7 +37,7 @@ export class DevconnectPretixDataMocker {
     this.mockData = this.newMockData();
   }
 
-  public getMockData(): IMockDevconnectPretixData {
+  public get(): IMockDevconnectPretixData {
     logger("[MOCK]", JSON.stringify(this.mockData, null, 2));
     return this.mockData;
   }
@@ -69,6 +73,11 @@ export class DevconnectPretixDataMocker {
   }
 
   private newMockData(): IMockDevconnectPretixData {
+    const EMAIL_1 = "email-1@test.com";
+    const EMAIL_2 = "email-2@test.com";
+    const EMAIL_3 = "email-3@test.com";
+    const EMAIL_4 = "email-4@test.com";
+
     const eventA = this.newEvent("Event A", "event-a");
     const eventB = this.newEvent("Event B", "event-b");
     const eventC = this.newEvent("Event C", "event-c");
@@ -125,7 +134,11 @@ export class DevconnectPretixDataMocker {
       eventBItem3,
       eventA,
       eventB,
-      eventC
+      eventC,
+      EMAIL_1,
+      EMAIL_2,
+      EMAIL_3,
+      EMAIL_4
     };
   }
 

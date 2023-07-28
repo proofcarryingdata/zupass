@@ -12,7 +12,7 @@ import {
 
 export function newMockDevconnectPretixAPI(): IDevconnectPretixAPI {
   const mocker = new DevconnectPretixDataMocker();
-  const mockData = mocker.getMockData();
+  const mockData = mocker.get();
   logger("[MOCK] devconnect pretix data", mockData);
   return getDevconnectMockPretixAPI(mockData);
 }
