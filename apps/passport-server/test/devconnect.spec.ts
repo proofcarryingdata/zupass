@@ -18,6 +18,7 @@ import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
+import { insertPretixOrganizerConfig } from "../src/database/queries/pretix_config/insertConfiguration";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
@@ -51,10 +52,12 @@ import { startTestingApp } from "./util/startTestingApplication";
 
 describe("devconnect configuration db tables", function () {
   let application: PCDPass;
+  let db: Pool;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
     application = await startTestingApp();
+    db = application.context.dbPool;
   });
 
   this.afterAll(async () => {
@@ -63,25 +66,19 @@ describe("devconnect configuration db tables", function () {
 
   step("test organizer config", async function () {
     // Insert organizer 1
-    await sqlQuery(
-      application.context.dbPool,
-      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token1')"
-    );
+    await insertPretixOrganizerConfig(db, "organizer-url-1", "token1");
+
     // Should fail on duplicate (organizer_url, token)
     try {
-      await sqlQuery(
-        application.context.dbPool,
-        "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-1', 'token2') returning id"
-      );
+      await insertPretixOrganizerConfig(db, "organizer-url-1", "token2");
+
       expect.fail();
     } catch (e) {
       // Should end up here
     }
     // Insert organizer 2
-    await sqlQuery(
-      application.context.dbPool,
-      "insert into pretix_organizers_config (organizer_url, token) values ('organizer-url-2', 'token2')"
-    );
+
+    await insertPretixOrganizerConfig(db, "organizer-url-2", "token2");
     expect(
       (
         await sqlQuery(
