@@ -37,7 +37,7 @@ interface ITestOrganizer {
 }
 
 interface ITestEvent {
-  dbId: string;
+  dbEventConfigId: string;
   dbEventInfoId: string;
   dbOrganizerId: string;
   eventId: string;
@@ -54,7 +54,7 @@ interface ITestItem {
   _eventIdx: number;
 }
 
-describe("database reads and writes for devconnect ticket features", function () {
+describe.only("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
 
   let db: Pool;
@@ -85,22 +85,9 @@ describe("database reads and writes for devconnect ticket features", function ()
     }
   ];
 
-  step("should be able to insert organizers", async function () {
-    for (const organizer of testOrganizers) {
-      const id = await insertPretixOrganizerConfig(
-        db,
-        organizer.organizerUrl,
-        organizer.token
-      );
-      organizer.dbId = id;
-    }
-    const allOrganizers = await getAllOrganizers(db);
-    expect(allOrganizers.length).to.eq(testOrganizers.length);
-  });
-
   const testEvents: ITestEvent[] = [
     {
-      dbId: "",
+      dbEventConfigId: "",
       dbEventInfoId: "",
       dbOrganizerId: "",
       eventId: "progcrypto",
@@ -108,7 +95,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _organizerIdx: 0
     },
     {
-      dbId: "",
+      dbEventConfigId: "",
       dbEventInfoId: "",
       dbOrganizerId: "",
       eventId: "aw",
@@ -116,7 +103,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _organizerIdx: 0
     },
     {
-      dbId: "",
+      dbEventConfigId: "",
       dbEventInfoId: "",
       dbOrganizerId: "",
       eventId: "third-party",
@@ -124,50 +111,6 @@ describe("database reads and writes for devconnect ticket features", function ()
       _organizerIdx: 1
     }
   ];
-
-  step(
-    "should be able to insert corresponding event configs",
-    async function () {
-      for (let i = 0; i < testEvents.length; i++) {
-        const event = testEvents[i];
-
-        const eventConfigId = await insertPretixEventConfig(
-          db,
-          testOrganizers[event._organizerIdx].dbId,
-          testItems
-            .filter((item) => item._eventIdx === i)
-            .map((item) => item.itemId),
-          testItems
-            .filter((item) => item._eventIdx === i)
-            .filter((item) => item.isSuperUser)
-            .map((item) => item.itemId),
-          event.eventId
-        );
-
-        event.dbId = eventConfigId;
-      }
-    }
-  );
-
-  step("should be able to insert pretix event information", async function () {
-    for (let i = 0; i < testEvents.length; i++) {
-      const event = testEvents[i];
-
-      const eventsInfoId = await insertPretixEventsInfo(
-        db,
-        event.eventName,
-        event.dbId
-      );
-
-      event.dbEventInfoId = eventsInfoId;
-
-      const eventsInfoFromDb = await fetchPretixEventInfo(db, eventsInfoId);
-      expect(eventsInfoFromDb?.event_name).to.eq(event.eventName);
-      expect(eventsInfoFromDb?.pretix_events_config_id).to.eq(
-        event.dbEventInfoId
-      );
-    }
-  });
 
   const testItems: ITestItem[] = [
     {
@@ -180,8 +123,8 @@ describe("database reads and writes for devconnect ticket features", function ()
     },
     {
       dbId: "",
-      dbEventId: "pg-guest",
-      itemId: "",
+      dbEventId: "",
+      itemId: "pg-guest",
       itemName: "ProgCrypto Guest",
       isSuperUser: false,
       _eventIdx: 0
@@ -220,27 +163,11 @@ describe("database reads and writes for devconnect ticket features", function ()
     }
   ];
 
-  step("should be able to insert pretix item information", async function () {
-    for (const itemInfo of testItems) {
-      const event = testEvents[itemInfo._eventIdx];
-
-      const itemInfoId = await insertPretixItemsInfo(
-        db,
-        itemInfo.itemId,
-        event.dbId,
-        itemInfo.itemName
-      );
-
-      itemInfo.dbEventId = event.dbId;
-      itemInfo.dbId = itemInfoId;
-    }
-  });
-
   const testTickets: DevconnectPretixTicket[] = [
     {
       full_name: "UserFirst UserLast",
       email: "user-one@test.com",
-      devconnect_pretix_items_info_id: 1,
+      devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1000"
@@ -248,7 +175,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     {
       full_name: "Super User1",
       email: "user-two@test.com",
-      devconnect_pretix_items_info_id: 4,
+      devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1001"
@@ -256,7 +183,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     {
       full_name: "ThirdParty Attendee",
       email: "thirdparty-attendee@test.com",
-      devconnect_pretix_items_info_id: 5,
+      devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1002"
@@ -264,40 +191,118 @@ describe("database reads and writes for devconnect ticket features", function ()
     {
       full_name: "ThirdParty SuperUser",
       email: "thirdparty-attendee@test.com",
-      devconnect_pretix_items_info_id: 6,
+      devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1003"
     }
   ];
 
+  step("should be able to insert organizers", async function () {
+    for (const organizer of testOrganizers) {
+      const id = await insertPretixOrganizerConfig(
+        db,
+        organizer.organizerUrl,
+        organizer.token
+      );
+      organizer.dbId = id;
+      expect(typeof id).to.eq("string");
+    }
+    const allOrganizers = await getAllOrganizers(db);
+    expect(allOrganizers.length).to.eq(testOrganizers.length);
+  });
+
+  step(
+    "should be able to insert corresponding event configs",
+    async function () {
+      for (let i = 0; i < testEvents.length; i++) {
+        const event = testEvents[i];
+
+        const eventConfigId = await insertPretixEventConfig(
+          db,
+          testOrganizers[event._organizerIdx].dbId,
+          testItems
+            .filter((item) => item._eventIdx === i)
+            .map((item) => item.itemId),
+          testItems
+            .filter((item) => item._eventIdx === i)
+            .filter((item) => item.isSuperUser)
+            .map((item) => item.itemId),
+          event.eventId
+        );
+
+        event.dbEventConfigId = eventConfigId;
+        expect(typeof event.dbEventConfigId).to.eq("string");
+      }
+    }
+  );
+
+  step("should be able to insert pretix event information", async function () {
+    for (let i = 0; i < testEvents.length; i++) {
+      const event = testEvents[i];
+
+      const dbEventInfoId = await insertPretixEventsInfo(
+        db,
+        event.eventName,
+        event.dbEventConfigId
+      );
+
+      event.dbEventInfoId = dbEventInfoId;
+
+      const eventInfoFromDb = await fetchPretixEventInfo(
+        db,
+        event.dbEventConfigId
+      );
+      expect(eventInfoFromDb?.event_name).to.eq(event.eventName);
+      expect(eventInfoFromDb?.pretix_events_config_id).to.eq(
+        event.dbEventConfigId
+      );
+      expect(eventInfoFromDb?.id).to.eq(dbEventInfoId);
+    }
+  });
+
+  step("should be able to insert pretix item information", async function () {
+    for (const itemInfo of testItems) {
+      const event = testEvents[itemInfo._eventIdx];
+
+      const itemInfoId = await insertPretixItemsInfo(
+        db,
+        itemInfo.itemId,
+        event.dbEventInfoId,
+        itemInfo.itemName
+      );
+
+      itemInfo.dbEventId = event.dbEventConfigId;
+      itemInfo.dbId = itemInfoId;
+    }
+  });
+
   step("should be able to get pretix configuration", async function () {
     const configs = await fetchPretixConfiguration(db);
     expect(configs.length).to.eq(testOrganizers.length);
 
     for (const organizer of testOrganizers) {
-      const inDb = configs.find((c) => c.id === organizer.expectedInternalId);
+      const inDb = configs.find((c) => c.id === organizer.dbId);
       if (!inDb) {
         throw new Error("expected a corresponding config in the database");
       }
-      expect(inDb.id).to.eq(organizer.expectedInternalId);
+      expect(inDb.id).to.eq(organizer.dbId);
       expect(inDb.token).to.eq(organizer.token);
       expect(inDb.organizer_url).to.eq(organizer.organizerUrl);
       expect(inDb.events).to.deep.eq(
         testEvents
-          .filter((e) => e.organizerInternalId === organizer.expectedInternalId)
+          .filter((e) => e.dbOrganizerId === organizer.dbId)
           .map((e) => ({
-            id: e.expectedInternalId,
-            pretix_organizers_config_id: organizer.expectedInternalId,
+            id: e.dbOrganizerId,
+            pretix_organizers_config_id: organizer.dbId,
             active_item_ids: testItems
-              .filter((item) => item.internalEventId === e.expectedInternalId)
+              .filter((item) => item.dbEventId === e.dbEventConfigId)
               .map((item) => item.itemId),
             event_id: e.eventId,
             superuser_item_ids: testItems
               .filter(
                 (item) =>
-                  item.internalEventId === e.expectedInternalId &&
-                  item.isSuperUser
+                  item.dbEventId === e.dbEventConfigId && item.isSuperUser
               )
               .map((item) => item.itemId)
           }))
@@ -370,7 +375,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   step("fetching tickets by event should work", async function () {
     const fetchedTickets = await fetchDevconnectPretixTicketsByEvent(
       db,
-      testEvents[0].expectedInternalId
+      testEvents[0].dbEventConfigId
     );
 
     expect(fetchedTickets.length).to.eq(2);
@@ -397,7 +402,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     async function () {
       const progCryptoSuperUsers = await fetchDevconnectSuperusersForEvent(
         db,
-        testEvents[0].expectedInternalId
+        testEvents[0].dbEventConfigId
       );
       expect(progCryptoSuperUsers.length).to.eq(1);
       expect(progCryptoSuperUsers[0].email).to.eq(testTickets[1].email);
