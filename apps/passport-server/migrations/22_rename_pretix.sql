@@ -60,5 +60,3 @@ alter table pretix_events_config add column pretix_organizers_config_id uuid;
 alter table pretix_events_config 
 add constraint pretix_events_config_pretix_organizers_config_id_fkey 
 foreign key (pretix_organizers_config_id) references pretix_organizers_config (id);
-
-
