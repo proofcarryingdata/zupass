@@ -36,7 +36,7 @@ export async function insertPretixEventsInfo(
 
 export async function updatePretixEventsInfo(
   client: Pool,
-  id: number,
+  id: string,
   eventName: string
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(

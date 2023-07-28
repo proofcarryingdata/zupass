@@ -49,10 +49,10 @@ describe("devconnect functionality", function () {
 
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let db: Pool;
-  let organizerConfigId: number;
-  let eventAConfigId: number;
-  let eventBConfigId: number;
-  let eventCConfigId: number;
+  let organizerConfigId: string;
+  let eventAConfigId: string;
+  let eventBConfigId: string;
+  let eventCConfigId: string;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -111,24 +111,24 @@ describe("devconnect functionality", function () {
     expect(devconnectPretixAPIConfigFromDB).to.deep.equal({
       organizers: [
         {
-          id: 1,
+          id: organizerConfigId,
           orgURL: "organizer-url",
           token: "token",
           events: [
             {
-              id: 1,
+              id: eventAConfigId,
               eventID: "event-a",
               superuserItemIds: ["10002"],
               activeItemIDs: ["10001", "10002"]
             },
             {
-              id: 2,
+              id: eventBConfigId,
               eventID: "event-b",
               activeItemIDs: ["10003"],
               superuserItemIds: ["10003"]
             },
             {
-              id: 3,
+              id: eventCConfigId,
               eventID: "event-c",
               activeItemIDs: [],
               superuserItemIds: []

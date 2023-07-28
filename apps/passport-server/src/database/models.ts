@@ -66,7 +66,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 }
 
 export interface LoggedinPCDPassUser extends CommitmentRow {
-  superuserEventConfigIds: number[];
+  superuserEventConfigIds: string[];
 }
 
 export enum ZuzaluUserRole {
@@ -96,7 +96,7 @@ export interface HistoricSemaphoreGroup {
 
 // Database representation of Pretix event configuration
 export interface PretixEventsConfig {
-  id: number;
+  id: string;
   event_id: string;
   pretix_organizers_config_id: string;
   active_item_ids: string[]; // relevant item IDs that correspond to ticket products
@@ -105,26 +105,26 @@ export interface PretixEventsConfig {
 
 // Database representation of Pretix organizer configuration
 export interface PretixOrganizersConfig {
-  id: number;
+  id: string;
   organizer_url: string;
   token: string;
   events: PretixEventsConfig[];
 }
 
 export interface PretixOrganizerRow {
-  id: number;
+  id: string;
   organizer_url: string;
   token: string;
 }
 
 export interface PretixEventInfo {
-  id: number;
+  id: string;
   pretix_events_config_id: string;
   event_name: string;
 }
 
 export interface PretixItemInfo {
-  id: number;
+  id: string;
   item_id: string;
   devconnect_pretix_events_info_id: string;
   item_name: string;
