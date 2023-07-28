@@ -52,39 +52,5 @@ export async function insertPretixEventConfig(
       `{${superuserItemIds.join(",")}}`
     ]
   );
-
   return result.rows[0].id;
-}
-
-export async function updatePretixEventConfig(
-  db: Pool,
-  organizerConfigId: number,
-  activeItemIds: string[],
-  superuserItemIds: string[],
-  eventId: string
-): Promise<void> {
-  const activeItemIdsSet = new Set(activeItemIds);
-  superuserItemIds.forEach((superId) => {
-    if (!activeItemIdsSet.has(superId)) {
-      throw new Error(
-        "super user item id must be included in the active item ids set"
-      );
-    }
-  });
-
-  await sqlQuery(
-    db,
-    `update pretix_events_config
-    (pretix_organizers_config_id, active_item_ids, event_id, superuser_item_ids)
-    set pretix_organizers_config_id = $1, active_item_ids = $2
-    event_id = $3, superuser_item_ids = $4
-    where id = $5`,
-    [
-      organizerConfigId,
-      `{${activeItemIds.join(",")}}`,
-      eventId,
-      `{${superuserItemIds.join(",")}}`,
-      organizerConfigId
-    ]
-  );
 }
