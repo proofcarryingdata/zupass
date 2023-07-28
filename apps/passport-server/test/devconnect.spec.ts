@@ -12,7 +12,10 @@ import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "pg";
-import { getDevconnectPretixConfig } from "../src/apis/devconnect/organizer";
+import {
+  DevconnectPretixConfig,
+  getDevconnectPretixConfig
+} from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
@@ -67,15 +70,15 @@ describe("devconnect functionality", function () {
       db,
       organizerConfigId,
       [mocker.get().eventAItem1.id + "", mocker.get().eventAItem2.id + ""],
-      [mocker.get().eventAItem2 + ""],
+      [mocker.get().eventAItem2.id + ""],
       mocker.get().eventA.slug
     );
 
     eventBConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [mocker.get().eventBItem3 + ""],
-      [mocker.get().eventBItem3 + ""],
+      [mocker.get().eventBItem3.id + ""],
+      [mocker.get().eventBItem3.id + ""],
       mocker.get().eventB.slug
     );
 
@@ -105,7 +108,35 @@ describe("devconnect functionality", function () {
 
   step("mock pretix api config matches load from DB", async function () {
     const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    expect(devconnectPretixAPIConfigFromDB).to.deep.equal({});
+    expect(devconnectPretixAPIConfigFromDB).to.deep.equal({
+      organizers: [
+        {
+          id: 1,
+          orgURL: "organizer-url",
+          token: "token",
+          events: [
+            {
+              id: 1,
+              eventID: "event-a",
+              superuserItemIds: ["2"],
+              activeItemIDs: ["1", "2"]
+            },
+            {
+              id: 2,
+              eventID: "event-b",
+              activeItemIDs: ["3"],
+              superuserItemIds: ["3"]
+            },
+            {
+              id: 3,
+              eventID: "event-c",
+              activeItemIDs: [],
+              superuserItemIds: []
+            }
+          ]
+        }
+      ]
+    } satisfies DevconnectPretixConfig);
   });
 
   step("email client should have been mocked", async function () {
