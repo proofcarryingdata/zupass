@@ -23,26 +23,17 @@ export function getDevconnectMockPretixAPI(
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
-    fetchAllEvents: async (
-      _orgURL: string,
-      _token: string
-    ): Promise<DevconnectPretixEvent[]> => {
-      return [...mockData.eventNameByEventID.entries()].map((e) => ({
-        slug: e[0],
-        name: { en: e[1] }
-      }));
+    fetchAllEvents: async (): Promise<DevconnectPretixEvent[]> => {
+      return [...mockData.eventByEventID.values()];
     },
     fetchEvent: async (
       _orgURL: string,
       _token: string,
       eventID: string
     ): Promise<DevconnectPretixEvent> => {
-      const eventName = mockData.eventNameByEventID.get(eventID);
-      if (eventName) {
-        return {
-          slug: eventID,
-          name: { en: eventName }
-        };
+      const event = mockData.eventByEventID.get(eventID);
+      if (event) {
+        return event;
       }
       throw new Error("404 event not found");
     },

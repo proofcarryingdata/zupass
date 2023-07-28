@@ -7,23 +7,12 @@ import {
   DevconnectPretixPosition
 } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
-import {
-  EMAIL_1,
-  EMAIL_2,
-  EMAIL_3,
-  EMAIL_4,
-  EVENT_A_ID,
-  EVENT_A_NAME,
-  EVENT_B_ID,
-  EVENT_B_NAME,
-  EVENT_C_ID,
-  EVENT_C_NAME
-} from "./mockPretixConfig";
+import { EMAIL_1, EMAIL_2, EMAIL_3, EMAIL_4 } from "./mockPretixConfig";
 
 export interface IMockDevconnectPretixData {
   // aggregate data for simpler querying
   ordersByEventID: Map<string, DevconnectPretixOrder[]>;
-  eventNameByEventID: Map<string, string>;
+  eventByEventID: Map<string, DevconnectPretixEvent>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
 
   // specific data for easier testing
@@ -114,22 +103,22 @@ export class DevconnectPretixDataMocker {
     const eventCOrders: DevconnectPretixOrder[] = [];
 
     const ordersByEventID: Map<string, DevconnectPretixOrder[]> = new Map();
-    ordersByEventID.set(EVENT_A_ID, eventAOrders);
-    ordersByEventID.set(EVENT_B_ID, eventBOrders);
-    ordersByEventID.set(EVENT_C_ID, eventCOrders);
+    ordersByEventID.set(eventA.slug, eventAOrders);
+    ordersByEventID.set(eventB.slug, eventBOrders);
+    ordersByEventID.set(eventC.slug, eventCOrders);
 
-    const eventNameByEventID: Map<string, string> = new Map();
-    eventNameByEventID.set(EVENT_A_ID, EVENT_A_NAME);
-    eventNameByEventID.set(EVENT_B_ID, EVENT_B_NAME);
-    eventNameByEventID.set(EVENT_C_ID, EVENT_C_NAME);
+    const eventNameByEventID: Map<string, DevconnectPretixEvent> = new Map();
+    eventNameByEventID.set(eventA.slug, eventA);
+    eventNameByEventID.set(eventB.slug, eventB);
+    eventNameByEventID.set(eventC.slug, eventC);
 
     const itemsByEventID: Map<string, DevconnectPretixItem[]> = new Map();
-    itemsByEventID.set(EVENT_A_ID, [eventAItem1, eventAItem2]);
-    itemsByEventID.set(EVENT_B_ID, [eventBItem3]);
+    itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
+    itemsByEventID.set(eventB.slug, [eventBItem3]);
 
     return {
       ordersByEventID,
-      eventNameByEventID,
+      eventByEventID: eventNameByEventID,
       itemsByEventID,
       eventAItem1,
       eventAItem2,
