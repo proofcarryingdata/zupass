@@ -1,50 +1,43 @@
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  DevconnectPretixEvent,
+  DevconnectPretixItem,
   DevconnectPretixOrder,
   DevconnectPretixPosition
 } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
-  ordersByEventId: Map<string, DevconnectPretixOrder[]>;
-  eventNameByEventID: Map<string, string>;
+  // aggregate data for simpler querying
+  ordersByEventID: Map<string, DevconnectPretixOrder[]>;
+  eventByEventID: Map<string, DevconnectPretixEvent>;
+  itemsByEventID: Map<string, DevconnectPretixItem[]>;
+
+  // specific data for easier testing
+  eventAItem1: DevconnectPretixItem;
+  eventAItem2: DevconnectPretixItem;
+  eventBItem3: DevconnectPretixItem;
+
+  eventA: DevconnectPretixEvent;
+  eventB: DevconnectPretixEvent;
+  eventC: DevconnectPretixEvent;
+
+  EMAIL_1: string;
+  EMAIL_2: string;
+  EMAIL_3: string;
+  EMAIL_4: string;
 }
 
-export const EVENT_A_ID = "event-a";
-export const EVENT_B_ID = "event-b";
-export const EVENT_C_ID = "event-c";
-
-export const EVENT_A_CONFIG_ID = 1;
-export const EVENT_B_CONFIG_ID = 2;
-export const EVENT_C_CONFIG_ID = 3;
-
-export const EVENT_A_NAME = "Event A";
-export const EVENT_B_NAME = "Event B";
-export const EVENT_C_NAME = "Event C";
-
-export const ITEM_1 = 456;
-export const ITEM_2 = 123;
-export const ITEM_3 = 789;
-
-export const ORG_CONFIG_ID = 1;
-
-export const EMAIL_1 = "email-1@test.com";
-export const EMAIL_2 = "email-2@test.com";
-export const EMAIL_3 = "email-3@test.com";
-export const EMAIL_4 = "email-4@test.com";
-
-export const EMAIL_QUESTION_ID = 456;
-
 export class DevconnectPretixDataMocker {
-  private autoincrementingId = 0;
+  private autoincrementingId = 10_000;
   private mockData: IMockDevconnectPretixData;
 
   public constructor() {
     this.mockData = this.newMockData();
   }
 
-  public getMockData(): IMockDevconnectPretixData {
+  public get(): IMockDevconnectPretixData {
     logger("[MOCK]", JSON.stringify(this.mockData, null, 2));
     return this.mockData;
   }
@@ -54,7 +47,7 @@ export class DevconnectPretixDataMocker {
     code: string,
     update: (order: DevconnectPretixOrder) => void
   ): void {
-    const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
+    const eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
     const order = eventOrders.find((o) => o.code === code);
     if (!order) {
       throw new Error(`couldn't find order ${code}`);
@@ -68,58 +61,98 @@ export class DevconnectPretixDataMocker {
     itemsAndEmails: [number, string | null][]
   ): DevconnectPretixOrder {
     const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
-    const eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
+    const eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
     eventOrders.push(newOrder);
     return newOrder;
   }
 
   public removeOrder(eventID: string, code: string): void {
-    let eventOrders = this.mockData.ordersByEventId.get(eventID) ?? [];
+    let eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
     eventOrders = eventOrders.filter((o) => o.code !== code);
-    this.mockData.ordersByEventId.set(eventID, eventOrders);
+    this.mockData.ordersByEventID.set(eventID, eventOrders);
   }
 
   private newMockData(): IMockDevconnectPretixData {
+    const EMAIL_1 = "email-1@test.com";
+    const EMAIL_2 = "email-2@test.com";
+    const EMAIL_3 = "email-3@test.com";
+    const EMAIL_4 = "email-4@test.com";
+
+    const eventA = this.newEvent("Event A", "event-a");
+    const eventB = this.newEvent("Event B", "event-b");
+    const eventC = this.newEvent("Event C", "event-c");
+
+    const eventAItem1 = this.newItem("item-1");
+    const eventAItem2 = this.newItem("item-2");
+    const eventBItem3 = this.newItem("item-3");
+
     const eventAOrders: DevconnectPretixOrder[] = [
-      this.newPretixOrder(EMAIL_4, [[ITEM_1, EMAIL_4]]),
+      this.newPretixOrder(EMAIL_4, [[eventAItem1.id, EMAIL_4]]),
       this.newPretixOrder(EMAIL_1, [
-        [ITEM_1, EMAIL_1],
-        [ITEM_1, EMAIL_2],
-        [ITEM_1, EMAIL_2],
-        [ITEM_1, EMAIL_3],
-        [ITEM_1, null],
-        [ITEM_2, EMAIL_1],
-        [ITEM_2, EMAIL_1],
-        [ITEM_2, EMAIL_2],
-        [ITEM_2, null],
-        [ITEM_3, EMAIL_2],
-        [ITEM_2, EMAIL_4]
+        [eventAItem1.id, EMAIL_1],
+        [eventAItem1.id, EMAIL_2],
+        [eventAItem1.id, EMAIL_2],
+        [eventAItem1.id, EMAIL_3],
+        [eventAItem1.id, null],
+        [eventAItem2.id, EMAIL_1],
+        [eventAItem2.id, EMAIL_1],
+        [eventAItem2.id, EMAIL_2],
+        [eventAItem2.id, null],
+        [eventBItem3.id, EMAIL_2],
+        [eventAItem2.id, EMAIL_4]
       ]),
       this.newPretixOrder(EMAIL_2, [
-        [ITEM_2, EMAIL_4],
-        [ITEM_2, null],
-        [ITEM_1, EMAIL_1]
+        [eventAItem2.id, EMAIL_4],
+        [eventAItem2.id, null],
+        [eventAItem1.id, EMAIL_1]
       ])
     ];
 
-    const eventBOrders: DevconnectPretixOrder[] = [
-      this.newPretixOrder(EMAIL_1, [[ITEM_1, EMAIL_1]])
-    ];
+    const eventBOrders: DevconnectPretixOrder[] = [];
     const eventCOrders: DevconnectPretixOrder[] = [];
 
-    const ordersByEventId: Map<string, DevconnectPretixOrder[]> = new Map();
-    ordersByEventId.set(EVENT_A_ID, eventAOrders);
-    ordersByEventId.set(EVENT_B_ID, eventBOrders);
-    ordersByEventId.set(EVENT_C_ID, eventCOrders);
+    const ordersByEventID: Map<string, DevconnectPretixOrder[]> = new Map();
+    ordersByEventID.set(eventA.slug, eventAOrders);
+    ordersByEventID.set(eventB.slug, eventBOrders);
+    ordersByEventID.set(eventC.slug, eventCOrders);
 
-    const eventNameByEventID: Map<string, string> = new Map();
-    eventNameByEventID.set(EVENT_A_ID, EVENT_A_NAME);
-    eventNameByEventID.set(EVENT_B_ID, EVENT_B_NAME);
-    eventNameByEventID.set(EVENT_C_ID, EVENT_C_NAME);
+    const eventNameByEventID: Map<string, DevconnectPretixEvent> = new Map();
+    eventNameByEventID.set(eventA.slug, eventA);
+    eventNameByEventID.set(eventB.slug, eventB);
+    eventNameByEventID.set(eventC.slug, eventC);
+
+    const itemsByEventID: Map<string, DevconnectPretixItem[]> = new Map();
+    itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
+    itemsByEventID.set(eventB.slug, [eventBItem3]);
 
     return {
-      ordersByEventId,
-      eventNameByEventID
+      ordersByEventID,
+      eventByEventID: eventNameByEventID,
+      itemsByEventID,
+      eventAItem1,
+      eventAItem2,
+      eventBItem3,
+      eventA,
+      eventB,
+      eventC,
+      EMAIL_1,
+      EMAIL_2,
+      EMAIL_3,
+      EMAIL_4
+    };
+  }
+
+  private newEvent(name: string, slug: string): DevconnectPretixEvent {
+    return {
+      name: { en: name },
+      slug
+    };
+  }
+
+  private newItem(name: string): DevconnectPretixItem {
+    return {
+      id: this.nextId(),
+      name: { en: name }
     };
   }
 

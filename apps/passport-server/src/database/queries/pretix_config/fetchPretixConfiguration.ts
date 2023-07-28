@@ -23,7 +23,7 @@ export async function fetchPretixConfiguration(
 /**
  * Fetch the list of Pretix organizers from the database.
  */
-export async function fetchEventConfiguratin(
+export async function fetchEventConfiguration(
   client: Pool,
   orgURL: string,
   eventID: string
