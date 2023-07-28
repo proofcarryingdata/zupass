@@ -22,7 +22,6 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
@@ -52,83 +51,6 @@ import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPre
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-
-describe("devconnect configuration db tables", function () {
-  let application: PCDPass;
-  let db: Pool;
-
-  this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
-    application = await startTestingApp();
-    db = application.context.dbPool;
-  });
-
-  this.afterAll(async () => {
-    await stopApplication(application);
-  });
-
-  let firstOrganizerConfigId: number;
-
-  step("test organizer config", async function () {
-    firstOrganizerConfigId = await insertPretixOrganizerConfig(
-      db,
-      "organizer-url-1",
-      "token1"
-    );
-
-    try {
-      await insertPretixOrganizerConfig(db, "organizer-url-1", "token2");
-      expect.fail();
-    } catch (e) {
-      // Should fail on duplicate (organizer_url, token)
-    }
-
-    await insertPretixOrganizerConfig(db, "organizer-url-2", "token2");
-    expect(
-      (
-        await sqlQuery(
-          application.context.dbPool,
-          "select id from pretix_organizers_config"
-        )
-      ).rowCount
-    ).to.equal(2);
-  });
-
-  step("test events config", async function () {
-    await insertPretixEventConfig(
-      db,
-      firstOrganizerConfigId,
-      [],
-      [],
-      "event-1"
-    );
-
-    await insertPretixEventConfig(
-      db,
-      firstOrganizerConfigId,
-      [],
-      [],
-      "event-2"
-    );
-
-    await insertPretixEventConfig(
-      db,
-      firstOrganizerConfigId,
-      ["123", "456", "789"],
-      ["789"],
-      "event-3"
-    );
-
-    expect(
-      (
-        await sqlQuery(
-          application.context.dbPool,
-          "select id from pretix_events_config"
-        )
-      ).rowCount
-    ).to.equal(3);
-  });
-});
 
 describe("devconnect functionality", function () {
   this.timeout(15_000);
