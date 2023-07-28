@@ -18,7 +18,10 @@ import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
-import { insertPretixOrganizerConfig } from "../src/database/queries/pretix_config/insertConfiguration";
+import {
+  insertPretixEventConfig,
+  insertPretixOrganizerConfig
+} from "../src/database/queries/pretix_config/insertConfiguration";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
@@ -64,19 +67,21 @@ describe("devconnect configuration db tables", function () {
     await stopApplication(application);
   });
 
-  step("test organizer config", async function () {
-    // Insert organizer 1
-    await insertPretixOrganizerConfig(db, "organizer-url-1", "token1");
+  let firstOrganizerConfigId: number;
 
-    // Should fail on duplicate (organizer_url, token)
+  step("test organizer config", async function () {
+    firstOrganizerConfigId = await insertPretixOrganizerConfig(
+      db,
+      "organizer-url-1",
+      "token1"
+    );
+
     try {
       await insertPretixOrganizerConfig(db, "organizer-url-1", "token2");
-
       expect.fail();
     } catch (e) {
-      // Should end up here
+      // Should fail on duplicate (organizer_url, token)
     }
-    // Insert organizer 2
 
     await insertPretixOrganizerConfig(db, "organizer-url-2", "token2");
     expect(
@@ -90,45 +95,30 @@ describe("devconnect configuration db tables", function () {
   });
 
   step("test events config", async function () {
-    // Insert organizer 1 and 2 from previous test
-    // Insert event 1
-    await sqlQuery(
-      application.context.dbPool,
-      `insert into pretix_events_config 
-      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
-      values 
-      (1, 'event-1', '{}', '{}')`
-    );
-    // Should fail on duplicate (event id, org id)
-    try {
-      await sqlQuery(
-        application.context.dbPool,
-        `insert into pretix_events_config 
-        (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
-        values 
-        (1, 'event-1', '{}', '{}')`
-      );
-      expect.fail();
-    } catch (e) {
-      // Should end up here
-    }
-    // Insert it again with updated event-id
-    await sqlQuery(
-      application.context.dbPool,
-      `insert into pretix_events_config 
-      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids) 
-      values 
-      (3, 'event-2', '{}', '{}')`
+    await insertPretixEventConfig(
+      db,
+      firstOrganizerConfigId,
+      [],
+      [],
+      "event-1"
     );
 
-    // Insert with active item IDs
-    await sqlQuery(
-      application.context.dbPool,
-      `insert into pretix_events_config
-      (pretix_organizers_config_id, event_id, active_item_ids, superuser_item_ids)
-      values 
-      (1, 'event-3', '{123, 456, 789}', '{789}')`
+    await insertPretixEventConfig(
+      db,
+      firstOrganizerConfigId,
+      [],
+      [],
+      "event-2"
     );
+
+    await insertPretixEventConfig(
+      db,
+      firstOrganizerConfigId,
+      ["123", "456", "789"],
+      ["789"],
+      "event-3"
+    );
+
     expect(
       (
         await sqlQuery(
