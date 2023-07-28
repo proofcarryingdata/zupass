@@ -170,7 +170,8 @@ describe.only("database reads and writes for devconnect ticket features", functi
       devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
-      position_id: "1000"
+      position_id: "1000",
+      _itemIdx: 0
     },
     {
       full_name: "Super User1",
@@ -178,7 +179,8 @@ describe.only("database reads and writes for devconnect ticket features", functi
       devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
-      position_id: "1001"
+      position_id: "1001",
+      _itemIdx: 3
     },
     {
       full_name: "ThirdParty Attendee",
@@ -186,7 +188,8 @@ describe.only("database reads and writes for devconnect ticket features", functi
       devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
-      position_id: "1002"
+      position_id: "1002",
+      _itemIdx: 4
     },
     {
       full_name: "ThirdParty SuperUser",
@@ -194,7 +197,8 @@ describe.only("database reads and writes for devconnect ticket features", functi
       devconnect_pretix_items_info_id: "",
       is_consumed: false,
       is_deleted: false,
-      position_id: "1003"
+      position_id: "1003",
+      _itemIdx: 5
     }
   ];
 
@@ -313,6 +317,9 @@ describe.only("database reads and writes for devconnect ticket features", functi
 
   step("should be able to add tickets", async function () {
     for (const ticket of testTickets) {
+      const item = testItems[ticket._itemIdx];
+      ticket.devconnect_pretix_items_info_id = item.dbId;
+
       const insertedTicket = await insertDevconnectPretixTicket(db, ticket);
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
         ticket.devconnect_pretix_items_info_id
