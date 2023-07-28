@@ -118,14 +118,14 @@ describe("devconnect functionality", function () {
             {
               id: 1,
               eventID: "event-a",
-              superuserItemIds: ["2"],
-              activeItemIDs: ["1", "2"]
+              superuserItemIds: ["10002"],
+              activeItemIDs: ["10001", "10002"]
             },
             {
               id: 2,
               eventID: "event-b",
-              activeItemIDs: ["3"],
-              superuserItemIds: ["3"]
+              activeItemIDs: ["10003"],
+              superuserItemIds: ["10003"]
             },
             {
               id: 3,

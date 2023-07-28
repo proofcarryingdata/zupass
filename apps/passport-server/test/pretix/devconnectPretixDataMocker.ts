@@ -30,7 +30,7 @@ export interface IMockDevconnectPretixData {
 }
 
 export class DevconnectPretixDataMocker {
-  private autoincrementingId = 0;
+  private autoincrementingId = 10_000;
   private mockData: IMockDevconnectPretixData;
 
   public constructor() {
