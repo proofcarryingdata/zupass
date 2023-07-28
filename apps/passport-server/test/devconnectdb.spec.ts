@@ -54,6 +54,10 @@ interface ITestItem {
   _eventIdx: number;
 }
 
+interface ITestTicket extends DevconnectPretixTicket {
+  _itemIdx: number;
+}
+
 describe("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
 
@@ -163,7 +167,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     }
   ];
 
-  const testTickets: DevconnectPretixTicket[] = [
+  const testTickets: ITestTicket[] = [
     {
       full_name: "UserFirst UserLast",
       email: "user-one@test.com",
