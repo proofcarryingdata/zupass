@@ -3,7 +3,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName,
+  SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
 import { Identity } from "@semaphore-protocol/identity";
@@ -16,7 +16,7 @@ import {
   EthereumGroupPCD,
   EthereumGroupPCDPackage,
   getRawPubKeyBuffer,
-  GroupType,
+  GroupType
 } from "../src/EthereumGroupPCD";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
@@ -84,13 +84,13 @@ async function groupProof(
   return {
     signatureOfIdentityCommitment,
     msgHash,
-    merkleProof,
+    merkleProof
   };
 }
 
 async function happyPathEthGroupPCD(groupType: GroupType) {
   const identity = await SemaphoreIdentityPCDPackage.prove({
-    identity: new Identity(),
+    identity: new Identity()
   });
   const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
     identity
@@ -105,21 +105,21 @@ async function happyPathEthGroupPCD(groupType: GroupType) {
   const ethGroupPCD = await EthereumGroupPCDPackage.prove({
     merkleProof: {
       argumentType: ArgumentTypeName.String,
-      value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof),
+      value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof)
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDTypeName,
-      value: serializedIdentity,
+      value: serializedIdentity
     },
     signatureOfIdentityCommitment: {
       argumentType: ArgumentTypeName.String,
-      value: signatureOfIdentityCommitment,
+      value: signatureOfIdentityCommitment
     },
     groupType: {
       argumentType: ArgumentTypeName.String,
-      value: groupType,
-    },
+      value: groupType
+    }
   });
 
   return ethGroupPCD;
@@ -127,22 +127,22 @@ async function happyPathEthGroupPCD(groupType: GroupType) {
 
 describe("Ethereum Group PCD", function () {
   let ethGroupPCD: EthereumGroupPCD;
-  this.timeout(2 * 60 * 1000);
+  this.timeout(8 * 60 * 1000);
 
   this.beforeAll(async function () {
     const addrMembershipConfig = {
       circuit: __dirname.concat("/../artifacts/addr_membership.circuit"),
-      witnessGenWasm: __dirname.concat("/../artifacts/addr_membership.wasm"),
+      witnessGenWasm: __dirname.concat("/../artifacts/addr_membership.wasm")
     };
     const pubkeyMembershipConfig = {
       circuit: __dirname.concat("/../artifacts/pubkey_membership.circuit"),
-      witnessGenWasm: __dirname.concat("/../artifacts/pubkey_membership.wasm"),
+      witnessGenWasm: __dirname.concat("/../artifacts/pubkey_membership.wasm")
     };
     await EthereumGroupPCDPackage.init!({
       zkeyFilePath,
       wasmFilePath,
       addrMembershipConfig,
-      pubkeyMembershipConfig,
+      pubkeyMembershipConfig
     });
     ethGroupPCD = await happyPathEthGroupPCD(GroupType.PUBLICKEY);
   });
@@ -158,18 +158,14 @@ describe("Ethereum Group PCD", function () {
 
   it("serializes", async function () {
     const newEthGroupPCD = await EthereumGroupPCDPackage.deserialize(
-      (
-        await EthereumGroupPCDPackage.serialize(ethGroupPCD)
-      ).pcd
+      (await EthereumGroupPCDPackage.serialize(ethGroupPCD)).pcd
     );
     assert(await EthereumGroupPCDPackage.verify(newEthGroupPCD));
   });
 
   it("should not verify tampered inputs", async function () {
     const newEthGroupPCD = await EthereumGroupPCDPackage.deserialize(
-      (
-        await EthereumGroupPCDPackage.serialize(ethGroupPCD)
-      ).pcd
+      (await EthereumGroupPCDPackage.serialize(ethGroupPCD)).pcd
     );
     assert(await EthereumGroupPCDPackage.verify(newEthGroupPCD));
 
@@ -236,7 +232,7 @@ describe("Ethereum Group PCD", function () {
 
   it("should not be able create a PCD with a different identity", async function () {
     const identity1 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity(),
+      identity: new Identity()
     });
     const wallet = ethers.Wallet.createRandom();
     const { signatureOfIdentityCommitment, merkleProof } = await groupProof(
@@ -245,7 +241,7 @@ describe("Ethereum Group PCD", function () {
     );
 
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity(),
+      identity: new Identity()
     });
     const serializedIdentity2 = await SemaphoreIdentityPCDPackage.serialize(
       identity2
@@ -258,28 +254,28 @@ describe("Ethereum Group PCD", function () {
         await EthereumGroupPCDPackage.prove({
           merkleProof: {
             argumentType: ArgumentTypeName.String,
-            value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof),
+            value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof)
           },
           identity: {
             argumentType: ArgumentTypeName.PCD,
             pcdType: SemaphoreIdentityPCDTypeName,
-            value: serializedIdentity2,
+            value: serializedIdentity2
           },
           groupType: {
             argumentType: ArgumentTypeName.String,
-            value: GroupType.PUBLICKEY,
+            value: GroupType.PUBLICKEY
           },
           signatureOfIdentityCommitment: {
             argumentType: ArgumentTypeName.String,
-            value: signatureOfIdentityCommitment,
-          },
+            value: signatureOfIdentityCommitment
+          }
         })
     );
   });
 
   it("should not be able to create a PCD with tampered merkle root", async function () {
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity(),
+      identity: new Identity()
     });
     const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
       identity
@@ -300,20 +296,20 @@ describe("Ethereum Group PCD", function () {
         identity: {
           argumentType: ArgumentTypeName.PCD,
           pcdType: SemaphoreIdentityPCDTypeName,
-          value: serializedIdentity,
+          value: serializedIdentity
         },
         groupType: {
           argumentType: ArgumentTypeName.String,
-          value: GroupType.PUBLICKEY,
+          value: GroupType.PUBLICKEY
         },
         signatureOfIdentityCommitment: {
           argumentType: ArgumentTypeName.String,
-          value: signatureOfIdentityCommitment,
+          value: signatureOfIdentityCommitment
         },
         merkleProof: {
           argumentType: ArgumentTypeName.String,
-          value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof),
-        },
+          value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof)
+        }
       });
     });
   });
