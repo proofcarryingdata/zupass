@@ -2,6 +2,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import { AboutScreen } from "../components/screens/AboutScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -101,6 +102,7 @@ function Router() {
       <Routes>
         <Route path="/">
           <Route index element={<HomeScreen />} />
+          <Route path="about" element={<AboutScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
