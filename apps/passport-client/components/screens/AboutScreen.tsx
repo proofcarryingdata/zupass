@@ -18,6 +18,11 @@ const GlobalStyle = createGlobalStyle`
     background-color: white;
     color: black;
   }
+
+  a {
+    color: #3d3daa !important;
+    text-decoration: underline;
+  }
 `;
 
 const Container = styled.div`
