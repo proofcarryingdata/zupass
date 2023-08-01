@@ -63,24 +63,27 @@ describe("devconnect functionality", function () {
 
     organizerConfigId = await insertPretixOrganizerConfig(
       db,
-      "organizer-url",
-      "token"
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.token
     );
 
     eventAConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [mocker.get().eventAItem1.id + "", mocker.get().eventAItem2.id + ""],
-      [mocker.get().eventAItem2.id + ""],
-      mocker.get().eventA.slug
+      [
+        mocker.get().organizer1.eventAItem1.id + "",
+        mocker.get().organizer1.eventAItem2.id + ""
+      ],
+      [mocker.get().organizer1.eventAItem2.id + ""],
+      mocker.get().organizer1.eventA.slug
     );
 
     eventBConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [mocker.get().eventBItem3.id + ""],
-      [mocker.get().eventBItem3.id + ""],
-      mocker.get().eventB.slug
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      mocker.get().organizer1.eventB.slug
     );
 
     eventCConfigId = await insertPretixEventConfig(
@@ -88,7 +91,7 @@ describe("devconnect functionality", function () {
       organizerConfigId,
       [],
       [],
-      mocker.get().eventC.slug
+      mocker.get().organizer1.eventC.slug
     );
 
     const devconnectPretixAPI = getDevconnectMockPretixAPI(mocker.get());
@@ -113,8 +116,8 @@ describe("devconnect functionality", function () {
       organizers: [
         {
           id: organizerConfigId,
-          orgURL: "organizer-url",
-          token: "token",
+          orgURL: mocker.get().organizer1.orgUrl,
+          token: mocker.get().organizer1.token,
           events: [
             {
               id: eventAConfigId,
@@ -191,59 +194,59 @@ describe("devconnect functionality", function () {
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         {
-          email: mocker.get().EMAIL_4,
+          email: mocker.get().organizer1.EMAIL_4,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_2,
+          email: mocker.get().organizer1.EMAIL_2,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_2,
+          email: mocker.get().organizer1.EMAIL_2,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_3,
+          email: mocker.get().organizer1.EMAIL_3,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item1EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_2,
+          email: mocker.get().organizer1.EMAIL_2,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_4,
+          email: mocker.get().organizer1.EMAIL_4,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_4,
+          email: mocker.get().organizer1.EMAIL_4,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_2,
+          email: mocker.get().organizer1.EMAIL_2,
           itemInfoID: item2EventAInfoID
         },
         {
-          email: mocker.get().EMAIL_1,
+          email: mocker.get().organizer1.EMAIL_1,
           itemInfoID: item1EventAInfoID
         }
       ]);
@@ -253,13 +256,17 @@ describe("devconnect functionality", function () {
   step("removing an order causes soft deletion of ticket", async function () {
     const ordersForEventA = mocker
       .get()
-      .ordersByEventID.get(mocker.get().eventA.slug)!;
+      .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug)!;
 
     const lastOrder = ordersForEventA.find(
-      (o) => o.email === mocker.get().EMAIL_2
+      (o) => o.email === mocker.get().organizer1.EMAIL_2
     )!;
 
-    mocker.removeOrder(mocker.get().eventA.slug, lastOrder.code);
+    mocker.removeOrder(
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.eventA.slug,
+      lastOrder.code
+    );
     devconnectPretixSyncService.replaceApi(
       getDevconnectMockPretixAPI(mocker.get())
     );
@@ -288,47 +295,47 @@ describe("devconnect functionality", function () {
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       {
-        email: mocker.get().EMAIL_4,
+        email: mocker.get().organizer1.EMAIL_4,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_1,
+        email: mocker.get().organizer1.EMAIL_1,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_2,
+        email: mocker.get().organizer1.EMAIL_2,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_2,
+        email: mocker.get().organizer1.EMAIL_2,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_3,
+        email: mocker.get().organizer1.EMAIL_3,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_1,
+        email: mocker.get().organizer1.EMAIL_1,
         itemInfoID: item1EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_1,
+        email: mocker.get().organizer1.EMAIL_1,
         itemInfoID: item2EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_1,
+        email: mocker.get().organizer1.EMAIL_1,
         itemInfoID: item2EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_2,
+        email: mocker.get().organizer1.EMAIL_2,
         itemInfoID: item2EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_1,
+        email: mocker.get().organizer1.EMAIL_1,
         itemInfoID: item2EventAInfoID
       },
       {
-        email: mocker.get().EMAIL_4,
+        email: mocker.get().organizer1.EMAIL_4,
         itemInfoID: item2EventAInfoID
       }
     ]);
@@ -351,11 +358,15 @@ describe("devconnect functionality", function () {
   );
 
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(application, mocker.get().EMAIL_1, {
-      expectEmailIncorrect: false,
-      expectUserAlreadyLoggedIn: false,
-      force: false
-    });
+    const result = await testLoginPCDPass(
+      application,
+      mocker.get().organizer1.EMAIL_1,
+      {
+        expectEmailIncorrect: false,
+        expectUserAlreadyLoggedIn: false,
+        force: false
+      }
+    );
 
     if (!result) {
       throw new Error("failed to log in");
@@ -436,11 +447,15 @@ describe("devconnect functionality", function () {
   let checkerUser: User;
   let checkerIdentity: Identity;
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(application, mocker.get().EMAIL_2, {
-      expectEmailIncorrect: false,
-      expectUserAlreadyLoggedIn: false,
-      force: false
-    });
+    const result = await testLoginPCDPass(
+      application,
+      mocker.get().organizer1.EMAIL_2,
+      {
+        expectEmailIncorrect: false,
+        expectUserAlreadyLoggedIn: false,
+        force: false
+      }
+    );
 
     if (!result) {
       throw new Error("failed to log in");

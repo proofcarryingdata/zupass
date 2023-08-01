@@ -23,33 +23,52 @@ export function getDevconnectMockPretixAPI(
   logger("[MOCK] instantiating mock devconnect pretix api");
 
   return {
-    fetchAllEvents: async (): Promise<DevconnectPretixEvent[]> => {
-      return [...mockData.eventByEventID.values()];
+    fetchAllEvents: async (
+      orgUrl: string,
+      token: string
+    ): Promise<DevconnectPretixEvent[]> => {
+      const org = mockData.organizersByOrgUrl.get(orgUrl);
+      if (!org) throw new Error(`missing org ${orgUrl}`);
+      if (org.token !== token)
+        throw new Error(`incorrect token ${token} for org ${orgUrl}`);
+      return [...org.eventByEventID.values()];
     },
     fetchEvent: async (
-      _orgURL: string,
-      _token: string,
+      orgUrl: string,
+      token: string,
       eventID: string
     ): Promise<DevconnectPretixEvent> => {
-      const event = mockData.eventByEventID.get(eventID);
+      const org = mockData.organizersByOrgUrl.get(orgUrl);
+      if (!org) throw new Error(`missing org ${orgUrl}`);
+      if (org.token !== token)
+        throw new Error(`incorrect token ${token} for org ${orgUrl}`);
+      const event = org.eventByEventID.get(eventID);
       if (event) {
         return event;
       }
       throw new Error("404 event not found");
     },
     fetchItems: async (
-      _orgUrl,
-      _token,
+      orgUrl,
+      token,
       eventId
     ): Promise<DevconnectPretixItem[]> => {
-      return mockData.itemsByEventID.get(eventId) ?? [];
+      const org = mockData.organizersByOrgUrl.get(orgUrl);
+      if (!org) throw new Error(`missing org ${orgUrl}`);
+      if (org.token !== token)
+        throw new Error(`incorrect token ${token} for org ${orgUrl}`);
+      return org.itemsByEventID.get(eventId) ?? [];
     },
     fetchOrders: async (
-      _orgUrl: string,
-      _token: string,
+      orgUrl: string,
+      token: string,
       eventID: string
     ): Promise<DevconnectPretixOrder[]> => {
-      const result = mockData.ordersByEventID.get(eventID) ?? [];
+      const org = mockData.organizersByOrgUrl.get(orgUrl);
+      if (!org) throw new Error(`missing org ${orgUrl}`);
+      if (org.token !== token)
+        throw new Error(`incorrect token ${token} for org ${orgUrl}`);
+      const result = org.ordersByEventID.get(eventID) ?? [];
       logger(
         `[MOCK] fetchOrders('${eventID}') =>`,
         JSON.stringify(result, null, 2)

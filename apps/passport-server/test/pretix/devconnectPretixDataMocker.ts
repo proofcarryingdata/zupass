@@ -10,6 +10,19 @@ import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
   // aggregate data for simpler querying
+  organizers: IOrganizer[];
+  organizersByOrgUrl: Map<string, IOrganizer>;
+
+  // specific data for easier testing
+  organizer1: IOrganizer;
+  organizer2: IOrganizer;
+}
+
+export interface IOrganizer {
+  orgUrl: string;
+  token: string;
+
+  // aggregate data for simpler querying
   ordersByEventID: Map<string, DevconnectPretixOrder[]>;
   eventByEventID: Map<string, DevconnectPretixEvent>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
@@ -43,11 +56,14 @@ export class DevconnectPretixDataMocker {
   }
 
   public updateOrder(
+    orgUrl: string,
     eventID: string,
     code: string,
     update: (order: DevconnectPretixOrder) => void
   ): void {
-    const eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const eventOrders = org.ordersByEventID.get(eventID) ?? [];
     const order = eventOrders.find((o) => o.code === code);
     if (!order) {
       throw new Error(`couldn't find order ${code}`);
@@ -56,23 +72,47 @@ export class DevconnectPretixDataMocker {
   }
 
   public addOrder(
+    orgUrl: string,
     eventID: string,
     orderEmail: string,
     itemsAndEmails: [number, string | null][]
   ): DevconnectPretixOrder {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
     const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
-    const eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
+    const eventOrders = org.ordersByEventID.get(eventID) ?? [];
     eventOrders.push(newOrder);
     return newOrder;
   }
 
-  public removeOrder(eventID: string, code: string): void {
-    let eventOrders = this.mockData.ordersByEventID.get(eventID) ?? [];
+  public removeOrder(orgUrl: string, eventID: string, code: string): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    let eventOrders = org.ordersByEventID.get(eventID) ?? [];
     eventOrders = eventOrders.filter((o) => o.code !== code);
-    this.mockData.ordersByEventID.set(eventID, eventOrders);
+    org.ordersByEventID.set(eventID, eventOrders);
   }
 
   private newMockData(): IMockDevconnectPretixData {
+    const organizer1 = this.newOrganizer();
+    const organizer2 = this.newOrganizer();
+
+    const organizersByOrgUrl: Map<string, IOrganizer> = new Map();
+    organizersByOrgUrl.set(organizer1.orgUrl, organizer1);
+    organizersByOrgUrl.set(organizer2.orgUrl, organizer2);
+
+    return {
+      organizers: [organizer1, organizer2],
+      organizersByOrgUrl: organizersByOrgUrl,
+      organizer2,
+      organizer1
+    };
+  }
+
+  private newOrganizer(): IOrganizer {
+    const orgUrl = `https://www.${uuid()}.com`;
+    const token = uuid();
+
     const EMAIL_1 = "email-1@test.com";
     const EMAIL_2 = "email-2@test.com";
     const EMAIL_3 = "email-3@test.com";
@@ -126,6 +166,8 @@ export class DevconnectPretixDataMocker {
     itemsByEventID.set(eventB.slug, [eventBItem3]);
 
     return {
+      orgUrl,
+      token,
       ordersByEventID,
       eventByEventID: eventNameByEventID,
       itemsByEventID,
