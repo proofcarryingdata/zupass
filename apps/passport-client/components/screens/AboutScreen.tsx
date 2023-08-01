@@ -1,13 +1,24 @@
-import styled from "styled-components";
+import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import styled, { createGlobalStyle } from "styled-components";
 import aboutMd from "../../resources/about.md";
 
 export function AboutScreen() {
   return (
     <Container>
-      <ContentContainer>{aboutMd}</ContentContainer>
+      <GlobalStyle />
+      <ContentContainer>
+        <ReactMarkdown>{aboutMd}</ReactMarkdown>
+      </ContentContainer>
     </Container>
   );
 }
+
+const GlobalStyle = createGlobalStyle`
+  html {
+    background-color: white;
+    color: black;
+  }
+`;
 
 const Container = styled.div`
   display: flex;
@@ -20,6 +31,7 @@ const Container = styled.div`
 
 const ContentContainer = styled.div`
   flex-grow: 0;
+  width: 600px;
   max-width: 600px;
   min-height: 100vh;
   padding: 64px 32px;
