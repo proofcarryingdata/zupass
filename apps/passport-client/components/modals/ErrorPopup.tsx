@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import styled from "styled-components";
 import { AppError } from "../../src/state";
 import { Button, H1, PreWrap, Spacer } from "../core";
@@ -9,9 +10,10 @@ export function ErrorPopup({
   error: AppError;
   onClose: () => void;
 }) {
+  const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
-    <ErrorBg>
-      <ErrorWrap>
+    <ErrorBg onClick={onClose}>
+      <ErrorWrap onClick={ignore}>
         <Spacer h={24} />
         <H1>{error.title}</H1>
         <Spacer h={24} />
