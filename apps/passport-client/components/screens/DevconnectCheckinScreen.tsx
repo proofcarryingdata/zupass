@@ -21,7 +21,7 @@ import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { DispatchContext } from "../../src/dispatch";
 import { sleep } from "../../src/util";
-import { Button } from "../core";
+import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 import {
@@ -71,8 +71,24 @@ function TicketError({
   ticketData: ITicketData;
   error: TicketError;
 }) {
+  let errorContent = null;
+
   switch (error.name) {
     case "AlreadyCheckedIn":
+      errorContent = (
+        <>
+          <ErrorTitle>This ticket has already been checked in</ErrorTitle>
+          <Spacer h={8} />
+          <Spread>
+            <span>Checked in at</span>
+            <span>{error.checkinTimestamp}</span>
+          </Spread>
+          <Spread>
+            <span>Checked in by</span>
+            <span>TODO</span>
+          </Spread>
+        </>
+      );
       break;
     case "InvalidSignature":
       break;
@@ -90,7 +106,7 @@ function TicketError({
     <AppContainer bg={"primary"}>
       <Container>
         <TicketInfoSection ticketData={ticketData} />
-        <div>{error.name}</div>
+        <ErrorContainer>{errorContent}</ErrorContainer>
       </Container>
     </AppContainer>
   );
@@ -307,4 +323,16 @@ const Spread = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+`;
+
+const ErrorContainer = styled.div`
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: white;
+`;
+
+const ErrorTitle = styled(H5)`
+  color: var(--danger);
 `;
