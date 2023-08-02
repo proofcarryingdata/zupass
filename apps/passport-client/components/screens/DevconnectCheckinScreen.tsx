@@ -150,9 +150,25 @@ function TicketError({
       <Container>
         <TicketInfoSection ticketData={ticketData} />
         <ErrorContainer>{errorContent}</ErrorContainer>
+        <div
+          style={{
+            marginTop: "16px",
+            width: "100%"
+          }}
+        >
+          <CheckAnotherTicket />
+        </div>
       </Container>
     </AppContainer>
   );
+}
+
+function CheckAnotherTicket() {
+  const onClick = useCallback(() => {
+    window.location.href = "/#/scan";
+  }, []);
+
+  return <Button onClick={onClick}>Check another</Button>;
 }
 
 function UserReadyForCheckin({
