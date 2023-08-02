@@ -175,4 +175,5 @@ export interface DevconnectPretixPosition {
   attendee_name: string; // first and last
   attendee_email: string | null;
   subevent: number;
+  secret: string;
 }

@@ -9,6 +9,7 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import _ from "lodash";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "pg";
@@ -600,10 +601,17 @@ describe("devconnect functionality", function () {
   );
 
   step("should be able to log in with a device login", async function () {
-    const secret = mocker
-      .get()
-      .ordersByEventID.get(mocker.get().eventA.slug)
-      ?.find((order) => order.email == mocker.get().EMAIL_1)?.secret;
+    const positions = _.flatMap(
+      mocker.get().ordersByEventID.get(mocker.get().eventA.slug),
+      (order) => order.positions
+    );
+
+    const secret = positions.find(
+      (position) =>
+        position.attendee_email == mocker.get().EMAIL_1 &&
+        // in "mock pretix api config matches load from DB" we set 10002 as a superuserItemId
+        position.item == 10002
+    )?.secret;
 
     if (!secret) {
       throw new Error("No secret found");
@@ -633,9 +641,13 @@ describe("devconnect functionality", function () {
   step(
     "should not be able to log in with a device login for non-superuser",
     async function () {
-      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(db);
-      const secret = tickets.find(
-        (ticket) => ticket.email == mocker.get().EMAIL_3
+      const positions = _.flatMap(
+        mocker.get().ordersByEventID.get(mocker.get().eventA.slug),
+        (order) => order.positions
+      );
+
+      const secret = positions.find(
+        (position) => position.attendee_email == mocker.get().EMAIL_3
       )?.secret;
 
       if (!secret) {

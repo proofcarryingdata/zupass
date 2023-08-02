@@ -126,6 +126,7 @@ export interface PretixPosition {
   attendee_name: string; // first and last
   attendee_email: string;
   subevent: number;
+  secret: string;
 }
 
 export interface PretixSubevent {

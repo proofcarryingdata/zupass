@@ -230,7 +230,8 @@ export class DevconnectPretixDataMocker {
       price: "",
       attendee_name: this.randomName(),
       attendee_email: attendeeEmail,
-      subevent: subevent
+      subevent: subevent,
+      secret: this.randomSecret()
     };
   }
 
