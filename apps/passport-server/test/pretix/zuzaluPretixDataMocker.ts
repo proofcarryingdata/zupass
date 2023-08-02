@@ -4,7 +4,7 @@ import {
   PretixConfig,
   PretixOrder,
   PretixPosition,
-  PretixSubevent,
+  PretixSubevent
 } from "../../src/apis/pretixAPI";
 import { logger } from "../../src/util/logger";
 import { randomEmail } from "../util/util";
@@ -124,14 +124,14 @@ export class ZuzaluPretixDataMocker {
   private newMockData(): IMockPretixData {
     const residentOrders: PretixOrder[] = [
       this.newResidentOrOrganizer(true),
-      this.newResidentOrOrganizer(false),
+      this.newResidentOrOrganizer(false)
     ];
     const visitorSubevent = this.newVisitorSubEvent();
     const visitorOrders = [this.newVisitor(visitorSubevent)];
 
     const subEventsByParentEventId: Map<string, PretixSubevent[]> = new Map();
     subEventsByParentEventId.set(this.config.zuVisitorEventID, [
-      visitorSubevent,
+      visitorSubevent
     ]);
 
     const ordersByEventId: Map<string, PretixOrder[]> = new Map();
@@ -142,7 +142,7 @@ export class ZuzaluPretixDataMocker {
       config: this.config,
       subEventsByParentEventId,
       ordersByEventId,
-      visitorSubevent,
+      visitorSubevent
     };
   }
 
@@ -150,7 +150,7 @@ export class ZuzaluPretixDataMocker {
     return {
       id: this.nextId(),
       date_from: new Date(Date.now()).toString(),
-      date_to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toString(),
+      date_to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toString()
     };
   }
 
@@ -164,7 +164,7 @@ export class ZuzaluPretixDataMocker {
       testmode: false,
       secret: "",
       email: email,
-      positions: [this.newPosition(orderId, email, this.nextId(), subevent.id)],
+      positions: [this.newPosition(orderId, email, this.nextId(), subevent.id)]
     };
   }
 
@@ -184,8 +184,8 @@ export class ZuzaluPretixDataMocker {
           email,
           isOrganizer ? this.config.zuEventOrganizersItemID : this.nextId(),
           this.nextId()
-        ),
-      ],
+        )
+      ]
     };
   }
 
@@ -204,6 +204,7 @@ export class ZuzaluPretixDataMocker {
       attendee_name: this.randomName(),
       attendee_email: email,
       subevent: subevent,
+      secret: this.randomSecret()
     };
   }
 
@@ -219,6 +220,10 @@ export class ZuzaluPretixDataMocker {
     return uuid().substring(0, 5).toUpperCase();
   }
 
+  private randomSecret(): string {
+    return uuid().substring(0, 8);
+  }
+
   private randomName(): string {
     const firstNames = ["Bob", "Steve", "Gub", "Mob", "Flub", "Jib", "Grub"];
     const lastNames = [
@@ -227,7 +232,7 @@ export class ZuzaluPretixDataMocker {
       "Glowby",
       "Brimby",
       "Slimbo",
-      "Froggy",
+      "Froggy"
     ];
     return _.sample(firstNames) + " " + _.sample(lastNames);
   }

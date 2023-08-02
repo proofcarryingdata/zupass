@@ -602,13 +602,15 @@ describe("devconnect functionality", function () {
 
   step("should be able to log in with a device login", async function () {
     const positions = _.flatMap(
-      mocker.get().ordersByEventID.get(mocker.get().eventA.slug),
+      mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
       (order) => order.positions
     );
 
     const secret = positions.find(
       (position) =>
-        position.attendee_email == mocker.get().EMAIL_1 &&
+        position.attendee_email == mocker.get().organizer1.EMAIL_1 &&
         // in "mock pretix api config matches load from DB" we set 10002 as a superuserItemId
         position.item == 10002
     )?.secret;
@@ -619,7 +621,7 @@ describe("devconnect functionality", function () {
 
     const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
       db,
-      mocker.get().EMAIL_1,
+      mocker.get().organizer1.EMAIL_1,
       secret
     );
 
@@ -627,7 +629,7 @@ describe("devconnect functionality", function () {
 
     const result = await testDeviceLogin(
       application,
-      mocker.get().EMAIL_1,
+      mocker.get().organizer1.EMAIL_1,
       secret
     );
 
@@ -635,19 +637,21 @@ describe("devconnect functionality", function () {
       throw new Error("Not able to login with device login");
     }
 
-    expect(result.user).to.include({ email: mocker.get().EMAIL_1 });
+    expect(result.user).to.include({ email: mocker.get().organizer1.EMAIL_1 });
   });
 
   step(
     "should not be able to log in with a device login for non-superuser",
     async function () {
       const positions = _.flatMap(
-        mocker.get().ordersByEventID.get(mocker.get().eventA.slug),
+        mocker
+          .get()
+          .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
         (order) => order.positions
       );
 
       const secret = positions.find(
-        (position) => position.attendee_email == mocker.get().EMAIL_3
+        (position) => position.attendee_email == mocker.get().organizer1.EMAIL_3
       )?.secret;
 
       if (!secret) {
@@ -656,13 +660,17 @@ describe("devconnect functionality", function () {
 
       const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
         db,
-        mocker.get().EMAIL_3,
+        mocker.get().organizer1.EMAIL_3,
         secret
       );
 
       expect(fetchedDeviceLogin).is.undefined;
 
-      testFailedDeviceLogin(application, mocker.get().EMAIL_3, secret);
+      testFailedDeviceLogin(
+        application,
+        mocker.get().organizer1.EMAIL_3,
+        secret
+      );
     }
   );
 
