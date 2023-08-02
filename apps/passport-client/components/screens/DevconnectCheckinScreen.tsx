@@ -247,17 +247,13 @@ async function checkinTicket(
 }
 
 const TicketInfoContainer = styled.div`
-  padding: 10px;
+  padding: 16px;
 `;
 
 const Container = styled.div`
   margin-top: 64px;
-  border-radius: 12px;
-  border: 1px solid var(--accent-dark);
-  background: white;
   color: var(--bg-dark-primary);
   width: 400px;
-  padding: 16px;
 `;
 
 const CheckinSuccess = styled.span`
@@ -271,7 +267,7 @@ const CheckinFailure = styled.span`
 `;
 
 const CheckinSectionContainer = styled.div`
-  margin-top: 8px;
+  margin-top: 16px;
 `;
 
 const Spread = styled.div`
