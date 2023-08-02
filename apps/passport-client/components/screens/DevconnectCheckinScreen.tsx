@@ -251,9 +251,15 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
-            <CheckinSuccess>Checked In ✅</CheckinSuccess>
+            <>
+              <CheckinSuccess>Checked In ✅</CheckinSuccess>
+              <CheckAnotherTicket />
+            </>
           ) : (
-            <CheckinFailure>Failed to check in ❌</CheckinFailure>
+            <>
+              <CheckinFailure>Failed to check in ❌</CheckinFailure>
+              <CheckAnotherTicket />
+            </>
           )}
         </>
       )}
