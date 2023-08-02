@@ -41,7 +41,7 @@ import {
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
-import { testDeviceLogin } from "./user/testDeviceLogin";
+import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -661,6 +661,8 @@ describe("devconnect functionality", function () {
       );
 
       expect(fetchedDeviceLogin).is.undefined;
+
+      testFailedDeviceLogin(application, mocker.get().EMAIL_3, secret);
     }
   );
 

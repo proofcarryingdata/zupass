@@ -41,3 +41,23 @@ export async function testDeviceLogin(
 
   return { user: getUserResponseJson, identity };
 }
+
+export async function testFailedDeviceLogin(
+  application: PCDPass,
+  email: string,
+  secret: string
+): Promise<void> {
+  const { userService } = application.services;
+  const identity = new Identity();
+  const commitment = identity.commitment.toString();
+
+  const newDeviceLoginResponse = httpMocks.createResponse();
+  await userService.handleNewDeviceLogin(
+    secret,
+    email,
+    commitment,
+    newDeviceLoginResponse
+  );
+
+  expect(newDeviceLoginResponse.statusCode).to.eq(500);
+}
