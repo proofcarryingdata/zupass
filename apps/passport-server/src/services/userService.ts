@@ -323,8 +323,10 @@ export class UserService {
 
       if (!ticket) {
         const err = `Secret key is not valid, or no such device login exists.`;
+        logger(err);
+        this.rollbarService?.reportError(err);
         res.status(500).send(err);
-        throw new Error(err);
+        return;
       }
 
       logger(`[ZUID] Saving new commitment: ${commitment}`);
