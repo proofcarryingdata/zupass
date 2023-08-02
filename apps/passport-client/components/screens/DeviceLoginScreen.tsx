@@ -1,11 +1,5 @@
 import { Spacer } from "@pcd/passport-ui";
-import {
-  ChangeEvent,
-  FormEvent,
-  useCallback,
-  useContext,
-  useState
-} from "react";
+import { ChangeEvent, useCallback, useContext, useState } from "react";
 import styled from "styled-components";
 import { DispatchContext } from "../../src/dispatch";
 import { BigInput, Button, CenterColumn, H2, TextCenter } from "../core";
@@ -16,20 +10,16 @@ export function DeviceLoginScreen() {
   const [secret, setSecret] = useState("");
   const [state, dispatch] = useContext(DispatchContext);
 
-  const onAuthenticate = useCallback(
-    function (e: FormEvent<HTMLFormElement>) {
-      e.preventDefault();
-      dispatch({
-        type: "new-device-login-passport"
-      });
-      dispatch({
-        type: "device-login",
-        secret: secret,
-        email: email
-      });
-    },
-    [dispatch, email, secret]
-  );
+  const onAuthenticate = useCallback(() => {
+    dispatch({
+      type: "new-device-login-passport"
+    });
+    dispatch({
+      type: "device-login",
+      secret: secret,
+      email: email
+    });
+  }, [dispatch, email, secret]);
 
   return (
     <AppContainer bg="primary">
@@ -44,7 +34,7 @@ export function DeviceLoginScreen() {
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <form onSubmit={onAuthenticate}>
+          <form>
             <BigInput
               type="text"
               placeholder="email address"
@@ -65,7 +55,7 @@ export function DeviceLoginScreen() {
               )}
             />
             <Spacer h={8} />
-            <Button style="primary" type="submit">
+            <Button style="primary" type="submit" onClick={onAuthenticate}>
               Authenticate
             </Button>
           </form>
