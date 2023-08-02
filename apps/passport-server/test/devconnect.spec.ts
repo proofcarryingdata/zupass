@@ -9,6 +9,7 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import _ from "lodash";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "pg";
@@ -19,7 +20,10 @@ import {
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchAllNonDeletedDevconnectPretixTickets,
+  fetchDevconnectDeviceLoginTicket
+} from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import {
@@ -37,6 +41,7 @@ import {
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
+import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -592,6 +597,80 @@ describe("devconnect functionality", function () {
       );
       const response = expressResponse.body as IssuedPCDsResponse;
       expect(response.pcds).to.deep.eq([]);
+    }
+  );
+
+  step("should be able to log in with a device login", async function () {
+    const positions = _.flatMap(
+      mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
+      (order) => order.positions
+    );
+
+    const secret = positions.find(
+      (position) =>
+        position.attendee_email == mocker.get().organizer1.EMAIL_1 &&
+        // in "mock pretix api config matches load from DB" we set 10002 as a superuserItemId
+        position.item == 10002
+    )?.secret;
+
+    if (!secret) {
+      throw new Error("No secret found");
+    }
+
+    const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+      db,
+      mocker.get().organizer1.EMAIL_1,
+      secret
+    );
+
+    expect(fetchedDeviceLogin).is.not.undefined;
+
+    const result = await testDeviceLogin(
+      application,
+      mocker.get().organizer1.EMAIL_1,
+      secret
+    );
+
+    if (!result) {
+      throw new Error("Not able to login with device login");
+    }
+
+    expect(result.user).to.include({ email: mocker.get().organizer1.EMAIL_1 });
+  });
+
+  step(
+    "should not be able to log in with a device login for non-superuser",
+    async function () {
+      const positions = _.flatMap(
+        mocker
+          .get()
+          .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
+        (order) => order.positions
+      );
+
+      const secret = positions.find(
+        (position) => position.attendee_email == mocker.get().organizer1.EMAIL_3
+      )?.secret;
+
+      if (!secret) {
+        throw new Error("No secret found");
+      }
+
+      const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+        db,
+        mocker.get().organizer1.EMAIL_3,
+        secret
+      );
+
+      expect(fetchedDeviceLogin).is.undefined;
+
+      testFailedDeviceLogin(
+        application,
+        mocker.get().organizer1.EMAIL_3,
+        secret
+      );
     }
   );
 

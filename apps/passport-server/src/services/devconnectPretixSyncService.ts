@@ -499,7 +499,6 @@ export class DevconnectPretixSyncService {
     // we just need to have the email as the key for this map.
     const itemsInfoByItemID = new Map(itemsInfo.map((i) => [i.item_id, i]));
     const tickets: DevconnectPretixTicket[] = [];
-
     for (const order of orders) {
       // check that they paid
       if (order.status !== "p") {
@@ -510,7 +509,8 @@ export class DevconnectPretixSyncService {
         positionid,
         item,
         attendee_name,
-        attendee_email
+        attendee_email,
+        secret
       } of order.positions) {
         const existingItem = itemsInfoByItemID.get(item.toString());
         if (existingItem) {
@@ -533,7 +533,8 @@ export class DevconnectPretixSyncService {
             devconnect_pretix_items_info_id: existingItem.id,
             is_deleted: false,
             is_consumed: false,
-            position_id: id.toString()
+            position_id: id.toString(),
+            secret
           });
         }
       }

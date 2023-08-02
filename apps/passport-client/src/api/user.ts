@@ -112,3 +112,20 @@ export async function submitNewGenericUser(
   if (!res.ok) throw new Error(await res.text());
   return res;
 }
+
+export async function submitDeviceLogin(
+  email: string,
+  secret: string,
+  identity: Identity
+): Promise<Response> {
+  const query = new URLSearchParams({
+    email,
+    secret,
+    commitment: identity.commitment.toString()
+  }).toString();
+  const loginUrl = `${appConfig.passportServer}/pcdpass/device-login?${query}`;
+
+  const res = await fetch(loginUrl, { method: "POST" });
+  if (!res.ok) throw new Error(await res.text());
+  return res;
+}

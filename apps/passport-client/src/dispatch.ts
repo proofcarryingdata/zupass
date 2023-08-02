@@ -5,11 +5,11 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName,
+  SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { submitNewUser } from "./api/user";
+import { submitDeviceLogin, submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
@@ -17,16 +17,16 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
-  saveUserInvalid,
+  saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppError, AppState } from "./state";
-import { sanitizeDateRanges } from "./user";
 import {
   downloadStorage,
   loadIssuedPCDs,
-  uploadStorage,
+  uploadStorage
 } from "./useSyncE2EEStorage";
+import { sanitizeDateRanges } from "./user";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -40,6 +40,12 @@ export type Action =
       email: string;
       token: string;
     }
+  | {
+      type: "device-login";
+      email: string;
+      secret: string;
+    }
+  | { type: "new-device-login-passport" }
   | {
       type: "set-self";
       self: User;
@@ -82,6 +88,10 @@ export async function dispatch(
       return genPassport(state.identity, action.email, update);
     case "login":
       return login(action.email, action.token, state, update);
+    case "device-login":
+      return deviceLogin(action.email, action.secret, state, update);
+    case "new-device-login-passport":
+      return genDeviceLoginPassport(state.identity, update);
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
@@ -94,7 +104,7 @@ export async function dispatch(
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     case "set-modal":
       return update({
-        modal: action.modal,
+        modal: action.modal
       });
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);
@@ -131,7 +141,27 @@ async function genPassport(
   update({
     pcds,
     encryptionKey,
-    pendingAction: { type: "new-passport", email },
+    pendingAction: { type: "new-passport", email }
+  });
+}
+
+/**
+ * Pretty much the same as genPassport, but without screen
+ * navigation coupled to the email verification workflow
+ */
+async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = await crypto.generateRandomKey();
+
+  await savePCDs(pcds);
+  await saveEncryptionKey(encryptionKey);
+
+  update({
+    pcds,
+    encryptionKey
   });
 }
 
@@ -151,8 +181,33 @@ async function login(
       error: {
         title: "Login failed",
         message: "Couldn't log in. " + e.message,
-        dismissToCurrentPage: true,
-      },
+        dismissToCurrentPage: true
+      }
+    });
+    return;
+  }
+
+  return finishLogin(user, state, update);
+}
+
+async function deviceLogin(
+  email: string,
+  secret: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  let user: User;
+  try {
+    const res = await submitDeviceLogin(email, secret, state.identity);
+    if (!res.ok) throw new Error(await res.text());
+    user = await res.json();
+  } catch (e) {
+    update({
+      error: {
+        title: "Login failed",
+        message: "Couldn't log in. " + e.message,
+        dismissToCurrentPage: true
+      }
     });
     return;
   }
@@ -171,8 +226,8 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
     update({
       error: {
         title: "Invalid identity",
-        message: "Something went wrong saving your passport. Contact support.",
-      },
+        message: "Something went wrong saving your passport. Contact support."
+      }
     });
   }
 
@@ -275,7 +330,7 @@ async function loadFromSync(
     encryptionKey,
     pcds,
     identity: identityPCD.claim.identity,
-    self: storage.self,
+    self: storage.self
   });
 
   console.log("Loaded from sync key, redirecting to home screen...");
@@ -287,7 +342,7 @@ function userInvalid(update: ZuUpdate) {
   saveUserInvalid(true);
   update({
     userInvalid: true,
-    modal: "invalid-participant",
+    modal: "invalid-participant"
   });
 }
 
@@ -313,7 +368,7 @@ async function sync(state: AppState, update: ZuUpdate) {
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     console.log("[SYNC] sync action: download");
     update({
-      downloadingPCDs: true,
+      downloadingPCDs: true
     });
 
     const pcds = await downloadStorage();
@@ -323,7 +378,7 @@ async function sync(state: AppState, update: ZuUpdate) {
         downloadedPCDs: true,
         downloadingPCDs: false,
         pcds: pcds,
-        uploadedUploadId: await pcds.getHash(),
+        uploadedUploadId: await pcds.getHash()
       });
     } else {
       console.log(
@@ -331,7 +386,7 @@ async function sync(state: AppState, update: ZuUpdate) {
       );
       update({
         downloadedPCDs: true,
-        downloadingPCDs: false,
+        downloadingPCDs: false
       });
     }
 
@@ -348,7 +403,7 @@ async function sync(state: AppState, update: ZuUpdate) {
     !state.loadingIssuedPCDs
   ) {
     update({
-      loadingIssuedPCDs: true,
+      loadingIssuedPCDs: true
     });
     const pcds = await loadIssuedPCDs(state);
     await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
@@ -356,7 +411,7 @@ async function sync(state: AppState, update: ZuUpdate) {
     update({
       loadingIssuedPCDs: false,
       loadedIssuedPCDs: true,
-      pcds: state.pcds,
+      pcds: state.pcds
     });
     return;
   }
@@ -381,11 +436,11 @@ async function sync(state: AppState, update: ZuUpdate) {
 
   console.log("[SYNC] sync action: upload");
   update({
-    uploadingUploadId: uploadId,
+    uploadingUploadId: uploadId
   });
   await uploadStorage();
   update({
     uploadingUploadId: undefined,
-    uploadedUploadId: uploadId,
+    uploadedUploadId: uploadId
   });
 }

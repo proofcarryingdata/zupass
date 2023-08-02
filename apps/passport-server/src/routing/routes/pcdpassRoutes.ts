@@ -43,6 +43,19 @@ export function initPCDPassRoutes(
     }
   });
 
+  app.post("/pcdpass/device-login", async (req: Request, res: Response) => {
+    try {
+      const secret = decodeString(req.query.secret, "secret");
+      const email = normalizeEmail(decodeString(req.query.email, "email"));
+      const commitment = decodeString(req.query.commitment, "commitment");
+      await userService.handleNewDeviceLogin(secret, email, commitment, res);
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
   // Fetch a specific user, given their public semaphore commitment.
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     try {

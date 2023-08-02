@@ -16,5 +16,9 @@ export function pretixTicketsDifferent(
     return true;
   }
 
+  if (oldTicket.secret !== newTicket.secret) {
+    return true;
+  }
+
   return false;
 }

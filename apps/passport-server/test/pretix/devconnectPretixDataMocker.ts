@@ -208,7 +208,7 @@ export class DevconnectPretixDataMocker {
       code: orderId,
       status: "p",
       testmode: false,
-      secret: "",
+      secret: this.randomSecret(),
       email: orderEmail,
       positions: itemsAndEmails.map(([item, email]) =>
         this.newPosition(orderId, email, item, this.nextId())
@@ -230,7 +230,8 @@ export class DevconnectPretixDataMocker {
       price: "",
       attendee_name: this.randomName(),
       attendee_email: attendeeEmail,
-      subevent: subevent
+      subevent: subevent,
+      secret: this.randomSecret()
     };
   }
 
@@ -240,6 +241,10 @@ export class DevconnectPretixDataMocker {
 
   private randomOrderCode(): string {
     return uuid().substring(0, 5).toUpperCase();
+  }
+
+  private randomSecret(): string {
+    return uuid().substring(0, 8);
   }
 
   private randomName(): string {
