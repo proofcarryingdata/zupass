@@ -23,6 +23,11 @@ import { sleep } from "../../src/util";
 import { Button } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import {
+  CardBodyContainer,
+  CardHeader,
+  CardOutlineExpanded
+} from "../shared/PCDCard";
 
 export function DevconnectCheckinScreen() {
   const ticket = useDecodedTicket();
@@ -150,12 +155,24 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
 
 function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
   return (
-    <div>
-      <div>{ticketData.eventName}</div>
-      <div>{ticketData.ticketName}</div>
-      <div>{ticketData.attendeeName}</div>
-      <div>{ticketData.attendeeEmail}</div>
-    </div>
+    <CardOutlineExpanded>
+      <CardHeader>
+        <div>{ticketData.eventName}</div>
+      </CardHeader>
+      <CardBodyContainer>
+        <TicketInfoContainer>
+          <Spread>
+            <span>Ticket Type</span> {ticketData.ticketName}
+          </Spread>
+          <Spread>
+            <span>Name</span> {ticketData.attendeeName}
+          </Spread>
+          <Spread>
+            <span>Email</span> {ticketData.attendeeEmail}
+          </Spread>
+        </TicketInfoContainer>
+      </CardBodyContainer>
+    </CardOutlineExpanded>
   );
 }
 
@@ -229,6 +246,10 @@ async function checkinTicket(
   }
 }
 
+const TicketInfoContainer = styled.div`
+  padding: 10px;
+`;
+
 const Container = styled.div`
   margin-top: 64px;
   border-radius: 12px;
@@ -251,4 +272,10 @@ const CheckinFailure = styled.span`
 
 const CheckinSectionContainer = styled.div`
   margin-top: 8px;
+`;
+
+const Spread = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
