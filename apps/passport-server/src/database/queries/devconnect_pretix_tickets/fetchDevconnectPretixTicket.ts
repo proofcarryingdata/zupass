@@ -82,7 +82,12 @@ export async function fetchDevconnectPretixTicketsByEmail(
 }
 
 /**
- * Fetch a Devconnect device login, by email and secret
+ * Fetch a Devconnect device login, by email and secret.
+ *
+ * For Devconnect we want to provide the ability for users to sign in using
+ * device-specific email addresses, and a ticket-specific secret. We want
+ * this query to succeed if we can match the email/secret, and the item is
+ * a superuser for the event.
  */
 export async function fetchDevconnectDeviceLoginTicket(
   client: Pool,
