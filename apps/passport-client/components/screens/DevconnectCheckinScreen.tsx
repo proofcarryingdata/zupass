@@ -1,7 +1,8 @@
 import {
   CheckInResponse,
   CheckTicketResponse,
-  ISSUANCE_STRING
+  ISSUANCE_STRING,
+  TicketError
 } from "@pcd/passport-interface";
 import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -49,18 +50,50 @@ export function DevconnectCheckinScreen() {
       content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
     } else {
       content = (
-        <>
-          <AppContainer bg={"primary"}>
-            <Container>
-              <div>{checkTicketResponse.error.name}</div>
-            </Container>
-          </AppContainer>
-        </>
+        <TicketError
+          ticket={ticket}
+          ticketData={ticketData}
+          error={checkTicketResponse.error}
+        />
       );
     }
   }
 
   return <>{content}</>;
+}
+
+function TicketError({
+  ticket,
+  ticketData,
+  error
+}: {
+  ticket: RSATicketPCD;
+  ticketData: ITicketData;
+  error: TicketError;
+}) {
+  switch (error.name) {
+    case "AlreadyCheckedIn":
+      break;
+    case "InvalidSignature":
+      break;
+    case "InvalidTicket":
+      break;
+    case "NotSuperuser":
+      break;
+    case "ServerError":
+      break;
+    case "TicketRevoked":
+      break;
+  }
+
+  return (
+    <AppContainer bg={"primary"}>
+      <Container>
+        <TicketInfoSection ticketData={ticketData} />
+        <div>{error.name}</div>
+      </Container>
+    </AppContainer>
+  );
 }
 
 function UserReadyForCheckin({
