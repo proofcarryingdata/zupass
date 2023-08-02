@@ -19,7 +19,10 @@ import {
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { fetchAllNonDeletedDevconnectPretixTickets } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchAllNonDeletedDevconnectPretixTickets,
+  fetchDevconnectDeviceLoginTicket
+} from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import {
@@ -37,6 +40,7 @@ import {
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
+import { testDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -592,6 +596,59 @@ describe("devconnect functionality", function () {
       );
       const response = expressResponse.body as IssuedPCDsResponse;
       expect(response.pcds).to.deep.eq([]);
+    }
+  );
+
+  step("should be able to log in with a device login", async function () {
+    const secret = mocker
+      .get()
+      .ordersByEventID.get(mocker.get().eventA.slug)
+      ?.find((order) => order.email == mocker.get().EMAIL_1)?.secret;
+
+    if (!secret) {
+      throw new Error("No secret found");
+    }
+
+    const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+      db,
+      mocker.get().EMAIL_1,
+      secret
+    );
+
+    expect(fetchedDeviceLogin).is.not.undefined;
+
+    const result = await testDeviceLogin(
+      application,
+      mocker.get().EMAIL_1,
+      secret
+    );
+
+    if (!result) {
+      throw new Error("Not able to login with device login");
+    }
+
+    expect(result.user).to.include({ email: mocker.get().EMAIL_1 });
+  });
+
+  step(
+    "should not be able to log in with a device login for non-superuser",
+    async function () {
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(db);
+      const secret = tickets.find(
+        (ticket) => ticket.email == mocker.get().EMAIL_3
+      )?.secret;
+
+      if (!secret) {
+        throw new Error("No secret found");
+      }
+
+      const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+        db,
+        mocker.get().EMAIL_3,
+        secret
+      );
+
+      expect(fetchedDeviceLogin).is.undefined;
     }
   );
 

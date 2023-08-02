@@ -5,6 +5,7 @@ import {
   useContext,
   useState
 } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
@@ -81,6 +82,16 @@ export function LoginScreen() {
               <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
             </>
           )}
+          {!appConfig.isZuzalu && (
+            <>
+              <Spacer h={24} />
+              <TextCenter>
+                <DeviceLoginLink to={"/device-login"}>
+                  Device Login
+                </DeviceLoginLink>
+              </TextCenter>
+            </>
+          )}
         </CenterColumn>
         <Spacer h={24} />
       </BackgroundGlow>
@@ -121,4 +132,11 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
+`;
+
+const DeviceLoginLink = styled(Link)`
+  color: #aaa;
+  &:hover {
+    text-decoration: underline;
+  }
 `;

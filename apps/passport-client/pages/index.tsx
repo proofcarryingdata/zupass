@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
+import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -17,7 +18,7 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
-import { Action, dispatch, DispatchContext } from "../src/dispatch";
+import { Action, DispatchContext, dispatch } from "../src/dispatch";
 import {
   loadEncryptionKey,
   loadIdentity,
@@ -122,6 +123,7 @@ function Router() {
               )
             }
           />
+          <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

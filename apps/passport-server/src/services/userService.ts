@@ -2,7 +2,10 @@ import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Response } from "express";
 import { LoggedinPCDPassUser, ZuzaluUser } from "../database/models";
 import { fetchCommitment } from "../database/queries/commitments";
-import { fetchDevconnectSuperusersForEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchDevconnectDeviceLoginTicket,
+  fetchDevconnectSuperusersForEmail
+} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertCommitment } from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
@@ -303,6 +306,60 @@ export class UserService {
     const user = await this.semaphoreService.getUserByUUID(uuid);
     if (!user) res.status(404);
     res.json(user || null);
+  }
+
+  public async handleNewDeviceLogin(
+    secret: string,
+    email: string,
+    commitment: string,
+    res: Response
+  ): Promise<void> {
+    try {
+      const ticket = await fetchDevconnectDeviceLoginTicket(
+        this.context.dbPool,
+        email,
+        secret
+      );
+
+      if (!ticket) {
+        const err = `Secret key is not valid, or no such device login exists.`;
+        res.status(500).send(err);
+        throw new Error(err);
+      }
+
+      logger(`[ZUID] Saving new commitment: ${commitment}`);
+      await insertCommitment(this.context.dbPool, { email, commitment });
+
+      // Reload Merkle trees
+      await this.semaphoreService.reload();
+
+      // Return user, including UUID, back to Passport
+      const commitmentRow = await fetchCommitment(this.context.dbPool, email);
+
+      if (!commitmentRow) {
+        throw new Error("no user with that email exists");
+      }
+
+      const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+        this.context.dbPool,
+        commitmentRow.email
+      );
+
+      const pcdpassUser: LoggedinPCDPassUser = {
+        ...commitmentRow,
+        superuserEventConfigIds: superuserPrivilages.map(
+          (s) => s.pretix_events_config_id
+        )
+      };
+
+      const jsonP = JSON.stringify(pcdpassUser);
+      logger(`[ZUID] logged in a device login user: ${jsonP}`);
+      res.json(pcdpassUser);
+    } catch (e) {
+      logger(e);
+      this.rollbarService?.reportError(e);
+      res.sendStatus(500);
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import { v4 as uuid } from "uuid";
 import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
+  fetchDevconnectDeviceLoginTicket,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusers,
@@ -175,7 +176,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_consumed: false,
       is_deleted: false,
       position_id: "1000",
-      _itemIdx: 0
+      _itemIdx: 0,
+      secret: "a1b2c3d4"
     },
     {
       full_name: "Super User1",
@@ -184,7 +186,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_consumed: false,
       is_deleted: false,
       position_id: "1001",
-      _itemIdx: 3
+      _itemIdx: 3,
+      secret: "qwertyuiop"
     },
     {
       full_name: "ThirdParty Attendee",
@@ -193,7 +196,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_consumed: false,
       is_deleted: false,
       position_id: "1002",
-      _itemIdx: 4
+      _itemIdx: 4,
+      secret: "0xdeadbeef"
     },
     {
       full_name: "ThirdParty SuperUser",
@@ -202,7 +206,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_consumed: false,
       is_deleted: false,
       position_id: "1003",
-      _itemIdx: 5
+      _itemIdx: 5,
+      secret: "asdfghjkl"
     }
   ];
 
@@ -332,6 +337,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       expect(insertedTicket.full_name).to.eq(ticket.full_name);
       expect(insertedTicket.is_deleted).to.eq(false);
       expect(insertedTicket.is_consumed).to.eq(false);
+      expect(insertedTicket.secret).to.eq(ticket.secret);
     }
   });
 
@@ -398,6 +404,31 @@ describe("database reads and writes for devconnect ticket features", function ()
 
     expect(actualEmailSet).to.deep.eq(expectedEmailSet);
   });
+
+  step("fetching device logins should work", async function () {
+    const ticket = testTickets[1];
+    const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+      db,
+      ticket.email,
+      ticket.secret
+    );
+
+    expect(fetchedDeviceLogin).to.have.property("email", ticket.email);
+  });
+
+  step(
+    "fetching device logins should fail for non-superusers",
+    async function () {
+      const ticket = testTickets[0];
+      const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
+        db,
+        ticket.email,
+        ticket.secret
+      );
+
+      expect(fetchedDeviceLogin).to.be.undefined;
+    }
+  );
 
   step("fetching all superusers should work", async function () {
     const dbSuperUsers = await fetchDevconnectSuperusers(db);

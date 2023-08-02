@@ -14,8 +14,8 @@ export async function insertDevconnectPretixTicket(
     client,
     `\
 insert into devconnect_pretix_tickets
-(email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id)
-values ($1, $2, $3, $4, $5, $6)
+(email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id, secret)
+values ($1, $2, $3, $4, $5, $6, $7)
 on conflict do nothing
 returning *`,
     [
@@ -24,7 +24,8 @@ returning *`,
       params.devconnect_pretix_items_info_id,
       params.is_deleted,
       params.is_consumed,
-      params.position_id
+      params.position_id,
+      params.secret
     ]
   );
   return result.rows[0];

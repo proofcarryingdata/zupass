@@ -533,7 +533,8 @@ export class DevconnectPretixSyncService {
             devconnect_pretix_items_info_id: existingItem.id,
             is_deleted: false,
             is_consumed: false,
-            position_id: id.toString()
+            position_id: id.toString(),
+            secret: order.secret
           });
         }
       }

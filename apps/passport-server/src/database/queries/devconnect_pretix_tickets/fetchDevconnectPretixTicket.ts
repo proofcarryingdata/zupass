@@ -81,6 +81,30 @@ export async function fetchDevconnectPretixTicketsByEmail(
   return result.rows;
 }
 
+/**
+ * Fetch a Devconnect device login, by email and secret
+ */
+export async function fetchDevconnectDeviceLoginTicket(
+  client: Pool,
+  email: string,
+  secret: string
+): Promise<DevconnectPretixTicketDBWithEmailAndItem> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select t.* from devconnect_pretix_tickets t
+    join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+    join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
+    join pretix_events_config ec on ec.id = e.pretix_events_config_id
+    where i.item_id = ANY(ec.superuser_item_ids)
+    and t.email = $1 and t.secret = $2
+    `,
+    [email, secret]
+  );
+
+  return result.rows[0];
+}
+
 export async function fetchDevconnectSuperusers(
   client: Pool
 ): Promise<Array<DevconnectSuperuser>> {
