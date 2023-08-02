@@ -43,7 +43,7 @@ export function initPCDPassRoutes(
     }
   });
 
-  app.get("/pcdpass/device-login", async (req: Request, res: Response) => {
+  app.post("/pcdpass/device-login", async (req: Request, res: Response) => {
     try {
       const secret = decodeString(req.query.secret, "secret");
       const email = normalizeEmail(decodeString(req.query.email, "email"));

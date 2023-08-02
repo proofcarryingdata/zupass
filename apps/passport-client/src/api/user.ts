@@ -125,7 +125,7 @@ export async function submitDeviceLogin(
   }).toString();
   const loginUrl = `${appConfig.passportServer}/pcdpass/device-login?${query}`;
 
-  const res = await fetch(loginUrl);
+  const res = await fetch(loginUrl, { method: "POST" });
   if (!res.ok) throw new Error(await res.text());
   return res;
 }
