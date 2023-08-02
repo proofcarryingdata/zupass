@@ -35,7 +35,7 @@ export function SettingsModal() {
       <Spacer h={32} />
       <CenterColumn w={280}>
         <LinkButton to="/scan">
-          {appConfig.isZuzalu ? "Verify a Passport" : "Check Someone In"}
+          {appConfig.isZuzalu ? "Verify a Passport" : "Scan Ticket"}
         </LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>
