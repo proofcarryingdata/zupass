@@ -91,14 +91,57 @@ function TicketError({
       );
       break;
     case "InvalidSignature":
+      errorContent = (
+        <>
+          <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
+          <Spacer h={8} />
+          <span>This ticket was not issued by PCDPass.</span>
+        </>
+      );
       break;
     case "InvalidTicket":
+      errorContent = (
+        <>
+          <ErrorTitle>Invalid ticket</ErrorTitle>
+          <Spacer h={8} />
+          <span>This ticket is invalid.</span>
+        </>
+      );
       break;
     case "NotSuperuser":
+      errorContent = (
+        <>
+          <ErrorTitle>
+            You are not authorized to check this ticket in
+          </ErrorTitle>
+          <Spacer h={8} />
+          <span>This event is: ""</span>
+          <div>The events you are able to check in are:</div>
+          <div>- a</div>
+          <div>- b</div>
+        </>
+      );
       break;
     case "ServerError":
+      errorContent = (
+        <>
+          <ErrorTitle>Network Error</ErrorTitle>
+          <Spacer h={8} />
+          <span>please try again</span>
+        </>
+      );
       break;
     case "TicketRevoked":
+      errorContent = (
+        <>
+          <ErrorTitle>This ticket was revoked</ErrorTitle>
+          <Spacer h={8} />
+          <Spread>
+            <span>Revoked at</span>
+            <span>{error.revokedTimestamp}</span>
+          </Spread>
+        </>
+      );
       break;
   }
 
