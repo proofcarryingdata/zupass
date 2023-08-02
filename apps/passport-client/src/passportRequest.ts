@@ -1,7 +1,7 @@
 import {
   PCDRequest,
   PCDRequestType,
-  PendingPCD,
+  PendingPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 
@@ -46,8 +46,13 @@ export function safeRedirectPending(returnUrl: string, pendingPCD: PendingPCD) {
 }
 
 // Redirects to the returnUrl with the serialized PCD in the query string.
-export function safeRedirect(returnUrl: string, serializedPCD: SerializedPCD) {
+export function safeRedirect(returnUrl: string, serializedPCD?: SerializedPCD) {
   validateReturnUrl(returnUrl);
-  const encPCD = encodeURIComponent(JSON.stringify(serializedPCD));
-  window.location.href = `${returnUrl}?proof=${encPCD}`;
+
+  if (serializedPCD) {
+    const encPCD = encodeURIComponent(JSON.stringify(serializedPCD));
+    window.location.href = `${returnUrl}?proof=${encPCD}&finished=true`;
+  } else {
+    window.location.href = `${returnUrl}?finished=true`;
+  }
 }
