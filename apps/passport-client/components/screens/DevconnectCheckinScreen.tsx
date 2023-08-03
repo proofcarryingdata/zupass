@@ -20,7 +20,6 @@ import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { DispatchContext } from "../../src/dispatch";
-import { sleep } from "../../src/util";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -31,14 +30,20 @@ import {
 } from "../shared/PCDCard";
 
 export function DevconnectCheckinScreen() {
-  const ticket = useDecodedTicket();
+  const { ticket, error: decodeError } = useDecodedTicket();
+
   const { loading: checkingTicket, response: checkTicketResponse } =
     useCheckTicket(ticket);
+
   const ticketData = getTicketData(ticket);
 
   let content = null;
 
-  if (checkingTicket) {
+  if (decodeError) {
+    content = (
+      <TicketError ticketData={ticketData} error={{ name: "InvalidTicket" }} />
+    );
+  } else if (checkingTicket) {
     content = (
       <div>
         <Spacer h={32} />
@@ -51,7 +56,6 @@ export function DevconnectCheckinScreen() {
     } else {
       content = (
         <TicketError
-          ticket={ticket}
           ticketData={ticketData}
           error={checkTicketResponse.error}
         />
@@ -63,15 +67,14 @@ export function DevconnectCheckinScreen() {
 }
 
 function TicketError({
-  ticket,
   ticketData,
   error
 }: {
-  ticket: RSATicketPCD;
   ticketData: ITicketData;
   error: TicketError;
 }) {
   let errorContent = null;
+  let showTicket = true;
 
   switch (error.name) {
     case "AlreadyCheckedIn":
@@ -100,6 +103,7 @@ function TicketError({
       );
       break;
     case "InvalidTicket":
+      showTicket = false;
       errorContent = (
         <>
           <ErrorTitle>Invalid ticket</ErrorTitle>
@@ -148,7 +152,7 @@ function TicketError({
   return (
     <AppContainer bg={"primary"}>
       <Container>
-        <TicketInfoSection ticketData={ticketData} />
+        {showTicket && <TicketInfoSection ticketData={ticketData} />}
         <ErrorContainer>{errorContent}</ErrorContainer>
         <div
           style={{
@@ -156,19 +160,33 @@ function TicketError({
             width: "100%"
           }}
         >
-          <CheckAnotherTicket />
+          <ScanAnotherTicket />
+          <Home />
         </div>
       </Container>
     </AppContainer>
   );
 }
 
-function CheckAnotherTicket() {
+function ScanAnotherTicket() {
   const onClick = useCallback(() => {
     window.location.href = "/#/scan";
   }, []);
 
-  return <Button onClick={onClick}>Check another</Button>;
+  return <Button onClick={onClick}>Scan Another Ticket</Button>;
+}
+
+function Home() {
+  const onClick = useCallback(() => {
+    window.location.href = "/#/";
+  }, []);
+
+  return (
+    <>
+      <Spacer h={8} />
+      <Button onClick={onClick}>Home</Button>
+    </>
+  );
 }
 
 function UserReadyForCheckin({
@@ -199,6 +217,8 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
     (async () => {
       try {
         if (!ticket) {
+          setResponse({ success: false, error: { name: "InvalidTicket" } });
+          setLoading(false);
           return;
         }
         setLoading(true);
@@ -253,12 +273,14 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
           {checkedIn ? (
             <>
               <CheckinSuccess>Checked In ✅</CheckinSuccess>
-              <CheckAnotherTicket />
+              <ScanAnotherTicket />
+              <Home />
             </>
           ) : (
             <>
               <CheckinFailure>Failed to check in ❌</CheckinFailure>
-              <CheckAnotherTicket />
+              <ScanAnotherTicket />
+              <Home />
             </>
           )}
         </>
@@ -290,19 +312,27 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
   );
 }
 
-function useDecodedTicket(): RSATicketPCD | undefined {
+function useDecodedTicket(): {
+  ticket: RSATicketPCD | undefined;
+  error: Error | undefined;
+} {
   const location = useLocation();
-  const [decodedPCD, setDecodedPCD] = useState<RSATicketPCD | undefined>();
+  const [ticket, setDecodedPCD] = useState<RSATicketPCD | undefined>();
+  const [error, setError] = useState<Error>();
 
   useEffect(() => {
     (async () => {
-      await sleep(500);
-      const pcd = await decodePCD(location);
-      setDecodedPCD(pcd);
+      try {
+        const pcd = await decodePCD(location);
+        setDecodedPCD(pcd);
+      } catch (e) {
+        console.log(e);
+        setError(e);
+      }
     })();
   }, [location, setDecodedPCD]);
 
-  return decodedPCD;
+  return { ticket, error };
 }
 
 async function decodePCD(
