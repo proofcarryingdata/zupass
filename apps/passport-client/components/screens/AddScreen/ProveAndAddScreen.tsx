@@ -6,7 +6,7 @@ import { DispatchContext } from "../../../src/dispatch";
 import { safeRedirect } from "../../../src/passportRequest";
 import {
   useHasUploaded,
-  useIsDownloaded,
+  useIsDownloaded
 } from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -21,7 +21,7 @@ import { GenericProveSection } from "../ProveScreen/GenericProveSection";
  * passport.
  */
 export function ProveAndAddScreen({
-  request,
+  request
 }: {
   request: PCDProveAndAddRequest;
 }) {
@@ -60,7 +60,11 @@ export function ProveAndAddScreen({
     content = (
       <AddedPCD
         onCloseClick={() => {
-          safeRedirect(request.returnUrl, serializedPCD);
+          if (request.returnPCD) {
+            safeRedirect(request.returnUrl, serializedPCD);
+          } else {
+            safeRedirect(request.returnUrl);
+          }
         }}
       />
     );

@@ -4,7 +4,7 @@ export enum PCDRequestType {
   Get = "Get",
   GetWithoutProving = "GetWithoutProving",
   Add = "Add",
-  ProveAndAdd = "ProveAndAdd",
+  ProveAndAdd = "ProveAndAdd"
 }
 
 export interface PCDRequest {
@@ -53,6 +53,7 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
   pcdType: string;
   args: ArgsOf<T>;
   options?: ProveOptions;
+  returnPCD?: boolean;
 }
 
 export function getWithoutProvingUrl(
@@ -63,7 +64,7 @@ export function getWithoutProvingUrl(
   const req: PCDGetWithoutProvingRequest = {
     type: PCDRequestType.GetWithoutProving,
     pcdType,
-    returnUrl,
+    returnUrl
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/get-without-proving?request=${encReq}`;
@@ -81,7 +82,7 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
     returnUrl: returnUrl,
     args: args,
     pcdType,
-    options,
+    options
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/prove?request=${encReq}`;
@@ -95,7 +96,7 @@ export function constructPassportPcdAddRequestUrl(
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
-    pcd,
+    pcd
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/add?request=${eqReq}`;
@@ -108,7 +109,8 @@ export function constructPassportPcdProveAndAddRequestUrl<
   returnUrl: string,
   pcdType: string,
   args: ArgsOf<T>,
-  options?: ProveOptions
+  options?: ProveOptions,
+  returnPCD?: boolean
 ) {
   const req: PCDProveAndAddRequest = {
     type: PCDRequestType.ProveAndAdd,
@@ -116,6 +118,7 @@ export function constructPassportPcdProveAndAddRequestUrl<
     pcdType,
     args,
     options,
+    returnPCD
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${passportOrigin}#/add?request=${eqReq}`;
