@@ -194,7 +194,9 @@ export class DevconnectPretixDataMocker {
   private newItem(name: string): DevconnectPretixItem {
     return {
       id: this.nextId(),
-      name: { en: name }
+      name: { en: name },
+      admission: true,
+      personalized: true
     };
   }
 

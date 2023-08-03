@@ -1,5 +1,6 @@
 import {
   DevconnectPretixEvent,
+  DevconnectPretixEventSettings,
   DevconnectPretixItem,
   DevconnectPretixOrder,
   IDevconnectPretixAPI
@@ -71,6 +72,26 @@ export function getDevconnectMockPretixAPI(
       const result = org.ordersByEventID.get(eventID) ?? [];
       logger(
         `[MOCK] fetchOrders('${eventID}') =>`,
+        JSON.stringify(result, null, 2)
+      );
+      return result;
+    },
+    fetchEventSettings: async (
+      orgUrl: string,
+      token: string,
+      eventID: string
+    ): Promise<DevconnectPretixEventSettings> => {
+      const org = mockData.organizersByOrgUrl.get(orgUrl);
+      if (!org) throw new Error(`missing org ${orgUrl}`);
+      if (org.token !== token)
+        throw new Error(`incorrect token ${token} for org ${orgUrl}`);
+
+      const result = {
+        attendee_emails_asked: true,
+        attendee_emails_required: true
+      };
+      logger(
+        `[MOCK] fetchEventSettings('${eventID}') =>`,
         JSON.stringify(result, null, 2)
       );
       return result;
