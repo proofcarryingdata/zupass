@@ -346,6 +346,64 @@ describe("devconnect functionality", function () {
     ]);
   });
 
+  step(
+    "should be able to sync an event with valid settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        { attendee_emails_asked: true, attendee_emails_required: true }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      expect(event?.event_name).to.eq(updatedNameInNewSync);
+      expect(event?.event_name).to.not.eq(originalEvent?.event_name);
+    }
+  );
+
+  step(
+    "should not be able to sync an event with invalid settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      expect(event?.event_name).to.not.eq(updatedNameInNewSync);
+      expect(event?.event_name).to.eq(originalEvent?.event_name);
+    }
+  );
+
   let user: User;
   let identity: Identity;
   let publicKey: NodeRSA;

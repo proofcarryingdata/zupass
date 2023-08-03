@@ -86,15 +86,18 @@ export function getDevconnectMockPretixAPI(
       if (org.token !== token)
         throw new Error(`incorrect token ${token} for org ${orgUrl}`);
 
-      const result = {
-        attendee_emails_asked: true,
-        attendee_emails_required: true
-      };
+      const result = org.settingsByEventID.get(eventID);
+
       logger(
         `[MOCK] fetchEventSettings('${eventID}') =>`,
         JSON.stringify(result, null, 2)
       );
-      return result;
+
+      if (result) {
+        return result;
+      } else {
+        throw new Error("Event settings not found");
+      }
     }
   };
 }
