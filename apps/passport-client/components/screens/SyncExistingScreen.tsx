@@ -57,7 +57,7 @@ export function SyncExistingScreen() {
 
       dispatch({
         type: "load-from-sync",
-        storage: decrypted,
+        storage: JSON.parse(decrypted),
         encryptionKey: syncKey
       });
 

@@ -1,12 +1,12 @@
 import {
   passportDecrypt,
   passportEncrypt,
-  PCDCrypto,
+  PCDCrypto
 } from "@pcd/passport-crypto";
 import {
   LoadE2EERequest,
   LoadE2EEResponse,
-  SaveE2EERequest,
+  SaveE2EERequest
 } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "chai-spies";
@@ -21,7 +21,7 @@ export async function testUserSync(application: PCDPass): Promise<void> {
   const { e2eeService } = application.services;
 
   const loadRequest: LoadE2EERequest = {
-    blobKey: syncKey,
+    blobKey: syncKey
   };
 
   const firstLoadResponse = httpMocks.createResponse();
@@ -30,7 +30,7 @@ export async function testUserSync(application: PCDPass): Promise<void> {
 
   const plaintextData = {
     test: "test",
-    one: 1,
+    one: 1
   };
   const encryptedData = await passportEncrypt(
     JSON.stringify(plaintextData),
@@ -39,7 +39,7 @@ export async function testUserSync(application: PCDPass): Promise<void> {
 
   const saveRequest: SaveE2EERequest = {
     blobKey: syncKey,
-    encryptedBlob: JSON.stringify(encryptedData),
+    encryptedBlob: JSON.stringify(encryptedData)
   };
 
   const saveResponse = httpMocks.createResponse();
@@ -51,9 +51,9 @@ export async function testUserSync(application: PCDPass): Promise<void> {
   const loadResponseJson =
     secondLoadResponse._getJSONData() as LoadE2EEResponse;
   expect(loadResponseJson).to.haveOwnProperty("encryptedStorage");
-  const decrypted = await passportDecrypt(
+  const decrypted: string = await passportDecrypt(
     loadResponseJson.encryptedStorage,
     syncKey
   );
-  expect(decrypted).to.deep.eq(plaintextData);
+  expect(JSON.parse(decrypted)).to.deep.eq(plaintextData);
 }

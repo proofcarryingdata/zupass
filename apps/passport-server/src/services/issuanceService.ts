@@ -54,7 +54,10 @@ export class IssuanceService {
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-    return { pcds };
+    const serialized = await Promise.all(
+      pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
+    );
+    return { pcds: serialized, folder: "Devconnect" };
   }
 
   public async handleCheckInRequest(
@@ -236,9 +239,9 @@ export class IssuanceService {
     return storedCommitment;
   }
 
-  private async ticketDataToSerializedPCD(
+  private async ticketDataToTicketPCD(
     ticketData: ITicketData
-  ): Promise<SerializedPCD> {
+  ): Promise<RSATicketPCD> {
     const serializedTicketData = JSON.stringify(ticketData);
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
@@ -268,11 +271,7 @@ export class IssuanceService {
       }
     });
 
-    const serializedTicketPCD = await RSATicketPCDPackage.serialize(
-      rsaTicketPCD
-    );
-
-    return serializedTicketPCD;
+    return rsaTicketPCD;
   }
 
   /**
@@ -280,7 +279,7 @@ export class IssuanceService {
    */
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
-  ): Promise<SerializedPCD[]> {
+  ): Promise<RSATicketPCD[]> {
     const commitment = await this.checkUserExists(request.userProof);
     const email = commitment?.email;
 
@@ -293,7 +292,7 @@ export class IssuanceService {
       email
     );
 
-    const serializedPCDs = await Promise.all(
+    const tickets = await Promise.all(
       ticketsDB
         // convert to ITicketData
         .map(
@@ -311,10 +310,10 @@ export class IssuanceService {
             }) satisfies ITicketData
         )
         // convert to serialized ticket PCD
-        .map((ticketData) => this.ticketDataToSerializedPCD(ticketData))
+        .map((ticketData) => this.ticketDataToTicketPCD(ticketData))
     );
 
-    return serializedPCDs;
+    return tickets;
   }
 }
 

@@ -20,14 +20,14 @@ export async function passportEncrypt(
 
   return {
     nonce,
-    ciphertext,
+    ciphertext
   };
 }
 
 export async function passportDecrypt(
   encryptedStorage: EncryptedPacket,
   encryptionKey: string
-): Promise<any> {
+): Promise<string> {
   const crypto = await cryptoPromise;
 
   const plaintext = crypto.xchacha20Decrypt(
@@ -41,5 +41,5 @@ export async function passportDecrypt(
     throw new Error("could not decrypt storage");
   }
 
-  return JSON.parse(plaintext);
+  return plaintext;
 }

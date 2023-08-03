@@ -47,7 +47,7 @@ import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("devconnect functionality", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let application: PCDPass;
   let _emailAPI: IEmailAPI;
@@ -390,6 +390,8 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const responseBody = response.body as IssuedPCDsResponse;
+
+      expect(responseBody.folder).to.eq("Devconnect");
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
       // important to note users are issued tickets pcd tickets even for

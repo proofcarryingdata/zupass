@@ -1,5 +1,9 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { EncryptedStorage, User } from "@pcd/passport-interface";
+import {
+  isSyncedEncryptedStorageV2,
+  SyncedEncryptedStorage,
+  User
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -21,12 +25,12 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppError, AppState } from "./state";
+import { sanitizeDateRanges } from "./user";
 import {
   downloadStorage,
   loadIssuedPCDs,
   uploadStorage
 } from "./useSyncE2EEStorage";
-import { sanitizeDateRanges } from "./user";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -67,7 +71,7 @@ export type Action =
   | { type: "participant-invalid" }
   | {
       type: "load-from-sync";
-      storage: EncryptedStorage;
+      storage: SyncedEncryptedStorage;
       encryptionKey: string;
     }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
@@ -302,15 +306,21 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 
 async function loadFromSync(
   encryptionKey: string,
-  storage: EncryptedStorage,
+  storage: SyncedEncryptedStorage,
   currentState: AppState,
   update: ZuUpdate
 ) {
   console.log("loading from sync", storage);
 
-  const pcds = new PCDCollection(await getPackages(), []);
+  let pcds: PCDCollection;
 
-  await pcds.deserializeAllAndAdd(storage.pcds);
+  if (isSyncedEncryptedStorageV2(storage)) {
+    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
+  } else {
+    pcds = await new PCDCollection(await getPackages());
+    await pcds.deserializeAllAndAdd(storage.pcds);
+  }
+
   // assumes that we only have one semaphore identity in the passport.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
@@ -381,9 +391,7 @@ async function sync(state: AppState, update: ZuUpdate) {
         uploadedUploadId: await pcds.getHash()
       });
     } else {
-      console.log(
-        `[SYNC] skipping download in favor of writing the storage for the first time`
-      );
+      console.log(`[SYNC] skipping download`);
       update({
         downloadedPCDs: true,
         downloadingPCDs: false
@@ -405,9 +413,16 @@ async function sync(state: AppState, update: ZuUpdate) {
     update({
       loadingIssuedPCDs: true
     });
-    const pcds = await loadIssuedPCDs(state);
-    await state.pcds.deserializeAllAndAdd(pcds, { upsert: true });
-    await savePCDs(state.pcds);
+
+    try {
+      const response = await loadIssuedPCDs(state);
+      const deserialized = await state.pcds.deserializeAll(response.pcds);
+      state.pcds.replaceFolderContents(response.folder, deserialized);
+      await savePCDs(state.pcds);
+    } catch (e) {
+      console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
+    }
+
     update({
       loadingIssuedPCDs: false,
       loadedIssuedPCDs: true,

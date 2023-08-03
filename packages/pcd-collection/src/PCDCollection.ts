@@ -10,10 +10,61 @@ import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 export class PCDCollection {
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
+  public folders: Record<string, string>; // pcd id -> folder
 
-  public constructor(packages: PCDPackage[], pcds?: PCD[]) {
+  public constructor(
+    packages: PCDPackage[],
+    pcds?: PCD[],
+    folders?: Record<string, string>
+  ) {
     this.packages = packages;
     this.pcds = pcds ?? [];
+    this.folders = folders ?? {};
+  }
+
+  public getAllFolderNames(): string[] {
+    const result = new Set<string>();
+    Object.entries(this.folders).forEach(([_pcdId, folder]) =>
+      result.add(folder)
+    );
+    return Array.from(result);
+  }
+
+  public setFolder(pcdId: string, folder: string): void {
+    if (!this.hasPCDWithId(pcdId)) {
+      throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
+    }
+
+    this.folders[pcdId] = folder;
+  }
+
+  public getFolder(pcdId: string): string | undefined {
+    if (!this.hasPCDWithId(pcdId)) {
+      return undefined;
+    }
+
+    return Object.entries(this.folders).find(
+      ([id, _folder]) => pcdId === id
+    )?.[1];
+  }
+
+  public getAllInFolder(folder: string): PCD[] {
+    const pcdIds = Object.entries(this.folders)
+      .filter(([_pcdId, f]) => f === folder)
+      .map(([pcdId, _f]) => pcdId);
+
+    return this.getByIds(pcdIds);
+  }
+
+  public removeAllInFolder(folder: string): void {
+    const inFolder = this.getAllInFolder(folder);
+    inFolder.forEach((pcd) => this.remove(pcd.id));
+  }
+
+  public replaceFolderContents(folder: string, pcds: PCD[]): void {
+    this.removeAllInFolder(folder);
+    this.addAll(pcds, { upsert: true });
+    pcds.forEach((pcd) => this.setFolder(pcd.id, folder));
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(
@@ -38,6 +89,13 @@ export class PCDCollection {
     return Promise.all(this.pcds.map(this.serialize.bind(this)));
   }
 
+  public async serializeCollection(): Promise<string> {
+    return JSON.stringify({
+      pcds: await Promise.all(this.pcds.map(this.serialize.bind(this))),
+      folders: this.folders
+    } satisfies SerializedPCDCollection);
+  }
+
   public async deserialize(serialized: SerializedPCD): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
     if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
@@ -57,8 +115,11 @@ export class PCDCollection {
     this.addAll(deserialized, options);
   }
 
-  public async remove(id: string) {
-    this.pcds = this.pcds.filter((pcd) => pcd.id !== id);
+  public async remove(pcdId: string) {
+    this.pcds = this.pcds.filter((pcd) => pcd.id !== pcdId);
+    this.folders = Object.fromEntries(
+      Object.entries(this.folders).filter(([id]) => id !== pcdId)
+    );
   }
 
   public async deserializeAndAdd(
@@ -99,14 +160,19 @@ export class PCDCollection {
     return this.getAll().map((pcd) => pcd.id);
   }
 
+  public getByIds(ids: string[]): PCD[] {
+    return this.pcds.filter(
+      (pcd) => ids.find((id) => pcd.id === id) !== undefined
+    );
+  }
+
   /**
    * Generates a unique hash based on the contents. This hash changes whenever
    * the set of pcds, or the contents of the pcds changes.
    */
   public async getHash(): Promise<string> {
-    const allSerialized = await this.serializeAll();
-    const stringified = allSerialized.map((s) => JSON.stringify(s)).join("\n");
-    const hashed = await getHash(stringified);
+    const allSerialized = await this.serializeCollection();
+    const hashed = await getHash(allSerialized);
     return hashed;
   }
 
@@ -124,13 +190,30 @@ export class PCDCollection {
 
   public static async deserialize(
     packages: PCDPackage[],
-    serializedPCDs: SerializedPCD[]
+    serialized: string
   ): Promise<PCDCollection> {
+    const parsed = JSON.parse(serialized) as Partial<SerializedPCDCollection>;
     const collection = new PCDCollection(packages, []);
+
+    const serializedPcdsList = parsed.pcds ?? [];
+    const parsedFolders = parsed.folders ?? {};
+
     const pcds: PCD[] = await Promise.all(
-      serializedPCDs.map(collection.deserialize.bind(collection))
+      serializedPcdsList.map(collection.deserialize.bind(collection))
     );
     collection.addAll(pcds, { upsert: true });
+    collection.folders = parsedFolders;
+
     return collection;
   }
+}
+
+/**
+ * {@link PCDCollection#serializeCollection} returns a stringified instance
+ * of this interface, and {@link PCDCollection.deserialize} takes a stringified
+ * instance of this object and returns a new {@link PCDCollection}.
+ */
+export interface SerializedPCDCollection {
+  pcds: SerializedPCD[];
+  folders: Record<string, string>;
 }
