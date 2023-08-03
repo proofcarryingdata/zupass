@@ -4,12 +4,12 @@ import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
-import { H3, InfoLine, Spacer, TextCenter } from "../core";
+import { H3, H4, InfoLine, Spacer, TextCenter } from "../core";
 import { IdentityQR } from "./IdentityQR";
 
 export function MainIdentityCard({
   showQrCode,
-  user,
+  user
 }: {
   showQrCode?: boolean;
   user?: User;
@@ -33,7 +33,10 @@ export function MainIdentityCard({
       <Spacer h={24} />
       <TextCenter>
         <H3 col="var(--primary-dark)">{actualUser.name}</H3>
-        <InfoLine>{actualUser.email}</InfoLine>
+        {appConfig.isZuzalu && <InfoLine>{actualUser.email}</InfoLine>}
+        {!appConfig.isZuzalu && (
+          <H4 col="var(--bg-dark-primary)">{actualUser.email}</H4>
+        )}
         <VisitorDateSection user={actualUser} />
       </TextCenter>
       <Spacer h={24} />
