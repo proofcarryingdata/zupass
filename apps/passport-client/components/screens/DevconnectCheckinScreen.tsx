@@ -272,7 +272,9 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
         <>
           {checkedIn ? (
             <>
-              <CheckinSuccess>Checked In ✅</CheckinSuccess>
+              <CheckedInContainer>
+                <CheckinSuccess>Checked In ✅</CheckinSuccess>
+              </CheckedInContainer>
               <ScanAnotherTicket />
               <Home />
             </>
@@ -430,4 +432,15 @@ const ErrorContainer = styled.div`
 
 const ErrorTitle = styled(H5)`
   color: var(--danger);
+`;
+
+const CheckedInContainer = styled.div`
+  padding: 64px 16px;
+  background-color: #dfffc6;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
