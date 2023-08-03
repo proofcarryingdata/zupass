@@ -136,13 +136,9 @@ export class DevconnectPretixSyncService {
 
       const organizerSyncPromises = []; // one per organizer
 
+      // Iterate over organizers and set up a sync promise for each
       for (const organizer of this.pretixConfig.organizers) {
         organizerSyncPromises.push(this.syncOrganizer(organizer));
-        /*for (const event of organizer.events) {
-          eventSyncPromises.push(
-            this.syncAllPretixForOrganizerAndEvent(organizer, event)
-          );
-        }*/
       }
 
       try {
@@ -165,6 +161,12 @@ export class DevconnectPretixSyncService {
     });
   }
 
+  /**
+   * Validate that an event's settings match our expectations.
+   * These settings correspond to the "Ask for email addresses per ticket"
+   * setting in the Pretix UI being set to "Ask and require input", which
+   * is mandatory for us.
+   */
   private validateEventSettings(
     settings: DevconnectPretixEventSettings
   ): boolean {
@@ -178,6 +180,13 @@ export class DevconnectPretixSyncService {
     }
   }
 
+  /**
+   * Validate that an item/products settings match our expectations.
+   * These settings correspond to the product being of type "Admission",
+   * "Personalization" being set to "Personalized ticket", and
+   * "Generate tickets" in the "Tickets & Badges" section being set to
+   * "Choose automatically depending on event settings" in the Pretix UI.
+   */
   private validateEventItem(item: DevconnectPretixItem): boolean {
     if (
       item.admission === true &&
@@ -190,6 +199,10 @@ export class DevconnectPretixSyncService {
     }
   }
 
+  /**
+   * Check all of the API responses for an event before syncing them to the
+   * DB.
+   */
   private checkEventData(
     eventData: EventData,
     eventConfig: DevconnectPretixEventConfig
@@ -197,6 +210,8 @@ export class DevconnectPretixSyncService {
     const { settings, items } = eventData;
     const activeItemIdSet = new Set(eventConfig.activeItemIDs);
 
+    // We want to make sure that we log all errors, so we collect everything
+    // and only throw an exception once we have found all of them.
     const errors = [];
 
     if (!this.validateEventSettings(settings)) {
@@ -206,6 +221,7 @@ export class DevconnectPretixSyncService {
     }
 
     for (const item of items) {
+      // Ignore items which are not in the events "activeItemIDs" set
       if (
         activeItemIdSet.has(item.id.toString()) &&
         !this.validateEventItem(item)
@@ -219,28 +235,38 @@ export class DevconnectPretixSyncService {
     }
   }
 
+  /**
+   * Fetch all of the API responses necessary to sync an event, so that we
+   * can inspect them before beginning a sync.
+   */
   private async fetchEventData(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig
   ): Promise<EventData> {
-    const { orgURL, token } = organizer;
-    const { eventID } = event;
+    return traced(NAME, "fetchEventData", async () => {
+      const { orgURL, token } = organizer;
+      const { eventID } = event;
 
-    const settings = await this.pretixAPI.fetchEventSettings(
-      orgURL,
-      token,
-      eventID
-    );
+      const settings = await this.pretixAPI.fetchEventSettings(
+        orgURL,
+        token,
+        eventID
+      );
 
-    const items = await this.pretixAPI.fetchItems(orgURL, token, eventID);
+      const items = await this.pretixAPI.fetchItems(orgURL, token, eventID);
 
-    const eventInfo = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
+      const eventInfo = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
 
-    const tickets = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
+      const tickets = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
-    return { settings, items, eventInfo, tickets };
+      return { settings, items, eventInfo, tickets };
+    });
   }
 
+  /**
+   * Sync an organizer's events. This process should abort if any invalid
+   * data is found in the event's API responses.
+   */
   private async syncOrganizer(
     organizer: DevconnectPretixOrganizerConfig
   ): Promise<PromiseSettledResult<void>[] | undefined> {
@@ -270,19 +296,14 @@ export class DevconnectPretixSyncService {
     });
   }
 
+  /**
+   * Sync a single event.
+   */
   private async syncEvent(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
     eventData: EventData
   ): Promise<void> {
-    // From here, we are going to:
-    // 1) Fetch the data relevant to this event from the API
-    // 2) Validate the settings embedded in this data
-    // 3) Feed the data into the individual sync functions
-    //
-    // If and only if the validation fails, we will throw an error,
-    // which will cause sync to halt for the organizer.
-
     try {
       const { eventInfo, items, tickets } = eventData;
 
@@ -598,40 +619,6 @@ export class DevconnectPretixSyncService {
       return true;
     });
   }
-
-  /**
-   * Syncs tickets from Pretix API for a given organizer and event
-   *
-  private async syncAllPretixForOrganizerAndEvent(
-    organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig
-  ): Promise<void> {
-    return traced(NAME, "syncAllPretixForOrganizerAndEvent", async (span) => {
-      const { orgURL } = organizer;
-      const { eventID } = event;
-
-      logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${orgURL} and ${eventID}`);
-
-      if (!(await this.syncEventInfos(organizer, event))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
-        );
-        return;
-      }
-
-      if (!(await this.syncItemInfos(organizer, event))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
-        );
-        return;
-      }
-
-      if (!(await this.syncTickets(organizer, event))) {
-        logger(`[DEVCONNECT PRETIX] Error updating tickets`);
-        return;
-      }
-    });
-  }*/
 
   /**
    * Converts a given list of orders to tickets, and sets
