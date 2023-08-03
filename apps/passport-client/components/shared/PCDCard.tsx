@@ -17,7 +17,7 @@ export function PCDCard({
   pcd,
   expanded,
   onClick,
-  hideRemoveButton,
+  hideRemoveButton
 }: {
   pcd: PCD;
   expanded?: boolean;
@@ -75,7 +75,7 @@ export function PCDCard({
           <CardHeader
             col={notCurrentVisitor ? "" : "var(--accent-lite)"}
             style={{
-              backgroundColor: notCurrentVisitor ? "var(--danger)" : "",
+              backgroundColor: notCurrentVisitor ? "var(--danger)" : ""
             }}
           >
             {headerContent}
@@ -102,7 +102,7 @@ export function PCDCard({
 
 function CardFooter({
   pcd,
-  isMainIdentity,
+  isMainIdentity
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
@@ -134,7 +134,7 @@ function CardFooter({
 
 function CardBody({
   pcd,
-  isMainIdentity,
+  isMainIdentity
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
@@ -142,7 +142,7 @@ function CardBody({
   const [state] = useContext(DispatchContext);
 
   if (isMainIdentity) {
-    return <MainIdentityCard showQrCode={true} />;
+    return <MainIdentityCard showQrCode={appConfig.isZuzalu} />;
   }
 
   if (state.pcds.hasPackage(pcd.type)) {
