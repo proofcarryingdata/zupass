@@ -169,15 +169,18 @@ export class DevconnectPretixSyncService {
    */
   private validateEventSettings(
     settings: DevconnectPretixEventSettings
-  ): boolean {
+  ): string[] {
+    const errors = [];
     if (
-      settings.attendee_emails_asked === true &&
-      settings.attendee_emails_required === true
+      settings.attendee_emails_asked !== true ||
+      settings.attendee_emails_required !== true
     ) {
-      return true;
-    } else {
-      return false;
+      errors.push(
+        `"Ask for email addresses per ticket" setting should be set to "Ask and require input"`
+      );
     }
+
+    return errors;
   }
 
   /**
@@ -187,16 +190,23 @@ export class DevconnectPretixSyncService {
    * "Generate tickets" in the "Tickets & Badges" section being set to
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
-  private validateEventItem(item: DevconnectPretixItem): boolean {
-    if (
-      item.admission === true &&
-      item.personalized === true &&
-      (item.generate_tickets === null || item.generate_tickets === undefined)
-    ) {
-      return true;
-    } else {
-      return false;
+  private validateEventItem(item: DevconnectPretixItem): string[] {
+    const errors = [];
+    if (item.admission !== true) {
+      errors.push(`Product type is not "Admission"`);
     }
+
+    if (item.personalized !== true) {
+      errors.push(`"Personalization" is not set to "Personalized ticket"`);
+    }
+
+    if (item.generate_tickets !== null && item.generate_tickets !== undefined) {
+      errors.push(
+        `"Generate tickets" is not set to "Choose automatically depending on event settings"`
+      );
+    }
+
+    return errors;
   }
 
   /**
@@ -214,19 +224,24 @@ export class DevconnectPretixSyncService {
     // and only throw an exception once we have found all of them.
     const errors = [];
 
-    if (!this.validateEventSettings(settings)) {
+    const eventSettingErrors = this.validateEventSettings(settings);
+    if (eventSettingErrors.length > 0) {
       errors.push(
-        `Event settings for "${eventData.eventInfo.name}" (${eventData.eventInfo.slug}) are invalid`
+        `Event settings for "${eventData.eventInfo.name.en}" (${eventData.eventInfo.slug}) are invalid:\n` +
+          eventSettingErrors.join("\n")
       );
     }
 
     for (const item of items) {
       // Ignore items which are not in the events "activeItemIDs" set
-      if (
-        activeItemIdSet.has(item.id.toString()) &&
-        !this.validateEventItem(item)
-      ) {
-        errors.push(`Event item "${item.name.en}" (${item.id}) is invalid`);
+      if (activeItemIdSet.has(item.id.toString())) {
+        const itemErrors = this.validateEventItem(item);
+        if (itemErrors.length > 0) {
+          errors.push(
+            `Product "${item.name.en}" (${item.id}) in event "${eventData.eventInfo.name.en}" is invalid:\n` +
+              itemErrors.join("\n")
+          );
+        }
       }
     }
 
