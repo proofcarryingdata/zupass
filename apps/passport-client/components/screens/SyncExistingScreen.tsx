@@ -1,7 +1,7 @@
 import {
   EncryptedPacket,
   getHash,
-  passportDecrypt,
+  passportDecrypt
 } from "@pcd/passport-crypto";
 import React, { useCallback, useContext, useState } from "react";
 import styled from "styled-components";
@@ -31,6 +31,9 @@ export function SyncExistingScreen() {
         setIsLoading(true);
         const blobHash = await getHash(syncKey);
         storage = await downloadEncryptedStorage(blobHash);
+        if (!storage) {
+          throw new Error("no e2ee for this sync key found");
+        }
       } catch (e: unknown) {
         console.error(e);
         dispatch({
@@ -41,8 +44,8 @@ export function SyncExistingScreen() {
               "Couldn't load end-to-end encrypted backup. " +
               `If this is your first time using ${
                 appConfig.isZuzalu ? "zupass.org" : "pcdpass.xyz"
-              }, please generate a new passport instead.`,
-          },
+              }, please generate a new passport instead.`
+          }
         });
         setIsLoading(false);
         return;
@@ -55,7 +58,7 @@ export function SyncExistingScreen() {
       dispatch({
         type: "load-from-sync",
         storage: decrypted,
-        encryptionKey: syncKey,
+        encryptionKey: syncKey
       });
 
       setIsLoading(false);
@@ -66,7 +69,7 @@ export function SyncExistingScreen() {
       console.error(e);
       dispatch({
         type: "error",
-        error: { title: "Sync failed", message, stack },
+        error: { title: "Sync failed", message, stack }
       });
     });
   }, [syncKey, dispatch]);
