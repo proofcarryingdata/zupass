@@ -105,6 +105,7 @@ export interface IssuedPCDsRequest {
  */
 export interface IssuedPCDsResponse {
   pcds: SerializedPCD[];
+  folder: string;
 }
 
 export interface CheckTicketRequest {

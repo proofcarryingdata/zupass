@@ -9,7 +9,7 @@ describe("Passport encryption", function () {
       email: "b",
       name: "c",
       role: "e",
-      uuid: "g",
+      uuid: "g"
     };
     const pcdCrypto = await PCDCrypto.newInstance();
     const encryptionKey = pcdCrypto.generateRandomKey(256);
@@ -17,14 +17,15 @@ describe("Passport encryption", function () {
     const encrypted = await passportEncrypt(
       JSON.stringify({
         pcds: sourcePCDs,
-        self: testUser,
+        self: testUser
       }),
       encryptionKey
     );
     const decrypted = await passportDecrypt(encrypted, encryptionKey);
-    const destinationPCDs = decrypted.pcds as Array<{ id: number }>;
+    const parsed = JSON.parse(decrypted);
+    const destinationPCDs = parsed.pcds as Array<{ id: number }>;
     assert.equal(destinationPCDs.length, 1);
     assert.equal(destinationPCDs[0].id, sourcePCDs[0].id);
-    assert.deepEqual(decrypted.self, testUser);
+    assert.deepEqual(parsed.self, testUser);
   });
 });

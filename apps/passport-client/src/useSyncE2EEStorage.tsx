@@ -1,17 +1,24 @@
 import {
   getHash,
   passportDecrypt,
-  passportEncrypt,
+  passportEncrypt
 } from "@pcd/passport-crypto";
-import { ISSUANCE_STRING, IssuedPCDsRequest } from "@pcd/passport-interface";
+import {
+  ISSUANCE_STRING,
+  IssuedPCDsRequest,
+  IssuedPCDsResponse,
+  isSyncedEncryptedStorageV2,
+  SyncedEncryptedStorage,
+  SyncedEncryptedStorageV2
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useMemo, useState } from "react";
 import {
   downloadEncryptedStorage,
-  uploadEncryptedStorage,
+  uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { DispatchContext } from "./dispatch";
@@ -19,7 +26,7 @@ import {
   loadEncryptionKey,
   loadPCDs,
   loadSelf,
-  savePCDs,
+  savePCDs
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
@@ -34,9 +41,10 @@ export async function uploadStorage(): Promise<void> {
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({
-      pcds: await pcds.serializeAll(),
+      pcds: await pcds.serializeCollection(),
       self: user,
-    }),
+      _storage_version: "v2"
+    } satisfies SyncedEncryptedStorageV2),
     encryptionKey
   );
 
@@ -65,13 +73,32 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
   }
 
   const decrypted = await passportDecrypt(storage, encryptionKey);
-  const pcds = new PCDCollection(await getPackages(), []);
-  await pcds.deserializeAllAndAdd(decrypted.pcds);
-  await savePCDs(pcds);
-  return pcds;
+
+  try {
+    const decryptedPacket = JSON.parse(decrypted) as SyncedEncryptedStorage;
+    let pcds: PCDCollection;
+
+    if (isSyncedEncryptedStorageV2(decryptedPacket)) {
+      pcds = await PCDCollection.deserialize(
+        await getPackages(),
+        decryptedPacket.pcds
+      );
+    } else {
+      pcds = new PCDCollection(await getPackages());
+      await pcds.deserializeAllAndAdd(decryptedPacket.pcds);
+    }
+
+    await savePCDs(pcds);
+    return pcds;
+  } catch (e) {
+    console.log("[SYNC] uploaded storage is corrupted - ignoring it");
+    return null;
+  }
 }
 
-export async function loadIssuedPCDs(state: AppState): Promise<SerializedPCD[]> {
+export async function loadIssuedPCDs(
+  state: AppState
+): Promise<IssuedPCDsResponse | undefined> {
   const request: IssuedPCDsRequest = {
     userProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
@@ -79,26 +106,26 @@ export async function loadIssuedPCDs(state: AppState): Promise<SerializedPCD[]> 
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity: state.identity,
+              identity: state.identity
             })
-          ),
+          )
         },
         signedMessage: {
           argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING,
-        },
+          value: ISSUANCE_STRING
+        }
       })
-    ),
+    )
   };
 
   const issuedPcdsResponse = await requestIssuedPCDs(request);
 
   if (!issuedPcdsResponse) {
     console.log("[ISSUED PCDS] unable to get issued pcds");
-    return [];
+    return undefined;
   }
 
-  return issuedPcdsResponse.pcds;
+  return issuedPcdsResponse;
 }
 
 export function useSyncE2EEStorage() {

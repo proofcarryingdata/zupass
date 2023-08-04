@@ -3,17 +3,28 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
 
+const OLD_PCDS_KEY = "pcds"; // deprecated
+const COLLECTION_KEY = "pcd_collection";
+
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
-  const serialized = await pcds.serializeAll();
-  const stringified = JSON.stringify(serialized);
-  window.localStorage["pcds"] = stringified;
+  const serialized = await pcds.serializeCollection();
+  window.localStorage[COLLECTION_KEY] = serialized;
 }
 
-export async function loadPCDs() {
-  const stringified = window.localStorage["pcds"];
-  const serialized = JSON.parse(stringified ?? "[]");
+export async function loadPCDs(): Promise<PCDCollection> {
+  const oldPCDs = window.localStorage[OLD_PCDS_KEY];
+  if (oldPCDs) {
+    const collection = new PCDCollection(await getPackages());
+    await collection.deserializeAllAndAdd(JSON.parse(oldPCDs ?? "[]"));
+    await savePCDs(collection);
+    window.localStorage.removeItem(OLD_PCDS_KEY);
+  }
 
-  return await PCDCollection.deserialize(await getPackages(), serialized);
+  const serializedCollection = window.localStorage[COLLECTION_KEY];
+  return await PCDCollection.deserialize(
+    await getPackages(),
+    serializedCollection ?? "{}"
+  );
 }
 
 export function saveEncryptionKey(key: string): void {

@@ -1,11 +1,27 @@
 import { SerializedPCD } from "@pcd/pcd-types";
 import { User } from "./zuzalu";
 
-/**
- * For each user, we store an encrypted version of this interface which
- * allows us to sync their data between devices.
- */
-export interface EncryptedStorage {
+export interface SyncedEncryptedStorageV1 {
   self: User;
   pcds: SerializedPCD[];
+}
+
+export interface SyncedEncryptedStorageV2 {
+  self: User;
+
+  /**
+   * Serialized {@link PCDCollection}.
+   */
+  pcds: string;
+  _storage_version: "v2";
+}
+
+export type SyncedEncryptedStorage =
+  | SyncedEncryptedStorageV1
+  | SyncedEncryptedStorageV2;
+
+export function isSyncedEncryptedStorageV2(
+  storage: any
+): storage is SyncedEncryptedStorageV2 {
+  return storage._storage_version === "v2";
 }
