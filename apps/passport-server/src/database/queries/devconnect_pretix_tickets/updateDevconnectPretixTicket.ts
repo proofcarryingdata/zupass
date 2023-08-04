@@ -27,15 +27,16 @@ returning *`,
  */
 export async function consumeDevconnectPretixTicket(
   client: Pool,
-  id: string
+  id: string,
+  checkerEmail: string
 ): Promise<boolean> {
   const result = await sqlQuery(
     client,
     `update devconnect_pretix_tickets
-    set is_consumed=TRUE
+    set is_consumed=TRUE, checker=$2, checkin_timestamp=now()
     where id=$1 and is_deleted=FALSE and is_consumed=FALSE
     returning id`,
-    [id]
+    [id, checkerEmail]
   );
   return result.rowCount === 1;
 }

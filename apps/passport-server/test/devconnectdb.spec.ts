@@ -380,7 +380,11 @@ describe("database reads and writes for devconnect ticket features", function ()
     const firstTicket = fetchedTickets[0];
     expect(firstTicket.is_consumed).to.eq(false);
 
-    await consumeDevconnectPretixTicket(db, firstTicket.id);
+    await consumeDevconnectPretixTicket(
+      db,
+      firstTicket.id,
+      "checker@example.com"
+    );
 
     const afterConsumptionTickets = await fetchDevconnectPretixTicketsByEmail(
       db,

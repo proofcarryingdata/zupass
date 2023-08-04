@@ -121,7 +121,8 @@ export type TicketError =
   | { name: "NotSuperuser" }
   | {
       name: "AlreadyCheckedIn";
-      checkinTimestamp: number;
+      checkinTimestamp: string | undefined;
+      checker: string | undefined;
     }
   | { name: "InvalidSignature" }
   | { name: "InvalidTicket" }

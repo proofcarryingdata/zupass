@@ -27,6 +27,8 @@ export interface DevconnectPretixTicket {
   is_consumed: boolean;
   position_id: string;
   secret: string;
+  checker?: string;
+  checkin_timestamp?: string;
 }
 
 export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
