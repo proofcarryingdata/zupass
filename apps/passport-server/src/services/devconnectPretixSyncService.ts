@@ -52,7 +52,6 @@ export class DevconnectPretixSyncService {
   private static readonly SYNC_INTERVAL_MS = 1000 * 60;
 
   private pretixAPI: IDevconnectPretixAPI;
-  private pretixConfig: DevconnectPretixConfig;
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
   private db: Pool;
@@ -66,7 +65,6 @@ export class DevconnectPretixSyncService {
   public constructor(
     context: ApplicationContext,
     pretixAPI: IDevconnectPretixAPI,
-    pretixConfig: DevconnectPretixConfig,
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
@@ -74,7 +72,6 @@ export class DevconnectPretixSyncService {
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
     this.pretixAPI = pretixAPI;
-    this.pretixConfig = pretixConfig;
     this._hasCompletedSyncSinceStarting = false;
   }
 
@@ -109,8 +106,15 @@ export class DevconnectPretixSyncService {
 
   public async trySync(): Promise<void> {
     try {
+      logger("[DEVCONNECT PRETIX] (Re)loading Pretix Config");
+      const devconnectPretixConfig = await getDevconnectPretixConfig(this.db);
+
+      if (!devconnectPretixConfig) {
+        throw new Error("Pretix Config could not be loaded");
+      }
+
       logger("[DEVCONNECT PRETIX] Sync start");
-      await this.sync();
+      await this.sync(devconnectPretixConfig);
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
       logger("[DEVCONNECT PRETIX] Sync successful");
@@ -130,14 +134,14 @@ export class DevconnectPretixSyncService {
    * Download Pretix state, and apply a diff to our state so that it
    * reflects the state in Pretix.
    */
-  private async sync(): Promise<void> {
+  private async sync(pretixConfig: DevconnectPretixConfig): Promise<void> {
     return traced(NAME, "sync", async () => {
       const syncStart = Date.now();
 
       const organizerSyncPromises = []; // one per organizer
 
       // Iterate over organizers and set up a sync promise for each
-      for (const organizer of this.pretixConfig.organizers) {
+      for (const organizer of pretixConfig.organizers) {
         organizerSyncPromises.push(this.syncOrganizer(organizer));
       }
 
@@ -718,18 +722,9 @@ export async function startDevconnectPretixSyncService(
     return null;
   }
 
-  const devconnectPretixConfig = await getDevconnectPretixConfig(
-    context.dbPool
-  );
-
-  if (!devconnectPretixConfig) {
-    return null;
-  }
-
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
     devconnectPretixAPI,
-    devconnectPretixConfig,
     rollbarService,
     semaphoreService
   );
