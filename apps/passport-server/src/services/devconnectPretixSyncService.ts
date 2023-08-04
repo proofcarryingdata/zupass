@@ -139,14 +139,13 @@ export class DevconnectPretixSyncService {
       const syncStart = Date.now();
 
       const organizerSyncPromises = []; // one per organizer
-
       // Iterate over organizers and set up a sync promise for each
       for (const organizer of pretixConfig.organizers) {
         organizerSyncPromises.push(this.syncOrganizer(organizer));
       }
 
       try {
-        await Promise.all(organizerSyncPromises);
+        const results = await Promise.all(organizerSyncPromises);
       } catch (e) {
         logger(
           "[DEVCONNECT PRETIX] Failed to save tickets for one or more events",
@@ -220,13 +219,13 @@ export class DevconnectPretixSyncService {
   private checkEventData(
     eventData: EventData,
     eventConfig: DevconnectPretixEventConfig
-  ): void {
+  ): string[] {
     const { settings, items } = eventData;
     const activeItemIdSet = new Set(eventConfig.activeItemIDs);
 
     // We want to make sure that we log all errors, so we collect everything
     // and only throw an exception once we have found all of them.
-    const errors = [];
+    const errors: string[] = [];
 
     const eventSettingErrors = this.validateEventSettings(settings);
     if (eventSettingErrors.length > 0) {
@@ -237,7 +236,7 @@ export class DevconnectPretixSyncService {
     }
 
     for (const item of items) {
-      // Ignore items which are not in the events "activeItemIDs" set
+      // Ignore items which are not in the event's "activeItemIDs" set
       if (activeItemIdSet.has(item.id.toString())) {
         const itemErrors = this.validateEventItem(item);
         if (itemErrors.length > 0) {
@@ -249,14 +248,12 @@ export class DevconnectPretixSyncService {
       }
     }
 
-    if (errors.length > 0) {
-      throw new Error(errors.join("\n"));
-    }
+    return errors;
   }
 
   /**
-   * Fetch all of the API responses necessary to sync an event, so that we
-   * can inspect them before beginning a sync.
+   * Fetch all of the API responses from Pretix necessary to sync an event,
+   * so that we can inspect them before beginning a sync.
    */
   private async fetchEventData(
     organizer: DevconnectPretixOrganizerConfig,
@@ -292,15 +289,45 @@ export class DevconnectPretixSyncService {
     return traced(NAME, "syncOrganizer", async () => {
       logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${organizer.orgURL}`);
       try {
+        const eventDataPromises = [];
         const eventSyncPromises = [];
 
-        for (const event of organizer.events) {
-          const eventData = await this.fetchEventData(organizer, event);
-          // Will throw an exception if event data is invalid, aborting
-          // sync for this organizer.
-          this.checkEventData(eventData, event);
+        const errors: string[] = [];
 
-          eventSyncPromises.push(this.syncEvent(organizer, event, eventData));
+        // First, let's fetch the data for all of the events
+        for (const event of organizer.events) {
+          eventDataPromises.push(
+            (async (): Promise<{
+              event: DevconnectPretixEventConfig;
+              data: EventData;
+            }> => {
+              return {
+                event,
+                data: await this.fetchEventData(organizer, event)
+              };
+            })()
+          );
+        }
+
+        // Wait for all of the event data to arrive
+        const allEventData = await Promise.all(eventDataPromises);
+
+        // Find errors in any of the event data
+        for (const { data, event } of allEventData) {
+          errors.push(...this.checkEventData(data, event));
+        }
+
+        if (errors.length > 0) {
+          // Something was wrong with the API response
+          throw new Error(
+            `Errors were encountered in the API response when synchronizing organizer ${organizer.id}:\n` +
+              errors.join("\n")
+          );
+        } else {
+          // Everything is OK, let's do the actual syncing
+          for (const { data, event } of allEventData) {
+            eventSyncPromises.push(this.syncEvent(organizer, event, data));
+          }
         }
 
         // Return a promise which resolves when all events are sync'ed.
@@ -317,6 +344,9 @@ export class DevconnectPretixSyncService {
 
   /**
    * Sync a single event.
+   * This coordinates the syncing of event info, items, and tickets to the DB.
+   * No actual fetching from Pretix happens here, as the data was already
+   * fetched when checking for validity.
    */
   private async syncEvent(
     organizer: DevconnectPretixOrganizerConfig,
