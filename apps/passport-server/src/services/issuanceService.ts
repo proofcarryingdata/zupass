@@ -11,11 +11,11 @@ import {
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import {
-  getPublicKey,
-  getTicketData,
   ITicketData,
   RSATicketPCD,
-  RSATicketPCDPackage
+  RSATicketPCDPackage,
+  getPublicKey,
+  getTicketData
 } from "@pcd/rsa-ticket-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -98,7 +98,8 @@ export class IssuanceService {
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
-        ticketData.ticketId ?? ""
+        ticketData.ticketId ?? "",
+        checker.email
       );
 
       if (successfullyConsumed) {
@@ -183,7 +184,12 @@ export class IssuanceService {
       if (ticketInDb.is_consumed) {
         return {
           success: false,
-          error: { name: "AlreadyCheckedIn", checkinTimestamp: Date.now() }
+          error: {
+            name: "AlreadyCheckedIn",
+            checker: ticketInDb.checker,
+            checkinTimestamp:
+              ticketInDb.checkin_timestamp || new Date().toISOString()
+          }
         };
       }
 

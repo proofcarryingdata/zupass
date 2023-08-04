@@ -4,13 +4,13 @@ import {
   ISSUANCE_STRING,
   TicketError
 } from "@pcd/passport-interface";
-import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
+import { Spacer, decodeQRPayload } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
-  getTicketData,
   ITicketData,
   RSATicketPCD,
-  RSATicketPCDPackage
+  RSATicketPCDPackage,
+  getTicketData
 } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -76,6 +76,7 @@ function TicketError({
   let errorContent = null;
   let showTicket = true;
 
+  console.log(error);
   switch (error.name) {
     case "AlreadyCheckedIn":
       errorContent = (
@@ -88,7 +89,7 @@ function TicketError({
           </Spread>
           <Spread>
             <span>Checked in by</span>
-            <span>TODO</span>
+            <span>{error.checker}</span>
           </Spread>
         </>
       );
