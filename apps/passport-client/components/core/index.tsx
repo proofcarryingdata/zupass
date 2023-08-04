@@ -1,5 +1,4 @@
 import { Spacer } from "@pcd/passport-ui";
-import * as React from "react";
 import styled from "styled-components";
 import { icons } from "../icons";
 import { Button } from "./Button";
@@ -32,6 +31,13 @@ export const H4 = styled.h4<{ col?: string }>`
   color: ${(p) => p.col || "var(--white)"};
   letter-spacing: 1px;
   font-size: 20px;
+  font-weight: 400;
+`;
+
+export const H5 = styled.h5<{ col?: string }>`
+  color: ${(p) => p.col || "var(--white)"};
+  letter-spacing: 1px;
+  font-size: 18px;
   font-weight: 400;
 `;
 

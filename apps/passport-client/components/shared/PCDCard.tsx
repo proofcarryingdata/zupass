@@ -213,7 +213,7 @@ const FooterContainer = styled.div`
   align-items: center;
 `;
 
-const CardBodyContainer = styled.div`
+export const CardBodyContainer = styled.div`
   background-color: white;
   color: var(--bg-dark-primary);
 `;

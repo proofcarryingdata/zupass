@@ -1,7 +1,8 @@
 import {
   CheckInResponse,
   CheckTicketResponse,
-  ISSUANCE_STRING
+  ISSUANCE_STRING,
+  TicketError
 } from "@pcd/passport-interface";
 import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -19,20 +20,30 @@ import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
 import { DispatchContext } from "../../src/dispatch";
-import { sleep } from "../../src/util";
-import { Button } from "../core";
+import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import {
+  CardBodyContainer,
+  CardHeader,
+  CardOutlineExpanded
+} from "../shared/PCDCard";
 
 export function DevconnectCheckinScreen() {
-  const ticket = useDecodedTicket();
+  const { ticket, error: decodeError } = useDecodedTicket();
+
   const { loading: checkingTicket, response: checkTicketResponse } =
     useCheckTicket(ticket);
+
   const ticketData = getTicketData(ticket);
 
   let content = null;
 
-  if (checkingTicket) {
+  if (decodeError) {
+    content = (
+      <TicketError ticketData={ticketData} error={{ name: "InvalidTicket" }} />
+    );
+  } else if (checkingTicket) {
     content = (
       <div>
         <Spacer h={32} />
@@ -44,18 +55,138 @@ export function DevconnectCheckinScreen() {
       content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
     } else {
       content = (
-        <>
-          <AppContainer bg={"primary"}>
-            <Container>
-              <div>{checkTicketResponse.error.name}</div>
-            </Container>
-          </AppContainer>
-        </>
+        <TicketError
+          ticketData={ticketData}
+          error={checkTicketResponse.error}
+        />
       );
     }
   }
 
   return <>{content}</>;
+}
+
+function TicketError({
+  ticketData,
+  error
+}: {
+  ticketData: ITicketData;
+  error: TicketError;
+}) {
+  let errorContent = null;
+  let showTicket = true;
+
+  switch (error.name) {
+    case "AlreadyCheckedIn":
+      errorContent = (
+        <>
+          <ErrorTitle>This ticket has already been checked in</ErrorTitle>
+          <Spacer h={8} />
+          <Spread>
+            <span>Checked in at</span>
+            <span>{error.checkinTimestamp}</span>
+          </Spread>
+          <Spread>
+            <span>Checked in by</span>
+            <span>TODO</span>
+          </Spread>
+        </>
+      );
+      break;
+    case "InvalidSignature":
+      errorContent = (
+        <>
+          <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
+          <Spacer h={8} />
+          <span>This ticket was not issued by PCDPass.</span>
+        </>
+      );
+      break;
+    case "InvalidTicket":
+      showTicket = false;
+      errorContent = (
+        <>
+          <ErrorTitle>Invalid ticket</ErrorTitle>
+          <Spacer h={8} />
+          <span>This ticket is invalid.</span>
+        </>
+      );
+      break;
+    case "NotSuperuser":
+      errorContent = (
+        <>
+          <ErrorTitle>
+            You are not authorized to check this ticket in
+          </ErrorTitle>
+          <Spacer h={8} />
+          <span>This event is: ""</span>
+          <div>The events you are able to check in are:</div>
+          <div>- a</div>
+          <div>- b</div>
+        </>
+      );
+      break;
+    case "ServerError":
+      errorContent = (
+        <>
+          <ErrorTitle>Network Error</ErrorTitle>
+          <Spacer h={8} />
+          <span>please try again</span>
+        </>
+      );
+      break;
+    case "TicketRevoked":
+      errorContent = (
+        <>
+          <ErrorTitle>This ticket was revoked</ErrorTitle>
+          <Spacer h={8} />
+          <Spread>
+            <span>Revoked at</span>
+            <span>{error.revokedTimestamp}</span>
+          </Spread>
+        </>
+      );
+      break;
+  }
+
+  return (
+    <AppContainer bg={"primary"}>
+      <Container>
+        {showTicket && <TicketInfoSection ticketData={ticketData} />}
+        <ErrorContainer>{errorContent}</ErrorContainer>
+        <div
+          style={{
+            marginTop: "16px",
+            width: "100%"
+          }}
+        >
+          <ScanAnotherTicket />
+          <Home />
+        </div>
+      </Container>
+    </AppContainer>
+  );
+}
+
+function ScanAnotherTicket() {
+  const onClick = useCallback(() => {
+    window.location.href = "/#/scan";
+  }, []);
+
+  return <Button onClick={onClick}>Scan Another Ticket</Button>;
+}
+
+function Home() {
+  const onClick = useCallback(() => {
+    window.location.href = "/#/";
+  }, []);
+
+  return (
+    <>
+      <Spacer h={8} />
+      <Button onClick={onClick}>Home</Button>
+    </>
+  );
 }
 
 function UserReadyForCheckin({
@@ -86,6 +217,8 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
     (async () => {
       try {
         if (!ticket) {
+          setResponse({ success: false, error: { name: "InvalidTicket" } });
+          setLoading(false);
           return;
         }
         setLoading(true);
@@ -138,9 +271,21 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
-            <CheckinSuccess>Checked In ✅</CheckinSuccess>
+            <>
+              <StatusContainer>
+                <CheckinSuccess>Checked In ✅</CheckinSuccess>
+              </StatusContainer>
+              <ScanAnotherTicket />
+              <Home />
+            </>
           ) : (
-            <CheckinFailure>Failed to check in ❌</CheckinFailure>
+            <>
+              <StatusContainer style={{ backgroundColor: "#ffd4d4" }}>
+                <CheckinFailure>Failed to check in ❌</CheckinFailure>
+              </StatusContainer>
+              <ScanAnotherTicket />
+              <Home />
+            </>
           )}
         </>
       )}
@@ -150,28 +295,48 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
 
 function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
   return (
-    <div>
-      <div>{ticketData.eventName}</div>
-      <div>{ticketData.ticketName}</div>
-      <div>{ticketData.attendeeName}</div>
-      <div>{ticketData.attendeeEmail}</div>
-    </div>
+    <CardOutlineExpanded>
+      <CardHeader>
+        <div>{ticketData.eventName}</div>
+      </CardHeader>
+      <CardBodyContainer>
+        <TicketInfoContainer>
+          <Spread>
+            <span>Ticket Type</span> {ticketData.ticketName}
+          </Spread>
+          <Spread>
+            <span>Name</span> {ticketData.attendeeName}
+          </Spread>
+          <Spread>
+            <span>Email</span> {ticketData.attendeeEmail}
+          </Spread>
+        </TicketInfoContainer>
+      </CardBodyContainer>
+    </CardOutlineExpanded>
   );
 }
 
-function useDecodedTicket(): RSATicketPCD | undefined {
+function useDecodedTicket(): {
+  ticket: RSATicketPCD | undefined;
+  error: Error | undefined;
+} {
   const location = useLocation();
-  const [decodedPCD, setDecodedPCD] = useState<RSATicketPCD | undefined>();
+  const [ticket, setDecodedPCD] = useState<RSATicketPCD | undefined>();
+  const [error, setError] = useState<Error>();
 
   useEffect(() => {
     (async () => {
-      await sleep(500);
-      const pcd = await decodePCD(location);
-      setDecodedPCD(pcd);
+      try {
+        const pcd = await decodePCD(location);
+        setDecodedPCD(pcd);
+      } catch (e) {
+        console.log(e);
+        setError(e);
+      }
     })();
   }, [location, setDecodedPCD]);
 
-  return decodedPCD;
+  return { ticket, error };
 }
 
 async function decodePCD(
@@ -229,14 +394,14 @@ async function checkinTicket(
   }
 }
 
+const TicketInfoContainer = styled.div`
+  padding: 16px;
+`;
+
 const Container = styled.div`
   margin-top: 64px;
-  border-radius: 12px;
-  border: 1px solid var(--accent-dark);
-  background: white;
   color: var(--bg-dark-primary);
   width: 400px;
-  padding: 16px;
 `;
 
 const CheckinSuccess = styled.span`
@@ -250,5 +415,34 @@ const CheckinFailure = styled.span`
 `;
 
 const CheckinSectionContainer = styled.div`
-  margin-top: 8px;
+  margin-top: 16px;
+`;
+
+const Spread = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ErrorContainer = styled.div`
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--danger);
+  border-radius: 12px;
+  background: white;
+`;
+
+const ErrorTitle = styled(H5)`
+  color: var(--danger);
+`;
+
+const StatusContainer = styled.div`
+  padding: 64px 16px;
+  background-color: #dfffc6;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
