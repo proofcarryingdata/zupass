@@ -92,8 +92,10 @@ function SubscriptionInfoRow({
   info: SubscriptionInfo;
 }) {
   const onSubscribeClick = useCallback(() => {
-    alert("subscribing");
-  }, []);
+    if (!confirm("are you sure you want to subscribe to this feed?")) return;
+
+    subscriptions.subscribe(url, info);
+  }, [info, subscriptions, url]);
 
   const existingSubscription = subscriptions.getSubscription(url, info.id);
   const alreadySubscribed = !!existingSubscription;
@@ -106,15 +108,19 @@ function SubscriptionInfoRow({
       you send a: {info.inputPCDType}
       <br />
       <Spacer h={8} />
-      <Button
-        onClick={onSubscribeClick}
-        disabled={alreadySubscribed}
-        size="small"
-      >
-        {alreadySubscribed ? "already subscribed" : "Subscribe"}
-      </Button>
+      {alreadySubscribed ? (
+        <AlreadySubscribed />
+      ) : (
+        <Button onClick={onSubscribeClick} size="small">
+          Subscribe
+        </Button>
+      )}
     </InfoRowContainer>
   );
+}
+
+function AlreadySubscribed() {
+  return <div></div>;
 }
 
 const InfoRowContainer = styled.div`

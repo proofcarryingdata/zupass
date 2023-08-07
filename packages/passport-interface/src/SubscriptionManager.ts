@@ -29,11 +29,16 @@ export class SubscriptionManager {
       );
     }
 
+    this.getOrAddProvider(url);
+
     this.activeSubscriptions.push({
       credential: undefined,
       feed: info,
-      providerUrl: url
+      providerUrl: url,
+      subscribedTimestamp: Date.now()
     });
+
+    this.updatedEmitter.emit();
   }
 
   public getSubscription(
@@ -72,6 +77,7 @@ export class SubscriptionManager {
     };
 
     this.providers.push(newProvider);
+    this.updatedEmitter.emit();
     return newProvider;
   }
 
@@ -115,4 +121,5 @@ export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
   providerUrl: string;
   feed: Feed;
   credential: PCDOf<T> | undefined;
+  subscribedTimestamp: number;
 }

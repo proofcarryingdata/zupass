@@ -34,7 +34,8 @@ import {
   loadSelf,
   loadSubscriptions,
   loadUserInvalid,
-  saveIdentity
+  saveIdentity,
+  saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
@@ -165,6 +166,8 @@ async function loadInitialState(): Promise<AppState> {
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
   const subscriptions = await loadSubscriptions();
+
+  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   let modal = "" as AppState["modal"];
 
