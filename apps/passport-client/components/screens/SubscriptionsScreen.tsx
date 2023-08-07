@@ -63,12 +63,15 @@ function SingleProvider({
       {providerUrl}
       <Spacer h={16} />
       {subscriptionsList.map((s) => (
-        <SubscriptionInfoRow
-          key={s.feed.id}
-          providerUrl={providerUrl}
-          info={s.feed}
-          subscriptions={subscriptions}
-        />
+        <>
+          <Spacer h={8} />
+          <SubscriptionInfoRow
+            key={s.feed.id}
+            providerUrl={providerUrl}
+            info={s.feed}
+            subscriptions={subscriptions}
+          />
+        </>
       ))}
     </ProviderContainer>
   );
