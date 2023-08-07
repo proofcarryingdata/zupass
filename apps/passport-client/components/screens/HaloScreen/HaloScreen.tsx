@@ -1,6 +1,6 @@
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { DispatchContext } from "../../../src/dispatch";
+import { useDispatch } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -12,7 +12,7 @@ import { AddHaloScreen } from "./AddHaloScreen";
  */
 export function HaloScreen() {
   const location = useLocation();
-  const [_state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const params = new URLSearchParams(location.search);
   useSyncE2EEStorage();
 

@@ -1,9 +1,9 @@
 import { Identity } from "@semaphore-protocol/identity";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { requestConfirmationEmail } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
 import {
   BackgroundGlow,
@@ -14,7 +14,7 @@ import {
   HR,
   Spacer,
   TextCenter,
-  ZuLogo,
+  ZuLogo
 } from "../core";
 import { Button, LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
@@ -25,8 +25,7 @@ import { AppContainer } from "../shared/AppContainer";
  * verification link.
  */
 export function NewPassportScreen() {
-  const [state] = useContext(DispatchContext);
-  const { pendingAction } = state;
+  const pendingAction = usePendingAction();
 
   useEffect(() => {
     if (pendingAction == null || pendingAction.type !== "new-passport") {
@@ -42,8 +41,8 @@ export function NewPassportScreen() {
 }
 
 function SendEmailVerification({ email }: { email: string }) {
-  const [state, dispatch] = useContext(DispatchContext);
-  const { identity } = state;
+  const identity = useIdentity();
+  const dispatch = useDispatch();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
 

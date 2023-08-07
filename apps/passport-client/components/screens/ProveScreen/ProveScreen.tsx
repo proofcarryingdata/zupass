@@ -1,9 +1,9 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { DispatchContext } from "../../../src/dispatch";
+import { useDispatch, useSelf } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -14,7 +14,8 @@ import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function ProveScreen() {
   const location = useLocation();
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const self = useSelf();
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
 
@@ -25,7 +26,7 @@ export function ProveScreen() {
     }
   }, [dispatch, screen]);
 
-  if (state.self == null) {
+  if (self == null) {
     sessionStorage.pendingProofRequest = JSON.stringify(request);
     window.location.href = "/#/login";
     window.location.reload();

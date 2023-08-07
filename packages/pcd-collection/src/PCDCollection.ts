@@ -1,6 +1,6 @@
+import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -8,6 +8,11 @@ import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
  * PCDs.
  */
 export class PCDCollection {
+  /**
+   * Emits an event whenever the hash of this {@link PCDCollection} changes.
+   */
+  public readonly hashEmitter: Emitter<string>;
+
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
   public folders: Record<string, string>; // pcd id -> folder
@@ -20,6 +25,7 @@ export class PCDCollection {
     this.packages = packages;
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
+    this.hashEmitter = new Emitter();
   }
 
   public getAllFolderNames(): string[] {
@@ -36,6 +42,7 @@ export class PCDCollection {
     }
 
     this.folders[pcdId] = folder;
+    this.recalculateAndEmitHash();
   }
 
   public getFolder(pcdId: string): string | undefined {
@@ -120,6 +127,7 @@ export class PCDCollection {
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
     );
+    this.recalculateAndEmitHash();
   }
 
   public async deserializeAndAdd(
@@ -146,6 +154,7 @@ export class PCDCollection {
     }
 
     this.pcds = Array.from(currentMap.values());
+    this.recalculateAndEmitHash();
   }
 
   public size(): number {
@@ -186,6 +195,10 @@ export class PCDCollection {
 
   public getPCDsByType(type: string) {
     return this.pcds.filter((pcd) => pcd.type === type);
+  }
+
+  private recalculateAndEmitHash() {
+    this.getHash().then((newHash) => this.hashEmitter.emit(newHash));
   }
 
   public static async deserialize(

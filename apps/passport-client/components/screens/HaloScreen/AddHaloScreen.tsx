@@ -1,18 +1,18 @@
 import {
   HaLoNoncePCD,
   HaLoNoncePCDArgs,
-  HaLoNoncePCDPackage,
+  HaLoNoncePCDPackage
 } from "@pcd/halo-nonce-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { DispatchContext } from "../../../src/dispatch";
 import {
-  useHasUploaded,
+  useDispatch,
   useIsDownloaded,
-  useLoggedIn,
-} from "../../../src/useSyncE2EEStorage";
+  useIsLoggedIn
+} from "../../../src/appHooks";
+import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, Spacer, TextCenter } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -24,18 +24,18 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
 export function AddHaloScreen({
   pk2,
   rnd,
-  rndsig,
+  rndsig
 }: {
   pk2: string;
   rnd: string;
   rndsig: string;
 }) {
   const location = useLocation();
-  const [_state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const [pcd, setPCD] = useState<HaLoNoncePCD | undefined>(undefined);
   const [invalidPCD, setInvalidPCD] = useState(false);
-  const loggedIn = useLoggedIn();
+  const loggedIn = useIsLoggedIn();
   const hasUploaded = useHasUploaded();
   const isDownloaded = useIsDownloaded();
 
@@ -44,16 +44,16 @@ export function AddHaloScreen({
       const args: HaLoNoncePCDArgs = {
         pk2: {
           argumentType: ArgumentTypeName.String,
-          value: pk2,
+          value: pk2
         },
         rnd: {
           argumentType: ArgumentTypeName.String,
-          value: rnd,
+          value: rnd
         },
         rndsig: {
           argumentType: ArgumentTypeName.String,
-          value: rndsig,
-        },
+          value: rndsig
+        }
       };
 
       let producedPCD;

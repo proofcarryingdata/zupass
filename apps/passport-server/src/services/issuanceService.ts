@@ -11,11 +11,11 @@ import {
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import {
+  getPublicKey,
+  getTicketData,
   ITicketData,
   RSATicketPCD,
-  RSATicketPCDPackage,
-  getPublicKey,
-  getTicketData
+  RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -57,6 +57,7 @@ export class IssuanceService {
     const serialized = await Promise.all(
       pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
     );
+
     return { pcds: serialized, folder: "Devconnect" };
   }
 

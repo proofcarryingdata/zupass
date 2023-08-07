@@ -1,13 +1,13 @@
 import {
   encodeQRPayload,
-  QRDisplayWithRegenerateAndStorage,
+  QRDisplayWithRegenerateAndStorage
 } from "@pcd/passport-ui";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useCallback, useContext } from "react";
+import { useCallback } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
+import { useIdentity, useSelf } from "../../src/appHooks";
 import { createQRProof } from "../../src/createQRProof";
-import { DispatchContext } from "../../src/dispatch";
 import { makeEncodedVerifyLink } from "../../src/qr";
 import { icons } from "../icons";
 
@@ -23,8 +23,9 @@ const [qrBg, qrFg] = (() => {
 })();
 
 export function IdentityQR() {
-  const [state] = useContext(DispatchContext);
-  const { identity, self } = state;
+  const identity = useIdentity();
+  const self = useSelf();
+
   const { uuid } = self;
 
   const generate = useCallback(async () => {

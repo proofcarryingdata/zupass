@@ -1,6 +1,8 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { PCD } from "@pcd/pcd-types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DispatchContext } from "../../src/dispatch";
+import styled from "styled-components";
+import { usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -9,17 +11,20 @@ import { AppHeader } from "../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
 import { PCDCard } from "../shared/PCDCard";
 
+export const HomeScreen = React.memo(HomeScreenImpl);
+
 /**
  * Show the user their passport, an overview of cards / PCDs.
  */
-export function HomeScreen() {
+export function HomeScreenImpl() {
   useSyncE2EEStorage();
 
-  const [state] = useContext(DispatchContext);
+  const pcds = usePCDs();
+  const self = useSelf();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (state.self == null) {
+    if (self == null) {
       console.log("Redirecting to login screen");
       navigate("/login");
     } else if (sessionStorage.pendingProofRequest != null) {
@@ -50,10 +55,6 @@ export function HomeScreen() {
     }
   });
 
-  const pcds = useMemo(() => {
-    return state.pcds.getAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.pcds, state]);
   const mainIdPCD = useMemo(() => {
     return pcds[0]?.id;
   }, [pcds]);
@@ -76,7 +77,11 @@ export function HomeScreen() {
     return selected;
   }, [pcds, selectedPCDID]);
 
-  if (state.self == null) return null;
+  const onPcdClick = useCallback((id: string) => {
+    setSelectedPCDID(id);
+  }, []);
+
+  if (self == null) return null;
 
   return (
     <>
@@ -86,21 +91,15 @@ export function HomeScreen() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {pcds.map((pcd) => {
-            return (
-              <div id={pcd.id} key={pcd.id}>
-                <Spacer h={8} />
-                <PCDCard
-                  pcd={pcd}
-                  expanded={pcd.id === selectedPCD?.id}
-                  isMainIdentity={pcd.id === mainIdPCD}
-                  onClick={() => {
-                    setSelectedPCDID(pcd.id);
-                  }}
-                />
-              </div>
-            );
-          })}
+          {pcds.map((pcd) => (
+            <WrappedPCDCard
+              key={pcd.id}
+              pcd={pcd}
+              mainIdPCD={mainIdPCD}
+              onPcdClick={onPcdClick}
+              expanded={pcd.id === selectedPCD?.id}
+            />
+          ))}
           <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
@@ -108,3 +107,33 @@ export function HomeScreen() {
     </>
   );
 }
+
+const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
+
+function WrappedPCDCardImpl({
+  pcd,
+  expanded,
+  mainIdPCD,
+  onPcdClick
+}: {
+  pcd: PCD;
+  expanded: boolean;
+  mainIdPCD: string;
+  onPcdClick?: (id: string) => void;
+}) {
+  return (
+    <PCDContainer key={"container-" + pcd.id}>
+      <PCDCard
+        key={"card-" + pcd.id}
+        pcd={pcd}
+        expanded={expanded}
+        isMainIdentity={pcd.id === mainIdPCD}
+        onClick={onPcdClick}
+      />
+    </PCDContainer>
+  );
+}
+
+const PCDContainer = styled.div`
+  margin-top: 8px;
+`;

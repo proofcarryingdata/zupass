@@ -1,18 +1,21 @@
 import { PCD } from "@pcd/pcd-types";
-import { useCallback, useContext, useMemo } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { usePCDCollection, useSelf } from "../../src/appHooks";
+import { StateContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 
+export const PCDCard = React.memo(PCDCardImpl);
+
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
  * just the top of the card to allow stacking.
  */
-export function PCDCard({
+function PCDCardImpl({
   isMainIdentity,
   pcd,
   expanded,
@@ -22,10 +25,50 @@ export function PCDCard({
   pcd: PCD;
   expanded?: boolean;
   isMainIdentity?: boolean;
-  onClick?: () => void;
+  onClick?: (id: string) => void;
   hideRemoveButton?: boolean;
 }) {
-  const [state] = useContext(DispatchContext);
+  const clickHandler = useCallback(() => {
+    onClick(pcd.id);
+  }, [onClick, pcd.id]);
+
+  if (expanded) {
+    return (
+      <CardContainerExpanded>
+        <CardOutlineExpanded>
+          <CardHeader>
+            <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+          </CardHeader>
+          <CardBodyContainer>
+            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
+            {!hideRemoveButton && (
+              <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
+            )}
+          </CardBodyContainer>
+        </CardOutlineExpanded>
+      </CardContainerExpanded>
+    );
+  }
+
+  return (
+    <CardContainerCollapsed onClick={clickHandler}>
+      <CardOutlineCollapsed>
+        <CardHeaderCollapsed>
+          <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+        </CardHeaderCollapsed>
+      </CardOutlineCollapsed>
+    </CardContainerCollapsed>
+  );
+}
+
+function HeaderContent({
+  pcd,
+  isMainIdentity
+}: {
+  pcd: PCD;
+  isMainIdentity: boolean;
+}) {
+  const self = useSelf();
   const pcdPackage = usePackage(pcd);
 
   const displayOptions = useMemo(() => {
@@ -35,12 +78,10 @@ export function PCDCard({
   }, [pcd, pcdPackage]);
 
   let header;
-  let notCurrentVisitor = false;
-
   if (isMainIdentity && !appConfig.isZuzalu) {
     header = "PCDPASS IDENTITY";
   } else if (isMainIdentity) {
-    const visitorStatus = getVisitorStatus(state.self);
+    const visitorStatus = getVisitorStatus(self);
 
     if (
       visitorStatus.isVisitor &&
@@ -55,9 +96,6 @@ export function PCDCard({
     } else {
       header = "VERIFIED ZUZALU PASSPORT";
     }
-
-    notCurrentVisitor =
-      visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
   }
@@ -68,46 +106,19 @@ export function PCDCard({
     pcdPackage?.renderCardBody({ pcd, returnHeader: true })
   );
 
-  if (expanded) {
-    return (
-      <CardContainerExpanded>
-        <CardOutlineExpanded>
-          <CardHeader
-            col={notCurrentVisitor ? "" : "var(--accent-lite)"}
-            style={{
-              backgroundColor: notCurrentVisitor ? "var(--danger)" : ""
-            }}
-          >
-            {headerContent}
-          </CardHeader>
-          <CardBodyContainer>
-            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
-            {!hideRemoveButton && (
-              <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
-            )}
-          </CardBodyContainer>
-        </CardOutlineExpanded>
-      </CardContainerExpanded>
-    );
-  }
-
-  return (
-    <CardContainerCollapsed {...{ onClick }}>
-      <CardOutlineCollapsed>
-        <CardHeaderCollapsed>{headerContent}</CardHeaderCollapsed>
-      </CardOutlineCollapsed>
-    </CardContainerCollapsed>
-  );
+  return headerContent;
 }
 
-function CardFooter({
+const CardFooter = React.memo(CardFooterImpl);
+
+function CardFooterImpl({
   pcd,
   isMainIdentity
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
-  const [_, dispatch] = useContext(DispatchContext);
+  const { dispatch } = useContext(StateContext);
 
   const onRemoveClick = useCallback(() => {
     if (
@@ -139,14 +150,14 @@ function CardBody({
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
-  const [state] = useContext(DispatchContext);
+  const pcdCollection = usePCDCollection();
 
   if (isMainIdentity) {
     return <MainIdentityCard showQrCode={appConfig.isZuzalu} />;
   }
 
-  if (state.pcds.hasPackage(pcd.type)) {
-    const pcdPackage = state.pcds.getPackage(pcd.type);
+  if (pcdCollection.hasPackage(pcd.type)) {
+    const pcdPackage = pcdCollection.getPackage(pcd.type);
     if (pcdPackage.renderCardBody) {
       const Component = pcdPackage.renderCardBody;
       return <Component pcd={pcd} />;

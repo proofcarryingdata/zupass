@@ -1,18 +1,19 @@
-import * as React from "react";
 import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../../src/dispatch";
+import { useAppError, useDispatch } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
 
 // Wrapper for all screens.
 export function AppContainer({
   bg,
-  children,
+  children
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
 }) {
-  const [state, dispatch] = React.useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const error = useAppError();
+
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),
     [dispatch]
@@ -23,7 +24,7 @@ export function AppContainer({
     <Background color={col}>
       <Container>
         {children}
-        {state.error && <ErrorPopup error={state.error} onClose={onClose} />}
+        {error && <ErrorPopup error={error} onClose={onClose} />}
       </Container>
     </Background>
   );
