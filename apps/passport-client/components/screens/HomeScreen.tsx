@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import { usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
@@ -89,15 +90,15 @@ export function HomeScreen() {
         <Placeholder minH={540}>
           {pcds.map((pcd) => {
             return (
-              <div id={pcd.id} key={pcd.id}>
-                <Spacer h={8} />
+              <PCDContainer key={pcd.id + "-container"}>
                 <PCDCard
+                  key={pcd.id + "-card"}
                   pcd={pcd}
                   expanded={pcd.id === selectedPCD?.id}
                   isMainIdentity={pcd.id === mainIdPCD}
                   onClick={onPcdClick}
                 />
-              </div>
+              </PCDContainer>
             );
           })}
           <LoadingIssuedPCDs />
@@ -107,3 +108,7 @@ export function HomeScreen() {
     </>
   );
 }
+
+const PCDContainer = styled.div`
+  margin-top: 8px;
+`;
