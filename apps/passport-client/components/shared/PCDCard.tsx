@@ -51,7 +51,7 @@ function PCDCardImpl({
   }
 
   return (
-    <CardContainerCollapsed {...{ onClick: clickHandler }}>
+    <CardContainerCollapsed onClick={clickHandler}>
       <CardOutlineCollapsed>
         <CardHeaderCollapsed>
           <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
