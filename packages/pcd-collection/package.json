@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -18,15 +18,15 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
   },
   "dependencies": {
-    "@pcd/emitter": "0.0.1",
-    "@pcd/pcd-types": "0.6.0",
+    "@pcd/emitter": "0.0.2",
+    "@pcd/pcd-types": "0.6.1",
     "chai": "^4.3.7",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/passport-crypto": "0.6.0",
-    "@pcd/rsa-pcd": "0.1.0",
+    "@pcd/passport-crypto": "0.6.1",
+    "@pcd/rsa-pcd": "0.1.1",
     "@pcd/tsconfig": "*",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",

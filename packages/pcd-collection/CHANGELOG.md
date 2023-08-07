@@ -1,5 +1,14 @@
 # @pcd/pcd-types
 
+## 0.6.1
+
+### Patch Changes
+
+- update packages.
+- Updated dependencies
+  - @pcd/emitter@0.0.2
+  - @pcd/pcd-types@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes
