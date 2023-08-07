@@ -20,6 +20,24 @@ export class SubscriptionManager {
     this.activeSubscriptions = activeSubscriptions;
   }
 
+  public getSubscriptionsByProvider(): Map<string, ActiveSubscription[]> {
+    const result: Map<string, ActiveSubscription[]> = new Map();
+    const providers = this.getProviders();
+
+    for (const provider of providers) {
+      const array = result.get(provider.providerUrl) ?? [];
+      result.set(provider.providerUrl, array);
+
+      array.push(
+        ...this.activeSubscriptions.filter(
+          (s) => s.providerUrl === provider.providerUrl
+        )
+      );
+    }
+
+    return result;
+  }
+
   public unsubscribe(providerUrl: string, feedId: string): void {
     const existingSubscription = this.getSubscription(providerUrl, feedId);
 

@@ -79,7 +79,7 @@ export function AddSubscriptionScreen() {
           infos.map((info, i) => (
             <SubscriptionInfoRow
               subscriptions={subs}
-              url={url}
+              providerUrl={url}
               info={info}
               key={i}
             />
@@ -89,22 +89,25 @@ export function AddSubscriptionScreen() {
   );
 }
 
-function SubscriptionInfoRow({
+export function SubscriptionInfoRow({
   subscriptions,
-  url,
+  providerUrl,
   info
 }: {
   subscriptions: SubscriptionManager;
-  url: string;
+  providerUrl: string;
   info: Feed;
 }) {
   const onSubscribeClick = useCallback(() => {
     if (!confirm("are you sure you want to subscribe to this feed?")) return;
 
-    subscriptions.subscribe(url, info);
-  }, [info, subscriptions, url]);
+    subscriptions.subscribe(providerUrl, info);
+  }, [info, subscriptions, providerUrl]);
 
-  const existingSubscription = subscriptions.getSubscription(url, info.id);
+  const existingSubscription = subscriptions.getSubscription(
+    providerUrl,
+    info.id
+  );
   const alreadySubscribed = !!existingSubscription;
 
   return (
