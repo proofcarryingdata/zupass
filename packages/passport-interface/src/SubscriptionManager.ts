@@ -2,34 +2,81 @@ import { Emitter } from "@pcd/emitter";
 import { ArgsOf, PCDOf, PCDPackage, PCDTypeOf } from "@pcd/pcd-types";
 
 export interface SerializedSubscriptionManager {
-  subscriptions: SubscriptionProvider[];
-  subscriptionInfos: SubscriptionInfo[];
-  activeSubscriptions: ActiveSubscription[];
+  providers: SubscriptionProvider[];
+  subscribedFeeds: ActiveSubscription[];
 }
 
 export class SubscriptionManager {
   public updatedEmitter: Emitter;
   private providers: SubscriptionProvider[];
-  private subscriptionInfos: SubscriptionInfo[];
   private activeSubscriptions: ActiveSubscription[];
 
   public constructor(
     providers: SubscriptionProvider[],
-    subscriptionInfos: SubscriptionInfo[],
     activeSubscriptions: ActiveSubscription[]
   ) {
     this.updatedEmitter = new Emitter();
     this.providers = providers;
-    this.subscriptionInfos = subscriptionInfos;
     this.activeSubscriptions = activeSubscriptions;
+  }
+
+  public subscribe(url: string, info: Feed): void {
+    const existingSubscription = this.getSubscription(url, info.id);
+
+    if (existingSubscription) {
+      throw new Error(
+        `already subscribed on provider ${url} to feed ${info.id} `
+      );
+    }
+
+    this.activeSubscriptions.push({
+      credential: undefined,
+      feed: info,
+      providerUrl: url
+    });
+  }
+
+  public getSubscription(
+    url: string,
+    infoId: string
+  ): ActiveSubscription | undefined {
+    return this.activeSubscriptions.find(
+      (s) => s.providerUrl === url && s.feed.id === infoId
+    );
+  }
+
+  public hasProvider(url: string): boolean {
+    return this.getProvider(url) !== undefined;
+  }
+
+  public getProvider(url: string): SubscriptionProvider | undefined {
+    return this.providers.find((p) => p.url === url);
+  }
+
+  public getOrAddProvider(url: string): SubscriptionProvider {
+    const existingProvider = this.getProvider(url);
+    if (existingProvider) {
+      return existingProvider;
+    }
+    return this.addProvider(url);
+  }
+
+  public addProvider(url: string) {
+    if (this.hasProvider(url)) {
+      throw new Error(`provider ${url} already exists`);
+    }
+
+    const newProvider: SubscriptionProvider = {
+      url,
+      timestampAdded: Date.now()
+    };
+
+    this.providers.push(newProvider);
+    return newProvider;
   }
 
   public getProviders(): SubscriptionProvider[] {
     return this.providers;
-  }
-
-  public getSubscriptionInfos(): SubscriptionInfo[] {
-    return this.subscriptionInfos;
   }
 
   public getActiveSubscriptions(): ActiveSubscription[] {
@@ -38,28 +85,26 @@ export class SubscriptionManager {
 
   public serialize(): string {
     return JSON.stringify({
-      subscriptions: this.providers,
-      subscriptionInfos: this.subscriptionInfos,
-      activeSubscriptions: this.activeSubscriptions
+      providers: this.providers,
+      subscribedFeeds: this.activeSubscriptions
     } satisfies SerializedSubscriptionManager);
   }
 
   public static deserialize(serialized: string): SubscriptionManager {
     const parsed = JSON.parse(serialized) as SerializedSubscriptionManager;
     return new SubscriptionManager(
-      parsed.subscriptions ?? [],
-      parsed.subscriptionInfos ?? [],
-      parsed.activeSubscriptions ?? []
+      parsed.providers ?? [],
+      parsed.subscribedFeeds ?? []
     );
   }
 }
 
 export interface SubscriptionProvider {
-  id: string;
   url: string;
+  timestampAdded: number;
 }
 
-export interface SubscriptionInfo<T extends PCDPackage = PCDPackage> {
+export interface Feed<T extends PCDPackage = PCDPackage> {
   id: string;
   inputPCDType: PCDTypeOf<T>;
   partialArgs: ArgsOf<T>;
@@ -67,6 +112,7 @@ export interface SubscriptionInfo<T extends PCDPackage = PCDPackage> {
 }
 
 export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
-  subscriptionProviderId: string;
-  credential: PCDOf<T>;
+  providerUrl: string;
+  feed: Feed;
+  credential: PCDOf<T> | undefined;
 }

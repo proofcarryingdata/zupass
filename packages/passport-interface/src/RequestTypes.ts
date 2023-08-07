@@ -3,7 +3,7 @@ import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { RSATicketPCD } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
-import { SubscriptionInfo } from "./SubscriptionManager";
+import { Feed } from "./SubscriptionManager";
 
 export interface ProveRequest<T extends PCDPackage = PCDPackage> {
   pcdType: string;
@@ -142,5 +142,5 @@ export type CheckInResponse = CheckTicketResponse;
 export interface GetSubscriptionInfosRequest {}
 
 export interface GetSubscriptionInfosResponse {
-  infos: SubscriptionInfo[];
+  infos: Feed[];
 }
