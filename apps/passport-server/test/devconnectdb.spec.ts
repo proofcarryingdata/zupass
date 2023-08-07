@@ -14,6 +14,7 @@ import {
   fetchDevconnectSuperusersForEvent
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
+import { softDeleteDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import {
   consumeDevconnectPretixTicket,
   updateDevconnectPretixTicket
@@ -392,6 +393,31 @@ describe("database reads and writes for devconnect ticket features", function ()
     );
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
+  });
+
+  step("should be able to soft-delete a ticket", async function () {
+    const existingTicket = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testTickets[0].email
+    );
+
+    const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      existingTicket[0].email
+    );
+
+    const firstTicket = fetchedTickets[0];
+    expect(firstTicket.is_deleted).to.eq(false);
+
+    await softDeleteDevconnectPretixTicket(db, firstTicket);
+
+    const afterDeletionTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      existingTicket[0].email
+    );
+
+    const firstTicketAfterDeletion = afterDeletionTickets[0];
+    expect(firstTicketAfterDeletion.is_deleted).to.eq(true);
   });
 
   step("fetching tickets by event should work", async function () {
