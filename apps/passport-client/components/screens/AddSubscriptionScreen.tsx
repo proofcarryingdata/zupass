@@ -88,6 +88,8 @@ function SubscriptionInfoRow({
       description: {info.description} <br />
       you send a: {info.inputPCDType}
       <br />
+      <Spacer h={8} />
+      <Button size="small">Subscribe</Button>
     </InfoRowContainer>
   );
 }
