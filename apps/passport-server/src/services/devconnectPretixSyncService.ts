@@ -1,5 +1,8 @@
 import { Pool } from "pg";
 import {
+  DevconnectPretixEvent,
+  DevconnectPretixEventSettings,
+  DevconnectPretixItem,
   DevconnectPretixOrder,
   IDevconnectPretixAPI
 } from "../apis/devconnect/devconnectPretixAPI";
@@ -34,6 +37,14 @@ import { traced } from "./telemetryService";
 
 const NAME = "Devconnect Pretix";
 
+// Collection of API data for a single event
+interface EventData {
+  settings: DevconnectPretixEventSettings;
+  eventInfo: DevconnectPretixEvent;
+  items: DevconnectPretixItem[];
+  tickets: DevconnectPretixOrder[];
+}
+
 /**
  * Responsible for syncing users from Pretix into an internal representation.
  */
@@ -41,7 +52,6 @@ export class DevconnectPretixSyncService {
   private static readonly SYNC_INTERVAL_MS = 1000 * 60;
 
   private pretixAPI: IDevconnectPretixAPI;
-  private pretixConfig: DevconnectPretixConfig;
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
   private db: Pool;
@@ -55,7 +65,6 @@ export class DevconnectPretixSyncService {
   public constructor(
     context: ApplicationContext,
     pretixAPI: IDevconnectPretixAPI,
-    pretixConfig: DevconnectPretixConfig,
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
@@ -63,7 +72,6 @@ export class DevconnectPretixSyncService {
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
     this.pretixAPI = pretixAPI;
-    this.pretixConfig = pretixConfig;
     this._hasCompletedSyncSinceStarting = false;
   }
 
@@ -98,8 +106,15 @@ export class DevconnectPretixSyncService {
 
   public async trySync(): Promise<void> {
     try {
+      logger("[DEVCONNECT PRETIX] (Re)loading Pretix Config");
+      const devconnectPretixConfig = await getDevconnectPretixConfig(this.db);
+
+      if (!devconnectPretixConfig) {
+        throw new Error("Pretix Config could not be loaded");
+      }
+
       logger("[DEVCONNECT PRETIX] Sync start");
-      await this.sync();
+      await this.sync(devconnectPretixConfig);
       await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
       logger("[DEVCONNECT PRETIX] Sync successful");
@@ -119,22 +134,18 @@ export class DevconnectPretixSyncService {
    * Download Pretix state, and apply a diff to our state so that it
    * reflects the state in Pretix.
    */
-  private async sync(): Promise<void> {
+  private async sync(pretixConfig: DevconnectPretixConfig): Promise<void> {
     return traced(NAME, "sync", async () => {
       const syncStart = Date.now();
 
-      const eventSyncPromises = []; // one per organizer-event pair
-
-      for (const organizer of this.pretixConfig.organizers) {
-        for (const event of organizer.events) {
-          eventSyncPromises.push(
-            this.syncAllPretixForOrganizerAndEvent(organizer, event)
-          );
-        }
+      const organizerSyncPromises = []; // one per organizer
+      // Iterate over organizers and set up a sync promise for each
+      for (const organizer of pretixConfig.organizers) {
+        organizerSyncPromises.push(this.syncOrganizer(organizer));
       }
 
       try {
-        await Promise.all(eventSyncPromises);
+        const results = await Promise.all(organizerSyncPromises);
       } catch (e) {
         logger(
           "[DEVCONNECT PRETIX] Failed to save tickets for one or more events",
@@ -154,21 +165,238 @@ export class DevconnectPretixSyncService {
   }
 
   /**
+   * Validate that an event's settings match our expectations.
+   * These settings correspond to the "Ask for email addresses per ticket"
+   * setting in the Pretix UI being set to "Ask and require input", which
+   * is mandatory for us.
+   */
+  private validateEventSettings(
+    settings: DevconnectPretixEventSettings
+  ): string[] {
+    const errors = [];
+    if (
+      settings.attendee_emails_asked !== true ||
+      settings.attendee_emails_required !== true
+    ) {
+      errors.push(
+        `"Ask for email addresses per ticket" setting should be set to "Ask and require input"`
+      );
+    }
+
+    return errors;
+  }
+
+  /**
+   * Validate that an item/products settings match our expectations.
+   * These settings correspond to the product being of type "Admission",
+   * "Personalization" being set to "Personalized ticket", and
+   * "Generate tickets" in the "Tickets & Badges" section being set to
+   * "Choose automatically depending on event settings" in the Pretix UI.
+   */
+  private validateEventItem(item: DevconnectPretixItem): string[] {
+    const errors = [];
+    if (item.admission !== true) {
+      errors.push(`Product type is not "Admission"`);
+    }
+
+    if (item.personalized !== true) {
+      errors.push(`"Personalization" is not set to "Personalized ticket"`);
+    }
+
+    if (item.generate_tickets !== null && item.generate_tickets !== undefined) {
+      errors.push(
+        `"Generate tickets" is not set to "Choose automatically depending on event settings"`
+      );
+    }
+
+    return errors;
+  }
+
+  /**
+   * Check all of the API responses for an event before syncing them to the
+   * DB.
+   */
+  private checkEventData(
+    eventData: EventData,
+    eventConfig: DevconnectPretixEventConfig
+  ): string[] {
+    const { settings, items } = eventData;
+    const activeItemIdSet = new Set(eventConfig.activeItemIDs);
+
+    // We want to make sure that we log all errors, so we collect everything
+    // and only throw an exception once we have found all of them.
+    const errors: string[] = [];
+
+    const eventSettingErrors = this.validateEventSettings(settings);
+    if (eventSettingErrors.length > 0) {
+      errors.push(
+        `Event settings for "${eventData.eventInfo.name.en}" (${eventData.eventInfo.slug}) are invalid:\n` +
+          eventSettingErrors.join("\n")
+      );
+    }
+
+    for (const item of items) {
+      // Ignore items which are not in the event's "activeItemIDs" set
+      if (activeItemIdSet.has(item.id.toString())) {
+        const itemErrors = this.validateEventItem(item);
+        if (itemErrors.length > 0) {
+          errors.push(
+            `Product "${item.name.en}" (${item.id}) in event "${eventData.eventInfo.name.en}" is invalid:\n` +
+              itemErrors.join("\n")
+          );
+        }
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Fetch all of the API responses from Pretix necessary to sync an event,
+   * so that we can inspect them before beginning a sync.
+   */
+  private async fetchEventData(
+    organizer: DevconnectPretixOrganizerConfig,
+    event: DevconnectPretixEventConfig
+  ): Promise<EventData> {
+    return traced(NAME, "fetchEventData", async () => {
+      const { orgURL, token } = organizer;
+      const { eventID } = event;
+
+      const settings = await this.pretixAPI.fetchEventSettings(
+        orgURL,
+        token,
+        eventID
+      );
+
+      const items = await this.pretixAPI.fetchItems(orgURL, token, eventID);
+
+      const eventInfo = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
+
+      const tickets = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
+
+      return { settings, items, eventInfo, tickets };
+    });
+  }
+
+  /**
+   * Sync an organizer's events. This process should abort if any invalid
+   * data is found in the event's API responses.
+   */
+  private async syncOrganizer(
+    organizer: DevconnectPretixOrganizerConfig
+  ): Promise<PromiseSettledResult<void>[] | undefined> {
+    return traced(NAME, "syncOrganizer", async () => {
+      logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${organizer.orgURL}`);
+      try {
+        const eventDataPromises = [];
+        const eventSyncPromises = [];
+
+        const errors: string[] = [];
+
+        // First, let's fetch the data for all of the events
+        for (const event of organizer.events) {
+          eventDataPromises.push(
+            (async (): Promise<{
+              event: DevconnectPretixEventConfig;
+              data: EventData;
+            }> => {
+              return {
+                event,
+                data: await this.fetchEventData(organizer, event)
+              };
+            })()
+          );
+        }
+
+        // Wait for all of the event data to arrive
+        const allEventData = await Promise.all(eventDataPromises);
+
+        // Find errors in any of the event data
+        for (const { data, event } of allEventData) {
+          errors.push(...this.checkEventData(data, event));
+        }
+
+        if (errors.length > 0) {
+          // Something was wrong with the API response
+          throw new Error(
+            `Errors were encountered in the API response when synchronizing organizer ${organizer.id}:\n` +
+              errors.join("\n")
+          );
+        } else {
+          // Everything is OK, let's do the actual syncing
+          for (const { data, event } of allEventData) {
+            eventSyncPromises.push(this.syncEvent(organizer, event, data));
+          }
+        }
+
+        // Return a promise which resolves when all events are sync'ed.
+        return Promise.allSettled(eventSyncPromises);
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX] Sync aborted for organizer ${organizer.id} due to errors`,
+          e
+        );
+        this.rollbarService?.reportError(e);
+      }
+    });
+  }
+
+  /**
+   * Sync a single event.
+   * This coordinates the syncing of event info, items, and tickets to the DB.
+   * No actual fetching from Pretix happens here, as the data was already
+   * fetched when checking for validity.
+   */
+  private async syncEvent(
+    organizer: DevconnectPretixOrganizerConfig,
+    event: DevconnectPretixEventConfig,
+    eventData: EventData
+  ): Promise<void> {
+    try {
+      const { eventInfo, items, tickets } = eventData;
+
+      if (!(await this.syncEventInfos(organizer, event, eventInfo))) {
+        logger(
+          `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
+        );
+        return;
+      }
+
+      if (!(await this.syncItemInfos(organizer, event, items))) {
+        logger(
+          `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
+        );
+        return;
+      }
+
+      if (!(await this.syncTickets(organizer, event, tickets))) {
+        logger(`[DEVCONNECT PRETIX] Error updating tickets`);
+        return;
+      }
+    } catch (e) {
+      logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
+      this.rollbarService?.reportError(e);
+    }
+  }
+
+  /**
    * Sync, and update data for Pretix event.
    * Returns whether update was successful.
    */
   private async syncEventInfos(
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig
+    event: DevconnectPretixEventConfig,
+    eventInfo: DevconnectPretixEvent
   ): Promise<boolean> {
     return traced(NAME, "syncEventInfos", async (span) => {
-      const { orgURL, token } = organizer;
+      const { orgURL } = organizer;
       const { eventID, id: eventConfigID } = event;
 
       try {
         const {
           name: { en: eventNameFromAPI }
-        } = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
+        } = eventInfo;
         const existingEvent = await fetchPretixEventInfo(
           this.db,
           eventConfigID
@@ -204,7 +432,8 @@ export class DevconnectPretixSyncService {
    */
   private async syncItemInfos(
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig
+    event: DevconnectPretixEventConfig,
+    itemsFromAPI: DevconnectPretixItem[]
   ): Promise<boolean> {
     return traced(NAME, "syncItemInfos", async (span) => {
       const { orgURL, token } = organizer;
@@ -219,11 +448,6 @@ export class DevconnectPretixSyncService {
           );
         }
 
-        const itemsFromAPI = await this.pretixAPI.fetchItems(
-          orgURL,
-          token,
-          eventID
-        );
         const newItemIDsSet = new Set(itemsFromAPI.map((i) => i.id.toString()));
         const activeItemIDsSet = new Set(activeItemIDs);
         // Ensure all configured "active items" exist under the Pretix event's returned items.
@@ -329,13 +553,13 @@ export class DevconnectPretixSyncService {
    */
   private async syncTickets(
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig
+    event: DevconnectPretixEventConfig,
+    pretixOrders: DevconnectPretixOrder[]
   ): Promise<boolean> {
     return traced(NAME, "syncTickets", async (span) => {
-      const { orgURL, token } = organizer;
+      const { orgURL } = organizer;
       const { eventID, id: eventConfigID } = event;
 
-      let pretixOrders: DevconnectPretixOrder[];
       try {
         const eventInfo = await fetchPretixEventInfo(this.db, eventConfigID);
 
@@ -344,8 +568,6 @@ export class DevconnectPretixSyncService {
             `Couldn't find an event info matching event config id ${eventConfigID}`
           );
         }
-
-        pretixOrders = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
         // Fetch updated version after DB updates
         const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
@@ -448,40 +670,6 @@ export class DevconnectPretixSyncService {
   }
 
   /**
-   * Syncs tickets from Pretix API for a given organizer and event
-   */
-  private async syncAllPretixForOrganizerAndEvent(
-    organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig
-  ): Promise<void> {
-    return traced(NAME, "syncAllPretixForOrganizerAndEvent", async (span) => {
-      const { orgURL } = organizer;
-      const { eventID } = event;
-
-      logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${orgURL} and ${eventID}`);
-
-      if (!(await this.syncEventInfos(organizer, event))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
-        );
-        return;
-      }
-
-      if (!(await this.syncItemInfos(organizer, event))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
-        );
-        return;
-      }
-
-      if (!(await this.syncTickets(organizer, event))) {
-        logger(`[DEVCONNECT PRETIX] Error updating tickets`);
-        return;
-      }
-    });
-  }
-
-  /**
    * Converts a given list of orders to tickets, and sets
    * all of their roles to equal the given role. When `subEvents`
    * is passed in as a parameter, cross-reference them with the
@@ -564,18 +752,9 @@ export async function startDevconnectPretixSyncService(
     return null;
   }
 
-  const devconnectPretixConfig = await getDevconnectPretixConfig(
-    context.dbPool
-  );
-
-  if (!devconnectPretixConfig) {
-    return null;
-  }
-
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
     devconnectPretixAPI,
-    devconnectPretixConfig,
     rollbarService,
     semaphoreService
   );

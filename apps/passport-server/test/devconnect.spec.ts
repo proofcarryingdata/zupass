@@ -346,6 +346,79 @@ describe("devconnect functionality", function () {
     ]);
   });
 
+  /**
+   * This test covers the case where an event is updated as part of a sync.
+   * It's not very interesting, and mostly exists to contrast with the
+   * subsequent test in which the same operation fails due to the event's
+   * settings being invalid.
+   */
+  step(
+    "should be able to sync an event with valid settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        // These settings are valid
+        { attendee_emails_asked: true, attendee_emails_required: true }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      expect(event?.event_name).to.eq(updatedNameInNewSync);
+      expect(event?.event_name).to.not.eq(originalEvent?.event_name);
+    }
+  );
+
+  /**
+   * This is identical to the previous test, except for the use of invalid
+   * event settings, which causes the sync to fail. The only observable
+   * effect here is the absence of a change to the event in the DB.
+   */
+  step(
+    "should not be able to sync an event with invalid settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        // These settings are invalid, so our sync will fail
+        { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      // The event name does *not* match the one fetched during sync
+      expect(event?.event_name).to.not.eq(updatedNameInNewSync);
+      // Instead, the original name remains.
+      expect(event?.event_name).to.eq(originalEvent?.event_name);
+    }
+  );
+
   let user: User;
   let identity: Identity;
   let publicKey: NodeRSA;
