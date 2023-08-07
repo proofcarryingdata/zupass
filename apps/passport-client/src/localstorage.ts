@@ -34,7 +34,9 @@ export async function saveSubscriptions(
 }
 
 export async function loadSubscriptions(): Promise<SubscriptionManager> {
-  return SubscriptionManager.deserialize(window.localStorage["subscriptions"]);
+  return SubscriptionManager.deserialize(
+    window.localStorage["subscriptions"] ?? "{}"
+  );
 }
 
 export function saveEncryptionKey(key: string): void {
