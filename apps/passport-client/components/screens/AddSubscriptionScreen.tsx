@@ -1,4 +1,5 @@
 import {
+  ActiveSubscription,
   GetSubscriptionInfosResponse,
   SubscriptionInfo,
   SubscriptionManager
@@ -109,7 +110,10 @@ function SubscriptionInfoRow({
       <br />
       <Spacer h={8} />
       {alreadySubscribed ? (
-        <AlreadySubscribed />
+        <AlreadySubscribed
+          subscriptions={subscriptions}
+          existingSubscription={existingSubscription}
+        />
       ) : (
         <Button onClick={onSubscribeClick} size="small">
           Subscribe
@@ -119,8 +123,29 @@ function SubscriptionInfoRow({
   );
 }
 
-function AlreadySubscribed() {
-  return <div></div>;
+function AlreadySubscribed({
+  subscriptions,
+  existingSubscription
+}: {
+  existingSubscription: ActiveSubscription;
+  subscriptions: SubscriptionManager;
+}) {
+  const onUnsubscribeClick = useCallback(() => {
+    if (
+      !window.confirm("are you sure you want to unsubscribe from this feed?")
+    ) {
+      return;
+    }
+
+    subscriptions.unsubscribe();
+  }, []);
+  return (
+    <div>
+      You're already subscribed to this feed! <br />
+      subscribed at{" "}
+      {new Date(existingSubscription.subscribedTimestamp).toISOString()}
+    </div>
+  );
 }
 
 const InfoRowContainer = styled.div`

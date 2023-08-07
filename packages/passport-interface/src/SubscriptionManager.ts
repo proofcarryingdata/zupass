@@ -20,21 +20,67 @@ export class SubscriptionManager {
     this.activeSubscriptions = activeSubscriptions;
   }
 
-  public subscribe(url: string, info: Feed): void {
-    const existingSubscription = this.getSubscription(url, info.id);
+  public unsubscribe(providerUrl: string, feedId: string): void {
+    const existingSubscription = this.getSubscription(providerUrl, feedId);
 
-    if (existingSubscription) {
+    if (!existingSubscription) {
       throw new Error(
-        `already subscribed on provider ${url} to feed ${info.id} `
+        `never subscribed to provider ${providerUrl} feed id ${feedId}`
       );
     }
 
-    this.getOrAddProvider(url);
+    this.activeSubscriptions = this.activeSubscriptions.filter(
+      (s) => !(s.feed.id === feedId && s.providerUrl === providerUrl)
+    );
+
+    const remainingSubscriptionsOnProvider =
+      this.getSubscriptionsForProvider(providerUrl);
+
+    if (remainingSubscriptionsOnProvider.length === 0) {
+      this.removeProvider(providerUrl);
+    }
+
+    this.updatedEmitter.emit();
+  }
+
+  public removeProvider(providerUrl: string): void {
+    const subscriptions = this.getSubscriptionsForProvider(providerUrl);
+
+    if (subscriptions.length > 0) {
+      throw new Error(
+        `can't remove provider ${providerUrl} - have ${subscriptions.length} existing subscriptions`
+      );
+    }
+
+    this.providers = this.providers.filter(
+      (p) => p.providerUrl !== providerUrl
+    );
+    this.updatedEmitter.emit();
+  }
+
+  public getSubscriptionsForProvider(
+    providerUrl: string
+  ): ActiveSubscription[] {
+    return this.activeSubscriptions.filter(
+      (s) => s.providerUrl === providerUrl
+    );
+  }
+
+  public subscribe(providerUrl: string, info: Feed): void {
+    const existingSubscription = this.getSubscription(providerUrl, info.id);
+
+    if (existingSubscription) {
+      throw new Error(
+        `already subscribed on provider ${providerUrl} to feed ${info.id} `
+      );
+    }
+
+    this.getOrAddProvider(providerUrl);
 
     this.activeSubscriptions.push({
       credential: undefined,
       feed: info,
-      providerUrl: url,
+      providerUrl: providerUrl,
       subscribedTimestamp: Date.now()
     });
 
@@ -50,29 +96,29 @@ export class SubscriptionManager {
     );
   }
 
-  public hasProvider(url: string): boolean {
-    return this.getProvider(url) !== undefined;
+  public hasProvider(providerUrl: string): boolean {
+    return this.getProvider(providerUrl) !== undefined;
   }
 
-  public getProvider(url: string): SubscriptionProvider | undefined {
-    return this.providers.find((p) => p.url === url);
+  public getProvider(providerUrl: string): SubscriptionProvider | undefined {
+    return this.providers.find((p) => p.providerUrl === providerUrl);
   }
 
-  public getOrAddProvider(url: string): SubscriptionProvider {
-    const existingProvider = this.getProvider(url);
+  public getOrAddProvider(providerUrl: string): SubscriptionProvider {
+    const existingProvider = this.getProvider(providerUrl);
     if (existingProvider) {
       return existingProvider;
     }
-    return this.addProvider(url);
+    return this.addProvider(providerUrl);
   }
 
-  public addProvider(url: string) {
-    if (this.hasProvider(url)) {
-      throw new Error(`provider ${url} already exists`);
+  public addProvider(providerUrl: string) {
+    if (this.hasProvider(providerUrl)) {
+      throw new Error(`provider ${providerUrl} already exists`);
     }
 
     const newProvider: SubscriptionProvider = {
-      url,
+      providerUrl: providerUrl,
       timestampAdded: Date.now()
     };
 
@@ -106,7 +152,7 @@ export class SubscriptionManager {
 }
 
 export interface SubscriptionProvider {
-  url: string;
+  providerUrl: string;
   timestampAdded: number;
 }
 
