@@ -76,3 +76,7 @@ export function useIsDownloaded(): boolean | undefined {
 export function useIsLoggedIn(): boolean {
   return useSelector<boolean | undefined>((s) => s.self !== undefined, []);
 }
+
+export function useUploadedId(): string | undefined {
+  return useSelector<string | undefined>((s) => s.uploadedUploadId, []);
+}

@@ -15,12 +15,13 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
+import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
@@ -139,12 +140,12 @@ export function useSyncE2EEStorage() {
 
 export function useHasUploaded() {
   const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
+  const { hash } = usePCDCollectionWithHash();
+  const uploadedId = useUploadedId();
 
-  useOnStateChange((state) => {
-    (async () => {
-      setHasUploaded(state.uploadedUploadId === (await state.pcds.getHash()));
-    })();
-  });
+  useEffect(() => {
+    setHasUploaded(hash === uploadedId);
+  }, [hash, uploadedId]);
 
   return hasUploaded;
 }
