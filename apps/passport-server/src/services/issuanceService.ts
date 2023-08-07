@@ -118,7 +118,7 @@ export class IssuanceService {
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in");
+      throw new Error("failed to check in", {cause: e});
     }
   }
 
