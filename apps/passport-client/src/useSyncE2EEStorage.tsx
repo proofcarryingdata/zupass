@@ -147,6 +147,7 @@ export function useLoggedIn() {
   return loggedIn;
 }
 
+// TODO: convert to new hooks
 export function useHasUploaded() {
   const [state] = useContext(DispatchContext);
   const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
@@ -164,6 +165,7 @@ export function useHasUploaded() {
   return hasUploaded;
 }
 
+// TODO: convert to new hooks
 export function useIsDownloaded() {
   const [state] = useContext(DispatchContext);
 

@@ -1,6 +1,6 @@
-import React, { ReactNode, useCallback, useContext, useEffect } from "react";
+import React, { ReactNode, useCallback, useEffect } from "react";
 import styled, { css } from "styled-components";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
@@ -12,12 +12,14 @@ import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
 export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const modal = useModal();
+
   const close = useCallback(
     () => dispatch({ type: "set-modal", modal: "" }),
     [dispatch]
   );
-  const dismissable = isModalDismissable(state.modal);
+  const dismissable = isModalDismissable(modal);
 
   // Close on escape
   useEffect(() => {
@@ -29,9 +31,9 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
     window.addEventListener("keydown", listener, { capture: true });
     return () =>
       window.removeEventListener("keydown", listener, { capture: true });
-  }, [close, state.modal, dismissable]);
+  }, [close, dismissable]);
 
-  const body = getModalBody(state.modal);
+  const body = getModalBody(modal);
 
   if (body == null) return null;
   return (

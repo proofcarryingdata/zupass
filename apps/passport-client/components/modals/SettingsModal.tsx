@@ -1,20 +1,21 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, useSyncKey } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 
 export function SettingsModal() {
   const [justCopied, setJustCopied] = useState(false);
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const syncKey = useSyncKey();
 
   const copySyncKey = useCallback(async () => {
     // Use the window clipboard API to copy the key
-    await window.navigator.clipboard.writeText(state.encryptionKey);
+    await window.navigator.clipboard.writeText(syncKey);
     setJustCopied(true);
     setTimeout(() => setJustCopied(false), 2000);
-  }, [state.encryptionKey]);
+  }, [syncKey]);
 
   const clearPassport = useCallback(() => {
     if (

@@ -1,11 +1,11 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../../../src/dispatch";
+import { useDispatch } from "../../../src/appHooks";
 import { useDeserialized } from "../../../src/useDeserialized";
 import {
   useHasUploaded,
-  useIsDownloaded,
+  useIsDownloaded
 } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, H2, Spacer } from "../../core";
@@ -21,7 +21,7 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
  * a PCD into their wallet without proving it.
  */
 export function JustAddScreen({ request }: { request: PCDAddRequest }) {
-  const [_state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
   const hasUploaded = useHasUploaded();

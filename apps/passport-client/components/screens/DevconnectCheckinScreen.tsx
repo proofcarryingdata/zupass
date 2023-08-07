@@ -4,22 +4,22 @@ import {
   ISSUANCE_STRING,
   TicketError
 } from "@pcd/passport-interface";
-import { Spacer, decodeQRPayload } from "@pcd/passport-ui";
+import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
+  getTicketData,
   ITicketData,
   RSATicketPCD,
-  RSATicketPCDPackage,
-  getTicketData
+  RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
-import { DispatchContext } from "../../src/dispatch";
+import { useIdentity } from "../../src/appHooks";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -243,14 +243,14 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
-  const [state] = useContext(DispatchContext);
+  const identity = useIdentity();
 
   const onCheckInClick = useCallback(() => {
     if (checkingIn) {
       return;
     }
     setCheckingIn(true);
-    checkinTicket(state.identity, ticket)
+    checkinTicket(identity, ticket)
       .then((response) => {
         setCheckedIn(response.success);
         setFinishedCheckinAttempt(true);
@@ -261,7 +261,7 @@ function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
         setFinishedCheckinAttempt(true);
         setCheckingIn(false);
       });
-  }, [checkingIn, state.identity, ticket]);
+  }, [checkingIn, identity, ticket]);
 
   return (
     <CheckinSectionContainer>

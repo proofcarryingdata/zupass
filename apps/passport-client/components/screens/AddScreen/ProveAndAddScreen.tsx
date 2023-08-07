@@ -1,8 +1,8 @@
 import { PCDProveAndAddRequest } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { ReactNode, useCallback, useContext, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../../../src/dispatch";
+import { useDispatch } from "../../../src/appHooks";
 import { safeRedirect } from "../../../src/passportRequest";
 import {
   useHasUploaded,
@@ -25,7 +25,7 @@ export function ProveAndAddScreen({
 }: {
   request: PCDProveAndAddRequest;
 }) {
-  const [_, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const [proved, setProved] = useState(false);
   const [serializedPCD, setSerializedPCD] = useState<
     SerializedPCD | undefined

@@ -1,13 +1,13 @@
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, useSyncKey } from "../../src/appHooks";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { Modal } from "./Modal";
 
 export function SaveSyncModal() {
-  const [state, dispatch] = useContext(DispatchContext);
-  const syncKey = state.encryptionKey;
+  const dispatch = useDispatch();
+  const syncKey = useSyncKey();
 
   const [justCopied, setJustCopied] = useState(false);
   const copyKey = useCallback(() => {
