@@ -1,6 +1,8 @@
 import { User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { useContext } from "react";
+import { Dispatcher, StateContext } from "./dispatch";
 import { useSelector } from "./subscribe";
 
 export function usePCDs(): PCD[] {
@@ -13,4 +15,9 @@ export function usePCDCollection(): PCDCollection {
 
 export function useSelf(): User | undefined {
   return useSelector<User | undefined>((s) => s.self, []);
+}
+
+export function useDispatch(): Dispatcher {
+  const { dispatch } = useContext(StateContext);
+  return dispatch;
 }
