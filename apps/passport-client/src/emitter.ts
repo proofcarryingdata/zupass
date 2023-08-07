@@ -3,15 +3,16 @@ export interface Listener<T> {
 }
 
 export class Emitter<T> {
-  private listeners: Array<Listener<T>> = [];
+  private listeners: Set<Listener<T>> = new Set();
 
-  public listen(l: Listener<T>): void {
-    this.listeners.push(l);
+  public listen(l: Listener<T>): () => void {
+    this.listeners.add(l);
+    return () => this.listeners.delete(l);
   }
 
   public emit(t: T) {
-    for (let i = 0; i < this.listeners.length; i++) {
-      this.listeners[i](t);
+    for (const listener of this.listeners) {
+      listener(t);
     }
   }
 }
