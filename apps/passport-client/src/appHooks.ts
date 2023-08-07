@@ -51,3 +51,7 @@ export function useLoadedIssuedPCDs(): boolean | undefined {
 export function useIsDownloaded(): boolean | undefined {
   return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
 }
+
+export function useIsLoggedIn(): boolean {
+  return useSelector<boolean | undefined>((s) => s.self !== undefined, []);
+}

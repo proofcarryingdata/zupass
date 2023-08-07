@@ -4,12 +4,15 @@ import {
   HaLoNoncePCDPackage
 } from "@pcd/halo-nonce-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useIsDownloaded } from "../../../src/appHooks";
-import { DispatchContext } from "../../../src/dispatch";
-import { useHasUploaded, useLoggedIn } from "../../../src/useSyncE2EEStorage";
+import {
+  useDispatch,
+  useIsDownloaded,
+  useIsLoggedIn
+} from "../../../src/appHooks";
+import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, Spacer, TextCenter } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -28,11 +31,11 @@ export function AddHaloScreen({
   rndsig: string;
 }) {
   const location = useLocation();
-  const [_state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const [pcd, setPCD] = useState<HaLoNoncePCD | undefined>(undefined);
   const [invalidPCD, setInvalidPCD] = useState(false);
-  const loggedIn = useLoggedIn();
+  const loggedIn = useIsLoggedIn();
   const hasUploaded = useHasUploaded();
   const isDownloaded = useIsDownloaded();
 

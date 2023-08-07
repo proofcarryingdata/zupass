@@ -15,7 +15,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage
@@ -135,16 +135,6 @@ export function useSyncE2EEStorage() {
   useSubscribe(() => {
     dispatch({ type: "sync" });
   }, [dispatch]);
-}
-
-export function useLoggedIn() {
-  const [state] = useContext(DispatchContext);
-
-  const loggedIn = useMemo(() => {
-    return state.self !== undefined;
-  }, [state]);
-
-  return loggedIn;
 }
 
 // TODO: convert to new hooks
