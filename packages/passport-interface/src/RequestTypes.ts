@@ -141,6 +141,6 @@ export type CheckInResponse = CheckTicketResponse;
 
 export interface GetSubscriptionInfosRequest {}
 
-export interface GetSubscriptionInfosResponse {
+export interface GetFeedsResponse {
   infos: Feed[];
 }

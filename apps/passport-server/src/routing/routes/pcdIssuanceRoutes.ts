@@ -1,8 +1,9 @@
 import {
   CheckInRequest,
   CheckTicketRequest,
-  GetSubscriptionInfosResponse,
-  IssuedPCDsRequest
+  GetFeedsResponse,
+  IssuedPCDsRequest,
+  PCDPermissionType
 } from "@pcd/passport-interface";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import express, { Request, Response } from "express";
@@ -34,21 +35,28 @@ export function initPCDIssuanceRoutes(
   });
 
   app.get("/issuance/feeds", async (req: Request, res: Response) => {
-    const response: GetSubscriptionInfosResponse = {
+    const response: GetFeedsResponse = {
       infos: [
         {
           id: "1",
           name: "Devconnect Tickets",
           description: "Get your Devconnect tickets here!",
           inputPCDType: RSAPCDPackage.name,
-          partialArgs: undefined
+          partialArgs: undefined,
+          permissions: [
+            { folder: "Devconnect", type: PCDPermissionType.FolderAppend },
+            { folder: "Devconnect", type: PCDPermissionType.FolderReplace }
+          ]
         },
         {
           id: "2",
           name: "Frogs",
           description: "Get your Frogs here!",
           inputPCDType: undefined,
-          partialArgs: undefined
+          partialArgs: undefined,
+          permissions: [
+            { folder: "Frogs", type: PCDPermissionType.FolderAppend }
+          ]
         }
       ]
     };

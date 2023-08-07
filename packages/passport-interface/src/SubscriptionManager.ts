@@ -180,6 +180,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   description: string;
   inputPCDType?: PCDTypeOf<T>;
   partialArgs?: ArgsOf<T>;
+  permissions: PCDPermissions;
 }
 
 export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
@@ -188,3 +189,17 @@ export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
   credential: PCDOf<T> | undefined;
   subscribedTimestamp: number;
 }
+
+export enum PCDPermissionType {
+  FolderReplace = "FolderReplace",
+  FolderAppend = "FolderAppend"
+}
+
+export interface PCDFolderPermission {
+  type: PCDPermissionType.FolderAppend | PCDPermissionType.FolderReplace;
+  folder: string;
+}
+
+export type PCDPermissions = PCDPermission[];
+
+export type PCDPermission = PCDFolderPermission;

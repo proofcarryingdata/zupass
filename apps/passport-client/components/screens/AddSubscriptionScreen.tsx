@@ -1,7 +1,8 @@
 import {
   ActiveSubscription,
   Feed,
-  GetSubscriptionInfosResponse,
+  GetFeedsResponse,
+  PCDPermissions,
   SubscriptionManager
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
@@ -12,7 +13,7 @@ import { BigInput, Button, Spacer } from "../core";
 
 async function fetchSubscriptionInfos(url: string): Promise<Feed[]> {
   const result = await fetch(url);
-  const parsed = (await result.json()) as GetSubscriptionInfosResponse;
+  const parsed = (await result.json()) as GetFeedsResponse;
   return parsed.infos;
 }
 
@@ -118,7 +119,8 @@ export function SubscriptionInfoRow({
       id: {info.id}
       <br />
       description: {info.description} <br />
-      {info.inputPCDType && <>you send a: {info.inputPCDType}</>}
+      {info.inputPCDType && <>you send a: {info.inputPCDType}</>} <br />
+      <PermissionsView permissions={info.permissions} />
       <br />
       <Spacer h={8} />
       {alreadySubscribed ? (
@@ -133,6 +135,28 @@ export function SubscriptionInfoRow({
       )}
     </InfoRowContainer>
   );
+}
+
+export function PermissionsView({
+  permissions
+}: {
+  permissions: PCDPermissions;
+}) {
+  return (
+    <div>
+      {permissions.map((p, i) => (
+        <SinglePermission key={i} permission={p} />
+      ))}
+    </div>
+  );
+}
+
+export function SinglePermission({
+  permission
+}: {
+  permission: PCDPermission;
+}) {
+  return <div>{JSON.stringify(permission)}</div>;
 }
 
 function AlreadySubscribed({
