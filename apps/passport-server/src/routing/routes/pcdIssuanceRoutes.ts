@@ -63,6 +63,10 @@ export function initPCDIssuanceRoutes(
     res.json(response);
   });
 
+  app.post("/issuance/feeds/:id", async (req, res) => {
+    res.json();
+  });
+
   app.post("/issue/", async (req: Request, res: Response) => {
     try {
       if (!issuanceService) {

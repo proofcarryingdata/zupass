@@ -1,9 +1,9 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { RSATicketPCD } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
-import { Feed } from "./SubscriptionManager";
+import { Feed, PCDPermission } from "./SubscriptionManager";
 
 export interface ProveRequest<T extends PCDPackage = PCDPackage> {
   pcdType: string;
@@ -143,4 +143,18 @@ export interface GetSubscriptionInfosRequest {}
 
 export interface GetFeedsResponse {
   infos: Feed[];
+}
+
+export interface FeedRequest<T extends PCDPackage> {
+  id: string;
+  pcd: SerializedPCD<PCDOf<T>>;
+}
+
+export interface FeedResponse {
+  actions: FeedResponseAction[];
+}
+
+export interface FeedResponseAction {
+  permission: PCDPermission;
+  pcds: SerializedPCD[];
 }
