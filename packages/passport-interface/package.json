@@ -18,6 +18,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
+    "@pcd/emitter": "0.0.2",
     "@pcd/passport-crypto": "0.6.1",
     "@pcd/pcd-types": "0.6.1",
     "@pcd/rsa-ticket-pcd": "0.1.1",

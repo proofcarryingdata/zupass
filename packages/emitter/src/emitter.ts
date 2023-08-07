@@ -2,7 +2,7 @@ export interface Listener<T> {
   (t: T): unknown;
 }
 
-export class Emitter<T> {
+export class Emitter<T = void> {
   private listeners: Set<Listener<T>> = new Set();
 
   public listen(l: Listener<T>): () => void {

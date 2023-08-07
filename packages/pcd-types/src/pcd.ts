@@ -36,7 +36,7 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
   renderCardBody?: ({
     pcd,
-    returnHeader,
+    returnHeader
   }: {
     pcd: PCD<C, P>;
     returnHeader?: boolean;
@@ -52,7 +52,9 @@ export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
 export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
   ? PCD<C, P>
   : T;
-
+export type PCDTypeOf<T> = T extends PCDPackage<infer C, infer P, any, any>
+  ? T["name"]
+  : T;
 export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
   type: T;
   specificType: U;
@@ -65,7 +67,7 @@ export enum ArgumentTypeName {
   Boolean = "Boolean",
   Object = "Object",
   PCD = "PCD",
-  Unknown = "Unknown",
+  Unknown = "Unknown"
 }
 
 export interface Argument<
