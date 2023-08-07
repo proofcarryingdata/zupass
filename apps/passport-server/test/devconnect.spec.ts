@@ -346,6 +346,33 @@ describe("devconnect functionality", function () {
     ]);
   });
 
+  /**
+   * This test doesn't pass because missing items causes an exception rather than a soft-delete
+   */
+  /** 
+  step("removing an item causes soft deletion of item", async function () {
+    const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+    if (!eventAItemInfo) {
+      throw new Error("expected to be able to fetch corresponding item info");
+    }
+    const eventItemsBeforeDelete = await fetchPretixItemsInfoByEvent(application.context.dbPool, eventAItemInfo.id);
+
+    mocker.removeEventItem(
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.eventA.slug,
+      mocker.get().organizer1.eventAItem1.id
+    );
+
+    devconnectPretixSyncService.replaceApi(
+      getDevconnectMockPretixAPI(mocker.get())
+    );
+
+    await devconnectPretixSyncService.trySync();
+
+    const eventItems = await fetchPretixItemsInfoByEvent(application.context.dbPool, eventAItemInfo.id);
+
+  });*/
+
   let user: User;
   let identity: Identity;
   let publicKey: NodeRSA;

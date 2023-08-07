@@ -93,6 +93,15 @@ export class DevconnectPretixDataMocker {
     org.ordersByEventID.set(eventID, eventOrders);
   }
 
+  public removeEventItem(orgUrl: string, eventID: string, id: number): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+
+    let eventItems = org.itemsByEventID.get(eventID) ?? [];
+    eventItems = eventItems.filter((item) => item.id !== id);
+    org.itemsByEventID.set(eventID, eventItems);
+  }
+
   private newMockData(): IMockDevconnectPretixData {
     const organizer1 = this.newOrganizer();
     const organizer2 = this.newOrganizer();
