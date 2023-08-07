@@ -49,8 +49,16 @@ export function AddSubscriptionScreen() {
       });
   }, [fetched, fetching, url]);
 
+  const onBackClick = useCallback(() => {
+    window.location.href = "/#/subscriptions";
+  }, []);
+
   return (
     <SubscriptionsScreenContainer>
+      <Button disabled={fetching || fetched} onClick={onBackClick}>
+        Back to manager
+      </Button>
+      <Spacer h={16} />
       here you can add a new subscription
       <Spacer h={16} />
       <BigInput
