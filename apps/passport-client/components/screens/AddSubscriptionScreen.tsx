@@ -1,7 +1,7 @@
 import {
   ActiveSubscription,
+  Feed,
   GetSubscriptionInfosResponse,
-  SubscriptionInfo,
   SubscriptionManager
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
@@ -10,9 +10,7 @@ import { appConfig } from "../../src/appConfig";
 import { useSubscriptions } from "../../src/appHooks";
 import { BigInput, Button, Spacer } from "../core";
 
-async function fetchSubscriptionInfos(
-  url: string
-): Promise<SubscriptionInfo[]> {
+async function fetchSubscriptionInfos(url: string): Promise<Feed[]> {
   const result = await fetch(url);
   const parsed = (await result.json()) as GetSubscriptionInfosResponse;
   return parsed.infos;
@@ -22,7 +20,7 @@ const DEFAULT_URL = appConfig.passportServer + "/issuance/feeds";
 
 export function AddSubscriptionScreen() {
   const [url, setUrl] = useState(DEFAULT_URL);
-  const [infos, setInfos] = useState<SubscriptionInfo[] | undefined>();
+  const [infos, setInfos] = useState<Feed[] | undefined>();
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [fetchError, setFetchError] = useState<Error | undefined>();
@@ -90,7 +88,7 @@ function SubscriptionInfoRow({
 }: {
   subscriptions: SubscriptionManager;
   url: string;
-  info: SubscriptionInfo;
+  info: Feed;
 }) {
   const onSubscribeClick = useCallback(() => {
     if (!confirm("are you sure you want to subscribe to this feed?")) return;
