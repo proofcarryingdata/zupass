@@ -3,8 +3,9 @@ import {
   SubscriptionInfo
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
+import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { BigInput, Button } from "../core";
+import { BigInput, Button, Spacer } from "../core";
 
 async function fetchSubscriptionInfos(
   url: string
@@ -47,8 +48,9 @@ export function AddSubscriptionScreen() {
   }, [fetched, fetching, url]);
 
   return (
-    <div>
+    <SubscriptionsScreenContainer>
       here you can add a new subscription
+      <Spacer h={16} />
       <BigInput
         disabled={fetching || fetched}
         value={url}
@@ -56,9 +58,11 @@ export function AddSubscriptionScreen() {
           setUrl(e.target.value);
         }}
       />
+      <Spacer h={16} />
       <Button disabled={fetching || fetched} onClick={onClick}>
         Get possible subscriptions
       </Button>
+      <Spacer h={16} />
       <div>{fetchError && <>error: {fetchError.message}</>}</div>
       <div>
         {infos &&
@@ -66,7 +70,7 @@ export function AddSubscriptionScreen() {
             <SubscriptionInfoRow url={url} info={info} key={i} />
           ))}
       </div>
-    </div>
+    </SubscriptionsScreenContainer>
   );
 }
 
@@ -77,5 +81,23 @@ function SubscriptionInfoRow({
   url: string;
   info: SubscriptionInfo;
 }) {
-  return <div>{info.description}</div>;
+  return (
+    <InfoRowContainer>
+      id: {info.id}
+      <br />
+      description: {info.description} <br />
+      you send a: {info.inputPCDType}
+      <br />
+    </InfoRowContainer>
+  );
 }
+
+const InfoRowContainer = styled.div`
+  padding: 16px;
+  border: 1px solid white;
+  border-radius: 12px;
+`;
+
+const SubscriptionsScreenContainer = styled.div`
+  padding: 64px;
+`;
