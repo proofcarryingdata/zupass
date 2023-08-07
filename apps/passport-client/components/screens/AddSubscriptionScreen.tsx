@@ -3,6 +3,7 @@ import {
   SubscriptionInfo
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
+import { appConfig } from "../../src/appConfig";
 import { BigInput, Button } from "../core";
 
 async function fetchSubscriptionInfos(
@@ -13,8 +14,10 @@ async function fetchSubscriptionInfos(
   return parsed.infos;
 }
 
+const DEFAULT_URL = appConfig.passportServer + "/issuance/feeds";
+
 export function AddSubscriptionScreen() {
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(DEFAULT_URL);
   const [infos, setInfos] = useState<SubscriptionInfo[] | undefined>();
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);

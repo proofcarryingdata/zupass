@@ -1,8 +1,10 @@
 import {
   CheckInRequest,
   CheckTicketRequest,
+  GetSubscriptionInfosResponse,
   IssuedPCDsRequest
 } from "@pcd/passport-interface";
+import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -29,6 +31,20 @@ export function initPCDIssuanceRoutes(
       logger(e);
       res.sendStatus(500);
     }
+  });
+
+  app.get("/issuance/feeds", async (req: Request, res: Response) => {
+    const response: GetSubscriptionInfosResponse = {
+      infos: [
+        {
+          description: "Get your Devconnect tickets here!",
+          id: "1",
+          inputPCDType: RSAPCDPackage.name,
+          partialArgs: {}
+        }
+      ]
+    };
+    res.json(response);
   });
 
   app.post("/issue/", async (req: Request, res: Response) => {
