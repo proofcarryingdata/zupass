@@ -15,7 +15,8 @@ export function useSubscribe(
   h: (state: AppState) => unknown,
   deps?: DependencyList
 ): void {
-  const handler = useCallback(h, [h, ...(deps ?? [])]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const handler = useCallback(h, deps ?? []);
   const context = useContext(StateContext);
 
   useEffect(() => {
@@ -28,7 +29,8 @@ export function useSelector<T>(
   deps?: DependencyList
 ): T {
   const context = useContext(StateContext);
-  const selectorFunc = useCallback(selector, [selector, ...(deps ?? [])]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const selectorFunc = useCallback(selector, deps ?? []);
   const [selected, setSelected] = useState(() =>
     selectorFunc(context.getState())
   );

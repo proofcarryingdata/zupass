@@ -134,7 +134,6 @@ export function useSyncE2EEStorage() {
 
   useSubscribe(() => {
     dispatch({ type: "sync" });
-    // TODO: convert to new hooks
   }, [dispatch]);
 }
 
