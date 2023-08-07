@@ -5,7 +5,7 @@ import {
 import { useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useSubscriptions } from "../../src/appHooks";
-import { Button, Spacer } from "../core";
+import { Button, H1, Spacer } from "../core";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
@@ -17,11 +17,8 @@ export function SubscriptionsScreen() {
 
   return (
     <Container>
-      these are your subscriptions
-      <br />
-      you have:
-      <div>{subs.getProviders().length} providers</div>
-      <div>{subs.getActiveSubscriptions().length} active subscriptions</div>
+      <H1>Your Subscriptions</H1>
+      <Spacer h={32} />
       <Button onClick={onAddNewClicked}>Add a new subscription</Button>
       <Spacer h={16} />
       <SubscriptionTree subscriptions={subs} />
