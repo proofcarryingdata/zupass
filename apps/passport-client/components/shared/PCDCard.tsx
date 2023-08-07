@@ -109,7 +109,9 @@ function HeaderContent({
   return headerContent;
 }
 
-function CardFooter({
+const CardFooter = React.memo(CardFooterImpl);
+
+function CardFooterImpl({
   pcd,
   isMainIdentity
 }: {
