@@ -18,12 +18,12 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@pcd/emitter": "0.0.1",
     "@pcd/pcd-types": "0.6.0",
     "chai": "^4.3.7",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/emitter": "0.0.1",
     "@pcd/eslint-config-custom": "*",
     "@pcd/passport-crypto": "0.6.0",
     "@pcd/rsa-pcd": "0.1.0",
