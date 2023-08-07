@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "allowJs": true
+  },
+  "extends": "@pcd/tsconfig/ts-library.json",
+  "include": [".", "./test"],
+  "exclude": ["dist", "build", "node_modules"]
+}
