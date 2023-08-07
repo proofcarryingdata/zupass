@@ -1,10 +1,12 @@
 import {
   GetSubscriptionInfosResponse,
-  SubscriptionInfo
+  SubscriptionInfo,
+  SubscriptionManager
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
+import { useSubscriptions } from "../../src/appHooks";
 import { BigInput, Button, Spacer } from "../core";
 
 async function fetchSubscriptionInfos(
@@ -23,8 +25,9 @@ export function AddSubscriptionScreen() {
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [fetchError, setFetchError] = useState<Error | undefined>();
+  const { value: subs } = useSubscriptions();
 
-  const onClick = useCallback(() => {
+  const onFetchFeedsClick = useCallback(() => {
     if (fetching || fetched) {
       return;
     }
@@ -59,7 +62,7 @@ export function AddSubscriptionScreen() {
         }}
       />
       <Spacer h={16} />
-      <Button disabled={fetching || fetched} onClick={onClick}>
+      <Button disabled={fetching || fetched} onClick={onFetchFeedsClick}>
         Get possible subscriptions
       </Button>
       <Spacer h={16} />
@@ -67,7 +70,12 @@ export function AddSubscriptionScreen() {
       <div>
         {infos &&
           infos.map((info, i) => (
-            <SubscriptionInfoRow url={url} info={info} key={i} />
+            <SubscriptionInfoRow
+              subscriptions={subs}
+              url={url}
+              info={info}
+              key={i}
+            />
           ))}
       </div>
     </SubscriptionsScreenContainer>
@@ -75,12 +83,21 @@ export function AddSubscriptionScreen() {
 }
 
 function SubscriptionInfoRow({
+  subscriptions,
   url,
   info
 }: {
+  subscriptions: SubscriptionManager;
   url: string;
   info: SubscriptionInfo;
 }) {
+  const onSubscribeClick = useCallback(() => {
+    alert("subscribing");
+  }, []);
+
+  const existingSubscription = subscriptions.getSubscription(url, info.id);
+  const alreadySubscribed = !!existingSubscription;
+
   return (
     <InfoRowContainer>
       id: {info.id}
@@ -89,7 +106,13 @@ function SubscriptionInfoRow({
       you send a: {info.inputPCDType}
       <br />
       <Spacer h={8} />
-      <Button size="small">Subscribe</Button>
+      <Button
+        onClick={onSubscribeClick}
+        disabled={alreadySubscribed}
+        size="small"
+      >
+        {alreadySubscribed ? "already subscribed" : "Subscribe"}
+      </Button>
     </InfoRowContainer>
   );
 }
