@@ -19,7 +19,14 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
-import { Action, dispatch, DispatchContext } from "../src/dispatch";
+import {
+  Action,
+  dispatch,
+  DispatchContext,
+  StateContext,
+  StateContextState
+} from "../src/dispatch";
+import { Emitter } from "../src/emitter";
 import {
   loadEncryptionKey,
   loadIdentity,
@@ -29,19 +36,26 @@ import {
   saveIdentity
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
-import { AppState } from "../src/state";
+import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
+  stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
     console.log("App.update", diff);
-    this.setState(diff);
+    this.setState(diff, () => {
+      this.stateEmitter.emit(this.state);
+    });
   };
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
+  stateContextState: StateContextState = {
+    getState: () => this.state,
+    stateEmitter: this.stateEmitter
+  };
 
   render() {
     const { state, dispatch: disp } = this;
@@ -52,16 +66,18 @@ class App extends React.Component<object, AppState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <DispatchContext.Provider value={[state, disp]}>
-        {!hasStack && <Router />}
-        {hasStack && (
-          <HashRouter>
-            <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
-            </Routes>
-          </HashRouter>
-        )}
-      </DispatchContext.Provider>
+      <StateContext.Provider value={this.stateContextState}>
+        <DispatchContext.Provider value={[state, disp]}>
+          {!hasStack && <Router />}
+          {hasStack && (
+            <HashRouter>
+              <Routes>
+                <Route path="*" element={<AppContainer bg="gray" />} />
+              </Routes>
+            </HashRouter>
+          )}
+        </DispatchContext.Provider>
+      </StateContext.Provider>
     );
   }
 

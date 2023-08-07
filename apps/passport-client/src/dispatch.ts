@@ -78,8 +78,14 @@ export type Action =
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
-export const DispatchContext = createContext<[AppState, Dispatcher]>([] as any);
-export const StateContext = createContext<[GetState, StateEmitter]>([] as any);
+export type DispatchContextState = [AppState, Dispatcher];
+export const DispatchContext = createContext<DispatchContextState>([] as any);
+
+export type StateContextState = {
+  getState: GetState;
+  stateEmitter: StateEmitter;
+};
+export const StateContext = createContext<StateContextState>([] as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 
