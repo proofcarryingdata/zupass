@@ -14,7 +14,6 @@ import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
-import { TestScreen } from "../components/screens/TestScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
@@ -119,7 +118,6 @@ function RouterImpl() {
       <Routes>
         <Route path="/">
           <Route index element={<HomeScreen />} />
-          <Route path="test" element={<TestScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
