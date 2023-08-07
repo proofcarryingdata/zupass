@@ -20,9 +20,9 @@ import {
   updatePretixEventsInfo
 } from "../database/queries/pretixEventInfo";
 import {
-  deletePretixItemInfo,
   fetchPretixItemsInfoByEvent,
   insertPretixItemsInfo,
+  softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../database/queries/pretixItemInfo";
 import { ApplicationContext } from "../types";
@@ -183,7 +183,8 @@ export class DevconnectPretixSyncService {
           await updatePretixEventsInfo(
             this.db,
             existingEvent.id,
-            eventNameFromAPI
+            eventNameFromAPI,
+            false
           );
         }
       } catch (e) {
@@ -293,7 +294,7 @@ export class DevconnectPretixSyncService {
               oldItem
             )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
           );
-          await updatePretixItemsInfo(this.db, oldItem.id, item.name.en);
+          await updatePretixItemsInfo(this.db, oldItem.id, item.name.en, false);
         }
 
         // Step 3 of saving: remove items that are not active anymore
@@ -309,7 +310,7 @@ export class DevconnectPretixSyncService {
               eventInfo.event_name
             }] Deleting item info ${JSON.stringify(item)}`
           );
-          await deletePretixItemInfo(this.db, item.id);
+          await softDeletePretixItemInfo(this.db, item.id);
         }
       } catch (e) {
         logger(

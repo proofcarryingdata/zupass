@@ -38,15 +38,16 @@ export async function insertPretixEventsInfo(
 export async function updatePretixEventsInfo(
   client: Pool,
   id: string,
-  eventName: string
+  eventName: string,
+  isDeleted: boolean
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
     client,
     `\
       update devconnect_pretix_events_info
-      set event_name = $2
+      set event_name = $2, is_deleted = $3
       where id=$1`,
-    [id, eventName]
+    [id, eventName, isDeleted]
   );
   return result.rows;
 }
@@ -57,7 +58,7 @@ export async function softDeletePretixEventsInfo(
 ): Promise<void> {
   await sqlQuery(
     client,
-    `update devconnect_pretix_events_info set is_deleted=TRUE where id=$1`,
+    `update devconnect_pretix_events_info set is_deleted=true where id=$1`,
     [id]
   );
 }
