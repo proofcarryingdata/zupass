@@ -84,8 +84,9 @@ export function useUploadedId(): string | undefined {
 
 export function useSubscriptions(): Wrapper<SubscriptionManager> {
   const subs = useSelector<SubscriptionManager>((s) => s.subscriptions, []);
-  const [wrappedSubs, setWrappedSubs] =
-    useState<Wrapper<SubscriptionManager>>();
+  const [wrappedSubs, setWrappedSubs] = useState<Wrapper<SubscriptionManager>>(
+    () => wrap(subs)
+  );
 
   useEffect(() => {
     return subs.updatedEmitter.listen(() => {

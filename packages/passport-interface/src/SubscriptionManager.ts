@@ -3,30 +3,42 @@ import { ArgsOf, PCDOf, PCDPackage, PCDTypeOf } from "@pcd/pcd-types";
 
 export interface SerializedSubscriptionManager {
   subscriptions: SubscriptionProvider[];
-  subscriptionInfos: PossibleSubscription[];
-  activeSubscriptions: LiveSubscription[];
+  subscriptionInfos: SubscriptionInfo[];
+  activeSubscriptions: ActiveSubscription[];
 }
 
 export class SubscriptionManager {
   public updatedEmitter: Emitter;
-  private subscriptions: SubscriptionProvider[];
-  private subscriptionInfos: PossibleSubscription[];
-  private activeSubscriptions: LiveSubscription[];
+  private providers: SubscriptionProvider[];
+  private subscriptionInfos: SubscriptionInfo[];
+  private activeSubscriptions: ActiveSubscription[];
 
   public constructor(
-    subscriptions: SubscriptionProvider[],
-    subscriptionInfos: PossibleSubscription[],
-    activeSubscriptions: LiveSubscription[]
+    providers: SubscriptionProvider[],
+    subscriptionInfos: SubscriptionInfo[],
+    activeSubscriptions: ActiveSubscription[]
   ) {
     this.updatedEmitter = new Emitter();
-    this.subscriptions = subscriptions;
+    this.providers = providers;
     this.subscriptionInfos = subscriptionInfos;
     this.activeSubscriptions = activeSubscriptions;
   }
 
+  public getProviders(): SubscriptionProvider[] {
+    return this.providers;
+  }
+
+  public getSubscriptionInfos(): SubscriptionInfo[] {
+    return this.subscriptionInfos;
+  }
+
+  public getActiveSubscriptions(): ActiveSubscription[] {
+    return this.activeSubscriptions;
+  }
+
   public serialize(): string {
     return JSON.stringify({
-      subscriptions: this.subscriptions,
+      subscriptions: this.providers,
       subscriptionInfos: this.subscriptionInfos,
       activeSubscriptions: this.activeSubscriptions
     } satisfies SerializedSubscriptionManager);
@@ -47,14 +59,14 @@ export interface SubscriptionProvider {
   url: string;
 }
 
-export interface PossibleSubscription<T extends PCDPackage = PCDPackage> {
+export interface SubscriptionInfo<T extends PCDPackage = PCDPackage> {
   id: string;
   inputPCDType: PCDTypeOf<T>;
   partialArgs: ArgsOf<T>;
   description: string;
 }
 
-export interface LiveSubscription<T extends PCDPackage = PCDPackage> {
+export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
   subscriptionProviderId: string;
   credential: PCDOf<T>;
 }
