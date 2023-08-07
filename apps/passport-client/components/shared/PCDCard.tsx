@@ -2,7 +2,8 @@ import { PCD } from "@pcd/pcd-types";
 import { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { usePCDCollection, useSelf } from "../../src/appHooks";
+import { StateContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
@@ -25,7 +26,7 @@ export function PCDCard({
   onClick?: () => void;
   hideRemoveButton?: boolean;
 }) {
-  const [state] = useContext(DispatchContext);
+  const self = useSelf();
   const pcdPackage = usePackage(pcd);
 
   const displayOptions = useMemo(() => {
@@ -40,7 +41,7 @@ export function PCDCard({
   if (isMainIdentity && !appConfig.isZuzalu) {
     header = "PCDPASS IDENTITY";
   } else if (isMainIdentity) {
-    const visitorStatus = getVisitorStatus(state.self);
+    const visitorStatus = getVisitorStatus(self);
 
     if (
       visitorStatus.isVisitor &&
@@ -107,7 +108,7 @@ function CardFooter({
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
-  const [_, dispatch] = useContext(DispatchContext);
+  const { dispatch } = useContext(StateContext);
 
   const onRemoveClick = useCallback(() => {
     if (
@@ -139,14 +140,14 @@ function CardBody({
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
-  const [state] = useContext(DispatchContext);
+  const pcdCollection = usePCDCollection();
 
   if (isMainIdentity) {
     return <MainIdentityCard showQrCode={appConfig.isZuzalu} />;
   }
 
-  if (state.pcds.hasPackage(pcd.type)) {
-    const pcdPackage = state.pcds.getPackage(pcd.type);
+  if (pcdCollection.hasPackage(pcd.type)) {
+    const pcdPackage = pcdCollection.getPackage(pcd.type);
     if (pcdPackage.renderCardBody) {
       const Component = pcdPackage.renderCardBody;
       return <Component pcd={pcd} />;
