@@ -16,3 +16,11 @@ export class Emitter<T = void> {
     }
   }
 }
+
+export interface Wrapper<T> {
+  value: T;
+}
+
+export function wrap<T>(t: T): Wrapper<T> {
+  return { value: t };
+}
