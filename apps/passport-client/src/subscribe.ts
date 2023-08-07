@@ -11,7 +11,7 @@ import { AppState } from "./state";
 
 export type Selector<T> = (state: AppState) => T;
 
-export function useSubscribe(
+export function useOnStateChange(
   h: (state: AppState) => unknown,
   deps?: DependencyList
 ): void {
@@ -47,7 +47,7 @@ export function useSelector<T>(
     [selectorFunc]
   );
 
-  useSubscribe(onStateChange);
+  useOnStateChange(onStateChange);
 
   return selected;
 }

@@ -30,7 +30,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
-import { useSubscribe } from "./subscribe";
+import { useOnStateChange } from "./subscribe";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -132,7 +132,7 @@ export async function loadIssuedPCDs(
 export function useSyncE2EEStorage() {
   const { dispatch } = useContext(StateContext);
 
-  useSubscribe(() => {
+  useOnStateChange(() => {
     dispatch({ type: "sync" });
   }, [dispatch]);
 }
@@ -140,7 +140,7 @@ export function useSyncE2EEStorage() {
 export function useHasUploaded() {
   const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
 
-  useSubscribe((state) => {
+  useOnStateChange((state) => {
     (async () => {
       setHasUploaded(state.uploadedUploadId === (await state.pcds.getHash()));
     })();
