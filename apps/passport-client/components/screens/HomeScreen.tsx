@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
@@ -73,6 +73,10 @@ export function HomeScreen() {
     return selected;
   }, [pcds, selectedPCDID]);
 
+  const onPcdClick = useCallback((id: string) => {
+    setSelectedPCDID(id);
+  }, []);
+
   if (self == null) return null;
 
   return (
@@ -91,9 +95,7 @@ export function HomeScreen() {
                   pcd={pcd}
                   expanded={pcd.id === selectedPCD?.id}
                   isMainIdentity={pcd.id === mainIdPCD}
-                  onClick={() => {
-                    setSelectedPCDID(pcd.id);
-                  }}
+                  onClick={onPcdClick}
                 />
               </div>
             );

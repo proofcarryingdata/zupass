@@ -23,7 +23,7 @@ export function PCDCard({
   pcd: PCD;
   expanded?: boolean;
   isMainIdentity?: boolean;
-  onClick?: () => void;
+  onClick?: (id: string) => void;
   hideRemoveButton?: boolean;
 }) {
   const self = useSelf();
@@ -69,6 +69,10 @@ export function PCDCard({
     pcdPackage?.renderCardBody({ pcd, returnHeader: true })
   );
 
+  const clickHandler = useCallback(() => {
+    onClick(pcd.id);
+  }, [onClick, pcd.id]);
+
   if (expanded) {
     return (
       <CardContainerExpanded>
@@ -93,7 +97,7 @@ export function PCDCard({
   }
 
   return (
-    <CardContainerCollapsed {...{ onClick }}>
+    <CardContainerCollapsed {...{ onClick: clickHandler }}>
       <CardOutlineCollapsed>
         <CardHeaderCollapsed>{headerContent}</CardHeaderCollapsed>
       </CardOutlineCollapsed>
