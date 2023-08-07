@@ -1,6 +1,6 @@
+import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -8,6 +8,11 @@ import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
  * PCDs.
  */
 export class PCDCollection {
+  /**
+   * Emits an event whenever the hash of this {@link PCDCollection} changes.
+   */
+  public readonly hashEmitter: Emitter<string>;
+
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
   public folders: Record<string, string>; // pcd id -> folder
@@ -20,6 +25,7 @@ export class PCDCollection {
     this.packages = packages;
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
+    this.hashEmitter = new Emitter();
   }
 
   public getAllFolderNames(): string[] {

@@ -23,6 +23,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@pcd/emitter": "0.0.1",
     "@pcd/eslint-config-custom": "*",
     "@pcd/passport-crypto": "0.6.0",
     "@pcd/rsa-pcd": "0.1.0",
