@@ -37,10 +37,18 @@ export function initPCDIssuanceRoutes(
     const response: GetSubscriptionInfosResponse = {
       infos: [
         {
-          description: "Get your Devconnect tickets here!",
           id: "1",
+          name: "Devconnect Tickets",
+          description: "Get your Devconnect tickets here!",
           inputPCDType: RSAPCDPackage.name,
-          partialArgs: {}
+          partialArgs: undefined
+        },
+        {
+          id: "2",
+          name: "Frogs",
+          description: "Get your Frogs here!",
+          inputPCDType: undefined,
+          partialArgs: undefined
         }
       ]
     };

@@ -77,12 +77,15 @@ export function AddSubscriptionScreen() {
       <div>
         {infos &&
           infos.map((info, i) => (
-            <SubscriptionInfoRow
-              subscriptions={subs}
-              providerUrl={url}
-              info={info}
-              key={i}
-            />
+            <>
+              <Spacer h={8} />
+              <SubscriptionInfoRow
+                subscriptions={subs}
+                providerUrl={url}
+                info={info}
+                key={i}
+              />
+            </>
           ))}
       </div>
     </SubscriptionsScreenContainer>
@@ -115,7 +118,7 @@ export function SubscriptionInfoRow({
       id: {info.id}
       <br />
       description: {info.description} <br />
-      you send a: {info.inputPCDType}
+      {info.inputPCDType && <>you send a: {info.inputPCDType}</>}
       <br />
       <Spacer h={8} />
       {alreadySubscribed ? (

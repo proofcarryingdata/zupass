@@ -176,9 +176,10 @@ export interface SubscriptionProvider {
 
 export interface Feed<T extends PCDPackage = PCDPackage> {
   id: string;
-  inputPCDType: PCDTypeOf<T>;
-  partialArgs: ArgsOf<T>;
+  name: string;
   description: string;
+  inputPCDType?: PCDTypeOf<T>;
+  partialArgs?: ArgsOf<T>;
 }
 
 export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
