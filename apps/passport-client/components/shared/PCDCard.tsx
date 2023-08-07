@@ -1,5 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import { useCallback, useContext, useMemo } from "react";
+import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useSelf } from "../../src/appHooks";
@@ -9,11 +9,13 @@ import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 
+export const PCDCard = React.memo(PCDCardImpl);
+
 /**
  * Shows a card in the Passport wallet. If expanded, the full card, otherwise
  * just the top of the card to allow stacking.
  */
-export function PCDCard({
+function PCDCardImpl({
   isMainIdentity,
   pcd,
   expanded,
