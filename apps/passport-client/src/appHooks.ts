@@ -2,17 +2,38 @@ import { User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState, PendingAction } from "./state";
 import { useSelector } from "./subscribe";
 
+export function usePCDCollectionWithHash(): {
+  pcds: PCDCollection;
+  hash: string | undefined;
+} {
+  const pcds = useSelector<PCDCollection>((s) => s.pcds, []);
+  const [hash, setHash] = useState<string | undefined>();
+
+  useEffect(() => {
+    return pcds.hashEmitter.listen((newHash: string) => {
+      setHash(newHash);
+    });
+  }, [pcds]);
+
+  return {
+    pcds,
+    hash
+  };
+}
+
 export function usePCDs(): PCD[] {
-  return useSelector<PCD[]>((s) => s.pcds.getAll(), []);
+  const { pcds } = usePCDCollectionWithHash();
+  return [...pcds.getAll()];
 }
 
 export function usePCDCollection(): PCDCollection {
-  return useSelector<PCDCollection>((s) => s.pcds, []);
+  const { pcds } = usePCDCollectionWithHash();
+  return pcds;
 }
 
 export function useSelf(): User | undefined {
