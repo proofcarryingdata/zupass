@@ -137,13 +137,25 @@ function AlreadySubscribed({
       return;
     }
 
-    subscriptions.unsubscribe();
-  }, []);
+    subscriptions.unsubscribe(
+      existingSubscription.providerUrl,
+      existingSubscription.feed.id
+    );
+  }, [
+    existingSubscription.feed.id,
+    existingSubscription.providerUrl,
+    subscriptions
+  ]);
+
   return (
     <div>
       You're already subscribed to this feed! <br />
       subscribed at{" "}
       {new Date(existingSubscription.subscribedTimestamp).toISOString()}
+      <br />
+      <Button onClick={onUnsubscribeClick} size="small" style="danger">
+        Unsubscribe
+      </Button>
     </div>
   );
 }
