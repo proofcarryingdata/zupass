@@ -1,3 +1,4 @@
+import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -90,24 +91,46 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {pcds.map((pcd) => {
-            return (
-              <PCDContainer key={pcd.id + "-container"}>
-                <PCDCard
-                  key={pcd.id + "-card"}
-                  pcd={pcd}
-                  expanded={pcd.id === selectedPCD?.id}
-                  isMainIdentity={pcd.id === mainIdPCD}
-                  onClick={onPcdClick}
-                />
-              </PCDContainer>
-            );
-          })}
+          {pcds.map((pcd) => (
+            <WrappedPCDCard
+              key={pcd.id}
+              pcd={pcd}
+              mainIdPCD={mainIdPCD}
+              onPcdClick={onPcdClick}
+              expanded={pcd.id === selectedPCD?.id}
+            />
+          ))}
           <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
     </>
+  );
+}
+
+const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
+
+function WrappedPCDCardImpl({
+  pcd,
+  expanded,
+  mainIdPCD,
+  onPcdClick
+}: {
+  pcd: PCD;
+  expanded: boolean;
+  mainIdPCD: string;
+  onPcdClick?: (id: string) => void;
+}) {
+  return (
+    <PCDContainer key={"container-" + pcd.id}>
+      <PCDCard
+        key={"card-" + pcd.id}
+        pcd={pcd}
+        expanded={expanded}
+        isMainIdentity={pcd.id === mainIdPCD}
+        onClick={onPcdClick}
+      />
+    </PCDContainer>
   );
 }
 
