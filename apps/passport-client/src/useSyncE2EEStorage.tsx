@@ -164,14 +164,3 @@ export function useHasUploaded() {
 
   return hasUploaded;
 }
-
-// TODO: convert to new hooks
-export function useIsDownloaded() {
-  const [state] = useContext(DispatchContext);
-
-  const isDownloaded = useMemo(() => {
-    return state.downloadedPCDs !== undefined;
-  }, [state]);
-
-  return isDownloaded;
-}

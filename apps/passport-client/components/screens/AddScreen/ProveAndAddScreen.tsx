@@ -2,12 +2,9 @@ import { PCDProveAndAddRequest } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../../../src/appHooks";
+import { useDispatch, useIsDownloaded } from "../../../src/appHooks";
 import { safeRedirect } from "../../../src/passportRequest";
-import {
-  useHasUploaded,
-  useIsDownloaded
-} from "../../../src/useSyncE2EEStorage";
+import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";

@@ -1,12 +1,9 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../../../src/appHooks";
+import { useDispatch, useIsDownloaded } from "../../../src/appHooks";
 import { useDeserialized } from "../../../src/useDeserialized";
-import {
-  useHasUploaded,
-  useIsDownloaded
-} from "../../../src/useSyncE2EEStorage";
+import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";

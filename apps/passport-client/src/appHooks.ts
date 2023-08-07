@@ -47,3 +47,7 @@ export function useAppError(): AppError | undefined {
 export function useLoadedIssuedPCDs(): boolean | undefined {
   return useSelector<boolean | undefined>((s) => s.loadedIssuedPCDs, []);
 }
+
+export function useIsDownloaded(): boolean | undefined {
+  return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
+}

@@ -1,18 +1,15 @@
 import {
   HaLoNoncePCD,
   HaLoNoncePCDArgs,
-  HaLoNoncePCDPackage,
+  HaLoNoncePCDPackage
 } from "@pcd/halo-nonce-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
+import { useIsDownloaded } from "../../../src/appHooks";
 import { DispatchContext } from "../../../src/dispatch";
-import {
-  useHasUploaded,
-  useIsDownloaded,
-  useLoggedIn,
-} from "../../../src/useSyncE2EEStorage";
+import { useHasUploaded, useLoggedIn } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, Spacer, TextCenter } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -24,7 +21,7 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
 export function AddHaloScreen({
   pk2,
   rnd,
-  rndsig,
+  rndsig
 }: {
   pk2: string;
   rnd: string;
@@ -44,16 +41,16 @@ export function AddHaloScreen({
       const args: HaLoNoncePCDArgs = {
         pk2: {
           argumentType: ArgumentTypeName.String,
-          value: pk2,
+          value: pk2
         },
         rnd: {
           argumentType: ArgumentTypeName.String,
-          value: rnd,
+          value: rnd
         },
         rndsig: {
           argumentType: ArgumentTypeName.String,
-          value: rndsig,
-        },
+          value: rndsig
+        }
       };
 
       let producedPCD;
