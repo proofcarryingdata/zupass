@@ -17,12 +17,10 @@ import {
   RSATicketPCD,
   RSATicketPCDPackage
 } from "@pcd/rsa-ticket-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import NodeRSA from "node-rsa";
 import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -59,13 +57,7 @@ export class IssuanceService {
     const serialized = await Promise.all(
       pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
     );
-    for (let i = 0; i < 100; i++) {
-      serialized.push(
-        await SemaphoreIdentityPCDPackage.serialize(
-          await SemaphoreIdentityPCDPackage.prove({ identity: new Identity() })
-        )
-      );
-    }
+
     return { pcds: serialized, folder: "Devconnect" };
   }
 
