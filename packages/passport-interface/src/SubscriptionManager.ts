@@ -20,6 +20,12 @@ export class SubscriptionManager {
     this.activeSubscriptions = activeSubscriptions;
   }
 
+  public pollSubscriptions() {
+    for (const subscription of this.activeSubscriptions) {
+      alert(subscription);
+    }
+  }
+
   public getSubscriptionsByProvider(): Map<string, ActiveSubscription[]> {
     const result: Map<string, ActiveSubscription[]> = new Map();
     const providers = this.getProviders();
