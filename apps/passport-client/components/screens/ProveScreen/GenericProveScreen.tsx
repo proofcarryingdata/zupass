@@ -1,14 +1,14 @@
 import {
   PCDGetRequest,
   PCDRequestType,
-  PendingPCD,
+  PendingPCD
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import { useCallback, useContext } from "react";
-import { DispatchContext } from "../../../src/dispatch";
+import { useCallback } from "react";
+import { useDispatch } from "../../../src/appHooks";
 import {
   safeRedirect,
-  safeRedirectPending,
+  safeRedirectPending
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
 import { Spacer } from "../../core";
@@ -25,7 +25,7 @@ import { GenericProveSection } from "./GenericProveSection";
  * are objects, supports loading from a URL.
  */
 export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
-  const [_, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
 
   const onProve = useCallback(
     async (_pcd: PCD, serialized: SerializedPCD, pendingPCD: PendingPCD) => {

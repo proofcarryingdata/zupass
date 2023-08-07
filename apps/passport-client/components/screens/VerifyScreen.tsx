@@ -2,13 +2,13 @@ import { fetchUser, User } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import {
   SemaphoreSignaturePCDPackage,
-  SemaphoreSignaturePCDTypeName,
+  SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
+import { useDispatch } from "../../src/appHooks";
 import { QRPayload } from "../../src/createQRProof";
-import { DispatchContext } from "../../src/dispatch";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
 import {
@@ -17,7 +17,7 @@ import {
   H4,
   Placeholder,
   Spacer,
-  TextCenter,
+  TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
@@ -26,7 +26,7 @@ import { MainIdentityCard } from "../shared/MainIdentityCard";
 import {
   CardContainerExpanded,
   CardHeader,
-  CardOutlineExpanded,
+  CardOutlineExpanded
 } from "../shared/PCDCard";
 
 /** You can either prove who you are, or you can prove anonymously that you're a Zuzalu resident or visitor. */
@@ -40,7 +40,7 @@ type VerifyResult =
 // Shows whether a proof is valid. On success, shows the PCD claim visually.
 export function VerifyScreen() {
   const location = useLocation();
-  const [_, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
 
   const params = new URLSearchParams(location.search);
   const encodedQRPayload = params.get("pcd");
@@ -63,8 +63,8 @@ export function VerifyScreen() {
           error: {
             title: "Verification error",
             message: err.message,
-            stack: err.stack,
-          },
+            stack: err.stack
+          }
         });
       });
   }, [encodedQRPayload, setResult, dispatch]);
@@ -76,7 +76,7 @@ export function VerifyScreen() {
   const icon = {
     true: icons.verifyValid,
     false: icons.verifyInvalid,
-    undefined: icons.verifyInProgress,
+    undefined: icons.verifyInProgress
   }["" + result?.valid];
 
   return (
@@ -155,7 +155,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "User not found",
+      message: "User not found"
     };
   }
 
@@ -163,7 +163,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "User doesn't match proof",
+      message: "User doesn't match proof"
     };
   }
 
@@ -173,7 +173,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Proof expired",
+      message: "Proof expired"
     };
   }
 
@@ -187,7 +187,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     return {
       valid: false,
       type: "identity-proof",
-      message: "Expired visitor.",
+      message: "Expired visitor."
     };
   }
 

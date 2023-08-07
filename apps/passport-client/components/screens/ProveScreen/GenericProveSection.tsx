@@ -1,13 +1,13 @@
 import {
   PendingPCD,
   ProveOptions,
-  ProveRequest,
+  ProveRequest
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
-import { DispatchContext } from "../../../src/dispatch";
+import { usePCDCollection } from "../../../src/appHooks";
 import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
 import { Button, H1, Spacer } from "../../core";
@@ -22,7 +22,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
   options,
-  onProve,
+  onProve
 }: {
   pcdType: string;
   initialArgs: ArgsOf<T>;
@@ -34,11 +34,11 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   ) => void;
 }) {
   const rollbar = useAppRollbar();
-  const [state] = useContext(DispatchContext);
+  const pcds = usePCDCollection();
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(initialArgs)));
   const [error, setError] = useState<Error | undefined>();
   const [proving, setProving] = useState(false);
-  const pcdPackage = state.pcds.getPackage<T>(pcdType);
+  const pcdPackage = pcds.getPackage<T>(pcdType);
 
   const onProveClick = useCallback(async () => {
     try {
@@ -51,7 +51,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       if (options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: pcdType,
-          args: args,
+          args: args
         };
         const pendingPCD = await requestPendingPCD(serverReq);
         onProve(undefined, undefined, pendingPCD);
@@ -82,7 +82,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
       <Spacer h={24} />
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
-      <PCDArgs args={args} setArgs={setArgs} pcdCollection={state.pcds} />
+      <PCDArgs args={args} setArgs={setArgs} pcdCollection={pcds} />
       <Spacer h={16} />
       {error && (
         <>

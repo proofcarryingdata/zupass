@@ -4,7 +4,7 @@ import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext } from "react";
 import { Dispatcher, StateContext } from "./dispatch";
-import { AppState } from "./state";
+import { AppError, AppState, PendingAction } from "./state";
 import { useSelector } from "./subscribe";
 
 export function usePCDs(): PCD[] {
@@ -34,4 +34,16 @@ export function useModal(): AppState["modal"] {
 
 export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
+}
+
+export function usePendingAction(): PendingAction | undefined {
+  return useSelector<PendingAction | undefined>((s) => s.pendingAction, []);
+}
+
+export function useAppError(): AppError | undefined {
+  return useSelector<AppError | undefined>((s) => s.error, []);
+}
+
+export function useLoadedIssuedPCDs(): boolean | undefined {
+  return useSelector<boolean | undefined>((s) => s.loadedIssuedPCDs, []);
 }

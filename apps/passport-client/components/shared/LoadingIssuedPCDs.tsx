@@ -1,17 +1,16 @@
-import { useContext } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { RippleLoader } from "../core/RippleLoader";
 
 export function LoadingIssuedPCDs() {
-  const [state] = useContext(DispatchContext);
+  const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   if (appConfig.isZuzalu) {
     return null;
   }
 
-  if (state.loadedIssuedPCDs) {
+  if (loadedIssuedPCDs) {
     return null;
   }
 

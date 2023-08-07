@@ -3,11 +3,11 @@ import {
   getHash,
   passportDecrypt
 } from "@pcd/passport-crypto";
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useState } from "react";
 import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch } from "../../src/appHooks";
 import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -19,7 +19,7 @@ import { AppContainer } from "../shared/AppContainer";
  * on first login.
  */
 export function SyncExistingScreen() {
-  const [_, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
   const [syncKey, setSyncKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
