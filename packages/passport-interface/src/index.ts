@@ -7,5 +7,6 @@ export * from "./RequestTypes";
 export * from "./SemaphoreGroupIntegration";
 export * from "./SemaphoreSignatureIntegration";
 export * from "./SerializedPCDIntegration";
+export * from "./SubscriptionManager";
 export * from "./User";
 export * from "./zuzalu";

@@ -1,4 +1,4 @@
-import { User } from "@pcd/passport-interface";
+import { SubscriptionManager, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
@@ -25,6 +25,16 @@ export async function loadPCDs(): Promise<PCDCollection> {
     await getPackages(),
     serializedCollection ?? "{}"
   );
+}
+
+export async function saveSubscriptions(
+  subscriptions: SubscriptionManager
+): Promise<void> {
+  window.localStorage["subscriptions"] = subscriptions.serialize();
+}
+
+export async function loadSubscriptions(): Promise<SubscriptionManager> {
+  return SubscriptionManager.deserialize(window.localStorage["subscriptions"]);
 }
 
 export function saveEncryptionKey(key: string): void {

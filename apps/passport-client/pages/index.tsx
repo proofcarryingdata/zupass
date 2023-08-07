@@ -30,6 +30,7 @@ import {
   loadIdentity,
   loadPCDs,
   loadSelf,
+  loadSubscriptions,
   loadUserInvalid,
   saveIdentity
 } from "../src/localstorage";
@@ -159,6 +160,7 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
+  const subscriptions = await loadSubscriptions();
 
   let modal = "" as AppState["modal"];
 
@@ -175,7 +177,8 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    userInvalid: userInvalid
+    userInvalid: userInvalid,
+    subscriptions
   };
 }
 
