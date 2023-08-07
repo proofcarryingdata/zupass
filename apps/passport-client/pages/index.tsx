@@ -22,7 +22,6 @@ import { appConfig } from "../src/appConfig";
 import {
   Action,
   dispatch,
-  DispatchContext,
   StateContext,
   StateContextState
 } from "../src/dispatch";
@@ -59,7 +58,7 @@ class App extends React.Component<object, AppState> {
   };
 
   render() {
-    const { state, dispatch: disp } = this;
+    const { state } = this;
 
     if (!state) {
       return null;
@@ -68,16 +67,14 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        <DispatchContext.Provider value={[state, disp]}>
-          {!hasStack && <Router />}
-          {hasStack && (
-            <HashRouter>
-              <Routes>
-                <Route path="*" element={<AppContainer bg="gray" />} />
-              </Routes>
-            </HashRouter>
-          )}
-        </DispatchContext.Provider>
+        {!hasStack && <Router />}
+        {hasStack && (
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<AppContainer bg="gray" />} />
+            </Routes>
+          </HashRouter>
+        )}
       </StateContext.Provider>
     );
   }
