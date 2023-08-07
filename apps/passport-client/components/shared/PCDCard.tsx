@@ -28,6 +28,46 @@ function PCDCardImpl({
   onClick?: (id: string) => void;
   hideRemoveButton?: boolean;
 }) {
+  const clickHandler = useCallback(() => {
+    onClick(pcd.id);
+  }, [onClick, pcd.id]);
+
+  if (expanded) {
+    return (
+      <CardContainerExpanded>
+        <CardOutlineExpanded>
+          <CardHeader>
+            <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+          </CardHeader>
+          <CardBodyContainer>
+            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
+            {!hideRemoveButton && (
+              <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
+            )}
+          </CardBodyContainer>
+        </CardOutlineExpanded>
+      </CardContainerExpanded>
+    );
+  }
+
+  return (
+    <CardContainerCollapsed {...{ onClick: clickHandler }}>
+      <CardOutlineCollapsed>
+        <CardHeaderCollapsed>
+          <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+        </CardHeaderCollapsed>
+      </CardOutlineCollapsed>
+    </CardContainerCollapsed>
+  );
+}
+
+function HeaderContent({
+  pcd,
+  isMainIdentity
+}: {
+  pcd: PCD;
+  isMainIdentity: boolean;
+}) {
   const self = useSelf();
   const pcdPackage = usePackage(pcd);
 
@@ -38,8 +78,6 @@ function PCDCardImpl({
   }, [pcd, pcdPackage]);
 
   let header;
-  let notCurrentVisitor = false;
-
   if (isMainIdentity && !appConfig.isZuzalu) {
     header = "PCDPASS IDENTITY";
   } else if (isMainIdentity) {
@@ -58,9 +96,6 @@ function PCDCardImpl({
     } else {
       header = "VERIFIED ZUZALU PASSPORT";
     }
-
-    notCurrentVisitor =
-      visitorStatus.isVisitor && visitorStatus.status !== VisitorStatus.Current;
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
   }
@@ -71,40 +106,7 @@ function PCDCardImpl({
     pcdPackage?.renderCardBody({ pcd, returnHeader: true })
   );
 
-  const clickHandler = useCallback(() => {
-    onClick(pcd.id);
-  }, [onClick, pcd.id]);
-
-  if (expanded) {
-    return (
-      <CardContainerExpanded>
-        <CardOutlineExpanded>
-          <CardHeader
-            col={notCurrentVisitor ? "" : "var(--accent-lite)"}
-            style={{
-              backgroundColor: notCurrentVisitor ? "var(--danger)" : ""
-            }}
-          >
-            {headerContent}
-          </CardHeader>
-          <CardBodyContainer>
-            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
-            {!hideRemoveButton && (
-              <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
-            )}
-          </CardBodyContainer>
-        </CardOutlineExpanded>
-      </CardContainerExpanded>
-    );
-  }
-
-  return (
-    <CardContainerCollapsed {...{ onClick: clickHandler }}>
-      <CardOutlineCollapsed>
-        <CardHeaderCollapsed>{headerContent}</CardHeaderCollapsed>
-      </CardOutlineCollapsed>
-    </CardContainerCollapsed>
-  );
+  return headerContent;
 }
 
 function CardFooter({
