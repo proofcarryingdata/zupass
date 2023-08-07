@@ -42,6 +42,7 @@ export class PCDCollection {
     }
 
     this.folders[pcdId] = folder;
+    this.recalculateAndEmitHash();
   }
 
   public getFolder(pcdId: string): string | undefined {
@@ -126,6 +127,7 @@ export class PCDCollection {
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
     );
+    this.recalculateAndEmitHash();
   }
 
   public async deserializeAndAdd(
@@ -152,6 +154,7 @@ export class PCDCollection {
     }
 
     this.pcds = Array.from(currentMap.values());
+    this.recalculateAndEmitHash();
   }
 
   public size(): number {
@@ -192,6 +195,10 @@ export class PCDCollection {
 
   public getPCDsByType(type: string) {
     return this.pcds.filter((pcd) => pcd.type === type);
+  }
+
+  private recalculateAndEmitHash() {
+    this.getHash().then((newHash) => this.hashEmitter.emit(newHash));
   }
 
   public static async deserialize(
