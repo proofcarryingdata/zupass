@@ -1,6 +1,6 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DispatchContext } from "../../src/dispatch";
+import { usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -15,11 +15,12 @@ import { PCDCard } from "../shared/PCDCard";
 export function HomeScreen() {
   useSyncE2EEStorage();
 
-  const [state] = useContext(DispatchContext);
+  const pcds = usePCDs();
+  const self = useSelf();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (state.self == null) {
+    if (self == null) {
       console.log("Redirecting to login screen");
       navigate("/login");
     } else if (sessionStorage.pendingProofRequest != null) {
@@ -50,10 +51,6 @@ export function HomeScreen() {
     }
   });
 
-  const pcds = useMemo(() => {
-    return state.pcds.getAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.pcds, state]);
   const mainIdPCD = useMemo(() => {
     return pcds[0]?.id;
   }, [pcds]);
@@ -76,7 +73,7 @@ export function HomeScreen() {
     return selected;
   }, [pcds, selectedPCDID]);
 
-  if (state.self == null) return null;
+  if (self == null) return null;
 
   return (
     <>
