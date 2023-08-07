@@ -84,8 +84,9 @@ export const DispatchContext = createContext<DispatchContextState>([] as any);
 export type StateContextState = {
   getState: GetState;
   stateEmitter: StateEmitter;
+  dispatch: Dispatcher;
 };
-export const StateContext = createContext<StateContextState>([] as any);
+export const StateContext = createContext<StateContextState>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 

@@ -21,7 +21,7 @@ import {
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
-import { DispatchContext } from "./dispatch";
+import { DispatchContext, StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
   loadPCDs,
@@ -30,6 +30,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
+import { useSubscribe } from "./subscribe";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -129,11 +130,11 @@ export async function loadIssuedPCDs(
 }
 
 export function useSyncE2EEStorage() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const { dispatch } = useContext(StateContext);
 
-  useEffect(() => {
+  useSubscribe(() => {
     dispatch({ type: "sync" });
-  }, [dispatch, state]);
+  }, [dispatch]);
 }
 
 export function useLoggedIn() {

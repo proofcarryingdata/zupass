@@ -54,7 +54,8 @@ class App extends React.Component<object, AppState> {
   }
   stateContextState: StateContextState = {
     getState: () => this.state,
-    stateEmitter: this.stateEmitter
+    stateEmitter: this.stateEmitter,
+    dispatch: this.dispatch
   };
 
   render() {
