@@ -24,7 +24,7 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { AppError, AppState } from "./state";
+import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
 import {
   downloadStorage,
@@ -79,6 +79,7 @@ export type Action =
   | { type: "sync" };
 
 export const DispatchContext = createContext<[AppState, Dispatcher]>([] as any);
+export const StateContext = createContext<[GetState, StateEmitter]>([] as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 
