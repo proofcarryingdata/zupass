@@ -111,7 +111,9 @@ class App extends React.Component<object, AppState> {
   };
 }
 
-function Router() {
+const Router = React.memo(RouterImpl);
+
+function RouterImpl() {
   return (
     <HashRouter>
       <Routes>
