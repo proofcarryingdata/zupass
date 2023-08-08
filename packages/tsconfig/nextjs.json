@@ -15,8 +15,7 @@
     "module": "esnext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "downlevelIteration": true
+    "jsx": "preserve"
   },
   "include": ["src", "next-env.d.ts"],
   "exclude": ["node_modules"]
