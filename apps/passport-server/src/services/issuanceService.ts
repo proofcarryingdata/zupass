@@ -25,6 +25,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import _ from "lodash";
 import NodeRSA from "node-rsa";
 import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -36,6 +37,7 @@ import {
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { timeBasedId } from "../util/timeBasedId";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -348,6 +350,7 @@ export class IssuanceService {
   }
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
+    const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
     const serverUrl = process.env.PASSPORT_CLIENT_URL;
 
     if (!serverUrl) {
@@ -362,28 +365,26 @@ export class IssuanceService {
       "images/frogs/frog4.jpeg"
     ];
 
-    const frogPCDs = await Promise.all(
-      frogPaths.map(async (frogPath) =>
-        RSAPCDPackage.serialize(
-          await RSAPCDPackage.prove({
-            privateKey: {
-              argumentType: ArgumentTypeName.String,
-              value: this.exportedPrivateKey
-            },
-            signedMessage: {
-              argumentType: ArgumentTypeName.String,
-              value: serverUrl + "/" + frogPath
-            },
-            id: {
-              argumentType: ArgumentTypeName.String,
-              value: undefined
-            }
-          })
-        )
-      )
+    const randomFrogPath = _.sample(frogPaths);
+
+    const frogPCD = await RSAPCDPackage.serialize(
+      await RSAPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: this.exportedPrivateKey
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: serverUrl + "/" + randomFrogPath
+        },
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: timeBasedId(FROG_INTERVAL_MS) + ""
+        }
+      })
     );
 
-    return frogPCDs;
+    return [frogPCD];
   }
 
   /**
