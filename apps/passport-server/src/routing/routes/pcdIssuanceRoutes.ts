@@ -39,7 +39,8 @@ export function initPCDIssuanceRoutes(
       }
 
       const request = req.body as FeedRequest;
-      res.json(await issuanceService.handleIssueRequest(request));
+
+      res.json(await issuanceService.handleFeedRequest(request));
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

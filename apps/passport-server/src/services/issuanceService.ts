@@ -119,7 +119,7 @@ export class IssuanceService {
     return this.feedHost.handleListFeedsRequest(request);
   }
 
-  public async handleIssueRequest(request: FeedRequest): Promise<FeedResponse> {
+  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
     return this.feedHost.handleFeedRequest(request);
   }
 

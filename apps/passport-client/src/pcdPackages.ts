@@ -29,17 +29,17 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await SemaphoreGroupPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await SemaphoreSignaturePCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await EthereumOwnershipPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await EthereumGroupPCDPackage.init({
@@ -51,24 +51,24 @@ async function loadPackages(): Promise<PCDPackage[]> {
       circuit:
         "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.circuit",
       witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.wasm",
+        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.wasm"
     },
 
     pubkeyMembershipConfig: {
       circuit:
         "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.circuit",
       witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.wasm",
-    },
+        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.wasm"
+    }
   });
 
   await RLNPCDPackage.init({
     wasmFilePath: SERVER_STATIC_URL + "rln-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey",
+    zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey"
   });
 
   await RSATicketPCDPackage.init({
-    makeEncodedVerifyLink: makeEncodedVerifyLink,
+    makeEncodedVerifyLink: makeEncodedVerifyLink
   });
 
   return [
@@ -82,6 +82,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     WebAuthnPCDPackage,
     HaLoNoncePCDPackage,
     RSAPCDPackage,
-    RSATicketPCDPackage,
+    RSATicketPCDPackage
   ];
 }

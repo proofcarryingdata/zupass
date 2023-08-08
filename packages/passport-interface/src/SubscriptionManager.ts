@@ -65,7 +65,11 @@ export class SubscriptionManager {
 
     const result = await fetch(subscription.providerUrl, {
       method: "POST",
-      body: JSON.stringify(request)
+      body: JSON.stringify(request),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      }
     });
     const parsed = (await result.json()) as FeedResponse;
     return parsed;
@@ -141,7 +145,11 @@ export class SubscriptionManager {
     );
   }
 
-  public subscribe(providerUrl: string, info: Feed): void {
+  public subscribe(
+    providerUrl: string,
+    info: Feed,
+    credential: SerializedPCD
+  ): void {
     const existingSubscription = this.getSubscription(providerUrl, info.id);
 
     if (existingSubscription) {
@@ -153,7 +161,7 @@ export class SubscriptionManager {
     this.getOrAddProvider(providerUrl);
 
     this.activeSubscriptions.push({
-      credential: undefined,
+      credential,
       feed: info,
       providerUrl: providerUrl,
       subscribedTimestamp: Date.now()

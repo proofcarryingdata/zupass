@@ -1,17 +1,25 @@
 import {
   ActiveSubscription,
   Feed,
+  ISSUANCE_STRING,
   PCDPermission,
   PCDPermissions,
   SubscriptionManager
 } from "@pcd/passport-interface";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd/";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useSubscriptions } from "../../src/appHooks";
+import {
+  useIdentity,
+  usePCDCollection,
+  useSubscriptions
+} from "../../src/appHooks";
 import { BigInput, Button, Spacer } from "../core";
 
-const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds/list";
+const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds";
 
 export function AddSubscriptionScreen() {
   const [providerUrl, setProviderUrl] = useState(DEFAULT_FEEDS_URL);
@@ -96,12 +104,6 @@ export function SubscriptionInfoRow({
   providerUrl: string;
   info: Feed;
 }) {
-  const onSubscribeClick = useCallback(() => {
-    if (!confirm("are you sure you want to subscribe to this feed?")) return;
-
-    subscriptions.subscribe(providerUrl, info);
-  }, [info, subscriptions, providerUrl]);
-
   const existingSubscription = subscriptions.getSubscription(
     providerUrl,
     info.id
@@ -123,11 +125,72 @@ export function SubscriptionInfoRow({
           existingSubscription={existingSubscription}
         />
       ) : (
-        <Button onClick={onSubscribeClick} size="small">
-          Subscribe
-        </Button>
+        <SubscribeSection
+          subscriptions={subscriptions}
+          providerUrl={providerUrl}
+          info={info}
+        />
       )}
     </InfoRowContainer>
+  );
+}
+
+function SubscribeSection({
+  subscriptions,
+  providerUrl,
+  info
+}: {
+  subscriptions: SubscriptionManager;
+  providerUrl: string;
+  info: Feed;
+}) {
+  const identity = useIdentity();
+  const [credential, setCredential] = useState<SerializedPCD | undefined>();
+
+  const pcds = usePCDCollection();
+  console.log("PCDS", pcds);
+
+  const onSubscribeClick = useCallback(() => {
+    if (!confirm("are you sure you want to subscribe to this feed?")) return;
+
+    subscriptions.subscribe(providerUrl, info, credential);
+  }, [subscriptions, providerUrl, info, credential]);
+
+  const addCredential = useCallback(() => {
+    (async () => {
+      setCredential(
+        await SemaphoreSignaturePCDPackage.serialize(
+          await SemaphoreSignaturePCDPackage.prove({
+            identity: {
+              argumentType: ArgumentTypeName.PCD,
+              value: await SemaphoreIdentityPCDPackage.serialize(
+                await SemaphoreIdentityPCDPackage.prove({
+                  identity: identity
+                })
+              )
+            },
+            signedMessage: {
+              argumentType: ArgumentTypeName.String,
+              value: ISSUANCE_STRING
+            }
+          })
+        )
+      );
+    })();
+  }, [identity]);
+
+  return (
+    <>
+      <Button onClick={addCredential} size="small">
+        Set Credential
+      </Button>
+      <Spacer w={8} />
+      credential: {credential ? "✅" : "❌"}
+      <Spacer h={8} />
+      <Button onClick={onSubscribeClick} size="small">
+        Subscribe
+      </Button>
+    </>
   );
 }
 

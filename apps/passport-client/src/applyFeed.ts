@@ -54,7 +54,7 @@ export async function applyAction(
         );
       }
     }
-    collection.addAll(deserialized);
+    collection.addAll(deserialized, { upsert: true });
     deserialized.forEach((d) =>
       collection.setFolder(d.id, pcdAction.permission.folder)
     );
