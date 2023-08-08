@@ -106,6 +106,7 @@ export class DevconnectPretixDataMocker {
     let eventItems = org.itemsByEventID.get(eventID) ?? [];
     eventItems = eventItems.filter((item) => item.id !== id);
     org.itemsByEventID.set(eventID, eventItems);
+  }
 
   public updateEvent(
     orgUrl: string,

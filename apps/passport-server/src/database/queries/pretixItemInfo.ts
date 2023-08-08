@@ -47,7 +47,7 @@ export async function updatePretixItemsInfo(
       update devconnect_pretix_items_info
       set item_name = $1, is_deleted = $3
       where id=$2`,
-    [item_name, id, is_deleted]
+    [item_name, id, isDeleted]
   );
   return result.rows;
 }
