@@ -417,9 +417,11 @@ async function sync(state: AppState, update: ZuUpdate) {
     });
 
     try {
+      console.log("[SYNC] loading issued pcds");
       const actions = await state.subscriptions.pollSubscriptions();
       await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
+      console.log("[SYNC] loaded and saved issued pcds");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }

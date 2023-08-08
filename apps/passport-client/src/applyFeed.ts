@@ -40,8 +40,9 @@ export async function applyAction(
     }
 
     collection.addAll(deserialized);
-    deserialized.forEach((d) =>
-      collection.setFolder(d.id, pcdAction.permission.folder)
+    collection.bulkSetFolder(
+      deserialized.map((pcd) => pcd.id),
+      pcdAction.permission.folder
     );
   } else if (pcdAction.permission.type === PCDPermissionType.FolderReplace) {
     for (const pcd of deserialized) {
@@ -55,8 +56,9 @@ export async function applyAction(
       }
     }
     collection.addAll(deserialized, { upsert: true });
-    deserialized.forEach((d) =>
-      collection.setFolder(d.id, pcdAction.permission.folder)
+    collection.bulkSetFolder(
+      deserialized.map((pcd) => pcd.id),
+      pcdAction.permission.folder
     );
   }
 }

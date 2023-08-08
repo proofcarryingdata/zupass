@@ -37,13 +37,22 @@ export class PCDCollection {
     return Array.from(result);
   }
 
-  public setFolder(pcdId: string, folder: string): void {
-    if (!this.hasPCDWithId(pcdId)) {
-      throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
-    }
+  public bulkSetFolder(pcdIds: string[], folder: string) {
+    pcdIds.forEach((pcdId) => {
+      if (!this.hasPCDWithId(pcdId)) {
+        throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
+      }
+    });
 
-    this.folders[pcdId] = folder;
+    pcdIds.forEach((pcdId) => {
+      this.folders[pcdId] = folder;
+    });
+
     this.recalculateAndEmitHash();
+  }
+
+  public setFolder(pcdId: string, folder: string): void {
+    this.bulkSetFolder([pcdId], folder);
   }
 
   public getFolder(pcdId: string): string | undefined {
