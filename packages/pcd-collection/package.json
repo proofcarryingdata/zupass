@@ -26,6 +26,7 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/passport-crypto": "0.6.1",
+    "@pcd/passport-interface": "0.6.1",
     "@pcd/rsa-pcd": "0.1.1",
     "@pcd/tsconfig": "*",
     "@types/chai": "^4.3.5",

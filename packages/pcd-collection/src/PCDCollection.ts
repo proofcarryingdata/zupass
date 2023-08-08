@@ -1,13 +1,6 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
-import {
-  ActiveSubscription,
-  FeedResponseAction,
-  PCDPermissionType,
-  ReturnedAction
-} from "@pcd/passport-interface";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import _ from "lodash";
 
 /**
  * This class represents all the PCDs a user may have, and also
@@ -34,69 +27,6 @@ export class PCDCollection {
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
     this.hashEmitter = new Emitter();
-  }
-
-  public async applyActions(actions: ReturnedAction[]) {
-    for (const action of actions) {
-      for (const subAction of action.actions) {
-        try {
-          await this.applyAction(subAction, action.subscription);
-        } catch (e) {
-          console.log(e);
-        }
-      }
-    }
-  }
-
-  public async applyAction(
-    pcdAction: FeedResponseAction,
-    activeSubscription: ActiveSubscription
-  ) {
-    if (!PCDCollection.checkPermissions(pcdAction, activeSubscription)) {
-      throw new Error(`permission denied`);
-    }
-    const deserialized = await this.deserializeAll(pcdAction.pcds);
-
-    if (pcdAction.permission.type === PCDPermissionType.FolderAppend) {
-      for (const pcd of deserialized) {
-        if (this.hasPCDWithId(pcd.id)) {
-          throw new Error(`pcd with ${pcd.id} already exists`);
-        }
-      }
-
-      this.addAll(deserialized);
-      deserialized.forEach((d) =>
-        this.setFolder(d.id, pcdAction.permission.folder)
-      );
-    } else if (pcdAction.permission.type === PCDPermissionType.FolderReplace) {
-      for (const pcd of deserialized) {
-        if (
-          this.hasPCDWithId(pcd.id) &&
-          this.getFolder(pcd.id) !== pcdAction.permission.folder
-        ) {
-          throw new Error(
-            `pcd with ${pcd.id} already exists outside the allowed folder`
-          );
-        }
-      }
-      this.addAll(deserialized);
-      deserialized.forEach((d) =>
-        this.setFolder(d.id, pcdAction.permission.folder)
-      );
-    }
-  }
-
-  public static checkPermissions(
-    pcdAction: FeedResponseAction,
-    activeSubscription: ActiveSubscription
-  ) {
-    for (const allowedPermissions of activeSubscription.feed.permissions) {
-      if (_.eq(allowedPermissions, pcdAction.permission)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   public getAllFolderNames(): string[] {

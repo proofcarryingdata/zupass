@@ -15,6 +15,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { submitDeviceLogin, submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
+import { applyActions } from "./applyFeed";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
@@ -417,8 +418,7 @@ async function sync(state: AppState, update: ZuUpdate) {
 
     try {
       const actions = await state.subscriptions.pollSubscriptions();
-      await state.pcds.applyActions(actions);
-
+      await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
