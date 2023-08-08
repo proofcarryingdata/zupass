@@ -166,6 +166,26 @@ export async function getDevconnectPretixAPI(): Promise<IDevconnectPretixAPI | n
   return api;
 }
 
+export type DevconnectPretixI18nMap = { [lang: string]: string };
+export type I18nLanguage = "en" | "de" | "cn"; // @todo which other languages are supported?
+
+/**
+ * Returns a string of any of the preferred languages, in order given,
+ * or the first language if no preferred language is found.
+ *
+ */
+export function getPreferredI18n(
+  map: DevconnectPretixI18nMap,
+  preferredLang: I18nLanguage[]
+): string {
+  for (const lang of preferredLang) {
+    if (map[lang]) {
+      return map[lang];
+    }
+  }
+  return Object.values(map)[0];
+}
+
 // A Pretix order. For our purposes, each order contains one ticket.
 export interface DevconnectPretixOrder {
   code: string; // "Q0BHN"
@@ -178,20 +198,15 @@ export interface DevconnectPretixOrder {
 
 export interface DevconnectPretixItem {
   id: number; // corresponds to "item" field in DevconnectPretixPosition
-  name: {
-    // TODO: Investigate what languages are necessary to support
-    en: string; // English name of item
-  };
   admission: boolean;
   personalized: boolean;
   generate_tickets?: boolean | null;
+  name: DevconnectPretixI18nMap;
 }
 
 export interface DevconnectPretixEvent {
   slug: string; // corresponds to "event_id" field in our dn
-  name: {
-    en: string; // English name of item
-  };
+  name: DevconnectPretixI18nMap;
 }
 
 export interface DevconnectPretixEventSettings {
