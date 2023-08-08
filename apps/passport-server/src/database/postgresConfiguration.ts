@@ -32,11 +32,11 @@ export function getDatabaseConfiguration(): PoolConfig {
     host: process.env.DATABASE_HOST,
     database: process.env.DATABASE_DB_NAME,
     port: 5432,
-    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: true } : false,
+    ssl: process.env.DATABASE_SSL === "true",
 
     // Pool configuration
     connectionTimeoutMillis: 1_000,
-    idleTimeoutMillis: 0,
+    idleTimeoutMillis: 30_000,
     max: 8,
   };
 }
