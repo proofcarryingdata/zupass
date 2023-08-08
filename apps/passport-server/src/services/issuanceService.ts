@@ -55,7 +55,9 @@ export class IssuanceService {
         handleRequest: async (
           req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
         ): Promise<FeedResponse> => {
-          const pcds = await this.issueDevconnectPretixTicketPCDs(req.pcd);
+          const pcds = await this.issueDevconnectPretixTicketPCDs(
+            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+          );
           const serializedPCDs = await Promise.all(
             pcds.map(RSATicketPCDPackage.serialize)
           );
