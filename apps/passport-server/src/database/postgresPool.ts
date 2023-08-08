@@ -7,6 +7,11 @@ export async function getDB(): Promise<Pool> {
   logger("[INIT] Initializing Postgres client");
 
   const pool = new Pool(getDatabaseConfiguration());
+
+  pool.on("error", (err) => {
+    logger(err);
+  });
+
   const client = await pool.connect();
   await migrateDatabase(client);
   client.release();
