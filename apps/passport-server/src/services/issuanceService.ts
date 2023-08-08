@@ -347,6 +347,8 @@ export class IssuanceService {
     return rsaTicketPCD;
   }
 
+  private async issueFrogPCDs() {}
+
   /**
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
