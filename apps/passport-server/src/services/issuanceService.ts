@@ -13,6 +13,7 @@ import {
   PCDPermissionType
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import {
   getPublicKey,
@@ -367,19 +368,25 @@ export class IssuanceService {
 
     const randomFrogPath = _.sample(frogPaths);
 
-    const frogPCD = await RSAPCDPackage.serialize(
-      await RSAPCDPackage.prove({
+    const id = timeBasedId(FROG_INTERVAL_MS) + "";
+
+    const frogPCD = await RSAImagePCDPackage.serialize(
+      await RSAImagePCDPackage.prove({
         privateKey: {
           argumentType: ArgumentTypeName.String,
           value: this.exportedPrivateKey
         },
-        signedMessage: {
+        url: {
           argumentType: ArgumentTypeName.String,
           value: serverUrl + "/" + randomFrogPath
         },
+        title: {
+          argumentType: ArgumentTypeName.String,
+          value: "frog " + id
+        },
         id: {
           argumentType: ArgumentTypeName.String,
-          value: timeBasedId(FROG_INTERVAL_MS) + ""
+          value: id
         }
       })
     );

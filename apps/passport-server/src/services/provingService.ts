@@ -4,10 +4,11 @@ import {
   PendingPCDStatus,
   ProveRequest,
   StatusResponse,
-  SupportedPCDsResponse,
+  SupportedPCDsResponse
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -47,6 +48,7 @@ export class ProvingService {
     RLNPCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
+    RSAImagePCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {
@@ -78,7 +80,7 @@ export class ProvingService {
         this.pendingPCDResponse.set(hash, {
           status: PendingPCDStatus.PROVING,
           serializedPCD: undefined,
-          error: undefined,
+          error: undefined
         });
 
         // we don't wait for this to end; we let it work in the background
@@ -87,7 +89,7 @@ export class ProvingService {
         this.pendingPCDResponse.set(hash, {
           status: PendingPCDStatus.QUEUED,
           serializedPCD: undefined,
-          error: undefined,
+          error: undefined
         });
       }
     }
@@ -100,7 +102,7 @@ export class ProvingService {
     const pending: PendingPCD = {
       pcdType: request.pcdType,
       hash: hash,
-      status: requestResponse.status,
+      status: requestResponse.status
     };
 
     return pending;
@@ -112,7 +114,7 @@ export class ProvingService {
     return {
       serializedPCD: undefined,
       error: undefined,
-      status: PendingPCDStatus.NONE,
+      status: PendingPCDStatus.NONE
     };
   }
 
@@ -135,7 +137,7 @@ export class ProvingService {
       this.pendingPCDResponse.set(currentHash, {
         status: PendingPCDStatus.COMPLETE,
         serializedPCD: JSON.stringify(serializedPCD),
-        error: undefined,
+        error: undefined
       });
     } catch (e: any) {
       logger(e);
@@ -143,7 +145,7 @@ export class ProvingService {
       this.pendingPCDResponse.set(currentHash, {
         status: PendingPCDStatus.ERROR,
         serializedPCD: undefined,
-        error: e.message,
+        error: e.message
       });
     }
 
@@ -161,7 +163,7 @@ export class ProvingService {
         this.pendingPCDResponse.set(topHash, {
           status: PendingPCDStatus.PROVING,
           serializedPCD: undefined,
-          error: undefined,
+          error: undefined
         });
         this.serverProve(this.queue[0]);
       }
@@ -170,7 +172,7 @@ export class ProvingService {
 
   public getSupportedPCDTypes(): SupportedPCDsResponse {
     return {
-      names: this.packages.map((p) => p.name),
+      names: this.packages.map((p) => p.name)
     };
   }
 }
@@ -182,12 +184,12 @@ export async function startProvingService(
 
   await SemaphoreGroupPCDPackage.init!({
     wasmFilePath: fullPath + "/16.wasm",
-    zkeyFilePath: fullPath + "/16.zkey",
+    zkeyFilePath: fullPath + "/16.zkey"
   });
 
   await SemaphoreSignaturePCDPackage.init!({
     wasmFilePath: fullPath + "/16.wasm",
-    zkeyFilePath: fullPath + "/16.zkey",
+    zkeyFilePath: fullPath + "/16.zkey"
   });
 
   await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
