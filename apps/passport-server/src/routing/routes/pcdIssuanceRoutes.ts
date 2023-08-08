@@ -1,8 +1,8 @@
 import {
   CheckInRequest,
   CheckTicketRequest,
-  GetFeedsResponse,
   IssuedPCDsRequest,
+  ListFeedsResponse,
   PCDPermissionType
 } from "@pcd/passport-interface";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -35,8 +35,8 @@ export function initPCDIssuanceRoutes(
   });
 
   app.get("/issuance/feeds", async (req: Request, res: Response) => {
-    const response: GetFeedsResponse = {
-      infos: [
+    const response: ListFeedsResponse = {
+      feeds: [
         {
           id: "1",
           name: "Devconnect Tickets",

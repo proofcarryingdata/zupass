@@ -1,4 +1,5 @@
 export * from "./EncryptedStorage";
+export * from "./FeedHost";
 export * from "./PassportInterface";
 export * from "./PassportPopup";
 export * from "./PendingPCDIntegration";

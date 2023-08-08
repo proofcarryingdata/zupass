@@ -139,14 +139,14 @@ export interface CheckInRequest {
 
 export type CheckInResponse = CheckTicketResponse;
 
-export interface GetSubscriptionInfosRequest {}
+export interface ListFeedsRequest {}
 
-export interface GetFeedsResponse {
-  infos: Feed[];
+export interface ListFeedsResponse {
+  feeds: Feed[];
 }
 
-export interface FeedRequest<T extends PCDPackage> {
-  id: string;
+export interface FeedRequest<T extends PCDPackage = PCDPackage> {
+  feedId: string;
   pcd: SerializedPCD<PCDOf<T>>;
 }
 
