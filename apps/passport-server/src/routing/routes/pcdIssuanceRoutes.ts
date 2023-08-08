@@ -1,11 +1,9 @@
 import {
   CheckInRequest,
   CheckTicketRequest,
-  IssuedPCDsRequest,
-  ListFeedsResponse,
-  PCDPermissionType
+  FeedRequest,
+  ListFeedsRequest
 } from "@pcd/passport-interface";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -34,48 +32,29 @@ export function initPCDIssuanceRoutes(
     }
   });
 
-  app.get("/issuance/feeds", async (req: Request, res: Response) => {
-    const response: ListFeedsResponse = {
-      feeds: [
-        {
-          id: "1",
-          name: "Devconnect Tickets",
-          description: "Get your Devconnect tickets here!",
-          inputPCDType: RSAPCDPackage.name,
-          partialArgs: undefined,
-          permissions: [
-            { folder: "Devconnect", type: PCDPermissionType.FolderAppend },
-            { folder: "Devconnect", type: PCDPermissionType.FolderReplace }
-          ]
-        },
-        {
-          id: "2",
-          name: "Frogs",
-          description: "Get your Frogs here!",
-          inputPCDType: undefined,
-          partialArgs: undefined,
-          permissions: [
-            { folder: "Frogs", type: PCDPermissionType.FolderAppend }
-          ]
-        }
-      ]
-    };
-    res.json(response);
-  });
-
-  app.post("/issuance/feeds/:id", async (req, res) => {
-    res.json();
-  });
-
-  app.post("/issue/", async (req: Request, res: Response) => {
+  app.post("/feeds", async (req, res) => {
     try {
       if (!issuanceService) {
         throw new Error("issuance service not instantiated");
       }
 
-      const request = req.body as IssuedPCDsRequest;
-      const response = await issuanceService.handleIssueRequest(request);
-      res.status(200).json(response);
+      const request = req.body as FeedRequest;
+      res.json(await issuanceService.handleIssueRequest(request));
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/feeds", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+
+      const request = req.body as ListFeedsRequest;
+      res.json(await issuanceService.handleListFeedsRequest(request));
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

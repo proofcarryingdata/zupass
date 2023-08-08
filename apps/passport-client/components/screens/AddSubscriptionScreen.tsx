@@ -1,7 +1,8 @@
 import {
   ActiveSubscription,
   Feed,
-  GetFeedsResponse,
+  ListFeedsResponse,
+  PCDPermission,
   PCDPermissions,
   SubscriptionManager
 } from "@pcd/passport-interface";
@@ -13,14 +14,14 @@ import { BigInput, Button, Spacer } from "../core";
 
 async function fetchSubscriptionInfos(url: string): Promise<Feed[]> {
   const result = await fetch(url);
-  const parsed = (await result.json()) as GetFeedsResponse;
-  return parsed.infos;
+  const parsed = (await result.json()) as ListFeedsResponse;
+  return parsed.feeds;
 }
 
-const DEFAULT_URL = appConfig.passportServer + "/issuance/feeds";
+const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds/list";
 
 export function AddSubscriptionScreen() {
-  const [url, setUrl] = useState(DEFAULT_URL);
+  const [url, setUrl] = useState(DEFAULT_FEEDS_URL);
   const [infos, setInfos] = useState<Feed[] | undefined>();
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);

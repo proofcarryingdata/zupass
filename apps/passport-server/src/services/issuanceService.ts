@@ -4,9 +4,13 @@ import {
   CheckInResponse,
   CheckTicketRequest,
   CheckTicketResponse,
+  FeedHost,
+  FeedRequest,
+  FeedResponse,
   ISSUANCE_STRING,
-  IssuedPCDsRequest,
-  IssuedPCDsResponse
+  ListFeedsRequest,
+  ListFeedsResponse,
+  PCDPermissionType
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -38,27 +42,87 @@ export class IssuanceService {
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedPrivateKey: string;
   private readonly exportedPublicKey: string;
+  private readonly feedHost: FeedHost;
 
   public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
+
+    this.feedHost = new FeedHost([
+      {
+        handleRequest: async (
+          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<FeedResponse> => {
+          const pcds = await this.issueDevconnectPretixTicketPCDs(req.pcd);
+          const serializedPCDs = await Promise.all(
+            pcds.map(RSATicketPCDPackage.serialize)
+          );
+          return {
+            actions: [
+              {
+                pcds: serializedPCDs,
+                permission: {
+                  folder: "Devconnect",
+                  type: PCDPermissionType.FolderReplace
+                }
+              }
+            ]
+          };
+        },
+        feed: {
+          id: "1",
+          name: "Devconnect Tickets",
+          description: "Get your Devconnect tickets here!",
+          inputPCDType: RSAPCDPackage.name,
+          partialArgs: undefined,
+          permissions: [
+            { folder: "Devconnect", type: PCDPermissionType.FolderAppend },
+            { folder: "Devconnect", type: PCDPermissionType.FolderReplace }
+          ]
+        }
+      },
+      {
+        handleRequest: async (req: FeedRequest): Promise<FeedResponse> => {
+          return {
+            actions: [
+              {
+                pcds: [],
+                permission: {
+                  folder: "Frogs",
+                  type: PCDPermissionType.FolderAppend
+                }
+              }
+            ]
+          };
+        },
+        feed: {
+          id: "2",
+          name: "Frogs",
+          description: "Get your Frogs here!",
+          inputPCDType: undefined,
+          partialArgs: undefined,
+          permissions: [
+            { folder: "Frogs", type: PCDPermissionType.FolderAppend }
+          ]
+        }
+      }
+    ]);
+  }
+
+  public async handleListFeedsRequest(
+    request: ListFeedsRequest
+  ): Promise<ListFeedsResponse> {
+    return this.feedHost.handleListFeedsRequest(request);
+  }
+
+  public async handleIssueRequest(request: FeedRequest): Promise<FeedResponse> {
+    return this.feedHost.handleFeedRequest(request);
   }
 
   public getPublicKey(): string {
     return this.exportedPublicKey;
-  }
-
-  public async handleIssueRequest(
-    request: IssuedPCDsRequest
-  ): Promise<IssuedPCDsResponse> {
-    const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-    const serialized = await Promise.all(
-      pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
-    );
-
-    return { pcds: serialized, folder: "Devconnect" };
   }
 
   public async handleCheckInRequest(
@@ -118,7 +182,7 @@ export class IssuanceService {
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in", {cause: e});
+      throw new Error("failed to check in", { cause: e });
     }
   }
 
@@ -285,9 +349,9 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    request: IssuedPCDsRequest
+    credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<RSATicketPCD[]> {
-    const commitment = await this.checkUserExists(request.userProof);
+    const commitment = await this.checkUserExists(credential);
     const email = commitment?.email;
 
     if (email == null) {

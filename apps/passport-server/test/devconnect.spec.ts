@@ -1,7 +1,9 @@
 import {
   CheckInResponse,
+  FeedResponse,
   ISSUANCE_STRING,
-  IssuedPCDsResponse,
+  PCDPermission,
+  PCDPermissionType,
   User
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -559,18 +561,24 @@ describe("devconnect functionality", function () {
         identity,
         ISSUANCE_STRING
       );
-      const responseBody = response.body as IssuedPCDsResponse;
+      const responseBody = response.body as FeedResponse;
 
-      expect(responseBody.folder).to.eq("Devconnect");
+      expect(responseBody.actions.length).to.eq(1);
+      const action = responseBody.actions[0];
 
-      expect(Array.isArray(responseBody.pcds)).to.eq(true);
+      expect(action.permission).to.deep.eq({
+        folder: "Devconnect",
+        type: PCDPermissionType.FolderReplace
+      } satisfies PCDPermission);
+
+      expect(Array.isArray(action.pcds)).to.eq(true);
       // originally there were 6 orders in the mock data
       // but one was deleted in an earlier test
       // since we don't fetch tickets with is_deleted = true
       // there will only be 5 PCDs
-      expect(responseBody.pcds.length).to.eq(5);
+      expect(action.pcds.length).to.eq(6);
 
-      const ticketPCD = responseBody.pcds[0];
+      const ticketPCD = action.pcds[0];
 
       expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
 
@@ -605,14 +613,18 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const response1 = expressResponse1.body as IssuedPCDsResponse;
-    const response2 = expressResponse2.body as IssuedPCDsResponse;
+    const response1 = expressResponse1.body as FeedResponse;
+    const response2 = expressResponse2.body as FeedResponse;
 
     const pcds1 = await Promise.all(
-      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response1.actions[0].pcds.map((pcd) =>
+        RSATicketPCDPackage.deserialize(pcd.pcd)
+      )
     );
     const pcds2 = await Promise.all(
-      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response2.actions[0].pcds.map((pcd) =>
+        RSATicketPCDPackage.deserialize(pcd.pcd)
+      )
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -650,9 +662,9 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
+    const issueResponseBody = issueResponse.body as FeedResponse;
 
-    const serializedTicket = issueResponseBody
+    const serializedTicket = issueResponseBody.actions[0]
       .pcds[1] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
@@ -755,8 +767,8 @@ describe("devconnect functionality", function () {
         identity,
         "asdf"
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.pcds).to.deep.eq([]);
+      const response = expressResponse.body as FeedResponse;
+      expect(response.actions[0].pcds).to.deep.eq([]);
     }
   );
 
@@ -768,8 +780,8 @@ describe("devconnect functionality", function () {
         new Identity(),
         ISSUANCE_STRING
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.pcds).to.deep.eq([]);
+      const response = expressResponse.body as FeedResponse;
+      expect(response.actions[0].pcds).to.deep.eq([]);
     }
   );
 

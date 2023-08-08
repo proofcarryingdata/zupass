@@ -89,26 +89,6 @@ export interface LoadE2EEResponse {
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
 
-/**
- * The POST request body of the client's request to the server which
- * asks for the PCDs that have been issued to the given user.
- */
-export interface IssuedPCDsRequest {
-  /**
-   * A semaphore signature by the user who is requesting the data. The
-   * signature is only accepted if it is of the string {@link ISSUANCE_STRING}.
-   */
-  userProof: SerializedPCD<SemaphoreSignaturePCD>;
-}
-
-/**
- * The response body that the server responds with to an {@link IssuedPCDsRequest}.
- */
-export interface IssuedPCDsResponse {
-  pcds: SerializedPCD[];
-  folder: string;
-}
-
 export interface CheckTicketRequest {
   ticket: SerializedPCD<RSATicketPCD>;
 }

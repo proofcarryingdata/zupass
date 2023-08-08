@@ -1,7 +1,7 @@
 import {
   CheckInRequest,
-  ISSUANCE_STRING,
-  IssuedPCDsRequest
+  FeedRequest,
+  ISSUANCE_STRING
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
@@ -47,8 +47,9 @@ export async function requestIssuedPCDs(
   identity: Identity,
   signedMessage: string
 ): Promise<Response> {
-  const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
+  const request: FeedRequest = {
+    feedId: "1",
+    pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {
           argumentType: ArgumentTypeName.PCD,
@@ -71,7 +72,7 @@ export async function requestIssuedPCDs(
 
     chai
       .request(expressContext.app)
-      .post("/issue")
+      .post("/feeds")
       .send(request)
       .then(async (r) => {
         try {

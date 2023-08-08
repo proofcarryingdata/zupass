@@ -11,7 +11,7 @@ export class Emitter<T = void> {
   }
 
   public emit(t: T) {
-    for (const listener of this.listeners) {
+    for (const listener of Array.from(this.listeners)) {
       listener(t);
     }
   }
