@@ -25,15 +25,11 @@ export function getDatabaseConfiguration(): PoolConfig {
     throw new Error("Missing or incorrect env variable: DATABASE_SSL");
   }
 
+  const sslMode = process.env.DATABASE_SSL === "true" ? "require" : "disable";
+
   return {
     // DB connection configuration
-    user: process.env.DATABASE_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-    host: process.env.DATABASE_HOST,
-    database: process.env.DATABASE_DB_NAME,
-    port: 5432,
-    ssl: process.env.DATABASE_SSL === "true",
-
+    connectionString: `postgresql://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:5432/${process.env.DATABASE_DB_NAME}?sslmode=${sslMode}`,
     // Pool configuration
     connectionTimeoutMillis: 1_000,
     idleTimeoutMillis: 0,
