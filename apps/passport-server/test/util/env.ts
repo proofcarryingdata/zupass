@@ -20,7 +20,8 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
   SUPPRESS_LOGGING: "true",
-  SERVER_RSA_PRIVATE_KEY_BASE64: undefined
+  SERVER_RSA_PRIVATE_KEY_BASE64: undefined,
+  PASSPORT_CLIENT_URL: "http://localhost:3000"
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({

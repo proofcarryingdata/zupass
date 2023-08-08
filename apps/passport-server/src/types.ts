@@ -71,4 +71,5 @@ export interface EnvironmentVariables {
   PRETIX_VISITOR_EVENT_ID?: string;
   ROLLBAR_TOKEN?: string;
   SUPPRESS_LOGGING?: string;
+  PASSPORT_CLIENT_URL?: string;
 }

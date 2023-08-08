@@ -90,7 +90,7 @@ export class IssuanceService {
           return {
             actions: [
               {
-                pcds: [],
+                pcds: await this.issueFrogPCDs(),
                 permission: {
                   folder: "Frogs",
                   type: PCDPermissionType.FolderAppend
@@ -347,7 +347,44 @@ export class IssuanceService {
     return rsaTicketPCD;
   }
 
-  private async issueFrogPCDs() {}
+  private async issueFrogPCDs(): Promise<SerializedPCD[]> {
+    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+
+    if (!serverUrl) {
+      logger("[ISSUE] can't issue frogs - unaware of the client location");
+      return [];
+    }
+
+    const frogPaths: string[] = [
+      "images/frogs/frog.jpeg",
+      "images/frogs/frog2.jpeg",
+      "images/frogs/frog3.jpeg",
+      "images/frogs/frog4.jpeg"
+    ];
+
+    const frogPCDs = await Promise.all(
+      frogPaths.map(async (frogPath) =>
+        RSAPCDPackage.serialize(
+          await RSAPCDPackage.prove({
+            privateKey: {
+              argumentType: ArgumentTypeName.String,
+              value: this.exportedPrivateKey
+            },
+            signedMessage: {
+              argumentType: ArgumentTypeName.String,
+              value: serverUrl + "/" + frogPath
+            },
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: undefined
+            }
+          })
+        )
+      )
+    );
+
+    return frogPCDs;
+  }
 
   /**
    * Fetch all DevconnectPretixTicket entities under a given user's email.
