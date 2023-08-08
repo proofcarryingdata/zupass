@@ -2483,26 +2483,6 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.8.0.tgz#fe2aa90e6df050a11cd57f5c0f47b0641fd2cad3"
   integrity sha512-TYh1MRcm4JnvpqtqOwT9WYaBYY4KERHdToxs/suDTLviGRsQkIjS5yYROTYTSJQUnYLOn/TuOh5GoMwfLSU+Ew==
 
-"@pcd/eslint-config-custom@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.5.2.tgz#b1c6da66dd1ee6ce05540afcf6fc84e1635550e2"
-  integrity sha512-GwqmjzSoyR6XUKfnvIWjw/xPD01XLhgh/sB0H258eHvS1RubCqorfOLCpyOZFzglPGaEG8ylp+lGvh+/NO1frw==
-  dependencies:
-    eslint "^7.23.0"
-    eslint-config-next "13.0.0"
-    eslint-config-prettier "^8.3.0"
-    eslint-config-turbo latest
-    eslint-plugin-react "7.31.8"
-
-"@pcd/passport-ui@0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@pcd/passport-ui/-/passport-ui-0.5.3.tgz#5441afc6dba40e8cfe32ab4da7d026abf3617aab"
-  integrity sha512-Pwq5CIF/JjmbMibQVzYr0laT8KX04tN3AqQgcEkRAij6pBt3HMJw//fD/U4f/184y/lqx+k3zosmhg5+vQ8/yQ==
-  dependencies:
-    "@pcd/pcd-types" "0.5.3"
-    react "^18.2.0"
-    styled-components "^5.3.9"
-
 "@pcd/passport-ui@^0.4.1":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@pcd/passport-ui/-/passport-ui-0.4.2.tgz#ed12bc67eef713cf1b1d5b6a39c825067c0fe226"
@@ -2527,26 +2507,6 @@
     "@types/react" "^18.0.22"
     typescript "^4.9.5"
 
-"@pcd/pcd-types@0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.5.3.tgz#e40664b9cc0474767e5a9399c773f98421e2aa4a"
-  integrity sha512-5BQ3LCgNMn6gkoqmP4YxceObenkyNWG+bVp0hQSz4eCp2P6hGsHhRtt2oKSp5LnnLaWHss3wyqBaTC6EfuG9ow==
-
-"@pcd/semaphore-identity-pcd@0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.5.3.tgz#cae4013881a3e396e2567d3c27540dc0389f7172"
-  integrity sha512-rkSEqmDOmfpY4ygVg8qdRsmK/LRPvy0uBruHFsaPK3XCa1FNGfhVUnhbvdAZSFiZDfguRbkmqMfsHR5DXZ+HZA==
-  dependencies:
-    "@pcd/passport-ui" "0.5.3"
-    "@pcd/pcd-types" "0.5.3"
-    "@semaphore-protocol/group" "^3.10.0"
-    "@semaphore-protocol/identity" "^3.10.0"
-    "@semaphore-protocol/proof" "^3.10.0"
-    json-bigint "^1.0.0"
-    react "^18.2.0"
-    styled-components "^5.3.9"
-    uuid "^9.0.0"
-
 "@pcd/semaphore-identity-pcd@^0.1.0":
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.1.0.tgz#1a17c5d5eaa99bc8b96b2ebefa106d4140600b9b"
@@ -2559,32 +2519,10 @@
     json-bigint "^1.0.0"
     uuid "^9.0.0"
 
-"@pcd/semaphore-signature-pcd@0.5.3":
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-signature-pcd/-/semaphore-signature-pcd-0.5.3.tgz#8f869f0af3fb5607db3f2054bb27936ec5a15b93"
-  integrity sha512-LWU300/kQ1R9Jxmav81a3QV1hXYeLjdcpg3N68YEAnKPyQ+l8Jqr4L4LVxNtFfiBMWUmPSR5dyWzD2cHoUDchQ==
-  dependencies:
-    "@pcd/passport-ui" "0.5.3"
-    "@pcd/pcd-types" "0.5.3"
-    "@pcd/semaphore-identity-pcd" "0.5.3"
-    "@semaphore-protocol/group" "^3.10.0"
-    "@semaphore-protocol/identity" "^3.10.0"
-    "@semaphore-protocol/proof" "^3.10.0"
-    js-sha256 "^0.9.0"
-    json-bigint "^1.0.0"
-    react "^18.2.0"
-    styled-components "^5.3.9"
-    uuid "^9.0.0"
-
 "@pcd/tsconfig@0.4.2":
   version "0.4.2"
   resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.4.2.tgz#ea0121cf14f5f5d4a9e59cec864d9d0d1666a02e"
   integrity sha512-bxeNIxvg+kHvrUn2bT6cnUYxr9lumOol9KUUM6SlHXOFaNylEwNx3h9i089yHCIYx5Pc8NLeU2uHatwWPlstsg==
-
-"@pcd/tsconfig@0.5.2":
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.5.2.tgz#afd1da532f8b3a54c3ea309736290fd2a4e91d2c"
-  integrity sha512-bi7S+dt2HGZMVHmY5DbRXrkbSvkghF1P21H+ctIBY6htUp8Z8Zu98zK5AJBesx4kdgCES8A5Os6ai17nhnbc2w==
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"

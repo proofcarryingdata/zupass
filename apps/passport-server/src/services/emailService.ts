@@ -99,7 +99,7 @@ export class EmailService {
       } catch (e) {
         logger(e);
         this.rollbarService?.reportError(e);
-        throw new Error(`Email send error, failed to email ${to}`);
+        throw new Error(`Email send error, failed to email ${to}`, {cause: e});
       }
     });
   }
@@ -124,7 +124,7 @@ export class EmailService {
       } catch (e) {
         logger(e);
         this.rollbarService?.reportError(e);
-        throw new Error(`Email send error, failed to email ${to}`);
+        throw new Error(`Email send error, failed to email ${to}`), {cause: e};
       }
     });
   }

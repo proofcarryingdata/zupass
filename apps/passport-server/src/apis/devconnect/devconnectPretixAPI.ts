@@ -19,6 +19,11 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEvent>;
+  fetchEventSettings(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixEventSettings>;
   fetchAllEvents(
     orgUrl: string,
     token: string
@@ -59,10 +64,31 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEvent> {
-    return traced(TRACE_SERVICE, "fetchItems", async () => {
+    return traced(TRACE_SERVICE, "fetchEvent", async () => {
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching event: ${url}`);
+      const res = await fetch(url, {
+        headers: { Authorization: `Token ${token}` }
+      });
+      if (!res.ok) {
+        throw new Error(
+          `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+        );
+      }
+      return res.json();
+    });
+  }
+
+  public async fetchEventSettings(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixEventSettings> {
+    return traced(TRACE_SERVICE, "fetchEventSettings", async () => {
+      // Fetch event settings API
+      const url = `${orgUrl}/events/${eventID}/settings`;
+      logger(`[DEVCONNECT PRETIX] Fetching event settings: ${url}`);
       const res = await fetch(url, {
         headers: { Authorization: `Token ${token}` }
       });
@@ -156,6 +182,9 @@ export interface DevconnectPretixItem {
     // TODO: Investigate what languages are necessary to support
     en: string; // English name of item
   };
+  admission: boolean;
+  personalized: boolean;
+  generate_tickets?: boolean | null;
 }
 
 export interface DevconnectPretixEvent {
@@ -163,6 +192,16 @@ export interface DevconnectPretixEvent {
   name: {
     en: string; // English name of item
   };
+}
+
+export interface DevconnectPretixEventSettings {
+  // These settings control whether individual attendees must have
+  // email addresses specified.
+  // Corresponds to the "Ask for email addresses per ticket" setting
+  // in the "Customer and attendee data" section of event settings
+  // in the Pretix UI.
+  attendee_emails_asked: boolean;
+  attendee_emails_required: boolean;
 }
 
 // Unclear why this is called a "position" rather than a ticket.

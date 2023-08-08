@@ -1,17 +1,20 @@
-import { useCallback, useContext } from "react";
+import React, { useCallback } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 
-export function AppHeader() {
-  const [_, dispatch] = useContext(DispatchContext);
+export const AppHeader = React.memo(AppHeaderImpl);
+
+function AppHeaderImpl() {
+  const dispatch = useDispatch();
+
   const setModal = useCallback(
     (modal: AppState["modal"]) =>
       dispatch({
         type: "set-modal",
-        modal,
+        modal
       }),
     [dispatch]
   );

@@ -3,30 +3,30 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDPackage,
-  SerializedSemaphoreGroup,
+  SerializedSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
-import { DispatchContext } from "../../../src/dispatch";
+import { useIdentity } from "../../../src/appHooks";
 import {
   safeRedirect,
-  safeRedirectPending,
+  safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreGroupProveScreen({
-  req,
+  req
 }: {
   req: PCDGetRequest<typeof SemaphoreGroupPCDPackage>;
 }) {
   const [error, setError] = useState<string | undefined>();
   const [group, setGroup] = useState<SerializedSemaphoreGroup | null>(null);
-  const [state] = useContext(DispatchContext);
+  const identity = useIdentity();
   const [proving, setProving] = useState(false);
   const isLoading = group === null;
 
@@ -48,12 +48,12 @@ export function SemaphoreGroupProveScreen({
       // potentially blocking proving operation kicks off
       await nextFrame();
 
-      const args = await fillArgs(state.identity, group, req.args);
+      const args = await fillArgs(identity, group, req.args);
 
       if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: SemaphoreGroupPCDPackage.name,
-          args: args,
+          args: args
         };
         const pendingPCD = await requestPendingPCD(serverReq);
         safeRedirectPending(req.returnUrl, pendingPCD);
@@ -73,13 +73,7 @@ export function SemaphoreGroupProveScreen({
         setError(e.message);
       }
     }
-  }, [
-    group,
-    req.returnUrl,
-    state.identity,
-    req.args,
-    req.options?.proveOnServer,
-  ]);
+  }, [identity, group, req.args, req.options?.proveOnServer, req.returnUrl]);
 
   const lines: ReactNode[] = [];
   if (group === null) {
@@ -125,23 +119,23 @@ async function fillArgs(
   let args: SemaphoreGroupPCDArgs = {
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: 23 + "",
+      value: 23 + ""
     },
     signal: {
       argumentType: ArgumentTypeName.BigInt,
-      value: 34 + "",
+      value: 34 + ""
     },
     group: {
       argumentType: ArgumentTypeName.Object,
-      value: semaphoreGroup,
+      value: semaphoreGroup
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({ identity })
-      ),
-    },
+      )
+    }
   };
 
   // in the case the requesting application actually submitted some
@@ -149,7 +143,7 @@ async function fillArgs(
   if (reqArgs.externalNullifier.value !== undefined) {
     args = {
       ...args,
-      externalNullifier: reqArgs.externalNullifier,
+      externalNullifier: reqArgs.externalNullifier
     };
   }
   // same, but for signal

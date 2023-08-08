@@ -1,12 +1,12 @@
 import {
   PCDGetWithoutProvingRequest,
-  PCDRequestType,
+  PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, usePCDCollection } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
@@ -20,19 +20,20 @@ import { AppHeader } from "../shared/AppHeader";
  */
 export function GetWithoutProvingScreen() {
   const location = useLocation();
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const pcds = usePCDCollection();
   const params = new URLSearchParams(location.search);
   const [selectedPCDID, setSelectedPCDID] = useState<string>("none");
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
 
   const onSendClick = useCallback(async () => {
     if (selectedPCDID === undefined) return;
-    const pcd = state.pcds.getById(selectedPCDID);
-    const pcdPackage = state.pcds.getPackage(pcd.type);
+    const pcd = pcds.getById(selectedPCDID);
+    const pcdPackage = pcds.getPackage(pcd.type);
     if (pcdPackage === undefined) return;
     const serializedPCD = await pcdPackage.serialize(pcd);
     safeRedirect(request.returnUrl, serializedPCD);
-  }, [request.returnUrl, selectedPCDID, state.pcds]);
+  }, [pcds, request.returnUrl, selectedPCDID]);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(
@@ -72,11 +73,11 @@ export function GetWithoutProvingScreen() {
           onChange={(e) => setSelectedPCDID(e.target.value)}
         >
           <option value="none">select</option>
-          {state.pcds
+          {pcds
             .getAll()
             .filter((pcd) => pcd.type === request.pcdType)
             .map((pcd) => {
-              const pcdPackage = state.pcds.getPackage(pcd.type);
+              const pcdPackage = pcds.getPackage(pcd.type);
               return (
                 <option key={pcd.id} value={pcd.id}>
                   {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}

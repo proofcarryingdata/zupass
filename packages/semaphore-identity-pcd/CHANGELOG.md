@@ -1,5 +1,14 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.6.1
+
+### Patch Changes
+
+- update packages.
+- Updated dependencies
+  - @pcd/passport-ui@0.6.1
+  - @pcd/pcd-types@0.6.1
+
 ## 0.6.0
 
 ### Minor Changes

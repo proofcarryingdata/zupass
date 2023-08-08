@@ -1,8 +1,7 @@
 import { DateRange, User, ZuzaluUserRole } from "@pcd/passport-interface";
-import { useContext } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useSelf } from "../../src/appHooks";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { H3, H4, InfoLine, Spacer, TextCenter } from "../core";
 import { IdentityQR } from "./IdentityQR";
@@ -14,8 +13,8 @@ export function MainIdentityCard({
   showQrCode?: boolean;
   user?: User;
 }) {
-  const [state, _] = useContext(DispatchContext);
-  const actualUser = user ?? state.self;
+  const self = useSelf();
+  const actualUser = user ?? self;
   const visitorStatus = getVisitorStatus(actualUser);
 
   return (
