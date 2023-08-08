@@ -26,11 +26,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
-import {
-  downloadStorage,
-  loadIssuedPCDs,
-  uploadStorage
-} from "./useSyncE2EEStorage";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -420,9 +416,9 @@ async function sync(state: AppState, update: ZuUpdate) {
     });
 
     try {
-      const response = await loadIssuedPCDs(state);
-      const deserialized = await state.pcds.deserializeAll(response.pcds);
-      state.pcds.replaceFolderContents(response.folder, deserialized);
+      const actions = await state.subscriptions.pollSubscriptions();
+      await state.pcds.applyActions(actions);
+
       await savePCDs(state.pcds);
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);

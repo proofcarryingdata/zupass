@@ -1,9 +1,26 @@
 import { Emitter } from "@pcd/emitter";
-import { ArgsOf, PCDOf, PCDPackage, PCDTypeOf } from "@pcd/pcd-types";
+import {
+  ArgsOf,
+  PCDOf,
+  PCDPackage,
+  PCDTypeOf,
+  SerializedPCD
+} from "@pcd/pcd-types";
+import {
+  FeedRequest,
+  FeedResponse,
+  FeedResponseAction,
+  ListFeedsResponse
+} from "./RequestTypes";
 
 export interface SerializedSubscriptionManager {
   providers: SubscriptionProvider[];
   subscribedFeeds: ActiveSubscription[];
+}
+
+export interface ReturnedAction {
+  actions: FeedResponseAction[];
+  subscription: ActiveSubscription;
 }
 
 export class SubscriptionManager {
@@ -20,10 +37,44 @@ export class SubscriptionManager {
     this.activeSubscriptions = activeSubscriptions;
   }
 
-  public pollSubscriptions() {
+  public async pollSubscriptions(): Promise<ReturnedAction[]> {
+    const responses: ReturnedAction[] = [];
+
     for (const subscription of this.activeSubscriptions) {
-      alert(subscription);
+      try {
+        responses.push({
+          actions: (await SubscriptionManager.pollSubscription(subscription))
+            .actions,
+          subscription
+        });
+      } catch (e) {
+        console.log(`failed to poll subscription`, e);
+      }
     }
+
+    return responses;
+  }
+
+  public static async pollSubscription(
+    subscription: ActiveSubscription
+  ): Promise<FeedResponse> {
+    const request: FeedRequest = {
+      feedId: subscription.feed.id,
+      pcd: subscription.credential
+    };
+
+    const result = await fetch(subscription.providerUrl, {
+      method: "POST",
+      body: JSON.stringify(request)
+    });
+    const parsed = (await result.json()) as FeedResponse;
+    return parsed;
+  }
+
+  public static async listFeeds(providerUrl: string): Promise<Feed[]> {
+    const result = await fetch(providerUrl);
+    const parsed = (await result.json()) as ListFeedsResponse;
+    return parsed.feeds;
   }
 
   public getSubscriptionsByProvider(): Map<string, ActiveSubscription[]> {
@@ -192,7 +243,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
 export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
   providerUrl: string;
   feed: Feed;
-  credential: PCDOf<T> | undefined;
+  credential: SerializedPCD<PCDOf<T>> | undefined;
   subscribedTimestamp: number;
 }
 

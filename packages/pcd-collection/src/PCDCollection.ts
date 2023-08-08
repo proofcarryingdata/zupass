@@ -3,7 +3,8 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   ActiveSubscription,
   FeedResponseAction,
-  PCDPermissionType
+  PCDPermissionType,
+  ReturnedAction
 } from "@pcd/passport-interface";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
@@ -33,6 +34,18 @@ export class PCDCollection {
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
     this.hashEmitter = new Emitter();
+  }
+
+  public async applyActions(actions: ReturnedAction[]) {
+    for (const action of actions) {
+      for (const subAction of action.actions) {
+        try {
+          await this.applyAction(subAction, action.subscription);
+        } catch (e) {
+          console.log(e);
+        }
+      }
+    }
   }
 
   public async applyAction(

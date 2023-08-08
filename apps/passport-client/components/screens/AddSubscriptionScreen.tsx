@@ -1,7 +1,6 @@
 import {
   ActiveSubscription,
   Feed,
-  ListFeedsResponse,
   PCDPermission,
   PCDPermissions,
   SubscriptionManager
@@ -12,16 +11,10 @@ import { appConfig } from "../../src/appConfig";
 import { useSubscriptions } from "../../src/appHooks";
 import { BigInput, Button, Spacer } from "../core";
 
-async function fetchSubscriptionInfos(url: string): Promise<Feed[]> {
-  const result = await fetch(url);
-  const parsed = (await result.json()) as ListFeedsResponse;
-  return parsed.feeds;
-}
-
 const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds/list";
 
 export function AddSubscriptionScreen() {
-  const [url, setUrl] = useState(DEFAULT_FEEDS_URL);
+  const [providerUrl, setProviderUrl] = useState(DEFAULT_FEEDS_URL);
   const [infos, setInfos] = useState<Feed[] | undefined>();
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);
@@ -37,7 +30,7 @@ export function AddSubscriptionScreen() {
     setFetching(true);
     setFetchError(undefined);
 
-    fetchSubscriptionInfos(url)
+    SubscriptionManager.listFeeds(providerUrl)
       .then((infos) => {
         setFetched(true);
         setFetching(false);
@@ -49,7 +42,7 @@ export function AddSubscriptionScreen() {
         setFetching(false);
         setFetchError(e);
       });
-  }, [fetched, fetching, url]);
+  }, [fetched, fetching, providerUrl]);
 
   const onBackClick = useCallback(() => {
     window.location.href = "/#/subscriptions";
@@ -65,9 +58,9 @@ export function AddSubscriptionScreen() {
       <Spacer h={16} />
       <BigInput
         disabled={fetching || fetched}
-        value={url}
+        value={providerUrl}
         onChange={(e) => {
-          setUrl(e.target.value);
+          setProviderUrl(e.target.value);
         }}
       />
       <Spacer h={16} />
@@ -83,7 +76,7 @@ export function AddSubscriptionScreen() {
               <Spacer h={8} />
               <SubscriptionInfoRow
                 subscriptions={subs}
-                providerUrl={url}
+                providerUrl={providerUrl}
                 info={info}
                 key={i}
               />

@@ -127,7 +127,7 @@ export interface ListFeedsResponse {
 
 export interface FeedRequest<T extends PCDPackage = PCDPackage> {
   feedId: string;
-  pcd: SerializedPCD<PCDOf<T>>;
+  pcd?: SerializedPCD<PCDOf<T>>;
 }
 
 export interface FeedResponse {
