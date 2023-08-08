@@ -167,23 +167,12 @@ export async function getDevconnectPretixAPI(): Promise<IDevconnectPretixAPI | n
 }
 
 export type DevconnectPretixI18nMap = { [lang: string]: string };
-export type I18nLanguage = "en" | "de" | "cn"; // @todo which other languages are supported?
 
 /**
- * Returns a string of any of the preferred languages, in order given,
- * or the first language if no preferred language is found.
- *
+ * Return an English-language string if one exists, otherwise the first
  */
-export function getPreferredI18n(
-  map: DevconnectPretixI18nMap,
-  preferredLang: I18nLanguage[]
-): string {
-  for (const lang of preferredLang) {
-    if (map[lang]) {
-      return map[lang];
-    }
-  }
-  return Object.values(map)[0];
+export function getI18nString(map: DevconnectPretixI18nMap): string {
+  return map["en"] ?? Object.values(map)[0];
 }
 
 // A Pretix order. For our purposes, each order contains one ticket.
