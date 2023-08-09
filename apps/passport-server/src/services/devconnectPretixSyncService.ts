@@ -135,7 +135,9 @@ export class DevconnectPretixSyncService {
    * reflects the state in Pretix.
    */
   private async sync(pretixConfig: DevconnectPretixConfig): Promise<void> {
-    return traced(NAME, "sync", async () => {
+    return traced(NAME, "sync", async (span) => {
+      span?.setAttribute("organizers_count", pretixConfig.organizers.length);
+
       const syncStart = Date.now();
 
       const organizerSyncPromises = []; // one per organizer
@@ -151,6 +153,7 @@ export class DevconnectPretixSyncService {
           "[DEVCONNECT PRETIX] Failed to save tickets for one or more events",
           e
         );
+        span?.setAttribute("error", e + "");
         this.rollbarService?.reportError(e);
       }
 
@@ -286,8 +289,17 @@ export class DevconnectPretixSyncService {
   private async syncOrganizer(
     organizer: DevconnectPretixOrganizerConfig
   ): Promise<PromiseSettledResult<void>[] | undefined> {
-    return traced(NAME, "syncOrganizer", async () => {
+    return traced(NAME, "syncOrganizer", async (span) => {
       logger(`[DEVCONNECT PRETIX] Syncing Pretix for ${organizer.orgURL}`);
+
+      span?.setAttribute("org_id", organizer.id);
+      span?.setAttribute("org_url", organizer.orgURL);
+      span?.setAttribute("events_count", organizer.events.length);
+      span?.setAttribute(
+        "event_ids",
+        organizer.events.map((e) => e.eventID).join(", ")
+      );
+
       try {
         const eventDataPromises = [];
         const eventSyncPromises = [];
@@ -337,6 +349,7 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] Sync aborted for organizer ${organizer.id} due to errors`,
           e
         );
+        span?.setAttribute("error", e + "");
         this.rollbarService?.reportError(e);
       }
     });
@@ -353,31 +366,39 @@ export class DevconnectPretixSyncService {
     event: DevconnectPretixEventConfig,
     eventData: EventData
   ): Promise<void> {
-    try {
-      const { eventInfo, items, tickets } = eventData;
+    return traced("Devconnect Sync", "syncEvent", async (span) => {
+      try {
+        const { eventInfo, items, tickets } = eventData;
 
-      if (!(await this.syncEventInfos(organizer, event, eventInfo))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
-        );
-        return;
-      }
+        span?.setAttribute("org_url", organizer.orgURL);
+        span?.setAttribute("ticket_count", tickets.length);
+        span?.setAttribute("event_slug", eventInfo.slug);
+        span?.setAttribute("event_name", eventInfo.name.en);
 
-      if (!(await this.syncItemInfos(organizer, event, items))) {
-        logger(
-          `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
-        );
-        return;
-      }
+        if (!(await this.syncEventInfos(organizer, event, eventInfo))) {
+          logger(
+            `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
+          );
+          return;
+        }
 
-      if (!(await this.syncTickets(organizer, event, tickets))) {
-        logger(`[DEVCONNECT PRETIX] Error updating tickets`);
-        return;
+        if (!(await this.syncItemInfos(organizer, event, items))) {
+          logger(
+            `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
+          );
+          return;
+        }
+
+        if (!(await this.syncTickets(organizer, event, tickets))) {
+          logger(`[DEVCONNECT PRETIX] Error updating tickets`);
+          return;
+        }
+      } catch (e) {
+        logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
+        span?.setAttribute("error", e + "");
+        this.rollbarService?.reportError(e);
       }
-    } catch (e) {
-      logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
-      this.rollbarService?.reportError(e);
-    }
+    });
   }
 
   /**
@@ -390,6 +411,10 @@ export class DevconnectPretixSyncService {
     eventInfo: DevconnectPretixEvent
   ): Promise<boolean> {
     return traced(NAME, "syncEventInfos", async (span) => {
+      span?.setAttribute("org_url", organizer.orgURL);
+      span?.setAttribute("event_slug", event.eventID);
+      span?.setAttribute("event_name", eventInfo.name?.en);
+
       const { orgURL } = organizer;
       const { eventID, id: eventConfigID } = event;
 
@@ -419,6 +444,8 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] Error while syncing event for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
+        this.rollbarService?.reportError(e);
+        span?.setAttribute("error", e + "");
         return false;
       }
 
@@ -436,7 +463,14 @@ export class DevconnectPretixSyncService {
     itemsFromAPI: DevconnectPretixItem[]
   ): Promise<boolean> {
     return traced(NAME, "syncItemInfos", async (span) => {
-      const { orgURL, token } = organizer;
+      span?.setAttribute("org_url", organizer.orgURL);
+      span?.setAttribute("event_slug", event.eventID);
+      span?.setAttribute(
+        "item_names",
+        itemsFromAPI.map((item) => `'${item.name}'`).join(", ")
+      );
+
+      const { orgURL } = organizer;
       const { eventID, activeItemIDs, id: eventConfigID } = event;
 
       try {
@@ -447,6 +481,8 @@ export class DevconnectPretixSyncService {
             `Couldn't find an event info matching event config id ${eventConfigID}`
           );
         }
+
+        span?.setAttribute("event_name", eventInfo?.event_name);
 
         const newItemIDsSet = new Set(itemsFromAPI.map((i) => i.id.toString()));
         const activeItemIDsSet = new Set(activeItemIDs);
@@ -494,6 +530,7 @@ export class DevconnectPretixSyncService {
             item.name.en
           );
         }
+        span?.setAttribute("items_inserted", itemsToInsert.length);
 
         // Step 2 of saving: update items that have changed
         // Filter to items that existed before, and filter to those that have changed.
@@ -519,6 +556,7 @@ export class DevconnectPretixSyncService {
           );
           await updatePretixItemsInfo(this.db, oldItem.id, item.name.en);
         }
+        span?.setAttribute("items_updated", itemsToUpdate.length);
 
         // Step 3 of saving: remove items that are not active anymore
         const itemsToRemove = existingItemsInfo.filter(
@@ -535,11 +573,14 @@ export class DevconnectPretixSyncService {
           );
           await deletePretixItemInfo(this.db, item.id);
         }
+        span?.setAttribute("items_deleted", itemsToRemove.length);
       } catch (e) {
         logger(
           `[DEVCONNECT PRETIX] Error while syncing items for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
+        this.rollbarService?.reportError(e);
+        span?.setAttribute("error", e + "");
         return false;
       }
 
@@ -557,6 +598,9 @@ export class DevconnectPretixSyncService {
     pretixOrders: DevconnectPretixOrder[]
   ): Promise<boolean> {
     return traced(NAME, "syncTickets", async (span) => {
+      span?.setAttribute("org_url", organizer.orgURL);
+      span?.setAttribute("event_slug", event.eventID);
+
       const { orgURL } = organizer;
       const { eventID, id: eventConfigID } = event;
 
@@ -568,6 +612,7 @@ export class DevconnectPretixSyncService {
             `Couldn't find an event info matching event config id ${eventConfigID}`
           );
         }
+        span?.setAttribute("event_name", eventInfo.event_name);
 
         // Fetch updated version after DB updates
         const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
@@ -663,6 +708,8 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] error while syncing for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
+        this.rollbarService?.reportError(e);
+        span?.setAttribute("error", e + "");
         return false;
       }
       return true;
