@@ -63,6 +63,6 @@ function historicRowToGroup(row: QueryResultRow): HistoricSemaphoreGroup {
     groupId: row.groupid,
     rootHash: row.roothash,
     serializedGroup: row.serializedgroup,
-    timeCreated: row.timecreated,
+    timeCreated: row.timecreated
   };
 }

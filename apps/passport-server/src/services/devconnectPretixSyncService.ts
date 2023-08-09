@@ -33,7 +33,7 @@ import { pretixTicketsDifferent } from "../util/devconnectTicket";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
-import { traced } from "./telemetryService";
+import { setError, traced } from "./telemetryService";
 
 const NAME = "Devconnect Pretix";
 
@@ -153,7 +153,7 @@ export class DevconnectPretixSyncService {
           "[DEVCONNECT PRETIX] Failed to save tickets for one or more events",
           e
         );
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         this.rollbarService?.reportError(e);
       }
 
@@ -349,7 +349,7 @@ export class DevconnectPretixSyncService {
           `[DEVCONNECT PRETIX] Sync aborted for organizer ${organizer.id} due to errors`,
           e
         );
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         this.rollbarService?.reportError(e);
       }
     });
@@ -395,7 +395,7 @@ export class DevconnectPretixSyncService {
         }
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         this.rollbarService?.reportError(e);
       }
     });
@@ -445,7 +445,7 @@ export class DevconnectPretixSyncService {
           { error: e }
         );
         this.rollbarService?.reportError(e);
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         return false;
       }
 
@@ -580,7 +580,7 @@ export class DevconnectPretixSyncService {
           { error: e }
         );
         this.rollbarService?.reportError(e);
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         return false;
       }
 
@@ -709,7 +709,7 @@ export class DevconnectPretixSyncService {
           { error: e }
         );
         this.rollbarService?.reportError(e);
-        span?.setAttribute("error", e + "");
+        setError(e, span);
         return false;
       }
       return true;

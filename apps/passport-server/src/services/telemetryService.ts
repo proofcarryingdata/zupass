@@ -66,14 +66,29 @@ export async function traced<T>(
     if (process.env.ROLLBAR_ENV_NAME) {
       span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
     }
-    const result = await func(span);
-    if (
-      options == null ||
-      options.autoEndSpan == null ||
-      options.autoEndSpan == true
-    ) {
+    try {
+      const result = await func(span);
+      if (
+        options == null ||
+        options.autoEndSpan == null ||
+        options.autoEndSpan == true
+      ) {
+        span.end();
+      }
+      return result;
+    } catch (e) {
+      setError(e, span);
       span.end();
+      throw e;
     }
-    return result;
   });
+}
+
+export function setError(e: Error | any, span?: Span): void {
+  span?.setAttribute("error", true);
+  span?.setAttribute("error_msg", e + "");
+
+  if (e instanceof Error && e.stack) {
+    span?.setAttribute("error_trace", e.stack);
+  }
 }
