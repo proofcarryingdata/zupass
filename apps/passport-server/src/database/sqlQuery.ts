@@ -1,4 +1,5 @@
-import { Pool, QueryResult } from "pg";
+import { QueryResult } from "pg";
+import { Pool } from "postgres-pool";
 import { traced } from "../services/telemetryService";
 
 /**

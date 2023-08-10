@@ -1,4 +1,5 @@
-import { ClientConfig, PoolConfig } from "pg";
+import { ClientConfig } from "pg";
+import { PoolOptionsExplicit, SslSettings } from "postgres-pool";
 
 export interface DBConfiguration extends ClientConfig {
   user: string;
@@ -8,7 +9,7 @@ export interface DBConfiguration extends ClientConfig {
   port: number;
 }
 
-export function getDatabaseConfiguration(): PoolConfig {
+export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");
   }
@@ -32,11 +33,14 @@ export function getDatabaseConfiguration(): PoolConfig {
     host: process.env.DATABASE_HOST,
     database: process.env.DATABASE_DB_NAME,
     port: 5432,
-    ssl: process.env.DATABASE_SSL === "true",
+    ssl:
+      process.env.DATABASE_SSL === "true"
+        ? { rejectUnauthorized: false }
+        : undefined,
 
     // Pool configuration
     connectionTimeoutMillis: 1_000,
     idleTimeoutMillis: 0,
-    max: 8,
+    poolSize: 8
   };
 }

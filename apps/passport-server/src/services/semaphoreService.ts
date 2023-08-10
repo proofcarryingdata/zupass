@@ -1,6 +1,6 @@
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import {
   CommitmentRow,
   HistoricSemaphoreGroup,

@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
