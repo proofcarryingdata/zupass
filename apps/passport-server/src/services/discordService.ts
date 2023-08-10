@@ -78,11 +78,12 @@ export class DiscordService {
           return;
         }
 
+        const url = `${process.env.DISCORD_VERIFY_URL}?guild_id=${guildId}&user_id=${interaction.user.id}`;
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setLabel("Verify")
             .setStyle(ButtonStyle.Link)
-            .setURL("url")
+            .setURL(url)
         );
         interaction.reply({
           content:  "To join other channels in this server, click the button to verify with your PCD",
