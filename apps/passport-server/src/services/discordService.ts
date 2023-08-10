@@ -30,18 +30,6 @@ export class DiscordService {
     this.handleInteraction();
   }
 
-  public async sendAlert(msg: string): Promise<void> {
-    if (process.env.NODE_ENV !== "production") {
-      logger("[DISCORD] not in production, not sending alert");
-      return;
-    }
-
-    traced("Discord", "sendAlert", async () => {
-      logger(`[DISCORD] sending alert ${msg}`);
-      this.alertsChannel?.send(msg);
-    });
-  }
-
   private async registerSlashCommands() {
     if (!process.env.DISCORD_TOKEN) return;
 
@@ -86,7 +74,7 @@ export class DiscordService {
             .setURL(url)
         );
         interaction.reply({
-          content:  "To join other channels in this server, click the button to verify with your PCD",
+          content:  "To get new roles in this server, click the button to verify your identity with PCD",
           components: [actionRow],
           ephemeral: true
         }).catch((e) => {
@@ -94,6 +82,31 @@ export class DiscordService {
         })
       }
     });
+  }
+
+  public async sendAlert(msg: string): Promise<void> {
+    if (process.env.NODE_ENV !== "production") {
+      logger("[DISCORD] not in production, not sending alert");
+      return;
+    }
+
+    traced("Discord", "sendAlert", async () => {
+      logger(`[DISCORD] sending alert ${msg}`);
+      this.alertsChannel?.send(msg);
+    });
+  }
+
+  public async assignRole(userId: string, guildId: string, roleId: string): Promise<Boolean> {
+    const guild = await this.client.guilds.fetch(guildId);
+    if (!guild) return false;
+
+    const member = await guild.members.fetch(userId);
+    if (!member) return false;
+
+    await member.roles.add(roleId);
+    await member.user.send(`Congrats! Assigned you a new role in the server - ${guild.name}.`);
+
+    return true;
   }
 }
 
