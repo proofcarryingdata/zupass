@@ -1,8 +1,12 @@
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord-api-types/v9';
 import {
   Client,
   Events,
   GatewayIntentBits,
-  TextBasedChannel,
+  Interaction,
+  SlashCommandBuilder,
+  TextBasedChannel
 } from "discord.js";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -18,6 +22,9 @@ export class DiscordService {
     if (alertsChannel?.isTextBased()) {
       this.alertsChannel = alertsChannel;
     }
+
+    this.registerSlashCommands();
+    this.handleInteraction();
   }
 
   public async sendAlert(msg: string): Promise<void> {
@@ -29,6 +36,40 @@ export class DiscordService {
     traced("Discord", "sendAlert", async () => {
       logger(`[DISCORD] sending alert ${msg}`);
       this.alertsChannel?.send(msg);
+    });
+  }
+
+  private async registerSlashCommands() {
+    if (!process.env.DISCORD_TOKEN) return;
+
+    logger("[DISCORD] register slash commands");
+
+    const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN!);
+
+    const commandsRaw = [
+      new SlashCommandBuilder()
+        .setName("verify")
+        .setDescription(
+          'Responds with a verification link!'
+        ),
+    ]
+    const commands = commandsRaw.map((command) => command.toJSON());
+
+    await rest.put(Routes.applicationCommands(this.client.user!.id), { body: commands });
+  }
+
+  private async handleInteraction() {
+    this.client.on(Events.InteractionCreate, async (interaction: Interaction): Promise<any> => {
+      if (!interaction.isChatInputCommand()) return;
+
+      if (interaction.commandName === "verify") {
+        interaction.reply({
+          content: "here is the link to verify",
+          ephemeral: true
+        }).catch((e) => {
+          logger(e);
+        })
+      }
     });
   }
 }
