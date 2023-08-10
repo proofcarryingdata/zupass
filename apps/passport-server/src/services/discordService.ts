@@ -1,6 +1,9 @@
 import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v9';
+import { Routes } from 'discord-api-types/v10';
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   Client,
   Events,
   GatewayIntentBits,
@@ -44,13 +47,13 @@ export class DiscordService {
 
     logger("[DISCORD] register slash commands");
 
-    const rest = new REST({ version: "9" }).setToken(process.env.DISCORD_TOKEN!);
+    const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN!);
 
     const commandsRaw = [
       new SlashCommandBuilder()
         .setName("verify")
         .setDescription(
-          'Responds with a verification link!'
+          'Verify with your PCD'
         ),
     ]
     const commands = commandsRaw.map((command) => command.toJSON());
@@ -63,8 +66,27 @@ export class DiscordService {
       if (!interaction.isChatInputCommand()) return;
 
       if (interaction.commandName === "verify") {
+        const guildId = interaction.guildId;
+
+        if (guildId === null) {
+          interaction.reply({
+            content: "Use this command in a server you would like to join",
+            ephemeral: true
+          }).catch((e) => {
+            logger(e);
+          })
+          return;
+        }
+
+        const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setLabel("Verify")
+            .setStyle(ButtonStyle.Link)
+            .setURL("url")
+        );
         interaction.reply({
-          content: "here is the link to verify",
+          content:  "To join other channels in this server, click the button to verify with your PCD",
+          components: [actionRow],
           ephemeral: true
         }).catch((e) => {
           logger(e);
