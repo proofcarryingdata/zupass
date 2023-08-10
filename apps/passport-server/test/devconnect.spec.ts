@@ -347,32 +347,6 @@ describe("devconnect functionality", function () {
   });
 
   /**
-   * This test doesn't pass because missing items causes an exception rather than a soft-delete
-   */
-  /** 
-  step("removing an item causes soft deletion of item", async function () {
-    const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
-    if (!eventAItemInfo) {
-      throw new Error("expected to be able to fetch corresponding item info");
-    }
-    const eventItemsBeforeDelete = await fetchPretixItemsInfoByEvent(application.context.dbPool, eventAItemInfo.id);
-
-    mocker.removeEventItem(
-      mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.eventA.slug,
-      mocker.get().organizer1.eventAItem1.id
-    );
-
-    devconnectPretixSyncService.replaceApi(
-      getDevconnectMockPretixAPI(mocker.get())
-    );
-
-    await devconnectPretixSyncService.trySync();
-
-    const eventItems = await fetchPretixItemsInfoByEvent(application.context.dbPool, eventAItemInfo.id);
-
-  });*/
- /**
    * This test covers the case where an event is updated as part of a sync.
    * It's not very interesting, and mostly exists to contrast with the
    * subsequent test in which the same operation fails due to the event's
@@ -493,10 +467,11 @@ describe("devconnect functionality", function () {
       expect(responseBody.folder).to.eq("Devconnect");
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // important to note users are issued tickets pcd tickets even for
-      // tickets that no longer exist, so they can be displayed
-      // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(6);
+      // originally there were 6 orders in the mock data
+      // but one was deleted in an earlier test
+      // since we don't fetch tickets with is_deleted = true
+      // there will only be 5 PCDs
+      expect(responseBody.pcds.length).to.eq(5);
 
       const ticketPCD = responseBody.pcds[0];
 

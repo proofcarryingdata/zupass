@@ -3,7 +3,10 @@ import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "pg";
 import { v4 as uuid } from "uuid";
-import { DevconnectPretixTicket } from "../src/database/models";
+import {
+  DevconnectPretixTicket,
+  DevconnectPretixTicketDBWithEmailAndItem
+} from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectDeviceLoginTicket,
@@ -342,6 +345,26 @@ describe("database reads and writes for devconnect ticket features", function ()
     }
   });
 
+  step(
+    "should be not be able to add multiple tickets with the same postion_id",
+    async function () {
+      const ticket = testTickets[0];
+      const item = testItems[ticket._itemIdx];
+      ticket.devconnect_pretix_items_info_id = item.dbId;
+
+      const ticketsForEmail = await fetchDevconnectPretixTicketsByEmail(
+        db,
+        ticket.email
+      );
+      // This will perform an upsert
+      await insertDevconnectPretixTicket(db, ticket);
+      const ticketsForEmailAfterInsert =
+        await fetchDevconnectPretixTicketsByEmail(db, ticket.email);
+
+      expect(ticketsForEmail.length).to.eq(ticketsForEmailAfterInsert.length);
+    }
+  );
+
   step("should be able update a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
       db,
@@ -395,7 +418,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
   });
 
-  step("should be able to soft-delete a ticket", async function () {
+  step("should be able to soft-delete and restore a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
       db,
       testTickets[0].email
@@ -416,8 +439,36 @@ describe("database reads and writes for devconnect ticket features", function ()
       existingTicket[0].email
     );
 
-    const firstTicketAfterDeletion = afterDeletionTickets[0];
-    expect(firstTicketAfterDeletion.is_deleted).to.eq(true);
+    // We should no longer find the soft-deleted ticket
+    expect(afterDeletionTickets).to.satisfy(
+      (tickets: DevconnectPretixTicketDBWithEmailAndItem[]) => {
+        return (
+          tickets.filter(
+            (ticket: DevconnectPretixTicketDBWithEmailAndItem) =>
+              ticket.position_id == firstTicket.position_id
+          ).length === 0
+        );
+      }
+    );
+
+    await insertDevconnectPretixTicket(db, firstTicket);
+
+    const afterRestorationTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      existingTicket[0].email
+    );
+
+    // We should now be able to find it again
+    expect(afterRestorationTickets).to.satisfy(
+      (tickets: DevconnectPretixTicketDBWithEmailAndItem[]) => {
+        return (
+          tickets.filter(
+            (ticket: DevconnectPretixTicketDBWithEmailAndItem) =>
+              ticket.position_id == firstTicket.position_id
+          ).length === 1
+        );
+      }
+    );
   });
 
   step("fetching tickets by event should work", async function () {
