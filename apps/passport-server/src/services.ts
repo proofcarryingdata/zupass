@@ -11,6 +11,7 @@ import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
+import { startVerifyService } from "./services/verifyService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
 
 export async function startServices(
@@ -50,6 +51,7 @@ export async function startServices(
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
   const issuanceService = startIssuanceService(context);
+  const verifyService = startVerifyService();
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -61,7 +63,9 @@ export async function startServices(
     devconnectPretixSyncService,
     metricsService,
     issuanceService,
-    discordService
+    discordService,
+    verifyService
+
   };
   return services;
 }

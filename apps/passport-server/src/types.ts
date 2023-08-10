@@ -16,6 +16,7 @@ import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { UserService } from "./services/userService";
+import { VerifyService } from "./services/verifyService";
 
 export interface ApplicationContext {
   dbPool: Pool;
@@ -39,6 +40,7 @@ export interface GlobalServices {
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
+  verifyService: VerifyService;
 }
 
 export interface PCDPass {

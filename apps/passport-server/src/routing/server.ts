@@ -7,6 +7,7 @@ import { ApplicationContext, GlobalServices } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
+import { initDiscordRoutes } from "./routes/discordRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
@@ -87,4 +88,5 @@ function initAllRoutes(
   initProvingRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
+  initDiscordRoutes(app, context, globalServices);
 }

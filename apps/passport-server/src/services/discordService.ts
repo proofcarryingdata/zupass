@@ -58,7 +58,7 @@ export class DiscordService {
 
         if (guildId === null) {
           interaction.reply({
-            content: "Use this command in a server you would like to join",
+            content: "Use this command in a server to get new roles",
             ephemeral: true
           }).catch((e) => {
             logger(e);

@@ -137,3 +137,16 @@ export interface CheckInRequest {
 }
 
 export type CheckInResponse = CheckTicketResponse;
+
+export interface DiscordAuthorizeRequest {
+  pcdType: string;
+
+  /**
+   * JSON.stringify(SerializedPCD)
+   */
+  serializedPCD: string;
+
+  discordUserId: string;
+
+  discordGuildId: string;
+}
