@@ -4,7 +4,8 @@ import {
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
   DevconnectPretixOrder,
-  IDevconnectPretixAPI
+  IDevconnectPretixAPI,
+  getI18nString
 } from "../apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
@@ -533,7 +534,7 @@ export class DevconnectPretixSyncService {
             this.db,
             item.id.toString(),
             eventInfo.id,
-            item.name.en
+            getI18nString(item.name)
           );
         }
         span?.setAttribute("items_inserted", itemsToInsert.length);
@@ -544,7 +545,7 @@ export class DevconnectPretixSyncService {
           .filter((i) => existingItemsInfoByItemID.has(i.id.toString()))
           .filter((i) => {
             const oldItem = existingItemsInfoByItemID.get(i.id.toString())!;
-            return oldItem.item_name !== i.name.en;
+            return oldItem.item_name !== getI18nString(i.name);
           });
 
         // For the active item that have changed, update them in the database.
@@ -558,9 +559,17 @@ export class DevconnectPretixSyncService {
               eventInfo.event_name
             }] Updating item info ${JSON.stringify(
               oldItem
-            )} to ${JSON.stringify({ ...oldItem, item_name: item.name.en })}`
+            )} to ${JSON.stringify({
+              ...oldItem,
+              item_name: getI18nString(item.name)
+            })}`
           );
-          await updatePretixItemsInfo(this.db, oldItem.id, item.name.en, false);
+          await updatePretixItemsInfo(
+            this.db,
+            oldItem.id,
+            getI18nString(item.name),
+            false
+          );
         }
         span?.setAttribute("items_updated", itemsToUpdate.length);
 
