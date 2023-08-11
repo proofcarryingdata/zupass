@@ -12,6 +12,16 @@ import { startServices, stopServices } from "./services";
 import { APIs, ApplicationContext, PCDPass } from "./types";
 import { logger } from "./util/logger";
 
+import process from "node:process";
+
+process.on("unhandledRejection", (reason) => {
+  if (reason instanceof Error) {
+    logger("[ERROR] unhandled rejection \n" + reason.stack);
+  } else {
+    logger("[ERROR] unhandled rejection " + reason);
+  }
+});
+
 /**
  * Starts the server, all the appropriate services, routes, and instantiates
  * the appropriate APIs if they have not been overriden by the caller.
