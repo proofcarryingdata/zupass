@@ -15,10 +15,15 @@ import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
-// TODO (veronica): add a map
-export const groupUrl = IS_PROD
-  ? "https://api.pcdpass.xyz/semaphore/5"
-  : "http://localhost:3002/semaphore/5";
+// Only SemaphoreGroupPCD is supported for now
+const authorizationMap = [
+  {
+    guildId: "1138792489025802291",
+    roleId: "1139265041116446730",
+    groupUrl: IS_PROD? "https://api.pcdpass.xyz/semaphore/5"
+      : "http://localhost:3002/semaphore/5",
+  }
+]
 
 export class DiscordService {
   private readonly client: Client;
@@ -72,10 +77,22 @@ export class DiscordService {
           return;
         }
 
-        // Only SemaphoreGroupPCD is supported for now
+        // TODO: to support multiple roles in a guild,
+        // the user can choose different roles as part of the slash command
+        const entry = authorizationMap.find((a) => a.guildId === guildId);
+        if (!entry) {
+          interaction.reply({
+            content:  "This command is not supported in this server",
+            ephemeral: true
+          }).catch((e) => {
+            logger(e);
+          })
+          return;
+        }
+
         const url = `${
           process.env.DISCORD_VERIFY_URL
-        }?user_id=${interaction.user.id}&guild_id=${guildId}&group_url=${groupUrl}`;
+        }?user_id=${interaction.user.id}&guild_id=${guildId}&group_url=${entry.groupUrl}`;
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setLabel("Verify")
@@ -105,14 +122,19 @@ export class DiscordService {
     });
   }
 
-  public async assignRole(userId: string, guildId: string, roleId: string): Promise<Boolean> {
+  public async assignRole(userId: string, guildId: string): Promise<Boolean> {
+    const entry = authorizationMap.find((a) => a.guildId === guildId);
+    if (!entry) {
+      return false;
+    }
+
     const guild = await this.client.guilds.fetch(guildId);
     if (!guild) return false;
 
     const member = await guild.members.fetch(userId);
     if (!member) return false;
 
-    await member.roles.add(roleId);
+    await member.roles.add(entry.roleId);
     await member.user.send(`Congrats! Assigned you a new role in the server - ${guild.name}.`);
 
     return true;

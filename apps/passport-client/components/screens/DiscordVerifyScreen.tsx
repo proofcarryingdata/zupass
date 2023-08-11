@@ -28,9 +28,8 @@ export function DiscordVerifyScreen() {
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = async(valid: boolean) => {
     setValid(valid);
-    // TODO (veronica): edit URL, format
-    // sent twice
-    const url = "http://localhost:3002/discord/authorize";
+    // TODO (veronica): format, sent twice
+    const url = `${process.env.PASSPORT_SERVER_URL}/discord/authorize`;
     const request = {
       pcdType: SemaphoreGroupPCDTypeName,
       serializedPCD: pcdStr,
