@@ -1,3 +1,3 @@
-# `@pcd/rsa-pcd`
+# `@pcd/rsa-image-pcd`
 
-PCD representing an RSA signature with a public-private keypair.
+PCD representing an RSA signature of a url to an image.
