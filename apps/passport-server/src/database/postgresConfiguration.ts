@@ -39,8 +39,8 @@ export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
         : undefined,
 
     // Pool configuration
-    connectionTimeoutMillis: 1_000,
-    idleTimeoutMillis: 0,
+    connectionTimeoutMillis: 16_000,
+    idleTimeoutMillis: 8_000,
     poolSize: 8
   };
 }
