@@ -134,4 +134,7 @@ const DeviceLoginLink = styled(Link)`
   &:hover {
     text-decoration: underline;
   }
+  &:visited {
+    color: #aaa;
+  }
 `;
