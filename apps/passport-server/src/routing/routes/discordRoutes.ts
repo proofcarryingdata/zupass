@@ -21,8 +21,8 @@ export function initDiscordRoutes(
 
       logger(`[VERIFY] result ${verified.verified}`);
 
-      // TODO: get role
-      const roleId = "roleId";
+      // TODO (veronica): get role from the map
+      const roleId = "1139265041116446730";
       const assigned = await discordService?.assignRole(
         request.discordUserId,
         request.discordGuildId,

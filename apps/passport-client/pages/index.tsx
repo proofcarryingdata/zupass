@@ -15,6 +15,7 @@ import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
+import { DiscordVerifyScreen } from "../components/screens/DiscordVerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
@@ -140,6 +141,7 @@ function RouterImpl() {
             }
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
+          <Route path="discord-verify" element={<DiscordVerifyScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

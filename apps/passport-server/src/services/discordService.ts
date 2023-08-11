@@ -11,8 +11,14 @@ import {
   SlashCommandBuilder,
   TextBasedChannel
 } from "discord.js";
+import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
+
+// TODO (veronica): add a map
+export const groupUrl = IS_PROD
+  ? "https://api.pcdpass.xyz/semaphore/5"
+  : "http://localhost:3002/semaphore/5";
 
 export class DiscordService {
   private readonly client: Client;
@@ -66,7 +72,10 @@ export class DiscordService {
           return;
         }
 
-        const url = `${process.env.DISCORD_VERIFY_URL}?guild_id=${guildId}&user_id=${interaction.user.id}`;
+        // Only SemaphoreGroupPCD is supported for now
+        const url = `${
+          process.env.DISCORD_VERIFY_URL
+        }?user_id=${interaction.user.id}&guild_id=${guildId}&group_url=${groupUrl}`;
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setLabel("Verify")
