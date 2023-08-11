@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixTicket,

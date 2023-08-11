@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -21,7 +21,7 @@ where email=$1;`,
       params.visitor_date_ranges === undefined
         ? undefined
         : JSON.stringify(params.visitor_date_ranges),
-      params.name,
+      params.name
     ]
   );
   return result.rowCount;

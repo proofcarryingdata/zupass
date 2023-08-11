@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -10,7 +10,7 @@ export async function deleteZuzaluUser(
   email: string
 ): Promise<void> {
   await sqlQuery(client, `delete from zuzalu_pretix_tickets where email = $1`, [
-    email,
+    email
   ]);
 
   await sqlQuery(client, `delete from commitments where email = $1`, [email]);

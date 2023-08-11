@@ -1,5 +1,5 @@
 import { DateRange } from "@pcd/passport-interface";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
@@ -10,7 +10,7 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   pretixTicketsDifferent,
-  ticketsToMapByEmail,
+  ticketsToMapByEmail
 } from "../util/zuzaluUser";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
@@ -322,7 +322,7 @@ export class PretixSyncService {
           (subEvent) =>
             ({
               date_from: subEvent?.date_from,
-              date_to: subEvent?.date_to,
+              date_to: subEvent?.date_to
             } satisfies DateRange)
         );
 
@@ -331,7 +331,7 @@ export class PretixSyncService {
           email: (o.email || o.positions[0].attendee_email).toLowerCase(),
           name: o.positions[0].attendee_name,
           order_id: o.code,
-          visitor_date_ranges: visitorDateRanges,
+          visitor_date_ranges: visitorDateRanges
         } satisfies ZuzaluPretixTicket;
       });
 
