@@ -15,26 +15,26 @@ import {
 
 export interface SerializedSubscriptionManager {
   providers: SubscriptionProvider[];
-  subscribedFeeds: ActiveSubscription[];
+  subscribedFeeds: Subscription[];
 }
 
 export interface ReturnedAction {
   actions: FeedResponseAction[];
-  subscription: ActiveSubscription;
+  subscription: Subscription;
 }
 
 export class SubscriptionManager {
   public updatedEmitter: Emitter;
   private providers: SubscriptionProvider[];
-  private activeSubscriptions: ActiveSubscription[];
+  private activeSubscriptions: Subscription[];
 
   public constructor(
-    providers: SubscriptionProvider[],
-    activeSubscriptions: ActiveSubscription[]
+    providers?: SubscriptionProvider[],
+    activeSubscriptions?: Subscription[]
   ) {
     this.updatedEmitter = new Emitter();
-    this.providers = providers;
-    this.activeSubscriptions = activeSubscriptions;
+    this.providers = providers ?? [];
+    this.activeSubscriptions = activeSubscriptions ?? [];
   }
 
   public async pollSubscriptions(): Promise<ReturnedAction[]> {
@@ -56,7 +56,7 @@ export class SubscriptionManager {
   }
 
   public static async pollSubscription(
-    subscription: ActiveSubscription
+    subscription: Subscription
   ): Promise<FeedResponse> {
     const request: FeedRequest = {
       feedId: subscription.feed.id,
@@ -81,8 +81,8 @@ export class SubscriptionManager {
     return parsed.feeds;
   }
 
-  public getSubscriptionsByProvider(): Map<string, ActiveSubscription[]> {
-    const result: Map<string, ActiveSubscription[]> = new Map();
+  public getSubscriptionsByProvider(): Map<string, Subscription[]> {
+    const result: Map<string, Subscription[]> = new Map();
     const providers = this.getProviders();
 
     for (const provider of providers) {
@@ -137,9 +137,7 @@ export class SubscriptionManager {
     this.updatedEmitter.emit();
   }
 
-  public getSubscriptionsForProvider(
-    providerUrl: string
-  ): ActiveSubscription[] {
+  public getSubscriptionsForProvider(providerUrl: string): Subscription[] {
     return this.activeSubscriptions.filter(
       (s) => s.providerUrl === providerUrl
     );
@@ -148,7 +146,7 @@ export class SubscriptionManager {
   public subscribe(
     providerUrl: string,
     info: Feed,
-    credential: SerializedPCD
+    credential?: SerializedPCD
   ): void {
     const existingSubscription = this.getSubscription(providerUrl, info.id);
 
@@ -171,11 +169,11 @@ export class SubscriptionManager {
   }
 
   public getSubscription(
-    url: string,
+    providerUrl: string,
     infoId: string
-  ): ActiveSubscription | undefined {
+  ): Subscription | undefined {
     return this.activeSubscriptions.find(
-      (s) => s.providerUrl === url && s.feed.id === infoId
+      (s) => s.providerUrl === providerUrl && s.feed.id === infoId
     );
   }
 
@@ -214,7 +212,7 @@ export class SubscriptionManager {
     return this.providers;
   }
 
-  public getActiveSubscriptions(): ActiveSubscription[] {
+  public getActiveSubscriptions(): Subscription[] {
     return this.activeSubscriptions;
   }
 
@@ -248,7 +246,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   permissions: PCDPermissions;
 }
 
-export interface ActiveSubscription<T extends PCDPackage = PCDPackage> {
+export interface Subscription<T extends PCDPackage = PCDPackage> {
   providerUrl: string;
   feed: Feed;
   credential: SerializedPCD<PCDOf<T>> | undefined;

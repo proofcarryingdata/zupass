@@ -433,6 +433,10 @@ export class IssuanceService {
         .map((ticketData) => this.ticketDataToTicketPCD(ticketData))
     );
 
+    logger(
+      `[ISSUANCE] issued ${tickets.length} Devconnect tickets to ${email}`
+    );
+
     return tickets;
   }
 }
