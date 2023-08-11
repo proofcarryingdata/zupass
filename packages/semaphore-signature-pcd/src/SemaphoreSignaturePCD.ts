@@ -13,8 +13,8 @@ import {
 import { Group } from "@semaphore-protocol/group";
 import {
   FullProof,
-  generateProof,
   Proof,
+  generateProof,
   verifyProof,
 } from "@semaphore-protocol/proof";
 import { sha256 } from "js-sha256";

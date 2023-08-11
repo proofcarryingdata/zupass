@@ -3,8 +3,10 @@ import {
   usePassportPopupMessages,
   useSemaphoreGroupProof,
 } from "@pcd/passport-interface";
-import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
-import { useState } from "react";
+import {
+  SemaphoreGroupPCDTypeName
+} from "@pcd/semaphore-group-pcd";
+import { useCallback, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   BackgroundGlow,
@@ -29,16 +31,10 @@ export function DiscordVerifyScreen() {
 
   const [valid, setValid] = useState<boolean | undefined>();
 
-  const onVerified = async(valid: boolean) => {
+  const onVerified = useCallback(async (valid: boolean) => {
     setValid(valid);
 
-    if (valid) {
-      // TODO: fix, this gets called twice
-      await sendToServer();
-    }
-  };
-
-  const sendToServer = async() => {
+    if (!valid) return;
     const url = `${process.env.PASSPORT_SERVER_URL}/discord/authorize`;
     const request = {
       pcdType: SemaphoreGroupPCDTypeName,
@@ -54,15 +50,14 @@ export function DiscordVerifyScreen() {
         Accept: "application/json"
       }
     });
-  };
- 
-  // TODO (veronica): fix userId
+  }, [pcdStr, userId, guildId]);
+
   const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
     semaphoreGroupUrl,
     "passport-client",
     onVerified,
-    // userId
+    // generateMessageHash(userId).toString()
   );
 
   const [from, to, bg]: [string, string, "primary" | "gray"] = valid
@@ -77,7 +72,7 @@ export function DiscordVerifyScreen() {
         <Spacer h={48} />
         <H4>
           Click the button below to generate Semaphore Group Membership Proof.
-          The Proof will be sent to the server.
+          The proof will be sent to the server.
           Once verified, the corresponding role will be assigned to the user
           in the Discord server.
         </H4>
