@@ -16,7 +16,6 @@ export function initDiscordRoutes(
     try {
       const request = req.body as DiscordAuthorizeRequest;
 
-      // TODO (veronica): use userId as nullified or signed message
       const verified = await verifyService.verify(request);
       if (!verified) {
         res.json({assigned: false});
