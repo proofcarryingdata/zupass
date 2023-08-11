@@ -53,4 +53,43 @@ describe("Subscription Manager", async function () {
     expect(manager.getActiveSubscriptions().length).to.eq(0);
     expect(manager.getProviders().length).to.eq(0);
   });
+
+  it("serialization and deserialization should work", async function () {
+    const manager = new SubscriptionManager([], []);
+
+    const providerUrl = "test url";
+    manager.addProvider(providerUrl);
+
+    const feed: Feed = {
+      description: "description",
+      id: "1",
+      name: "test feed",
+      permissions: [],
+      inputPCDType: undefined,
+      partialArgs: undefined
+    };
+
+    manager.subscribe(providerUrl, feed, undefined);
+
+    const serialized = manager.serialize();
+    const deserialized = SubscriptionManager.deserialize(serialized);
+
+    expect(manager.getProviders()).to.deep.eq(deserialized.getProviders());
+    expect(manager.getActiveSubscriptions().length).to.eq(
+      deserialized.getActiveSubscriptions().length
+    );
+
+    for (let i = 0; i < manager.getActiveSubscriptions().length; i++) {
+      const l = manager.getActiveSubscriptions()[0];
+      const r = deserialized.getActiveSubscriptions()[0];
+
+      expect(l.feed.description).to.eq(r.feed.description);
+      expect(l.feed.id).to.eq(r.feed.id);
+      expect(l.feed.name).to.eq(r.feed.name);
+      expect(l.feed.permissions).to.deep.eq(r.feed.permissions);
+      expect(l.providerUrl).to.eq(r.providerUrl);
+      expect(l.subscribedTimestamp).to.eq(r.subscribedTimestamp);
+      expect(l.credential).to.eq(r.credential);
+    }
+  });
 });
