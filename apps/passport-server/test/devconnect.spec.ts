@@ -401,6 +401,11 @@ describe("devconnect functionality", function () {
         }
       );
 
+      const oldSettings = mocker.getEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug
+      );
+
       mocker.setEventSettings(
         mocker.get().organizer1.orgUrl,
         mocker.get().organizer1.eventA.slug,
@@ -416,6 +421,98 @@ describe("devconnect functionality", function () {
       expect(event?.event_name).to.not.eq(updatedNameInNewSync);
       // Instead, the original name remains.
       expect(event?.event_name).to.eq(originalEvent?.event_name);
+
+      // Since we introduced invalid data, we want to restore the valid
+      // data in order to avoid interfering with future tests.
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        oldSettings
+      );
+    }
+  );
+
+  step(
+    "should be able to sync an item with valid item settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      devconnectPretixSyncService.replaceApi(
+        getDevconnectMockPretixAPI(mocker.get())
+      );
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is valid
+          //item.generate_tickets = null;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name matches the one fetched during sync
+      expect(item.item_name).to.eq(updatedNameInNewSync);
+      // The original name no longer matches
+      expect(item.item_name).to.not.eq(originalItem.item_name);
+    }
+  );
+
+  step(
+    "should not be able to sync an item with invalid item settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is not valid
+          item.generate_tickets = true;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name does *not* match the one fetched during sync
+      expect(item.item_name).to.not.eq(updatedNameInNewSync);
+      // Instead, the original name remains.
+      expect(item.item_name).to.eq(originalItem.item_name);
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // Restore the item to a valid setting
+          item.generate_tickets = false;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
     }
   );
 

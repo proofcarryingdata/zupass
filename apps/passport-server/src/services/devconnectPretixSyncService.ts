@@ -206,9 +206,14 @@ export class DevconnectPretixSyncService {
       errors.push(`"Personalization" is not set to "Personalized ticket"`);
     }
 
-    if (item.generate_tickets !== null && item.generate_tickets !== undefined) {
+    if (
+      !(
+        item.generate_tickets === null || item.generate_tickets === undefined
+      ) &&
+      item.generate_tickets !== false
+    ) {
       errors.push(
-        `"Generate tickets" is not set to "Choose automatically depending on event settings"`
+        `"Generate tickets" is not set to "Choose automatically depending on event settings" or "Never"`
       );
     }
 
