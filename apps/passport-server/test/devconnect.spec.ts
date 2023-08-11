@@ -564,10 +564,11 @@ describe("devconnect functionality", function () {
       expect(responseBody.folder).to.eq("Devconnect");
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // important to note users are issued tickets pcd tickets even for
-      // tickets that no longer exist, so they can be displayed
-      // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(6);
+      // originally there were 6 orders in the mock data
+      // but one was deleted in an earlier test
+      // since we don't fetch tickets with is_deleted = true
+      // there will only be 5 PCDs
+      expect(responseBody.pcds.length).to.eq(5);
 
       const ticketPCD = responseBody.pcds[0];
 
