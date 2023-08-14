@@ -2,10 +2,13 @@ import {
   CheckInResponse,
   FeedResponse,
   ISSUANCE_STRING,
-  PCDPermission,
-  PCDPermissionType,
   User
 } from "@pcd/passport-interface";
+import {
+  AppendToFolderAction,
+  PCDActionType,
+  ReplaceInFolderAction
+} from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
@@ -564,12 +567,10 @@ describe("devconnect functionality", function () {
       const responseBody = response.body as FeedResponse;
 
       expect(responseBody.actions.length).to.eq(1);
-      const action = responseBody.actions[0];
+      const action = responseBody.actions[0] as AppendToFolderAction;
 
-      expect(action.permission).to.deep.eq({
-        folder: "Devconnect",
-        type: PCDPermissionType.FolderReplace
-      } satisfies PCDPermission);
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.folder).to.eq("Devconnect");
 
       expect(Array.isArray(action.pcds)).to.eq(true);
       // originally there were 6 orders in the mock data
@@ -615,16 +616,14 @@ describe("devconnect functionality", function () {
     );
     const response1 = expressResponse1.body as FeedResponse;
     const response2 = expressResponse2.body as FeedResponse;
+    const action1 = response1.actions[0] as AppendToFolderAction;
+    const action2 = response2.actions[0] as AppendToFolderAction;
 
     const pcds1 = await Promise.all(
-      response1.actions[0].pcds.map((pcd) =>
-        RSATicketPCDPackage.deserialize(pcd.pcd)
-      )
+      action1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
     );
     const pcds2 = await Promise.all(
-      response2.actions[0].pcds.map((pcd) =>
-        RSATicketPCDPackage.deserialize(pcd.pcd)
-      )
+      action2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -663,9 +662,9 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as FeedResponse;
+    const action = issueResponseBody.actions[0] as ReplaceInFolderAction;
 
-    const serializedTicket = issueResponseBody.actions[0]
-      .pcds[1] as SerializedPCD<RSATicketPCD>;
+    const serializedTicket = action.pcds[1] as SerializedPCD<RSATicketPCD>;
     ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
@@ -768,7 +767,8 @@ describe("devconnect functionality", function () {
         "asdf"
       );
       const response = expressResponse.body as FeedResponse;
-      expect(response.actions[0].pcds).to.deep.eq([]);
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 
@@ -781,7 +781,8 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const response = expressResponse.body as FeedResponse;
-      expect(response.actions[0].pcds).to.deep.eq([]);
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 

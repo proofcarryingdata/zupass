@@ -1,3 +1,4 @@
+export * from "../test/MockFeedApi";
 export * from "./EncryptedStorage";
 export * from "./FeedHost";
 export * from "./PassportInterface";

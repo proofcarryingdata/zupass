@@ -1,4 +1,5 @@
 import { Emitter } from "@pcd/emitter";
+import { PCDAction, PCDPermission } from "@pcd/pcd-collection";
 import {
   ArgsOf,
   PCDOf,
@@ -7,7 +8,6 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import { IFeedApi } from "./FeedAPI";
-import { FeedResponseAction } from "./RequestTypes";
 
 /**
  * Class responsible for storing the list of feed providers this application is
@@ -35,8 +35,8 @@ export class FeedSubscriptionManager {
     return this.api.listFeeds(providerUrl).then((r) => r.feeds);
   }
 
-  public async pollSubscriptions(): Promise<ReturnedAction[]> {
-    const responses: ReturnedAction[] = [];
+  public async pollSubscriptions(): Promise<SubscriptionActions[]> {
+    const responses: SubscriptionActions[] = [];
 
     for (const subscription of this.activeSubscriptions) {
       try {
@@ -212,8 +212,8 @@ export class FeedSubscriptionManager {
   }
 }
 
-export interface ReturnedAction {
-  actions: FeedResponseAction[];
+export interface SubscriptionActions {
+  actions: PCDAction[];
   subscription: Subscription;
 }
 
@@ -233,7 +233,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   description: string;
   inputPCDType?: PCDTypeNameOf<T>;
   partialArgs?: ArgsOf<T>;
-  permissions: PCDPermissions;
+  permissions: PCDPermission[];
 }
 
 export interface Subscription<T extends PCDPackage = PCDPackage> {
@@ -242,17 +242,3 @@ export interface Subscription<T extends PCDPackage = PCDPackage> {
   credential: SerializedPCD<PCDOf<T>> | undefined;
   subscribedTimestamp: number;
 }
-
-export enum PCDPermissionType {
-  FolderReplace = "FolderReplace",
-  FolderAppend = "FolderAppend"
-}
-
-export interface PCDFolderPermission {
-  type: PCDPermissionType.FolderAppend | PCDPermissionType.FolderReplace;
-  folder: string;
-}
-
-export type PCDPermissions = PCDPermission[];
-
-export type PCDPermission = PCDFolderPermission;

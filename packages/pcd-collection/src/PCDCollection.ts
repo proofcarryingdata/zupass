@@ -1,6 +1,16 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import {
+  isAppendToFolderAction,
+  isReplaceInFolderAction,
+  PCDAction
+} from "./actions2";
+import {
+  isAppendToFolderPermission,
+  isReplaceInFolderPermission,
+  PCDPermission
+} from "./permissions";
 
 /**
  * This class represents all the PCDs a user may have, and also
@@ -27,6 +37,102 @@ export class PCDCollection {
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
     this.hashEmitter = new Emitter();
+  }
+
+  public async tryExec(
+    action: PCDAction,
+    permissions: PCDPermission[]
+  ): Promise<boolean> {
+    for (const permission of permissions) {
+      try {
+        const result = await this.tryExecutingActionWithPermission(
+          action,
+          permission
+        );
+
+        if (result) {
+          return true;
+        }
+      } catch (e) {
+        console.log(e);
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  public async tryExecutingActionWithPermission(
+    action: PCDAction,
+    permission: PCDPermission
+  ): Promise<boolean> {
+    console.log(
+      `executing`,
+      JSON.stringify(action, null, 2),
+      `with permission`,
+      JSON.stringify(permission, null, 2)
+    );
+
+    if (
+      isAppendToFolderAction(action) &&
+      isAppendToFolderPermission(permission)
+    ) {
+      if (action.folder !== permission.folder) {
+        return false;
+      }
+
+      const pcds = await this.deserializeAll(action.pcds);
+
+      for (const pcd of pcds) {
+        if (this.hasPCDWithId(pcd.id)) {
+          throw new Error(`pcd with ${pcd.id} already exists`);
+        }
+      }
+
+      this.addAll(pcds);
+      this.bulkSetFolder(
+        pcds.map((pcd) => pcd.id),
+        action.folder
+      );
+    }
+
+    if (
+      isReplaceInFolderAction(action) &&
+      isReplaceInFolderPermission(permission)
+    ) {
+      if (action.folder !== permission.folder) {
+        console.log(
+          `action folder ${action.folder} doesn't match permission ${permission.folder}`
+        );
+        return false;
+      }
+
+      const pcds = await this.deserializeAll(action.pcds);
+
+      for (const pcd of pcds) {
+        if (
+          this.hasPCDWithId(pcd.id) &&
+          this.getFolder(pcd.id) !== action.folder
+        ) {
+          throw new Error(
+            `pcd with ${pcd.id} already exists outside the allowed folder`
+          );
+        }
+      }
+
+      console.log(`adding pcds ${pcds} to folder ${action.folder}`);
+      this.addAll(pcds, { upsert: true });
+      this.bulkSetFolder(
+        pcds.map((pcd) => pcd.id),
+        action.folder
+      );
+    }
+
+    return false;
+  }
+
+  public getSize(): number {
+    return this.pcds.length;
   }
 
   public getAllFolderNames(): string[] {
@@ -155,7 +261,7 @@ export class PCDCollection {
     const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
     const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
 
-    for (const [id, pcd] of toAddMap.entries()) {
+    for (const [id, pcd] of Array.from(toAddMap.entries())) {
       if (currentMap.has(id) && !options?.upsert) {
         throw new Error(`pcd with id ${id} is already in this collection`);
       }

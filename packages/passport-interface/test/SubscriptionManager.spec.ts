@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Feed, FeedSubscriptionManager } from "../src";
+import { Feed, FeedSubscriptionManager } from "../src/SubscriptionManager";
 import { MockFeedApi } from "./MockFeedApi";
 
 describe("Subscription Manager", async function () {

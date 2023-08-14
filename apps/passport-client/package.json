@@ -14,6 +14,7 @@
     "@pcd/ethereum-ownership-pcd": "0.6.1",
     "@pcd/halo-nonce-pcd": "0.2.1",
     "@pcd/passport-crypto": "0.6.1",
+    "@pcd/passport-integration": "0.6.1",
     "@pcd/passport-interface": "0.6.1",
     "@pcd/passport-ui": "0.6.1",
     "@pcd/emitter": "0.0.2",

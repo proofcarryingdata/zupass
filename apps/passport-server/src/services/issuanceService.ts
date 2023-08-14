@@ -9,9 +9,16 @@ import {
   FeedResponse,
   ISSUANCE_STRING,
   ListFeedsRequest,
-  ListFeedsResponse,
-  PCDPermissionType
+  ListFeedsResponse
 } from "@pcd/passport-interface";
+import {
+  AppendToFolderAction,
+  AppendToFolderPermission,
+  PCDActionType,
+  PCDPermissionType,
+  ReplaceInFolderAction,
+  ReplaceInFolderPermission
+} from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -67,12 +74,10 @@ export class IssuanceService {
           return {
             actions: [
               {
-                pcds: serializedPCDs,
-                permission: {
-                  folder: "Devconnect",
-                  type: PCDPermissionType.FolderReplace
-                }
-              }
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Devconnect",
+                pcds: serializedPCDs
+              } as ReplaceInFolderAction
             ]
           };
         },
@@ -83,8 +88,14 @@ export class IssuanceService {
           inputPCDType: RSAPCDPackage.name,
           partialArgs: undefined,
           permissions: [
-            { folder: "Devconnect", type: PCDPermissionType.FolderAppend },
-            { folder: "Devconnect", type: PCDPermissionType.FolderReplace }
+            {
+              folder: "Devconnect",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "Devconnect",
+              type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission
           ]
         }
       },
@@ -94,11 +105,9 @@ export class IssuanceService {
             actions: [
               {
                 pcds: await this.issueFrogPCDs(),
-                permission: {
-                  folder: "Frogs",
-                  type: PCDPermissionType.FolderAppend
-                }
-              }
+                folder: "Frogs",
+                type: PCDActionType.AppendToFolder
+              } as AppendToFolderAction
             ]
           };
         },
@@ -109,7 +118,10 @@ export class IssuanceService {
           inputPCDType: undefined,
           partialArgs: undefined,
           permissions: [
-            { folder: "Frogs", type: PCDPermissionType.FolderAppend }
+            {
+              folder: "Frogs",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission
           ]
         }
       }

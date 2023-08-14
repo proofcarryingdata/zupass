@@ -1,4 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
+import { applyActions } from "@pcd/passport-integration";
 import {
   isSyncedEncryptedStorageV2,
   SyncedEncryptedStorage,
@@ -15,7 +16,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { submitDeviceLogin, submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
-import { applyActions } from "./applyFeed";
 import {
   loadEncryptionKey,
   saveEncryptionKey,

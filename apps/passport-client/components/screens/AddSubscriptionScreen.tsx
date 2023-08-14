@@ -2,10 +2,9 @@ import {
   Feed,
   FeedSubscriptionManager,
   ISSUANCE_STRING,
-  PCDPermission,
-  PCDPermissions,
   Subscription
 } from "@pcd/passport-interface";
+import { PCDPermission } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd/";
@@ -198,7 +197,7 @@ function SubscribeSection({
 export function PermissionsView({
   permissions
 }: {
-  permissions: PCDPermissions;
+  permissions: PCDPermission[];
 }) {
   return (
     <div>

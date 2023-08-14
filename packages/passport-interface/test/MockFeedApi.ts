@@ -1,12 +1,11 @@
+import {
+  PCDActionType,
+  PCDPermission,
+  PCDPermissionType
+} from "@pcd/pcd-collection";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import {
-  FeedHost,
-  FeedRequest,
-  FeedResponse,
-  ListFeedsResponse,
-  PCDPermissionType
-} from "../src";
+import { FeedHost, FeedRequest, FeedResponse, ListFeedsResponse } from "../src";
 import { IFeedApi } from "../src/FeedAPI";
 
 export class MockFeedApi implements IFeedApi {
@@ -24,7 +23,10 @@ export class MockFeedApi implements IFeedApi {
               id: "1",
               name: "identity drip",
               permissions: [
-                { folder: "TEST", type: PCDPermissionType.FolderReplace }
+                {
+                  folder: "TEST",
+                  type: PCDPermissionType.ReplaceInFolder
+                } as PCDPermission
               ],
               inputPCDType: undefined,
               partialArgs: undefined
@@ -33,17 +35,15 @@ export class MockFeedApi implements IFeedApi {
               return {
                 actions: [
                   {
+                    type: PCDActionType.ReplaceInFolder,
+                    folder: "TEST",
                     pcds: [
                       await SemaphoreIdentityPCDPackage.serialize(
                         await SemaphoreIdentityPCDPackage.prove({
                           identity: new Identity()
                         })
                       )
-                    ],
-                    permission: {
-                      folder: "TEST",
-                      type: PCDPermissionType.FolderReplace
-                    }
+                    ]
                   }
                 ]
               };
