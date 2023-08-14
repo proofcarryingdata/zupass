@@ -1,4 +1,4 @@
-import { Feed, FeedHost, FeedRequest, FeedResponse } from "../src";
+import { FeedHost, FeedRequest, FeedResponse, ListFeedsResponse } from "../src";
 import { IFeedApi } from "../src/FeedAPI";
 
 export class MockFeedApi implements IFeedApi {
@@ -29,11 +29,26 @@ export class MockFeedApi implements IFeedApi {
     ]);
   }
 
-  pollFeed(providerUrl: string, request: FeedRequest): Promise<FeedResponse> {
-    throw new Error("Method not implemented.");
+  private getFeedHost(providerUrl: string): FeedHost {
+    const host = this.feedHosts.get(providerUrl);
+    if (!host) {
+      throw new Error(
+        `couldn't find feed host with provider url ${providerUrl}`
+      );
+    }
+    return host;
   }
 
-  listFeeds(providerUrl: string): Promise<Feed[]> {
-    throw new Error("Method not implemented.");
+  public async pollFeed(
+    providerUrl: string,
+    request: FeedRequest
+  ): Promise<FeedResponse> {
+    const host = this.getFeedHost(providerUrl);
+    return host.handleFeedRequest(request);
+  }
+
+  public async listFeeds(providerUrl: string): Promise<ListFeedsResponse> {
+    const host = this.getFeedHost(providerUrl);
+    return host.handleListFeedsRequest({});
   }
 }

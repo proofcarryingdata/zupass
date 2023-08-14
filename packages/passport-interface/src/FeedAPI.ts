@@ -1,10 +1,9 @@
 import { PCDPackage } from "@pcd/pcd-types";
 import { FeedRequest, FeedResponse, ListFeedsResponse } from "./RequestTypes";
-import { Feed } from "./SubscriptionManager";
 
 export interface IFeedApi {
   pollFeed(providerUrl: string, request: FeedRequest): Promise<FeedResponse>;
-  listFeeds(providerUrl: string): Promise<Feed[]>;
+  listFeeds(providerUrl: string): Promise<ListFeedsResponse>;
 }
 
 export class NetworkFeedApi implements IFeedApi {
@@ -24,9 +23,9 @@ export class NetworkFeedApi implements IFeedApi {
     return parsed;
   }
 
-  async listFeeds(providerUrl: string): Promise<Feed[]> {
+  async listFeeds(providerUrl: string): Promise<ListFeedsResponse> {
     const result = await fetch(providerUrl);
     const parsed = (await result.json()) as ListFeedsResponse;
-    return parsed.feeds;
+    return parsed;
   }
 }
