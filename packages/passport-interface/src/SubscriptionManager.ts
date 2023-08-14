@@ -6,7 +6,8 @@ import {
   PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { FeedRequest, FeedResponse, FeedResponseAction } from "./RequestTypes";
+import { IFeedApi } from "./FeedAPI";
+import { FeedResponseAction } from "./RequestTypes";
 
 /**
  * Class responsible for storing the list of feed providers this application is
@@ -15,14 +16,17 @@ import { FeedRequest, FeedResponse, FeedResponseAction } from "./RequestTypes";
  */
 export class FeedSubscriptionManager {
   public updatedEmitter: Emitter;
+  private api: IFeedApi;
   private providers: SubscriptionProvider[];
   private activeSubscriptions: Subscription[];
 
   public constructor(
+    api: IFeedApi,
     providers?: SubscriptionProvider[],
     activeSubscriptions?: Subscription[]
   ) {
     this.updatedEmitter = new Emitter();
+    this.api = api;
     this.providers = providers ?? [];
     this.activeSubscriptions = activeSubscriptions ?? [];
   }
@@ -34,7 +38,10 @@ export class FeedSubscriptionManager {
       try {
         responses.push({
           actions: (
-            await FeedSubscriptionManager.pollSubscription(subscription)
+            await this.api.pollFeed(subscription.providerUrl, {
+              feedId: subscription.feed.id,
+              pcd: subscription.credential
+            })
           ).actions,
           subscription
         });
@@ -44,26 +51,6 @@ export class FeedSubscriptionManager {
     }
 
     return responses;
-  }
-
-  public static async pollSubscription(
-    subscription: Subscription
-  ): Promise<FeedResponse> {
-    const request: FeedRequest = {
-      feedId: subscription.feed.id,
-      pcd: subscription.credential
-    };
-
-    const result = await fetch(subscription.providerUrl, {
-      method: "POST",
-      body: JSON.stringify(request),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      }
-    });
-    const parsed = (await result.json()) as FeedResponse;
-    return parsed;
   }
 
   public getSubscriptionsByProvider(): Map<string, Subscription[]> {
@@ -208,9 +195,13 @@ export class FeedSubscriptionManager {
     } satisfies SerializedSubscriptionManager);
   }
 
-  public static deserialize(serialized: string): FeedSubscriptionManager {
+  public static deserialize(
+    api: IFeedApi,
+    serialized: string
+  ): FeedSubscriptionManager {
     const parsed = JSON.parse(serialized) as SerializedSubscriptionManager;
     return new FeedSubscriptionManager(
+      api,
       parsed.providers ?? [],
       parsed.subscribedFeeds ?? []
     );

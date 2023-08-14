@@ -1,9 +1,12 @@
 import { expect } from "chai";
 import { Feed, FeedSubscriptionManager } from "../src";
+import { MockFeedApi } from "./MockFeedApi";
 
 describe("Subscription Manager", async function () {
-  it("providers should work", async function () {
-    const manager = new FeedSubscriptionManager([], []);
+  const mockFeedApi = new MockFeedApi();
+
+  it("keeping track of providers should work", async function () {
+    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -15,8 +18,8 @@ describe("Subscription Manager", async function () {
     expect(manager.getProviders().length).to.eq(0);
   });
 
-  it("subscriptions should work", async function () {
-    const manager = new FeedSubscriptionManager([], []);
+  it("keeping track of subscriptions should work", async function () {
+    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -55,7 +58,7 @@ describe("Subscription Manager", async function () {
   });
 
   it("serialization and deserialization should work", async function () {
-    const manager = new FeedSubscriptionManager([], []);
+    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -72,7 +75,10 @@ describe("Subscription Manager", async function () {
     manager.subscribe(providerUrl, feed, undefined);
 
     const serialized = manager.serialize();
-    const deserialized = FeedSubscriptionManager.deserialize(serialized);
+    const deserialized = FeedSubscriptionManager.deserialize(
+      mockFeedApi,
+      serialized
+    );
 
     expect(manager.getProviders()).to.deep.eq(deserialized.getProviders());
     expect(manager.getActiveSubscriptions().length).to.eq(
