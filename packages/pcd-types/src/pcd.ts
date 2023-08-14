@@ -52,7 +52,7 @@ export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
 export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
   ? PCD<C, P>
   : T;
-export type PCDTypeOf<T> = T extends PCDPackage<infer C, infer P, any, any>
+export type PCDTypeNameOf<T> = T extends PCDPackage<any, any, any, any>
   ? T["name"]
   : T;
 export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {

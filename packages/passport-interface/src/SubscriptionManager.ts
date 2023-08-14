@@ -3,27 +3,17 @@ import {
   ArgsOf,
   PCDOf,
   PCDPackage,
-  PCDTypeOf,
+  PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import {
-  FeedRequest,
-  FeedResponse,
-  FeedResponseAction,
-  ListFeedsResponse
-} from "./RequestTypes";
+import { FeedRequest, FeedResponse, FeedResponseAction } from "./RequestTypes";
 
-export interface SerializedSubscriptionManager {
-  providers: SubscriptionProvider[];
-  subscribedFeeds: Subscription[];
-}
-
-export interface ReturnedAction {
-  actions: FeedResponseAction[];
-  subscription: Subscription;
-}
-
-export class SubscriptionManager {
+/**
+ * Class responsible for storing the list of feed providers this application is
+ * aware of, as well as the list of feeds that each provider can serve, and which
+ * of those we are subscribed to.
+ */
+export class FeedSubscriptionManager {
   public updatedEmitter: Emitter;
   private providers: SubscriptionProvider[];
   private activeSubscriptions: Subscription[];
@@ -43,8 +33,9 @@ export class SubscriptionManager {
     for (const subscription of this.activeSubscriptions) {
       try {
         responses.push({
-          actions: (await SubscriptionManager.pollSubscription(subscription))
-            .actions,
+          actions: (
+            await FeedSubscriptionManager.pollSubscription(subscription)
+          ).actions,
           subscription
         });
       } catch (e) {
@@ -73,12 +64,6 @@ export class SubscriptionManager {
     });
     const parsed = (await result.json()) as FeedResponse;
     return parsed;
-  }
-
-  public static async listFeeds(providerUrl: string): Promise<Feed[]> {
-    const result = await fetch(providerUrl);
-    const parsed = (await result.json()) as ListFeedsResponse;
-    return parsed.feeds;
   }
 
   public getSubscriptionsByProvider(): Map<string, Subscription[]> {
@@ -223,13 +208,23 @@ export class SubscriptionManager {
     } satisfies SerializedSubscriptionManager);
   }
 
-  public static deserialize(serialized: string): SubscriptionManager {
+  public static deserialize(serialized: string): FeedSubscriptionManager {
     const parsed = JSON.parse(serialized) as SerializedSubscriptionManager;
-    return new SubscriptionManager(
+    return new FeedSubscriptionManager(
       parsed.providers ?? [],
       parsed.subscribedFeeds ?? []
     );
   }
+}
+
+export interface ReturnedAction {
+  actions: FeedResponseAction[];
+  subscription: Subscription;
+}
+
+export interface SerializedSubscriptionManager {
+  providers: SubscriptionProvider[];
+  subscribedFeeds: Subscription[];
 }
 
 export interface SubscriptionProvider {
@@ -241,7 +236,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   id: string;
   name: string;
   description: string;
-  inputPCDType?: PCDTypeOf<T>;
+  inputPCDType?: PCDTypeNameOf<T>;
   partialArgs?: ArgsOf<T>;
   permissions: PCDPermissions;
 }

@@ -1,10 +1,10 @@
 import {
-  ActiveSubscription,
   Feed,
+  FeedSubscriptionManager,
   ISSUANCE_STRING,
   PCDPermission,
   PCDPermissions,
-  SubscriptionManager
+  Subscription
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -38,7 +38,7 @@ export function AddSubscriptionScreen() {
     setFetching(true);
     setFetchError(undefined);
 
-    SubscriptionManager.listFeeds(providerUrl)
+    FeedSubscriptionManager.listFeeds(providerUrl)
       .then((infos) => {
         setFetched(true);
         setFetching(false);
@@ -100,7 +100,7 @@ export function SubscriptionInfoRow({
   providerUrl,
   info
 }: {
-  subscriptions: SubscriptionManager;
+  subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   info: Feed;
 }) {
@@ -140,7 +140,7 @@ function SubscribeSection({
   providerUrl,
   info
 }: {
-  subscriptions: SubscriptionManager;
+  subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   info: Feed;
 }) {
@@ -220,8 +220,8 @@ function AlreadySubscribed({
   subscriptions,
   existingSubscription
 }: {
-  existingSubscription: ActiveSubscription;
-  subscriptions: SubscriptionManager;
+  existingSubscription: Subscription;
+  subscriptions: FeedSubscriptionManager;
 }) {
   const onUnsubscribeClick = useCallback(() => {
     if (

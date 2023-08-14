@@ -1,9 +1,9 @@
 import { expect } from "chai";
-import { Feed, SubscriptionManager } from "../src";
+import { Feed, FeedSubscriptionManager } from "../src";
 
 describe("Subscription Manager", async function () {
   it("providers should work", async function () {
-    const manager = new SubscriptionManager([], []);
+    const manager = new FeedSubscriptionManager([], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -16,7 +16,7 @@ describe("Subscription Manager", async function () {
   });
 
   it("subscriptions should work", async function () {
-    const manager = new SubscriptionManager([], []);
+    const manager = new FeedSubscriptionManager([], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -55,7 +55,7 @@ describe("Subscription Manager", async function () {
   });
 
   it("serialization and deserialization should work", async function () {
-    const manager = new SubscriptionManager([], []);
+    const manager = new FeedSubscriptionManager([], []);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -72,7 +72,7 @@ describe("Subscription Manager", async function () {
     manager.subscribe(providerUrl, feed, undefined);
 
     const serialized = manager.serialize();
-    const deserialized = SubscriptionManager.deserialize(serialized);
+    const deserialized = FeedSubscriptionManager.deserialize(serialized);
 
     expect(manager.getProviders()).to.deep.eq(deserialized.getProviders());
     expect(manager.getActiveSubscriptions().length).to.eq(
