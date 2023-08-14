@@ -31,6 +31,10 @@ export class FeedSubscriptionManager {
     this.activeSubscriptions = activeSubscriptions ?? [];
   }
 
+  public async listFeeds(providerUrl: string): Promise<Feed[]> {
+    return this.api.listFeeds(providerUrl).then((r) => r.feeds);
+  }
+
   public async pollSubscriptions(): Promise<ReturnedAction[]> {
     const responses: ReturnedAction[] = [];
 

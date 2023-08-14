@@ -6,7 +6,7 @@ describe("Subscription Manager", async function () {
   const mockFeedApi = new MockFeedApi();
 
   it("keeping track of providers should work", async function () {
-    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
+    const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -19,7 +19,7 @@ describe("Subscription Manager", async function () {
   });
 
   it("keeping track of subscriptions should work", async function () {
-    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
+    const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -58,7 +58,7 @@ describe("Subscription Manager", async function () {
   });
 
   it("serialization and deserialization should work", async function () {
-    const manager = new FeedSubscriptionManager(mockFeedApi, [], []);
+    const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
     manager.addProvider(providerUrl);
@@ -97,5 +97,13 @@ describe("Subscription Manager", async function () {
       expect(l.subscribedTimestamp).to.eq(r.subscribedTimestamp);
       expect(l.credential).to.eq(r.credential);
     }
+  });
+
+  it("listing feeds over network should work", async () => {
+    const manager = new FeedSubscriptionManager(mockFeedApi);
+    const firstProvider = mockFeedApi.getProviders()[0];
+
+    const feeds = await manager.listFeeds(firstProvider);
+    expect(feeds.length).to.eq(1);
   });
 });

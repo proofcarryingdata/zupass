@@ -29,6 +29,10 @@ export class MockFeedApi implements IFeedApi {
     ]);
   }
 
+  public getProviders(): string[] {
+    return Array.from(this.feedHosts.keys());
+  }
+
   private getFeedHost(providerUrl: string): FeedHost {
     const host = this.feedHosts.get(providerUrl);
     if (!host) {
