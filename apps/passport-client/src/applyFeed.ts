@@ -1,8 +1,8 @@
 import {
-  ActiveSubscription,
   FeedResponseAction,
   PCDPermissionType,
-  ReturnedAction
+  ReturnedAction,
+  Subscription
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import _ from "lodash";
@@ -25,7 +25,7 @@ export async function applyActions(
 export async function applyAction(
   collection: PCDCollection,
   pcdAction: FeedResponseAction,
-  activeSubscription: ActiveSubscription
+  activeSubscription: Subscription
 ) {
   if (!checkPermissions(pcdAction, activeSubscription)) {
     throw new Error(`permission denied`);
@@ -65,7 +65,7 @@ export async function applyAction(
 
 export async function checkPermissions(
   pcdAction: FeedResponseAction,
-  activeSubscription: ActiveSubscription
+  activeSubscription: Subscription
 ) {
   for (const allowedPermissions of activeSubscription.feed.permissions) {
     if (_.eq(allowedPermissions, pcdAction.permission)) {

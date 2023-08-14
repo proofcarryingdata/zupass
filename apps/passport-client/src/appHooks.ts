@@ -1,5 +1,5 @@
 import { wrap, Wrapper } from "@pcd/emitter";
-import { SubscriptionManager, User } from "@pcd/passport-interface";
+import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
@@ -82,11 +82,11 @@ export function useUploadedId(): string | undefined {
   return useSelector<string | undefined>((s) => s.uploadedUploadId, []);
 }
 
-export function useSubscriptions(): Wrapper<SubscriptionManager> {
-  const subs = useSelector<SubscriptionManager>((s) => s.subscriptions, []);
-  const [wrappedSubs, setWrappedSubs] = useState<Wrapper<SubscriptionManager>>(
-    () => wrap(subs)
-  );
+export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
+  const subs = useSelector<FeedSubscriptionManager>((s) => s.subscriptions, []);
+  const [wrappedSubs, setWrappedSubs] = useState<
+    Wrapper<FeedSubscriptionManager>
+  >(() => wrap(subs));
 
   useEffect(() => {
     return subs.updatedEmitter.listen(() => {

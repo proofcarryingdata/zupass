@@ -1,7 +1,4 @@
-import {
-  ActiveSubscription,
-  SubscriptionManager
-} from "@pcd/passport-interface";
+import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
 import { useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useSubscriptions } from "../../src/appHooks";
@@ -29,7 +26,7 @@ export function SubscriptionsScreen() {
 function SubscriptionTree({
   subscriptions
 }: {
-  subscriptions: SubscriptionManager;
+  subscriptions: FeedSubscriptionManager;
 }) {
   const byProvider = useMemo(() => {
     return Array.from(subscriptions.getSubscriptionsByProvider().entries());
@@ -54,9 +51,9 @@ function SingleProvider({
   subscriptionsList,
   providerUrl
 }: {
-  subscriptions: SubscriptionManager;
+  subscriptions: FeedSubscriptionManager;
   providerUrl: string;
-  subscriptionsList: ActiveSubscription[];
+  subscriptionsList: Subscription[];
 }) {
   return (
     <ProviderContainer>

@@ -1,4 +1,4 @@
-import { SubscriptionManager, User } from "@pcd/passport-interface";
+import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
@@ -15,7 +15,7 @@ export interface AppState {
   // Zuzalu semaphore identity.
   identity: Identity;
   pcds: PCDCollection;
-  subscriptions: SubscriptionManager;
+  subscriptions: FeedSubscriptionManager;
   encryptionKey?: string;
 
   // View state

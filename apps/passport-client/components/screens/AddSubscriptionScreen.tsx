@@ -38,7 +38,8 @@ export function AddSubscriptionScreen() {
     setFetching(true);
     setFetchError(undefined);
 
-    FeedSubscriptionManager.listFeeds(providerUrl)
+    subs
+      .listFeeds(providerUrl)
       .then((infos) => {
         setFetched(true);
         setFetching(false);
@@ -50,7 +51,7 @@ export function AddSubscriptionScreen() {
         setFetching(false);
         setFetchError(e);
       });
-  }, [fetched, fetching, providerUrl]);
+  }, [fetched, fetching, providerUrl, subs]);
 
   const onBackClick = useCallback(() => {
     window.location.href = "/#/subscriptions";
