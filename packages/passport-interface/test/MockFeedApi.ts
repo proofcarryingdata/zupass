@@ -1,4 +1,12 @@
-import { FeedHost, FeedRequest, FeedResponse, ListFeedsResponse } from "../src";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity } from "@semaphore-protocol/identity";
+import {
+  FeedHost,
+  FeedRequest,
+  FeedResponse,
+  ListFeedsResponse,
+  PCDPermissionType
+} from "../src";
 import { IFeedApi } from "../src/FeedAPI";
 
 export class MockFeedApi implements IFeedApi {
@@ -11,16 +19,33 @@ export class MockFeedApi implements IFeedApi {
         new FeedHost([
           {
             feed: {
-              description: "description",
+              description:
+                "returns a new semaphore identity each time it's invoked",
               id: "1",
-              name: "test name",
-              permissions: [],
-              inputPCDType: "type",
+              name: "identity drip",
+              permissions: [
+                { folder: "TEST", type: PCDPermissionType.FolderReplace }
+              ],
+              inputPCDType: undefined,
               partialArgs: undefined
             },
-            handleRequest: async (req: FeedRequest) => {
+            handleRequest: async (_req: FeedRequest) => {
               return {
-                actions: []
+                actions: [
+                  {
+                    pcds: [
+                      await SemaphoreIdentityPCDPackage.serialize(
+                        await SemaphoreIdentityPCDPackage.prove({
+                          identity: new Identity()
+                        })
+                      )
+                    ],
+                    permission: {
+                      folder: "TEST",
+                      type: PCDPermissionType.FolderReplace
+                    }
+                  }
+                ]
               };
             }
           }

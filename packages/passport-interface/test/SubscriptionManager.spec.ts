@@ -101,9 +101,19 @@ describe("Subscription Manager", async function () {
 
   it("listing feeds over network should work", async () => {
     const manager = new FeedSubscriptionManager(mockFeedApi);
-    const firstProvider = mockFeedApi.getProviders()[0];
-
-    const feeds = await manager.listFeeds(firstProvider);
+    const firstProviderUrl = mockFeedApi.getProviders()[0];
+    const feeds = await manager.listFeeds(firstProviderUrl);
     expect(feeds.length).to.eq(1);
+  });
+
+  it("polling feeds over network should work", async () => {
+    const manager = new FeedSubscriptionManager(mockFeedApi);
+    const firstProviderUrl = mockFeedApi.getProviders()[0];
+    const feeds = await manager.listFeeds(firstProviderUrl);
+    const firstFeed = feeds[0];
+
+    manager.subscribe(firstProviderUrl, firstFeed);
+    const actions = await manager.pollSubscriptions();
+    expect(actions.length).to.eq(1);
   });
 });
