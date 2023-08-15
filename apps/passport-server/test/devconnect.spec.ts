@@ -11,8 +11,11 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
+import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
+import PQueue from "p-queue";
 import { Pool } from "postgres-pool";
+import { getDevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
@@ -30,7 +33,10 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
+import {
+  DevconnectPretixSyncService,
+  OrganizerSync
+} from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
@@ -39,7 +45,7 @@ import {
   requestServerPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
-import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
@@ -59,6 +65,7 @@ describe("devconnect functionality", function () {
   let eventAConfigId: string;
   let eventBConfigId: string;
   let eventCConfigId: string;
+  let server: SetupServer;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -99,7 +106,11 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    const devconnectPretixAPI = getDevconnectMockPretixAPI(mocker.get());
+    server = getDevconnectMockPretixAPIServer(mocker.get());
+    // @todo more selective approach to unhandled requests
+    server.listen({ onUnhandledRequest: "bypass" });
+
+    const devconnectPretixAPI = await getDevconnectPretixAPI(); //getDevconnectMockPretixAPI(mocker.get());
     application = await startTestingApp({ devconnectPretixAPI });
 
     if (!application.services.devconnectPretixSyncService) {
@@ -113,6 +124,49 @@ describe("devconnect functionality", function () {
   this.afterAll(async () => {
     await stopApplication(application);
     await db.end();
+    server.close();
+  });
+
+  step("should be rate-limited", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("");
+    }
+    if (!application.apis.devconnectPretixAPI) {
+      throw new Error("no pretix api");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      new PQueue(),
+      new PQueue(),
+      organizer,
+      1, // limit to a single request before rate-limiting
+      application.apis.devconnectPretixAPI,
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requests = 0;
+
+    const listener = (): void => {
+      requests++;
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // Perform a single run - this will not sync anything to the DB
+    // because sync cannot complete in a single run with a limit of
+    // one request
+    await os.run();
+
+    // Sync run will end with rate-limiting
+    expect(os.getPhase()).to.eq("rate-limited");
+    expect(requests).to.eq(1);
+
+    server.events.removeListener("response:mocked", listener);
   });
 
   step("mock pretix api config matches load from DB", async function () {
@@ -271,9 +325,6 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.orgUrl,
       mocker.get().organizer1.eventA.slug,
       lastOrder.code
-    );
-    devconnectPretixSyncService.replaceApi(
-      getDevconnectMockPretixAPI(mocker.get())
     );
 
     await devconnectPretixSyncService.trySync();
@@ -444,10 +495,6 @@ describe("devconnect functionality", function () {
       const originalItem = (
         await fetchPretixItemsInfoByEvent(db, eventInfo.id)
       )[0];
-
-      devconnectPretixSyncService.replaceApi(
-        getDevconnectMockPretixAPI(mocker.get())
-      );
 
       mocker.updateItem(
         mocker.get().organizer1.orgUrl,

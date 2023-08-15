@@ -3,37 +3,48 @@ import { logger } from "../../util/logger";
 
 const TRACE_SERVICE = "Fetch";
 
+type FetchFn = (
+  input: RequestInfo | URL,
+  init?: RequestInit
+) => Promise<Response>;
+
 export interface IDevconnectPretixAPI {
   fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixOrder[]>;
   fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixItem[]>;
   fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEvent>;
   fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEventSettings>;
   fetchAllEvents(
     orgUrl: string,
-    token: string
+    token: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEvent[]>;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchAllEvents(
     orgUrl: string,
-    token: string
+    token: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEvent[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const events: DevconnectPretixEvent[] = [];
@@ -62,7 +73,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEvent> {
     return traced(TRACE_SERVICE, "fetchEvent", async () => {
       // Fetch event API
@@ -83,7 +95,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixEventSettings> {
     return traced(TRACE_SERVICE, "fetchEventSettings", async () => {
       // Fetch event settings API
@@ -104,7 +117,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixItem[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const items: DevconnectPretixItem[] = [];
@@ -134,7 +148,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    fetch: FetchFn
   ): Promise<DevconnectPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async () => {
       const orders: DevconnectPretixOrder[] = [];
