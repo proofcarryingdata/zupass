@@ -1,1 +1,1 @@
-export * from "./EDDSAPCD";
+export * from "./EdDSAPCD";

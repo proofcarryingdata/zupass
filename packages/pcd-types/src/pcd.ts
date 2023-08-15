@@ -36,7 +36,7 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
   renderCardBody?: ({
     pcd,
-    returnHeader,
+    returnHeader
   }: {
     pcd: PCD<C, P>;
     returnHeader?: boolean;
@@ -62,10 +62,11 @@ export enum ArgumentTypeName {
   String = "String",
   Number = "Number",
   BigInt = "BigInt",
+  BigIntSequence = "BigIntSequence",
   Boolean = "Boolean",
   Object = "Object",
   PCD = "PCD",
-  Unknown = "Unknown",
+  Unknown = "Unknown"
 }
 
 export interface Argument<
@@ -112,6 +113,16 @@ export function isObjectArgument(
   arg: Argument<any, unknown>
 ): arg is ObjectArgument<unknown> {
   return arg.argumentType === ArgumentTypeName.Object;
+}
+
+export type BigIntSequenceArgument = Argument<
+  ArgumentTypeName.BigIntSequence,
+  bigint[]
+>;
+export function isBigIntSequenceArgument(
+  arg: Argument<any, unknown>
+): arg is BigIntSequenceArgument {
+  return arg.argumentType === ArgumentTypeName.BigIntSequence;
 }
 
 export type PCDArgument<T extends PCD = PCD> = Argument<
