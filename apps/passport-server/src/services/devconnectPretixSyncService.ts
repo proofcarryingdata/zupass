@@ -124,6 +124,10 @@ export class OrganizerSync {
   private fetchPromise?: Promise<void>;
   private rollbarService: RollbarService | null;
   private db: Pool;
+  private fetchedData?: {
+    data: EventData;
+    event: DevconnectPretixEventConfig;
+  }[];
 
   public constructor(
     fetchQueue: PQueue,
@@ -185,9 +189,9 @@ export class OrganizerSync {
     if (!this.fetchPromise) {
       this.fetchPromise = (async (): Promise<void> => {
         this.phase = "fetching";
-        const data = [];
+        this.fetchedData = [];
         for (const event of this.organizer.events) {
-          data.push({
+          this.fetchedData.push({
             event,
             data: await this.fetchEventData(
               this.organizer,
@@ -296,8 +300,16 @@ export class OrganizerSync {
     return errors;
   }
 
-  private validate(data: EventData, config: DevconnectPretixEventConfig): void {
-    const errors = this.checkEventData(data, config);
+  private validate(): void {
+    const errors = [];
+
+    if (!this.fetchedData) {
+      throw new Error("No fetched data to validate");
+    }
+
+    for (const { data, event } of this.fetchedData) {
+      errors.push(...this.checkEventData(data, event));
+    }
 
     if (errors.length === 0) {
       this.phase = "data-validated";
