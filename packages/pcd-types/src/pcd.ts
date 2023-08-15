@@ -62,9 +62,9 @@ export enum ArgumentTypeName {
   String = "String",
   Number = "Number",
   BigInt = "BigInt",
-  BigIntSequence = "BigIntSequence",
   Boolean = "Boolean",
   Object = "Object",
+  StringArray = "StringArray",
   PCD = "PCD",
   Unknown = "Unknown"
 }
@@ -115,14 +115,14 @@ export function isObjectArgument(
   return arg.argumentType === ArgumentTypeName.Object;
 }
 
-export type BigIntSequenceArgument = Argument<
-  ArgumentTypeName.BigIntSequence,
-  bigint[]
+export type StringArrayArgument = Argument<
+  ArgumentTypeName.StringArray,
+  string[]
 >;
-export function isBigIntSequenceArgument(
+export function isStringArrayArgument(
   arg: Argument<any, unknown>
-): arg is BigIntSequenceArgument {
-  return arg.argumentType === ArgumentTypeName.BigIntSequence;
+): arg is StringArrayArgument {
+  return arg.argumentType === ArgumentTypeName.StringArray;
 }
 
 export type PCDArgument<T extends PCD = PCD> = Argument<
