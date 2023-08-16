@@ -866,7 +866,6 @@ describe("devconnect functionality", function () {
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       new PQueue(),
-      new PQueue(),
       organizer,
       1, // limit to a single request before rate-limiting
       application.apis.devconnectPretixAPI,
@@ -908,7 +907,6 @@ describe("devconnect functionality", function () {
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       new PQueue(),
-      new PQueue(),
       organizer,
       300, // limit to 300 - a high limit
       application.apis.devconnectPretixAPI,
@@ -935,6 +933,60 @@ describe("devconnect functionality", function () {
 
     server.events.removeListener("response:mocked", listener);
   });
+
+  step(
+    "should complete after multiple runs when earlier runs were rate-limited",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+      if (!application.apis.devconnectPretixAPI) {
+        throw new Error("Application has no Pretix API");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        new PQueue(),
+        organizer,
+        1, // limit to a single request before rate-limiting
+        application.apis.devconnectPretixAPI,
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let requests = 0;
+
+      const listener = (): void => {
+        requests++;
+      };
+      // Count each request
+      server.events.on("response:mocked", listener);
+
+      let wasRateLimited = false;
+      let result;
+      // Perform a single run - this will not sync anything to the DB
+      // because sync cannot complete in a single run with a limit of
+      // one request
+      do {
+        result = await os.run();
+        if (result.outcome === "rate-limited") {
+          wasRateLimited = true;
+        }
+      } while (result.outcome !== "complete");
+
+      // Sync run will end with rate-limiting
+      expect(result.outcome).to.eq("complete");
+      expect(requests).to.be.greaterThan(1);
+      expect(wasRateLimited).to.be.true;
+
+      server.events.removeListener("response:mocked", listener);
+    }
+  );
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
   // 2. Test deleting positions within orders (not just entire orders).

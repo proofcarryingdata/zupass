@@ -3,7 +3,7 @@ import { logger } from "../../util/logger";
 
 const TRACE_SERVICE = "Fetch";
 
-type FetchFn = (
+export type FetchFn = (
   input: RequestInfo | URL,
   init?: RequestInit
 ) => Promise<Response>;
