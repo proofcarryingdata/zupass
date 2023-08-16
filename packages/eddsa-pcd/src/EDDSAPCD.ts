@@ -1,8 +1,4 @@
-import {
-  PCD,
-  StringArgument,
-  StringArrayArgument
-} from "@pcd/pcd-types";
+import { PCD, StringArgument, StringArrayArgument } from "@pcd/pcd-types";
 import { v4 as uuid } from "uuid";
 import { buildEddsa } from "circomlibjs";
 import { Scalar } from "ffjavascript";
@@ -67,8 +63,11 @@ const toHexString = (bytes: Uint8Array) =>
 function messageToUint8Array(message: string[]): Uint8Array {
   const buffers: Uint8Array[] = message.map(fromHexString);
 
-  const msgBuf = mergeArrays(buffers); 
-  const paddedMsgBuf = mergeArrays([msgBuf, (new Uint8Array(4 - (msgBuf.length % 4))).fill(0)]);
+  const msgBuf = mergeArrays(buffers);
+  const paddedMsgBuf = mergeArrays([
+    msgBuf,
+    new Uint8Array(4 - (msgBuf.length % 4)).fill(0)
+  ]);
 
   return paddedMsgBuf;
 }
@@ -97,7 +96,11 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   );
   console.log("proving", msg, signature, publicKey);
 
-  return new EdDSAPCD(id, { message: args.message.value }, { signature, publicKey });
+  return new EdDSAPCD(
+    id,
+    { message: args.message.value },
+    { signature, publicKey }
+  );
 }
 
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
@@ -105,14 +108,10 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
   const pubKey = pcd.proof.publicKey;
-  const paddedMsgBuf =   messageToUint8Array(pcd.claim.message);
+  const paddedMsgBuf = messageToUint8Array(pcd.claim.message);
   const msg = eddsa.babyJub.F.e(Scalar.fromRprLE(paddedMsgBuf, 0));
 
   console.log("verifying", msg, signature, pubKey);
-  
-  return eddsa.verifyPoseidon(
-    msg,
-    signature,
-    pubKey
-  );
+
+  return eddsa.verifyPoseidon(msg, signature, pubKey);
 }
