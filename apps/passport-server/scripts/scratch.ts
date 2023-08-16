@@ -1,8 +1,8 @@
 /* eslint-disable */
+import * as dotenv from "dotenv";
+import * as path from "path";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { logger } from "../src/util/logger";
-import * as path from "path";
-import * as dotenv from "dotenv";
 
 dotenv.config({ path: path.join(__dirname, ".env") });
 
@@ -16,12 +16,12 @@ if (!orgUrl || !token) {
 
 async function scratch(): Promise<void> {
   const api = new DevconnectPretixAPI();
-  const events = await api.fetchAllEvents(orgUrl, token);
+  const events = await api.fetchAllEvents(orgUrl, token, fetch);
 
   logger();
   logger(`EVENTS: ${orgUrl}`);
   for (const e of events) {
-    const items = await api.fetchItems(orgUrl, token, e.slug);
+    const items = await api.fetchItems(orgUrl, token, e.slug, fetch);
     logger(`EVENT name: '${e.name.en}'; slug: '${e.slug}'`);
     items.forEach((i) => {
       logger(`  ITEM id: '${i.id}'; name: '${i.name.en}'`);

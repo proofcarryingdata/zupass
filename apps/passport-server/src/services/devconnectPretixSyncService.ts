@@ -1086,7 +1086,7 @@ export class DevconnectPretixSyncService {
       }
 
       const syncEnd = Date.now();
-
+      logger(`[DEVCONNECT PRETIX] Sync results: `, this.syncResults);
       logger(
         `[DEVCONNECT PRETIX] Sync end. Completed in ${Math.floor(
           (syncEnd - syncStart) / 1000
