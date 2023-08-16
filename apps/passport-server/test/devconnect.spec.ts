@@ -885,10 +885,10 @@ describe("devconnect functionality", function () {
     // Perform a single run - this will not sync anything to the DB
     // because sync cannot complete in a single run with a limit of
     // one request
-    await os.run();
+    const result = await os.run();
 
     // Sync run will end with rate-limiting
-    expect(os.getPhase()).to.eq("rate-limited");
+    expect(result.outcome).to.eq("rate-limited");
     expect(requests).to.eq(1);
 
     server.events.removeListener("response:mocked", listener);
@@ -927,10 +927,10 @@ describe("devconnect functionality", function () {
     // Perform a single run - this will not sync anything to the DB
     // because sync cannot complete in a single run with a limit of
     // one request
-    await os.run();
+    const result = await os.run();
 
     // Sync run will end with rate-limiting
-    expect(os.getPhase()).to.eq("finished");
+    expect(result.outcome).to.eq("complete");
     expect(requests).to.be.greaterThan(1);
 
     server.events.removeListener("response:mocked", listener);

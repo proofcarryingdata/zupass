@@ -47,29 +47,36 @@ interface EventData {
   tickets: DevconnectPretixOrder[];
 }
 
-/**
- * There are five possible phases:
- * not-started: the initial phase before the first run
- * fetching: actively fetching results from pretix
- * fetching-rate-limited: paused due to rate limit
- * validating: having fetched all necessary data, validating it
- * saving: given that data is valid, saving it to DB
- * finished: successfully saved the data
- * validation-error: data was found to be invalid
- * saving-error: an error occurred while saving data
- */
+type SyncPhase = "fetching" | "validating" | "saving";
 
-type SyncPhase =
-  | "idle"
-  | "fetching"
-  | "rate-limited"
-  | "data-fetched"
-  | "data-validated"
-  | "saving"
-  | "finished"
-  | "fetching-error"
-  | "validation-error"
-  | "saving-error";
+type FetchOutcome = "complete" | "rate-limited";
+
+interface SyncErrorCause {
+  success: false;
+  phase: SyncPhase;
+  error: Error;
+  organizerId: string;
+}
+
+function errorCause(
+  phase: SyncPhase,
+  organizerId: string,
+  originalError: any
+): SyncErrorCause {
+  if (originalError instanceof Error) {
+    return { success: false, phase, error: originalError, organizerId };
+  } else {
+    throw new Error(`originalError is not an error`);
+  }
+}
+
+interface SyncSuccess {
+  success: true;
+  organizerId: string;
+  outcome: "complete" | "rate-limited";
+}
+
+type SyncResult = SyncSuccess | SyncErrorCause;
 
 // @todo move this somewhere
 type FetchFn = (
@@ -117,10 +124,9 @@ export class OrganizerSync {
   public fetchQueue: PQueue;
   public dbQueue: PQueue;
   private organizer: DevconnectPretixOrganizerConfig;
-  private phase: SyncPhase;
   private pretixAPI: IDevconnectPretixAPI;
   private fetcher: LimitedFetcher;
-  private fetchPromise?: Promise<void>;
+  private fetchPromise?: Promise<"complete">;
   private rollbarService: RollbarService | null;
   private db: Pool;
   private fetchedData?: {
@@ -143,55 +149,84 @@ export class OrganizerSync {
     this.pretixAPI = pretixAPI;
     this.rollbarService = rollbarService;
     this.db = db;
-    this.phase = "idle";
     this.fetcher = new LimitedFetcher(fetchesPerCycle);
   }
 
-  public getPhase(): SyncPhase {
-    return this.phase;
+  private rateLimitedSuccess(): SyncSuccess {
+    return {
+      success: true,
+      outcome: "rate-limited",
+      organizerId: this.organizer.id
+    };
   }
 
-  // Start the sync process for this organizer
-  public async run(): Promise<void> {
-    console.log(`Running from ${this.phase}`);
-    switch (this.phase) {
-      case "idle": // First run
-      case "finished": // New run following a success
-      case "rate-limited": // Resuming a rate-limited run
-        await this.fetchData();
-        console.log("fetched");
-        // If we successfully fetched all of the data, validate it
-        // @ts-ignore TypeScript thinks this.phase can't have changed, but it can
-        if (this.phase === "data-fetched") {
-          this.validate();
-        }
+  private completeSuccess(): SyncSuccess {
+    return {
+      success: true,
+      outcome: "complete",
+      organizerId: this.organizer.id
+    };
+  }
 
-        // If we successfully validated the data, save it
-        // @ts-ignore
-        if (this.phase === "data-validated") {
-          await this.save();
-          console.log("saved");
-          this.phase = "finished";
-        }
-        break;
-      default:
-        throw new Error(`Tried to sync from an invalid phase: "${this.phase}"`);
+  // Conduct a single sync run
+  public async run(): Promise<SyncSuccess> {
+    try {
+      const fetchResult = await this.fetchData();
+
+      if (fetchResult === "rate-limited") {
+        return this.rateLimitedSuccess();
+      }
+    } catch (e) {
+      logger(
+        `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
+      );
+      this.rollbarService?.reportError(e);
+
+      throw new Error("Data failed to validate", {
+        cause: errorCause("fetching", this.organizer.id, e)
+      });
     }
+
+    try {
+      this.validate();
+    } catch (e) {
+      logger(
+        `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
+      );
+      this.rollbarService?.reportError(e);
+
+      throw new Error("Data failed to validate", {
+        cause: errorCause("validating", this.organizer.id, e)
+      });
+    }
+
+    try {
+      await this.save();
+    } catch (e) {
+      logger(
+        `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
+      );
+      this.rollbarService?.reportError(e);
+
+      throw new Error("Data failed to validate", {
+        cause: errorCause("saving", this.organizer.id, e)
+      });
+    }
+
+    return this.completeSuccess();
   }
 
-  private async fetchData(): Promise<void> {
-    const pausePromise = new Promise<void>((resolve) => {
+  private async fetchData(): Promise<FetchOutcome> {
+    const pausePromise = new Promise<"rate-limited">((resolve) => {
       this.fetcher.once("pause", () => {
-        this.phase = "rate-limited";
-        resolve();
+        resolve("rate-limited");
       });
     });
 
     this.fetcher.reset();
     // @todo use queue somehow?
     if (!this.fetchPromise) {
-      this.fetchPromise = (async (): Promise<void> => {
-        this.phase = "fetching";
+      this.fetchPromise = (async (): Promise<"complete"> => {
         this.fetchedData = [];
         for (const event of this.organizer.events) {
           this.fetchedData.push({
@@ -204,7 +239,8 @@ export class OrganizerSync {
           });
         }
         this.fetcher.removeAllListeners("pause");
-        this.phase = "data-fetched";
+        this.fetchPromise = undefined;
+        return "complete";
       })();
     }
 
@@ -303,7 +339,7 @@ export class OrganizerSync {
     return errors;
   }
 
-  private validate(): string[] {
+  private validate(): void {
     const errors = [];
 
     if (!this.fetchedData) {
@@ -314,13 +350,14 @@ export class OrganizerSync {
       errors.push(...this.checkEventData(data, event));
     }
 
-    if (errors.length === 0) {
-      this.phase = "data-validated";
-    } else {
-      this.phase = "validation-error";
+    if (errors.length > 0) {
+      for (const error of errors) {
+        logger(
+          `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${error}`
+        );
+      }
+      throw new Error(errors.join("\n"), { cause: errors });
     }
-
-    return errors;
   }
 
   /**
@@ -829,9 +866,14 @@ export class DevconnectPretixSyncService {
   private pretixAPI: IDevconnectPretixAPI;
   private fetchQueue: PQueue;
   private dbQueue: PQueue;
+  private syncResults: Map<string, SyncResult>;
 
   public get hasCompletedSyncSinceStarting(): boolean {
     return this._hasCompletedSyncSinceStarting;
+  }
+
+  public getSyncResults(): Map<string, SyncResult> {
+    return this.syncResults;
   }
 
   public constructor(
@@ -848,6 +890,7 @@ export class DevconnectPretixSyncService {
     this.fetchQueue = new PQueue({ concurrency: 10 });
     this.dbQueue = new PQueue({ concurrency: 1 });
     this._hasCompletedSyncSinceStarting = false;
+    this.syncResults = new Map();
   }
 
   /*public replaceApi(newAPI: IDevconnectPretixAPI): void {
@@ -947,14 +990,14 @@ export class DevconnectPretixSyncService {
 
       const syncStart = Date.now();
       const organizerPromises = [];
-      console.log(this.organizers);
+      this.syncResults.clear();
 
       // Attempt to run each organizer job in parallel
       // Internally the organizers will use PQueues to avoid excessive
       // concurrent requests to Pretix or the DB.
       for (const [id, organizer] of this.organizers.entries()) {
         organizerPromises.push(
-          (async (): Promise<void> => {
+          (async (): Promise<string> => {
             try {
               await organizer.run();
             } catch (e) {
@@ -964,13 +1007,26 @@ export class DevconnectPretixSyncService {
               );
               setError(e, span);
               this.rollbarService?.reportError(e);
+
+              throw e;
             }
+
+            return id;
           })()
         );
       }
 
-      // Wait until all organizers have either completed or failed
-      await Promise.allSettled(organizerPromises);
+      // Wait until all organizers have either completed or failed and
+      // record results.
+      for (const result of await Promise.allSettled(organizerPromises)) {
+        if (result.status === "rejected") {
+          // @ts-ignore can't type promise rejections
+          this.syncResults.set(result.reason?.cause?.organizerId);
+        } else {
+          // Value is set to the organizer ID
+          this.syncResults.set(result.value, "success");
+        }
+      }
 
       const syncEnd = Date.now();
 
