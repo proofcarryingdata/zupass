@@ -245,6 +245,24 @@ export class OrganizerSync {
     return this.completeSuccess();
   }
 
+  /**
+   * Fetches data from Pretix. This will return a FetchOutcome, which
+   * can be either "rate-limited" or "complete". This is achieved by
+   * having two promises, one which resolves when we get rate-limited,
+   * and one which resolves when we finish fetching all available data.
+   *
+   * The first promise gets created on every run (that is, every time
+   * the function is called). It simply listens for the fetcher's pause
+   * event, and resolves if it is triggered.
+   *
+   * The second promise is potentially longer-lived, and survives across
+   * multiple calls. This is because it starts the fetching process,
+   * which may become paused due to rate-limiting.
+   *
+   * On each call, we reset the fetcher's count, which will un-pause the
+   * long-lived promise (if active). This causes it to resume, and will
+   * allow it to resolve its promise with the value of "complete".
+   */
   private async fetchData(): Promise<FetchOutcome> {
     // This promise will resolve if we get rate-limited
     const pausePromise = new Promise<"rate-limited">((resolve) => {
@@ -254,6 +272,7 @@ export class OrganizerSync {
     });
 
     // Reset the rate-limit for the fetcher.
+    // If the job below is paused, this will un-pause it.
     this.fetcher.reset();
 
     // If fetchPromise exists, then we already have an active promise
