@@ -1,4 +1,11 @@
-import { PCD, StringArgument, StringArrayArgument } from "@pcd/pcd-types";
+import {
+  DisplayOptions,
+  PCD,
+  PCDPackage,
+  SerializedPCD,
+  StringArgument,
+  StringArrayArgument
+} from "@pcd/pcd-types";
 import { buildEddsa, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 
@@ -35,16 +42,9 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   }
 }
 
-const fromHexString = (hexString: string) => {
-  const byteStr = hexString.match(/.{1,2}/g);
-  if (!byteStr) {
-    throw new Error("Invalid hex string");
-  }
-  return Uint8Array.from(byteStr.map((byte) => parseInt(byte, 16)));
-};
+const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
 
-const toHexString = (bytes: Uint8Array) =>
-  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
+const toHexString = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
 
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   if (!args.privateKey.value) {
@@ -88,3 +88,57 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
 }
+
+function messageReplacer(key: any, value: any): any {
+  if (key === "message") {
+    return value.map((num: bigint) => num.toString(16));
+  } else {
+    return value;
+  }
+}
+
+function messageReviver(key: any, value: any): any {
+  if (key === "message") {
+    return value.map((str: string) => BigInt(`0x${str}`));
+  } else {
+    return value;
+  }
+}
+
+export async function serialize(
+  pcd: EdDSAPCD
+): Promise<SerializedPCD<EdDSAPCD>> {
+  return {
+    type: EdDSAPCDTypeName,
+    pcd: JSON.stringify(pcd, messageReplacer)
+  };
+}
+
+export async function deserialize(serialized: string): Promise<EdDSAPCD> {
+  return JSON.parse(serialized, messageReviver);
+}
+
+export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
+  return {
+    header: "EdDSA Signature",
+    displayName: "eddsa-sig-" + pcd.id.substring(0, 4)
+  };
+}
+
+/**
+ * PCD-conforming wrapper to sign messages using an EdDSA key.
+ */
+export const EdDSAPackage: PCDPackage<
+  EdDSAPCDClaim,
+  EdDSAPCDProof,
+  EdDSAPCDArgs,
+  undefined
+> = {
+  name: EdDSAPCDTypeName,
+  renderCardBody: undefined, //RSACardBody,
+  getDisplayOptions,
+  prove,
+  verify,
+  serialize,
+  deserialize
+};

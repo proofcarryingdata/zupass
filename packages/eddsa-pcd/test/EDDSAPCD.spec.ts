@@ -4,10 +4,11 @@ import "mocha";
 
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
-import { prove, verify } from "../src";
+import { EdDSAPCD, EdDSAPackage, prove, verify } from "../src";
 
 describe("eddsa-pcd should work", function () {
-  this.timeout(10_000);
+  this.timeout(30_000);
+  let pcd: EdDSAPCD;
 
   it("should be able to sign and verify using the PCD class", async function () {
     const prvKey =
@@ -15,7 +16,7 @@ describe("eddsa-pcd should work", function () {
 
     const message: string[] = ["0x12345", "0x54321", "0xdeadbeef"];
 
-    const pcd = await prove({
+    pcd = await prove({
       message: {
         value: message,
         argumentType: ArgumentTypeName.StringArray
@@ -31,5 +32,15 @@ describe("eddsa-pcd should work", function () {
     });
 
     expect(await verify(pcd)).to.be.true;
+  });
+
+  it("should be able to serialize and deserialize a PCD", async function () {
+    const serialized = await EdDSAPackage.serialize(pcd);
+    const deserialized = await EdDSAPackage.deserialize(serialized.pcd);
+    const deserializedValid = await EdDSAPackage.verify(deserialized);
+    console.log(pcd);
+    console.log(deserialized);
+    expect(deserializedValid).to.eq(true);
+    expect(pcd).to.deep.eq(deserialized);
   });
 });
