@@ -1,7 +1,6 @@
 import { PCD, StringArgument, StringArrayArgument } from "@pcd/pcd-types";
+import { buildEddsa, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
-import { buildEddsa } from "circomlibjs";
-import { Scalar } from "ffjavascript";
 
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="util/declarations/circomlibjs.d.ts" />
@@ -15,7 +14,7 @@ export interface EdDSAPCDArgs {
 }
 
 export interface EdDSAPCDClaim {
-  message: string[];
+  message: bigint[];
 }
 
 export interface EdDSAPCDProof {
@@ -36,41 +35,16 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   }
 }
 
-function mergeArrays(arrays: Uint8Array[]) {
-  let totalLength = 0;
-  for (const arr of arrays) {
-    totalLength += arr.length;
-  }
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const arr of arrays) {
-    result.set(arr, offset);
-    offset += arr.length;
-  }
-  return result;
-}
-
 const fromHexString = (hexString: string) => {
-  return new Uint8Array(
-    // @ts-ignore
-    hexString?.match(/.{1,2}/g).map((byte) => parseInt(byte, 16))
-  );
+  const byteStr = hexString.match(/.{1,2}/g);
+  if (!byteStr) {
+    throw new Error("Invalid hex string");
+  }
+  return Uint8Array.from(byteStr.map((byte) => parseInt(byte, 16)));
 };
 
 const toHexString = (bytes: Uint8Array) =>
   bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"), "");
-
-function messageToUint8Array(message: string[]): Uint8Array {
-  const buffers: Uint8Array[] = message.map(fromHexString);
-
-  const msgBuf = mergeArrays(buffers);
-  const paddedMsgBuf = mergeArrays([
-    msgBuf,
-    new Uint8Array(4 - (msgBuf.length % 4)).fill(0)
-  ]);
-
-  return paddedMsgBuf;
-}
 
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   if (!args.privateKey.value) {
@@ -81,37 +55,36 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
     throw new Error("No message value provided");
   }
 
+  let message;
+  try {
+    message = args.message.value.map((fieldStr: string) => BigInt(fieldStr));
+  } catch (e) {
+    throw new Error("Could not convert message contents to bigint type");
+  }
+
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
 
-  const prvKey = Buffer.from(args.privateKey.value, "hex");
-
-  const paddedMsgBuf = messageToUint8Array(args.message.value);
+  const prvKey = fromHexString(args.privateKey.value);
 
   const eddsa = await buildEddsa();
+  const poseidon = await buildPoseidon();
 
-  const msg = eddsa.babyJub.F.e(Scalar.fromRprLE(paddedMsgBuf, 0));
+  const hashedMessage = poseidon(message);
   const publicKey = eddsa.prv2pub(prvKey);
   const signature = toHexString(
-    eddsa.packSignature(eddsa.signPoseidon(prvKey, msg))
+    eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
-  console.log("proving", msg, signature, publicKey);
 
-  return new EdDSAPCD(
-    id,
-    { message: args.message.value },
-    { signature, publicKey }
-  );
+  return new EdDSAPCD(id, { message }, { signature, publicKey });
 }
 
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   const eddsa = await buildEddsa();
+  const poseidon = await buildPoseidon();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
   const pubKey = pcd.proof.publicKey;
-  const paddedMsgBuf = messageToUint8Array(pcd.claim.message);
-  const msg = eddsa.babyJub.F.e(Scalar.fromRprLE(paddedMsgBuf, 0));
+  const hashedMessage = poseidon(pcd.claim.message);
 
-  console.log("verifying", msg, signature, pubKey);
-
-  return eddsa.verifyPoseidon(msg, signature, pubKey);
+  return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
 }
