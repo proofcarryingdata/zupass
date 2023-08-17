@@ -1,3 +1,4 @@
+import PQueue from "p-queue";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
 
@@ -12,39 +13,72 @@ export interface IDevconnectPretixAPI {
   fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixOrder[]>;
   fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixItem[]>;
   fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixEvent>;
   fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixEventSettings>;
   fetchAllEvents(
     orgUrl: string,
-    token: string,
-    fetch: FetchFn
+    token: string
   ): Promise<DevconnectPretixEvent[]>;
 }
 
+export interface DevconnectPretixAPIOptions {
+  tokenRequestsPerMinute?: number;
+  concurrency?: number;
+}
+
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
+  private tokenRequestsPerMinute: number;
+  private requestQueues: Map<string, PQueue>;
+
+  public constructor(options: DevconnectPretixAPIOptions) {
+    this.tokenRequestsPerMinute = options.tokenRequestsPerMinute ?? 100;
+    this.requestQueues = new Map();
+  }
+
+  private getQueue(token: string): PQueue {
+    if (!this.requestQueues.has(token)) {
+      const queue = new PQueue({
+        // @todo set these in constructor?
+        concurrency: 1,
+        intervalCap: this.tokenRequestsPerMinute,
+        interval: 60_000
+      });
+
+      this.requestQueues.set(token, queue);
+    }
+
+    return this.requestQueues.get(token) as PQueue;
+  }
+
+  private queuedFetch(
+    queue: PQueue,
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    return queue.add(() => {
+      // @todo we could detect a 429 and back-off/retry here
+      return fetch(input, init);
+    });
+  }
+
   public async fetchAllEvents(
     orgUrl: string,
-    token: string,
-    fetch: FetchFn
+    token: string
   ): Promise<DevconnectPretixEvent[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const events: DevconnectPretixEvent[] = [];
@@ -53,7 +87,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching events: ${url}`);
-        const res = await fetch(url, {
+        const res = await this.queuedFetch(this.getQueue(token), url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
@@ -73,14 +107,13 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixEvent> {
     return traced(TRACE_SERVICE, "fetchEvent", async () => {
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching event: ${url}`);
-      const res = await fetch(url, {
+      const res = await this.queuedFetch(this.getQueue(token), url, {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
@@ -95,14 +128,13 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixEventSettings> {
     return traced(TRACE_SERVICE, "fetchEventSettings", async () => {
       // Fetch event settings API
       const url = `${orgUrl}/events/${eventID}/settings`;
       logger(`[DEVCONNECT PRETIX] Fetching event settings: ${url}`);
-      const res = await fetch(url, {
+      const res = await this.queuedFetch(this.getQueue(token), url, {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
@@ -117,8 +149,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchItems(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixItem[]> {
     return traced(TRACE_SERVICE, "fetchItems", async () => {
       const items: DevconnectPretixItem[] = [];
@@ -127,7 +158,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events/${eventID}/items/`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching items: ${url}`);
-        const res = await fetch(url, {
+        const res = await this.queuedFetch(this.getQueue(token), url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
@@ -148,8 +179,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   public async fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string,
-    fetch: FetchFn
+    eventID: string
   ): Promise<DevconnectPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async () => {
       const orders: DevconnectPretixOrder[] = [];
@@ -158,7 +188,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching orders ${url}`);
-        const res = await fetch(url, {
+        const res = await this.queuedFetch(this.getQueue(token), url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
@@ -176,8 +206,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   }
 }
 
-export async function getDevconnectPretixAPI(): Promise<IDevconnectPretixAPI | null> {
-  const api = new DevconnectPretixAPI();
+export async function getDevconnectPretixAPI(): Promise<DevconnectPretixAPI> {
+  const api = new DevconnectPretixAPI({ tokenRequestsPerMinute: 100 });
   return api;
 }
 

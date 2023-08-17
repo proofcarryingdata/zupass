@@ -1,12 +1,9 @@
-import { EventEmitter } from "events";
-import PQueue from "p-queue";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
   DevconnectPretixOrder,
-  FetchFn,
   IDevconnectPretixAPI,
   getI18nString
 } from "../apis/devconnect/devconnectPretixAPI";
@@ -48,9 +45,12 @@ interface EventData {
   tickets: DevconnectPretixOrder[];
 }
 
-type SyncPhase = "fetching" | "validating" | "saving";
+interface FetchResult {
+  data: EventData;
+  event: DevconnectPretixEventConfig;
+}
 
-type FetchOutcome = "complete" | "rate-limited";
+type SyncPhase = "fetching" | "validating" | "saving";
 
 interface SyncErrorCause {
   success: false;
@@ -72,77 +72,6 @@ function errorCause(
 }
 
 /**
- * We have a concept of a sync "run", which occurs on an interval.
- * A run can fail, can complete synchronization, or can be suspended due
- * to rate-limiting on requests to Pretix.
- *
- * In order to do a full synchronization for a given organizer, multiple
- * runs may be required if rate-limiting makes it impossible to fetch
- * all of the necessary data in a single run.
- */
-interface SyncRunSuccess {
-  success: true;
-  organizerId: string;
-  outcome: "complete" | "rate-limited";
-}
-
-type SyncResult = SyncRunSuccess | SyncErrorCause;
-
-/**
- * This class implements a rate-limited fetcher. It provides a function
- * which can be passed to the Pretix fetch functions, in place of the
- * native 'fetch' API call. Behind the scenes, this function will
- * increment a counter. When the counter exceeds the limit, the call to
- * the fetcher function will suspend until the counter is reset. When
- * this happens, an event is raised. In this system, we use this event
- * to mark a sync run as "rate-limited", allowing us to complete the run
- * and resume fetching the remaining data on the next run, when we will
- * reset the counter.
- */
-class LimitedFetcher extends EventEmitter {
-  // The maximum number of requests to allow
-  private limit: number;
-  // The number of requests made so far
-  private count: number;
-
-  public constructor(limit: number) {
-    super();
-    this.limit = limit;
-    this.count = 0;
-  }
-
-  public reset(): void {
-    this.count = 0;
-    this.emit("reset");
-  }
-
-  // Returns a function which matches the signature of the 'fetch' API
-  public fetcher(): FetchFn {
-    return async (input, init?) => {
-      if (this.count >= this.limit) {
-        // We are stuck at the limit, so do nothing until reset
-        // By awaiting here, we will pause indefinitely, relying on
-        // another system to reset our counter. In the sync context, the
-        // counter will be reset on each run, allowing us to pick up the
-        // request we were limited from making on the previous run.
-        this.emit("pause");
-        await new Promise<void>((resolve) => {
-          this.once("reset", () => {
-            resolve();
-          });
-        });
-      }
-      this.count++;
-      return fetch(input, init);
-    };
-  }
-
-  public getCount(): number {
-    return this.count;
-  }
-}
-
-/**
  * For the purposes of sync, organizers are isolated from each other.
  * A failure for one organizer should not prevent other organizers from
  * completing sync. Organizers also have independent rate limits with
@@ -150,61 +79,29 @@ class LimitedFetcher extends EventEmitter {
  */
 export class OrganizerSync {
   // This queue allows the sync system to limit concurrent DB access
-  public dbQueue: PQueue;
   private organizer: DevconnectPretixOrganizerConfig;
   private pretixAPI: IDevconnectPretixAPI;
-  private fetcher: LimitedFetcher;
   // A promise which resolves only when sync fully completes
-  private fetchPromise?: Promise<"complete">;
   private rollbarService: RollbarService | null;
   private db: Pool;
-  private fetchedData?: {
-    data: EventData;
-    event: DevconnectPretixEventConfig;
-  }[];
 
   public constructor(
-    dbQueue: PQueue,
     organizer: DevconnectPretixOrganizerConfig,
-    fetchesPerCycle: number,
     pretixAPI: IDevconnectPretixAPI,
     rollbarService: RollbarService | null,
     db: Pool
   ) {
-    this.dbQueue = dbQueue;
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
     this.rollbarService = rollbarService;
     this.db = db;
-    this.fetcher = new LimitedFetcher(fetchesPerCycle);
-  }
-
-  // Utility function to return a SyncRunSuccess for a rate-limited run
-  private rateLimitedSuccess(): SyncRunSuccess {
-    return {
-      success: true,
-      outcome: "rate-limited",
-      organizerId: this.organizer.id
-    };
-  }
-
-  // Utility function to return a SyncRunSuccess for a complete run
-  private completeSuccess(): SyncRunSuccess {
-    return {
-      success: true,
-      outcome: "complete",
-      organizerId: this.organizer.id
-    };
   }
 
   // Conduct a single sync run
-  public async run(): Promise<SyncRunSuccess> {
+  public async run(): Promise<void> {
+    let fetchedData;
     try {
-      const fetchResult = await this.fetchData();
-
-      if (fetchResult === "rate-limited") {
-        return this.rateLimitedSuccess();
-      }
+      fetchedData = await this.fetchData();
     } catch (e) {
       logger(
         `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
@@ -217,7 +114,7 @@ export class OrganizerSync {
     }
 
     try {
-      this.validate();
+      this.validate(fetchedData);
     } catch (e) {
       logger(
         `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
@@ -230,7 +127,7 @@ export class OrganizerSync {
     }
 
     try {
-      await this.save();
+      await this.save(fetchedData);
     } catch (e) {
       logger(
         `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
@@ -241,8 +138,6 @@ export class OrganizerSync {
         cause: errorCause("saving", this.organizer.id, e)
       });
     }
-
-    return this.completeSuccess();
   }
 
   /**
@@ -263,44 +158,23 @@ export class OrganizerSync {
    * long-lived promise (if active). This causes it to resume, and will
    * allow it to resolve its promise with the value of "complete".
    */
-  private async fetchData(): Promise<FetchOutcome> {
-    // This promise will resolve if we get rate-limited
-    const pausePromise = new Promise<"rate-limited">((resolve) => {
-      this.fetcher.once("pause", () => {
-        resolve("rate-limited");
-      });
-    });
-
-    // Reset the rate-limit for the fetcher.
-    // If the job below is paused, this will un-pause it.
-    this.fetcher.reset();
-
+  private async fetchData(): Promise<FetchResult[]> {
     // If fetchPromise exists, then we already have an active promise
     // which was rate-limited on a previous run. Only start a new one if
     // the previous one completed fully.
-    if (!this.fetchPromise) {
-      this.fetchPromise = (async (): Promise<"complete"> => {
-        this.fetchedData = [];
-        for (const event of this.organizer.events) {
-          this.fetchedData.push({
-            event,
-            data: await this.fetchEventData(
-              this.organizer,
-              event,
-              this.fetcher.fetcher()
-            )
-          });
-        }
-        this.fetcher.removeAllListeners("pause");
-        this.fetchPromise = undefined;
-        return "complete";
-      })();
+
+    const fetchedData = [];
+    for (const event of this.organizer.events) {
+      fetchedData.push({
+        event,
+        data: await this.fetchEventData(this.organizer, event)
+      });
     }
 
+    return fetchedData;
     // Either of the two promises above might resolve, depending on
     // whether we get rate-limited. Either is a successful outcome for
     // the run.
-    return Promise.any([pausePromise, this.fetchPromise]);
   }
 
   /**
@@ -398,14 +272,10 @@ export class OrganizerSync {
   /**
    * Validate fetched data, or throw an exception
    */
-  private validate(): void {
+  private validate(fetchedData: FetchResult[]): void {
     const errors = [];
 
-    if (!this.fetchedData) {
-      throw new Error("No fetched data to validate");
-    }
-
-    for (const { data, event } of this.fetchedData) {
+    for (const { data, event } of fetchedData) {
       errors.push(...this.checkEventData(data, event));
     }
 
@@ -425,8 +295,7 @@ export class OrganizerSync {
    */
   private async fetchEventData(
     organizer: DevconnectPretixOrganizerConfig,
-    event: DevconnectPretixEventConfig,
-    fetch: FetchFn
+    event: DevconnectPretixEventConfig
   ): Promise<EventData> {
     return traced(NAME, "fetchEventData", async () => {
       const { orgURL, token } = organizer;
@@ -435,30 +304,14 @@ export class OrganizerSync {
       const settings = await this.pretixAPI.fetchEventSettings(
         orgURL,
         token,
-        eventID,
-        fetch
+        eventID
       );
 
-      const items = await this.pretixAPI.fetchItems(
-        orgURL,
-        token,
-        eventID,
-        fetch
-      );
+      const items = await this.pretixAPI.fetchItems(orgURL, token, eventID);
 
-      const eventInfo = await this.pretixAPI.fetchEvent(
-        orgURL,
-        token,
-        eventID,
-        fetch
-      );
+      const eventInfo = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
 
-      const tickets = await this.pretixAPI.fetchOrders(
-        orgURL,
-        token,
-        eventID,
-        fetch
-      );
+      const tickets = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
       return { settings, items, eventInfo, tickets };
     });
@@ -898,18 +751,11 @@ export class OrganizerSync {
   /**
    * Sync the fetched data to the DB.
    */
-  private async save(): Promise<void> {
-    // This ensures a limit on the number of concurrent organizers writing to the DB
-    return this.dbQueue.add(async () => {
-      if (!this.fetchedData) {
-        throw new Error("No fetched data to save");
-      }
-
-      for (const { data, event } of this.fetchedData) {
-        // This will throw an exception if it fails
-        await this.syncEvent(this.organizer, event, data);
-      }
-    });
+  private async save(fetchedData: FetchResult[]): Promise<void> {
+    for (const { data, event } of fetchedData) {
+      // This will throw an exception if it fails
+      await this.syncEvent(this.organizer, event, data);
+    }
   }
 }
 
@@ -927,15 +773,9 @@ export class DevconnectPretixSyncService {
   private _hasCompletedSyncSinceStarting: boolean;
   private organizers: Map<string, OrganizerSync>;
   private pretixAPI: IDevconnectPretixAPI;
-  private dbQueue: PQueue;
-  private syncResults: Map<string, SyncResult>;
 
   public get hasCompletedSyncSinceStarting(): boolean {
     return this._hasCompletedSyncSinceStarting;
-  }
-
-  public getSyncResults(): Map<string, SyncResult> {
-    return this.syncResults;
   }
 
   public constructor(
@@ -949,10 +789,9 @@ export class DevconnectPretixSyncService {
     this.semaphoreService = semaphoreService;
     this.pretixAPI = pretixAPI;
     this.organizers = new Map();
-    this.dbQueue = new PQueue({ concurrency: 1 });
     this._hasCompletedSyncSinceStarting = false;
-    this.syncResults = new Map();
   }
+
   public startSyncLoop(): void {
     logger("[DEVCONNECT PRETIX] Starting sync loop");
 
@@ -1014,9 +853,7 @@ export class DevconnectPretixSyncService {
         (org) => org.id === id
       ) as DevconnectPretixOrganizerConfig;
       const org = new OrganizerSync(
-        this.dbQueue, // To allow sync jobs to avoid concurrent DB access
         config,
-        DevconnectPretixSyncService.PRETIX_RATE_PER_MINUTE,
         this.pretixAPI,
         this.rollbarService,
         this.db
@@ -1033,7 +870,7 @@ export class DevconnectPretixSyncService {
   private async syncSingleOrganizer(
     id: string,
     organizer: OrganizerSync
-  ): Promise<SyncResult> {
+  ): Promise<void> {
     return traced(NAME, "syncSingleOrganizer", async (span) => {
       span?.setAttribute("organizers_count", this.organizers.size);
       try {
@@ -1045,35 +882,6 @@ export class DevconnectPretixSyncService {
         );
         setError(e, span);
         this.rollbarService?.reportError(e);
-
-        // If we're catching an exception here, it really *should*
-        // have a .cause of type SyncErrorCause, but we can't type-
-        // check this.
-        if (
-          e instanceof Error &&
-          e.cause &&
-          e.cause instanceof Object &&
-          Object.hasOwn(e.cause, "success") &&
-          Object.hasOwn(e.cause, "phase") &&
-          Object.hasOwn(e.cause, "error") &&
-          Object.hasOwn(e.cause, "organizerId")
-        ) {
-          return e.cause as SyncErrorCause;
-        } else {
-          // This should never happen, but let's handle it anyway
-          logger(
-            `[DEVCONNECT PRETIX] Unknown error encounted when synchronizing organizer ${id}`,
-            e
-          );
-          return {
-            success: false,
-            error: new Error(
-              `Unknown error encounted when synchronizing organizer ${id}`
-            ),
-            phase: "saving",
-            organizerId: id
-          };
-        }
       }
     });
   }
@@ -1088,7 +896,6 @@ export class DevconnectPretixSyncService {
 
       const syncStart = Date.now();
       const organizerPromises = [];
-      this.syncResults.clear();
 
       // Attempt to run each organizer job in parallel
       // Internally the organizers will use a queue to avoid excessive
@@ -1099,19 +906,9 @@ export class DevconnectPretixSyncService {
 
       // Wait until all organizers have either completed or failed and
       // record results.
-      for (const result of await Promise.allSettled(organizerPromises)) {
-        if (result.status === "fulfilled") {
-          this.syncResults.set(result.value.organizerId, result.value);
-        } else {
-          // Again, this should never happen - our function above catches
-          // all exceptions and returns a SyncResult, so the promise should
-          // never be rejected.
-          logger(`[DEVCONNECT PRETIX] ERROR: Sync run promise rejected`);
-        }
-      }
+      await Promise.allSettled(organizerPromises);
 
       const syncEnd = Date.now();
-      logger(`[DEVCONNECT PRETIX] Sync results: `, this.syncResults);
       logger(
         `[DEVCONNECT PRETIX] Sync end. Completed in ${Math.floor(
           (syncEnd - syncStart) / 1000
