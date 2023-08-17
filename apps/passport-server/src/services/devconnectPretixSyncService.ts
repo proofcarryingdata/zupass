@@ -74,16 +74,18 @@ function errorCause(
 /**
  * For the purposes of sync, organizers are isolated from each other.
  * A failure for one organizer should not prevent other organizers from
- * completing sync. Organizers also have independent rate limits with
- * Pretix.
+ * completing sync.
  */
 export class OrganizerSync {
-  // This queue allows the sync system to limit concurrent DB access
   private organizer: DevconnectPretixOrganizerConfig;
   private pretixAPI: IDevconnectPretixAPI;
-  // A promise which resolves only when sync fully completes
   private rollbarService: RollbarService | null;
   private db: Pool;
+  private _isRunning: boolean;
+
+  public get isRunning(): boolean {
+    return this._isRunning;
+  }
 
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
@@ -95,74 +97,61 @@ export class OrganizerSync {
     this.pretixAPI = pretixAPI;
     this.rollbarService = rollbarService;
     this.db = db;
+    this._isRunning = false;
   }
 
   // Conduct a single sync run
   public async run(): Promise<void> {
     let fetchedData;
+    this._isRunning = true;
     try {
-      fetchedData = await this.fetchData();
-    } catch (e) {
-      logger(
-        `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
-      );
-      this.rollbarService?.reportError(e);
+      try {
+        fetchedData = await this.fetchData();
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
+        );
+        this.rollbarService?.reportError(e);
 
-      throw new Error("Data failed to validate", {
-        cause: errorCause("fetching", this.organizer.id, e)
-      });
-    }
+        throw new Error("Data failed to validate", {
+          cause: errorCause("fetching", this.organizer.id, e)
+        });
+      }
 
-    try {
-      this.validate(fetchedData);
-    } catch (e) {
-      logger(
-        `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
-      );
-      this.rollbarService?.reportError(e);
+      try {
+        this.validate(fetchedData);
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
+        );
+        this.rollbarService?.reportError(e);
 
-      throw new Error("Data failed to validate", {
-        cause: errorCause("validating", this.organizer.id, e)
-      });
-    }
+        throw new Error("Data failed to validate", {
+          cause: errorCause("validating", this.organizer.id, e)
+        });
+      }
 
-    try {
-      await this.save(fetchedData);
-    } catch (e) {
-      logger(
-        `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
-      );
-      this.rollbarService?.reportError(e);
+      try {
+        await this.save(fetchedData);
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
+        );
+        this.rollbarService?.reportError(e);
 
-      throw new Error("Data failed to validate", {
-        cause: errorCause("saving", this.organizer.id, e)
-      });
+        throw new Error("Data failed to validate", {
+          cause: errorCause("saving", this.organizer.id, e)
+        });
+      }
+    } finally {
+      this._isRunning = false;
     }
   }
 
   /**
-   * Fetches data from Pretix. This will return a FetchOutcome, which
-   * can be either "rate-limited" or "complete". This is achieved by
-   * having two promises, one which resolves when we get rate-limited,
-   * and one which resolves when we finish fetching all available data.
-   *
-   * The first promise gets created on every run (that is, every time
-   * the function is called). It simply listens for the fetcher's pause
-   * event, and resolves if it is triggered.
-   *
-   * The second promise is potentially longer-lived, and survives across
-   * multiple calls. This is because it starts the fetching process,
-   * which may become paused due to rate-limiting.
-   *
-   * On each call, we reset the fetcher's count, which will un-pause the
-   * long-lived promise (if active). This causes it to resume, and will
-   * allow it to resolve its promise with the value of "complete".
+   * Fetch data for each of the organizer's events.
    */
   private async fetchData(): Promise<FetchResult[]> {
-    // If fetchPromise exists, then we already have an active promise
-    // which was rate-limited on a previous run. Only start a new one if
-    // the previous one completed fully.
-
     const fetchedData = [];
     for (const event of this.organizer.events) {
       fetchedData.push({
@@ -172,9 +161,6 @@ export class OrganizerSync {
     }
 
     return fetchedData;
-    // Either of the two promises above might resolve, depending on
-    // whether we get rate-limited. Either is a successful outcome for
-    // the run.
   }
 
   /**
@@ -901,7 +887,9 @@ export class DevconnectPretixSyncService {
       // Internally the organizers will use a queue to avoid excessive
       // concurrent requests to the DB.
       for (const [id, organizer] of this.organizers.entries()) {
-        organizerPromises.push(this.syncSingleOrganizer(id, organizer));
+        if (!organizer.isRunning) {
+          organizerPromises.push(this.syncSingleOrganizer(id, organizer));
+        }
       }
 
       // Wait until all organizers have either completed or failed and

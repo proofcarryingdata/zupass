@@ -886,7 +886,6 @@ describe("devconnect functionality", function () {
     // one request
     os.run();
     await new Promise((f) => setTimeout(f, 100));
-    console.log(os);
 
     // Sync run will end with rate-limiting
     expect(requests).to.eq(3);
