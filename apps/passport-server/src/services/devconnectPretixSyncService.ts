@@ -1030,6 +1030,54 @@ export class DevconnectPretixSyncService {
     }
   }
 
+  private async syncSingleOrganizer(
+    id: string,
+    organizer: OrganizerSync
+  ): Promise<SyncResult> {
+    return traced(NAME, "syncSingleOrganizer", async (span) => {
+      span?.setAttribute("organizers_count", this.organizers.size);
+      try {
+        return await organizer.run();
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX] Error encounted when synchronizing organizer ${id}`,
+          e
+        );
+        setError(e, span);
+        this.rollbarService?.reportError(e);
+
+        // If we're catching an exception here, it really *should*
+        // have a .cause of type SyncErrorCause, but we can't type-
+        // check this.
+        if (
+          e instanceof Error &&
+          e.cause &&
+          e.cause instanceof Object &&
+          Object.hasOwn(e.cause, "success") &&
+          Object.hasOwn(e.cause, "phase") &&
+          Object.hasOwn(e.cause, "error") &&
+          Object.hasOwn(e.cause, "organizerId")
+        ) {
+          return e.cause as SyncErrorCause;
+        } else {
+          // This should never happen, but let's handle it anyway
+          logger(
+            `[DEVCONNECT PRETIX] Unknown error encounted when synchronizing organizer ${id}`,
+            e
+          );
+          return {
+            success: false,
+            error: new Error(
+              `Unknown error encounted when synchronizing organizer ${id}`
+            ),
+            phase: "saving",
+            organizerId: id
+          };
+        }
+      }
+    });
+  }
+
   /**
    * Download Pretix state, and apply a diff to our state so that it
    * reflects the state in Pretix.
@@ -1046,49 +1094,7 @@ export class DevconnectPretixSyncService {
       // Internally the organizers will use a queue to avoid excessive
       // concurrent requests to the DB.
       for (const [id, organizer] of this.organizers.entries()) {
-        organizerPromises.push(
-          (async (): Promise<SyncResult> => {
-            try {
-              return await organizer.run();
-            } catch (e) {
-              logger(
-                `[DEVCONNECT PRETIX] Error encounted when synchronizing organizer ${id}`,
-                e
-              );
-              setError(e, span);
-              this.rollbarService?.reportError(e);
-
-              // If we're catching an exception here, it really *should*
-              // have a .cause of type SyncErrorCause, but we can't type-
-              // check this.
-              if (
-                e instanceof Error &&
-                e.cause &&
-                e.cause instanceof Object &&
-                Object.hasOwn(e.cause, "success") &&
-                Object.hasOwn(e.cause, "phase") &&
-                Object.hasOwn(e.cause, "error") &&
-                Object.hasOwn(e.cause, "organizerId")
-              ) {
-                return e.cause as SyncErrorCause;
-              } else {
-                // This should never happen, but let's handle it anyway
-                logger(
-                  `[DEVCONNECT PRETIX] Unknown error encounted when synchronizing organizer ${id}`,
-                  e
-                );
-                return {
-                  success: false,
-                  error: new Error(
-                    `Unknown error encounted when synchronizing organizer ${id}`
-                  ),
-                  phase: "saving",
-                  organizerId: id
-                };
-              }
-            }
-          })()
-        );
+        organizerPromises.push(this.syncSingleOrganizer(id, organizer));
       }
 
       // Wait until all organizers have either completed or failed and
