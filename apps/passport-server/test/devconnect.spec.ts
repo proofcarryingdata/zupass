@@ -969,9 +969,11 @@ describe("devconnect functionality", function () {
 
       let wasRateLimited = false;
       let result;
-      // Perform a single run - this will not sync anything to the DB
-      // because sync cannot complete in a single run with a limit of
-      // one request
+
+      // This will not sync in a single run.
+      // In a real scenario, each of these runs would occur a minute apart,
+      // but to show that we do get to completion we will run them in a
+      // loop.
       do {
         result = await os.run();
         if (result.outcome === "rate-limited") {
