@@ -80,12 +80,42 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
-    return queue.add(() => {
-      // @todo we could detect a 429 and back-off/retry here
-      return fetch(input, {
-        signal: this.abortController.signal,
-        ...init
-      });
+    return queue.add(async () => {
+      // Create a function for doing the fetch, so we can retry it
+      const doFetch = async (): Promise<Response> => {
+        return fetch(input, {
+          signal: this.abortController.signal,
+          ...init
+        });
+      };
+
+      let result = await doFetch();
+
+      // If Pretix wants us to slow down
+      while (result.status === 429) {
+        logger(
+          `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
+        );
+        // Get how long to wait for
+        const replyAfter = result.headers.get("Reply-after");
+        if (replyAfter) {
+          const seconds = parseInt(replyAfter);
+          // Wait for the specified time
+          await new Promise((f) => setTimeout(f, seconds * 1000));
+          // Try again
+          result = await doFetch();
+        } else {
+          break;
+        }
+      }
+
+      if (!result.ok) {
+        throw new Error(
+          `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
+        );
+      }
+
+      return result;
     });
   }
 
