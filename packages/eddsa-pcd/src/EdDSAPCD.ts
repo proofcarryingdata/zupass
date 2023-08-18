@@ -8,6 +8,7 @@ import {
 } from "@pcd/pcd-types";
 import { buildEddsa, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
+import { EdDSACardBody } from "./CardBody";
 
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="util/declarations/circomlibjs.d.ts" />
@@ -137,7 +138,7 @@ export const EdDSAPackage: PCDPackage<
   undefined
 > = {
   name: EdDSAPCDTypeName,
-  renderCardBody: undefined, //RSACardBody,
+  renderCardBody: EdDSACardBody,
   getDisplayOptions,
   prove,
   verify,
