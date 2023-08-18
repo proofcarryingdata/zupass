@@ -22,11 +22,11 @@ export interface EdDSAPCDArgs {
 }
 
 export interface EdDSAPCDClaim {
+  publicKey: [string, string];
   message: bigint[];
 }
 
 export interface EdDSAPCDProof {
-  publicKey: [string, string];
   signature: string;
 }
 
@@ -78,7 +78,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
 
-  return new EdDSAPCD(id, { message }, { signature, publicKey });
+  return new EdDSAPCD(id, { message, publicKey }, { signature });
 }
 
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
@@ -86,7 +86,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   const poseidon = await buildPoseidon();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
-  const pubKey = pcd.proof.publicKey.map(fromHexString);
+  const pubKey = pcd.claim.publicKey.map(fromHexString);
   const hashedMessage = poseidon(pcd.claim.message);
 
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
