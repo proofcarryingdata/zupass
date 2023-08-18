@@ -34,22 +34,30 @@ export interface IDevconnectPretixAPI {
     orgUrl: string,
     token: string
   ): Promise<DevconnectPretixEvent[]>;
+  cancelPendingRequests(): void;
 }
 
 export interface DevconnectPretixAPIOptions {
   tokenRequestsPerMinute?: number;
   concurrency?: number;
+  interval?: number;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   private tokenRequestsPerMinute: number;
   private concurrency: number;
+  private interval: number;
   private requestQueues: Map<string, PQueue>;
+  private abortController: AbortController;
 
   public constructor(options?: DevconnectPretixAPIOptions) {
+    // Default is 100 requests per minute
     this.tokenRequestsPerMinute = options?.tokenRequestsPerMinute ?? 100;
+    this.interval = options?.interval ?? 60_000;
     this.concurrency = options?.concurrency ?? 1;
+
     this.requestQueues = new Map();
+    this.abortController = new AbortController();
   }
 
   private getQueue(token: string): PQueue {
@@ -58,7 +66,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
         // @todo set these in constructor?
         concurrency: this.concurrency,
         intervalCap: this.tokenRequestsPerMinute,
-        interval: 60_000
+        interval: this.interval
       });
 
       this.requestQueues.set(token, queue);
@@ -74,8 +82,16 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   ): Promise<Response> {
     return queue.add(() => {
       // @todo we could detect a 429 and back-off/retry here
-      return fetch(input, init);
+      return fetch(input, {
+        signal: this.abortController.signal,
+        ...init
+      });
     });
+  }
+
+  public cancelPendingRequests(): void {
+    this.abortController.abort();
+    this.abortController = new AbortController();
   }
 
   public async fetchAllEvents(

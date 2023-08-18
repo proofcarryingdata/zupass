@@ -171,6 +171,10 @@ export function getDevconnectMockPretixAPI(
       } else {
         throw new Error("Event settings not found");
       }
+    },
+    cancelPendingRequests: (): void => {
+      // Nothing to do here
+      return;
     }
   };
 }

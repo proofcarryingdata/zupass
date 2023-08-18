@@ -1,12 +1,11 @@
 import * as path from "path";
 import {
-  DevconnectPretixAPI,
   IDevconnectPretixAPI,
   getDevconnectPretixAPI
 } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
+import { PretixAPI, getPretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startServices, stopServices } from "./services";

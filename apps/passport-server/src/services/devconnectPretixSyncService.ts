@@ -148,6 +148,10 @@ export class OrganizerSync {
     }
   }
 
+  public cancel(): void {
+    this.pretixAPI.cancelPendingRequests();
+  }
+
   /**
    * Fetch data for each of the organizer's events.
    */
