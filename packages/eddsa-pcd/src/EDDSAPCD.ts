@@ -25,7 +25,7 @@ export interface EdDSAPCDClaim {
 }
 
 export interface EdDSAPCDProof {
-  publicKey: string;
+  publicKey: [string, string];
   signature: string;
 }
 
@@ -70,7 +70,9 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const poseidon = await buildPoseidon();
 
   const hashedMessage = poseidon(message);
-  const publicKey = eddsa.prv2pub(prvKey);
+  const publicKey: [string, string] = eddsa
+    .prv2pub(prvKey)
+    .map(toHexString) as [string, string];
   const signature = toHexString(
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
@@ -83,13 +85,13 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   const poseidon = await buildPoseidon();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
-  const pubKey = pcd.proof.publicKey;
+  const pubKey = pcd.proof.publicKey.map(fromHexString);
   const hashedMessage = poseidon(pcd.claim.message);
 
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
 }
 
-function messageReplacer(key: any, value: any): any {
+function replacer(key: any, value: any): any {
   if (key === "message") {
     return value.map((num: bigint) => num.toString(16));
   } else {
@@ -97,7 +99,7 @@ function messageReplacer(key: any, value: any): any {
   }
 }
 
-function messageReviver(key: any, value: any): any {
+function reviver(key: any, value: any): any {
   if (key === "message") {
     return value.map((str: string) => BigInt(`0x${str}`));
   } else {
@@ -110,12 +112,12 @@ export async function serialize(
 ): Promise<SerializedPCD<EdDSAPCD>> {
   return {
     type: EdDSAPCDTypeName,
-    pcd: JSON.stringify(pcd, messageReplacer)
+    pcd: JSON.stringify(pcd, replacer)
   };
 }
 
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
-  return JSON.parse(serialized, messageReviver);
+  return JSON.parse(serialized, reviver);
 }
 
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {

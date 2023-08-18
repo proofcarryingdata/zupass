@@ -38,8 +38,6 @@ describe("eddsa-pcd should work", function () {
     const serialized = await EdDSAPackage.serialize(pcd);
     const deserialized = await EdDSAPackage.deserialize(serialized.pcd);
     const deserializedValid = await EdDSAPackage.verify(deserialized);
-    console.log(pcd);
-    console.log(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(pcd).to.deep.eq(deserialized);
   });
