@@ -43,10 +43,12 @@ export interface DevconnectPretixAPIOptions {
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   private tokenRequestsPerMinute: number;
+  private concurrency: number;
   private requestQueues: Map<string, PQueue>;
 
-  public constructor(options: DevconnectPretixAPIOptions) {
-    this.tokenRequestsPerMinute = options.tokenRequestsPerMinute ?? 100;
+  public constructor(options?: DevconnectPretixAPIOptions) {
+    this.tokenRequestsPerMinute = options?.tokenRequestsPerMinute ?? 100;
+    this.concurrency = options?.concurrency ?? 1;
     this.requestQueues = new Map();
   }
 
@@ -54,7 +56,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     if (!this.requestQueues.has(token)) {
       const queue = new PQueue({
         // @todo set these in constructor?
-        concurrency: 1,
+        concurrency: this.concurrency,
         intervalCap: this.tokenRequestsPerMinute,
         interval: 60_000
       });

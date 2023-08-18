@@ -16,12 +16,12 @@ if (!orgUrl || !token) {
 
 async function scratch(): Promise<void> {
   const api = new DevconnectPretixAPI();
-  const events = await api.fetchAllEvents(orgUrl, token, fetch);
+  const events = await api.fetchAllEvents(orgUrl, token);
 
   logger();
   logger(`EVENTS: ${orgUrl}`);
   for (const e of events) {
-    const items = await api.fetchItems(orgUrl, token, e.slug, fetch);
+    const items = await api.fetchItems(orgUrl, token, e.slug);
     logger(`EVENT name: '${e.name.en}'; slug: '${e.slug}'`);
     items.forEach((i) => {
       logger(`  ITEM id: '${i.id}'; name: '${i.name.en}'`);
