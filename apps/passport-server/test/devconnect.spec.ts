@@ -1,3 +1,4 @@
+import { IsomorphicResponse } from "@mswjs/interceptors";
 import {
   CheckInResponse,
   ISSUANCE_STRING,
@@ -11,6 +12,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
+import { rest } from "msw";
 import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
@@ -925,6 +927,56 @@ describe("devconnect functionality", function () {
     await new Promise((f) => setTimeout(f, 100));
 
     expect(requests).to.be.greaterThan(3);
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step("should respect a 429 response during sync", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+    if (!application.apis.devconnectPretixAPI) {
+      throw new Error("Application has no Pretix API");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ tokenRequestsPerMinute: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requestsCompleted = 0;
+
+    const listener = async (res: IsomorphicResponse): Promise<void> => {
+      if (res.status === 200) {
+        requestsCompleted++;
+      }
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // The first request will return a 429, indicating server-side rate-limiting
+    server.use(
+      rest.get("*", (req, res, ctx) => {
+        // Instruct the client to wait 0.5 seconds before trying again
+        return res.once(ctx.set("Retry-After", "0.5"), ctx.status(429));
+      })
+    );
+
+    os.run();
+    // After 0.1 seconds, no requests have completed
+    await new Promise((f) => setTimeout(f, 100));
+
+    expect(requestsCompleted).to.eq(0);
+    // After 0.6 seconds, we will have re-tried and successfully fetched something
+    await new Promise((f) => setTimeout(f, 500));
+    expect(requestsCompleted).to.be.greaterThan(0);
+
+    os.cancel();
     server.events.removeListener("response:mocked", listener);
   });
 

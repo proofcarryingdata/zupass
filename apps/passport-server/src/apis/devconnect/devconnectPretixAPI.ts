@@ -97,9 +97,9 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
           `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
         );
         // Get how long to wait for
-        const replyAfter = result.headers.get("Reply-after");
+        const replyAfter = result.headers.get("Retry-After");
         if (replyAfter) {
-          const seconds = parseInt(replyAfter);
+          const seconds = parseFloat(replyAfter);
           // Wait for the specified time
           await new Promise((f) => setTimeout(f, seconds * 1000));
           // Try again
