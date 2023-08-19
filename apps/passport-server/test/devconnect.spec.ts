@@ -41,6 +41,7 @@ import { OrganizerSync } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
@@ -885,7 +886,7 @@ describe("devconnect functionality", function () {
     // because sync cannot complete in a single run with a limit of
     // one request
     os.run();
-    await new Promise((f) => setTimeout(f, 100));
+    await sleep(100);
     os.cancel();
 
     // Sync run will end with rate-limiting
@@ -922,7 +923,7 @@ describe("devconnect functionality", function () {
     server.events.on("response:mocked", listener);
 
     os.run();
-    await new Promise((f) => setTimeout(f, 100));
+    await sleep(100);
 
     expect(requests).to.be.greaterThan(3);
     server.events.removeListener("response:mocked", listener);
@@ -967,11 +968,11 @@ describe("devconnect functionality", function () {
 
     os.run();
     // After 0.1 seconds, no requests have completed
-    await new Promise((f) => setTimeout(f, 100));
+    await sleep(100);
 
     expect(requestsCompleted).to.eq(0);
     // After 0.6 seconds, we will have re-tried and successfully fetched something
-    await new Promise((f) => setTimeout(f, 500));
+    await sleep(500);
     expect(requestsCompleted).to.be.greaterThan(0);
 
     os.cancel();

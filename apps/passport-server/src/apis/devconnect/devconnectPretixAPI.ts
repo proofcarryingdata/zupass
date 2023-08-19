@@ -1,6 +1,7 @@
 import PQueue from "p-queue";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
+import { sleep } from "../../util/util";
 
 const TRACE_SERVICE = "Fetch";
 
@@ -78,43 +79,51 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
-    return queue.add(async () => {
-      // Create a function for doing the fetch, so we can retry it
-      const doFetch = async (): Promise<Response> => {
-        return fetch(input, {
-          signal: this.abortController.signal,
-          ...init
-        });
-      };
+    // We reset abort controller signals after use, so make sure that we
+    // stay bound to the current abort controller when the queued function
+    // executes.
+    const signal = this.abortController.signal;
+    return queue.add(
+      async () => {
+        // Create a function for doing the fetch, so we can retry it
+        const doFetch = async (): Promise<Response> => {
+          return fetch(input, {
+            signal,
+            ...init
+          });
+        };
 
-      let result = await doFetch();
+        let result = await doFetch();
 
-      // If Pretix wants us to slow down
-      while (result.status === 429) {
-        logger(
-          `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
-        );
-        // Get how long to wait for
-        const retryAfter = result.headers.get("Retry-After");
-        if (retryAfter) {
-          const seconds = parseFloat(retryAfter);
-          // Wait for the specified time
-          await new Promise((f) => setTimeout(f, seconds * 1000));
-          // Try again
-          result = await doFetch();
-        } else {
-          break;
+        // If Pretix wants us to slow down
+        // @see https://docs.pretix.eu/en/latest/api/ratelimit.html
+        while (result.status === 429) {
+          logger(
+            `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
+          );
+          // Get how long to wait for
+          const retryAfter = result.headers.get("Retry-After");
+          if (retryAfter) {
+            const seconds = parseFloat(retryAfter);
+            // Wait for the specified time
+            await sleep(seconds * 1000);
+            // Try again
+            result = await doFetch();
+          } else {
+            break;
+          }
         }
-      }
 
-      if (!result.ok) {
-        throw new Error(
-          `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
-        );
-      }
+        if (!result.ok) {
+          throw new Error(
+            `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
+          );
+        }
 
-      return result;
-    });
+        return result;
+      },
+      { signal }
+    );
   }
 
   public cancelPendingRequests(): void {
@@ -253,7 +262,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 }
 
 export async function getDevconnectPretixAPI(): Promise<DevconnectPretixAPI> {
-  const api = new DevconnectPretixAPI({ tokenRequestsPerInterval: 100 });
+  const api = new DevconnectPretixAPI();
   return api;
 }
 

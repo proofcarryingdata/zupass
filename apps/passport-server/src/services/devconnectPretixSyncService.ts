@@ -62,7 +62,7 @@ export class DevconnectPretixSyncService {
   public async trySync(): Promise<void> {
     try {
       logger("[DEVCONNECT PRETIX] (Re)loading Pretix Config");
-      await this.loadConfiguration();
+      await this.setupOrganizers();
 
       logger("[DEVCONNECT PRETIX] Sync start");
       await this.sync();
@@ -84,7 +84,7 @@ export class DevconnectPretixSyncService {
   /**
    * (Re)load Pretix configuration, and set up organizers.
    */
-  private async loadConfiguration(): Promise<void> {
+  private async setupOrganizers(): Promise<void> {
     const devconnectPretixConfig = await getDevconnectPretixConfig(this.db);
 
     if (!devconnectPretixConfig) {
@@ -159,8 +159,7 @@ export class DevconnectPretixSyncService {
         }
       }
 
-      // Wait until all organizers have either completed or failed and
-      // record results.
+      // Wait until all organizers have either completed or failed
       await Promise.allSettled(organizerPromises);
 
       const syncEnd = Date.now();

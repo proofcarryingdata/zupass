@@ -50,7 +50,6 @@ interface FetchResult {
 type SyncPhase = "fetching" | "validating" | "saving";
 
 interface SyncErrorCause {
-  success: false;
   phase: SyncPhase;
   error: Error;
   organizerId: string;
@@ -62,7 +61,7 @@ function errorCause(
   originalError: any
 ): SyncErrorCause {
   if (originalError instanceof Error) {
-    return { success: false, phase, error: originalError, organizerId };
+    return { phase, error: originalError, organizerId };
   } else {
     throw new Error(`originalError is not an error`);
   }
@@ -110,7 +109,7 @@ export class OrganizerSync {
         );
         this.rollbarService?.reportError(e);
 
-        throw new Error("Data failed to validate", {
+        throw new Error("Data failed to fetch", {
           cause: errorCause("fetching", this.organizer.id, e)
         });
       }
@@ -136,7 +135,7 @@ export class OrganizerSync {
         );
         this.rollbarService?.reportError(e);
 
-        throw new Error("Data failed to validate", {
+        throw new Error("Data failed to save", {
           cause: errorCause("saving", this.organizer.id, e)
         });
       }
@@ -314,12 +313,12 @@ export class OrganizerSync {
    * No actual fetching from Pretix happens here, as the data was already
    * fetched when checking for validity.
    */
-  private async syncEvent(
+  private async saveEvent(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
     eventData: EventData
   ): Promise<void> {
-    return traced("Devconnect Sync", "syncEvent", async (span) => {
+    return traced("Devconnect Sync", "saveEvent", async (span) => {
       try {
         const { eventInfo, items, tickets } = eventData;
 
@@ -745,7 +744,7 @@ export class OrganizerSync {
   private async save(fetchedData: FetchResult[]): Promise<void> {
     for (const { data, event } of fetchedData) {
       // This will throw an exception if it fails
-      await this.syncEvent(this.organizer, event, data);
+      await this.saveEvent(this.organizer, event, data);
     }
   }
 }
