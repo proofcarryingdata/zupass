@@ -37,10 +37,8 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import {
-  DevconnectPretixSyncService,
-  OrganizerSync
-} from "../src/services/devconnectPretixSyncService";
+import { OrganizerSync } from "../src/services/devconnect/organizerSync";
+import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
 import {
@@ -870,7 +868,7 @@ describe("devconnect functionality", function () {
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerMinute: 3 }),
+      new DevconnectPretixAPI({ tokenRequestsPerInterval: 3 }),
       application.services.rollbarService,
       application.context.dbPool
     );
@@ -910,7 +908,7 @@ describe("devconnect functionality", function () {
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerMinute: 300 }),
+      new DevconnectPretixAPI({ tokenRequestsPerInterval: 300 }),
       application.services.rollbarService,
       application.context.dbPool
     );
@@ -944,7 +942,7 @@ describe("devconnect functionality", function () {
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerMinute: 300 }),
+      new DevconnectPretixAPI({ tokenRequestsPerInterval: 300 }),
       application.services.rollbarService,
       application.context.dbPool
     );

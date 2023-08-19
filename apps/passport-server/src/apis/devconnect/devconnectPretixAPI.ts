@@ -38,22 +38,21 @@ export interface IDevconnectPretixAPI {
 }
 
 export interface DevconnectPretixAPIOptions {
-  tokenRequestsPerMinute?: number;
+  tokenRequestsPerInterval?: number;
   concurrency?: number;
-  interval?: number;
+  intervalMs?: number;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
-  private tokenRequestsPerMinute: number;
-  private concurrency: number;
-  private interval: number;
+  private readonly tokenRequestsPerInterval: number;
+  private readonly concurrency: number;
+  private readonly interval: number;
   private requestQueues: Map<string, PQueue>;
   private abortController: AbortController;
 
   public constructor(options?: DevconnectPretixAPIOptions) {
-    // Default is 100 requests per minute
-    this.tokenRequestsPerMinute = options?.tokenRequestsPerMinute ?? 100;
-    this.interval = options?.interval ?? 60_000;
+    this.tokenRequestsPerInterval = options?.tokenRequestsPerInterval ?? 100;
+    this.interval = options?.intervalMs ?? 60_000;
     this.concurrency = options?.concurrency ?? 1;
 
     this.requestQueues = new Map();
@@ -63,9 +62,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   private getQueue(token: string): PQueue {
     if (!this.requestQueues.has(token)) {
       const queue = new PQueue({
-        // @todo set these in constructor?
         concurrency: this.concurrency,
-        intervalCap: this.tokenRequestsPerMinute,
+        intervalCap: this.tokenRequestsPerInterval,
         interval: this.interval
       });
 
@@ -97,9 +95,9 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
           `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
         );
         // Get how long to wait for
-        const replyAfter = result.headers.get("Retry-After");
-        if (replyAfter) {
-          const seconds = parseFloat(replyAfter);
+        const retryAfter = result.headers.get("Retry-After");
+        if (retryAfter) {
+          const seconds = parseFloat(retryAfter);
           // Wait for the specified time
           await new Promise((f) => setTimeout(f, seconds * 1000));
           // Try again
@@ -255,7 +253,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 }
 
 export async function getDevconnectPretixAPI(): Promise<DevconnectPretixAPI> {
-  const api = new DevconnectPretixAPI({ tokenRequestsPerMinute: 100 });
+  const api = new DevconnectPretixAPI({ tokenRequestsPerInterval: 100 });
   return api;
 }
 
