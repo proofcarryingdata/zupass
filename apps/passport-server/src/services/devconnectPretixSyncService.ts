@@ -119,7 +119,7 @@ export class DevconnectPretixSyncService {
     }
 
     for (const id of removedOrgIds) {
-      // @todo cleanup any organizers which have pending requests?
+      this.organizers.get(id)?.cancel();
       this.organizers.delete(id);
     }
   }
