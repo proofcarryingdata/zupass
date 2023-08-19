@@ -79,6 +79,10 @@ export class DevconnectPretixSyncService {
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
+
+    for (const [_id, organizerSync] of this.organizers) {
+      organizerSync.cancel();
+    }
   }
 
   /**

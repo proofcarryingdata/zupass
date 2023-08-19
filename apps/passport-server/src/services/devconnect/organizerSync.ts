@@ -42,7 +42,7 @@ interface EventData {
   tickets: DevconnectPretixOrder[];
 }
 
-interface FetchResult {
+interface EventDataFromPretix {
   data: EventData;
   event: DevconnectPretixEventConfig;
 }
@@ -151,7 +151,7 @@ export class OrganizerSync {
   /**
    * Fetch data for each of the organizer's events.
    */
-  private async fetchData(): Promise<FetchResult[]> {
+  private async fetchData(): Promise<EventDataFromPretix[]> {
     return traced(NAME, "fetchData", async (span) => {
       span?.setAttribute("org_url", this.organizer.orgURL);
 
@@ -262,7 +262,7 @@ export class OrganizerSync {
   /**
    * Validate fetched data, or throw an exception
    */
-  private validate(fetchedData: FetchResult[]): void {
+  private validate(fetchedData: EventDataFromPretix[]): void {
     const errors = [];
 
     for (const { data, event } of fetchedData) {
@@ -741,7 +741,7 @@ export class OrganizerSync {
   /**
    * Sync the fetched data to the DB.
    */
-  private async save(fetchedData: FetchResult[]): Promise<void> {
+  private async save(fetchedData: EventDataFromPretix[]): Promise<void> {
     for (const { data, event } of fetchedData) {
       // This will throw an exception if it fails
       await this.saveEvent(this.organizer, event, data);
