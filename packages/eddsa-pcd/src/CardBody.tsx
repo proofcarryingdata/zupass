@@ -16,7 +16,7 @@ export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
       <Spacer h={8} />
 
       <FieldLabel>RSA Public Key</FieldLabel>
-      <HiddenText text={pcd.proof.publicKey.join("")} />
+      <HiddenText text={pcd.claim.publicKey.join("")} />
     </Container>
   );
 }
