@@ -39,43 +39,25 @@ export interface IDevconnectPretixAPI {
 }
 
 export interface DevconnectPretixAPIOptions {
-  tokenRequestsPerInterval?: number;
+  requestsPerInterval?: number;
   concurrency?: number;
   intervalMs?: number;
 }
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
-  private readonly tokenRequestsPerInterval: number;
-  private readonly concurrency: number;
-  private readonly interval: number;
-  private requestQueues: Map<string, PQueue>;
+  private requestQueue: PQueue;
   private abortController: AbortController;
 
   public constructor(options?: DevconnectPretixAPIOptions) {
-    this.tokenRequestsPerInterval = options?.tokenRequestsPerInterval ?? 100;
-    this.interval = options?.intervalMs ?? 60_000;
-    this.concurrency = options?.concurrency ?? 1;
-
-    this.requestQueues = new Map();
+    this.requestQueue = new PQueue({
+      concurrency: options?.concurrency ?? 1,
+      interval: options?.intervalMs ?? 60_000,
+      intervalCap: options?.requestsPerInterval ?? 100
+    });
     this.abortController = new AbortController();
   }
 
-  private getQueue(token: string): PQueue {
-    if (!this.requestQueues.has(token)) {
-      const queue = new PQueue({
-        concurrency: this.concurrency,
-        intervalCap: this.tokenRequestsPerInterval,
-        interval: this.interval
-      });
-
-      this.requestQueues.set(token, queue);
-    }
-
-    return this.requestQueues.get(token) as PQueue;
-  }
-
   private queuedFetch(
-    queue: PQueue,
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
@@ -83,7 +65,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     // stay bound to the current abort controller when the queued function
     // executes.
     const signal = this.abortController.signal;
-    return queue.add(async () => {
+    return this.requestQueue.add(async () => {
       // Create a function for doing the fetch, so we can retry it
       const doFetch = async (): Promise<Response> => {
         return fetch(input, {
@@ -140,7 +122,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching events: ${url}`);
-        const res = await this.queuedFetch(this.getQueue(token), url, {
+        const res = await this.queuedFetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
@@ -167,7 +149,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching event: ${url}`);
-      const res = await this.queuedFetch(this.getQueue(token), url, {
+      const res = await this.queuedFetch(url, {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
@@ -189,7 +171,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       // Fetch event settings API
       const url = `${orgUrl}/events/${eventID}/settings`;
       logger(`[DEVCONNECT PRETIX] Fetching event settings: ${url}`);
-      const res = await this.queuedFetch(this.getQueue(token), url, {
+      const res = await this.queuedFetch(url, {
         headers: { Authorization: `Token ${token}` }
       });
       if (!res.ok) {
@@ -214,7 +196,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events/${eventID}/items/`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching items: ${url}`);
-        const res = await this.queuedFetch(this.getQueue(token), url, {
+        const res = await this.queuedFetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
@@ -245,7 +227,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       let url = `${orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching orders ${url}`);
-        const res = await this.queuedFetch(this.getQueue(token), url, {
+        const res = await this.queuedFetch(url, {
           headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {

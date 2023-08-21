@@ -18,8 +18,7 @@ import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixAPI,
-  DevconnectPretixOrder,
-  getDevconnectPretixAPI
+  DevconnectPretixOrder
 } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
@@ -49,12 +48,12 @@ import {
   requestServerPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
-import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 
 describe("devconnect functionality", function () {
   this.timeout(30_000);
@@ -114,8 +113,7 @@ describe("devconnect functionality", function () {
     // @todo more selective approach to unhandled requests
     server.listen({ onUnhandledRequest: "bypass" });
 
-    const devconnectPretixAPI = await getDevconnectPretixAPI();
-    application = await startTestingApp({ devconnectPretixAPI });
+    application = await startTestingApp();
 
     if (!application.services.devconnectPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
@@ -863,16 +861,13 @@ describe("devconnect functionality", function () {
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
-    if (!application.apis.devconnectPretixAPI) {
-      throw new Error("Application has no Pretix API");
-    }
 
     const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
 
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerInterval: 3 }),
+      new DevconnectPretixAPI({ requestsPerInterval: 3 }),
       application.services.rollbarService,
       application.context.dbPool
     );
@@ -903,16 +898,13 @@ describe("devconnect functionality", function () {
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
-    if (!application.apis.devconnectPretixAPI) {
-      throw new Error("Application has no Pretix API");
-    }
 
     const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
 
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerInterval: 300 }),
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
       application.services.rollbarService,
       application.context.dbPool
     );
@@ -937,16 +929,13 @@ describe("devconnect functionality", function () {
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
-    if (!application.apis.devconnectPretixAPI) {
-      throw new Error("Application has no Pretix API");
-    }
 
     const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
 
     // Set up a sync manager for a single organizer
     const os = new OrganizerSync(
       organizer,
-      new DevconnectPretixAPI({ tokenRequestsPerInterval: 300 }),
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
       application.services.rollbarService,
       application.context.dbPool
     );

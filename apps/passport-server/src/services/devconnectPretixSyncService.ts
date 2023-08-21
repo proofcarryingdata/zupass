@@ -13,6 +13,8 @@ import { setError, traced } from "./telemetryService";
 
 const NAME = "Devconnect Pretix";
 
+export type DevconnectPretixAPIFactory = () => Promise<IDevconnectPretixAPI>;
+
 /**
  * Responsible for syncing users from Pretix into an internal representation.
  */
@@ -25,7 +27,7 @@ export class DevconnectPretixSyncService {
   private timeout: NodeJS.Timeout | undefined;
   private _hasCompletedSyncSinceStarting: boolean;
   private organizers: Map<string, OrganizerSync>;
-  private pretixAPI: IDevconnectPretixAPI;
+  private pretixAPIFactory: DevconnectPretixAPIFactory;
 
   public get hasCompletedSyncSinceStarting(): boolean {
     return this._hasCompletedSyncSinceStarting;
@@ -33,14 +35,14 @@ export class DevconnectPretixSyncService {
 
   public constructor(
     context: ApplicationContext,
-    pretixAPI: IDevconnectPretixAPI,
+    pretixAPIFactory: DevconnectPretixAPIFactory,
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
     this.db = context.dbPool;
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
-    this.pretixAPI = pretixAPI;
+    this.pretixAPIFactory = pretixAPIFactory;
     this.organizers = new Map();
     this._hasCompletedSyncSinceStarting = false;
   }
@@ -111,7 +113,7 @@ export class DevconnectPretixSyncService {
       ) as DevconnectPretixOrganizerConfig;
       const org = new OrganizerSync(
         config,
-        this.pretixAPI,
+        await this.pretixAPIFactory(),
         this.rollbarService,
         this.db
       );
@@ -183,23 +185,23 @@ export async function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
-  devconnectPretixAPI: IDevconnectPretixAPI | null
+  devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null
 ): Promise<DevconnectPretixSyncService | null> {
   if (context.isZuzalu) {
     logger("[DEVCONNECT PRETIX] Not starting service because IS_ZUZALU=true");
     return null;
   }
 
-  if (!devconnectPretixAPI) {
+  if (!devconnectPretixAPIFactory) {
     logger(
-      "[DEVCONNECT PRETIX] Can't start sync service - no api instantiated"
+      "[DEVCONNECT PRETIX] Can't start sync service - no api factory instantiated"
     );
     return null;
   }
 
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
-    devconnectPretixAPI,
+    devconnectPretixAPIFactory,
     rollbarService,
     semaphoreService
   );

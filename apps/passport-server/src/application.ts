@@ -13,6 +13,7 @@ import { APIs, ApplicationContext, PCDPass } from "./types";
 import { logger } from "./util/logger";
 
 import process from "node:process";
+import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {
@@ -93,18 +94,18 @@ async function getOverridenApis(
     }
   }
 
-  let devconnectPretixAPI: IDevconnectPretixAPI | null = null;
+  let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null = null;
 
-  if (apiOverrides?.devconnectPretixAPI) {
-    logger("[INIT] overriding devconnect pretix api");
-    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  if (apiOverrides?.devconnectPretixAPIFactory) {
+    logger("[INIT] overriding devconnect pretix api factory");
+    devconnectPretixAPIFactory = apiOverrides.devconnectPretixAPIFactory;
   } else {
-    devconnectPretixAPI = await getDevconnectPretixAPI();
+    devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI
+    devconnectPretixAPIFactory
   };
 }
