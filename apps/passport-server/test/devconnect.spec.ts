@@ -18,6 +18,7 @@ import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixAPI,
+  DevconnectPretixOrder,
   getDevconnectPretixAPI
 } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
@@ -274,13 +275,15 @@ describe("devconnect functionality", function () {
   );
 
   step("removing an order causes soft deletion of ticket", async function () {
-    const ordersForEventA = mocker
-      .get()
-      .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug)!;
+    const ordersForEventA =
+      mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug) ??
+      [];
 
     const lastOrder = ordersForEventA.find(
       (o) => o.email === mocker.get().organizer1.EMAIL_2
-    )!;
+    ) as DevconnectPretixOrder;
 
     mocker.removeOrder(
       mocker.get().organizer1.orgUrl,

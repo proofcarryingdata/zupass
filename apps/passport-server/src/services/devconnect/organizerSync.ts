@@ -11,7 +11,11 @@ import {
   DevconnectPretixEventConfig,
   DevconnectPretixOrganizerConfig
 } from "../../apis/devconnect/organizer";
-import { DevconnectPretixTicket, PretixItemInfo } from "../../database/models";
+import {
+  DevconnectPretixTicket,
+  DevconnectPretixTicketDB,
+  PretixItemInfo
+} from "../../database/models";
 import { fetchDevconnectPretixTicketsByEvent } from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
@@ -490,7 +494,9 @@ export class OrganizerSync {
         const itemsToUpdate = newActiveItems
           .filter((i) => existingItemsInfoByItemID.has(i.id.toString()))
           .filter((i) => {
-            const oldItem = existingItemsInfoByItemID.get(i.id.toString())!;
+            const oldItem = existingItemsInfoByItemID.get(
+              i.id.toString()
+            ) as PretixItemInfo;
             return oldItem.item_name !== getI18nString(i.name);
           });
 
@@ -499,7 +505,9 @@ export class OrganizerSync {
           `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
         );
         for (const item of itemsToUpdate) {
-          const oldItem = existingItemsInfoByItemID.get(item.id.toString())!;
+          const oldItem = existingItemsInfoByItemID.get(
+            item.id.toString()
+          ) as PretixItemInfo;
           logger(
             `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
               eventInfo.event_name
@@ -618,7 +626,9 @@ export class OrganizerSync {
         const updatedTickets = ticketsFromPretix
           .filter((t) => existingTicketsByPositionId.has(t.position_id))
           .filter((t) => {
-            const oldTicket = existingTicketsByPositionId.get(t.position_id)!;
+            const oldTicket = existingTicketsByPositionId.get(
+              t.position_id
+            ) as DevconnectPretixTicketDB;
             const newTicket = t;
             return pretixTicketsDifferent(oldTicket, newTicket);
           });
