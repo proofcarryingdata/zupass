@@ -83,47 +83,44 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     // stay bound to the current abort controller when the queued function
     // executes.
     const signal = this.abortController.signal;
-    return queue.add(
-      async () => {
-        // Create a function for doing the fetch, so we can retry it
-        const doFetch = async (): Promise<Response> => {
-          return fetch(input, {
-            signal,
-            ...init
-          });
-        };
+    return queue.add(async () => {
+      // Create a function for doing the fetch, so we can retry it
+      const doFetch = async (): Promise<Response> => {
+        return fetch(input, {
+          signal,
+          ...init
+        });
+      };
 
-        let result = await doFetch();
+      let result = await doFetch();
 
-        // If Pretix wants us to slow down
-        // @see https://docs.pretix.eu/en/latest/api/ratelimit.html
-        while (result.status === 429) {
-          logger(
-            `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
-          );
-          // Get how long to wait for
-          const retryAfter = result.headers.get("Retry-After");
-          if (retryAfter) {
-            const seconds = parseFloat(retryAfter);
-            // Wait for the specified time
-            await sleep(seconds * 1000);
-            // Try again
-            result = await doFetch();
-          } else {
-            break;
-          }
+      // If Pretix wants us to slow down
+      // @see https://docs.pretix.eu/en/latest/api/ratelimit.html
+      while (result.status === 429) {
+        logger(
+          `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
+        );
+        // Get how long to wait for
+        const retryAfter = result.headers.get("Retry-After");
+        if (retryAfter) {
+          const seconds = parseFloat(retryAfter);
+          // Wait for the specified time
+          await sleep(seconds * 1000);
+          // Try again
+          result = await doFetch();
+        } else {
+          break;
         }
+      }
 
-        if (!result.ok) {
-          throw new Error(
-            `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
-          );
-        }
+      if (!result.ok) {
+        throw new Error(
+          `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
+        );
+      }
 
-        return result;
-      },
-      { signal }
-    );
+      return result;
+    });
   }
 
   public cancelPendingRequests(): void {
@@ -135,7 +132,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     orgUrl: string,
     token: string
   ): Promise<DevconnectPretixEvent[]> {
-    return traced(TRACE_SERVICE, "fetchItems", async () => {
+    return traced(TRACE_SERVICE, "fetchAllEvents", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
       const events: DevconnectPretixEvent[] = [];
 
       // Fetch orders from paginated API
@@ -164,7 +162,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEvent> {
-    return traced(TRACE_SERVICE, "fetchEvent", async () => {
+    return traced(TRACE_SERVICE, "fetchEvent", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[DEVCONNECT PRETIX] Fetching event: ${url}`);
@@ -185,7 +184,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEventSettings> {
-    return traced(TRACE_SERVICE, "fetchEventSettings", async () => {
+    return traced(TRACE_SERVICE, "fetchEventSettings", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
       // Fetch event settings API
       const url = `${orgUrl}/events/${eventID}/settings`;
       logger(`[DEVCONNECT PRETIX] Fetching event settings: ${url}`);
@@ -206,7 +206,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixItem[]> {
-    return traced(TRACE_SERVICE, "fetchItems", async () => {
+    return traced(TRACE_SERVICE, "fetchItems", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
       const items: DevconnectPretixItem[] = [];
 
       // Fetch orders from paginated API
@@ -236,7 +237,8 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixOrder[]> {
-    return traced(TRACE_SERVICE, "fetchOrders", async () => {
+    return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
       const orders: DevconnectPretixOrder[] = [];
 
       // Fetch orders from paginated API

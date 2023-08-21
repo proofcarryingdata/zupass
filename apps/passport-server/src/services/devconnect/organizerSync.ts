@@ -318,7 +318,7 @@ export class OrganizerSync {
     event: DevconnectPretixEventConfig,
     eventData: EventData
   ): Promise<void> {
-    return traced("Devconnect Sync", "saveEvent", async (span) => {
+    return traced(NAME, "saveEvent", async (span) => {
       try {
         const { eventInfo, items, tickets } = eventData;
 
