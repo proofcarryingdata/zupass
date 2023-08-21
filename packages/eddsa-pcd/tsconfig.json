@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "allowJs": true
+    "typeRoots": ["src/util/declarations/"],
+    "lib": ["dom"]
   },
   "extends": "@pcd/tsconfig/ts-library.json",
   "include": [".", "./test"],
