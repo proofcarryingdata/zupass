@@ -8,23 +8,35 @@ import {
 } from "@pcd/pcd-types";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="util/declarations/circomlibjs.d.ts" />
-import { buildEddsa, buildPoseidon } from "circomlibjs";
+import { buildEddsa, buildPoseidon, Eddsa, PoseidonFn } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
 export interface EdDSAPCDArgs {
+  // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
+  // The message is an array of bigints, represented here as an array of
+  // strings
   message: StringArrayArgument;
+  // A unique string identifying the PCD
   id: StringArgument;
 }
 
+// The claim is that we have a message that was signed by a public key
 export interface EdDSAPCDClaim {
+  // The public key is a pair of hex strings, representing a point on
+  // the elliptic curve
   publicKey: [string, string];
+  // The message is an array of bigints, each representing a field
   message: bigint[];
 }
 
+// The proof is the signature, in the form of a string representation of
+// hex digits.
+// This signature proves that the private key matching publicKey in
+// the claim was used to sign the message.
 export interface EdDSAPCDProof {
   signature: string;
 }
@@ -40,6 +52,14 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
     this.claim = claim;
     this.proof = proof;
   }
+}
+
+let eddsa: Eddsa;
+let poseidon: PoseidonFn;
+
+export async function init(): Promise<void> {
+  eddsa = await buildEddsa();
+  poseidon = await buildPoseidon();
 }
 
 const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
@@ -66,9 +86,6 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 
   const prvKey = fromHexString(args.privateKey.value);
 
-  const eddsa = await buildEddsa();
-  const poseidon = await buildPoseidon();
-
   const hashedMessage = poseidon(message);
   const publicKey: [string, string] = eddsa
     .prv2pub(prvKey)
@@ -81,9 +98,6 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 }
 
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
-  const eddsa = await buildEddsa();
-  const poseidon = await buildPoseidon();
-
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
   const pubKey = pcd.claim.publicKey.map(fromHexString);
   const hashedMessage = poseidon(pcd.claim.message);
@@ -142,5 +156,6 @@ export const EdDSAPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize
+  deserialize,
+  init
 };

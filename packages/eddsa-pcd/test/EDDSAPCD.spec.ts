@@ -10,10 +10,18 @@ describe("eddsa-pcd should work", function () {
   this.timeout(30_000);
   let pcd: EdDSAPCD;
 
+  this.beforeAll(async function () {
+    if (EdDSAPackage.init) {
+      await EdDSAPackage.init(undefined);
+    }
+  });
+
   it("should be able to sign and verify using the PCD class", async function () {
+    // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
     const prvKey =
       "0001020304050607080900010203040506070809000102030405060708090001";
 
+    // Three parameters which represent bigints
     const message: string[] = ["0x12345", "0x54321", "0xdeadbeef"];
 
     pcd = await prove({
