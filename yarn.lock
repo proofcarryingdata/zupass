@@ -2532,6 +2532,16 @@
   resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.5.3.tgz#e40664b9cc0474767e5a9399c773f98421e2aa4a"
   integrity sha512-5BQ3LCgNMn6gkoqmP4YxceObenkyNWG+bVp0hQSz4eCp2P6hGsHhRtt2oKSp5LnnLaWHss3wyqBaTC6EfuG9ow==
 
+"@pcd/pcd-types@0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.6.0.tgz#ada6a00bb84d5492478d402563883c9bfd83f7f5"
+  integrity sha512-nOSrbxyfxIIcJXeMeGgJdEajomuXyjpFDuAGK3TDoHoopYCapvaNGnbluv5neXjWdQHMbEVT++3ChlL9wS3X2w==
+
+"@pcd/pcd-types@^0.6.0":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.6.1.tgz#4410742ba5e736483a2ad36ffee4f8e69d105967"
+  integrity sha512-z6dvt8CAOhe7ZIvC2hs4IWtmUnGCQicDIVoQT9YBRSEUUR4Opmc71Mgq52ZIHINnN9frfgjvvYDjefviILjD3w==
+
 "@pcd/semaphore-identity-pcd@0.5.3":
   version "0.5.3"
   resolved "https://registry.yarnpkg.com/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.5.3.tgz#cae4013881a3e396e2567d3c27540dc0389f7172"
