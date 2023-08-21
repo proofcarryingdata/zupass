@@ -78,9 +78,11 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 
       // If Pretix wants us to slow down
       // @see https://docs.pretix.eu/en/latest/api/ratelimit.html
-      while (result.status === 429) {
+      let attempts = 0;
+      while (result.status === 429 && attempts < 5) {
+        attempts++;
         logger(
-          `[DEVCONNECT PRETIX] Received status 429 while fetching: ${input}`
+          `[DEVCONNECT PRETIX] Received status 429 while fetching after ${attempts} attempt(s): ${input}`
         );
         // Get how long to wait for
         const retryAfter = result.headers.get("Retry-After");

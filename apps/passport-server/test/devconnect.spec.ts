@@ -48,12 +48,12 @@ import {
   requestServerPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 
 describe("devconnect functionality", function () {
   this.timeout(30_000);
@@ -970,6 +970,69 @@ describe("devconnect functionality", function () {
     os.cancel();
     server.events.removeListener("response:mocked", listener);
   });
+
+  step(
+    "should retry 5 times before giving up with 429 response",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let requestsCompleted = 0;
+
+      const listener = async (res: IsomorphicResponse): Promise<void> => {
+        if (res.status === 200) {
+          requestsCompleted++;
+        }
+      };
+      // Count each successful request
+      server.events.on("response:mocked", listener);
+
+      let url: string;
+      let attempts = 0;
+
+      server.use(
+        rest.get("*", (req, res, ctx) => {
+          attempts++;
+          if (!url) {
+            url = req.url.toString();
+          }
+
+          // Only one URL should ever be requested
+          // If this is not fetched within 5 requests, the entire sync run
+          // will fail
+          expect(url).to.eq(req.url.toString());
+          // Instruct the client to wait 0.01 seconds before trying again
+          return res(ctx.set("Retry-After", "0.01"), ctx.status(429));
+        })
+      );
+
+      os.run();
+      // After 0.1 seconds, no requests should have completed
+      await sleep(100);
+      expect(requestsCompleted).to.eq(0);
+
+      // But 6 attempts should have been made
+      expect(attempts).eq(6);
+
+      os.cancel();
+      server.resetHandlers();
+      server.events.removeListener("response:mocked", listener);
+    }
+  );
 
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
