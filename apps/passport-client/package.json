@@ -11,6 +11,7 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
   },
   "dependencies": {
+    "@pcd/eddsa-pcd": "0.1.0",
     "@pcd/ethereum-ownership-pcd": "0.6.0",
     "@pcd/halo-nonce-pcd": "0.2.0",
     "@pcd/passport-crypto": "0.6.0",
@@ -31,7 +32,6 @@
     "email-validator": "^2.0.4",
     "handlebars": "^4.7.7",
     "json-bigint": "^1.0.0",
-    "jubjub-signature-pcd": "0.0.5",
     "pako": "^2.1.0",
     "qr-image": "^3.2.0",
     "react": "^18.2.0",

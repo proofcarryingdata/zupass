@@ -1,4 +1,4 @@
-import { EdDSAPackage } from "@pcd/eddsa-pcd";
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   hashProveRequest,
   PendingPCD,
@@ -13,7 +13,6 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import path from "path";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -44,11 +43,10 @@ export class ProvingService {
   private packages: PCDPackage[] = [
     SemaphoreGroupPCDPackage,
     SemaphoreSignaturePCDPackage,
-    JubJubSignaturePCDPackage,
     RLNPCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
-    EdDSAPackage
+    EdDSAPCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {
@@ -193,7 +191,7 @@ export async function startProvingService(
   });
 
   await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
-  await EdDSAPackage.init!({});
+  await EdDSAPCDPackage.init!({});
 
   const provingService = new ProvingService(rollbarService);
   return provingService;

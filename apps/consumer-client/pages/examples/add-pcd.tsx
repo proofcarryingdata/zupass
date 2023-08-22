@@ -1,14 +1,15 @@
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   EthereumGroupPCDPackage,
   getRawPubKeyBuffer,
-  GroupType,
+  GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import {
   constructPassportPcdAddRequestUrl,
   constructPassportPcdProveAndAddRequestUrl,
   openSignedZuzaluSignInPopup,
-  usePassportPopupMessages,
+  usePassportPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -20,7 +21,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { startRegistration } from "@simplewebauthn/browser";
 import {
   generateRegistrationOptions,
-  verifyRegistrationResponse,
+  verifyRegistrationResponse
 } from "@simplewebauthn/server";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
@@ -80,6 +81,9 @@ export default function Page() {
         <br />
         <br />
         <AddEthGroupPCDButton />
+        <br />
+        <br />
+        <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
       </ExampleContainer>
     </div>
   );
@@ -119,16 +123,16 @@ function AddEthAddrPCDButton() {
           value: undefined,
           userProvided: true,
           description:
-            "The Semaphore Identity which you are proving owns the given Ethereum address.",
+            "The Semaphore Identity which you are proving owns the given Ethereum address."
         },
         ethereumAddress: {
           argumentType: ArgumentTypeName.String,
-          value: await provider.getSigner().getAddress(),
+          value: await provider.getSigner().getAddress()
         },
         ethereumSignatureOfCommitment: {
           argumentType: ArgumentTypeName.String,
-          value: signature,
-        },
+          value: signature
+        }
       });
 
       sendPassportRequest(proofUrl);
@@ -193,7 +197,7 @@ function AddEthGroupPCDButton() {
       // Add some public keys to the tree
       for (const member of [
         "0x04b4d5188949bf70c4db5e965a9ea67b80407e8ee7fa3a260ccf86e9c0395fe82cba155fdff55829b3c862322aba402d00b563861b603879ee8ae211c34257d4ad",
-        "0x042d21e6aa2021a991a82d08591fa0528d0bebe4ac9a34d851a74507327d930dec217380bd602fe48a143bb21106ab274d6a51aff396f0e4f7e1e3a8a673d46d83",
+        "0x042d21e6aa2021a991a82d08591fa0528d0bebe4ac9a34d851a74507327d930dec217380bd602fe48a143bb21106ab274d6a51aff396f0e4f7e1e3a8a673d46d83"
       ]) {
         pubKeyTree.insert(poseidon.hashPubKey(getRawPubKeyBuffer(member)));
       }
@@ -219,20 +223,20 @@ function AddEthGroupPCDButton() {
           value: undefined,
           userProvided: true,
           description:
-            "The Semaphore Identity which you are signing the message.",
+            "The Semaphore Identity which you are signing the message."
         },
         groupType: {
           argumentType: ArgumentTypeName.String,
-          value: GroupType.PUBLICKEY,
+          value: GroupType.PUBLICKEY
         },
         signatureOfIdentityCommitment: {
           argumentType: ArgumentTypeName.String,
-          value: signatureOfIdentityCommitment,
+          value: signatureOfIdentityCommitment
         },
         merkleProof: {
           argumentType: ArgumentTypeName.String,
-          value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof),
-        },
+          value: JSONBig({ useNativeBigInt: true }).stringify(merkleProof)
+        }
       });
 
       sendPassportRequest(proofUrl);
@@ -266,13 +270,13 @@ async function addGroupMembershipProofPCD() {
         userProvided: true,
         value: "1",
         description:
-          "You can choose a nullifier to prevent this signed message from being used across domains.",
+          "You can choose a nullifier to prevent this signed message from being used across domains."
       },
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
         remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
-        description: "The Semaphore group which you are proving you belong to.",
+        description: "The Semaphore group which you are proving you belong to."
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
@@ -280,25 +284,56 @@ async function addGroupMembershipProofPCD() {
         value: undefined,
         userProvided: true,
         description:
-          "The Semaphore Identity which you are signing the message on behalf of.",
+          "The Semaphore Identity which you are signing the message on behalf of."
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
         value: "1",
-        description:
-          "The message you are signing with your Semaphore identity.",
-      },
+        description: "The message you are signing with your Semaphore identity."
+      }
     },
     {
       genericProveScreen: true,
       description:
         "Generate a group membership proof using your passport's Semaphore Identity.",
-      title: "Group Membership Proof",
+      title: "Group Membership Proof"
     }
   );
 
   sendPassportRequest(url);
+}
+
+async function addEdDSAPCD() {
+  const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+    typeof EdDSAPCDPackage
+  >(
+    ZUPASS_URL,
+    window.location.origin + "/popup",
+    EdDSAPCDPackage.name,
+    {
+      message: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: ["0x12345", "0x54321"],
+        userProvided: true
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        userProvided: false,
+        // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
+        value:
+          "0001020304050607080900010203040506070809000102030405060708090001"
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: undefined,
+        userProvided: false
+      }
+    },
+    { title: "EdDSA Signature Proof" }
+  );
+
+  sendPassportRequest(proofUrl);
 }
 
 async function addSignatureProofPCD() {
@@ -313,16 +348,16 @@ async function addSignatureProofPCD() {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
-        userProvided: true,
+        userProvided: true
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         value: "1",
-        userProvided: false,
-      },
+        userProvided: false
+      }
     },
     {
-      title: "Semaphore Signature Proof",
+      title: "Semaphore Signature Proof"
     }
   );
 
@@ -331,7 +366,7 @@ async function addSignatureProofPCD() {
 
 async function addIdentityPCD() {
   const newIdentity = await SemaphoreIdentityPCDPackage.prove({
-    identity: new Identity(),
+    identity: new Identity()
   });
 
   const serializedNewIdentity = await SemaphoreIdentityPCDPackage.serialize(
@@ -356,7 +391,7 @@ async function addWebAuthnPCD() {
     userName: "user",
     attestationType: "direct",
     challenge: "challenge",
-    supportedAlgorithmIDs: [-7],
+    supportedAlgorithmIDs: [-7]
   });
   const startRegistrationResponse = await startRegistration(
     generatedRegistrationOptions
@@ -365,7 +400,7 @@ async function addWebAuthnPCD() {
     response: startRegistrationResponse,
     expectedOrigin: window.location.origin,
     expectedChallenge: generatedRegistrationOptions.challenge,
-    supportedAlgorithmIDs: [-7], // support ES256 signing algorithm
+    supportedAlgorithmIDs: [-7] // support ES256 signing algorithm
   });
 
   if (!verificationResponse.registrationInfo) {
@@ -384,10 +419,10 @@ async function addWebAuthnPCD() {
     authenticator: {
       credentialID,
       credentialPublicKey,
-      counter,
+      counter
     },
     challenge: "1", // arbitrary challenge to be signed
-    origin: window.location.origin,
+    origin: window.location.origin
   });
 
   const serializedNewCredential = await WebAuthnPCDPackage.serialize(

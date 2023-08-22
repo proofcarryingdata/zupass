@@ -31,10 +31,10 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.5.3",
-    "@pcd/pcd-types": "0.5.3",
-    "@pcd/semaphore-identity-pcd": "0.5.3",
-    "@pcd/semaphore-signature-pcd": "0.5.3",
+    "@pcd/passport-ui": "0.6.0",
+    "@pcd/pcd-types": "0.6.0",
+    "@pcd/semaphore-identity-pcd": "0.6.0",
+    "@pcd/semaphore-signature-pcd": "0.6.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",

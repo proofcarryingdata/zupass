@@ -1,9 +1,8 @@
 declare module "circomlibjs" {
   // Import the types used by eddsa and babyJub modules
-  import { Point, Scalar } from "circomlib/ff";
 
   type PoseidonFn = (inputs: bigint[]) => Uint8Array;
-  type Signature = { R8: Point; S: Scalar };
+  type Signature = { R8: any; S: any };
 
   export function buildEddsa(): Promise<Eddsa>;
   export function buildPoseidon(): Promise<PoseidonFn>;
@@ -27,6 +26,6 @@ declare module "circomlibjs" {
     packSignature(signature: Signature): Uint8Array;
 
     // Pack a signature into a Uint8Array
-    unpackSignature(packedSignature: Uint8Array): { R8: Point; S: Scalar };
+    unpackSignature(packedSignature: Uint8Array): Signature;
   }
 }

@@ -4,15 +4,15 @@ import "mocha";
 
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
-import { EdDSAPCD, EdDSAPackage, prove, verify } from "../src";
+import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src";
 
 describe("eddsa-pcd should work", function () {
   this.timeout(30_000);
   let pcd: EdDSAPCD;
 
   this.beforeAll(async function () {
-    if (EdDSAPackage.init) {
-      await EdDSAPackage.init({});
+    if (EdDSAPCDPackage.init) {
+      await EdDSAPCDPackage.init({});
     }
   });
 
@@ -43,9 +43,9 @@ describe("eddsa-pcd should work", function () {
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
-    const serialized = await EdDSAPackage.serialize(pcd);
-    const deserialized = await EdDSAPackage.deserialize(serialized.pcd);
-    const deserializedValid = await EdDSAPackage.verify(deserialized);
+    const serialized = await EdDSAPCDPackage.serialize(pcd);
+    const deserialized = await EdDSAPCDPackage.deserialize(serialized.pcd);
+    const deserializedValid = await EdDSAPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(pcd).to.deep.eq(deserialized);
   });
