@@ -8,7 +8,8 @@
     "build": "next build",
     "export": "next export",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.0",

@@ -15,7 +15,8 @@
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@pcd/passport-crypto": "0.6.1",

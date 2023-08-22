@@ -15,7 +15,8 @@
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@pcd/emitter": "0.0.2",
