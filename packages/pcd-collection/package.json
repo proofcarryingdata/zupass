@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@pcd/emitter": "0.0.2",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "chai": "^4.3.7",
     "uuid": "^9.0.0"
   },

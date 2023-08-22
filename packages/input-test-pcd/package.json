@@ -18,7 +18,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "@semaphore-protocol/proof": "^3.10.0",

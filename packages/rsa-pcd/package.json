@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@pcd/passport-ui": "0.6.1",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "chai": "^4.3.7",
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",

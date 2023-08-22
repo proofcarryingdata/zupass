@@ -18,7 +18,7 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@pcd/semaphore-identity-pcd": "0.6.1",
     "@semaphore-protocol/identity": "^3.10.0",
     "libsodium-wrappers": "^0.7.11",
