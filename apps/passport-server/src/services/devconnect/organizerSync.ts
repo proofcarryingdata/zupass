@@ -228,7 +228,7 @@ export class OrganizerSync {
    * Check all of the API responses for an event before syncing them to the
    * DB.
    */
-  private checkEventData(
+  private validateEventData(
     eventData: EventData,
     eventConfig: DevconnectPretixEventConfig
   ): string[] {
@@ -270,7 +270,7 @@ export class OrganizerSync {
     const errors = [];
 
     for (const { data, event } of fetchedData) {
-      errors.push(...this.checkEventData(data, event));
+      errors.push(...this.validateEventData(data, event));
     }
 
     if (errors.length > 0) {

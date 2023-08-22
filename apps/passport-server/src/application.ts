@@ -1,8 +1,5 @@
 import * as path from "path";
-import {
-  IDevconnectPretixAPI,
-  getDevconnectPretixAPI
-} from "./apis/devconnect/devconnectPretixAPI";
+import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { PretixAPI, getPretixAPI } from "./apis/pretixAPI";
