@@ -15,5 +15,6 @@ describe.only("PCD File System", async function () {
 
     await fs.addPCD("/", pcdList[0]);
     console.log("pcds in directory", await fs.getPcdsInDirectory("/"));
+    console.log("snapshot", fs.getSnapshot());
   });
 });

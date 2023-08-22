@@ -1,5 +1,6 @@
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import Dirent from "memfs/lib/Dirent";
+import * as snapshot from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
@@ -46,6 +47,10 @@ export class PCDFileSystem {
       JSON.parse(data)
     ) as SerializedPCD[];
     return this.pcdPackages.deserializeAll(asSerializedPCDs);
+  }
+
+  public getSnapshot() {
+    return snapshot.toSnapshotSync({ fs: this.volume });
   }
 
   private getFileNamesInDirectory(directoryPath: string): string[] {
