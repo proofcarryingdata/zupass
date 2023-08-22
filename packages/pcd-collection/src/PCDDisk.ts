@@ -14,10 +14,10 @@ export class PCDDisk {
     this.volume = volume ?? new Volume();
   }
 
-  public async insertPCD(pcd: PCD, dirPath: string): Promise<void> {
-    checkIsDirectory(this.volume, dirPath);
+  public async insertPCD(pcd: PCD, dir: string): Promise<void> {
+    checkIsDirectory(this.volume, dir);
 
-    const pcdPath = path.join(dirPath, pcd.id);
+    const pcdPath = path.join(dir, pcd.id);
 
     if (this.volume.existsSync(pcdPath)) {
       throw new Error(`${pcdPath} already exists`);
@@ -29,9 +29,9 @@ export class PCDDisk {
     );
   }
 
-  public async getPCDsInDirectory(directoryPath: string): Promise<PCD[]> {
+  public async getPCDsInDirectory(dir: string): Promise<PCD[]> {
     return this.pcdPackages.deserializeAll(
-      readFiles(this.volume, filesInDirectory(this.volume, directoryPath)).map(
+      readFiles(this.volume, filesInDirectory(this.volume, dir)).map(
         (data) => JSON.parse(data) as SerializedPCD
       )
     );
