@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.0",
+    "@pcd/eddsa-ticket-pcd": "0.1.0",
     "@pcd/ethereum-ownership-pcd": "0.6.1",
     "@pcd/halo-nonce-pcd": "0.2.1",
     "@pcd/passport-crypto": "0.6.1",

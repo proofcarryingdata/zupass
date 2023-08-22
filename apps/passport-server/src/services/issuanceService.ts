@@ -1,3 +1,4 @@
+import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
@@ -9,7 +10,6 @@ import {
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import {
   getPublicKey,
   getTicketData,
@@ -35,15 +35,22 @@ import { logger } from "../util/logger";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
+
+  private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedPrivateKey: string;
   private readonly exportedPublicKey: string;
 
-  public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
+  public constructor(
+    context: ApplicationContext,
+    rsaPrivateKey: NodeRSA,
+    eddsaPrivateKey: string
+  ) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
+    this.eddsaPrivateKey = eddsaPrivateKey;
   }
 
   public getPublicKey(): string {
@@ -55,7 +62,7 @@ export class IssuanceService {
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
     const serialized = await Promise.all(
-      pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
+      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
     );
 
     return { pcds: serialized, folder: "Devconnect" };
@@ -118,7 +125,7 @@ export class IssuanceService {
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in", {cause: e});
+      throw new Error("failed to check in", { cause: e });
     }
   }
 
@@ -248,37 +255,25 @@ export class IssuanceService {
 
   private async ticketDataToTicketPCD(
     ticketData: ITicketData
-  ): Promise<RSATicketPCD> {
-    const serializedTicketData = JSON.stringify(ticketData);
+  ): Promise<EdDSATicketPCD> {
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
-    const rsaPcd = await RSAPCDPackage.prove({
+    const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
       privateKey: {
-        argumentType: ArgumentTypeName.String,
-        value: this.exportedPrivateKey
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: serializedTicketData
+        value: this.eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
       },
       id: {
-        argumentType: ArgumentTypeName.String,
-        value: undefined
+        value: stableId,
+        argumentType: ArgumentTypeName.String
       }
     });
 
-    const rsaTicketPCD = await RSATicketPCDPackage.prove({
-      id: {
-        argumentType: ArgumentTypeName.String,
-        value: stableId
-      },
-      rsaPCD: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await RSAPCDPackage.serialize(rsaPcd)
-      }
-    });
-
-    return rsaTicketPCD;
+    return ticketPCD;
   }
 
   /**
@@ -286,7 +281,7 @@ export class IssuanceService {
    */
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
-  ): Promise<RSATicketPCD[]> {
+  ): Promise<EdDSATicketPCD[]> {
     const commitment = await this.checkUserExists(request.userProof);
     const email = commitment?.email;
 
@@ -332,18 +327,19 @@ export function startIssuanceService(
     return null;
   }
 
-  const pkey = loadPrivateKey();
+  const rsaKey = loadRSAPrivateKey();
+  const eddsaKey = loadEdDSAPrivateKey();
 
-  if (pkey == null) {
+  if (rsaKey == null || eddsaKey == null) {
     logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
 
-  const issuanceService = new IssuanceService(context, pkey);
+  const issuanceService = new IssuanceService(context, rsaKey, eddsaKey);
   return issuanceService;
 }
 
-function loadPrivateKey(): NodeRSA | null {
+function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
   if (pkeyEnv == null) {
@@ -362,4 +358,17 @@ function loadPrivateKey(): NodeRSA | null {
   }
 
   return null;
+}
+
+function loadEdDSAPrivateKey(): string | null {
+  const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY_BASE64;
+
+  if (pkeyEnv == null) {
+    logger(
+      "[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY_BASE64"
+    );
+    return null;
+  }
+
+  return pkeyEnv;
 }

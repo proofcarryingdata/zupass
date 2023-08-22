@@ -18,8 +18,8 @@ export function EdDSATicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
     <Container>
       <TicketQR pcd={pcd} />
       <TicketInfo>
-        <span>{ticketData.attendeeName}</span>
-        <span>{ticketData.attendeeEmail}</span>
+        <span>{ticketData?.attendeeName}</span>
+        <span>{ticketData?.attendeeEmail}</span>
       </TicketInfo>
     </Container>
   );

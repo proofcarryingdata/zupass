@@ -17,6 +17,7 @@
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@pcd/eddsa-pcd": "0.1.0",
+    "@pcd/eddsa-ticket-pcd": "0.1.0",
     "@pcd/ethereum-ownership-pcd": "0.6.1",
     "@pcd/passport-interface": "0.6.1",
     "@pcd/pcd-types": "0.6.2",
