@@ -332,22 +332,19 @@ export class OrganizerSync {
         span?.setAttribute("event_name", eventInfo.name.en);
 
         if (!(await this.syncEventInfos(organizer, event, eventInfo))) {
-          logger(
+          throw new Error(
             `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
           );
-          return;
         }
 
         if (!(await this.syncItemInfos(organizer, event, items))) {
-          logger(
+          throw new Error(
             `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
           );
-          return;
         }
 
         if (!(await this.syncTickets(organizer, event, tickets))) {
-          logger(`[DEVCONNECT PRETIX] Error updating tickets`);
-          return;
+          throw new Error(`[DEVCONNECT PRETIX] Error updating tickets`);
         }
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
