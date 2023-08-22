@@ -19,7 +19,8 @@
     "test": "turbo run test --concurrency=1 && yarn clean",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
-    "clean": "turbo run clean --parallel"
+    "clean": "turbo run clean --parallel && yarn clean:root",
+    "clean:root": "rm -rf node_modules"
   },
   "devDependencies": {
     "prettier": "^3.0.0",

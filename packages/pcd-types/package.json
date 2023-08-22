@@ -14,7 +14,8 @@
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

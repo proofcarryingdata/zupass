@@ -28,7 +28,8 @@
     "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --exit test/**/*.spec.ts",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@pcd/passport-ui": "0.6.1",
