@@ -1,10 +1,10 @@
-import { PCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import Dirent from "memfs/lib/Dirent";
-import { TDataOut } from "memfs/lib/encoding";
 import { Volume } from "memfs/lib/volume";
+import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
 
-export function isDirent(value: TDataOut | Dirent): value is Dirent {
+export function isDirent(value: unknown): value is Dirent {
   return (value as any)?.isDirectory !== undefined;
 }
 
@@ -24,16 +24,25 @@ export class PCDFileSystem {
     );
   }
 
-  // public async getPcdsInDirectory(path: string): Promise<PCD[]> {
-  //   const entries = this.volume.readdirSync(path);
-  //   const pcdFiles: Dirent[] = [];
+  public async getPcdsInDirectory(directoryPath: string): Promise<PCD[]> {
+    const fileNames = this.getFileNamesInDirectory(directoryPath);
+    const filePaths = fileNames.map((name) => path.join(directoryPath, name));
+    const fileDatas = filePaths.map((path) =>
+      this.volume.readFileSync(path, { encoding: "utf-8" }).toString()
+    );
+    const asSerializedPCDs = fileDatas.map((data) =>
+      JSON.parse(data)
+    ) as SerializedPCD[];
+    return this.pcdPackages.deserializeAll(asSerializedPCDs);
+  }
 
-  //   for (const entry of entries) {
-  //     if (isDirent(entry)) {
-  //       if (entry.isFile()) {
-  //         pcdFiles.push(entry);
-  //       }
-  //     }
-  //   }
-  // }
+  public getFileNamesInDirectory(directoryPath: string): string[] {
+    const entries: unknown[] = this.volume.readdirSync(directoryPath, {
+      withFileTypes: true
+    });
+    const fileEntries: Dirent[] = entries.filter(
+      (e) => isDirent(e) && e.isFile()
+    ) as Dirent[];
+    return fileEntries.map((e) => e.name.toString());
+  }
 }
