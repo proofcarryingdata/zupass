@@ -157,8 +157,6 @@ export class DevconnectPretixSyncService {
       const organizerPromises = [];
 
       // Attempt to run each organizer job in parallel
-      // Internally the organizers will use a queue to avoid excessive
-      // concurrent requests to the DB.
       for (const [id, organizer] of this.organizers.entries()) {
         if (!organizer.isRunning) {
           organizerPromises.push(this.syncSingleOrganizer(id, organizer));
@@ -166,13 +164,21 @@ export class DevconnectPretixSyncService {
       }
 
       // Wait until all organizers have either completed or failed
+      // This might take > 1 minute if one of the organizers hits a limit
+      // on requests to Pretix.
+      // In the meantime, this function might get called again, so there
+      // might be two overlapping syncs occurring. The !organizer.isRunning
+      // check earlier should prevent the same organizer being synced
+      // concurrently.
       await Promise.allSettled(organizerPromises);
 
       const syncEnd = Date.now();
       logger(
-        `[DEVCONNECT PRETIX] Sync end. Completed in ${Math.floor(
+        `[DEVCONNECT PRETIX] Sync end. Began at ${new Date(
+          syncStart
+        ).toString()} and completed in ${Math.floor(
           (syncEnd - syncStart) / 1000
-        )} seconds`
+        )} seconds.`
       );
     });
   }
