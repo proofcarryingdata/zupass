@@ -26,6 +26,7 @@ import {
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";
+import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
@@ -326,7 +327,7 @@ async function addEdDSAPCD() {
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
+        value: uuid(),
         userProvided: false
       }
     },
