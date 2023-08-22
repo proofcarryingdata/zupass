@@ -6,7 +6,9 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
   return [BigInt(1), BigInt(2)];
 }
 
-export function getTicketData(pcd?: EdDSATicketPCD): ITicketData | undefined {
+export function getEdDSATicketData(
+  pcd?: EdDSATicketPCD
+): ITicketData | undefined {
   return pcd?.claim?.ticket;
 }
 
@@ -21,7 +23,7 @@ const INVALID_TICKET_QR_CODE_COLOR = "#d3d3d3";
 export function getQRCodeColorOverride(
   pcd: EdDSATicketPCD
 ): string | undefined {
-  const ticketData = getTicketData(pcd);
+  const ticketData = getEdDSATicketData(pcd);
   if (!ticketData || ticketData.isConsumed || ticketData.isRevoked) {
     return INVALID_TICKET_QR_CODE_COLOR;
   }

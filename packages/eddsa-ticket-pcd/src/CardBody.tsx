@@ -9,10 +9,10 @@ import {
   EdDSATicketPCDPackage,
   initArgs
 } from "./EdDSATicketPCD";
-import { getQRCodeColorOverride, getTicketData } from "./utils";
+import { getEdDSATicketData, getQRCodeColorOverride } from "./utils";
 
 export function EdDSATicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
-  const ticketData = getTicketData(pcd);
+  const ticketData = getEdDSATicketData(pcd);
 
   return (
     <Container>

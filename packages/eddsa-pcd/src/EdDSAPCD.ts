@@ -161,3 +161,10 @@ export const EdDSAPCDPackage: PCDPackage<
   deserialize,
   init
 };
+
+export function getEdDSAPublicKey(privateKey: string): [string, string] {
+  return eddsa.prv2pub(fromHexString(privateKey)).map(toHexString) as [
+    string,
+    string
+  ];
+}

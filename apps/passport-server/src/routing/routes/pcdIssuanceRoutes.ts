@@ -23,7 +23,7 @@ export function initPCDIssuanceRoutes(
       if (!issuanceService) {
         throw new Error("issuance service not instantiated");
       }
-      res.send(issuanceService.getPublicKey());
+      res.send(issuanceService.getRSAPublicKey());
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

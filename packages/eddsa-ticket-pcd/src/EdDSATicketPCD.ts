@@ -12,7 +12,7 @@ import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { EdDSATicketCardBody } from "./CardBody";
-import { getTicketData, ticketDataToBigInts } from "./utils";
+import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
 export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 
@@ -171,7 +171,7 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
     throw new Error("package not initialized");
   }
 
-  const ticketData = getTicketData(pcd);
+  const ticketData = getEdDSATicketData(pcd);
 
   if (!ticketData) {
     return {

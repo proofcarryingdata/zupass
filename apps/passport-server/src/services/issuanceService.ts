@@ -1,4 +1,9 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  getEdDSATicketData
+} from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
@@ -10,17 +15,12 @@ import {
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import {
-  getPublicKey,
-  getTicketData,
-  ITicketData,
-  RSATicketPCD,
-  RSATicketPCDPackage
-} from "@pcd/rsa-ticket-pcd";
+import { ITicketData } from "@pcd/rsa-ticket-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import _ from "lodash";
 import NodeRSA from "node-rsa";
 import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -38,8 +38,8 @@ export class IssuanceService {
 
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
-  private readonly exportedPrivateKey: string;
-  private readonly exportedPublicKey: string;
+  private readonly exportedRSAPrivateKey: string;
+  private readonly exportedRSAPublicKey: string;
 
   public constructor(
     context: ApplicationContext,
@@ -48,13 +48,17 @@ export class IssuanceService {
   ) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
-    this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
-    this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
+    this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
+    this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
   }
 
-  public getPublicKey(): string {
-    return this.exportedPublicKey;
+  public getRSAPublicKey(): string {
+    return this.exportedRSAPublicKey;
+  }
+
+  public async getEdDSAPublicKey(): Promise<[string, string]> {
+    return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
   public async handleIssueRequest(
@@ -72,7 +76,7 @@ export class IssuanceService {
     request: CheckInRequest
   ): Promise<CheckInResponse> {
     try {
-      const ticketPCD = await RSATicketPCDPackage.deserialize(
+      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
 
@@ -82,7 +86,14 @@ export class IssuanceService {
         return ticketValid;
       }
 
-      const ticketData = getTicketData(ticketPCD);
+      const ticketData = getEdDSATicketData(ticketPCD);
+
+      if (!ticketData) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
 
       const checker = await this.checkUserExists(request.checkerProof);
 
@@ -133,7 +144,7 @@ export class IssuanceService {
     request: CheckTicketRequest
   ): Promise<CheckTicketResponse> {
     try {
-      const ticketPCD = await RSATicketPCDPackage.deserialize(
+      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
       return this.checkTicket(ticketPCD);
@@ -146,10 +157,10 @@ export class IssuanceService {
   }
 
   public async checkTicket(
-    ticketPCD: RSATicketPCD
+    ticketPCD: EdDSATicketPCD
   ): Promise<CheckTicketResponse> {
     try {
-      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
+      const proofPublicKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
       if (!proofPublicKey) {
         return {
           success: false,
@@ -157,16 +168,17 @@ export class IssuanceService {
         };
       }
 
-      const serverPublicKey = this.getPublicKey();
-      if (serverPublicKey !== proofPublicKey) {
+      const serverPublicKey = await this.getEdDSAPublicKey();
+      if (_.isEqual(serverPublicKey, proofPublicKey)) {
         return {
           success: false,
           error: { name: "InvalidSignature" }
         };
       }
 
-      const { ticketId } = getTicketData(ticketPCD);
-      if (!ticketId) {
+      const ticket = getEdDSATicketData(ticketPCD);
+
+      if (!ticket || !ticket.ticketId) {
         return {
           success: false,
           error: { name: "InvalidTicket" }
@@ -175,7 +187,7 @@ export class IssuanceService {
 
       const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
         this.context.dbPool,
-        ticketId
+        ticket.ticketId
       );
 
       if (!ticketInDb) {

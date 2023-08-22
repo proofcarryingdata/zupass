@@ -1,6 +1,6 @@
+import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EncryptedPacket } from "@pcd/passport-crypto";
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { RSATicketPCD } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 
@@ -109,7 +109,7 @@ export interface IssuedPCDsResponse {
 }
 
 export interface CheckTicketRequest {
-  ticket: SerializedPCD<RSATicketPCD>;
+  ticket: SerializedPCD<EdDSATicketPCD>;
 }
 
 export type CheckTicketResponse =
@@ -133,7 +133,7 @@ export type TicketError =
 
 export interface CheckInRequest {
   checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
-  ticket: SerializedPCD<RSATicketPCD>;
+  ticket: SerializedPCD<EdDSATicketPCD>;
 }
 
 export type CheckInResponse = CheckTicketResponse;
