@@ -169,7 +169,7 @@ export class IssuanceService {
       }
 
       const serverPublicKey = await this.getEdDSAPublicKey();
-      if (_.isEqual(serverPublicKey, proofPublicKey)) {
+      if (!_.isEqual(serverPublicKey, proofPublicKey)) {
         return {
           success: false,
           error: { name: "InvalidSignature" }
