@@ -23,14 +23,33 @@ export async function requestIssuanceServiceEnabled(
   return response.text === "true";
 }
 
-export async function requestServerPublicKey(
+export async function requestServerRSAPublicKey(
   application: PCDPass
 ): Promise<Response> {
   return new Promise((resolve, reject) => {
     const { expressContext } = application;
     chai
       .request(expressContext.app)
-      .get("/issue/public-key")
+      .get("/issue/rsa-public-key")
+      .send()
+      .then(async (r) => {
+        try {
+          resolve(r);
+        } catch (e) {
+          reject(e);
+        }
+      });
+  });
+}
+
+export async function requestServerEdDSAPublicKey(
+  application: PCDPass
+): Promise<Response> {
+  return new Promise((resolve, reject) => {
+    const { expressContext } = application;
+    chai
+      .request(expressContext.app)
+      .get("/issue/eddsa-public-key")
       .send()
       .then(async (r) => {
         try {

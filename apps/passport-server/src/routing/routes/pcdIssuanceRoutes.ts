@@ -18,12 +18,25 @@ export function initPCDIssuanceRoutes(
     res.json(issuanceService != null);
   });
 
-  app.get("/issue/public-key", async (req: Request, res: Response) => {
+  app.get("/issue/rsa-public-key", async (req: Request, res: Response) => {
     try {
       if (!issuanceService) {
         throw new Error("issuance service not instantiated");
       }
       res.send(issuanceService.getRSAPublicKey());
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/issue/eddsa-public-key", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+      res.send(await issuanceService.getEdDSAPublicKey());
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

@@ -36,7 +36,7 @@ import { PCDPass } from "../src/types";
 import {
   requestCheckIn,
   requestIssuedPCDs,
-  requestServerPublicKey
+  requestServerRSAPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
@@ -156,9 +156,8 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
-    );
+    const pretixSyncStatus =
+      await waitForDevconnectPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -523,7 +522,7 @@ describe("devconnect functionality", function () {
   step(
     "anyone should be able to request the server's public key",
     async function () {
-      const publicKeyResponse = await requestServerPublicKey(application);
+      const publicKeyResponse = await requestServerRSAPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
       publicKey = new NodeRSA(publicKeyResponse.text, "public");
       expect(publicKey.getKeySize()).to.eq(2048);
