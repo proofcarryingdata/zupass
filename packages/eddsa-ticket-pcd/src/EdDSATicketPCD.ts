@@ -17,15 +17,24 @@ import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 
 export interface ITicketData {
-  timestamp?: number;
-  eventName?: string;
-  eventConfigId?: string;
-  ticketName?: string;
-  attendeeName?: string;
-  attendeeEmail?: string;
-  ticketId?: string;
-  isConsumed?: boolean;
-  isRevoked?: boolean;
+  // the fields below are not signed and are used for display purposes
+
+  attendeeName: string;
+  attendeeEmail: string;
+  eventName: string;
+  ticketName: string;
+
+  // the fields below are signed using the server's private eddsa key
+
+  ticketId: string; // primary key uuid of the ticket's `devconnect_pretix_tickets` entry
+  eventId: string; // primary key uuid of the event's `pretix_events_config` entry
+  productId: string; // primary key uuid of the ticket's `devconnect_pretix_items_info` entry
+  timestampConsumed: number;
+  timestampSigned: number;
+  attendeeSemaphoreId: string; // stringified big int
+  checkerSemaphoreId: string; // stringified big int
+  isConsumed: boolean;
+  isRevoked: boolean;
 }
 
 export interface EdDSATicketPCDInitArgs {
