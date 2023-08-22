@@ -12,8 +12,8 @@ describe.only("PCD File System", async function () {
   it("should let you manage a file system", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD()]);
     const fs = new PCDFileSystem(new PCDPackages(packages));
-    await fs.addPCD("/test", pcdList[0]);
-    console.log("files in directory", await fs.getFileNamesInDirectory("/"));
+
+    await fs.addPCD("/", pcdList[0]);
     console.log("pcds in directory", await fs.getPcdsInDirectory("/"));
   });
 });

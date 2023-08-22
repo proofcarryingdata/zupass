@@ -17,9 +17,21 @@ export class PCDFileSystem {
     this.volume = volume ?? new Volume();
   }
 
-  public async addPCD(path: string, pcd: PCD): Promise<void> {
+  public async addPCD(directoryPath: string, pcd: PCD): Promise<void> {
+    const isDirectory = this.volume.statSync(directoryPath).isDirectory();
+
+    if (!isDirectory) {
+      throw new Error(`${directoryPath} is not a directory`);
+    }
+
+    const pcdPath = path.join(directoryPath, pcd.id);
+
+    if (this.volume.existsSync(pcdPath)) {
+      throw new Error(`${pcdPath} already exists`);
+    }
+
     this.volume.writeFileSync(
-      path,
+      pcdPath,
       JSON.stringify(await this.pcdPackages.serialize(pcd))
     );
   }
@@ -36,12 +48,22 @@ export class PCDFileSystem {
     return this.pcdPackages.deserializeAll(asSerializedPCDs);
   }
 
-  public getFileNamesInDirectory(directoryPath: string): string[] {
+  private getFileNamesInDirectory(directoryPath: string): string[] {
     const entries: unknown[] = this.volume.readdirSync(directoryPath, {
       withFileTypes: true
     });
     const fileEntries: Dirent[] = entries.filter(
       (e) => isDirent(e) && e.isFile()
+    ) as Dirent[];
+    return fileEntries.map((e) => e.name.toString());
+  }
+
+  private getDirectoryNamesInDirectory(directoryPath: string): string[] {
+    const entries: unknown[] = this.volume.readdirSync(directoryPath, {
+      withFileTypes: true
+    });
+    const fileEntries: Dirent[] = entries.filter(
+      (e) => isDirent(e) && e.isDirectory()
     ) as Dirent[];
     return fileEntries.map((e) => e.name.toString());
   }
