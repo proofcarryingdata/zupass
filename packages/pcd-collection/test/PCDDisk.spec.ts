@@ -1,6 +1,6 @@
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import "mocha";
-import { PCDFileSystem } from "../src/PCDFileSystem";
+import { PCDDisk } from "../src/PCDDisk";
 import { PCDPackages } from "../src/PCDPackages";
 import { newPCD } from "./util";
 
@@ -10,11 +10,12 @@ describe.only("PCD File System", async function () {
   const packages = [RSAPCDPackage];
 
   it("should let you manage a file system", async function () {
-    const pcdList = await Promise.all([newPCD(), newPCD()]);
-    const fs = new PCDFileSystem(new PCDPackages(packages));
+    const pcd = await newPCD();
+    const fs = new PCDDisk(new PCDPackages(packages));
 
-    await fs.addPCD("/", pcdList[0]);
-    console.log("pcds in directory", await fs.getPcdsInDirectory("/"));
+    await fs.insertPCD(pcd, "/");
+
+    console.log("pcds in directory", await fs.getPCDsInDirectory("/"));
     console.log("snapshot", fs.getSnapshot());
   });
 });

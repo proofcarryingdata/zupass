@@ -1,3 +1,3 @@
 export * from "./PCDCollection";
-export * from "./PCDFileSystem";
+export * from "./PCDDisk";
 export * from "./PCDPackages";
