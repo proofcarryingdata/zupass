@@ -12,7 +12,7 @@ describe("eddsa-pcd should work", function () {
 
   this.beforeAll(async function () {
     if (EdDSAPackage.init) {
-      await EdDSAPackage.init(undefined);
+      await EdDSAPackage.init({});
     }
   });
 

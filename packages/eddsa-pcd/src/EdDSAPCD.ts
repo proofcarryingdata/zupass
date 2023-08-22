@@ -14,6 +14,8 @@ import { EdDSACardBody } from "./CardBody";
 
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
+export interface EdDSAInitArgs {}
+
 export interface EdDSAPCDArgs {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
@@ -148,7 +150,7 @@ export const EdDSAPackage: PCDPackage<
   EdDSAPCDClaim,
   EdDSAPCDProof,
   EdDSAPCDArgs,
-  undefined
+  EdDSAInitArgs
 > = {
   name: EdDSAPCDTypeName,
   renderCardBody: EdDSACardBody,
