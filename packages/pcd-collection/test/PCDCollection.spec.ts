@@ -1,10 +1,14 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { expect } from "chai";
+import chai, { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
 import { PCDCollection } from "../src";
+
+import chaiSpies from "chai-spies";
+
+chai.use(chaiSpies);
 
 async function newPCD(id?: string) {
   id = id ?? uuid();
@@ -221,4 +225,45 @@ describe("PCDCollection", async function () {
 
     expect(hashAfterEdit).to.not.eq(hash);
   });
+
+  it("should emit a new hash on mutation", async function () {
+    const pcdList = await Promise.all([newPCD(), newPCD(), newPCD()]);
+
+    const serializedPCDs = await Promise.all(
+      pcdList.map(RSAPCDPackage.serialize)
+    );
+
+    const collection = new PCDCollection(packages);
+    await collection.deserializeAllAndAdd(serializedPCDs);
+    const firstHash = await waitForNewHash(collection);
+    const anotherPcd = await newPCD();
+    const secondhash = await waitForNewHash(collection, () => {
+      collection.add(anotherPcd);
+    });
+    expect(secondhash).to.not.eq(firstHash);
+
+    const thirdHash = await waitForNewHash(collection, () => {
+      collection.remove(anotherPcd.id);
+    });
+    expect(secondhash).to.not.eq(thirdHash);
+    expect(thirdHash).to.eq(firstHash);
+
+    const fourthHash = await waitForNewHash(collection, () => {
+      collection.setFolder(pcdList[0].id, "folder");
+    });
+    expect(fourthHash).to.not.eq(firstHash);
+  });
 });
+
+function waitForNewHash(
+  collection: PCDCollection,
+  mutation?: () => void
+): Promise<string> {
+  return new Promise((resolve) => {
+    const unsubscribe = collection.hashEmitter.listen((newHash) => {
+      unsubscribe();
+      resolve(newHash);
+    });
+    mutation && mutation();
+  });
+}

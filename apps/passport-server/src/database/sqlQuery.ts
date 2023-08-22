@@ -1,4 +1,5 @@
-import { Pool, QueryResult } from "pg";
+import { QueryResult } from "pg";
+import { Pool } from "postgres-pool";
 import { traced } from "../services/telemetryService";
 
 /**
@@ -12,6 +13,11 @@ export function sqlQuery(
 ): Promise<QueryResult> {
   return traced("DB", "query", async (span) => {
     span?.setAttribute("query", query);
-    return await client.query(query, args);
+    try {
+      return await client.query(query, args);
+    } catch (e) {
+      span?.setAttribute("error", e + "");
+      throw e;
+    }
   });
 }

@@ -15,13 +15,14 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
-import { DispatchContext } from "./dispatch";
+import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
+import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
   loadPCDs,
@@ -30,6 +31,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
+import { useOnStateChange } from "./subscribe";
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -129,46 +131,21 @@ export async function loadIssuedPCDs(
 }
 
 export function useSyncE2EEStorage() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const { dispatch } = useContext(StateContext);
 
-  useEffect(() => {
+  useOnStateChange(() => {
     dispatch({ type: "sync" });
-  }, [dispatch, state]);
-}
-
-export function useLoggedIn() {
-  const [state] = useContext(DispatchContext);
-
-  const loggedIn = useMemo(() => {
-    return state.self !== undefined;
-  }, [state]);
-
-  return loggedIn;
+  }, [dispatch]);
 }
 
 export function useHasUploaded() {
-  const [state] = useContext(DispatchContext);
   const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
+  const { hash } = usePCDCollectionWithHash();
+  const uploadedId = useUploadedId();
 
   useEffect(() => {
-    (async () => {
-      setHasUploaded(state.uploadedUploadId === (await state.pcds.getHash()));
-    })();
-  }, [state.pcds, state.uploadedUploadId]);
-
-  useEffect(() => {
-    setHasUploaded(undefined);
-  }, [state.uploadedUploadId]);
+    setHasUploaded(hash === uploadedId);
+  }, [hash, uploadedId]);
 
   return hasUploaded;
-}
-
-export function useIsDownloaded() {
-  const [state] = useContext(DispatchContext);
-
-  const isDownloaded = useMemo(() => {
-    return state.downloadedPCDs !== undefined;
-  }, [state]);
-
-  return isDownloaded;
 }

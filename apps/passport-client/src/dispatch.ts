@@ -24,7 +24,7 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { AppError, AppState } from "./state";
+import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
 import {
   downloadStorage,
@@ -78,7 +78,12 @@ export type Action =
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
 
-export const DispatchContext = createContext<[AppState, Dispatcher]>([] as any);
+export type StateContextState = {
+  getState: GetState;
+  stateEmitter: StateEmitter;
+  dispatch: Dispatcher;
+};
+export const StateContext = createContext<StateContextState>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 

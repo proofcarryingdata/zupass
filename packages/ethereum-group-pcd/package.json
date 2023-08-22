@@ -1,6 +1,6 @@
 {
   "name": "@pcd/ethereum-group-pcd",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/node/index.js",
   "types": "./src/index.ts",
@@ -31,10 +31,10 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.6.0",
-    "@pcd/pcd-types": "0.6.0",
-    "@pcd/semaphore-identity-pcd": "0.6.0",
-    "@pcd/semaphore-signature-pcd": "0.6.0",
+    "@pcd/passport-ui": "0.6.1",
+    "@pcd/pcd-types": "0.6.1",
+    "@pcd/semaphore-identity-pcd": "0.6.1",
+    "@pcd/semaphore-signature-pcd": "0.6.1",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
@@ -46,8 +46,8 @@
     "styled-components": "^5.3.9"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.5.2",
-    "@pcd/tsconfig": "0.5.2",
+    "@pcd/eslint-config-custom": "0.6.1",
+    "@pcd/tsconfig": "0.6.1",
     "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",

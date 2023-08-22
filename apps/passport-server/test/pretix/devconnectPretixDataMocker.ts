@@ -2,6 +2,7 @@ import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixEvent,
+  DevconnectPretixEventSettings,
   DevconnectPretixItem,
   DevconnectPretixOrder,
   DevconnectPretixPosition
@@ -26,6 +27,7 @@ export interface IOrganizer {
   ordersByEventID: Map<string, DevconnectPretixOrder[]>;
   eventByEventID: Map<string, DevconnectPretixEvent>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
+  settingsByEventID: Map<string, DevconnectPretixEventSettings>;
 
   // specific data for easier testing
   eventAItem1: DevconnectPretixItem;
@@ -35,6 +37,10 @@ export interface IOrganizer {
   eventA: DevconnectPretixEvent;
   eventB: DevconnectPretixEvent;
   eventC: DevconnectPretixEvent;
+
+  eventASettings: DevconnectPretixEventSettings;
+  eventBSettings: DevconnectPretixEventSettings;
+  eventCSettings: DevconnectPretixEventSettings;
 
   EMAIL_1: string;
   EMAIL_2: string;
@@ -93,6 +99,67 @@ export class DevconnectPretixDataMocker {
     org.ordersByEventID.set(eventID, eventOrders);
   }
 
+  public removeEventItem(orgUrl: string, eventID: string, id: number): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+
+    let eventItems = org.itemsByEventID.get(eventID) ?? [];
+    eventItems = eventItems.filter((item) => item.id !== id);
+    org.itemsByEventID.set(eventID, eventItems);
+  }
+
+  public updateEvent(
+    orgUrl: string,
+    eventID: string,
+    update: (event: DevconnectPretixEvent) => void
+  ): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const event = org.eventByEventID.get(eventID);
+    if (!event) {
+      throw new Error(`couldn't find event ${eventID}`);
+    }
+    update(event);
+  }
+
+  public getEventSettings(
+    orgUrl: string,
+    eventID: string
+  ): DevconnectPretixEventSettings {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    if (!org.settingsByEventID.has(eventID)) {
+      throw new Error(`missing settings for ${eventID}`);
+    }
+    return org.settingsByEventID.get(eventID) as DevconnectPretixEventSettings;
+  }
+
+  public setEventSettings(
+    orgUrl: string,
+    eventID: string,
+    settings: DevconnectPretixEventSettings
+  ): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    org.settingsByEventID.set(eventID, settings);
+  }
+
+  public updateItem(
+    orgUrl: string,
+    eventID: string,
+    itemId: number,
+    update: (order: DevconnectPretixItem) => void
+  ): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const eventItems = org.itemsByEventID.get(eventID) ?? [];
+    const item = eventItems.find((item) => item.id === itemId);
+    if (!item) {
+      throw new Error(`couldn't find item ${itemId} for event ${eventID}`);
+    }
+    update(item);
+  }
+
   private newMockData(): IMockDevconnectPretixData {
     const organizer1 = this.newOrganizer();
     const organizer2 = this.newOrganizer();
@@ -121,6 +188,10 @@ export class DevconnectPretixDataMocker {
     const eventA = this.newEvent("Event A", "event-a");
     const eventB = this.newEvent("Event B", "event-b");
     const eventC = this.newEvent("Event C", "event-c");
+
+    const eventASettings = this.newEventSettings();
+    const eventBSettings = this.newEventSettings();
+    const eventCSettings = this.newEventSettings();
 
     const eventAItem1 = this.newItem("item-1");
     const eventAItem2 = this.newItem("item-2");
@@ -165,18 +236,28 @@ export class DevconnectPretixDataMocker {
     itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
     itemsByEventID.set(eventB.slug, [eventBItem3]);
 
+    const settingsByEventID: Map<string, DevconnectPretixEventSettings> =
+      new Map();
+    settingsByEventID.set(eventA.slug, eventASettings);
+    settingsByEventID.set(eventB.slug, eventBSettings);
+    settingsByEventID.set(eventC.slug, eventCSettings);
+
     return {
       orgUrl,
       token,
       ordersByEventID,
       eventByEventID: eventNameByEventID,
       itemsByEventID,
+      settingsByEventID,
       eventAItem1,
       eventAItem2,
       eventBItem3,
       eventA,
       eventB,
       eventC,
+      eventASettings,
+      eventBSettings,
+      eventCSettings,
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
@@ -194,7 +275,9 @@ export class DevconnectPretixDataMocker {
   private newItem(name: string): DevconnectPretixItem {
     return {
       id: this.nextId(),
-      name: { en: name }
+      name: { en: name },
+      admission: true,
+      personalized: true
     };
   }
 
@@ -232,6 +315,13 @@ export class DevconnectPretixDataMocker {
       attendee_email: attendeeEmail,
       subevent: subevent,
       secret: this.randomSecret()
+    };
+  }
+
+  private newEventSettings(): DevconnectPretixEventSettings {
+    return {
+      attendee_emails_asked: true,
+      attendee_emails_required: true
     };
   }
 

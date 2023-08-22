@@ -2,35 +2,36 @@ import {
   PCDGetRequest,
   ProveOptions,
   ProveRequest,
-  SignInMessagePayload,
+  SignInMessagePayload
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCDArgs,
-  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
-import { ReactNode, useCallback, useContext, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
-import { DispatchContext } from "../../../src/dispatch";
+import { useIdentity, useSelf } from "../../../src/appHooks";
 import {
   safeRedirect,
-  safeRedirectPending,
+  safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreSignatureProveScreen({
-  req,
+  req
 }: {
   req: PCDGetRequest<typeof SemaphoreSignaturePCDPackage>;
 }) {
   // Create a zero-knowledge proof using the identity in DispatchContext
-  const [state] = useContext(DispatchContext);
+  const self = useSelf();
+  const identity = useIdentity();
   const [proving, setProving] = useState(false);
   const onProve = useCallback(async () => {
     try {
@@ -42,8 +43,8 @@ export function SemaphoreSignatureProveScreen({
 
       const modifiedArgs = cloneDeep(req.args);
       const args = await fillArgs(
-        state.identity,
-        state.self.uuid,
+        identity,
+        self.uuid,
         modifiedArgs,
         req.returnUrl,
         req.options
@@ -52,7 +53,7 @@ export function SemaphoreSignatureProveScreen({
       if (req.options?.proveOnServer === true) {
         const serverReq: ProveRequest = {
           pcdType: SemaphoreSignaturePCDPackage.name,
-          args: args,
+          args: args
         };
         const pendingPCD = await requestPendingPCD(serverReq);
         safeRedirectPending(req.returnUrl, pendingPCD);
@@ -65,7 +66,7 @@ export function SemaphoreSignatureProveScreen({
     } catch (e) {
       console.log(e);
     }
-  }, [req, state.identity, state.self?.uuid]);
+  }, [identity, req.args, req.options, req.returnUrl, self.uuid]);
 
   const lines: ReactNode[] = [];
 
@@ -119,7 +120,7 @@ async function fillArgs(
     console.log("this signature request is for signing into a website", uuid);
     const payload: SignInMessagePayload = {
       uuid,
-      referrer: getOrigin(returnURL),
+      referrer: getOrigin(returnURL)
     };
     signedMessage.value = JSON.stringify(payload);
   } else if (signedMessage.value === undefined) {
@@ -135,8 +136,8 @@ async function fillArgs(
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({ identity })
-      ),
-    },
+      )
+    }
   };
 
   return args;

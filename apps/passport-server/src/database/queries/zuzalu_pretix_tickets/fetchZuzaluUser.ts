@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { LoggedInZuzaluUser, ZuzaluUser } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -85,7 +85,8 @@ where c.uuid = $1;`,
 export async function fetchAllLoggedInZuzaluUsers(
   client: Pool
 ): Promise<LoggedInZuzaluUser[]> {
-  const result = await client.query(
+  const result = await sqlQuery(
+    client,
     `\
 select 
     c.uuid,

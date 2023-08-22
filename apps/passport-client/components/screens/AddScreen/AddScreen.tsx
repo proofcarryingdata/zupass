@@ -2,11 +2,11 @@ import {
   PCDAddRequest,
   PCDProveAndAddRequest,
   PCDRequest,
-  PCDRequestType,
+  PCDRequestType
 } from "@pcd/passport-interface";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { DispatchContext } from "../../../src/dispatch";
+import { useDispatch, useSelf } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
@@ -20,11 +20,12 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  * is freshly generated in-passport via a proving screen.
  */
 export function AddScreen() {
+  useSyncE2EEStorage();
+  const dispatch = useDispatch();
+  const self = useSelf();
   const location = useLocation();
-  const [state, dispatch] = useContext(DispatchContext);
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
-  useSyncE2EEStorage();
 
   const screen = getScreen(request);
   useEffect(() => {
@@ -33,7 +34,7 @@ export function AddScreen() {
     }
   }, [dispatch, screen]);
 
-  if (state.self == null) {
+  if (self == null) {
     sessionStorage.pendingAddRequest = JSON.stringify(request);
     window.location.href = "/#/login";
     window.location.reload();

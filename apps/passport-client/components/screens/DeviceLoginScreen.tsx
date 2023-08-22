@@ -1,14 +1,14 @@
 import { Spacer } from "@pcd/passport-ui";
-import { ChangeEvent, useCallback, useContext, useState } from "react";
+import { ChangeEvent, useCallback, useState } from "react";
 import styled from "styled-components";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch } from "../../src/appHooks";
 import { BigInput, Button, CenterColumn, H2, TextCenter } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
 export function DeviceLoginScreen() {
   const [email, setEmail] = useState("");
   const [secret, setSecret] = useState("");
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
 
   const onAuthenticate = useCallback(() => {
     dispatch({

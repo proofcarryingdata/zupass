@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -23,7 +23,7 @@ on conflict do nothing;`,
       params.order_id,
       params.visitor_date_ranges === undefined
         ? undefined
-        : JSON.stringify(params.visitor_date_ranges),
+        : JSON.stringify(params.visitor_date_ranges)
     ]
   );
   return result.rowCount;

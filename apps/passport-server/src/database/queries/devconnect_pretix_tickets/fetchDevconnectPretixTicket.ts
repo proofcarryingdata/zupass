@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import {
   DevconnectPretixTicketDB,
   DevconnectPretixTicketDBWithEmailAndItem,
@@ -36,7 +36,8 @@ export async function fetchDevconnectPretixTicketsByEvent(
     select t.* from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
     join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
-    where e.pretix_events_config_id = $1`,
+    where e.pretix_events_config_id = $1
+    and t.is_deleted = false`,
     [eventConfigID]
   );
 
@@ -56,7 +57,8 @@ export async function fetchDevconnectPretixTicketByTicketId(
     select t.* from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
     join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
-    where t.id = $1`,
+    where t.id = $1
+    and t.is_deleted = false`,
     [ticketId]
   );
 
@@ -74,6 +76,7 @@ export async function fetchDevconnectPretixTicketsByEmail(
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
     join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
     where t.email = $1
+    and t.is_deleted = false
     order by t.id asc
     `,
     [email]
@@ -103,6 +106,7 @@ export async function fetchDevconnectDeviceLoginTicket(
     join pretix_events_config ec on ec.id = e.pretix_events_config_id
     where i.item_id = ANY(ec.superuser_item_ids)
     and t.email = $1 and t.secret = $2
+    and t.is_deleted = false
     `,
     [email, secret]
   );
@@ -120,7 +124,8 @@ select *, t.id as ticket_id from devconnect_pretix_tickets t
 join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
 join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
 join pretix_events_config ec on ec.id = e.pretix_events_config_id
-where i.item_id = ANY(ec.superuser_item_ids);
+where i.item_id = ANY(ec.superuser_item_ids)
+and t.is_deleted = false;
     `
   );
   return result.rows;
@@ -139,6 +144,7 @@ join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_i
 join pretix_events_config ec on ec.id = e.pretix_events_config_id
 where i.item_id = ANY(ec.superuser_item_ids)
 and ec.id = $1
+and t.is_deleted = false
     `,
     [eventConfigID]
   );
@@ -158,6 +164,7 @@ join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_i
 join pretix_events_config ec on ec.id = e.pretix_events_config_id
 where i.item_id = ANY(ec.superuser_item_ids)
 and t.email = $1
+and t.is_deleted = false
     `,
     [email]
   );

@@ -2,10 +2,14 @@ import { User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
+import { Emitter } from "./emitter";
 
 export type PendingAction =
   | { type: "new-passport"; email: string }
   | { type: "save-sync-key" };
+
+export type GetState = () => AppState;
+export type StateEmitter = Emitter<AppState>;
 
 export interface AppState {
   // Zuzalu semaphore identity.

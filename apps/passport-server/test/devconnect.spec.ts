@@ -12,7 +12,7 @@ import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
 import NodeRSA from "node-rsa";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
@@ -346,6 +346,176 @@ describe("devconnect functionality", function () {
     ]);
   });
 
+  /**
+   * This test covers the case where an event is updated as part of a sync.
+   * It's not very interesting, and mostly exists to contrast with the
+   * subsequent test in which the same operation fails due to the event's
+   * settings being invalid.
+   */
+  step(
+    "should be able to sync an event with valid settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        // These settings are valid
+        { attendee_emails_asked: true, attendee_emails_required: true }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      expect(event?.event_name).to.eq(updatedNameInNewSync);
+      expect(event?.event_name).to.not.eq(originalEvent?.event_name);
+    }
+  );
+
+  /**
+   * This is identical to the previous test, except for the use of invalid
+   * event settings, which causes the sync to fail. The only observable
+   * effect here is the absence of a change to the event in the DB.
+   */
+  step(
+    "should not be able to sync an event with invalid settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedNameInNewSync;
+        }
+      );
+
+      const oldSettings = mocker.getEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug
+      );
+
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        // These settings are invalid, so our sync will fail
+        { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const event = await fetchPretixEventInfo(db, eventAConfigId);
+
+      // The event name does *not* match the one fetched during sync
+      expect(event?.event_name).to.not.eq(updatedNameInNewSync);
+      // Instead, the original name remains.
+      expect(event?.event_name).to.eq(originalEvent?.event_name);
+
+      // Since we introduced invalid data, we want to restore the valid
+      // data in order to avoid interfering with future tests.
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        oldSettings
+      );
+    }
+  );
+
+  step(
+    "should be able to sync an item with valid item settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      devconnectPretixSyncService.replaceApi(
+        getDevconnectMockPretixAPI(mocker.get())
+      );
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is valid
+          //item.generate_tickets = null;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name matches the one fetched during sync
+      expect(item.item_name).to.eq(updatedNameInNewSync);
+      // The original name no longer matches
+      expect(item.item_name).to.not.eq(originalItem.item_name);
+    }
+  );
+
+  step(
+    "should not be able to sync an item with invalid item settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is not valid
+          item.generate_tickets = true;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name does *not* match the one fetched during sync
+      expect(item.item_name).to.not.eq(updatedNameInNewSync);
+      // Instead, the original name remains.
+      expect(item.item_name).to.eq(originalItem.item_name);
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // Restore the item to a valid setting
+          item.generate_tickets = false;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+    }
+  );
+
   let user: User;
   let identity: Identity;
   let publicKey: NodeRSA;
@@ -394,10 +564,11 @@ describe("devconnect functionality", function () {
       expect(responseBody.folder).to.eq("Devconnect");
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // important to note users are issued tickets pcd tickets even for
-      // tickets that no longer exist, so they can be displayed
-      // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(6);
+      // originally there were 6 orders in the mock data
+      // but one was deleted in an earlier test
+      // since we don't fetch tickets with is_deleted = true
+      // there will only be 5 PCDs
+      expect(responseBody.pcds.length).to.eq(5);
 
       const ticketPCD = responseBody.pcds[0];
 

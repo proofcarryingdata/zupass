@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -16,7 +16,9 @@ export async function insertDevconnectPretixTicket(
 insert into devconnect_pretix_tickets
 (email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id, secret)
 values ($1, $2, $3, $4, $5, $6, $7)
-on conflict do nothing
+on conflict (position_id) do
+update set email = $1, full_name = $2, devconnect_pretix_items_info_id = $3,
+is_deleted = $4, is_consumed = $5, secret = $7
 returning *`,
     [
       params.email,

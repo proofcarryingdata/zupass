@@ -18,7 +18,13 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
-import { Action, DispatchContext, dispatch } from "../src/dispatch";
+import {
+  Action,
+  dispatch,
+  StateContext,
+  StateContextState
+} from "../src/dispatch";
+import { Emitter } from "../src/emitter";
 import {
   loadEncryptionKey,
   loadIdentity,
@@ -28,22 +34,30 @@ import {
   saveIdentity
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
-import { AppState } from "../src/state";
+import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
+  stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
     console.log("App.update", diff);
-    this.setState(diff);
+    this.setState(diff, () => {
+      this.stateEmitter.emit(this.state);
+    });
   };
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
   }
+  stateContextState: StateContextState = {
+    getState: () => this.state,
+    stateEmitter: this.stateEmitter,
+    dispatch: this.dispatch
+  };
 
   render() {
-    const { state, dispatch: disp } = this;
+    const { state } = this;
 
     if (!state) {
       return null;
@@ -51,7 +65,7 @@ class App extends React.Component<object, AppState> {
 
     const hasStack = state.error?.stack != null;
     return (
-      <DispatchContext.Provider value={[state, disp]}>
+      <StateContext.Provider value={this.stateContextState}>
         {!hasStack && <Router />}
         {hasStack && (
           <HashRouter>
@@ -60,7 +74,7 @@ class App extends React.Component<object, AppState> {
             </Routes>
           </HashRouter>
         )}
-      </DispatchContext.Provider>
+      </StateContext.Provider>
     );
   }
 
@@ -96,7 +110,9 @@ class App extends React.Component<object, AppState> {
   };
 }
 
-function Router() {
+const Router = React.memo(RouterImpl);
+
+function RouterImpl() {
   return (
     <HashRouter>
       <Routes>

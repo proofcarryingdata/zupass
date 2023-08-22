@@ -1,14 +1,8 @@
-import {
-  ChangeEvent,
-  FormEvent,
-  useCallback,
-  useContext,
-  useState
-} from "react";
+import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { DispatchContext } from "../../src/dispatch";
+import { useDispatch, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -25,7 +19,8 @@ import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 export function LoginScreen() {
-  const [state, dispatch] = useContext(DispatchContext);
+  const dispatch = useDispatch();
+  const self = useSelf();
   const [email, setEmail] = useState("");
 
   const onGenPass = useCallback(
@@ -40,7 +35,7 @@ export function LoginScreen() {
   );
 
   // Redirect to home if already logged in
-  if (state.self != null) {
+  if (self != null) {
     window.location.hash = "#/";
   }
 
@@ -138,5 +133,8 @@ const DeviceLoginLink = styled(Link)`
   color: #aaa;
   &:hover {
     text-decoration: underline;
+  }
+  &:visited {
+    color: #aaa;
   }
 `;
