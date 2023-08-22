@@ -1,13 +1,9 @@
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import Dirent from "memfs/lib/Dirent";
 import * as snapshot from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
-
-export function isDirent(value: unknown): value is Dirent {
-  return (value as any)?.isDirectory !== undefined;
-}
+import { checkIsDirectory, filesInDirectory, readFiles } from "./util";
 
 export class PCDFileSystem {
   private pcdPackages: PCDPackages;
@@ -19,11 +15,7 @@ export class PCDFileSystem {
   }
 
   public async addPCD(directoryPath: string, pcd: PCD): Promise<void> {
-    const isDirectory = this.volume.statSync(directoryPath).isDirectory();
-
-    if (!isDirectory) {
-      throw new Error(`${directoryPath} is not a directory`);
-    }
+    checkIsDirectory(this.volume, directoryPath);
 
     const pcdPath = path.join(directoryPath, pcd.id);
 
@@ -38,38 +30,14 @@ export class PCDFileSystem {
   }
 
   public async getPcdsInDirectory(directoryPath: string): Promise<PCD[]> {
-    const fileNames = this.getFileNamesInDirectory(directoryPath);
-    const filePaths = fileNames.map((name) => path.join(directoryPath, name));
-    const fileDatas = filePaths.map((path) =>
-      this.volume.readFileSync(path, { encoding: "utf-8" }).toString()
+    return this.pcdPackages.deserializeAll(
+      readFiles(this.volume, filesInDirectory(this.volume, directoryPath)).map(
+        (data) => JSON.parse(data) as SerializedPCD
+      )
     );
-    const asSerializedPCDs = fileDatas.map((data) =>
-      JSON.parse(data)
-    ) as SerializedPCD[];
-    return this.pcdPackages.deserializeAll(asSerializedPCDs);
   }
 
   public getSnapshot() {
     return snapshot.toSnapshotSync({ fs: this.volume });
-  }
-
-  private getFileNamesInDirectory(directoryPath: string): string[] {
-    const entries: unknown[] = this.volume.readdirSync(directoryPath, {
-      withFileTypes: true
-    });
-    const fileEntries: Dirent[] = entries.filter(
-      (e) => isDirent(e) && e.isFile()
-    ) as Dirent[];
-    return fileEntries.map((e) => e.name.toString());
-  }
-
-  private getDirectoryNamesInDirectory(directoryPath: string): string[] {
-    const entries: unknown[] = this.volume.readdirSync(directoryPath, {
-      withFileTypes: true
-    });
-    const fileEntries: Dirent[] = entries.filter(
-      (e) => isDirent(e) && e.isDirectory()
-    ) as Dirent[];
-    return fileEntries.map((e) => e.name.toString());
   }
 }
