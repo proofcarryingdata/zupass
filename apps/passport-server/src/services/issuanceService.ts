@@ -2,7 +2,8 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData
+  getEdDSATicketData,
+  ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -15,7 +16,6 @@ import {
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { ITicketData } from "@pcd/rsa-ticket-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -111,7 +111,7 @@ export class IssuanceService {
         );
 
       const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) => perm.pretix_events_config_id === ticketData.eventConfigId
+        (perm) => perm.pretix_events_config_id === ticketData.eventId
       );
 
       if (!relevantSuperUserPermission) {
@@ -312,15 +312,25 @@ export class IssuanceService {
         .map(
           (t) =>
             ({
-              ticketId: t.id.toString(),
+              // unsigned fields
+              attendeeName: t.full_name,
+              attendeeEmail: t.email,
               eventName: t.event_name,
               ticketName: t.item_name,
-              timestamp: Date.now(),
-              attendeeEmail: email,
-              attendeeName: t.full_name,
+
+              // signed fields
+              ticketId: t.id,
+              eventId: t.pretix_events_config_id,
+              productId: t.devconnect_pretix_items_info_id,
+              timestampConsumed:
+                t.checkin_timestamp == null
+                  ? 0
+                  : new Date(t.checkin_timestamp).getTime(),
+              timestampSigned: Date.now(),
+              attendeeSemaphoreId: "", // TODO
+              checkerSemaphoreId: "string", // TODO
               isConsumed: t.is_consumed,
-              isRevoked: t.is_deleted,
-              eventConfigId: t.pretix_events_config_id
+              isRevoked: t.is_deleted
             }) satisfies ITicketData
         )
         // convert to serialized ticket PCD
