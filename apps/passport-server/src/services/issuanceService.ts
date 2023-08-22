@@ -327,8 +327,8 @@ export class IssuanceService {
                   ? 0
                   : new Date(t.checkin_timestamp).getTime(),
               timestampSigned: Date.now(),
-              attendeeSemaphoreId: "", // TODO
-              checkerSemaphoreId: "string", // TODO
+              attendeeSemaphoreId: "2", // TODO
+              checkerSemaphoreId: "1", // TODO
               isConsumed: t.is_consumed,
               isRevoked: t.is_deleted
             }) satisfies ITicketData
@@ -383,12 +383,10 @@ function loadRSAPrivateKey(): NodeRSA | null {
 }
 
 function loadEdDSAPrivateKey(): string | null {
-  const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY_BASE64;
+  const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY;
 
   if (pkeyEnv == null) {
-    logger(
-      "[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY_BASE64"
-    );
+    logger("[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY");
     return null;
   }
 

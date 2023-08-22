@@ -1,10 +1,10 @@
+import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInRequest,
   ISSUANCE_STRING,
   IssuedPCDsRequest
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -104,11 +104,11 @@ export async function requestIssuedPCDs(
 
 export async function requestCheckIn(
   application: PCDPass,
-  ticket: RSATicketPCD,
+  ticket: EdDSATicketPCD,
   checkerIdentity: Identity
 ): Promise<Response> {
   const request: CheckInRequest = {
-    ticket: await RSATicketPCDPackage.serialize(ticket),
+    ticket: await EdDSATicketPCDPackage.serialize(ticket),
     checkerProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {
