@@ -42,15 +42,30 @@ export class PCDDisk {
     );
   }
 
-  public getSnapshot(): Promise<Directory | undefined> {
+  public getSerializedSnapshot(): Promise<SerializedDirectory> {
     const node = snapshot.toSnapshotSync({ fs: this.volume });
-    return this.snapshotNodeToDirectory("/", node);
+    return this.snapshotNodeToDirectory(
+      "/",
+      node
+    ) as Promise<SerializedDirectory>;
+  }
+
+  public async deserializeSnapshot(
+    directory: SerializedDirectory
+  ): Promise<DeserializedDirectory> {
+    return {
+      childDirectories: await Promise.all(
+        directory.childDirectories.map((d) => this.deserializeSnapshot(d))
+      ),
+      path: directory.path,
+      pcds: await this.pcdPackages.deserializeAll(directory.pcds)
+    };
   }
 
   public async snapshotNodeToDirectory(
     nodePath: string,
     node: SnapshotNode
-  ): Promise<Directory | undefined> {
+  ): Promise<SerializedDirectory | undefined> {
     if (!node) {
       return undefined;
     }
@@ -65,24 +80,24 @@ export class PCDDisk {
       path: nodePath,
       pcds: (
         await Promise.all(
-          entryList.map(([k, v]) => {
+          entryList.map(([_, v]) => {
             return this.snapshotNodeToFile(v);
           })
         )
-      ).filter((pcd) => !!pcd) as PCD[],
+      ).filter((pcd) => !!pcd) as SerializedPCD[],
       childDirectories: (
         await Promise.all(
           entryList.map(([k, v]) => {
             return this.snapshotNodeToDirectory(path.join(nodePath, k), v);
           })
         )
-      ).filter((dir) => !!dir) as Directory[]
+      ).filter((dir) => !!dir) as SerializedDirectory[]
     };
   }
 
   public async snapshotNodeToFile(
     node: SnapshotNode
-  ): Promise<PCD | undefined> {
+  ): Promise<SerializedPCD | undefined> {
     if (!node) {
       return undefined;
     }
@@ -94,12 +109,18 @@ export class PCDDisk {
     const stringFileContents = Buffer.from(node[2]).toString("utf-8");
     const serializedPCD = JSON.parse(stringFileContents) as SerializedPCD;
 
-    return this.pcdPackages.deserialize(serializedPCD);
+    return serializedPCD;
   }
 }
 
-export interface Directory {
+export interface SerializedDirectory {
+  path: string;
+  pcds: SerializedPCD[];
+  childDirectories: SerializedDirectory[];
+}
+
+export interface DeserializedDirectory {
   path: string;
   pcds: PCD[];
-  childDirectories: Directory[];
+  childDirectories: DeserializedDirectory[];
 }

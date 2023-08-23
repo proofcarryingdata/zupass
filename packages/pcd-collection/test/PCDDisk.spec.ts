@@ -1,7 +1,7 @@
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
-import { Directory, PCDDisk } from "../src/PCDDisk";
+import { DeserializedDirectory, PCDDisk } from "../src/PCDDisk";
 import { PCDPackages } from "../src/PCDPackages";
 import { newPCD } from "./util";
 
@@ -30,9 +30,10 @@ describe.only("PCD Disk", async function () {
     await disk.insertPCD(pcd, "/bar");
     await disk.insertPCD(pcd, "/foo/baz");
 
-    const snapshot = await disk.getSnapshot();
+    const snapshot = await disk.getSerializedSnapshot();
+    const deserialized = await disk.deserializeSnapshot(snapshot);
 
-    expect(snapshot).to.deep.eq({
+    expect(deserialized).to.deep.eq({
       path: "/",
       pcds: [pcd],
       childDirectories: [
@@ -49,6 +50,6 @@ describe.only("PCD Disk", async function () {
           ]
         }
       ]
-    } satisfies Directory);
+    } satisfies DeserializedDirectory);
   });
 });
