@@ -1,3 +1,3 @@
-# `@pcd/eddsa-pcd`
+# `@pcd/eddsa-ticket-pcd`
 
-PCD representing a Devconnect ticket implemented via an EdDSA signature with a public-private keypair.
+A PCD representing a Devconnect ticket, whose relevant values were signed by the issuing PCDpass server.
