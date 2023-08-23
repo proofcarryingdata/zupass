@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-crypto",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -19,8 +19,8 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.2",
-    "@pcd/semaphore-identity-pcd": "0.6.1",
+    "@pcd/pcd-types": "0.6.3",
+    "@pcd/semaphore-identity-pcd": "0.6.2",
     "@semaphore-protocol/identity": "^3.10.0",
     "libsodium-wrappers": "^0.7.11",
     "react": "^18.2.0"

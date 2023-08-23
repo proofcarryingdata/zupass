@@ -1,5 +1,15 @@
 # @pcd/semaphore-signature-pcd
 
+## 0.6.2
+
+### Patch Changes
+
+- eddsa pcds
+- Updated dependencies
+  - @pcd/passport-ui@0.6.2
+  - @pcd/pcd-types@0.6.3
+  - @pcd/semaphore-identity-pcd@0.6.2
+
 ## 0.6.1
 
 ### Patch Changes

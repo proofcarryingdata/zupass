@@ -1,5 +1,19 @@
 # consumer-client
 
+## 0.0.17
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eddsa-pcd@0.1.1
+  - @pcd/ethereum-group-pcd@0.0.3
+  - @pcd/ethereum-ownership-pcd@0.6.2
+  - @pcd/passport-interface@0.6.2
+  - @pcd/pcd-types@0.6.3
+  - @pcd/semaphore-group-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.6.2
+  - @pcd/webauthn-pcd@0.6.2
+
 ## 0.0.16
 
 ### Patch Changes

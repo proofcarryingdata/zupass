@@ -1,5 +1,15 @@
 # @pcd/rln-pcd
 
+## 0.5.2
+
+### Patch Changes
+
+- eddsa pcds
+- Updated dependencies
+  - @pcd/pcd-types@0.6.3
+  - @pcd/semaphore-group-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.6.2
+
 ## 0.5.1
 
 ### Patch Changes

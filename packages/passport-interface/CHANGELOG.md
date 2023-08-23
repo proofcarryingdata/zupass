@@ -1,5 +1,20 @@
 # @pcd/passport-interface
 
+## 0.6.2
+
+### Patch Changes
+
+- eddsa pcds
+- Updated dependencies
+  - @pcd/eddsa-ticket-pcd@0.1.1
+  - @pcd/passport-crypto@0.6.2
+  - @pcd/pcd-types@0.6.3
+  - @pcd/rsa-ticket-pcd@0.1.2
+  - @pcd/semaphore-group-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.6.2
+  - @pcd/semaphore-signature-pcd@0.6.2
+  - @pcd/webauthn-pcd@0.6.2
+
 ## 0.6.1
 
 ### Patch Changes

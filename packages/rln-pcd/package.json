@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rln-pcd",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/node/index.js",
   "types": "./src/index.ts",
@@ -32,9 +32,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "^0.6.2",
-    "@pcd/semaphore-group-pcd": "^0.6.1",
-    "@pcd/semaphore-identity-pcd": "^0.6.1",
+    "@pcd/pcd-types": "^0.6.3",
+    "@pcd/semaphore-group-pcd": "^0.6.2",
+    "@pcd/semaphore-identity-pcd": "^0.6.2",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "json-bigint": "^1.0.0",
