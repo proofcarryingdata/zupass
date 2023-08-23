@@ -35,8 +35,7 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
-  SERVER_EDDSA_PRIVATE_KEY:
-    newEdDSAPrivateKey()
+  SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey()
 });
 
 export async function overrideEnvironment(
