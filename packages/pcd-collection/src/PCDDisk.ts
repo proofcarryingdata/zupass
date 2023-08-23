@@ -1,5 +1,7 @@
+import { Emitter } from "@pcd/emitter";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import * as snapshot from "memfs/lib/snapshot";
+import { SnapshotNode } from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
@@ -13,12 +15,18 @@ import {
 } from "./util";
 
 export class PCDDisk {
+  /**
+   * Emits an event whenever the hash of this {@link PCDCollection} changes.
+   */
+  public readonly hashEmitter: Emitter<string>;
+
   private pcdPackages: PCDPackages;
   private volume: Volume;
 
   public constructor(pcdPackages: PCDPackages, volume?: Volume) {
     this.pcdPackages = pcdPackages;
     this.volume = volume ?? new Volume();
+    this.hashEmitter = new Emitter();
   }
 
   public mkdirp(dir: string): void {
@@ -48,6 +56,14 @@ export class PCDDisk {
     );
   }
 
+  public serialize() {
+    return snapshot.toSnapshotSync({ fs: this.volume });
+  }
+
+  public static deserialize(node: SnapshotNode): PCDDisk {
+    return new Volume({});
+  }
+
   public getSerializedSnapshot(): SerializedDirectory {
     const node = snapshot.toSnapshotSync({ fs: this.volume });
     return snapshotNodeToDirectory("/", node) as SerializedDirectory;
@@ -63,5 +79,15 @@ export class PCDDisk {
       path: directory.path,
       pcds: await this.pcdPackages.deserializeAll(directory.pcds)
     };
+  }
+
+  /**
+   * Generates a unique hash based on the contents. This hash changes whenever
+   * the set of pcds, or the contents of the pcds changes.
+   */
+  public async getHash(): Promise<string> {
+    const allSerialized = await this.serializeCollection();
+    const hashed = await getHash(allSerialized);
+    return hashed;
   }
 }
