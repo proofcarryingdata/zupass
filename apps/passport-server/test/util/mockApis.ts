@@ -1,15 +1,15 @@
 import chai from "chai";
-import { IDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
+import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import { IPretixAPI } from "../../src/apis/pretixAPI";
+import { DevconnectPretixAPIFactory } from "../../src/services/devconnectPretixSyncService";
 import { APIs } from "../../src/types";
-import { newMockDevconnectPretixAPI } from "../pretix/mockDevconnectPretixApi";
 import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
 export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let emailAPI: IEmailAPI | null;
   let pretixAPI: IPretixAPI | null;
-  let devconnectPretixAPI: IDevconnectPretixAPI | null;
+  let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
 
   if (apiOverrides?.emailAPI) {
     emailAPI = apiOverrides.emailAPI;
@@ -31,15 +31,15 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     pretixAPI = newMockZuzaluPretixAPI();
   }
 
-  if (apiOverrides?.devconnectPretixAPI) {
-    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  if (apiOverrides?.devconnectPretixAPIFactory) {
+    devconnectPretixAPIFactory = apiOverrides.devconnectPretixAPIFactory;
   } else {
-    devconnectPretixAPI = newMockDevconnectPretixAPI();
+    devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI
+    devconnectPretixAPIFactory
   };
 }

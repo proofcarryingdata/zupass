@@ -1,11 +1,8 @@
 import * as path from "path";
-import {
-  DevconnectPretixAPI,
-  getDevconnectPretixAPI
-} from "./apis/devconnect/devconnectPretixAPI";
+import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
+import { PretixAPI, getPretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
@@ -13,6 +10,7 @@ import { APIs, ApplicationContext, PCDPass } from "./types";
 import { logger } from "./util/logger";
 
 import process from "node:process";
+import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {
@@ -93,18 +91,18 @@ async function getOverridenApis(
     }
   }
 
-  let devconnectPretixAPI: DevconnectPretixAPI | null = null;
+  let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null = null;
 
-  if (apiOverrides?.devconnectPretixAPI) {
-    logger("[INIT] overriding devconnect pretix api");
-    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  if (apiOverrides?.devconnectPretixAPIFactory) {
+    logger("[INIT] overriding devconnect pretix api factory");
+    devconnectPretixAPIFactory = apiOverrides.devconnectPretixAPIFactory;
   } else {
-    devconnectPretixAPI = await getDevconnectPretixAPI();
+    devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI
+    devconnectPretixAPIFactory
   };
 }

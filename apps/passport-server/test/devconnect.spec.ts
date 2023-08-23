@@ -1,3 +1,4 @@
+import { IsomorphicResponse } from "@mswjs/interceptors";
 import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
@@ -15,9 +16,15 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
+import { rest } from "msw";
+import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
+import {
+  DevconnectPretixAPI,
+  DevconnectPretixOrder
+} from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
@@ -35,16 +42,18 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
+import { OrganizerSync } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
   requestServerRSAPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
-import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
@@ -64,6 +73,7 @@ describe("devconnect functionality", function () {
   let eventAConfigId: string;
   let eventBConfigId: string;
   let eventCConfigId: string;
+  let server: SetupServer;
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -104,8 +114,11 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    const devconnectPretixAPI = getDevconnectMockPretixAPI(mocker.get());
-    application = await startTestingApp({ devconnectPretixAPI });
+    server = getDevconnectMockPretixAPIServer(mocker.get());
+    // @todo more selective approach to unhandled requests
+    server.listen({ onUnhandledRequest: "bypass" });
+
+    application = await startTestingApp();
 
     if (!application.services.devconnectPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
@@ -118,6 +131,7 @@ describe("devconnect functionality", function () {
   this.afterAll(async () => {
     await stopApplication(application);
     await db.end();
+    server.close();
   });
 
   step("mock pretix api config matches load from DB", async function () {
@@ -263,21 +277,20 @@ describe("devconnect functionality", function () {
   );
 
   step("removing an order causes soft deletion of ticket", async function () {
-    const ordersForEventA = mocker
-      .get()
-      .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug)!;
+    const ordersForEventA =
+      mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug) ??
+      [];
 
     const lastOrder = ordersForEventA.find(
       (o) => o.email === mocker.get().organizer1.EMAIL_2
-    )!;
+    ) as DevconnectPretixOrder;
 
     mocker.removeOrder(
       mocker.get().organizer1.orgUrl,
       mocker.get().organizer1.eventA.slug,
       lastOrder.code
-    );
-    devconnectPretixSyncService.replaceApi(
-      getDevconnectMockPretixAPI(mocker.get())
     );
 
     await devconnectPretixSyncService.trySync();
@@ -448,10 +461,6 @@ describe("devconnect functionality", function () {
       const originalItem = (
         await fetchPretixItemsInfoByEvent(db, eventInfo.id)
       )[0];
-
-      devconnectPretixSyncService.replaceApi(
-        getDevconnectMockPretixAPI(mocker.get())
-      );
 
       mocker.updateItem(
         mocker.get().organizer1.orgUrl,
@@ -844,6 +853,184 @@ describe("devconnect functionality", function () {
         mocker.get().organizer1.EMAIL_3,
         secret
       );
+    }
+  );
+
+  step("should be rate-limited by a low limit", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 3 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requests = 0;
+
+    const listener = (): void => {
+      requests++;
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // Perform a single run - this will not sync anything to the DB
+    // because sync cannot complete in a single run with a limit of
+    // one request
+    os.run();
+    await sleep(100);
+    os.cancel();
+
+    // Sync run will end with rate-limiting
+    expect(requests).to.eq(3);
+
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step("should not be rate-limited by a high limit", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requests = 0;
+
+    const listener = (): void => {
+      requests++;
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    os.run();
+    await sleep(100);
+
+    expect(requests).to.be.greaterThan(3);
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step("should respect a 429 response during sync", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requestsCompleted = 0;
+
+    const listener = async (res: IsomorphicResponse): Promise<void> => {
+      if (res.status === 200) {
+        requestsCompleted++;
+      }
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // The first request will return a 429, indicating server-side rate-limiting
+    server.use(
+      rest.get("*", (req, res, ctx) => {
+        // Instruct the client to wait 0.5 seconds before trying again
+        return res.once(ctx.set("Retry-After", "0.5"), ctx.status(429));
+      })
+    );
+
+    os.run();
+    // After 0.1 seconds, no requests have completed
+    await sleep(100);
+
+    expect(requestsCompleted).to.eq(0);
+    // After 0.6 seconds, we will have re-tried and successfully fetched something
+    await sleep(500);
+    expect(requestsCompleted).to.be.greaterThan(0);
+
+    os.cancel();
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step(
+    "should retry 5 times before giving up with 429 response",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let requestsCompleted = 0;
+
+      const listener = async (res: IsomorphicResponse): Promise<void> => {
+        if (res.status === 200) {
+          requestsCompleted++;
+        }
+      };
+      // Count each successful request
+      server.events.on("response:mocked", listener);
+
+      let url: string;
+      let attempts = 0;
+
+      server.use(
+        rest.get("*", (req, res, ctx) => {
+          attempts++;
+          if (!url) {
+            url = req.url.toString();
+          }
+
+          // Only one URL should ever be requested
+          // If this is not fetched within 5 requests, the entire sync run
+          // will fail
+          expect(url).to.eq(req.url.toString());
+          // Instruct the client to wait 0.01 seconds before trying again
+          return res(ctx.set("Retry-After", "0.01"), ctx.status(429));
+        })
+      );
+
+      os.run();
+      // After 0.1 seconds, no requests should have completed
+      await sleep(100);
+      expect(requestsCompleted).to.eq(0);
+
+      // But 6 attempts should have been made
+      expect(attempts).eq(6);
+
+      os.cancel();
+      server.resetHandlers();
+      server.events.removeListener("response:mocked", listener);
     }
   );
 

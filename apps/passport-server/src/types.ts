@@ -2,10 +2,12 @@ import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
-import { IDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
-import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
+import {
+  DevconnectPretixAPIFactory,
+  DevconnectPretixSyncService
+} from "./services/devconnectPretixSyncService";
 import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
@@ -51,7 +53,7 @@ export interface PCDPass {
 export interface APIs {
   emailAPI: IEmailAPI | null;
   pretixAPI: IPretixAPI | null;
-  devconnectPretixAPI: IDevconnectPretixAPI | null;
+  devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
 }
 
 export interface EnvironmentVariables {

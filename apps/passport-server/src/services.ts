@@ -38,7 +38,7 @@ export async function startServices(
     context,
     rollbarService,
     semaphoreService,
-    apis.devconnectPretixAPI
+    apis.devconnectPretixAPIFactory
   );
   const userService = startUserService(
     context,
