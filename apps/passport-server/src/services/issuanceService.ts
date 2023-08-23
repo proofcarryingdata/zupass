@@ -297,7 +297,7 @@ export class IssuanceService {
     const commitment = await this.checkUserExists(request.userProof);
     const email = commitment?.email;
 
-    if (email == null) {
+    if (commitment == null || email == null) {
       return [];
     }
 
@@ -317,6 +317,7 @@ export class IssuanceService {
               attendeeEmail: t.email,
               eventName: t.event_name,
               ticketName: t.item_name,
+              checkerEmail: t.checker,
 
               // signed fields
               ticketId: t.id,
@@ -327,8 +328,7 @@ export class IssuanceService {
                   ? 0
                   : new Date(t.checkin_timestamp).getTime(),
               timestampSigned: Date.now(),
-              attendeeSemaphoreId: "2", // TODO
-              checkerSemaphoreId: "1", // TODO
+              attendeeSemaphoreId: commitment.commitment,
               isConsumed: t.is_consumed,
               isRevoked: t.is_deleted
             }) satisfies ITicketData

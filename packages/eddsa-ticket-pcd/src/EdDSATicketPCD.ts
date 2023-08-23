@@ -23,6 +23,7 @@ export interface ITicketData {
   attendeeEmail: string;
   eventName: string;
   ticketName: string;
+  checkerEmail: string | undefined;
 
   // the fields below are signed using the server's private eddsa key
 
@@ -32,7 +33,6 @@ export interface ITicketData {
   timestampConsumed: number;
   timestampSigned: number;
   attendeeSemaphoreId: string; // stringified big int
-  checkerSemaphoreId: string; // stringified big int
   isConsumed: boolean;
   isRevoked: boolean;
 }
