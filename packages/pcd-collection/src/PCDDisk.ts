@@ -1,5 +1,6 @@
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import * as snapshot from "memfs/lib/snapshot";
+import { SnapshotNode } from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
@@ -37,7 +38,64 @@ export class PCDDisk {
     );
   }
 
-  public getSnapshot() {
-    return snapshot.toSnapshotSync({ fs: this.volume });
+  public getSnapshot(): Promise<Directory | undefined> {
+    const node = snapshot.toSnapshotSync({ fs: this.volume });
+    return this.snapshotNodeToDirectory("/", node);
   }
+
+  public async snapshotNodeToDirectory(
+    nodePath: string,
+    node: SnapshotNode
+  ): Promise<Directory | undefined> {
+    if (!node) {
+      return undefined;
+    }
+
+    if (node[0] !== 0 /* folder */) {
+      return undefined;
+    }
+
+    const entryList = Object.entries(node[2]);
+
+    return {
+      path: nodePath,
+      pcds: (
+        await Promise.all(
+          entryList.map(([k, v]) => {
+            return this.snapshotNodeToFile(v);
+          })
+        )
+      ).filter((pcd) => !!pcd) as PCD[],
+      childDirectories: (
+        await Promise.all(
+          entryList.map(([k, v]) => {
+            return this.snapshotNodeToDirectory(path.join(nodePath, k), v);
+          })
+        )
+      ).filter((dir) => !!dir) as Directory[]
+    };
+  }
+
+  public async snapshotNodeToFile(
+    node: SnapshotNode
+  ): Promise<PCD | undefined> {
+    if (!node) {
+      return undefined;
+    }
+
+    if (node[0] !== 1 /* file */) {
+      return undefined;
+    }
+
+    const stringFileContents = Buffer.from(node[2]).toString("utf-8");
+    const serializedPCD = JSON.parse(stringFileContents) as SerializedPCD;
+
+    return this.pcdPackages.deserialize(serializedPCD);
+  }
+}
+
+export interface Directory {
+  path: string;
+  pcds: PCD[];
+  childDirectories: Directory[];
 }

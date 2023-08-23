@@ -16,4 +16,13 @@ describe.only("PCD Disk", async function () {
     const pcdsInDir = await disk.getPCDsInDirectory("/");
     expect(pcdsInDir).to.deep.eq([pcd]);
   });
+
+  it("should let you get a snapshot data structure", async function () {
+    const pcd = await newPCD();
+    const disk = new PCDDisk(packages);
+    await disk.insertPCD(pcd, "/");
+    const snapshot = await disk.getSnapshot();
+    console.log();
+    console.log("THE SNAPSHOT IS", snapshot);
+  });
 });
