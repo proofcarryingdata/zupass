@@ -682,7 +682,7 @@ describe("devconnect functionality", function () {
   step(
     "should not able to check in with a ticket not signed by the server",
     async function () {
-      const prvKey = Buffer.from(newEdDSAPrivateKey()).toString("hex");
+      const prvKey = newEdDSAPrivateKey()
       const ticketData: ITicketData = {
         // the fields below are not signed and are used for display purposes
         attendeeName: "test name",

@@ -1,3 +1,4 @@
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import NodeRSA from "node-rsa";
 import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
@@ -35,7 +36,7 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
   SERVER_EDDSA_PRIVATE_KEY:
-    "0001020304050607080900010203040506070809000102030405060708090001"
+    newEdDSAPrivateKey()
 });
 
 export async function overrideEnvironment(
