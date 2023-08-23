@@ -1,3 +1,4 @@
+import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import { parse as uuidParse } from "uuid";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
@@ -53,9 +54,7 @@ export function getEdDSATicketData(
   return pcd?.claim?.ticket;
 }
 
-export function getPublicKey(
-  pcd?: EdDSATicketPCD
-): [string, string] | undefined {
+export function getPublicKey(pcd?: EdDSATicketPCD): EDdSAPublicKey | undefined {
   return pcd?.proof?.eddsaPCD?.claim?.publicKey;
 }
 

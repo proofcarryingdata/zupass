@@ -1,4 +1,4 @@
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -57,7 +57,7 @@ export class IssuanceService {
     return this.exportedRSAPublicKey;
   }
 
-  public async getEdDSAPublicKey(): Promise<[string, string]> {
+  public getEdDSAPublicKey(): EDdSAPublicKey {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
