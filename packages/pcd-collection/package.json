@@ -15,11 +15,12 @@
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@pcd/emitter": "0.0.2",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "chai": "^4.3.7",
     "uuid": "^9.0.0"
   },

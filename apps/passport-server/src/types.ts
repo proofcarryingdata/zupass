@@ -73,4 +73,5 @@ export interface EnvironmentVariables {
   PRETIX_VISITOR_EVENT_ID?: string;
   ROLLBAR_TOKEN?: string;
   SUPPRESS_LOGGING?: string;
+  SERVER_EDDSA_PRIVATE_KEY?: string;
 }

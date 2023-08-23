@@ -8,13 +8,15 @@
     "build": "next build",
     "export": "next export",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf node_modules"
   },
   "dependencies": {
+    "@pcd/eddsa-pcd": "0.1.0",
     "@pcd/ethereum-group-pcd": "0.0.2",
     "@pcd/ethereum-ownership-pcd": "0.6.1",
     "@pcd/passport-interface": "0.6.1",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@pcd/webauthn-pcd": "0.6.1",
     "@pcd/semaphore-group-pcd": "0.6.1",
     "@pcd/semaphore-identity-pcd": "0.6.1",

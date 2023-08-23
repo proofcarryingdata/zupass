@@ -28,10 +28,11 @@
     "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
     "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "^0.6.1",
+    "@pcd/pcd-types": "^0.6.2",
     "@pcd/semaphore-group-pcd": "^0.6.1",
     "@pcd/semaphore-identity-pcd": "^0.6.1",
     "@semaphore-protocol/group": "^3.10.0",

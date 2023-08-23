@@ -7,10 +7,11 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "jest",
-    "build": "tsc --noEmit"
+    "build": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@simplewebauthn/typescript-types": "^7.0.0",

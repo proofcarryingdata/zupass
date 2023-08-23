@@ -15,7 +15,8 @@
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "airtable": "^0.11.6",
@@ -29,7 +30,7 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/passport-ui": "0.6.1",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@pcd/tsconfig": "*",
     "@types/elliptic": "^6.4.14",
     "@types/expect": "^24.3.0",

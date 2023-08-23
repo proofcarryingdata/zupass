@@ -15,10 +15,11 @@
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@pcd/semaphore-identity-pcd": "0.6.1",
     "@semaphore-protocol/identity": "^3.10.0",
     "libsodium-wrappers": "^0.7.11",

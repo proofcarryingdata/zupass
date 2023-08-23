@@ -8,9 +8,12 @@
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts"
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico"
   },
   "dependencies": {
+    "@pcd/eddsa-pcd": "0.1.0",
+    "@pcd/eddsa-ticket-pcd": "0.1.0",
     "@pcd/ethereum-ownership-pcd": "0.6.1",
     "@pcd/halo-nonce-pcd": "0.2.1",
     "@pcd/passport-crypto": "0.6.1",
@@ -18,7 +21,7 @@
     "@pcd/passport-ui": "0.6.1",
     "@pcd/emitter": "0.0.2",
     "@pcd/pcd-collection": "0.6.1",
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.2",
     "@pcd/rln-pcd": "0.5.1",
     "@pcd/rsa-pcd": "0.1.1",
     "@pcd/semaphore-group-pcd": "0.6.1",
@@ -32,7 +35,6 @@
     "email-validator": "^2.0.4",
     "handlebars": "^4.7.7",
     "json-bigint": "^1.0.0",
-    "jubjub-signature-pcd": "0.0.5",
     "pako": "^2.1.0",
     "qr-image": "^3.2.0",
     "react": "^18.2.0",

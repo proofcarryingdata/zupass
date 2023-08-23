@@ -1,4 +1,10 @@
 import { IsomorphicResponse } from "@mswjs/interceptors";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  ITicketData
+} from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
   ISSUANCE_STRING,
@@ -6,8 +12,6 @@ import {
   User
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
@@ -16,6 +20,7 @@ import { rest } from "msw";
 import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixAPI,
   DevconnectPretixOrder
@@ -45,7 +50,7 @@ import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
-  requestServerPublicKey
+  requestServerRSAPublicKey
 } from "./issuance/issuance";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
@@ -170,9 +175,8 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
-    );
+    const pretixSyncStatus =
+      await waitForDevconnectPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -532,7 +536,7 @@ describe("devconnect functionality", function () {
   step(
     "anyone should be able to request the server's public key",
     async function () {
-      const publicKeyResponse = await requestServerPublicKey(application);
+      const publicKeyResponse = await requestServerRSAPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
       publicKey = new NodeRSA(publicKeyResponse.text, "public");
       expect(publicKey.getKeySize()).to.eq(2048);
@@ -581,25 +585,14 @@ describe("devconnect functionality", function () {
 
       const ticketPCD = responseBody.pcds[0];
 
-      expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-      const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+      const deserializedEmailPCD = await EdDSATicketPCDPackage.deserialize(
         ticketPCD.pcd
       );
 
-      const verified = await RSATicketPCDPackage.verify(deserializedEmailPCD);
+      const verified = await EdDSATicketPCDPackage.verify(deserializedEmailPCD);
       expect(verified).to.eq(true);
-
-      const pcdPublicKey = new NodeRSA(
-        deserializedEmailPCD.proof.rsaPCD.proof.publicKey,
-        "public"
-      );
-      expect(pcdPublicKey.isPublic(true)).to.eq(true);
-      expect(pcdPublicKey.isPrivate()).to.eq(false);
-
-      expect(pcdPublicKey.exportKey("public")).to.eq(
-        publicKey.exportKey("public")
-      );
     }
   );
 
@@ -618,10 +611,10 @@ describe("devconnect functionality", function () {
     const response2 = expressResponse2.body as IssuedPCDsResponse;
 
     const pcds1 = await Promise.all(
-      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
     const pcds2 = await Promise.all(
-      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response2.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -652,7 +645,7 @@ describe("devconnect functionality", function () {
     checkerIdentity = result.identity;
   });
 
-  let ticket: RSATicketPCD;
+  let ticket: EdDSATicketPCD;
   step("should be able to check in with a valid ticket", async function () {
     const issueResponse = await requestIssuedPCDs(
       application,
@@ -662,8 +655,8 @@ describe("devconnect functionality", function () {
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
 
     const serializedTicket = issueResponseBody
-      .pcds[1] as SerializedPCD<RSATicketPCD>;
-    ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
       application,
@@ -698,31 +691,38 @@ describe("devconnect functionality", function () {
   step(
     "should not able to check in with a ticket not signed by the server",
     async function () {
-      const key = new NodeRSA({ b: 2048 });
-      const exportedKey = key.exportKey("private");
-      const message = "test message";
-      const rsaPCD = await RSAPCDPackage.prove({
+      const prvKey = newEdDSAPrivateKey()
+      const ticketData: ITicketData = {
+        // the fields below are not signed and are used for display purposes
+        attendeeName: "test name",
+        attendeeEmail: "user@test.com",
+        eventName: "event",
+        ticketName: "ticket",
+        checkerEmail: "checker@test.com",
+
+        // the fields below are signed using the server's private eddsa key
+        ticketId: uuid(),
+        eventId: uuid(),
+        productId: uuid(),
+        timestampConsumed: Date.now(),
+        timestampSigned: Date.now(),
+        attendeeSemaphoreId: "12345",
+        isConsumed: false,
+        isRevoked: false
+      };
+
+      ticket = await EdDSATicketPCDPackage.prove({
+        ticket: {
+          value: ticketData,
+          argumentType: ArgumentTypeName.Object
+        },
         privateKey: {
-          argumentType: ArgumentTypeName.String,
-          value: exportedKey
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: message
+          value: prvKey,
+          argumentType: ArgumentTypeName.String
         },
         id: {
-          argumentType: ArgumentTypeName.String,
-          value: undefined
-        }
-      });
-      const ticket = await RSATicketPCDPackage.prove({
-        id: {
-          argumentType: ArgumentTypeName.String,
-          value: undefined
-        },
-        rsaPCD: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await RSAPCDPackage.serialize(rsaPCD)
+          value: undefined,
+          argumentType: ArgumentTypeName.String
         }
       });
 
