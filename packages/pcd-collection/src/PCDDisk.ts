@@ -1,10 +1,16 @@
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import * as snapshot from "memfs/lib/snapshot";
-import { SnapshotNode } from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 import { PCDPackages } from "./PCDPackages";
-import { checkIsDirectory, filesInDirectory, readFiles } from "./util";
+import {
+  checkIsDirectory,
+  DeserializedDirectory,
+  filesInDirectory,
+  readFiles,
+  SerializedDirectory,
+  snapshotNodeToDirectory
+} from "./util";
 
 export class PCDDisk {
   private pcdPackages: PCDPackages;
@@ -42,12 +48,9 @@ export class PCDDisk {
     );
   }
 
-  public getSerializedSnapshot(): Promise<SerializedDirectory> {
+  public getSerializedSnapshot(): SerializedDirectory {
     const node = snapshot.toSnapshotSync({ fs: this.volume });
-    return this.snapshotNodeToDirectory(
-      "/",
-      node
-    ) as Promise<SerializedDirectory>;
+    return snapshotNodeToDirectory("/", node) as SerializedDirectory;
   }
 
   public async deserializeSnapshot(
@@ -61,66 +64,4 @@ export class PCDDisk {
       pcds: await this.pcdPackages.deserializeAll(directory.pcds)
     };
   }
-
-  public async snapshotNodeToDirectory(
-    nodePath: string,
-    node: SnapshotNode
-  ): Promise<SerializedDirectory | undefined> {
-    if (!node) {
-      return undefined;
-    }
-
-    if (node[0] !== 0 /* folder */) {
-      return undefined;
-    }
-
-    const entryList = Object.entries(node[2]);
-
-    return {
-      path: nodePath,
-      pcds: (
-        await Promise.all(
-          entryList.map(([_, v]) => {
-            return this.snapshotNodeToFile(v);
-          })
-        )
-      ).filter((pcd) => !!pcd) as SerializedPCD[],
-      childDirectories: (
-        await Promise.all(
-          entryList.map(([k, v]) => {
-            return this.snapshotNodeToDirectory(path.join(nodePath, k), v);
-          })
-        )
-      ).filter((dir) => !!dir) as SerializedDirectory[]
-    };
-  }
-
-  public async snapshotNodeToFile(
-    node: SnapshotNode
-  ): Promise<SerializedPCD | undefined> {
-    if (!node) {
-      return undefined;
-    }
-
-    if (node[0] !== 1 /* file */) {
-      return undefined;
-    }
-
-    const stringFileContents = Buffer.from(node[2]).toString("utf-8");
-    const serializedPCD = JSON.parse(stringFileContents) as SerializedPCD;
-
-    return serializedPCD;
-  }
-}
-
-export interface SerializedDirectory {
-  path: string;
-  pcds: SerializedPCD[];
-  childDirectories: SerializedDirectory[];
-}
-
-export interface DeserializedDirectory {
-  path: string;
-  pcds: PCD[];
-  childDirectories: DeserializedDirectory[];
 }

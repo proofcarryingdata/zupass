@@ -30,7 +30,7 @@ describe.only("PCD Disk", async function () {
     await disk.insertPCD(pcd, "/bar");
     await disk.insertPCD(pcd, "/foo/baz");
 
-    const snapshot = await disk.getSerializedSnapshot();
+    const snapshot = disk.getSerializedSnapshot();
     const deserialized = await disk.deserializeSnapshot(snapshot);
 
     expect(deserialized).to.deep.eq({

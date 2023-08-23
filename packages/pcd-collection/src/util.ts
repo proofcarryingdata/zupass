@@ -1,4 +1,6 @@
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import Dirent from "memfs/lib/Dirent";
+import { SnapshotNode } from "memfs/lib/snapshot";
 import { Volume } from "memfs/lib/volume";
 import * as path from "path";
 
@@ -59,4 +61,62 @@ export function checkIsDirectory(volume: Volume, path: string): void {
   if (!isDirectory) {
     throw new Error(`${path} is not a directory`);
   }
+}
+
+export function snapshotNodeToDirectory(
+  nodePath: string,
+  node: SnapshotNode
+): SerializedDirectory | undefined {
+  if (!node) {
+    return undefined;
+  }
+
+  if (node[0] !== 0 /* folder */) {
+    return undefined;
+  }
+
+  const entryList = Object.entries(node[2]);
+
+  return {
+    path: nodePath,
+    pcds: entryList
+      .map(([_, v]) => {
+        return snapshotNodeToFile(v);
+      })
+      .filter((pcd) => !!pcd) as SerializedPCD[],
+    childDirectories: entryList
+      .map(([k, v]) => {
+        return snapshotNodeToDirectory(path.join(nodePath, k), v);
+      })
+      .filter((dir) => !!dir) as SerializedDirectory[]
+  };
+}
+
+export function snapshotNodeToFile(
+  node: SnapshotNode
+): SerializedPCD | undefined {
+  if (!node) {
+    return undefined;
+  }
+
+  if (node[0] !== 1 /* file */) {
+    return undefined;
+  }
+
+  const stringFileContents = Buffer.from(node[2]).toString("utf-8");
+  const serializedPCD = JSON.parse(stringFileContents) as SerializedPCD;
+
+  return serializedPCD;
+}
+
+export interface SerializedDirectory {
+  path: string;
+  pcds: SerializedPCD[];
+  childDirectories: SerializedDirectory[];
+}
+
+export interface DeserializedDirectory {
+  path: string;
+  pcds: PCD[];
+  childDirectories: DeserializedDirectory[];
 }
