@@ -1131,6 +1131,86 @@ describe("devconnect functionality", function () {
     }
   );
 
+  step(
+    "should fail to sync if an event we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      // Return 404 for any event request
+      server.use(
+        rest.get(organizer.orgURL + "/events/:event", (req, res, ctx) => {
+          return res(ctx.status(404));
+        })
+      );
+
+      try {
+        await os.run();
+      } catch (e) {
+        // This space intentionally left blank
+      }
+
+      expect(os.error).to.be.true;
+      expect(os.errorCause?.phase).to.eq("fetching");
+
+      server.resetHandlers();
+    }
+  );
+
+  step(
+    "should fail to sync if a product we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      // Return 404 for any item request
+      server.use(
+        rest.get(organizer.orgURL + "/events/:event/items", (req, res, ctx) => {
+          return res.once(ctx.status(404));
+        })
+      );
+
+      try {
+        await os.run();
+      } catch (e) {
+        // This space intentionally left blank
+      }
+
+      expect(os.error).to.be.true;
+      expect(os.errorCause?.phase).to.eq("fetching");
+
+      server.resetHandlers();
+    }
+  );
+
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
   // 2. Test deleting positions within orders (not just entire orders).

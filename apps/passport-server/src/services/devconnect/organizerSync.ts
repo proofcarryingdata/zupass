@@ -82,9 +82,19 @@ export class OrganizerSync {
   private rollbarService: RollbarService | null;
   private db: Pool;
   private _isRunning: boolean;
+  private _error: boolean;
+  private _errorCause: SyncErrorCause | null;
 
   public get isRunning(): boolean {
     return this._isRunning;
+  }
+
+  public get errorCause(): SyncErrorCause | null {
+    return this._errorCause;
+  }
+
+  public get error(): boolean {
+    return this._error;
   }
 
   public constructor(
@@ -98,12 +108,17 @@ export class OrganizerSync {
     this.rollbarService = rollbarService;
     this.db = db;
     this._isRunning = false;
+    this._error = false;
+    this._errorCause = null;
   }
 
   // Conduct a single sync run
   public async run(): Promise<void> {
     let fetchedData;
     this._isRunning = true;
+    this._error = false;
+    this._errorCause = null;
+
     try {
       try {
         fetchedData = await this.fetchData();
@@ -143,6 +158,10 @@ export class OrganizerSync {
           cause: errorCause("saving", this.organizer.id, e)
         });
       }
+    } catch (e) {
+      this._error = true;
+      this._errorCause = (e as Error).cause as SyncErrorCause;
+      throw e;
     } finally {
       this._isRunning = false;
     }
