@@ -17,7 +17,7 @@ export const EdDSAPCDTypeName = "eddsa-pcd";
 export interface EdDSAInitArgs {}
 
 export interface EdDSAPCDArgs {
-  // The EdDSA private key to sign the message with, as a hex string
+  // The 32-byte EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
   // The message is an array of bigints, represented here as an array of
   // strings
