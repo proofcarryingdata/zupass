@@ -12,12 +12,6 @@ import {
   User
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import {
-  ITicketData,
-  RSATicketPCD,
-  RSATicketPCDPackage
-} from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
@@ -665,15 +659,13 @@ describe("devconnect functionality", function () {
 
     expect(Array.isArray(responseBody.pcds)).to.eq(true);
     const ticketPCD = responseBody.pcds[0];
-    expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
+    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-    const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
       ticketPCD.pcd
     );
 
-    const ticketData = JSON.parse(
-      deserializedEmailPCD?.proof?.rsaPCD?.claim?.message ?? "{}"
-    ) as ITicketData;
+    const ticketData = deserializedPCD.claim.ticket;
 
     expect(ticketData.eventName).to.eq(updatedName);
   });
@@ -707,15 +699,13 @@ describe("devconnect functionality", function () {
 
     expect(Array.isArray(responseBody.pcds)).to.eq(true);
     const ticketPCD = responseBody.pcds[0];
-    expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
+    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-    const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
       ticketPCD.pcd
     );
 
-    const ticketData = JSON.parse(
-      deserializedEmailPCD?.proof?.rsaPCD?.claim?.message ?? "{}"
-    ) as ITicketData;
+    const ticketData = deserializedPCD.claim.ticket;
 
     // "Ticket name" is equivalent to item/product name
     expect(ticketData.ticketName).to.eq(updatedName);
