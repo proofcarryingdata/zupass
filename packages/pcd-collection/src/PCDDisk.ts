@@ -60,8 +60,15 @@ export class PCDDisk {
     return snapshot.toSnapshotSync({ fs: this.volume });
   }
 
-  public static deserialize(node: SnapshotNode): PCDDisk {
-    return new Volume({});
+  public static deserialize(
+    pcdPackages: PCDPackages,
+    node: SnapshotNode
+  ): PCDDisk {
+    const volume = new Volume();
+
+    snapshot.fromSnapshotSync(node, { fs: volume });
+
+    return new PCDDisk(pcdPackages, volume);
   }
 
   public getSerializedSnapshot(): SerializedDirectory {

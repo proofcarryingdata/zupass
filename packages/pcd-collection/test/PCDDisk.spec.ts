@@ -9,7 +9,7 @@ describe.only("PCD Disk", async function () {
   this.timeout(30 * 1000);
   const packages = new PCDPackages([RSAPCDPackage]);
 
-  it("should let you create a new PCD disk CRUD PCDs", async function () {
+  it("should let you create a new PCD disk and CRUD PCDs", async function () {
     const pcd = await newPCD();
     const disk = new PCDDisk(packages);
     await disk.insertPCD(pcd, "/");
@@ -51,5 +51,32 @@ describe.only("PCD Disk", async function () {
         }
       ]
     } satisfies DeserializedDirectory);
+  });
+
+  it("should let you serialize and deserialize a disk", async function () {
+    const pcd = await newPCD();
+    const disk = new PCDDisk(packages);
+
+    disk.mkdirp("/foo");
+    disk.mkdirp("/bar");
+    disk.mkdirp("/foo/baz");
+
+    await disk.insertPCD(pcd, "/");
+    await disk.insertPCD(pcd, "/foo");
+    await disk.insertPCD(pcd, "/bar");
+    await disk.insertPCD(pcd, "/foo/baz");
+
+    const serialized = disk.serialize();
+    const deserialized = PCDDisk.deserialize(packages, serialized);
+
+    const originalSnapshot = await disk.deserializeSnapshot(
+      disk.getSerializedSnapshot()
+    );
+
+    const snapshotOfCopy = await deserialized.deserializeSnapshot(
+      deserialized.getSerializedSnapshot()
+    );
+
+    expect(originalSnapshot).to.deep.eq(snapshotOfCopy);
   });
 });
