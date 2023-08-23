@@ -15,6 +15,10 @@ export class PCDDisk {
     this.volume = volume ?? new Volume();
   }
 
+  public mkdirp(dir: string): void {
+    this.volume.mkdirSync(dir, { recursive: true });
+  }
+
   public async insertPCD(pcd: PCD, dir: string): Promise<void> {
     checkIsDirectory(this.volume, dir);
 
