@@ -1,17 +1,23 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  ITicketData
+} from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
   ISSUANCE_STRING,
   IssuedPCDsResponse,
   User
 } from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
@@ -673,50 +679,57 @@ describe("devconnect functionality", function () {
     }
   );
 
-  // step(
-  //   "should not able to check in with a ticket not signed by the server",
-  //   async function () {
-  //     const key = new NodeRSA({ b: 2048 });
-  //     const exportedKey = key.exportKey("private");
-  //     const message = "test message";
-  //     const rsaPCD = await RSAPCDPackage.prove({
-  //       privateKey: {
-  //         argumentType: ArgumentTypeName.String,
-  //         value: exportedKey
-  //       },
-  //       signedMessage: {
-  //         argumentType: ArgumentTypeName.String,
-  //         value: message
-  //       },
-  //       id: {
-  //         argumentType: ArgumentTypeName.String,
-  //         value: undefined
-  //       }
-  //     });
-  //     const ticket = await RSATicketPCDPackage.prove({
-  //       id: {
-  //         argumentType: ArgumentTypeName.String,
-  //         value: undefined
-  //       },
-  //       rsaPCD: {
-  //         argumentType: ArgumentTypeName.PCD,
-  //         value: await RSAPCDPackage.serialize(rsaPCD)
-  //       }
-  //     });
+  step(
+    "should not able to check in with a ticket not signed by the server",
+    async function () {
+      const prvKey = Buffer.from(newEdDSAPrivateKey()).toString("hex");
+      const ticketData: ITicketData = {
+        // the fields below are not signed and are used for display purposes
+        attendeeName: "test name",
+        attendeeEmail: "user@test.com",
+        eventName: "event",
+        ticketName: "ticket",
+        checkerEmail: "checker@test.com",
 
-  //     const checkinResponse = await requestCheckIn(
-  //       application,
-  //       ticket,
-  //       checkerIdentity
-  //     );
-  //     const responseBody = checkinResponse.body as CheckInResponse;
-  //     expect(checkinResponse.status).to.eq(200);
-  //     expect(responseBody.success).to.eq(false);
-  //     if (!responseBody.success) {
-  //       expect(responseBody.error.name).to.eq("InvalidSignature");
-  //     }
-  //   }
-  // );
+        // the fields below are signed using the server's private eddsa key
+        ticketId: uuid(),
+        eventId: uuid(),
+        productId: uuid(),
+        timestampConsumed: Date.now(),
+        timestampSigned: Date.now(),
+        attendeeSemaphoreId: "12345",
+        isConsumed: false,
+        isRevoked: false
+      };
+
+      ticket = await EdDSATicketPCDPackage.prove({
+        ticket: {
+          value: ticketData,
+          argumentType: ArgumentTypeName.Object
+        },
+        privateKey: {
+          value: prvKey,
+          argumentType: ArgumentTypeName.String
+        },
+        id: {
+          value: undefined,
+          argumentType: ArgumentTypeName.String
+        }
+      });
+
+      const checkinResponse = await requestCheckIn(
+        application,
+        ticket,
+        checkerIdentity
+      );
+      const responseBody = checkinResponse.body as CheckInResponse;
+      expect(checkinResponse.status).to.eq(200);
+      expect(responseBody.success).to.eq(false);
+      if (!responseBody.success) {
+        expect(responseBody.error.name).to.eq("InvalidSignature");
+      }
+    }
+  );
 
   step(
     "should not be able to check in with a ticket that has already been used to check in",
