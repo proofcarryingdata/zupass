@@ -1,4 +1,5 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
@@ -68,7 +69,11 @@ async function loadPackages(): Promise<PCDPackage[]> {
   });
 
   await RSATicketPCDPackage.init({
-    makeEncodedVerifyLink: makeEncodedVerifyLink
+    makeEncodedVerifyLink
+  });
+
+  await EdDSATicketPCDPackage.init({
+    makeEncodedVerifyLink
   });
 
   await EdDSAPCDPackage.init({});
@@ -84,6 +89,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     HaLoNoncePCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
-    EdDSAPCDPackage
+    EdDSAPCDPackage,
+    EdDSATicketPCDPackage
   ];
 }

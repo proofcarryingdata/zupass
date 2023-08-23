@@ -1,4 +1,5 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   hashProveRequest,
   PendingPCD,
@@ -46,7 +47,8 @@ export class ProvingService {
     RLNPCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
-    EdDSAPCDPackage
+    EdDSAPCDPackage,
+    EdDSATicketPCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {
@@ -191,6 +193,7 @@ export async function startProvingService(
   });
 
   await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
+  await EdDSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
   await EdDSAPCDPackage.init!({});
 
   const provingService = new ProvingService(rollbarService);

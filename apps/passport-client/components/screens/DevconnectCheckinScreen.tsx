@@ -1,4 +1,10 @@
 import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  getEdDSATicketData,
+  ITicketData
+} from "@pcd/eddsa-ticket-pcd";
+import {
   CheckInResponse,
   CheckTicketResponse,
   ISSUANCE_STRING,
@@ -6,12 +12,6 @@ import {
 } from "@pcd/passport-interface";
 import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import {
-  getTicketData,
-  ITicketData,
-  RSATicketPCD,
-  RSATicketPCDPackage
-} from "@pcd/rsa-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -35,7 +35,7 @@ export function DevconnectCheckinScreen() {
   const { loading: checkingTicket, response: checkTicketResponse } =
     useCheckTicket(ticket);
 
-  const ticketData = getTicketData(ticket);
+  const ticketData = getEdDSATicketData(ticket);
 
   let content = null;
 
@@ -195,7 +195,7 @@ function UserReadyForCheckin({
   ticket
 }: {
   ticketData: ITicketData;
-  ticket: RSATicketPCD;
+  ticket: EdDSATicketPCD;
 }) {
   return (
     <AppContainer bg={"primary"}>
@@ -207,7 +207,7 @@ function UserReadyForCheckin({
   );
 }
 
-function useCheckTicket(ticket: RSATicketPCD | undefined): {
+function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
   loading: boolean;
   response: CheckTicketResponse;
 } {
@@ -224,7 +224,7 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
         }
         setLoading(true);
         const checkResponse = await requestCheckTicket({
-          ticket: await RSATicketPCDPackage.serialize(ticket)
+          ticket: await EdDSATicketPCDPackage.serialize(ticket)
         });
         setResponse(checkResponse);
         setLoading(false);
@@ -239,7 +239,7 @@ function useCheckTicket(ticket: RSATicketPCD | undefined): {
   return { loading, response };
 }
 
-function CheckInSection({ ticket }: { ticket: RSATicketPCD }) {
+function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
@@ -318,11 +318,11 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
 }
 
 function useDecodedTicket(): {
-  ticket: RSATicketPCD | undefined;
+  ticket: EdDSATicketPCD | undefined;
   error: Error | undefined;
 } {
   const location = useLocation();
-  const [ticket, setDecodedPCD] = useState<RSATicketPCD | undefined>();
+  const [ticket, setDecodedPCD] = useState<EdDSATicketPCD | undefined>();
   const [error, setError] = useState<Error>();
 
   useEffect(() => {
@@ -342,7 +342,7 @@ function useDecodedTicket(): {
 
 async function decodePCD(
   location: Location
-): Promise<RSATicketPCD | undefined> {
+): Promise<EdDSATicketPCD | undefined> {
   try {
     const params = new URLSearchParams(location.search);
     const encodedQRPayload = params.get("pcd");
@@ -353,7 +353,7 @@ async function decodePCD(
 
     const decodedQrPayload = decodeQRPayload(encodedQRPayload);
     const parsedQrPayload = JSON.parse(decodedQrPayload);
-    const decodedPCD = await RSATicketPCDPackage.deserialize(
+    const decodedPCD = await EdDSATicketPCDPackage.deserialize(
       parsedQrPayload.pcd
     );
     return decodedPCD;
@@ -366,11 +366,11 @@ async function decodePCD(
 
 async function checkinTicket(
   checkerIdentity: Identity,
-  ticket: RSATicketPCD
+  ticket: EdDSATicketPCD
 ): Promise<CheckInResponse> {
   try {
     const response = await requestCheckIn({
-      ticket: await RSATicketPCDPackage.serialize(ticket),
+      ticket: await EdDSATicketPCDPackage.serialize(ticket),
       checkerProof: await SemaphoreSignaturePCDPackage.serialize(
         await SemaphoreSignaturePCDPackage.prove({
           identity: {

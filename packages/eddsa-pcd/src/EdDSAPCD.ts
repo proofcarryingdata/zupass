@@ -14,10 +14,14 @@ import { EdDSACardBody } from "./CardBody";
 
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
+export type EDdSAPublicKey = [string, string];
+
 export interface EdDSAInitArgs {}
 
 export interface EdDSAPCDArgs {
-  // The EdDSA private key to sign the message with, as a hex string
+  // The 32-byte EdDSA private key to sign the message with, as a hex string.
+  // Any 32 bytes work as a private key. Use {@link newEdDSAPrivateKey} to
+  // generate a new one securely.
   privateKey: StringArgument;
   // The message is an array of bigints, represented here as an array of
   // strings
@@ -30,7 +34,7 @@ export interface EdDSAPCDArgs {
 export interface EdDSAPCDClaim {
   // The public key is a pair of hex strings, representing a point on
   // the elliptic curve
-  publicKey: [string, string];
+  publicKey: EDdSAPublicKey;
   // The message is an array of bigints, each representing a field
   message: bigint[];
 }
@@ -89,9 +93,9 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const prvKey = fromHexString(args.privateKey.value);
 
   const hashedMessage = poseidon(message);
-  const publicKey: [string, string] = eddsa
+  const publicKey: EDdSAPublicKey = eddsa
     .prv2pub(prvKey)
-    .map(toHexString) as [string, string];
+    .map(toHexString) as EDdSAPublicKey;
   const signature = toHexString(
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
@@ -161,3 +165,10 @@ export const EdDSAPCDPackage: PCDPackage<
   deserialize,
   init
 };
+
+export function getEdDSAPublicKey(privateKey: string): [string, string] {
+  return eddsa.prv2pub(fromHexString(privateKey)).map(toHexString) as [
+    string,
+    string
+  ];
+}
