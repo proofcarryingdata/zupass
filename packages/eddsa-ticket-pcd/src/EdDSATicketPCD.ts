@@ -46,8 +46,6 @@ async function init(args: EdDSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
-// expect(await verify(pcd)).to.be.true;
-
 export interface EdDSATicketPCDArgs {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
@@ -62,7 +60,7 @@ export interface EdDSATicketPCDClaim {
 }
 
 export interface EdDSATicketPCDProof {
-  eddsaPCD: EdDSAPCD;
+  eddsaPCD: EdDSAPCD; // eddsa signature of {@link EdDSATicketPCDClaim.ticket}
 }
 
 export class EdDSATicketPCD
