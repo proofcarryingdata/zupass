@@ -1,8 +1,9 @@
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
-import { DeserializedDirectory, PCDDisk } from "../src/PCDDisk";
+import { PCDDisk } from "../src/PCDDisk";
 import { PCDPackages } from "../src/PCDPackages";
+import { DeserializedDirectory } from "../src/util";
 import { newPCD } from "./util";
 
 describe.only("PCD Disk", async function () {
