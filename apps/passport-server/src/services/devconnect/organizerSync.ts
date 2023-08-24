@@ -868,7 +868,11 @@ export class OrganizerSync {
     }
   }
 
+  /**
+   * Push check-ins to Pretix.
+   */
   private async pushCheckins(): Promise<void> {
+    // Get the tickets which have been checked in but not yet synced
     const ticketsToSync = await fetchDevconnectTicketsAwaitingSync(
       this.db,
       this.organizer.orgURL
@@ -876,6 +880,8 @@ export class OrganizerSync {
 
     for (const ticket of ticketsToSync) {
       const now = new Date();
+      // Send the API request
+      // Will throw an exception if it fails
       await this.pretixAPI.pushCheckin(
         this.organizer.orgURL,
         this.organizer.token,
@@ -884,6 +890,7 @@ export class OrganizerSync {
         now.toISOString()
       );
 
+      // Update the DB so that this ticket doesn't require sync
       await updateDevconnectPretixTicket(this.db, {
         ...ticket,
         pretix_checkin_timestamp: now
