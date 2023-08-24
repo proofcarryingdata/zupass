@@ -98,8 +98,6 @@ export class OrganizerSync {
     this.rollbarService = rollbarService;
     this.db = db;
     this._isRunning = false;
-    this._error = false;
-    this._errorCause = null;
   }
 
   // Conduct a single sync run
