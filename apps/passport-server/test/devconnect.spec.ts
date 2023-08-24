@@ -52,7 +52,10 @@ import {
   requestIssuedPCDs,
   requestServerRSAPublicKey
 } from "./issuance/issuance";
-import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
+import {
+  DevconnectPretixDataMocker,
+  IOrganizer
+} from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
@@ -74,6 +77,10 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
   let server: SetupServer;
+
+  this.afterEach(async () => {
+    server.resetHandlers();
+  });
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -115,7 +122,6 @@ describe("devconnect functionality", function () {
     );
 
     server = getDevconnectMockPretixAPIServer(mocker.get());
-    // @todo more selective approach to unhandled requests
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp();
@@ -1116,7 +1122,6 @@ describe("devconnect functionality", function () {
       expect(attempts).eq(6);
 
       os.cancel();
-      server.resetHandlers();
       server.events.removeListener("response:mocked", listener);
     }
   );
@@ -1132,20 +1137,30 @@ describe("devconnect functionality", function () {
       }
 
       const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
 
-      // Set up a sync manager for a single organizer
+      const eventID = organizer.events[0].eventID;
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured event being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event", (req, res, ctx) => {
+          if (req.params.event === eventID) {
+            return res(ctx.status(404));
+          }
+          const event = org.eventByEventID.get(req.params.event as string);
+          if (!event) {
+            return res(ctx.status(404));
+          }
+          return res(ctx.json(event));
+        })
+      );
+
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
         application.services.rollbarService,
         application.context.dbPool
-      );
-
-      // Return 404 for any event request
-      server.use(
-        rest.get(organizer.orgURL + "/events/:event", (req, res, ctx) => {
-          return res(ctx.status(404));
-        })
       );
 
       try {
@@ -1156,13 +1171,11 @@ describe("devconnect functionality", function () {
 
       expect(os.error).to.be.true;
       expect(os.errorCause?.phase).to.eq("fetching");
-
-      server.resetHandlers();
     }
   );
 
   step(
-    "should fail to sync if a product we're tracking is deleted",
+    "should fail to sync if an active product we're tracking is deleted",
     async function () {
       const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
         db
@@ -1172,6 +1185,24 @@ describe("devconnect functionality", function () {
       }
 
       const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const itemID = parseInt(organizer.events[0].activeItemIDs[0]);
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured item being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+          const items =
+            org.itemsByEventID.get(req.params.event as string) ?? [];
+          return res(
+            ctx.json({
+              results: items.filter((item) => item.id !== itemID),
+              next: null
+            })
+          );
+        })
+      );
 
       // Set up a sync manager for a single organizer
       const os = new OrganizerSync(
@@ -1181,11 +1212,53 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
-      // Return 404 for any item request
+      try {
+        await os.run();
+      } catch (e) {
+        // This space intentionally left blank
+      }
+
+      expect(os.error).to.be.true;
+      expect(os.errorCause?.phase).to.eq("validating");
+    }
+  );
+
+  step(
+    "should fail to sync if a superuser product we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const itemID = parseInt(organizer.events[0].superuserItemIds[0]);
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured item being unavailable from Pretix
       server.use(
-        rest.get(organizer.orgURL + "/events/:event/items", (req, res, ctx) => {
-          return res.once(ctx.status(404));
+        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+          const items =
+            org.itemsByEventID.get(req.params.event as string) ?? [];
+          return res(
+            ctx.json({
+              results: items.filter((item) => item.id !== itemID),
+              next: null
+            })
+          );
         })
+      );
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
       );
 
       try {
@@ -1195,9 +1268,7 @@ describe("devconnect functionality", function () {
       }
 
       expect(os.error).to.be.true;
-      expect(os.errorCause?.phase).to.eq("fetching");
-
-      server.resetHandlers();
+      expect(os.errorCause?.phase).to.eq("validating");
     }
   );
 

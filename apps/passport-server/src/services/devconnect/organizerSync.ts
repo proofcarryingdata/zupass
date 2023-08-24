@@ -253,6 +253,7 @@ export class OrganizerSync {
   ): string[] {
     const { settings, items } = eventData;
     const activeItemIdSet = new Set(eventConfig.activeItemIDs);
+    const superuserItemIdSet = new Set(eventConfig.superuserItemIds);
 
     // We want to make sure that we log all errors, so we collect everything
     // and only throw an exception once we have found all of them.
@@ -266,9 +267,12 @@ export class OrganizerSync {
       );
     }
 
+    const fetchedItemsIdSet = new Set();
+
     for (const item of items) {
       // Ignore items which are not in the event's "activeItemIDs" set
       if (activeItemIdSet.has(item.id.toString())) {
+        fetchedItemsIdSet.add(item.id.toString());
         const itemErrors = this.validateEventItem(item);
         if (itemErrors.length > 0) {
           errors.push(
@@ -277,6 +281,34 @@ export class OrganizerSync {
           );
         }
       }
+    }
+
+    const activeItemDiff = [...activeItemIdSet].filter(
+      (x) => !fetchedItemsIdSet.has(x)
+    );
+
+    const superuserItemDiff = [...superuserItemIdSet].filter(
+      (x) => !fetchedItemsIdSet.has(x)
+    );
+
+    if (activeItemDiff.length > 0) {
+      errors.push(
+        `Active items with ID(s) "${activeItemDiff.join(
+          ", "
+        )}" are present in config but not in data fetched from Pretix for event ${
+          eventConfig.eventID
+        }`
+      );
+    }
+
+    if (superuserItemDiff.length > 0) {
+      errors.push(
+        `Superuser items with ID(s) "${superuserItemDiff.join(
+          ", "
+        )}" are present in config but not in data fetched from Pretix for event ${
+          eventConfig.eventID
+        }`
+      );
     }
 
     return errors;
