@@ -1,8 +1,12 @@
 import { EdDSAPCDPackage, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
-import { PCDDisk, PCDPackages } from "@pcd/pcd-collection";
-import { DeserializedDirectory } from "@pcd/pcd-collection/src/util";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { DependencyList, useEffect, useState } from "react";
+import {
+  DeserializedDirectory,
+  getDirectoryFromSnapshot,
+  PCDDisk,
+  PCDPackages
+} from "@pcd/pcd-collection";
+import { ArgumentTypeName, PCD } from "@pcd/pcd-types";
+import { DependencyList, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuid } from "uuid";
 
@@ -83,10 +87,19 @@ function useDiskSnapshot(disk: PCDDisk | undefined): {
 }
 
 export function RenderDirectory({
-  dir
+  dir,
+  setPath
 }: {
   dir: DeserializedDirectory | undefined;
+  setPath: (path: string) => void;
 }) {
+  const onDirectoryClick = useCallback(
+    (dir: string) => {
+      setPath(dir);
+    },
+    [setPath]
+  );
+
   if (!dir) {
     return undefined;
   }
@@ -96,14 +109,42 @@ export function RenderDirectory({
       path: {dir.path} <br />
       child directories: <br />
       {dir.childDirectories.map((dir) => (
-        <DirectoryEntryContainer>{dir.name}</DirectoryEntryContainer>
+        <DirectoryEntry dir={dir} onDirClick={onDirectoryClick} />
       ))}
       child pcds: <br />
       {dir.pcds.map((pcd) => (
-        <PCDEntryContainer>pcd: {pcd.id}</PCDEntryContainer>
+        <FileEntry pcd={pcd} container={dir} />
       ))}
     </DirectoryContainer>
   );
+}
+
+function DirectoryEntry({
+  dir,
+  onDirClick
+}: {
+  dir: DeserializedDirectory;
+  onDirClick: (dir: string) => void;
+}) {
+  const onClick = useCallback(() => {
+    onDirClick(dir.path);
+  }, [dir.path, onDirClick]);
+
+  return (
+    <DirectoryEntryContainer onClick={onClick}>
+      {dir.name}
+    </DirectoryEntryContainer>
+  );
+}
+
+function FileEntry({
+  pcd,
+  container
+}: {
+  pcd: PCD;
+  container: DeserializedDirectory;
+}) {
+  return <DirectoryEntryContainer>{pcd.id}</DirectoryEntryContainer>;
 }
 
 export function ScratchScreen() {
@@ -113,11 +154,12 @@ export function ScratchScreen() {
   console.log(err ?? err2);
 
   const [path, setPath] = useState("/");
+  const directory = getDirectoryFromSnapshot(snapshot, path);
 
   return (
     <Container>
       File explorer <br />
-      <RenderDirectory dir={snapshot} />
+      <RenderDirectory dir={directory} setPath={setPath} />
     </Container>
   );
 }

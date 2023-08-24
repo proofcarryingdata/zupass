@@ -110,6 +110,22 @@ export function snapshotNodeToFile(
   return serializedPCD;
 }
 
+export function getDirectoryFromSnapshot(
+  snapshot: DeserializedDirectory,
+  dirPath: string
+): DeserializedDirectory | undefined {
+  const parts = dirPath.split(path.sep).filter((d) => d !== "");
+  let directory: DeserializedDirectory | undefined = snapshot;
+
+  console.log("PARTS", parts);
+
+  for (let i = 0; i < parts.length; i++) {
+    directory = directory?.childDirectories.find((d) => d.name === parts[i]);
+  }
+
+  return directory;
+}
+
 export interface SerializedDirectory {
   name: string;
   path: string;
