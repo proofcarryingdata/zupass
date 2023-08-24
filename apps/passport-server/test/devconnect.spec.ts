@@ -42,7 +42,10 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import { OrganizerSync } from "../src/services/devconnect/organizerSync";
+import {
+  OrganizerSync,
+  SyncErrorCause
+} from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
@@ -1163,14 +1166,18 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
+      let cause: SyncErrorCause | null = null;
+      let error = null;
+
       try {
         await os.run();
       } catch (e) {
-        // This space intentionally left blank
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
       }
 
-      expect(os.error).to.be.true;
-      expect(os.errorCause?.phase).to.eq("fetching");
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("fetching");
     }
   );
 
@@ -1212,14 +1219,18 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
+      let error = null;
+      let cause: SyncErrorCause | null = null;
+
       try {
         await os.run();
       } catch (e) {
-        // This space intentionally left blank
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
       }
 
-      expect(os.error).to.be.true;
-      expect(os.errorCause?.phase).to.eq("validating");
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("validating");
     }
   );
 
@@ -1261,14 +1272,18 @@ describe("devconnect functionality", function () {
         application.context.dbPool
       );
 
+      let error = null;
+      let cause: SyncErrorCause | null = null;
+
       try {
         await os.run();
       } catch (e) {
-        // This space intentionally left blank
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
       }
 
-      expect(os.error).to.be.true;
-      expect(os.errorCause?.phase).to.eq("validating");
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("validating");
     }
   );
 
