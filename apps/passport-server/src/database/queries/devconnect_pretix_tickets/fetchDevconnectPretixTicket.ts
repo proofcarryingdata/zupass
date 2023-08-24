@@ -1,6 +1,7 @@
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixTicketDB,
+  DevconnectPretixTicketDBWithCheckinListID,
   DevconnectPretixTicketDBWithEmailAndItem,
   DevconnectSuperuser
 } from "../../models";
@@ -168,5 +169,31 @@ and t.is_deleted = false
     `,
     [email]
   );
+  return result.rows;
+}
+
+/**
+ * Fetches tickets which have been consumed in PCDPass, but not checked in
+ * on Pretix.
+ */
+export async function fetchDevconnectTicketsAwaitingSync(
+  client: Pool,
+  orgUrl: string
+): Promise<Array<DevconnectPretixTicketDBWithCheckinListID>> {
+  const result = await sqlQuery(
+    client,
+    `\
+      select t.*, e.checkin_list_id from devconnect_pretix_tickets t
+      join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
+      join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
+      join pretix_events_config ec on ec.id = e.pretix_events_config_id
+      join pretix_organizers_config o on ec.pretix_organizers_config_id = o.id
+      where o.organizer_url = $1
+      and t.is_deleted = false
+      and t.is_consumed = true
+      and t.pretix_checkin_timestamp IS NULL`,
+    [orgUrl]
+  );
+
   return result.rows;
 }

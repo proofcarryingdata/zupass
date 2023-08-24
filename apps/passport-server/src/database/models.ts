@@ -36,6 +36,11 @@ export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
   id: string;
 }
 
+export interface DevconnectPretixTicketDBWithCheckinListID
+  extends DevconnectPretixTicketDB {
+  checkin_list_id: string;
+}
+
 // DevconnectPretixTicket with all relevant fields for ticket PCD included,
 // namely the `event_name` and `item_name`
 export interface DevconnectPretixTicketDBWithEmailAndItem
@@ -125,6 +130,7 @@ export interface PretixEventInfo {
   id: string;
   pretix_events_config_id: string;
   event_name: string;
+  checkin_list_id: string;
 }
 
 export interface PretixItemInfo {

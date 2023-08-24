@@ -21,16 +21,17 @@ export async function fetchPretixEventInfo(
 export async function insertPretixEventsInfo(
   client: Pool,
   eventName: string,
-  eventsConfigID: string
+  eventsConfigID: string,
+  checkinListId: string
 ): Promise<string> {
   const result = await sqlQuery(
     client,
     // @todo consider upsert?
     `\
-      insert into devconnect_pretix_events_info (event_name, pretix_events_config_id, is_deleted)
-      values ($1, $2, FALSE)
+      insert into devconnect_pretix_events_info (event_name, pretix_events_config_id, checkin_list_id, is_deleted)
+      values ($1, $2, $3, FALSE)
       returning id`,
-    [eventName, eventsConfigID]
+    [eventName, eventsConfigID, checkinListId]
   );
   return result.rows[0].id;
 }
@@ -39,15 +40,16 @@ export async function updatePretixEventsInfo(
   client: Pool,
   id: string,
   eventName: string,
-  isDeleted: boolean
+  isDeleted: boolean,
+  checkinListId: string
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
     client,
     `\
       update devconnect_pretix_events_info
-      set event_name = $2, is_deleted = $3
+      set event_name = $2, is_deleted = $3, checkin_list_id = $4
       where id=$1`,
-    [id, eventName, isDeleted]
+    [id, eventName, isDeleted, checkinListId]
   );
   return result.rows;
 }

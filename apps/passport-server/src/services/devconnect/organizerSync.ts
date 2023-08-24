@@ -1,5 +1,6 @@
 import { Pool } from "postgres-pool";
 import {
+  DevconnectPretixCheckinList,
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
@@ -16,7 +17,10 @@ import {
   DevconnectPretixTicketDB,
   PretixItemInfo
 } from "../../database/models";
-import { fetchDevconnectPretixTicketsByEvent } from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  fetchDevconnectPretixTicketsByEvent,
+  fetchDevconnectTicketsAwaitingSync
+} from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
@@ -44,6 +48,7 @@ interface EventData {
   eventInfo: DevconnectPretixEvent;
   items: DevconnectPretixItem[];
   tickets: DevconnectPretixOrder[];
+  checkinLists: DevconnectPretixCheckinList[];
 }
 
 interface EventDataFromPretix {
@@ -51,7 +56,7 @@ interface EventDataFromPretix {
   event: DevconnectPretixEventConfig;
 }
 
-type SyncPhase = "fetching" | "validating" | "saving";
+type SyncPhase = "fetching" | "validating" | "saving" | "pushingCheckins";
 
 export interface SyncErrorCause {
   phase: SyncPhase;
@@ -142,6 +147,19 @@ export class OrganizerSync {
 
         throw new Error("Data failed to save", {
           cause: errorCause("saving", this.organizer.id, e)
+        });
+      }
+
+      try {
+        await this.pushCheckins();
+      } catch (e) {
+        logger(
+          `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
+        );
+        this.rollbarService?.reportError(e);
+
+        throw new Error("Check-in sync failed", {
+          cause: errorCause("pushingCheckins", this.organizer.id, e)
         });
       }
     } finally {
@@ -293,6 +311,18 @@ export class OrganizerSync {
       );
     }
 
+    if (eventData.checkinLists.length > 1) {
+      errors.push(
+        `Event "${eventData.eventInfo.name.en}" (${eventData.eventInfo.slug}) has multiple check-in lists`
+      );
+    }
+
+    if (eventData.checkinLists.length < 1) {
+      errors.push(
+        `Event "${eventData.eventInfo.name.en}" (${eventData.eventInfo.slug}) has no check-in lists`
+      );
+    }
+
     return errors;
   }
 
@@ -340,7 +370,13 @@ export class OrganizerSync {
 
       const tickets = await this.pretixAPI.fetchOrders(orgURL, token, eventID);
 
-      return { settings, items, eventInfo, tickets };
+      const checkinLists = await this.pretixAPI.fetchEventCheckinLists(
+        orgURL,
+        token,
+        eventID
+      );
+
+      return { settings, items, eventInfo, tickets, checkinLists };
     });
   }
 
@@ -357,14 +393,21 @@ export class OrganizerSync {
   ): Promise<void> {
     return traced(NAME, "saveEvent", async (span) => {
       try {
-        const { eventInfo, items, tickets } = eventData;
+        const { eventInfo, items, tickets, checkinLists } = eventData;
 
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("ticket_count", tickets.length);
         span?.setAttribute("event_slug", eventInfo.slug);
         span?.setAttribute("event_name", eventInfo.name.en);
 
-        if (!(await this.syncEventInfos(organizer, event, eventInfo))) {
+        if (
+          !(await this.syncEventInfos(
+            organizer,
+            event,
+            eventInfo,
+            checkinLists[0].id.toString()
+          ))
+        ) {
           throw new Error(
             `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
           );
@@ -394,7 +437,8 @@ export class OrganizerSync {
   private async syncEventInfos(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
-    eventInfo: DevconnectPretixEvent
+    eventInfo: DevconnectPretixEvent,
+    checkinListId: string
   ): Promise<boolean> {
     return traced(NAME, "syncEventInfos", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
@@ -416,14 +460,16 @@ export class OrganizerSync {
           await insertPretixEventsInfo(
             this.db,
             eventNameFromAPI,
-            eventConfigID
+            eventConfigID,
+            checkinListId
           );
         } else {
           await updatePretixEventsInfo(
             this.db,
             existingEvent.id,
             eventNameFromAPI,
-            false
+            false,
+            checkinListId
           );
         }
       } catch (e) {
@@ -702,6 +748,7 @@ export class OrganizerSync {
             !oldTicket.pretix_checkin_timestamp &&
             !updatedTicket.is_consumed
           ) {
+            updatedTicket.checkin_timestamp = oldTicket.checkin_timestamp;
             updatedTicket.is_consumed = true;
           }
 
@@ -818,6 +865,29 @@ export class OrganizerSync {
     for (const { data, event } of fetchedData) {
       // This will throw an exception if it fails
       await this.saveEvent(this.organizer, event, data);
+    }
+  }
+
+  private async pushCheckins(): Promise<void> {
+    const ticketsToSync = await fetchDevconnectTicketsAwaitingSync(
+      this.db,
+      this.organizer.orgURL
+    );
+
+    for (const ticket of ticketsToSync) {
+      const now = new Date();
+      await this.pretixAPI.pushCheckin(
+        this.organizer.orgURL,
+        this.organizer.token,
+        ticket.secret,
+        ticket.checkin_list_id,
+        now.toISOString()
+      );
+
+      await updateDevconnectPretixTicket(this.db, {
+        ...ticket,
+        pretix_checkin_timestamp: now
+      });
     }
   }
 }

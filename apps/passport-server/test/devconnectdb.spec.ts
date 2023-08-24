@@ -274,7 +274,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       const dbEventInfoId = await insertPretixEventsInfo(
         db,
         event.eventName,
-        event.dbEventConfigId
+        event.dbEventConfigId,
+        "1"
       );
 
       event.dbEventInfoId = dbEventInfoId;
