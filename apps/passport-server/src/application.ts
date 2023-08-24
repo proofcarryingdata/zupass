@@ -37,7 +37,7 @@ export async function startApplication(
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
-    commitHash: await getCommitHash()
+    gitCommitHash: await getCommitHash()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);

@@ -27,7 +27,7 @@ export async function startTelemetry(
 
   honeyClient = context.honeyClient;
   tracer = opentelemetry.trace.getTracer("server-telemetry");
-  commitHash = context.commitHash;
+  commitHash = context.gitCommitHash;
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
