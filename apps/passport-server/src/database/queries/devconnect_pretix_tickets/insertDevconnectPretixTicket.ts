@@ -1,6 +1,6 @@
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
-import { sqlQuery, timestampStringToDate } from "../../sqlQuery";
+import { sqlQuery } from "../../sqlQuery";
 
 /**
  * Insert a Devconnect pretix ticket into the database, if they have not been
@@ -31,8 +31,8 @@ returning *`,
       params.position_id,
       params.secret,
       params.checker ?? "",
-      timestampStringToDate(params.checkin_timestamp),
-      timestampStringToDate(params.pretix_checkin_timestamp)
+      params.checkin_timestamp,
+      params.pretix_checkin_timestamp
     ]
   );
   return result.rows[0];
