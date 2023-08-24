@@ -132,7 +132,10 @@ describe("devconnect functionality", function () {
     server = getDevconnectMockPretixAPIServer(mocker.get());
     server.listen({ onUnhandledRequest: "bypass" });
 
-    application = await startTestingApp();
+    application = await startTestingApp({
+      devconnectPretixAPIFactory: async () =>
+        new DevconnectPretixAPI({ requestsPerInterval: 10_000 })
+    });
 
     if (!application.services.devconnectPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
@@ -873,7 +876,6 @@ describe("devconnect functionality", function () {
     );
 
     await devconnectPretixSyncService.trySync();
-
     const response = await requestIssuedPCDs(
       application,
       identity,
