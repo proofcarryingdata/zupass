@@ -13,6 +13,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
+import { ScratchScreen } from "../components/screens/ScratchScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
@@ -118,6 +119,9 @@ function RouterImpl() {
       <Routes>
         <Route path="/">
           <Route index element={<HomeScreen />} />
+          {appConfig.devMode && (
+            <Route path="scratch" element={<ScratchScreen />} />
+          )}
           <Route path="login" element={<LoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
