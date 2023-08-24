@@ -252,7 +252,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     });
   }
 
-  // Fetch all orders for a given event.
+  // Fetch all check-in lists for a given event.
   public async fetchEventCheckinLists(
     orgUrl: string,
     token: string,
@@ -262,7 +262,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       span?.setAttribute("org_url", orgUrl);
       const lists: DevconnectPretixCheckinList[] = [];
 
-      // Fetch orders from paginated API
+      // Fetch check-in lists from paginated API
       let url = `${orgUrl}/events/${eventID}/checkinlists/`;
       while (url != null) {
         logger(`[DEVCONNECT PRETIX] Fetching orders ${url}`);
@@ -368,11 +368,14 @@ export interface DevconnectPretixEventSettings {
   attendee_emails_required: boolean;
 }
 
+// Each event has one or more check-in lists
+// We only care about these because we need the list ID for check-in sync
 export interface DevconnectPretixCheckinList {
   id: number;
   name: string;
 }
 
+// This records when an attendee was checked in
 export interface DevconnectPretixCheckin {
   datetime: Date;
   type: string;
