@@ -78,6 +78,7 @@ export function snapshotNodeToDirectory(
   const entryList = Object.entries(node[2]);
 
   return {
+    name: path.parse(nodePath).name,
     path: nodePath,
     pcds: entryList
       .map(([_, v]) => {
@@ -110,12 +111,14 @@ export function snapshotNodeToFile(
 }
 
 export interface SerializedDirectory {
+  name: string;
   path: string;
   pcds: SerializedPCD[];
   childDirectories: SerializedDirectory[];
 }
 
 export interface DeserializedDirectory {
+  name: string;
   path: string;
   pcds: PCD[];
   childDirectories: DeserializedDirectory[];

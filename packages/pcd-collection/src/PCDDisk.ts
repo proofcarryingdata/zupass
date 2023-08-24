@@ -85,6 +85,7 @@ export class PCDDisk {
     directory: SerializedDirectory
   ): Promise<DeserializedDirectory> {
     return {
+      name: directory.name,
       childDirectories: await Promise.all(
         directory.childDirectories.map((d) => this.deserializeSnapshot(d))
       ),
@@ -98,8 +99,9 @@ export class PCDDisk {
    * the set of pcds, or the contents of the pcds changes.
    */
   public async getHash(): Promise<string> {
-    const allSerialized = await this.serializeCollection();
-    const hashed = await getHash(allSerialized);
-    return hashed;
+    return "test";
+    // const allSerialized = await this.serializeCollection();
+    // const hashed = await getHash(allSerialized);
+    // return hashed;
   }
 }

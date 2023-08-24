@@ -96,7 +96,7 @@ export function RenderDirectory({
       path: {dir.path} <br />
       child directories: <br />
       {dir.childDirectories.map((dir) => (
-        <div>{dir.path}</div>
+        <div>{dir.name}</div>
       ))}
       child pcds: <br />
       {dir.pcds.map((pcd) => (
@@ -111,6 +111,8 @@ export function ScratchScreen() {
   const { value: snapshot, err: err2 } = useDiskSnapshot(testDisk);
 
   console.log(err ?? err2);
+
+  const [path, setPath] = useState("/");
 
   return (
     <Container>
