@@ -96,11 +96,11 @@ export function RenderDirectory({
       path: {dir.path} <br />
       child directories: <br />
       {dir.childDirectories.map((dir) => (
-        <div>{dir.name}</div>
+        <DirectoryEntryContainer>{dir.name}</DirectoryEntryContainer>
       ))}
       child pcds: <br />
       {dir.pcds.map((pcd) => (
-        <div>pcd: {pcd.id}</div>
+        <PCDEntryContainer>pcd: {pcd.id}</PCDEntryContainer>
       ))}
     </DirectoryContainer>
   );
@@ -136,3 +136,16 @@ const Container = styled.div`
   color: black;
   padding: 64px;
 `;
+
+const EntryContainer = styled.div`
+  padding: 4px 8px;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const DirectoryEntryContainer = styled(EntryContainer)``;
+
+const PCDEntryContainer = styled(EntryContainer)``;
