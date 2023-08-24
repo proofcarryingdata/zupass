@@ -76,6 +76,11 @@ export class PCDDisk {
     return snapshotNodeToDirectory("/", node) as SerializedDirectory;
   }
 
+  public getSnapshot(): Promise<DeserializedDirectory> {
+    const snapshot = this.getSerializedSnapshot();
+    return this.deserializeSnapshot(snapshot);
+  }
+
   public async deserializeSnapshot(
     directory: SerializedDirectory
   ): Promise<DeserializedDirectory> {

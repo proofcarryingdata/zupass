@@ -70,13 +70,8 @@ describe.only("PCD Disk", async function () {
     const serialized = disk.serialize();
     const deserialized = PCDDisk.deserialize(packages, serialized);
 
-    const originalSnapshot = await disk.deserializeSnapshot(
-      disk.getSerializedSnapshot()
-    );
-
-    const snapshotOfCopy = await deserialized.deserializeSnapshot(
-      deserialized.getSerializedSnapshot()
-    );
+    const originalSnapshot = await disk.getSnapshot();
+    const snapshotOfCopy = await deserialized.getSnapshot();
 
     expect(originalSnapshot).to.deep.eq(snapshotOfCopy);
   });
