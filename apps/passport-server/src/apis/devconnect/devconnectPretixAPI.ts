@@ -97,12 +97,6 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
         }
       }
 
-      if (!result.ok) {
-        throw new Error(
-          `[PRETIX] Error fetching ${input}: ${result.status} ${result.statusText}`
-        );
-      }
-
       return result;
     });
   }
