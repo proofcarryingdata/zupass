@@ -6,6 +6,7 @@ import {
   PCDPackages
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, PCD } from "@pcd/pcd-types";
+import * as path from "path";
 import { DependencyList, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuid } from "uuid";
@@ -60,12 +61,15 @@ function useTestDisk() {
     disk.mkdirp("/bar");
     disk.mkdirp("/foo/baz");
 
-    const pcd = await newPCD();
+    const pcd1 = await newPCD();
+    const pcd2 = await newPCD();
+    const pcd3 = await newPCD();
+    const pcd4 = await newPCD();
 
-    await disk.insertPCD(pcd, "/");
-    await disk.insertPCD(pcd, "/foo");
-    await disk.insertPCD(pcd, "/bar");
-    await disk.insertPCD(pcd, "/foo/baz");
+    await disk.insertPCD(pcd1, "/");
+    await disk.insertPCD(pcd2, "/foo");
+    await disk.insertPCD(pcd3, "/bar");
+    await disk.insertPCD(pcd4, "/foo/baz");
 
     console.log("created disk", disk);
 
@@ -104,9 +108,20 @@ export function RenderDirectory({
     return undefined;
   }
 
+  const parent = path.parse(dir.path).dir;
+
   return (
     <DirectoryContainer>
-      path: {dir.path} <br />
+      <div>
+        <button
+          onClick={() => {
+            setPath(parent);
+          }}
+        >
+          up ^
+        </button>
+        {" " + dir.path}
+      </div>
       child directories: <br />
       {dir.childDirectories.map((dir) => (
         <DirectoryEntry dir={dir} onDirClick={onDirectoryClick} />
