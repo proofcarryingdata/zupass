@@ -445,8 +445,6 @@ describe("devconnect functionality", function () {
         (ticket: DevconnectPretixTicket) => ticket.is_consumed === true
       ).length
     );
-
-    server.resetHandlers();
   });
 
   /**
