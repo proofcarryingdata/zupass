@@ -1,12 +1,12 @@
 import NodeRSA from "node-rsa";
-import { ITicketData, RSATicketPCD } from "./RSATicketPCD";
+import { IRSATicketData, RSATicketPCD } from "./RSATicketPCD";
 
-export function getTicketData(pcd?: RSATicketPCD): ITicketData {
-  let ticketData: ITicketData = {};
+export function getTicketData(pcd?: RSATicketPCD): IRSATicketData {
+  let ticketData: IRSATicketData = {};
   try {
     ticketData = JSON.parse(
       pcd?.proof?.rsaPCD?.claim?.message ?? "{}"
-    ) as ITicketData;
+    ) as IRSATicketData;
   } catch (e) {
     //
   }

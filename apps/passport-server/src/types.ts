@@ -1,11 +1,13 @@
 import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
-import { Pool } from "pg";
-import { IDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
+import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IPretixAPI } from "./apis/pretixAPI";
-import { DevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
+import {
+  DevconnectPretixAPIFactory,
+  DevconnectPretixSyncService
+} from "./services/devconnectPretixSyncService";
 import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
@@ -26,6 +28,7 @@ export interface ApplicationContext {
   isZuzalu: boolean;
   resourcesDir: string;
   publicResourcesDir: string;
+  gitCommitHash: string;
 }
 
 export interface GlobalServices {
@@ -53,7 +56,7 @@ export interface PCDPass {
 export interface APIs {
   emailAPI: IEmailAPI | null;
   pretixAPI: IPretixAPI | null;
-  devconnectPretixAPI: IDevconnectPretixAPI | null;
+  devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
 }
 
 export interface EnvironmentVariables {
@@ -73,4 +76,5 @@ export interface EnvironmentVariables {
   PRETIX_VISITOR_EVENT_ID?: string;
   ROLLBAR_TOKEN?: string;
   SUPPRESS_LOGGING?: string;
+  SERVER_EDDSA_PRIVATE_KEY?: string;
 }

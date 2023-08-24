@@ -1,3 +1,10 @@
+import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  getEdDSATicketData,
+  ITicketData
+} from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
@@ -9,18 +16,11 @@ import {
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import {
-  getPublicKey,
-  getTicketData,
-  ITicketData,
-  RSATicketPCD,
-  RSATicketPCDPackage
-} from "@pcd/rsa-ticket-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import _ from "lodash";
 import NodeRSA from "node-rsa";
 import { CommitmentRow } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
@@ -35,19 +35,30 @@ import { logger } from "../util/logger";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
-  private readonly rsaPrivateKey: NodeRSA;
-  private readonly exportedPrivateKey: string;
-  private readonly exportedPublicKey: string;
 
-  public constructor(context: ApplicationContext, rsaPrivateKey: NodeRSA) {
+  private readonly eddsaPrivateKey: string;
+  private readonly rsaPrivateKey: NodeRSA;
+  private readonly exportedRSAPrivateKey: string;
+  private readonly exportedRSAPublicKey: string;
+
+  public constructor(
+    context: ApplicationContext,
+    rsaPrivateKey: NodeRSA,
+    eddsaPrivateKey: string
+  ) {
     this.context = context;
     this.rsaPrivateKey = rsaPrivateKey;
-    this.exportedPrivateKey = this.rsaPrivateKey.exportKey("private");
-    this.exportedPublicKey = this.rsaPrivateKey.exportKey("public");
+    this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
+    this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
+    this.eddsaPrivateKey = eddsaPrivateKey;
   }
 
-  public getPublicKey(): string {
-    return this.exportedPublicKey;
+  public getRSAPublicKey(): string {
+    return this.exportedRSAPublicKey;
+  }
+
+  public getEdDSAPublicKey(): EDdSAPublicKey {
+    return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
   public async handleIssueRequest(
@@ -55,7 +66,7 @@ export class IssuanceService {
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
     const serialized = await Promise.all(
-      pcds.map((pcd) => RSATicketPCDPackage.serialize(pcd))
+      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
     );
 
     return { pcds: serialized, folder: "Devconnect" };
@@ -65,7 +76,7 @@ export class IssuanceService {
     request: CheckInRequest
   ): Promise<CheckInResponse> {
     try {
-      const ticketPCD = await RSATicketPCDPackage.deserialize(
+      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
 
@@ -75,7 +86,14 @@ export class IssuanceService {
         return ticketValid;
       }
 
-      const ticketData = getTicketData(ticketPCD);
+      const ticketData = getEdDSATicketData(ticketPCD);
+
+      if (!ticketData) {
+        return {
+          success: false,
+          error: { name: "InvalidTicket" }
+        };
+      }
 
       const checker = await this.checkUserExists(request.checkerProof);
 
@@ -93,7 +111,7 @@ export class IssuanceService {
         );
 
       const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) => perm.pretix_events_config_id === ticketData.eventConfigId
+        (perm) => perm.pretix_events_config_id === ticketData.eventId
       );
 
       if (!relevantSuperUserPermission) {
@@ -118,7 +136,7 @@ export class IssuanceService {
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in", {cause: e});
+      throw new Error("failed to check in", { cause: e });
     }
   }
 
@@ -126,7 +144,7 @@ export class IssuanceService {
     request: CheckTicketRequest
   ): Promise<CheckTicketResponse> {
     try {
-      const ticketPCD = await RSATicketPCDPackage.deserialize(
+      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
       return this.checkTicket(ticketPCD);
@@ -139,10 +157,10 @@ export class IssuanceService {
   }
 
   public async checkTicket(
-    ticketPCD: RSATicketPCD
+    ticketPCD: EdDSATicketPCD
   ): Promise<CheckTicketResponse> {
     try {
-      const proofPublicKey = getPublicKey(ticketPCD)?.exportKey("public");
+      const proofPublicKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
       if (!proofPublicKey) {
         return {
           success: false,
@@ -150,16 +168,17 @@ export class IssuanceService {
         };
       }
 
-      const serverPublicKey = this.getPublicKey();
-      if (serverPublicKey !== proofPublicKey) {
+      const serverPublicKey = await this.getEdDSAPublicKey();
+      if (!_.isEqual(serverPublicKey, proofPublicKey)) {
         return {
           success: false,
           error: { name: "InvalidSignature" }
         };
       }
 
-      const { ticketId } = getTicketData(ticketPCD);
-      if (!ticketId) {
+      const ticket = getEdDSATicketData(ticketPCD);
+
+      if (!ticket || !ticket.ticketId) {
         return {
           success: false,
           error: { name: "InvalidTicket" }
@@ -168,7 +187,7 @@ export class IssuanceService {
 
       const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
         this.context.dbPool,
-        ticketId
+        ticket.ticketId
       );
 
       if (!ticketInDb) {
@@ -248,37 +267,25 @@ export class IssuanceService {
 
   private async ticketDataToTicketPCD(
     ticketData: ITicketData
-  ): Promise<RSATicketPCD> {
-    const serializedTicketData = JSON.stringify(ticketData);
+  ): Promise<EdDSATicketPCD> {
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
-    const rsaPcd = await RSAPCDPackage.prove({
+    const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
       privateKey: {
-        argumentType: ArgumentTypeName.String,
-        value: this.exportedPrivateKey
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: serializedTicketData
+        value: this.eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
       },
       id: {
-        argumentType: ArgumentTypeName.String,
-        value: undefined
+        value: stableId,
+        argumentType: ArgumentTypeName.String
       }
     });
 
-    const rsaTicketPCD = await RSATicketPCDPackage.prove({
-      id: {
-        argumentType: ArgumentTypeName.String,
-        value: stableId
-      },
-      rsaPCD: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await RSAPCDPackage.serialize(rsaPcd)
-      }
-    });
-
-    return rsaTicketPCD;
+    return ticketPCD;
   }
 
   /**
@@ -286,11 +293,11 @@ export class IssuanceService {
    */
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
-  ): Promise<RSATicketPCD[]> {
+  ): Promise<EdDSATicketPCD[]> {
     const commitment = await this.checkUserExists(request.userProof);
     const email = commitment?.email;
 
-    if (email == null) {
+    if (commitment == null || email == null) {
       return [];
     }
 
@@ -305,15 +312,25 @@ export class IssuanceService {
         .map(
           (t) =>
             ({
-              ticketId: t.id.toString(),
+              // unsigned fields
+              attendeeName: t.full_name,
+              attendeeEmail: t.email,
               eventName: t.event_name,
               ticketName: t.item_name,
-              timestamp: Date.now(),
-              attendeeEmail: email,
-              attendeeName: t.full_name,
+              checkerEmail: t.checker,
+
+              // signed fields
+              ticketId: t.id,
+              eventId: t.pretix_events_config_id,
+              productId: t.devconnect_pretix_items_info_id,
+              timestampConsumed:
+                t.checkin_timestamp == null
+                  ? 0
+                  : new Date(t.checkin_timestamp).getTime(),
+              timestampSigned: Date.now(),
+              attendeeSemaphoreId: commitment.commitment,
               isConsumed: t.is_consumed,
-              isRevoked: t.is_deleted,
-              eventConfigId: t.pretix_events_config_id
+              isRevoked: t.is_deleted
             }) satisfies ITicketData
         )
         // convert to serialized ticket PCD
@@ -332,18 +349,19 @@ export function startIssuanceService(
     return null;
   }
 
-  const pkey = loadPrivateKey();
+  const rsaKey = loadRSAPrivateKey();
+  const eddsaKey = loadEdDSAPrivateKey();
 
-  if (pkey == null) {
+  if (rsaKey == null || eddsaKey == null) {
     logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
 
-  const issuanceService = new IssuanceService(context, pkey);
+  const issuanceService = new IssuanceService(context, rsaKey, eddsaKey);
   return issuanceService;
 }
 
-function loadPrivateKey(): NodeRSA | null {
+function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
   if (pkeyEnv == null) {
@@ -362,4 +380,15 @@ function loadPrivateKey(): NodeRSA | null {
   }
 
   return null;
+}
+
+function loadEdDSAPrivateKey(): string | null {
+  const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY;
+
+  if (pkeyEnv == null) {
+    logger("[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY");
+    return null;
+  }
+
+  return pkeyEnv;
 }

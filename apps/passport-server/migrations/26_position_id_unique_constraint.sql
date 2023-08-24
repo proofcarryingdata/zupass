@@ -1,0 +1,2 @@
+alter table devconnect_pretix_tickets
+add constraint unique_position_id unique(position_id);

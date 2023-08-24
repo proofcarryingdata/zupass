@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { PretixOrganizersConfig } from "../../database/models";
 import { fetchPretixConfiguration } from "../../database/queries/pretix_config/fetchPretixConfiguration";
 import { logger } from "../../util/logger";
@@ -37,7 +37,7 @@ function pretixConfigDBToDevconnectPretixConfig(
             superuserItemIds: eventDB.superuser_item_ids
           })),
           token: organizerDB.token
-        }) satisfies DevconnectPretixOrganizerConfig
+        } satisfies DevconnectPretixOrganizerConfig)
     )
   };
 }

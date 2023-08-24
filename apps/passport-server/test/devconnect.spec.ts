@@ -1,3 +1,10 @@
+import { IsomorphicResponse } from "@mswjs/interceptors";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  ITicketData
+} from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
   ISSUANCE_STRING,
@@ -5,14 +12,19 @@ import {
   User
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
-import { RSATicketPCD, RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
+import { rest } from "msw";
+import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
+import {
+  DevconnectPretixAPI,
+  DevconnectPretixOrder
+} from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
@@ -30,16 +42,24 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
+import {
+  OrganizerSync,
+  SyncErrorCause
+} from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDPass } from "../src/types";
+import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
-  requestServerPublicKey
+  requestServerRSAPublicKey
 } from "./issuance/issuance";
-import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
-import { getDevconnectMockPretixAPI } from "./pretix/mockDevconnectPretixApi";
+import {
+  DevconnectPretixDataMocker,
+  IOrganizer
+} from "./pretix/devconnectPretixDataMocker";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDPass } from "./user/testLoginPCDPass";
@@ -59,6 +79,11 @@ describe("devconnect functionality", function () {
   let eventAConfigId: string;
   let eventBConfigId: string;
   let eventCConfigId: string;
+  let server: SetupServer;
+
+  this.afterEach(async () => {
+    server.resetHandlers();
+  });
 
   this.beforeAll(async () => {
     await overrideEnvironment(pcdpassTestingEnv);
@@ -99,8 +124,10 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    const devconnectPretixAPI = getDevconnectMockPretixAPI(mocker.get());
-    application = await startTestingApp({ devconnectPretixAPI });
+    server = getDevconnectMockPretixAPIServer(mocker.get());
+    server.listen({ onUnhandledRequest: "bypass" });
+
+    application = await startTestingApp();
 
     if (!application.services.devconnectPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
@@ -113,6 +140,7 @@ describe("devconnect functionality", function () {
   this.afterAll(async () => {
     await stopApplication(application);
     await db.end();
+    server.close();
   });
 
   step("mock pretix api config matches load from DB", async function () {
@@ -259,21 +287,20 @@ describe("devconnect functionality", function () {
   );
 
   step("removing an order causes soft deletion of ticket", async function () {
-    const ordersForEventA = mocker
-      .get()
-      .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug)!;
+    const ordersForEventA =
+      mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug) ??
+      [];
 
     const lastOrder = ordersForEventA.find(
       (o) => o.email === mocker.get().organizer1.EMAIL_2
-    )!;
+    ) as DevconnectPretixOrder;
 
     mocker.removeOrder(
       mocker.get().organizer1.orgUrl,
       mocker.get().organizer1.eventA.slug,
       lastOrder.code
-    );
-    devconnectPretixSyncService.replaceApi(
-      getDevconnectMockPretixAPI(mocker.get())
     );
 
     await devconnectPretixSyncService.trySync();
@@ -401,6 +428,11 @@ describe("devconnect functionality", function () {
         }
       );
 
+      const oldSettings = mocker.getEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug
+      );
+
       mocker.setEventSettings(
         mocker.get().organizer1.orgUrl,
         mocker.get().organizer1.eventA.slug,
@@ -416,6 +448,94 @@ describe("devconnect functionality", function () {
       expect(event?.event_name).to.not.eq(updatedNameInNewSync);
       // Instead, the original name remains.
       expect(event?.event_name).to.eq(originalEvent?.event_name);
+
+      // Since we introduced invalid data, we want to restore the valid
+      // data in order to avoid interfering with future tests.
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        oldSettings
+      );
+    }
+  );
+
+  step(
+    "should be able to sync an item with valid item settings",
+    async function () {
+      const updatedNameInNewSync = "Will sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is valid
+          //item.generate_tickets = null;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name matches the one fetched during sync
+      expect(item.item_name).to.eq(updatedNameInNewSync);
+      // The original name no longer matches
+      expect(item.item_name).to.not.eq(originalItem.item_name);
+    }
+  );
+
+  step(
+    "should not be able to sync an item with invalid item settings",
+    async function () {
+      const updatedNameInNewSync = "Won't sync to this";
+      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventInfo) {
+        throw new Error(`Could not fetch event info for ${eventBConfigId}`);
+      }
+
+      const originalItem = (
+        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+      )[0];
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // This is not valid
+          item.generate_tickets = true;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+
+      // The event name does *not* match the one fetched during sync
+      expect(item.item_name).to.not.eq(updatedNameInNewSync);
+      // Instead, the original name remains.
+      expect(item.item_name).to.eq(originalItem.item_name);
+
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventB.slug,
+        mocker.get().organizer1.eventBItem3.id,
+        (item) => {
+          // Restore the item to a valid setting
+          item.generate_tickets = false;
+          item.name.en = updatedNameInNewSync;
+        }
+      );
     }
   );
 
@@ -426,7 +546,7 @@ describe("devconnect functionality", function () {
   step(
     "anyone should be able to request the server's public key",
     async function () {
-      const publicKeyResponse = await requestServerPublicKey(application);
+      const publicKeyResponse = await requestServerRSAPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
       publicKey = new NodeRSA(publicKeyResponse.text, "public");
       expect(publicKey.getKeySize()).to.eq(2048);
@@ -467,32 +587,22 @@ describe("devconnect functionality", function () {
       expect(responseBody.folder).to.eq("Devconnect");
 
       expect(Array.isArray(responseBody.pcds)).to.eq(true);
-      // important to note users are issued tickets pcd tickets even for
-      // tickets that no longer exist, so they can be displayed
-      // as 'revoked' on the client
-      expect(responseBody.pcds.length).to.eq(6);
+      // originally there were 6 orders in the mock data
+      // but one was deleted in an earlier test
+      // since we don't fetch tickets with is_deleted = true
+      // there will only be 5 PCDs
+      expect(responseBody.pcds.length).to.eq(5);
 
       const ticketPCD = responseBody.pcds[0];
 
-      expect(ticketPCD.type).to.eq(RSATicketPCDPackage.name);
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-      const deserializedEmailPCD = await RSATicketPCDPackage.deserialize(
+      const deserializedEmailPCD = await EdDSATicketPCDPackage.deserialize(
         ticketPCD.pcd
       );
 
-      const verified = await RSATicketPCDPackage.verify(deserializedEmailPCD);
+      const verified = await EdDSATicketPCDPackage.verify(deserializedEmailPCD);
       expect(verified).to.eq(true);
-
-      const pcdPublicKey = new NodeRSA(
-        deserializedEmailPCD.proof.rsaPCD.proof.publicKey,
-        "public"
-      );
-      expect(pcdPublicKey.isPublic(true)).to.eq(true);
-      expect(pcdPublicKey.isPrivate()).to.eq(false);
-
-      expect(pcdPublicKey.exportKey("public")).to.eq(
-        publicKey.exportKey("public")
-      );
     }
   );
 
@@ -511,10 +621,10 @@ describe("devconnect functionality", function () {
     const response2 = expressResponse2.body as IssuedPCDsResponse;
 
     const pcds1 = await Promise.all(
-      response1.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
     const pcds2 = await Promise.all(
-      response2.pcds.map((pcd) => RSATicketPCDPackage.deserialize(pcd.pcd))
+      response2.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -522,6 +632,92 @@ describe("devconnect functionality", function () {
     pcds1.forEach((_, i) => {
       expect(pcds1[i].id).to.eq(pcds2[i].id);
     });
+  });
+
+  /**
+   * This test updates an event, runs a pretix sync, then fetches the
+   * affected PCD to see if the new event name is reflected there.
+   */
+  step("should see event updates reflected in PCDs", async function () {
+    const updatedName = "New name";
+
+    mocker.updateEvent(
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.eventA.slug,
+      (event) => {
+        event.name.en = updatedName;
+      }
+    );
+
+    mocker.setEventSettings(
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.eventA.slug,
+      { attendee_emails_asked: true, attendee_emails_required: true }
+    );
+
+    await devconnectPretixSyncService.trySync();
+
+    const response = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const responseBody = response.body as IssuedPCDsResponse;
+
+    expect(responseBody.folder).to.eq("Devconnect");
+
+    expect(Array.isArray(responseBody.pcds)).to.eq(true);
+    const ticketPCD = responseBody.pcds[0];
+    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+
+    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
+      ticketPCD.pcd
+    );
+
+    const ticketData = deserializedPCD.claim.ticket;
+
+    expect(ticketData.eventName).to.eq(updatedName);
+  });
+
+  /**
+   * This test updates a product, runs a pretix sync, then fetches the
+   * affected PCD to see if the new product name is reflected there.
+   */
+  step("should see product updates reflected in PCDs", async function () {
+    const updatedName = "New product name";
+
+    mocker.updateItem(
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.eventA.slug,
+      mocker.get().organizer1.eventAItem1.id,
+      (item) => {
+        item.name.en = updatedName;
+      }
+    );
+
+    await devconnectPretixSyncService.trySync();
+
+    const response = await requestIssuedPCDs(
+      application,
+      identity,
+      ISSUANCE_STRING
+    );
+    const responseBody = response.body as IssuedPCDsResponse;
+
+    expect(responseBody.folder).to.eq("Devconnect");
+
+    expect(Array.isArray(responseBody.pcds)).to.eq(true);
+    const ticketPCD = responseBody.pcds[0];
+    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+
+    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
+      ticketPCD.pcd
+    );
+
+    const ticketData = deserializedPCD.claim.ticket;
+
+    // "Ticket name" is equivalent to item/product name
+    expect(ticketData.ticketName).to.eq(updatedName);
   });
 
   let checkerUser: User;
@@ -545,7 +741,7 @@ describe("devconnect functionality", function () {
     checkerIdentity = result.identity;
   });
 
-  let ticket: RSATicketPCD;
+  let ticket: EdDSATicketPCD;
   step("should be able to check in with a valid ticket", async function () {
     const issueResponse = await requestIssuedPCDs(
       application,
@@ -555,8 +751,8 @@ describe("devconnect functionality", function () {
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
 
     const serializedTicket = issueResponseBody
-      .pcds[1] as SerializedPCD<RSATicketPCD>;
-    ticket = await RSATicketPCDPackage.deserialize(serializedTicket.pcd);
+      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
       application,
@@ -591,31 +787,38 @@ describe("devconnect functionality", function () {
   step(
     "should not able to check in with a ticket not signed by the server",
     async function () {
-      const key = new NodeRSA({ b: 2048 });
-      const exportedKey = key.exportKey("private");
-      const message = "test message";
-      const rsaPCD = await RSAPCDPackage.prove({
+      const prvKey = newEdDSAPrivateKey();
+      const ticketData: ITicketData = {
+        // the fields below are not signed and are used for display purposes
+        attendeeName: "test name",
+        attendeeEmail: "user@test.com",
+        eventName: "event",
+        ticketName: "ticket",
+        checkerEmail: "checker@test.com",
+
+        // the fields below are signed using the server's private eddsa key
+        ticketId: uuid(),
+        eventId: uuid(),
+        productId: uuid(),
+        timestampConsumed: Date.now(),
+        timestampSigned: Date.now(),
+        attendeeSemaphoreId: "12345",
+        isConsumed: false,
+        isRevoked: false
+      };
+
+      ticket = await EdDSATicketPCDPackage.prove({
+        ticket: {
+          value: ticketData,
+          argumentType: ArgumentTypeName.Object
+        },
         privateKey: {
-          argumentType: ArgumentTypeName.String,
-          value: exportedKey
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: message
+          value: prvKey,
+          argumentType: ArgumentTypeName.String
         },
         id: {
-          argumentType: ArgumentTypeName.String,
-          value: undefined
-        }
-      });
-      const ticket = await RSATicketPCDPackage.prove({
-        id: {
-          argumentType: ArgumentTypeName.String,
-          value: undefined
-        },
-        rsaPCD: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await RSAPCDPackage.serialize(rsaPCD)
+          value: undefined,
+          argumentType: ArgumentTypeName.String
         }
       });
 
@@ -746,6 +949,341 @@ describe("devconnect functionality", function () {
         mocker.get().organizer1.EMAIL_3,
         secret
       );
+    }
+  );
+
+  step("should be rate-limited by a low limit", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 3 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requests = 0;
+
+    const listener = (): void => {
+      requests++;
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // Perform a single run - this will not sync anything to the DB
+    // because sync cannot complete in a single run with a limit of
+    // one request
+    os.run();
+    await sleep(100);
+    os.cancel();
+
+    // Sync run will end with rate-limiting
+    expect(requests).to.eq(3);
+
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step("should not be rate-limited by a high limit", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requests = 0;
+
+    const listener = (): void => {
+      requests++;
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    os.run();
+    await sleep(100);
+
+    expect(requests).to.be.greaterThan(3);
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step("should respect a 429 response during sync", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    let requestsCompleted = 0;
+
+    const listener = async (res: IsomorphicResponse): Promise<void> => {
+      if (res.status === 200) {
+        requestsCompleted++;
+      }
+    };
+    // Count each request
+    server.events.on("response:mocked", listener);
+
+    // The first request will return a 429, indicating server-side rate-limiting
+    server.use(
+      rest.get("*", (req, res, ctx) => {
+        // Instruct the client to wait 0.5 seconds before trying again
+        return res.once(ctx.set("Retry-After", "0.5"), ctx.status(429));
+      })
+    );
+
+    os.run();
+    // After 0.1 seconds, no requests have completed
+    await sleep(100);
+
+    expect(requestsCompleted).to.eq(0);
+    // After 0.6 seconds, we will have re-tried and successfully fetched something
+    await sleep(500);
+    expect(requestsCompleted).to.be.greaterThan(0);
+
+    os.cancel();
+    server.events.removeListener("response:mocked", listener);
+  });
+
+  step(
+    "should retry 5 times before giving up with 429 response",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let requestsCompleted = 0;
+
+      const listener = async (res: IsomorphicResponse): Promise<void> => {
+        if (res.status === 200) {
+          requestsCompleted++;
+        }
+      };
+      // Count each successful request
+      server.events.on("response:mocked", listener);
+
+      let url: string;
+      let attempts = 0;
+
+      server.use(
+        rest.get("*", (req, res, ctx) => {
+          attempts++;
+          if (!url) {
+            url = req.url.toString();
+          }
+
+          // Only one URL should ever be requested
+          // If this is not fetched within 5 requests, the entire sync run
+          // will fail
+          expect(url).to.eq(req.url.toString());
+          // Instruct the client to wait 0.01 seconds before trying again
+          return res(ctx.set("Retry-After", "0.01"), ctx.status(429));
+        })
+      );
+
+      os.run();
+      // After 0.1 seconds, no requests should have completed
+      await sleep(100);
+      expect(requestsCompleted).to.eq(0);
+
+      // But 6 attempts should have been made
+      expect(attempts).eq(6);
+
+      os.cancel();
+      server.events.removeListener("response:mocked", listener);
+    }
+  );
+
+  step(
+    "should fail to sync if an event we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const eventID = organizer.events[0].eventID;
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured event being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event", (req, res, ctx) => {
+          if (req.params.event === eventID) {
+            return res(ctx.status(404));
+          }
+          const event = org.eventByEventID.get(req.params.event as string);
+          if (!event) {
+            return res(ctx.status(404));
+          }
+          return res(ctx.json(event));
+        })
+      );
+
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let cause: SyncErrorCause | null = null;
+      let error = null;
+
+      try {
+        await os.run();
+      } catch (e) {
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
+      }
+
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("fetching");
+    }
+  );
+
+  step(
+    "should fail to sync if an active product we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const itemID = parseInt(organizer.events[0].activeItemIDs[0]);
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured item being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+          const items =
+            org.itemsByEventID.get(req.params.event as string) ?? [];
+          return res(
+            ctx.json({
+              results: items.filter((item) => item.id !== itemID),
+              next: null
+            })
+          );
+        })
+      );
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let error = null;
+      let cause: SyncErrorCause | null = null;
+
+      try {
+        await os.run();
+      } catch (e) {
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
+      }
+
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("validating");
+    }
+  );
+
+  step(
+    "should fail to sync if a superuser product we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const itemID = parseInt(organizer.events[0].superuserItemIds[0]);
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured item being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+          const items =
+            org.itemsByEventID.get(req.params.event as string) ?? [];
+          return res(
+            ctx.json({
+              results: items.filter((item) => item.id !== itemID),
+              next: null
+            })
+          );
+        })
+      );
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let error = null;
+      let cause: SyncErrorCause | null = null;
+
+      try {
+        await os.run();
+      } catch (e) {
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
+      }
+
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("validating");
     }
   );
 

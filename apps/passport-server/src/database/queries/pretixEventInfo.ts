@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { PretixEventInfo, PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -25,9 +25,10 @@ export async function insertPretixEventsInfo(
 ): Promise<string> {
   const result = await sqlQuery(
     client,
+    // @todo consider upsert?
     `\
-      insert into devconnect_pretix_events_info (event_name, pretix_events_config_id)
-      values ($1, $2)
+      insert into devconnect_pretix_events_info (event_name, pretix_events_config_id, is_deleted)
+      values ($1, $2, FALSE)
       returning id`,
     [eventName, eventsConfigID]
   );
@@ -37,26 +38,27 @@ export async function insertPretixEventsInfo(
 export async function updatePretixEventsInfo(
   client: Pool,
   id: string,
-  eventName: string
+  eventName: string,
+  isDeleted: boolean
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
     client,
     `\
       update devconnect_pretix_events_info
-      set event_name = $2
+      set event_name = $2, is_deleted = $3
       where id=$1`,
-    [id, eventName]
+    [id, eventName, isDeleted]
   );
   return result.rows;
 }
 
-export async function deletePretixEventsInfo(
+export async function softDeletePretixEventsInfo(
   client: Pool,
   id: number
 ): Promise<void> {
   await sqlQuery(
     client,
-    `delete from devconnect_pretix_events_info where id=$1`,
+    `update devconnect_pretix_events_info set is_deleted=true where id=$1`,
     [id]
   );
 }

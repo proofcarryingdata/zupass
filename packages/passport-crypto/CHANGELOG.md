@@ -1,5 +1,14 @@
 # @pcd/passport-crypto
 
+## 0.6.2
+
+### Patch Changes
+
+- eddsa pcds
+- Updated dependencies
+  - @pcd/pcd-types@0.6.3
+  - @pcd/semaphore-identity-pcd@0.6.2
+
 ## 0.6.1
 
 ### Patch Changes

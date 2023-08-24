@@ -2,29 +2,29 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllCommitments,
   fetchCommitment,
   fetchCommitmentByPublicCommitment,
-  removeCommitment,
+  removeCommitment
 } from "../src/database/queries/commitments";
 import {
   fetchEncryptedStorage,
-  insertEncryptedStorage,
+  insertEncryptedStorage
 } from "../src/database/queries/e2ee";
 import {
   fetchEmailToken,
-  insertEmailToken,
+  insertEmailToken
 } from "../src/database/queries/emailToken";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
 import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
   fetchAllLoggedInZuzaluUsers,
   fetchLoggedInZuzaluUser,
-  fetchZuzaluUser,
+  fetchZuzaluUser
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
@@ -71,7 +71,7 @@ describe("database reads and writes", function () {
       name: "bob shmob",
       order_id: "ASD12",
       role: ZuzaluUserRole.Organizer,
-      visitor_date_ranges: null,
+      visitor_date_ranges: null
     };
     otherRole = ZuzaluUserRole.Visitor;
 
@@ -101,7 +101,7 @@ describe("database reads and writes", function () {
       const newCommitment = newIdentity.commitment.toString();
       const newUuid = await insertCommitment(db, {
         email: testTicket.email,
-        commitment: newCommitment,
+        commitment: newCommitment
       });
 
       const loggedinUser = await fetchLoggedInZuzaluUser(db, { uuid: newUuid });
@@ -154,8 +154,8 @@ describe("database reads and writes", function () {
       email: testTicket.email,
       role: otherRole,
       visitor_date_ranges: [
-        { date_from: new Date().toString(), date_to: new Date().toString() },
-      ],
+        { date_from: new Date().toString(), date_to: new Date().toString() }
+      ]
     };
 
     await updateZuzaluPretixTicket(db, update);
@@ -220,7 +220,7 @@ describe("database reads and writes", function () {
     const commitment = new Identity().commitment.toString();
     const uuid = await insertCommitment(db, {
       commitment,
-      email,
+      email
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");

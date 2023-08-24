@@ -20,7 +20,7 @@ import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 
 export async function startServer(
   context: ApplicationContext,
-  globalServices: GlobalServices,
+  globalServices: GlobalServices
 ): Promise<{ app: Application; server: http.Server }> {
   return new Promise<{ app: Application; server: http.Server }>(
     (resolve, reject) => {
@@ -33,16 +33,16 @@ export async function startServer(
 
       app.use(
         express.json({
-          limit: "5mb",
-        }),
+          limit: "5mb"
+        })
       );
       app.use(cors());
       app.use(tracingMiddleware());
       app.use(
         cors({
           origin: "*",
-          methods: ["GET", "POST", "PUT", "DELETE"],
-        }),
+          methods: ["GET", "POST", "PUT", "DELETE"]
+        })
       );
 
       initAllRoutes(app, context, globalServices);
@@ -52,13 +52,13 @@ export async function startServer(
           err: Error,
           req: express.Request,
           res: express.Response,
-          _next: NextFunction,
+          _next: NextFunction
         ) => {
           logger(`[ERROR] ${req.method} ${req.url}`);
           logger(err.stack);
           globalServices.rollbarService?.reportError(err);
           res.status(500).send(err.message);
-        },
+        }
       );
 
       const server = app.listen(port, () => {
@@ -70,14 +70,14 @@ export async function startServer(
       server.on("error", (e: Error) => {
         reject(e);
       });
-    },
+    }
   );
 }
 
 function initAllRoutes(
   app: express.Application,
   context: ApplicationContext,
-  globalServices: GlobalServices,
+  globalServices: GlobalServices
 ): void {
   initStatusRoutes(app, context, globalServices);
   initHealthcheckRoutes(app, context);

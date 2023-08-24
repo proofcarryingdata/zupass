@@ -1,8 +1,5 @@
 import * as path from "path";
-import {
-  DevconnectPretixAPI,
-  getDevconnectPretixAPI
-} from "./apis/devconnect/devconnectPretixAPI";
+import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
@@ -11,6 +8,18 @@ import { startServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { APIs, ApplicationContext, PCDPass } from "./types";
 import { logger } from "./util/logger";
+
+import process from "node:process";
+import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
+import { getCommitHash } from "./util/util";
+
+process.on("unhandledRejection", (reason) => {
+  if (reason instanceof Error) {
+    logger("[ERROR] unhandled rejection \n" + reason.stack);
+  } else {
+    logger("[ERROR] unhandled rejection " + reason);
+  }
+});
 
 /**
  * Starts the server, all the appropriate services, routes, and instantiates
@@ -27,7 +36,8 @@ export async function startApplication(
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
-    publicResourcesDir: path.join(process.cwd(), "public")
+    publicResourcesDir: path.join(process.cwd(), "public"),
+    gitCommitHash: await getCommitHash()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
@@ -83,18 +93,18 @@ async function getOverridenApis(
     }
   }
 
-  let devconnectPretixAPI: DevconnectPretixAPI | null = null;
+  let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null = null;
 
-  if (apiOverrides?.devconnectPretixAPI) {
-    logger("[INIT] overriding devconnect pretix api");
-    devconnectPretixAPI = apiOverrides.devconnectPretixAPI;
+  if (apiOverrides?.devconnectPretixAPIFactory) {
+    logger("[INIT] overriding devconnect pretix api factory");
+    devconnectPretixAPIFactory = apiOverrides.devconnectPretixAPIFactory;
   } else {
-    devconnectPretixAPI = await getDevconnectPretixAPI();
+    devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
   return {
     emailAPI,
     pretixAPI,
-    devconnectPretixAPI
+    devconnectPretixAPIFactory
   };
 }

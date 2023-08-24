@@ -1,5 +1,11 @@
 # @pcd/halo-nonce-pcd
 
+## 0.2.2
+
+### Patch Changes
+
+- eddsa pcds
+
 ## 0.2.1
 
 ### Patch Changes

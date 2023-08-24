@@ -9,6 +9,9 @@ import { logger } from "../util/logger";
 // todo get rid of these globals
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
+let commitHash: string;
+
+export const DATASET_SLUG = "server-telemetry";
 
 /**
  * Responsible for uploading telemetry data about the performance and usage
@@ -26,10 +29,11 @@ export async function startTelemetry(
 
   honeyClient = context.honeyClient;
   tracer = opentelemetry.trace.getTracer("server-telemetry");
+  commitHash = context.gitCommitHash;
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
-    serviceName: "server-telemetry"
+    serviceName: DATASET_SLUG
   });
 
   logger("[INIT] Starting telemetry");
@@ -38,8 +42,46 @@ export async function startTelemetry(
     .start()
     .then(() => {
       logger("[INIT] Tracing initialized");
+      writeMarker(
+        context.gitCommitHash,
+        MarkerType.Deploy,
+        `https://github.com/proofcarryingdata/zupass/commit/${context.gitCommitHash}`
+      );
     })
     .catch((error) => logger("Error initializing tracing", error));
+}
+
+export const enum MarkerType {
+  Deploy = "deploy"
+}
+
+export async function writeMarker(
+  name: string,
+  type: string,
+  url?: string
+): Promise<void> {
+  if (!honeyClient) {
+    logger("can't write a marker to honeycomb - missing API keys");
+    return;
+  }
+
+  try {
+    await fetch(honeyClient.apiHost + `1/markers/${DATASET_SLUG}`, {
+      method: "POST",
+      body: JSON.stringify({
+        message: name,
+        type,
+        url
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Honeycomb-Team": honeyClient.writeKey
+      }
+    });
+  } catch (e) {
+    logger("failed to write marker to honeycomb", e);
+  }
 }
 
 /**
@@ -66,14 +108,32 @@ export async function traced<T>(
     if (process.env.ROLLBAR_ENV_NAME) {
       span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
     }
-    const result = await func(span);
-    if (
-      options == null ||
-      options.autoEndSpan == null ||
-      options.autoEndSpan == true
-    ) {
+
+    span.setAttribute("commit_hash", commitHash);
+
+    try {
+      const result = await func(span);
+      if (
+        options == null ||
+        options.autoEndSpan == null ||
+        options.autoEndSpan == true
+      ) {
+        span.end();
+      }
+      return result;
+    } catch (e) {
+      setError(e, span);
       span.end();
+      throw e;
     }
-    return result;
   });
+}
+
+export function setError(e: Error | any, span?: Span): void {
+  span?.setAttribute("error", true);
+  span?.setAttribute("error_msg", e + "");
+
+  if (e instanceof Error && e.stack) {
+    span?.setAttribute("error_trace", e.stack);
+  }
 }

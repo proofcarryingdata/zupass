@@ -1,6 +1,6 @@
 {
   "name": "@pcd/input-test-pcd",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -15,10 +15,11 @@
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build"
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.6.1",
+    "@pcd/pcd-types": "0.6.3",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "@semaphore-protocol/proof": "^3.10.0",

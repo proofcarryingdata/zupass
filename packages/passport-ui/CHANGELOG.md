@@ -1,5 +1,13 @@
 # @pcd/passport-ui
 
+## 0.6.2
+
+### Patch Changes
+
+- eddsa pcds
+- Updated dependencies
+  - @pcd/pcd-types@0.6.3
+
 ## 0.6.1
 
 ### Patch Changes

@@ -1,16 +1,24 @@
 import Rollbar from "rollbar";
+import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
 
 export class RollbarService {
   private rollbar: Rollbar;
 
-  public constructor(rollbarToken: string, rollbarEnvironmentName: string) {
+  public constructor(
+    rollbarToken: string,
+    rollbarEnvironmentName: string,
+    gitCommitHash: string
+  ) {
     this.rollbar = new Rollbar({
       accessToken: rollbarToken,
       captureUncaught: true,
       captureUnhandledRejections: true,
       environment: rollbarEnvironmentName,
+      payload: {
+        custom: { gitCommitHash }
+      }
     });
   }
 
@@ -26,7 +34,9 @@ export class RollbarService {
 /**
  * Responsible for error-reporting.
  */
-export function startRollbarService(): RollbarService | null {
+export function startRollbarService(
+  context: ApplicationContext
+): RollbarService | null {
   let rollbarToken: string;
   let rollbarEnvironmentName: string;
 
@@ -41,7 +51,8 @@ export function startRollbarService(): RollbarService | null {
   logger(`[ROLLBAR] starting`);
   const rollbarService = new RollbarService(
     rollbarToken,
-    rollbarEnvironmentName
+    rollbarEnvironmentName,
+    context.gitCommitHash
   );
 
   return rollbarService;

@@ -1,3 +1,5 @@
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
@@ -9,7 +11,6 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 import { appConfig } from "./appConfig";
 import { makeEncodedVerifyLink } from "./qr";
 
@@ -29,17 +30,17 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await SemaphoreGroupPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await SemaphoreSignaturePCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await EthereumOwnershipPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
+    zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
   await EthereumGroupPCDPackage.init({
@@ -51,25 +52,31 @@ async function loadPackages(): Promise<PCDPackage[]> {
       circuit:
         "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.circuit",
       witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.wasm",
+        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.wasm"
     },
 
     pubkeyMembershipConfig: {
       circuit:
         "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.circuit",
       witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.wasm",
-    },
+        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.wasm"
+    }
   });
 
   await RLNPCDPackage.init({
     wasmFilePath: SERVER_STATIC_URL + "rln-artifacts/16.wasm",
-    zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey",
+    zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey"
   });
 
   await RSATicketPCDPackage.init({
-    makeEncodedVerifyLink: makeEncodedVerifyLink,
+    makeEncodedVerifyLink
   });
+
+  await EdDSATicketPCDPackage.init({
+    makeEncodedVerifyLink
+  });
+
+  await EdDSAPCDPackage.init({});
 
   return [
     SemaphoreGroupPCDPackage,
@@ -77,11 +84,12 @@ async function loadPackages(): Promise<PCDPackage[]> {
     SemaphoreSignaturePCDPackage,
     EthereumOwnershipPCDPackage,
     EthereumGroupPCDPackage,
-    JubJubSignaturePCDPackage,
     RLNPCDPackage,
     WebAuthnPCDPackage,
     HaLoNoncePCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
+    EdDSAPCDPackage,
+    EdDSATicketPCDPackage
   ];
 }

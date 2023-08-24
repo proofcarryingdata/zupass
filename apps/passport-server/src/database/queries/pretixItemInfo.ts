@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool } from "postgres-pool";
 import { PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -38,26 +38,27 @@ export async function insertPretixItemsInfo(
 export async function updatePretixItemsInfo(
   client: Pool,
   id: string,
-  item_name: string
+  item_name: string,
+  isDeleted: boolean
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
     client,
     `\
       update devconnect_pretix_items_info
-      set item_name = $1
+      set item_name = $1, is_deleted = $3
       where id=$2`,
-    [item_name, id]
+    [item_name, id, isDeleted]
   );
   return result.rows;
 }
 
-export async function deletePretixItemInfo(
+export async function softDeletePretixItemInfo(
   client: Pool,
   id: string
 ): Promise<void> {
   await sqlQuery(
     client,
-    `delete from devconnect_pretix_items_info where id=$1`,
+    `update devconnect_pretix_items_info set is_deleted=TRUE where id=$1`,
     [id]
   );
 }

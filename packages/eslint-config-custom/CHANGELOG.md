@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.6.2
+
+### Patch Changes
+
+- eddsa pcds
+
 ## 0.6.1
 
 ### Patch Changes

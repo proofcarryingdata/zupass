@@ -99,6 +99,15 @@ export class DevconnectPretixDataMocker {
     org.ordersByEventID.set(eventID, eventOrders);
   }
 
+  public removeEventItem(orgUrl: string, eventID: string, id: number): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+
+    let eventItems = org.itemsByEventID.get(eventID) ?? [];
+    eventItems = eventItems.filter((item) => item.id !== id);
+    org.itemsByEventID.set(eventID, eventItems);
+  }
+
   public updateEvent(
     orgUrl: string,
     eventID: string,
@@ -113,6 +122,18 @@ export class DevconnectPretixDataMocker {
     update(event);
   }
 
+  public getEventSettings(
+    orgUrl: string,
+    eventID: string
+  ): DevconnectPretixEventSettings {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    if (!org.settingsByEventID.has(eventID)) {
+      throw new Error(`missing settings for ${eventID}`);
+    }
+    return org.settingsByEventID.get(eventID) as DevconnectPretixEventSettings;
+  }
+
   public setEventSettings(
     orgUrl: string,
     eventID: string,
@@ -121,6 +142,22 @@ export class DevconnectPretixDataMocker {
     const org = this.mockData.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
     org.settingsByEventID.set(eventID, settings);
+  }
+
+  public updateItem(
+    orgUrl: string,
+    eventID: string,
+    itemId: number,
+    update: (order: DevconnectPretixItem) => void
+  ): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const eventItems = org.itemsByEventID.get(eventID) ?? [];
+    const item = eventItems.find((item) => item.id === itemId);
+    if (!item) {
+      throw new Error(`couldn't find item ${itemId} for event ${eventID}`);
+    }
+    update(item);
   }
 
   private newMockData(): IMockDevconnectPretixData {

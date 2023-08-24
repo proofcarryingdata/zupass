@@ -1,8 +1,11 @@
 {
   "name": "@pcd/eslint-config-custom",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf dist node_modules"
+  },
   "dependencies": {
     "eslint": "^7.23.0",
     "eslint-config-next": "13.0.0",
