@@ -31,10 +31,12 @@ import {
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
+import { DevconnectPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
-  fetchDevconnectDeviceLoginTicket
+  fetchDevconnectDeviceLoginTicket,
+  fetchDevconnectPretixTicketsByEvent
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
@@ -373,7 +375,159 @@ describe("devconnect functionality", function () {
     ]);
   });
 
-  step("should be able to sync a checked-in ticket", async function () {});
+  /*step(
+    "should fail to sync if an active product we're tracking is deleted",
+    async function () {
+      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
+        db
+      );
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const orgUrl = organizer.orgURL;
+
+      const itemID = parseInt(organizer.events[0].activeItemIDs[0]);
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+      // Simulate a configured item being unavailable from Pretix
+      server.use(
+        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+          const items =
+            org.itemsByEventID.get(req.params.event as string) ?? [];
+          return res(
+            ctx.json({
+              results: items.filter((item) => item.id !== itemID),
+              next: null
+            })
+          );
+        })
+      );
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let error = null;
+      let cause: SyncErrorCause | null = null;
+
+      try {
+        await os.run();
+      } catch (e) {
+        error = e;
+        cause = (e as Error).cause as SyncErrorCause;
+      }
+
+      expect(error).to.be.an("Error");
+      expect(cause?.phase).to.eq("validating");
+    }
+  );*/
+  step("should be able to sync a checked-in ticket", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+    const orgUrl = organizer.orgURL;
+
+    // Pick an event where we will consume all of the tickets
+    const eventID = organizer.events[0].eventID;
+    const eventConfigID = organizer.events[0].id;
+    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+    // Simulate Pretix returning tickets as being checked in
+    server.use(
+      rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
+        const skip = (req.params.event as string) !== eventID;
+        const orders = skip
+          ? org.ordersByEventID.get(eventID)
+          : org.ordersByEventID.get(eventID)?.map((order) => {
+              return {
+                ...order,
+                positions: order.positions.map((position) => {
+                  return {
+                    ...position,
+                    checkins: [{ type: "entry", datetime: new Date() }]
+                  };
+                })
+              };
+            });
+
+        return res(
+          ctx.json({
+            results: orders,
+            next: null
+          })
+        );
+      })
+    );
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    expect(await os.run()).to.not.throw;
+
+    const tickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      eventConfigID
+    );
+
+    // All tickets for the event should be consumed
+    expect(tickets.length).to.eq(
+      tickets.filter(
+        (ticket: DevconnectPretixTicket) => ticket.is_consumed === true
+      ).length
+    );
+
+    server.resetHandlers();
+  });
+
+  step("should be able to un-check-in a ticket via sync", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    const eventConfigID = organizer.events[0].id;
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    // Because we're not patching the data from Pretix, tickets will now
+    // have no check-ins
+    expect(await os.run()).to.not.throw;
+
+    // In the previous test, we checked these tickets in
+    const tickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      eventConfigID
+    );
+
+    // All tickets for the event should be consumed
+    expect(tickets.length).to.eq(
+      tickets.filter(
+        (ticket: DevconnectPretixTicket) => ticket.is_consumed === false
+      ).length
+    );
+  });
 
   /**
    * This test covers the case where an event is updated as part of a sync.

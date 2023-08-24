@@ -1,6 +1,6 @@
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
-import { sqlQuery, timestampStringToDate } from "../../sqlQuery";
+import { sqlQuery } from "../../sqlQuery";
 
 /**
  * Updates a pretix ticket in our database.
@@ -23,8 +23,8 @@ returning *`,
       params.secret,
       params.is_consumed,
       params.checker,
-      timestampStringToDate(params.checkin_timestamp),
-      timestampStringToDate(params.pretix_checkin_timestamp),
+      params.checkin_timestamp,
+      params.pretix_checkin_timestamp,
       params.position_id
     ]
   );

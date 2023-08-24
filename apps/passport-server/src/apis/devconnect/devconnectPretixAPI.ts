@@ -289,7 +289,7 @@ export interface DevconnectPretixEventSettings {
 }
 
 export interface DevconnectPretixCheckin {
-  datetime: string;
+  datetime: Date;
   type: string;
 }
 

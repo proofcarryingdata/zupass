@@ -20,5 +20,9 @@ export function pretixTicketsDifferent(
     return true;
   }
 
+  if (oldTicket.is_consumed !== newTicket.is_consumed) {
+    return true;
+  }
+
   return false;
 }
