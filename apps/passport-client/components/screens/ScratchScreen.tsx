@@ -114,7 +114,7 @@ export function ScratchScreen() {
 
   return (
     <Container>
-      Scratch Screen <br />
+      File explorer <br />
       <RenderDirectory dir={snapshot} />
     </Container>
   );
