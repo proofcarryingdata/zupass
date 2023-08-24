@@ -288,6 +288,11 @@ export interface DevconnectPretixEventSettings {
   attendee_emails_required: boolean;
 }
 
+export interface DevconnectPretixCheckin {
+  datetime: string;
+  type: string;
+}
+
 // Unclear why this is called a "position" rather than a ticket.
 export interface DevconnectPretixPosition {
   id: number;
@@ -299,4 +304,5 @@ export interface DevconnectPretixPosition {
   attendee_email: string | null;
   subevent: number;
   secret: string;
+  checkins: DevconnectPretixCheckin[];
 }

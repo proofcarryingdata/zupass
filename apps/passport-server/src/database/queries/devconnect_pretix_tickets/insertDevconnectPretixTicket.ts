@@ -1,6 +1,6 @@
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
-import { sqlQuery } from "../../sqlQuery";
+import { sqlQuery, timestampStringToDate } from "../../sqlQuery";
 
 /**
  * Insert a Devconnect pretix ticket into the database, if they have not been
@@ -14,11 +14,13 @@ export async function insertDevconnectPretixTicket(
     client,
     `\
 insert into devconnect_pretix_tickets
-(email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id, secret)
-values ($1, $2, $3, $4, $5, $6, $7)
+(email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id,
+  secret, checker, checkin_timestamp, pretix_checkin_timestamp)
+values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 on conflict (position_id) do
 update set email = $1, full_name = $2, devconnect_pretix_items_info_id = $3,
-is_deleted = $4, is_consumed = $5, secret = $7
+is_deleted = $4, is_consumed = $5, secret = $7, checker = $8, checkin_timestamp = $9,
+pretix_checkin_timestamp = $10
 returning *`,
     [
       params.email,
@@ -27,7 +29,10 @@ returning *`,
       params.is_deleted,
       params.is_consumed,
       params.position_id,
-      params.secret
+      params.secret,
+      params.checker ?? "",
+      timestampStringToDate(params.checkin_timestamp),
+      timestampStringToDate(params.pretix_checkin_timestamp)
     ]
   );
   return result.rows[0];

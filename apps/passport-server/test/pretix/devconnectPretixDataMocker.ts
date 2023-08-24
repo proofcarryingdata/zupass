@@ -314,7 +314,8 @@ export class DevconnectPretixDataMocker {
       attendee_name: this.randomName(),
       attendee_email: attendeeEmail,
       subevent: subevent,
-      secret: this.randomSecret()
+      secret: this.randomSecret(),
+      checkins: []
     };
   }
 

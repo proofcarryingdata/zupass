@@ -1,6 +1,6 @@
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
-import { sqlQuery } from "../../sqlQuery";
+import { sqlQuery, timestampStringToDate } from "../../sqlQuery";
 
 /**
  * Updates a pretix ticket in our database.
@@ -13,10 +13,20 @@ export async function updateDevconnectPretixTicket(
     client,
     `\
 update devconnect_pretix_tickets
-set full_name=$1, is_deleted=$2, secret=$3
-where position_id=$4
+set full_name=$1, is_deleted=$2, secret=$3, is_consumed=$4, checker=$5, checkin_timestamp=$6,
+pretix_checkin_timestamp=$7
+where position_id=$8
 returning *`,
-    [params.full_name, params.is_deleted, params.secret, params.position_id]
+    [
+      params.full_name,
+      params.is_deleted,
+      params.secret,
+      params.is_consumed,
+      params.checker,
+      timestampStringToDate(params.checkin_timestamp),
+      timestampStringToDate(params.pretix_checkin_timestamp),
+      params.position_id
+    ]
   );
   return result.rows[0];
 }

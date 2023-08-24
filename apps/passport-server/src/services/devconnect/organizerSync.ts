@@ -648,6 +648,12 @@ export class OrganizerSync {
               eventInfo.event_name
             }] Inserting ticket ${JSON.stringify(ticket)}`
           );
+
+          // This is the first time we've seen this ticket, and it's already checked in
+          if (ticket.is_consumed) {
+            ticket.checker = "Pretix";
+          }
+
           await insertDevconnectPretixTicket(this.db, ticket);
         }
 
@@ -678,6 +684,27 @@ export class OrganizerSync {
               updatedTicket
             )}`
           );
+
+          // If a ticket has been checked in on Pretix, but was not checked
+          // in on our side, then consume it.
+          if (!oldTicket?.is_consumed && updatedTicket.is_consumed) {
+            updatedTicket.checker = "Pretix";
+          } else {
+            // Otherwise preserve whatever the checker value was from the
+            // old ticket
+            updatedTicket.checker = oldTicket?.checker as string;
+          }
+
+          // If the ticket was pending sync, ignore the fact that Pretix is
+          // telling us it's not checked in.
+          if (
+            oldTicket?.is_consumed &&
+            !oldTicket.pretix_checkin_timestamp &&
+            !updatedTicket.is_consumed
+          ) {
+            updatedTicket.is_consumed = true;
+          }
+
           await updateDevconnectPretixTicket(this.db, updatedTicket);
         }
 
@@ -746,7 +773,8 @@ export class OrganizerSync {
         item,
         attendee_name,
         attendee_email,
-        secret
+        secret,
+        checkins
       } of order.positions) {
         const existingItem = itemsInfoByItemID.get(item.toString());
         if (existingItem) {
@@ -762,15 +790,20 @@ export class OrganizerSync {
             );
           }
           const email = (attendee_email || order.email).toLowerCase();
+          const checkin_timestamp =
+            checkins.length > 0 ? new Date(checkins[0].datetime) : null;
 
           tickets.push({
             email,
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
             is_deleted: false,
-            is_consumed: false,
+            is_consumed: checkin_timestamp !== null,
             position_id: id.toString(),
-            secret
+            secret,
+            checker: "Pretix",
+            checkin_timestamp,
+            pretix_checkin_timestamp: checkin_timestamp
           });
         }
       }

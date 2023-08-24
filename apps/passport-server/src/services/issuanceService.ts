@@ -2,8 +2,8 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
-  ITicketData
+  ITicketData,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -210,8 +210,9 @@ export class IssuanceService {
           error: {
             name: "AlreadyCheckedIn",
             checker: ticketInDb.checker,
-            checkinTimestamp:
-              ticketInDb.checkin_timestamp || new Date().toISOString()
+            checkinTimestamp: (
+              ticketInDb.checkin_timestamp ?? new Date()
+            ).toISOString()
           }
         };
       }

@@ -181,7 +181,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1000",
       _itemIdx: 0,
-      secret: "a1b2c3d4"
+      secret: "a1b2c3d4",
+      checker: "",
+      checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "Super User1",
@@ -191,7 +194,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1001",
       _itemIdx: 3,
-      secret: "qwertyuiop"
+      secret: "qwertyuiop",
+      checker: "",
+      checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "ThirdParty Attendee",
@@ -201,7 +207,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1002",
       _itemIdx: 4,
-      secret: "0xdeadbeef"
+      secret: "0xdeadbeef",
+      checker: "",
+      checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "ThirdParty SuperUser",
@@ -211,7 +220,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1003",
       _itemIdx: 5,
-      secret: "asdfghjkl"
+      secret: "asdfghjkl",
+      checker: "",
+      checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     }
   ];
 

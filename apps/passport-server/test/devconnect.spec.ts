@@ -373,6 +373,8 @@ describe("devconnect functionality", function () {
     ]);
   });
 
+  step("should be able to sync a checked-in ticket", async function () {});
+
   /**
    * This test covers the case where an event is updated as part of a sync.
    * It's not very interesting, and mostly exists to contrast with the

@@ -21,3 +21,17 @@ export function sqlQuery(
     }
   });
 }
+
+export function timestampStringToDate(
+  timestamp: Date | string | null
+): Date | null {
+  if (timestamp === "" || timestamp === null) {
+    return null;
+  }
+
+  if (typeof timestamp === "string") {
+    return new Date(Date.parse(timestamp));
+  }
+
+  return new Date(timestamp);
+}

@@ -1,0 +1,2 @@
+alter table devconnect_pretix_tickets
+add column pretix_checkin_timestamp timestamp;
