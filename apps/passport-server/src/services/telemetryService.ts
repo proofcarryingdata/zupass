@@ -9,6 +9,7 @@ import { logger } from "../util/logger";
 // todo get rid of these globals
 let honeyClient: Libhoney | null;
 let tracer: Tracer | null;
+let commitHash: string;
 
 /**
  * Responsible for uploading telemetry data about the performance and usage
@@ -26,6 +27,7 @@ export async function startTelemetry(
 
   honeyClient = context.honeyClient;
   tracer = opentelemetry.trace.getTracer("server-telemetry");
+  commitHash = context.commitHash;
 
   const sdk: NodeSDK = new HoneycombSDK({
     instrumentations: [getNodeAutoInstrumentations()],
@@ -66,6 +68,9 @@ export async function traced<T>(
     if (process.env.ROLLBAR_ENV_NAME) {
       span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
     }
+
+    span.setAttribute("commit_hash", commitHash);
+
     try {
       const result = await func(span);
       if (

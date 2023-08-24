@@ -27,6 +27,7 @@ export interface ApplicationContext {
   isZuzalu: boolean;
   resourcesDir: string;
   publicResourcesDir: string;
+  commitHash: string;
 }
 
 export interface GlobalServices {

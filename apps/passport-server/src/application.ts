@@ -2,7 +2,7 @@ import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { PretixAPI, getPretixAPI } from "./apis/pretixAPI";
+import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
@@ -11,6 +11,7 @@ import { logger } from "./util/logger";
 
 import process from "node:process";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
+import { getCommitHash } from "./util/util";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {
@@ -35,7 +36,8 @@ export async function startApplication(
     honeyClient,
     isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
-    publicResourcesDir: path.join(process.cwd(), "public")
+    publicResourcesDir: path.join(process.cwd(), "public"),
+    commitHash: await getCommitHash()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
