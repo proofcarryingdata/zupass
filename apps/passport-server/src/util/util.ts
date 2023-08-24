@@ -1,4 +1,9 @@
+import { exec } from "child_process";
 import validator from "email-validator";
+import { promisify } from "util";
+import { logger } from "./logger";
+
+export const execAsync = promisify(exec);
 
 /**
  * Returns a promise that resolves after `ms` milliseconds.
@@ -58,4 +63,17 @@ export function randomEmailToken(): string {
 
 export function validateEmail(email: string): boolean {
   return validator.validate(email);
+}
+
+export async function getCommitHash(): Promise<string> {
+  try {
+    const result = await execAsync("git rev-parse HEAD", {
+      cwd: process.cwd()
+    });
+    return result.stdout.trim();
+  } catch (e) {
+    logger("couldn't get commit hash", e);
+  }
+
+  return "unknown commit hash";
 }
