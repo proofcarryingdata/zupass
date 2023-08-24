@@ -34,6 +34,7 @@
     "cors": "^2.8.5",
     "discord.js": "14.11.0",
     "express": "^5.0.0-beta.1",
+    "grammy": "^1.18.1",
     "libhoney": "^4.0.1",
     "lodash": "^4.17.21",
     "morgan": "^1.10.0",

@@ -9,6 +9,7 @@ import { startPretixSyncService } from "./services/pretixSyncService";
 import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
+import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
@@ -17,7 +18,9 @@ export async function startServices(
   context: ApplicationContext,
   apis: APIs
 ): Promise<GlobalServices> {
+  console.log("starting services hehe");
   await startTelemetry(context);
+  const telegramService = await startTelegramService(context);
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService();
   const provingService = await startProvingService(rollbarService);
@@ -61,7 +64,8 @@ export async function startServices(
     devconnectPretixSyncService,
     metricsService,
     issuanceService,
-    discordService
+    discordService,
+    telegramService
   };
   return services;
 }

@@ -12,6 +12,15 @@ export interface ZuzaluPretixTicket {
 }
 
 /**
+ * A conversation between the Telegram bot and a user, and associated params.
+ */
+export interface TelegramConversation {
+  telegram_user_id: number;
+  telegram_chat_id: number;
+  verified?: boolean;
+}
+
+/**
  * A zuzalu pretix-ticket-holder that may or may not have logged in yet.
  */
 export interface ZuzaluUser extends ZuzaluPretixTicket {

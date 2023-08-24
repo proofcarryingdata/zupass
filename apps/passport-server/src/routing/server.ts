@@ -15,6 +15,7 @@ import { initProvingRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
+import { initTelegramRoutes } from "./routes/telegramRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 
 export async function startServer(
@@ -87,4 +88,5 @@ function initAllRoutes(
   initProvingRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
+  initTelegramRoutes(app, context, globalServices);
 }
