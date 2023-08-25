@@ -1,3 +1,5 @@
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   SupportedPCDsResponse,
   VerifyRequest,
@@ -9,7 +11,6 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { JubJubSignaturePCDPackage } from "jubjub-signature-pcd";
 
 /**
  * Responsible for server-side verify.
@@ -22,10 +23,11 @@ export class VerifyService {
   private packages: PCDPackage[] = [
     SemaphoreGroupPCDPackage,
     SemaphoreSignaturePCDPackage,
-    JubJubSignaturePCDPackage,
     RLNPCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,
+    EdDSAPCDPackage,
+    EdDSATicketPCDPackage
   ];
 
   public constructor() {}
@@ -34,7 +36,7 @@ export class VerifyService {
     const matching = this.packages.find((p) => p.name === name);
 
     if (matching === undefined) {
-    throw new Error(`no package matching ${name}`);
+      throw new Error(`no package matching ${name}`);
     }
 
     return matching;
