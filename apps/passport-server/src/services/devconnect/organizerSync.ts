@@ -41,6 +41,7 @@ import { RollbarService } from "../rollbarService";
 import { setError, traced } from "../telemetryService";
 
 const NAME = "OrganizerSync";
+export const PRETIX_CHECKER = "Pretix";
 
 // Collection of API data for a single event
 interface EventData {
@@ -695,12 +696,21 @@ export class OrganizerSync {
             }] Inserting ticket ${JSON.stringify(ticket)}`
           );
 
-          // This is the first time we've seen this ticket, and it's already checked in
-          if (ticket.is_consumed) {
-            ticket.checker = "Pretix";
+          let checker = null;
+          let pcdpass_checkin_timestamp = null;
+
+          // This is the first time we've seen this ticket, and it's already
+          // checked in on Pretix.
+          if (ticket.pretix_checkin_timestamp) {
+            checker = PRETIX_CHECKER;
+            pcdpass_checkin_timestamp = ticket.pretix_checkin_timestamp;
           }
 
-          await insertDevconnectPretixTicket(this.db, ticket);
+          await insertDevconnectPretixTicket(this.db, {
+            ...ticket,
+            checker,
+            pcdpass_checkin_timestamp
+          });
         }
 
         // Step 2 of saving: update tickets that have changed
@@ -731,28 +741,42 @@ export class OrganizerSync {
             )}`
           );
 
+          // These values do not come from Pretix sync, so we have to compute
+          // them. We start with the old ticket as default.
+          let checker = oldTicket?.checker ?? null;
+          let pcdpass_checkin_timestamp =
+            oldTicket?.pcdpass_checkin_timestamp ?? null;
+
           // If a ticket has been checked in on Pretix, but was not checked
-          // in on our side, then consume it.
-          if (!oldTicket?.is_consumed && updatedTicket.is_consumed) {
-            updatedTicket.checker = "Pretix";
-          } else {
-            // Otherwise preserve whatever the checker value was from the
-            // old ticket
-            updatedTicket.checker = oldTicket?.checker as string;
+          // in on our side, then use the checkin details provided by Pretix.
+          if (
+            !oldTicket?.is_consumed &&
+            updatedTicket.pretix_checkin_timestamp
+          ) {
+            checker = PRETIX_CHECKER;
+            pcdpass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
           }
 
-          // If the ticket was pending sync, ignore the fact that Pretix is
-          // telling us it's not checked in.
-          if (
-            oldTicket?.is_consumed &&
-            !oldTicket.pretix_checkin_timestamp &&
-            !updatedTicket.is_consumed
-          ) {
-            updatedTicket.checkin_timestamp = oldTicket.checkin_timestamp;
+          // Here we are checking for a ticket which, prior to this point,
+          // has been checked in (is_consumed) but not synced (does not have
+          // a pretix_checkin_timestamp). This is the same check that we do
+          // in fetchDevconnectTicketsAwaitingSync().
+          //
+          // In this.ordersToDevconnectPretixTickets(), we set is_consumed
+          // based on data from Pretix, but since there has been no push-sync
+          // yet, this data will be incorrect. Instead, we should ensure
+          // that is_consumed remains true, so that the PCDPass UI shows the
+          // expected values while sync remains pending.
+          if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
             updatedTicket.is_consumed = true;
           }
 
-          await updateDevconnectPretixTicket(this.db, updatedTicket);
+          // Merge the checkin details into the ticket for saving.
+          await updateDevconnectPretixTicket(this.db, {
+            ...updatedTicket,
+            checker,
+            pcdpass_checkin_timestamp
+          });
         }
 
         // Step 3 of saving: soft delete tickets that don't exist anymore
@@ -837,20 +861,18 @@ export class OrganizerSync {
             );
           }
           const email = (attendee_email || order.email).toLowerCase();
-          const checkin_timestamp =
-            checkins.length > 0 ? new Date(checkins[0].datetime) : null;
+          const pretix_checkin_timestamp =
+            checkins.length > 0 ? checkins[0].datetime : null;
 
           tickets.push({
             email,
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
             is_deleted: false,
-            is_consumed: checkin_timestamp !== null,
+            is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
-            checker: "Pretix",
-            checkin_timestamp,
-            pretix_checkin_timestamp: checkin_timestamp
+            pretix_checkin_timestamp
           });
         }
       }
@@ -879,7 +901,7 @@ export class OrganizerSync {
     );
 
     for (const ticket of ticketsToSync) {
-      const now = new Date();
+      const checkinTimestamp = ticket.pcdpass_checkin_timestamp as Date;
       // Send the API request
       // Will throw an exception if it fails
       await this.pretixAPI.pushCheckin(
@@ -887,13 +909,13 @@ export class OrganizerSync {
         this.organizer.token,
         ticket.secret,
         ticket.checkin_list_id,
-        now.toISOString()
+        checkinTimestamp.toISOString()
       );
 
       // Update the DB so that this ticket doesn't require sync
       await updateDevconnectPretixTicket(this.db, {
         ...ticket,
-        pretix_checkin_timestamp: now
+        pretix_checkin_timestamp: checkinTimestamp
       });
     }
   }

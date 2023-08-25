@@ -27,12 +27,17 @@ export interface DevconnectPretixTicket {
   is_consumed: boolean;
   position_id: string;
   secret: string;
-  checker: string;
-  checkin_timestamp: Date | null;
   pretix_checkin_timestamp: Date | null;
 }
 
-export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
+export interface DevconnectPretixTicketWithCheckin
+  extends DevconnectPretixTicket {
+  checker: string | null;
+  pcdpass_checkin_timestamp: Date | null;
+}
+
+export interface DevconnectPretixTicketDB
+  extends DevconnectPretixTicketWithCheckin {
   id: string;
 }
 

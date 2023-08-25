@@ -4,8 +4,8 @@ import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import {
-  DevconnectPretixTicket,
-  DevconnectPretixTicketDBWithEmailAndItem
+  DevconnectPretixTicketDBWithEmailAndItem,
+  DevconnectPretixTicketWithCheckin
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
@@ -59,9 +59,11 @@ interface ITestItem {
   _eventIdx: number;
 }
 
-interface ITestTicket extends DevconnectPretixTicket {
+interface ITestTicket extends DevconnectPretixTicketWithCheckin {
   _itemIdx: number;
 }
+
+const DEFAULT_CHECKIN_LIST_ID = "1";
 
 describe("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
@@ -183,7 +185,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 0,
       secret: "a1b2c3d4",
       checker: "",
-      checkin_timestamp: null,
+      pcdpass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -196,7 +198,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 3,
       secret: "qwertyuiop",
       checker: "",
-      checkin_timestamp: null,
+      pcdpass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -209,7 +211,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 4,
       secret: "0xdeadbeef",
       checker: "",
-      checkin_timestamp: null,
+      pcdpass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -222,7 +224,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 5,
       secret: "asdfghjkl",
       checker: "",
-      checkin_timestamp: null,
+      pcdpass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     }
   ];
@@ -275,7 +277,7 @@ describe("database reads and writes for devconnect ticket features", function ()
         db,
         event.eventName,
         event.dbEventConfigId,
-        "1"
+        DEFAULT_CHECKIN_LIST_ID
       );
 
       event.dbEventInfoId = dbEventInfoId;
@@ -384,7 +386,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       testTickets[0].email
     );
 
-    const updatedTicket: DevconnectPretixTicket = {
+    const updatedTicket: DevconnectPretixTicketWithCheckin = {
       ...existingTicket[0],
       full_name: "New Fullname"
     };

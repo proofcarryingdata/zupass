@@ -31,7 +31,10 @@ import {
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
-import { DevconnectPretixTicket } from "../src/database/models";
+import {
+  DevconnectPretixTicket,
+  DevconnectPretixTicketWithCheckin
+} from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
@@ -49,6 +52,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
   OrganizerSync,
+  PRETIX_CHECKER,
   SyncErrorCause
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
@@ -412,7 +416,9 @@ describe("devconnect functionality", function () {
                 positions: order.positions.map((position) => {
                   return {
                     ...position,
-                    checkins: [{ type: "entry", datetime: new Date() }]
+                    checkins: [
+                      { type: "entry", datetime: new Date().toISOString() }
+                    ]
                   };
                 })
               };
@@ -445,7 +451,8 @@ describe("devconnect functionality", function () {
     // All tickets for the event should be consumed
     expect(tickets.length).to.eq(
       tickets.filter(
-        (ticket: DevconnectPretixTicket) => ticket.is_consumed === true
+        (ticket: DevconnectPretixTicketWithCheckin) =>
+          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER
       ).length
     );
   });
@@ -473,7 +480,9 @@ describe("devconnect functionality", function () {
     );
 
     // Because we're not patching the data from Pretix, default responses
-    // have no check-ins
+    // have no check-ins.
+    // Syncing should reset our checked-in tickets to be un-checked-in.
+
     expect(await os.run()).to.not.throw;
 
     // In the previous test, we checked these tickets in
@@ -520,10 +529,11 @@ describe("devconnect functionality", function () {
       );
       const ticket = tickets[0];
 
+      const checkerEmail = "test@example.com";
       const result = await consumeDevconnectPretixTicket(
         db,
         ticket.id,
-        "test@example.com"
+        checkerEmail
       );
 
       expect(result).to.be.true;
@@ -535,7 +545,7 @@ describe("devconnect functionality", function () {
 
       // The same ticket should now be consumed
       expect(consumedTicket?.is_consumed).to.be.true;
-      expect(consumedTicket?.checkin_timestamp).to.be.not.null;
+      expect(consumedTicket?.pcdpass_checkin_timestamp).to.be.not.null;
 
       const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
         db,
@@ -588,8 +598,19 @@ describe("devconnect functionality", function () {
 
       // Ticket should be marked as consumed
       expect(consumedTicketAfterSync?.is_consumed).to.be.true;
+      // Ticket should be checked-in by correct email
+      expect(consumedTicketAfterSync?.checker).to.eq(checkerEmail);
       // And ticket should have a pretix checkin timestamp!
       expect(consumedTicketAfterSync?.pretix_checkin_timestamp).to.be.not.null;
+      // Expect Pretix checkin timestamp to match PCDPass checkin timestamp
+      // Note that this is the value we pushed to Pretix, and we have not yet
+      // fetched Pretix's representation of this check-in. In the API docs
+      // it is indicated that Pretix will use the timestamp provided.
+      expect(
+        consumedTicketAfterSync?.pretix_checkin_timestamp?.toISOString()
+      ).to.eq(
+        consumedTicketAfterSync?.pcdpass_checkin_timestamp?.toISOString()
+      );
     }
   );
 
