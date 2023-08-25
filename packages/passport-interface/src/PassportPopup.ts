@@ -45,8 +45,11 @@ export function usePassportPopupSetup() {
       return;
     }
 
-    const search = window.location.search;
-    const params = new URLSearchParams(search);
+    // Single page client-side apps need a hash router because
+    // there is no server to direct all traffic.
+    // If the URL contains a hash it will be removed to read the search parameters.
+    const url = new URL(window.location.href.replace("#", ""));
+    const params = url.searchParams;
 
     const paramsProofUrl = params.get("proofUrl");
     const paramsProof = params.get("proof");
