@@ -131,7 +131,7 @@ export async function prove(
     BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER
   ) {
     throw new Error(
-      "Cannot make group proof: same externalNullifier as SemaphoreSignaturePCD, which would break anonymity"
+      "Cannot make proof: same externalNullifier as SemaphoreSignaturePCD, which would break anonymity"
     );
   }
 
