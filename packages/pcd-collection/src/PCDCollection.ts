@@ -1,7 +1,7 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { getFoldersInFolder } from "./util";
+import { getFoldersInFolder, isRootFolder } from "./util";
 
 /**
  * This class represents all the PCDs a user may have, and also
@@ -62,6 +62,20 @@ export class PCDCollection {
   }
 
   public getAllInFolder(folder: string): PCD[] {
+    if (isRootFolder(folder)) {
+      console.log("GETTING ROOT FOLDER CONTENTS");
+
+      const pcdIdsInFolders = new Set([...Object.keys(this.folders)]);
+      console.log("PCDS IN A FOLDER", pcdIdsInFolders);
+
+      const pcdsNotInFolders = this.pcds.filter(
+        (pcd) => !pcdIdsInFolders.has(pcd.id)
+      );
+      console.log("PCDS NOT IN A FOLDER", pcdsNotInFolders);
+
+      return pcdsNotInFolders;
+    }
+
     const pcdIds = Object.entries(this.folders)
       .filter(([_pcdId, f]) => f === folder)
       .map(([pcdId, _f]) => pcdId);

@@ -1,9 +1,15 @@
 import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
+import {
+  useFolders,
+  usePCDCollectionWithHash,
+  usePCDsInFolder,
+  useSelf
+} from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -24,6 +30,11 @@ export function HomeScreenImpl() {
 
   const pcds = usePCDsInFolder(browsingPath);
   const folders = useFolders(browsingPath);
+
+  const { pcds: pcds2, hash } = usePCDCollectionWithHash();
+  useEffect(() => {
+    console.log(pcds2.getAllInFolder("/"));
+  }, [pcds2, hash]);
 
   const self = useSelf();
   const navigate = useNavigate();
@@ -60,8 +71,10 @@ export function HomeScreenImpl() {
     }
   });
 
-  const mainIdPCD = useMemo(() => {
-    return pcds[0]?.id;
+  const mainPCDId = useMemo(() => {
+    if (pcds[0]?.type === SemaphoreIdentityPCDTypeName) {
+      return pcds[0]?.id;
+    }
   }, [pcds]);
   const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
@@ -114,7 +127,7 @@ export function HomeScreenImpl() {
             <WrappedPCDCard
               key={pcd.id}
               pcd={pcd}
-              mainIdPCD={mainIdPCD}
+              mainIdPCD={mainPCDId}
               onPcdClick={onPcdClick}
               expanded={pcd.id === selectedPCD?.id}
             />
