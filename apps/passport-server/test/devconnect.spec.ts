@@ -196,9 +196,8 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
-    );
+    const pretixSyncStatus =
+      await waitForDevconnectPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -506,9 +505,8 @@ describe("devconnect functionality", function () {
   step(
     "should be able to check in a ticket and sync to Pretix",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1310,9 +1308,8 @@ describe("devconnect functionality", function () {
   step(
     "should retry 5 times before giving up with 429 response",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1357,8 +1354,8 @@ describe("devconnect functionality", function () {
       );
 
       os.run();
-      // After 0.1 seconds, no requests should have completed
-      await sleep(100);
+      // After 0.2 seconds, no requests should have completed
+      await sleep(200);
       expect(requestsCompleted).to.eq(0);
 
       // But 6 attempts should have been made
@@ -1372,9 +1369,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an event we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1424,9 +1420,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an active product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1477,9 +1472,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if a superuser product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
