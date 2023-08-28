@@ -1,4 +1,3 @@
 *.js
-*.d.ts
 *.ts.map
 dist
