@@ -89,17 +89,6 @@ describe("EdDSA partial ticket should work", function () {
     const externalNullifier = BigInt(5);
     const watermark = BigInt(6);
 
-    /*
-    const publicKey = eddsa.prv2pub(fromHexString(prvKey));
-
-    console.log("public key");
-    console.log((poseidon as any).F.toObject(publicKey[0]));
-    console.log((poseidon as any).F.toObject(publicKey[1]));
-
-    console.log(toHexString(publicKey[0]));
-    console.log(toHexString(publicKey[1]));
-    */
-
     let ticketPCD = await EdDSATicketPCDPackage.prove({
       ticket: {
         value: ticketData,
@@ -124,8 +113,6 @@ describe("EdDSA partial ticket should work", function () {
       R8y: (poseidon as any).F.toObject(signatureRaw.R8[1]),
       S: signatureRaw.S
     };
-    console.log("signature");
-    console.log(signature);
 
     let serializedTicketPCD = await EdDSATicketPCDPackage.serialize(ticketPCD);
 
@@ -133,9 +120,8 @@ describe("EdDSA partial ticket should work", function () {
       identity
     });
 
-    let serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      identityPCD
-    );
+    let serializedIdentityPCD =
+      await SemaphoreIdentityPCDPackage.serialize(identityPCD);
 
     let eddsaRespPCD = await EdDSATicketPrivatePCDPackage.prove({
       ticket: {
@@ -162,7 +148,8 @@ describe("EdDSA partial ticket should work", function () {
       }
     });
 
-    console.log(eddsaRespPCD);
+    let verificationRes =
+      await EdDSATicketPrivatePCDPackage.verify(eddsaRespPCD);
 
     /*
     const signatureRaw = eddsa.unpackSignature(

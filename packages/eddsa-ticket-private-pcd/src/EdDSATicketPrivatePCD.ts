@@ -3,7 +3,9 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  ticketDataToBigInts
+  booleanToBigInt,
+  ticketDataToBigInts,
+  uuidToBigInt
 } from "@pcd/eddsa-ticket-pcd";
 import {
   BigIntArgument,
@@ -25,6 +27,7 @@ import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
+import vkey from "../artifacts/verification_key.json";
 import {
   decStringToBigIntToUuid,
   fromHexString,
@@ -146,9 +149,7 @@ export async function prove(
     serializedIdentityPCD
   );
 
-  const pubKey = deserializedTicket.proof.eddsaPCD.claim.publicKey.map((x) =>
-    babyJub.F.toObject(fromHexString(x))
-  );
+  const pubKey = deserializedTicket.proof.eddsaPCD.claim.publicKey;
 
   const rawSig = eddsa.unpackSignature(
     fromHexString(deserializedTicket.proof.eddsaPCD.proof.signature)
@@ -178,8 +179,8 @@ export async function prove(
     externalNullifier:
       args.externalNullifier?.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: !!dataRequestObj.revealNullifierHash ? "1" : "0",
-    Ax: pubKey[0].toString(),
-    Ay: pubKey[1].toString(),
+    Ax: babyJub.F.toObject(fromHexString(pubKey[0])).toString(),
+    Ay: babyJub.F.toObject(fromHexString(pubKey[1])).toString(),
     R8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
     R8y: babyJub.F.toObject(rawSig.R8[1]).toString(),
     S: rawSig.S.toString(),
@@ -188,16 +189,11 @@ export async function prove(
     watermark: BigInt(args.watermark.value).toString()
   };
 
-  console.log(snarkInput);
-
   const { proof, publicSignals } = await groth16.fullProve(
     snarkInput,
     initArgs.wasmFilePath,
     initArgs.zkeyFilePath
   );
-
-  console.log(proof);
-  console.log(publicSignals);
 
   const partialTicket: Partial<ITicketData> = {};
   if (!isNegativeOne(publicSignals[0])) {
@@ -228,7 +224,7 @@ export async function prove(
   const claim: EdDSATicketPrivatePCDClaim = {
     partialTicket,
     watermark: args.watermark.value,
-    signer: deserializedTicket.proof.eddsaPCD.claim.publicKey
+    signer: pubKey
   };
 
   if (!isNegativeOne(publicSignals[8])) {
@@ -238,8 +234,32 @@ export async function prove(
   return new EdDSATicketPrivatePCD(uuid(), claim, { proof });
 }
 
+function publicSignalsFromClaim(claim: EdDSATicketPrivatePCDClaim): string[] {
+  const t = claim.partialTicket;
+  const ret: string[] = [];
+
+  const negOne =
+    "21888242871839275222246405745257275088548364400416034343698204186575808495616";
+
+  ret.push(!!t.ticketId ? uuidToBigInt(t.ticketId).toString() : negOne);
+  ret.push(!!t.eventId ? uuidToBigInt(t.eventId).toString() : negOne);
+  ret.push(!!t.productId ? uuidToBigInt(t.productId).toString() : negOne);
+  ret.push(!!t.timestampConsumed ? t.timestampConsumed.toString() : negOne);
+  ret.push(!!t.timestampSigned ? t.timestampSigned.toString() : negOne);
+  ret.push(t.attendeeSemaphoreId || negOne);
+  ret.push(!!t.isConsumed ? booleanToBigInt(t.isConsumed).toString() : negOne);
+  ret.push(!!t.isRevoked ? booleanToBigInt(t.isRevoked).toString() : negOne);
+  ret.push(claim.externalNullifier || negOne);
+
+  ret.push(babyJub.F.toObject(fromHexString(claim.signer[0])).toString());
+  ret.push(babyJub.F.toObject(fromHexString(claim.signer[1])).toString());
+
+  return ret;
+}
+
 export async function verify(pcd: EdDSATicketPrivatePCD): Promise<boolean> {
-  return true;
+  let publicSignals = publicSignalsFromClaim(pcd.claim);
+  return groth16.verify(vkey, publicSignals, pcd.proof.proof);
 }
 
 export async function serialize(
