@@ -9,6 +9,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   BigIntArgument,
+  DisplayOptions,
   ObjectArgument,
   PCD,
   PCDArgument,
@@ -298,6 +299,13 @@ export async function deserialize(
   return new ZKEdDSATicketPCD(parsed.id, claim, proof);
 }
 
+export function getDisplayOptions(pcd: ZKEdDSATicketPCD): DisplayOptions {
+  return {
+    header: "ZK EdDSA Ticket PCD",
+    displayName: "zk-eddsa-ticket-" + pcd.id.substring(0, 4)
+  };
+}
+
 /**
  * ZK EdDSA Ticket PCD
  */
@@ -308,7 +316,7 @@ export const ZKEdDSATicketPCDPackage: PCDPackage<
   ZKEdDSATicketPCDInitArgs
 > = {
   name: ZKEdDSATicketPCDTypeName,
-  // getDisplayOptions,
+  getDisplayOptions,
   renderCardBody: ZKEdDSATicketCardBody,
   init,
   prove,
