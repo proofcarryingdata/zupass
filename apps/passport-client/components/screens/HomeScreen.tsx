@@ -116,8 +116,24 @@ export function HomeScreenImpl() {
 }
 
 function FolderCard({ folder }: { folder: string }) {
-  return <div>{folder}</div>;
+  return <FolderCardContainer>{folder}</FolderCardContainer>;
 }
+
+const FolderCardContainer = styled.div`
+  /* width: 100%; */
+  border-radius: 12px;
+  border: 1px solid var(--accent-dark);
+  background: var(--primary-dark);
+  overflow: hidden;
+  margin: 12px 8px;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--primary-lite);
+  }
+`;
 
 const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
 

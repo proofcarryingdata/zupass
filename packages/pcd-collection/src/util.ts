@@ -1,8 +1,10 @@
+import _ from "lodash";
+
 export function getFoldersInFolder(
   folderPath: string,
   allPaths: string[]
 ): string[] {
-  return allPaths.filter((p) => isPathInFolder(p, folderPath));
+  return _.uniq(allPaths.filter((p) => isPathInFolder(p, folderPath)));
 }
 
 export function isPathInFolder(path: string, folderPath: string): boolean {
