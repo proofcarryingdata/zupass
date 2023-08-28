@@ -1,5 +1,5 @@
 {
-  "name": "@pcd/eddsa-ticket-private-pcd",
+  "name": "@pcd/zk-eddsa-ticket-pcd",
   "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",

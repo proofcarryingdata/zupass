@@ -1,12 +1,8 @@
 import { FieldLabel, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
-import { EdDSATicketPrivatePCD } from "./EdDSATicketPrivatePCD";
+import { ZKEdDSATicketPCD } from "./ZKEdDSATicketPCD";
 
-export function EdDSATicketPrivateCardBody({
-  pcd
-}: {
-  pcd: EdDSATicketPrivatePCD;
-}) {
+export function ZKEdDSATicketCardBody({ pcd }: { pcd: ZKEdDSATicketPCD }) {
   return (
     <Container>
       <p>

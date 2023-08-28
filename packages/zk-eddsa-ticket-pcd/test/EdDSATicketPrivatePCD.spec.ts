@@ -12,10 +12,10 @@ import * as path from "path";
 import { v4 as uuid } from "uuid";
 import {
   EdDSATicketFieldsRequest,
-  EdDSATicketPrivatePCD,
-  EdDSATicketPrivatePCDArgs,
-  EdDSATicketPrivatePCDPackage,
-  EdDSATicketPrivatePCDTypeName
+  ZKEdDSATicketPCD,
+  ZKEdDSATicketPCDArgs,
+  ZKEdDSATicketPCDPackage,
+  ZKEdDSATicketPCDTypeName
 } from "../src";
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/circuit_final.zkey`);
@@ -28,7 +28,7 @@ let toArgs: (
   ticketData: ITicketData,
   fieldsRequested: EdDSATicketFieldsRequest,
   withNullifier: boolean
-) => Promise<EdDSATicketPrivatePCDArgs>;
+) => Promise<ZKEdDSATicketPCDArgs>;
 
 const identity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -44,7 +44,7 @@ const EXTERNAL_NULLIFIER = BigInt(42);
 describe("EdDSA partial ticket should work", function () {
   this.timeout(1000 * 30);
 
-  let pcd1: EdDSATicketPrivatePCD;
+  let pcd1: ZKEdDSATicketPCD;
 
   const ticketData1: ITicketData = {
     // the fields below are not signed and are used for display purposes
@@ -81,8 +81,8 @@ describe("EdDSA partial ticket should work", function () {
   this.beforeAll(async function () {
     await EdDSAPCDPackage.init!({});
     await EdDSATicketPCDPackage.init!({});
-    if (!EdDSATicketPrivatePCDPackage.init) return;
-    await EdDSATicketPrivatePCDPackage.init({
+    if (!ZKEdDSATicketPCDPackage.init) return;
+    await ZKEdDSATicketPCDPackage.init({
       zkeyFilePath,
       wasmFilePath
     });
@@ -117,11 +117,11 @@ describe("EdDSA partial ticket should work", function () {
       let serializedIdentityPCD =
         await SemaphoreIdentityPCDPackage.serialize(identityPCD);
 
-      const ret: EdDSATicketPrivatePCDArgs = {
+      const ret: ZKEdDSATicketPCDArgs = {
         ticket: {
           value: serializedTicketPCD,
           argumentType: ArgumentTypeName.PCD,
-          pcdType: EdDSATicketPrivatePCDTypeName
+          pcdType: ZKEdDSATicketPCDTypeName
         },
         identity: {
           value: serializedIdentityPCD,
@@ -151,13 +151,13 @@ describe("EdDSA partial ticket should work", function () {
 
   it("should be able to generate and verify a valid proof", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
-    pcd1 = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
+    pcd1 = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     const claim = pcd1.claim;
     expect(claim.partialTicket.ticketId).to.be.equal(undefined);
     expect(claim.partialTicket.productId).to.not.be.equal(undefined);
 
-    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(pcd1);
+    let verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd1);
     expect(verificationRes).to.be.true;
   });
 
@@ -170,42 +170,42 @@ describe("EdDSA partial ticket should work", function () {
 
   it("should not verify a proof with invalid partialTicket fields", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
-    const invalidPCD = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
+    const invalidPCD = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     // set ticketId to be some random uuid
     invalidPCD.claim.partialTicket.ticketId = uuid();
 
-    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(invalidPCD);
+    let verificationRes = await ZKEdDSATicketPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
   });
 
   it("should not verify a proof with invalid watermark", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
-    const invalidPCD = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
+    const invalidPCD = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     invalidPCD.claim.watermark = "111";
 
-    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(invalidPCD);
+    let verificationRes = await ZKEdDSATicketPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
   });
 
   it("should verify a PCD without nullifier requested", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, false);
-    const pcd2 = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
+    const pcd2 = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
-    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(pcd2);
+    let verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd2);
     expect(pcd2.claim.externalNullifier).to.equal(undefined);
     expect(pcd2.claim.nullifierHash).to.equal(undefined);
     expect(verificationRes).to.be.true;
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
-    const serialized = await EdDSATicketPrivatePCDPackage.serialize(pcd1);
-    const deserialized = await EdDSATicketPrivatePCDPackage.deserialize(
+    const serialized = await ZKEdDSATicketPCDPackage.serialize(pcd1);
+    const deserialized = await ZKEdDSATicketPCDPackage.deserialize(
       serialized.pcd
     );
     const deserializedValid =
-      await EdDSATicketPrivatePCDPackage.verify(deserialized);
+      await ZKEdDSATicketPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(pcd1).to.deep.eq(deserialized);
   });

@@ -28,6 +28,7 @@ import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/verification_key.json";
+import { ZKEdDSATicketCardBody } from "./CardBody";
 import {
   decStringToBigIntToUuid,
   fromHexString,
@@ -38,11 +39,11 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
   "dummy-nullifier-for-eddsa-ticket-pcds"
 );
 
-export const EdDSATicketPrivatePCDTypeName = "eddsa-ticket-private-pcd";
+export const ZKEdDSATicketPCDTypeName = "zk-eddsa-ticket-pcd";
 
 let babyJub: BabyJub;
 let eddsa: Eddsa;
-let initArgs: EdDSATicketPrivatePCDInitArgs | undefined = undefined;
+let initArgs: ZKEdDSATicketPCDInitArgs | undefined = undefined;
 
 export interface EdDSATicketFieldsRequest {
   revealTicketId: boolean;
@@ -55,12 +56,12 @@ export interface EdDSATicketFieldsRequest {
   revealIsRevoked: boolean;
 }
 
-export interface EdDSATicketPrivatePCDInitArgs {
+export interface ZKEdDSATicketPCDInitArgs {
   zkeyFilePath: string;
   wasmFilePath: string;
 }
 
-export interface EdDSATicketPrivatePCDArgs {
+export interface ZKEdDSATicketPCDArgs {
   // generally, `ticket` and `identity` are user-provided
   ticket: PCDArgument<EdDSATicketPCD>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
@@ -74,7 +75,7 @@ export interface EdDSATicketPrivatePCDArgs {
   externalNullifier?: BigIntArgument;
 }
 
-export interface EdDSATicketPrivatePCDClaim {
+export interface ZKEdDSATicketPCDClaim {
   partialTicket: Partial<ITicketData>;
   watermark: string;
   signer: EDdSAPublicKey; // in montgomery form. must use F.toObject() from ffjavascript to convert to raw coords
@@ -84,19 +85,19 @@ export interface EdDSATicketPrivatePCDClaim {
   nullifierHash?: string;
 }
 
-export interface EdDSATicketPrivatePCDProof {
+export interface ZKEdDSATicketPCDProof {
   proof: any;
 }
 
-export class EdDSATicketPrivatePCD
-  implements PCD<EdDSATicketPrivatePCDClaim, EdDSATicketPrivatePCDProof>
+export class ZKEdDSATicketPCD
+  implements PCD<ZKEdDSATicketPCDClaim, ZKEdDSATicketPCDProof>
 {
-  type = EdDSATicketPrivatePCDTypeName;
+  type = ZKEdDSATicketPCDTypeName;
 
   public constructor(
     readonly id: string,
-    readonly claim: EdDSATicketPrivatePCDClaim,
-    readonly proof: EdDSATicketPrivatePCDProof
+    readonly claim: ZKEdDSATicketPCDClaim,
+    readonly proof: ZKEdDSATicketPCDProof
   ) {
     this.id = id;
     this.claim = claim;
@@ -104,15 +105,15 @@ export class EdDSATicketPrivatePCD
   }
 }
 
-export async function init(args: EdDSATicketPrivatePCDInitArgs) {
+export async function init(args: ZKEdDSATicketPCDInitArgs) {
   initArgs = args;
   babyJub = await buildBabyjub();
   eddsa = await buildEddsa();
 }
 
 export async function prove(
-  args: EdDSATicketPrivatePCDArgs
-): Promise<EdDSATicketPrivatePCD> {
+  args: ZKEdDSATicketPCDArgs
+): Promise<ZKEdDSATicketPCD> {
   if (!initArgs) {
     throw new Error("Cannot make proof: init has not been called yet");
   }
@@ -229,7 +230,7 @@ export async function prove(
     partialTicket.isRevoked = publicSignals[7] !== "0";
   }
 
-  const claim: EdDSATicketPrivatePCDClaim = {
+  const claim: ZKEdDSATicketPCDClaim = {
     partialTicket,
     watermark: args.watermark.value,
     signer: pubKey
@@ -240,10 +241,10 @@ export async function prove(
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
-  return new EdDSATicketPrivatePCD(uuid(), claim, { proof });
+  return new ZKEdDSATicketPCD(uuid(), claim, { proof });
 }
 
-function publicSignalsFromClaim(claim: EdDSATicketPrivatePCDClaim): string[] {
+function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
   const t = claim.partialTicket;
   const ret: string[] = [];
 
@@ -274,41 +275,41 @@ function publicSignalsFromClaim(claim: EdDSATicketPrivatePCDClaim): string[] {
   return ret;
 }
 
-export async function verify(pcd: EdDSATicketPrivatePCD): Promise<boolean> {
+export async function verify(pcd: ZKEdDSATicketPCD): Promise<boolean> {
   let publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof.proof);
 }
 
 export async function serialize(
-  pcd: EdDSATicketPrivatePCD
-): Promise<SerializedPCD<EdDSATicketPrivatePCD>> {
+  pcd: ZKEdDSATicketPCD
+): Promise<SerializedPCD<ZKEdDSATicketPCD>> {
   return {
-    type: EdDSATicketPrivatePCDTypeName,
+    type: ZKEdDSATicketPCDTypeName,
     pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd)
-  } as SerializedPCD<EdDSATicketPrivatePCD>;
+  } as SerializedPCD<ZKEdDSATicketPCD>;
 }
 
 export async function deserialize(
   serialized: string
-): Promise<EdDSATicketPrivatePCD> {
+): Promise<ZKEdDSATicketPCD> {
   const parsed = JSONBig({ useNativeBigInt: true }).parse(serialized);
   const proof = parsed.proof;
   const claim = parsed.claim;
-  return new EdDSATicketPrivatePCD(parsed.id, claim, proof);
+  return new ZKEdDSATicketPCD(parsed.id, claim, proof);
 }
 
 /**
- * EdDSA Ticket Private PCD
+ * ZK EdDSA Ticket PCD
  */
-export const EdDSATicketPrivatePCDPackage: PCDPackage<
-  EdDSATicketPrivatePCDClaim,
-  EdDSATicketPrivatePCDProof,
-  EdDSATicketPrivatePCDArgs,
-  EdDSATicketPrivatePCDInitArgs
+export const ZKEdDSATicketPCDPackage: PCDPackage<
+  ZKEdDSATicketPCDClaim,
+  ZKEdDSATicketPCDProof,
+  ZKEdDSATicketPCDArgs,
+  ZKEdDSATicketPCDInitArgs
 > = {
-  name: EdDSATicketPrivatePCDTypeName,
+  name: ZKEdDSATicketPCDTypeName,
   // getDisplayOptions,
-  // renderCardBody: EdDSATicketPrivateCardBody,
+  renderCardBody: ZKEdDSATicketCardBody,
   init,
   prove,
   verify,
