@@ -81,7 +81,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await ZKEdDSATicketPCDPackage.init({
     wasmFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
-    zkeyFilePath: "/zkeddsa-artifacts-unsafe/circuit_final.zkey"
+    zkeyFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
 
   return [

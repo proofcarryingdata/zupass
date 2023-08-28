@@ -199,7 +199,7 @@ export async function startProvingService(
 
   await ZKEdDSATicketPCDPackage.init!({
     wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
-    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/circuit_final.zkey"
+    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
 
   const provingService = new ProvingService(rollbarService);

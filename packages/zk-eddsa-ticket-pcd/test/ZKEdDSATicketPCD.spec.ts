@@ -23,7 +23,7 @@ import {
 
 const zkeyFilePath = path.join(
   __dirname,
-  `../artifacts-unsafe/circuit_final.zkey`
+  `../artifacts-unsafe/eddsaTicket.zkey`
 );
 const wasmFilePath = path.join(
   __dirname,
