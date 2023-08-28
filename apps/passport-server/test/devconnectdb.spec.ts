@@ -4,17 +4,19 @@ import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import {
-  DevconnectPretixTicket,
-  DevconnectPretixTicketDBWithEmailAndItem
+  DevconnectPretixTicketDBWithEmailAndItem,
+  DevconnectPretixTicketWithCheckin
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectDeviceLoginTicket,
+  fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusers,
   fetchDevconnectSuperusersForEmail,
-  fetchDevconnectSuperusersForEvent
+  fetchDevconnectSuperusersForEvent,
+  fetchDevconnectTicketsAwaitingSync
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
@@ -59,9 +61,11 @@ interface ITestItem {
   _eventIdx: number;
 }
 
-interface ITestTicket extends DevconnectPretixTicket {
+interface ITestTicket extends DevconnectPretixTicketWithCheckin {
   _itemIdx: number;
 }
+
+const DEFAULT_CHECKIN_LIST_ID = "1";
 
 describe("database reads and writes for devconnect ticket features", function () {
   this.timeout(15_000);
@@ -181,7 +185,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1000",
       _itemIdx: 0,
-      secret: "a1b2c3d4"
+      secret: "a1b2c3d4",
+      checker: "",
+      pcdpass_checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "Super User1",
@@ -191,7 +198,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1001",
       _itemIdx: 3,
-      secret: "qwertyuiop"
+      secret: "qwertyuiop",
+      checker: "",
+      pcdpass_checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "ThirdParty Attendee",
@@ -201,7 +211,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1002",
       _itemIdx: 4,
-      secret: "0xdeadbeef"
+      secret: "0xdeadbeef",
+      checker: "",
+      pcdpass_checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     },
     {
       full_name: "ThirdParty SuperUser",
@@ -211,7 +224,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       is_deleted: false,
       position_id: "1003",
       _itemIdx: 5,
-      secret: "asdfghjkl"
+      secret: "asdfghjkl",
+      checker: "",
+      pcdpass_checkin_timestamp: null,
+      pretix_checkin_timestamp: null
     }
   ];
 
@@ -262,7 +278,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       const dbEventInfoId = await insertPretixEventsInfo(
         db,
         event.eventName,
-        event.dbEventConfigId
+        event.dbEventConfigId,
+        DEFAULT_CHECKIN_LIST_ID
       );
 
       event.dbEventInfoId = dbEventInfoId;
@@ -371,7 +388,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       testTickets[0].email
     );
 
-    const updatedTicket: DevconnectPretixTicket = {
+    const updatedTicket: DevconnectPretixTicketWithCheckin = {
       ...existingTicket[0],
       full_name: "New Fullname"
     };
@@ -417,6 +434,33 @@ describe("database reads and writes for devconnect ticket features", function ()
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
   });
+
+  step(
+    "should be able to fetch tickets awaiting push synchronization",
+    async function () {
+      // In the previous test, we consumed this ticket
+      const existingTicket = await fetchDevconnectPretixTicketsByEmail(
+        db,
+        testTickets[0].email
+      );
+
+      const consumedTicket = await fetchDevconnectPretixTicketByTicketId(
+        db,
+        existingTicket[0].id
+      );
+      expect(consumedTicket?.is_consumed).to.eq(true);
+
+      const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
+        db,
+        testOrganizers[0].organizerUrl
+      );
+      expect(ticketsAwaitingSync.length).to.eq(1);
+      // ticketsAwaitingSync[0] also includes the checkin_list property,
+      // so we check with deep.contain rather than deep.eq, which would
+      // fail due to ticketsAwaitingSync[0] having one extra property.
+      expect(ticketsAwaitingSync[0]).to.deep.contain(consumedTicket);
+    }
+  );
 
   step("should be able to soft-delete and restore a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(

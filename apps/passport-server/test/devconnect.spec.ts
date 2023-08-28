@@ -31,11 +31,19 @@ import {
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
+import {
+  DevconnectPretixTicket,
+  DevconnectPretixTicketWithCheckin
+} from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
-  fetchDevconnectDeviceLoginTicket
+  fetchDevconnectDeviceLoginTicket,
+  fetchDevconnectPretixTicketByTicketId,
+  fetchDevconnectPretixTicketsByEvent,
+  fetchDevconnectTicketsAwaitingSync
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { consumeDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import {
@@ -44,6 +52,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
   OrganizerSync,
+  PRETIX_CHECKER,
   SyncErrorCause
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
@@ -127,7 +136,10 @@ describe("devconnect functionality", function () {
     server = getDevconnectMockPretixAPIServer(mocker.get());
     server.listen({ onUnhandledRequest: "bypass" });
 
-    application = await startTestingApp();
+    application = await startTestingApp({
+      devconnectPretixAPIFactory: async () =>
+        new DevconnectPretixAPI({ requestsPerInterval: 10_000 })
+    });
 
     if (!application.services.devconnectPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
@@ -184,9 +196,8 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
-    );
+    const pretixSyncStatus =
+      await waitForDevconnectPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -372,6 +383,234 @@ describe("devconnect functionality", function () {
       }
     ]);
   });
+
+  /**
+   * This test shows the case where a ticket has been checked in with
+   * Pretix, but not in PCDPass. The ticket will be marked as consumed
+   * on the basis of data received from Pretix.
+   */
+  step("should be able to sync a checked-in ticket", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+    const orgUrl = organizer.orgURL;
+
+    // Pick an event where we will consume all of the tickets
+    const eventID = organizer.events[0].eventID;
+    const eventConfigID = organizer.events[0].id;
+    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+    // Simulate Pretix returning tickets as being checked in
+    server.use(
+      rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
+        const skip = (req.params.event as string) !== eventID;
+        const orders = skip
+          ? org.ordersByEventID.get(eventID)
+          : org.ordersByEventID.get(eventID)?.map((order) => {
+              return {
+                ...order,
+                positions: order.positions.map((position) => {
+                  return {
+                    ...position,
+                    checkins: [
+                      { type: "entry", datetime: new Date().toISOString() }
+                    ]
+                  };
+                })
+              };
+            });
+
+        return res(
+          ctx.json({
+            results: orders,
+            next: null
+          })
+        );
+      })
+    );
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    expect(await os.run()).to.not.throw;
+
+    const tickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      eventConfigID
+    );
+
+    // All tickets for the event should be consumed
+    expect(tickets.length).to.eq(
+      tickets.filter(
+        (ticket: DevconnectPretixTicketWithCheckin) =>
+          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER
+      ).length
+    );
+  });
+
+  /**
+   * This covers the case where we have a ticket marked as consumed, but
+   * the check-in is cancelled in Pretix.
+   */
+  step("should be able to un-check-in a ticket via sync", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+    const eventConfigID = organizer.events[0].id;
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.services.rollbarService,
+      application.context.dbPool
+    );
+
+    // Because we're not patching the data from Pretix, default responses
+    // have no check-ins.
+    // Syncing should reset our checked-in tickets to be un-checked-in.
+
+    expect(await os.run()).to.not.throw;
+
+    // In the previous test, we checked these tickets in
+    const tickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      eventConfigID
+    );
+
+    // But now they are *not* consumed
+    expect(tickets.length).to.eq(
+      tickets.filter(
+        (ticket: DevconnectPretixTicket) => ticket.is_consumed === false
+      ).length
+    );
+  });
+
+  /**
+   * This shows end-to-end sync for a ticket that gets consumed in
+   * PCDPass.
+   */
+  step(
+    "should be able to check in a ticket and sync to Pretix",
+    async function () {
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+      const eventConfigID = organizer.events[0].id;
+
+      const ticketsAwaitingSyncBeforeCheckin =
+        await fetchDevconnectTicketsAwaitingSync(db, organizer.orgURL);
+
+      // There are no tickets awaiting sync
+      expect(ticketsAwaitingSyncBeforeCheckin.length).to.eq(0);
+
+      // Grab a ticket and consume it
+      const tickets = await fetchDevconnectPretixTicketsByEvent(
+        db,
+        eventConfigID
+      );
+      const ticket = tickets[0];
+
+      const checkerEmail = "test@example.com";
+      const result = await consumeDevconnectPretixTicket(
+        db,
+        ticket.id,
+        checkerEmail
+      );
+
+      expect(result).to.be.true;
+
+      const consumedTicket = await fetchDevconnectPretixTicketByTicketId(
+        db,
+        ticket.id
+      );
+
+      // The same ticket should now be consumed
+      expect(consumedTicket?.is_consumed).to.be.true;
+      expect(consumedTicket?.pcdpass_checkin_timestamp).to.be.not.null;
+
+      const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
+        db,
+        organizer.orgURL
+      );
+
+      // The consumed ticket is awaiting sync
+      expect(ticketsAwaitingSync.length).to.eq(1);
+      expect(ticketsAwaitingSync[0]).to.deep.include(consumedTicket);
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.services.rollbarService,
+        application.context.dbPool
+      );
+
+      let receivedCheckIn = false;
+
+      server.use(
+        rest.post(
+          organizer.orgURL + "/checkinrpc/redeem",
+          async (req, res, ctx) => {
+            const body = new Map(Object.entries(await req.json()));
+            if (
+              !body.has("secret") ||
+              !body.has("lists") ||
+              typeof body.get("secret") !== "string" ||
+              !Array.isArray(body.get("lists"))
+            ) {
+              return res(ctx.status(400), ctx.json({}));
+            }
+
+            receivedCheckIn = true;
+            return res(ctx.json({ status: "ok" }));
+          }
+        )
+      );
+
+      // Because we're not patching the data from Pretix, tickets will now
+      // have no check-ins
+      expect(await os.run()).to.not.throw;
+
+      // The Pretix backend should have received a check-in request
+      expect(receivedCheckIn).to.be.true;
+
+      const consumedTicketAfterSync =
+        await fetchDevconnectPretixTicketByTicketId(db, ticket.id);
+
+      // Ticket should be marked as consumed
+      expect(consumedTicketAfterSync?.is_consumed).to.be.true;
+      // Ticket should be checked-in by correct email
+      expect(consumedTicketAfterSync?.checker).to.eq(checkerEmail);
+      // And ticket should have a pretix checkin timestamp!
+      expect(consumedTicketAfterSync?.pretix_checkin_timestamp).to.be.not.null;
+      // Expect Pretix checkin timestamp to match PCDPass checkin timestamp
+      // Note that this is the value we pushed to Pretix, and we have not yet
+      // fetched Pretix's representation of this check-in. In the API docs
+      // it is indicated that Pretix will use the timestamp provided.
+      expect(
+        consumedTicketAfterSync?.pretix_checkin_timestamp?.toISOString()
+      ).to.eq(
+        consumedTicketAfterSync?.pcdpass_checkin_timestamp?.toISOString()
+      );
+    }
+  );
 
   /**
    * This test covers the case where an event is updated as part of a sync.
@@ -656,7 +895,6 @@ describe("devconnect functionality", function () {
     );
 
     await devconnectPretixSyncService.trySync();
-
     const response = await requestIssuedPCDs(
       application,
       identity,
@@ -1070,9 +1308,8 @@ describe("devconnect functionality", function () {
   step(
     "should retry 5 times before giving up with 429 response",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1117,8 +1354,8 @@ describe("devconnect functionality", function () {
       );
 
       os.run();
-      // After 0.1 seconds, no requests should have completed
-      await sleep(100);
+      // After 0.2 seconds, no requests should have completed
+      await sleep(200);
       expect(requestsCompleted).to.eq(0);
 
       // But 6 attempts should have been made
@@ -1132,9 +1369,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an event we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1184,9 +1420,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an active product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1237,9 +1472,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if a superuser product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }

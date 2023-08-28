@@ -26,6 +26,11 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEvent>;
+  fetchEventCheckinLists(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixCheckinList[]>;
   fetchEventSettings(
     orgUrl: string,
     token: string,
@@ -35,6 +40,13 @@ export interface IDevconnectPretixAPI {
     orgUrl: string,
     token: string
   ): Promise<DevconnectPretixEvent[]>;
+  pushCheckin(
+    orgUrl: string,
+    token: string,
+    secret: string,
+    checkinListId: string,
+    timestamp: string
+  ): Promise<void>;
   cancelPendingRequests(): void;
 }
 
@@ -239,6 +251,74 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
       return orders;
     });
   }
+
+  // Fetch all check-in lists for a given event.
+  public async fetchEventCheckinLists(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixCheckinList[]> {
+    return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
+      const lists: DevconnectPretixCheckinList[] = [];
+
+      // Fetch check-in lists from paginated API
+      let url = `${orgUrl}/events/${eventID}/checkinlists/`;
+      while (url != null) {
+        logger(`[DEVCONNECT PRETIX] Fetching orders ${url}`);
+        const res = await this.queuedFetch(url, {
+          headers: { Authorization: `Token ${token}` }
+        });
+        if (!res.ok) {
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
+        }
+        const page = await res.json();
+        lists.push(...page.results);
+        url = page.next;
+      }
+
+      return lists;
+    });
+  }
+
+  // Push a check-in to Pretix
+  public async pushCheckin(
+    orgUrl: string,
+    token: string,
+    secret: string,
+    checkinListId: string,
+    timestamp: string
+  ): Promise<void> {
+    return traced(TRACE_SERVICE, "pushCheckin", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
+
+      const url = `${orgUrl}/checkinrpc/redeem/`;
+
+      const res = await this.queuedFetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Token ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          secret,
+          lists: [checkinListId],
+          datetime: timestamp
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(
+          `[PRETIX] Error pushing ${url}: ${res.status} ${res.statusText}`
+        );
+      }
+
+      return res.json();
+    });
+  }
 }
 
 export async function getDevconnectPretixAPI(): Promise<DevconnectPretixAPI> {
@@ -288,6 +368,19 @@ export interface DevconnectPretixEventSettings {
   attendee_emails_required: boolean;
 }
 
+// Each event has one or more check-in lists
+// We only care about these because we need the list ID for check-in sync
+export interface DevconnectPretixCheckinList {
+  id: number;
+  name: string;
+}
+
+// This records when an attendee was checked in
+export interface DevconnectPretixCheckin {
+  datetime: Date;
+  type: string;
+}
+
 // Unclear why this is called a "position" rather than a ticket.
 export interface DevconnectPretixPosition {
   id: number;
@@ -299,4 +392,5 @@ export interface DevconnectPretixPosition {
   attendee_email: string | null;
   subevent: number;
   secret: string;
+  checkins: DevconnectPretixCheckin[];
 }

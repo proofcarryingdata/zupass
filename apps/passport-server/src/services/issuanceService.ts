@@ -2,8 +2,8 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
-  ITicketData
+  ITicketData,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -209,9 +209,10 @@ export class IssuanceService {
           success: false,
           error: {
             name: "AlreadyCheckedIn",
-            checker: ticketInDb.checker,
-            checkinTimestamp:
-              ticketInDb.checkin_timestamp || new Date().toISOString()
+            checker: ticketInDb.checker ?? undefined,
+            checkinTimestamp: (
+              ticketInDb.pcdpass_checkin_timestamp ?? new Date()
+            ).toISOString()
           }
         };
       }
@@ -317,16 +318,16 @@ export class IssuanceService {
               attendeeEmail: t.email,
               eventName: t.event_name,
               ticketName: t.item_name,
-              checkerEmail: t.checker,
+              checkerEmail: t.checker ?? undefined,
 
               // signed fields
               ticketId: t.id,
               eventId: t.pretix_events_config_id,
               productId: t.devconnect_pretix_items_info_id,
               timestampConsumed:
-                t.checkin_timestamp == null
+                t.pcdpass_checkin_timestamp == null
                   ? 0
-                  : new Date(t.checkin_timestamp).getTime(),
+                  : new Date(t.pcdpass_checkin_timestamp).getTime(),
               timestampSigned: Date.now(),
               attendeeSemaphoreId: commitment.commitment,
               isConsumed: t.is_consumed,
