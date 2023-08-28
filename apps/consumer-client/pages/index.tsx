@@ -69,6 +69,9 @@ export default function Page() {
               Semaphore Signature Proof
             </a>
           </li>
+          <li>
+            <a href="/pcdpass-examples/zkeddsa-proof">ZKEdDSA Ticket Proof</a>
+          </li>
         </ol>
       </div>
     </div>
