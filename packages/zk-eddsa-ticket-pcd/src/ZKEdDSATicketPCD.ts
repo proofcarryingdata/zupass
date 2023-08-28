@@ -24,17 +24,21 @@ import {
   STATIC_SIGNATURE_PCD_NULLIFIER,
   generateMessageHash
 } from "@pcd/semaphore-signature-pcd";
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="./util/declarations/circomlibjs.d.ts" />
+/// <reference path="./util/declarations/snarkjs.d.ts" />
 import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts-unsafe/verification_key.json";
+
 import { ZKEdDSATicketCardBody } from "./CardBody";
 import {
   decStringToBigIntToUuid,
   fromHexString,
   isNegativeOne
-} from "./utils/utils";
+} from "./util/utils";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
   "dummy-nullifier-for-eddsa-ticket-pcds"

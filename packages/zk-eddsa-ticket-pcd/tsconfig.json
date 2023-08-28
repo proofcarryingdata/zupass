@@ -3,6 +3,7 @@
   "include": [".", "test"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "typeRoots": ["src/util/declarations/"]
   }
 }
