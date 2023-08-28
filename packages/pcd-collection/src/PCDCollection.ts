@@ -1,6 +1,8 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { getFoldersInFolder } from "./util";
+
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -26,6 +28,10 @@ export class PCDCollection {
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
     this.hashEmitter = new Emitter();
+  }
+
+  public getFoldersInFolder(folderPath: string): string[] {
+    return getFoldersInFolder(folderPath, Object.values(this.folders));
   }
 
   public getAllFolderNames(): string[] {

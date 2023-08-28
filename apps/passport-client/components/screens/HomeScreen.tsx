@@ -2,7 +2,7 @@ import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { usePCDs, useSelf } from "../../src/appHooks";
+import { useFolders, usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -19,7 +19,11 @@ export const HomeScreen = React.memo(HomeScreenImpl);
 export function HomeScreenImpl() {
   useSyncE2EEStorage();
 
+  const [browsingPath, setBrowsingPath] = useState("/");
+
   const pcds = usePCDs();
+  const folders = useFolders(browsingPath);
+
   const self = useSelf();
   const navigate = useNavigate();
 
@@ -91,6 +95,9 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
+          {folders.map((folder) => {
+            return <FolderCard folder={folder} />;
+          })}
           {pcds.map((pcd) => (
             <WrappedPCDCard
               key={pcd.id}
@@ -106,6 +113,10 @@ export function HomeScreenImpl() {
       </AppContainer>
     </>
   );
+}
+
+function FolderCard({ folder }: { folder: string }) {
+  return <div>{folder}</div>;
 }
 
 const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
