@@ -1,3 +1,4 @@
+import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -99,8 +100,15 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
+          <FolderDetails folder={browsingPath} onFolderClick={onFolderClick} />
           {folders.map((folder) => {
-            return <FolderCard onClick={onFolderClick} folder={folder} />;
+            return (
+              <FolderCard
+                key={folder}
+                onFolderClick={onFolderClick}
+                folder={folder}
+              />
+            );
           })}
           {pcds.map((pcd) => (
             <WrappedPCDCard
@@ -119,20 +127,38 @@ export function HomeScreenImpl() {
   );
 }
 
-function FolderCard({
+function FolderDetails({
   folder,
-  onClick
+  onFolderClick
 }: {
   folder: string;
-  onClick: (folder: string) => void;
+  onFolderClick: (folder: string) => void;
 }) {
-  const onFolderClick = useCallback(() => {
-    onClick(folder);
-  }, [folder, onClick]);
+  const isRoot = isRootFolder(folder);
+
+  const onUpOneClick = useCallback(() => {
+    onFolderClick(getParentFolder(folder));
+  }, [folder, onFolderClick]);
 
   return (
-    <FolderCardContainer onClick={onFolderClick}>{folder}</FolderCardContainer>
+    <div>
+      {folder} {!isRoot && <button onClick={onUpOneClick}>up one</button>}
+    </div>
   );
+}
+
+function FolderCard({
+  folder,
+  onFolderClick
+}: {
+  folder: string;
+  onFolderClick: (folder: string) => void;
+}) {
+  const onClick = useCallback(() => {
+    onFolderClick(folder);
+  }, [folder, onFolderClick]);
+
+  return <FolderCardContainer onClick={onClick}>{folder}</FolderCardContainer>;
 }
 
 const FolderCardContainer = styled.div`

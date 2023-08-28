@@ -27,3 +27,17 @@ export function isFolderAncestor(path: string, folderPath: string): boolean {
 export function splitPath(path: string): string[] {
   return path.split("/").filter((p) => p !== "");
 }
+
+export function normalizePath(path: string): string {
+  return splitPath(path).join("/");
+}
+
+export function getParentFolder(folderPath: string): string {
+  const parts = splitPath(folderPath);
+  parts.pop();
+  return parts.join("/");
+}
+
+export function isRootFolder(folderPath: string): boolean {
+  return normalizePath(folderPath) === "";
+}
