@@ -35,7 +35,7 @@ import {
 } from "./utils/utils";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
-  "nullifier-for-eddsa-ticket-pcds"
+  "dummy-nullifier-for-eddsa-ticket-pcds"
 );
 
 export const EdDSATicketPrivatePCDTypeName = "eddsa-ticket-private-pcd";
@@ -53,7 +53,6 @@ export interface EdDSATicketFieldsRequest {
   revealAttendeeSemaphoreId: boolean;
   revealIsConsumed: boolean;
   revealIsRevoked: boolean;
-  revealNullifierHash: boolean;
 }
 
 export interface EdDSATicketPrivatePCDInitArgs {
@@ -62,18 +61,27 @@ export interface EdDSATicketPrivatePCDInitArgs {
 }
 
 export interface EdDSATicketPrivatePCDArgs {
+  // generally, `ticket` and `identity` are user-provided
   ticket: PCDArgument<EdDSATicketPCD>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
+
+  // `fieldsRequested`, `externalNullifier`, `watermark` are usually app-specified
   fieldsRequested: ObjectArgument<EdDSATicketFieldsRequest>;
-  externalNullifier?: BigIntArgument;
   watermark: BigIntArgument;
+
+  // provide externalNullifier field to request a nullifierHash
+  // if you don't provide this field, no nullifierHash will be outputted
+  externalNullifier?: BigIntArgument;
 }
 
 export interface EdDSATicketPrivatePCDClaim {
   partialTicket: Partial<ITicketData>;
-  externalNullifier?: string;
   watermark: string;
   signer: EDdSAPublicKey; // in montgomery form. must use F.toObject() from ffjavascript to convert to raw coords
+
+  // only if requested in PCDArgs
+  externalNullifier?: string;
+  nullifierHash?: string;
 }
 
 export interface EdDSATicketPrivatePCDProof {
@@ -178,7 +186,7 @@ export async function prove(
     revealIsRevoked: !!dataRequestObj.revealIsRevoked ? "1" : "0",
     externalNullifier:
       args.externalNullifier?.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
-    revealNullifierHash: !!dataRequestObj.revealNullifierHash ? "1" : "0",
+    revealNullifierHash: !!args.externalNullifier ? "1" : "0",
     Ax: babyJub.F.toObject(fromHexString(pubKey[0])).toString(),
     Ay: babyJub.F.toObject(fromHexString(pubKey[1])).toString(),
     R8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
@@ -227,8 +235,9 @@ export async function prove(
     signer: pubKey
   };
 
-  if (!isNegativeOne(publicSignals[8])) {
-    claim.externalNullifier = publicSignals[8];
+  if (!!args.externalNullifier) {
+    claim.nullifierHash = publicSignals[8];
+    claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
   return new EdDSATicketPrivatePCD(uuid(), claim, { proof });
@@ -249,10 +258,18 @@ function publicSignalsFromClaim(claim: EdDSATicketPrivatePCDClaim): string[] {
   ret.push(t.attendeeSemaphoreId || negOne);
   ret.push(!!t.isConsumed ? booleanToBigInt(t.isConsumed).toString() : negOne);
   ret.push(!!t.isRevoked ? booleanToBigInt(t.isRevoked).toString() : negOne);
-  ret.push(claim.externalNullifier || negOne);
+  ret.push(claim.nullifierHash || negOne);
 
+  // for some reason the public inputs to the circuit
+  // show up in the order `externalNullifier, Ax, Ay, watermark`
+  ret.push(
+    claim.externalNullifier?.toString() ||
+      STATIC_TICKET_PCD_NULLIFIER.toString()
+  );
   ret.push(babyJub.F.toObject(fromHexString(claim.signer[0])).toString());
   ret.push(babyJub.F.toObject(fromHexString(claim.signer[1])).toString());
+
+  ret.push(claim.watermark);
 
   return ret;
 }

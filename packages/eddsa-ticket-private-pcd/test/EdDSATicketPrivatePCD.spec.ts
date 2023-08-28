@@ -9,13 +9,13 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import * as path from "path";
+import { v4 as uuid } from "uuid";
 import {
   EdDSATicketFieldsRequest,
   EdDSATicketPrivatePCD,
   EdDSATicketPrivatePCDArgs,
   EdDSATicketPrivatePCDPackage,
-  EdDSATicketPrivatePCDTypeName,
-  STATIC_TICKET_PCD_NULLIFIER
+  EdDSATicketPrivatePCDTypeName
 } from "../src";
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/circuit_final.zkey`);
@@ -42,7 +42,6 @@ const WATERMARK = BigInt(6);
 const EXTERNAL_NULLIFIER = BigInt(42);
 
 describe("EdDSA partial ticket should work", function () {
-  console.log("begin");
   this.timeout(1000 * 30);
 
   let pcd1: EdDSATicketPrivatePCD;
@@ -76,8 +75,7 @@ describe("EdDSA partial ticket should work", function () {
     revealTimestampSigned: false,
     revealAttendeeSemaphoreId: false,
     revealIsConsumed: false,
-    revealIsRevoked: false,
-    revealNullifierHash: true
+    revealIsRevoked: false
   };
 
   this.beforeAll(async function () {
@@ -158,27 +156,47 @@ describe("EdDSA partial ticket should work", function () {
     const claim = pcd1.claim;
     expect(claim.partialTicket.ticketId).to.be.equal(undefined);
     expect(claim.partialTicket.productId).to.not.be.equal(undefined);
-    expect(claim.externalNullifier).to.be.not.equal(undefined);
 
     let verificationRes = await EdDSATicketPrivatePCDPackage.verify(pcd1);
     expect(verificationRes).to.be.true;
   });
 
-  it("should not verify an invalid proof", async function () {
+  it("should include appropriate externalNullifier and nullifierHash if requested", async function () {
+    expect(pcd1.claim.externalNullifier).to.be.equal(
+      EXTERNAL_NULLIFIER.toString()
+    );
+    expect(pcd1.claim.nullifierHash).to.be.not.equal(undefined);
+  });
+
+  it("should not verify a proof with invalid partialTicket fields", async function () {
+    const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
+    const invalidPCD = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
+
+    // set ticketId to be some random uuid
+    invalidPCD.claim.partialTicket.ticketId = uuid();
+
+    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(invalidPCD);
+    expect(verificationRes).to.be.false;
+  });
+
+  it("should not verify a proof with invalid watermark", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
     const invalidPCD = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
 
     invalidPCD.claim.watermark = "111";
 
-    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(pcd1);
+    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
   });
 
-  it("should default to static pcd watermark", async function () {
+  it("should verify a PCD without nullifier requested", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsRequested1, false);
     const pcd2 = await EdDSATicketPrivatePCDPackage.prove(pcdArgs);
 
-    expect(pcd2.claim.externalNullifier).to.equal(STATIC_TICKET_PCD_NULLIFIER);
+    let verificationRes = await EdDSATicketPrivatePCDPackage.verify(pcd2);
+    expect(pcd2.claim.externalNullifier).to.equal(undefined);
+    expect(pcd2.claim.nullifierHash).to.equal(undefined);
+    expect(verificationRes).to.be.true;
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {

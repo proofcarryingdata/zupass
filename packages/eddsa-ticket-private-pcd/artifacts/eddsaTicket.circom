@@ -123,4 +123,4 @@ template PartialTicket () {
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);
 }
 
-component main { public [ Ax, Ay ] } = PartialTicket();
+component main { public [ Ax, Ay, externalNullifier, watermark ] } = PartialTicket();
