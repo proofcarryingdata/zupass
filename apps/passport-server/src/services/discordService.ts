@@ -2,7 +2,7 @@ import {
   Client,
   Events,
   GatewayIntentBits,
-  TextBasedChannel,
+  TextBasedChannel
 } from "discord.js";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -59,7 +59,7 @@ async function instantiateDiscordClient(): Promise<Client | null> {
   }
 
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-  const clientPromise = new Promise<Client | null>((resolve, reject) => {
+  const clientPromise = new Promise<Client | null>((resolve, _reject) => {
     client.once(Events.ClientReady, (c) => {
       logger(`[DISCORD] Ready! Logged in as ${c.user.tag}`);
       resolve(c);

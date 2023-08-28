@@ -5,16 +5,16 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName,
+  SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
@@ -72,7 +72,7 @@ export class EthereumOwnershipPCD
 }
 
 export async function init(args: EthereumOwnershipPCDInitArgs): Promise<void> {
-  return SemaphoreSignaturePCDPackage.init!(args);
+  return SemaphoreSignaturePCDPackage.init?.(args);
 }
 
 export async function prove(
@@ -119,24 +119,23 @@ export async function prove(
     identity: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDTypeName,
-      value: args.identity.value,
+      value: args.identity.value
     },
     signedMessage: {
       argumentType: ArgumentTypeName.String,
-      value: args.ethereumSignatureOfCommitment.value,
-    },
+      value: args.ethereumSignatureOfCommitment.value
+    }
   });
 
   return new EthereumOwnershipPCD(
     uuid(),
     {
-      ethereumAddress: args.ethereumAddress.value,
+      ethereumAddress: args.ethereumAddress.value
     },
     {
-      signatureProof: await SemaphoreSignaturePCDPackage.serialize(
-        semaphoreSignature
-      ),
-      ethereumSignatureOfCommitment: args.ethereumSignatureOfCommitment.value,
+      signatureProof:
+        await SemaphoreSignaturePCDPackage.serialize(semaphoreSignature),
+      ethereumSignatureOfCommitment: args.ethereumSignatureOfCommitment.value
     }
   );
 }
@@ -145,9 +144,8 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
   const semaphoreSignature = await SemaphoreSignaturePCDPackage.deserialize(
     pcd.proof.signatureProof.pcd
   );
-  const proofValid = await SemaphoreSignaturePCDPackage.verify(
-    semaphoreSignature
-  );
+  const proofValid =
+    await SemaphoreSignaturePCDPackage.verify(semaphoreSignature);
 
   // the semaphore signature of the ethereum signature must be valid
   if (!proofValid) {
@@ -195,7 +193,7 @@ export async function serialize(
 ): Promise<SerializedPCD<EthereumOwnershipPCD>> {
   return {
     type: EthereumOwnershipPCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<EthereumOwnershipPCD>;
 }
 
@@ -208,7 +206,7 @@ export async function deserialize(
 export function getDisplayOptions(pcd: EthereumOwnershipPCD): DisplayOptions {
   return {
     header: "Ethereum " + pcd.claim.ethereumAddress.substring(0, 12),
-    displayName: "eth-owner-" + pcd.id.substring(0, 4),
+    displayName: "eth-owner-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -230,5 +228,5 @@ export const EthereumOwnershipPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

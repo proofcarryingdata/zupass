@@ -183,18 +183,18 @@ export async function startProvingService(
 ): Promise<ProvingService> {
   const fullPath = path.join(__dirname, "../../public");
 
-  await SemaphoreGroupPCDPackage.init!({
+  await SemaphoreGroupPCDPackage.init?.({
     wasmFilePath: fullPath + "/semaphore-artifacts/16.wasm",
     zkeyFilePath: fullPath + "/semaphore-artifacts/16.zkey"
   });
 
-  await SemaphoreSignaturePCDPackage.init!({
+  await SemaphoreSignaturePCDPackage.init?.({
     wasmFilePath: fullPath + "/semaphore-artifacts/16.wasm",
     zkeyFilePath: fullPath + "/semaphore-artifacts/16.zkey"
   });
 
-  await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
-  await EdDSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
+  await RSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
+  await EdDSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
 
   await ZKEdDSATicketPCDPackage.init?.({
     wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
