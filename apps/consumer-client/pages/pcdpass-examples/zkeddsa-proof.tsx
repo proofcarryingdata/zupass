@@ -123,7 +123,7 @@ export function openZKEdDSATicketPopup(
   urlToPassportWebsite: string,
   popupUrl: string,
   fieldsRequested: EdDSATicketFieldsRequest,
-  watermark: BigInt,
+  watermark: bigint,
   externalNullifier?: string
 ) {
   const args: ZKEdDSATicketPCDArgs = {
@@ -151,7 +151,7 @@ export function openZKEdDSATicketPopup(
     }
   };
 
-  if (!!externalNullifier) {
+  if (externalNullifier) {
     args.externalNullifier = {
       argumentType: ArgumentTypeName.BigInt,
       value: externalNullifier,
@@ -178,7 +178,7 @@ function useZKEdDSATicketProof(
   pcdStr: string,
   onVerified: (valid: boolean) => void,
   fieldsRequested: EdDSATicketFieldsRequest,
-  watermark: BigInt,
+  watermark: bigint,
   externalNullifier?: string
 ) {
   const [error, setError] = useState<Error | undefined>();
@@ -193,7 +193,13 @@ function useZKEdDSATicketProof(
         externalNullifier
       ).then(onVerified);
     }
-  }, [zkEdDSATicketPCD, externalNullifier, onVerified]);
+  }, [
+    zkEdDSATicketPCD,
+    fieldsRequested,
+    watermark,
+    externalNullifier,
+    onVerified
+  ]);
 
   return {
     proof: zkEdDSATicketPCD,
@@ -204,7 +210,7 @@ function useZKEdDSATicketProof(
 async function verifyProof(
   pcd: ZKEdDSATicketPCD,
   fieldsRequested: EdDSATicketFieldsRequest,
-  watermark: BigInt,
+  watermark: bigint,
   externalNullifier?: string
 ): Promise<boolean> {
   const { verify } = ZKEdDSATicketPCDPackage;
@@ -220,17 +226,22 @@ async function verifyProof(
 
   const pTicket = pcd.claim.partialTicket;
   const sameFieldsRequested =
-    pTicket.hasOwnProperty("ticketId") === fieldsRequested.revealTicketId &&
-    pTicket.hasOwnProperty("eventId") === fieldsRequested.revealEventId &&
-    pTicket.hasOwnProperty("productId") === fieldsRequested.revealProductId;
-  pTicket.hasOwnProperty("timestampConsumed") ===
+    Object.prototype.hasOwnProperty.call(pTicket, "ticketId") ===
+      fieldsRequested.revealTicketId &&
+    Object.prototype.hasOwnProperty.call(pTicket, "eventId") ===
+      fieldsRequested.revealEventId &&
+    Object.prototype.hasOwnProperty.call(pTicket, "productId") ===
+      fieldsRequested.revealProductId;
+  Object.prototype.hasOwnProperty.call(pTicket, "timestampConsumed") ===
     fieldsRequested.revealTimestampConsumed &&
-    pTicket.hasOwnProperty("timestampSigned") ===
+    Object.prototype.hasOwnProperty.call(pTicket, "timestampSigned") ===
       fieldsRequested.revealTimestampSigned &&
-    pTicket.hasOwnProperty("attendeeSemaphoreId") ===
+    Object.prototype.hasOwnProperty.call(pTicket, "attendeeSemaphoreId") ===
       fieldsRequested.revealAttendeeSemaphoreId &&
-    pTicket.hasOwnProperty("isConsumed") === fieldsRequested.revealIsConsumed &&
-    pTicket.hasOwnProperty("isRevoked") === fieldsRequested.revealIsRevoked;
+    Object.prototype.hasOwnProperty.call(pTicket, "isConsumed") ===
+      fieldsRequested.revealIsConsumed &&
+    Object.prototype.hasOwnProperty.call(pTicket, "isRevoked") ===
+      fieldsRequested.revealIsRevoked;
 
   return sameExternalNullifier && sameWatermark && sameFieldsRequested;
 }
