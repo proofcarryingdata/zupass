@@ -22,15 +22,16 @@
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.1",
     "@pcd/eddsa-ticket-pcd": "0.1.1",
+    "@pcd/pcd-types": "^0.6.3",
     "@pcd/semaphore-identity-pcd": "0.6.2",
     "@pcd/semaphore-signature-pcd": "0.6.2",
-    "@pcd/pcd-types": "^0.6.3",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
-    "snarkjs": "^0.7.0"
+    "snarkjs": "^0.7.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

@@ -14,6 +14,7 @@ import {
   ZKEdDSATicketPCDArgs,
   ZKEdDSATicketPCDPackage
 } from "@pcd/zk-eddsa-ticket-pcd";
+import path from "path";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -48,7 +49,7 @@ export default function Page() {
     setValid(valid);
   };
 
-  const { proof } = useZKEdDSATicketProof(
+  const { pcd } = useZKEdDSATicketProof(
     pcdStr,
     onVerified,
     fieldsRequested,
@@ -95,13 +96,32 @@ export default function Page() {
         >
           Request PCDpass Membership Proof
         </button>
-        {proof != null && (
+        {!!pcd && (
           <>
             <p>Got PCDpass ZKEdDSA Proof from Passport</p>
-            <CollapsableCode code={JSON.stringify(proof, null, 2)} />
+            <CollapsableCode code={JSON.stringify(pcd, null, 2)} />
             {valid === undefined && <p>❓ Proof verifying</p>}
             {valid === false && <p>❌ Proof is invalid</p>}
-            {valid === true && <p>✅ Proof is valid</p>}
+            {valid === true && (
+              <>
+                <p>✅ Proof is valid</p>
+                <p>{`Ticket ID: ${
+                  pcd.claim.partialTicket.ticketId || "HIDDEN"
+                }`}</p>
+                <p>{`Event ID: ${
+                  pcd.claim.partialTicket.eventId || "HIDDEN"
+                }`}</p>
+                <p>{`Product ID: ${
+                  pcd.claim.partialTicket.productId || "HIDDEN"
+                }`}</p>
+                <p>{`Semaphore ID: ${
+                  pcd.claim.partialTicket.attendeeSemaphoreId || "HIDDEN"
+                }`}</p>
+                {pcd.claim.nullifierHash && (
+                  <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
+                )}
+              </>
+            )}
           </>
         )}
         {valid && <p>Welcome, anon</p>}
@@ -180,7 +200,7 @@ function useZKEdDSATicketProof(
   fieldsRequested: EdDSATicketFieldsRequest,
   watermark: bigint,
   externalNullifier?: string
-) {
+): { pcd: ZKEdDSATicketPCD | undefined; error: any } {
   const [error, setError] = useState<Error | undefined>();
   const zkEdDSATicketPCD = useSerializedPCD(ZKEdDSATicketPCDPackage, pcdStr);
 
@@ -202,7 +222,7 @@ function useZKEdDSATicketProof(
   ]);
 
   return {
-    proof: zkEdDSATicketPCD,
+    pcd: zkEdDSATicketPCD,
     error
   };
 }
@@ -213,6 +233,26 @@ async function verifyProof(
   watermark: bigint,
   externalNullifier?: string
 ): Promise<boolean> {
+  // TODO: after eddsa keys are represented in normal form and not montgomery
+  // form, we can remove the call to Package initialization logic and also
+  // remove the package artifacts in the ../../public directory (for now)
+
+  // ordinarily, we wouldn't need to init the package to call verify
+  // however, because converting the claim into public signals for verification
+  // requires us to convert the signing key from montgomery form, we need
+  // to use methods on circomlibjs.babyJub.F. and to do this, we need to
+  // build babyJub, which happens in init
+
+  // once we've made it so that keys are no longer in montgomery form, we won't
+  // need to do this anymore
+  // in general i am of the opinion that verification shouldn't require you
+  // to call init...
+  const fullPath = path.join(__dirname, "../../public");
+  await ZKEdDSATicketPCDPackage.init!({
+    wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
+    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
+  });
+
   const { verify } = ZKEdDSATicketPCDPackage;
   const verified = await verify(pcd);
   if (!verified) return false;
