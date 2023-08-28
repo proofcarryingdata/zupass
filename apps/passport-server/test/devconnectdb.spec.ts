@@ -10,11 +10,13 @@ import {
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchDevconnectDeviceLoginTicket,
+  fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusers,
   fetchDevconnectSuperusersForEmail,
-  fetchDevconnectSuperusersForEvent
+  fetchDevconnectSuperusersForEvent,
+  fetchDevconnectTicketsAwaitingSync
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
@@ -432,6 +434,33 @@ describe("database reads and writes for devconnect ticket features", function ()
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
     expect(firstTicketAfterConsumption.is_consumed).to.eq(true);
   });
+
+  step(
+    "should be able to fetch tickets awaiting push synchronization",
+    async function () {
+      // In the previous test, we consumed this ticket
+      const existingTicket = await fetchDevconnectPretixTicketsByEmail(
+        db,
+        testTickets[0].email
+      );
+
+      const consumedTicket = await fetchDevconnectPretixTicketByTicketId(
+        db,
+        existingTicket[0].id
+      );
+      expect(consumedTicket?.is_consumed).to.eq(true);
+
+      const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
+        db,
+        testOrganizers[0].organizerUrl
+      );
+      expect(ticketsAwaitingSync.length).to.eq(1);
+      // ticketsAwaitingSync[0] also includes the checkin_list property,
+      // so we check with deep.contain rather than deep.eq, which would
+      // fail due to ticketsAwaitingSync[0] having one extra property.
+      expect(ticketsAwaitingSync[0]).to.deep.contain(consumedTicket);
+    }
+  );
 
   step("should be able to soft-delete and restore a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
