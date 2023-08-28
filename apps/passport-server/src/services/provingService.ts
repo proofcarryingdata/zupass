@@ -14,6 +14,7 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
@@ -180,21 +181,26 @@ export class ProvingService {
 export async function startProvingService(
   rollbarService: RollbarService | null
 ): Promise<ProvingService> {
-  const fullPath = path.join(__dirname, "../../public/semaphore-artifacts");
+  const fullPath = path.join(__dirname, "../../public");
 
   await SemaphoreGroupPCDPackage.init!({
-    wasmFilePath: fullPath + "/16.wasm",
-    zkeyFilePath: fullPath + "/16.zkey"
+    wasmFilePath: fullPath + "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: fullPath + "/semaphore-artifacts/16.zkey"
   });
 
   await SemaphoreSignaturePCDPackage.init!({
-    wasmFilePath: fullPath + "/16.wasm",
-    zkeyFilePath: fullPath + "/16.zkey"
+    wasmFilePath: fullPath + "/semaphore-artifacts/16.wasm",
+    zkeyFilePath: fullPath + "/semaphore-artifacts/16.zkey"
   });
 
   await RSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
   await EdDSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
   await EdDSAPCDPackage.init!({});
+
+  await ZKEdDSATicketPCDPackage.init!({
+    wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
+    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/circuit_final.zkey"
+  });
 
   const provingService = new ProvingService(rollbarService);
   return provingService;

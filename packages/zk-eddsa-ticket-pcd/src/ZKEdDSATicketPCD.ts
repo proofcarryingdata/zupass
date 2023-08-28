@@ -28,7 +28,7 @@ import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts/verification_key.json";
+import vkey from "../artifacts-unsafe/verification_key.json";
 import { ZKEdDSATicketCardBody } from "./CardBody";
 import {
   decStringToBigIntToUuid,

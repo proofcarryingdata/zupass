@@ -18,10 +18,13 @@ import {
   ZKEdDSATicketPCDTypeName
 } from "../src";
 
-const zkeyFilePath = path.join(__dirname, `../artifacts/circuit_final.zkey`);
+const zkeyFilePath = path.join(
+  __dirname,
+  `../artifacts-unsafe/circuit_final.zkey`
+);
 const wasmFilePath = path.join(
   __dirname,
-  `../artifacts/eddsaTicket_js/eddsaTicket.wasm`
+  `../artifacts-unsafe/eddsaTicket_js/eddsaTicket.wasm`
 );
 
 let toArgs: (
