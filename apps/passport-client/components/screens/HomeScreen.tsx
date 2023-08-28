@@ -2,7 +2,7 @@ import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useFolders, usePCDs, useSelf } from "../../src/appHooks";
+import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -21,7 +21,7 @@ export function HomeScreenImpl() {
 
   const [browsingPath, setBrowsingPath] = useState("/");
 
-  const pcds = usePCDs();
+  const pcds = usePCDsInFolder(browsingPath);
   const folders = useFolders(browsingPath);
 
   const self = useSelf();
@@ -85,6 +85,10 @@ export function HomeScreenImpl() {
     setSelectedPCDID(id);
   }, []);
 
+  const onFolderClick = useCallback((folder: string) => {
+    setBrowsingPath(folder);
+  }, []);
+
   if (self == null) return null;
 
   return (
@@ -96,7 +100,7 @@ export function HomeScreenImpl() {
         <Spacer h={24} />
         <Placeholder minH={540}>
           {folders.map((folder) => {
-            return <FolderCard folder={folder} />;
+            return <FolderCard onClick={onFolderClick} folder={folder} />;
           })}
           {pcds.map((pcd) => (
             <WrappedPCDCard
@@ -115,8 +119,20 @@ export function HomeScreenImpl() {
   );
 }
 
-function FolderCard({ folder }: { folder: string }) {
-  return <FolderCardContainer>{folder}</FolderCardContainer>;
+function FolderCard({
+  folder,
+  onClick
+}: {
+  folder: string;
+  onClick: (folder: string) => void;
+}) {
+  const onFolderClick = useCallback(() => {
+    onClick(folder);
+  }, [folder, onClick]);
+
+  return (
+    <FolderCardContainer onClick={onFolderClick}>{folder}</FolderCardContainer>
+  );
 }
 
 const FolderCardContainer = styled.div`
