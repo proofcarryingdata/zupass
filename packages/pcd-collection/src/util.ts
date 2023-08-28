@@ -4,14 +4,14 @@ export function getFoldersInFolder(
   folderPath: string,
   allPaths: string[]
 ): string[] {
-  return _.uniq(allPaths.filter((p) => isPathInFolder(p, folderPath)));
+  return _.uniq(allPaths.filter((p) => isFolderAncestor(p, folderPath)));
 }
 
-export function isPathInFolder(path: string, folderPath: string): boolean {
+export function isFolderAncestor(path: string, folderPath: string): boolean {
   const pathParts = splitPath(path);
   const folderParts = splitPath(folderPath);
 
-  if (folderParts.length > pathParts.length) {
+  if (folderParts.length >= pathParts.length) {
     return false;
   }
 
