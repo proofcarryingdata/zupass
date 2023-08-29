@@ -114,6 +114,7 @@ export class TelegramService {
       throw new Error(`Deserialization error, ${e}`);
     }
 
+    // Right now, we are only verifying that the PCD is authentic
     const verified = await EdDSATicketPCDPackage.verify(pcd);
 
     if (verified) {
@@ -121,6 +122,8 @@ export class TelegramService {
         `[TELEGRAM] Verified PCD for ${telegramUserId}, event ${pcd.claim.ticket.eventId}`
       );
 
+      // Find the event which matches the PCD
+      // For this to work, the `telegram_bot_events` table must be populated.
       const event = await fetchTelegramEvent(
         this.context.dbPool,
         pcd.claim.ticket.eventId
@@ -134,25 +137,31 @@ export class TelegramService {
       }
 
       try {
-        const channel = await this.bot.api.getChat(event.telegram_chat_id);
+        // The event is linked to a chat. Make sure we can access it.
+        const chat = await this.bot.api.getChat(event.telegram_chat_id);
 
+        // Chat must be a group chat of some kind
         if (
-          channel?.type !== "channel" &&
-          channel?.type !== "group" &&
-          channel?.type !== "supergroup"
+          chat?.type !== "channel" &&
+          chat?.type !== "group" &&
+          chat?.type !== "supergroup"
         ) {
           logger(
-            `[TELEGRAM] Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${channel.type}"`
+            `[TELEGRAM] Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
           );
           return false;
         }
 
+        // We've verified that the chat exists, now add the user to our list.
+        // This will be important later when the user requests to join.
         await insertTelegramVerification(
           this.context.dbPool,
           telegramUserId,
           event.telegram_chat_id
         );
 
+        // Send the user an invite link. When they follow the link, this will
+        // trigger a "join request", which the bot will respond to.
         logger(
           `[TELEGRAM] Creating chat invite link to ${event.telegram_chat_id} for ${telegramUserId}`
         );
@@ -165,10 +174,10 @@ export class TelegramService {
         );
         await this.bot.api.sendMessage(
           telegramUserId,
-          `You are verified 🫡! Here is your invite link to ${channel.title}.`,
+          `You are verified 🫡! Here is your invite link to ${chat.title}.`,
           {
             reply_markup: new InlineKeyboard().url(
-              `Join ${channel.title} channel`,
+              `Join ${chat.title} channel`,
               inviteLink.invite_link
             )
           }
