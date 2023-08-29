@@ -197,7 +197,7 @@ export async function startProvingService(
   await EdDSATicketPCDPackage.init!({ makeEncodedVerifyLink: undefined });
   await EdDSAPCDPackage.init!({});
 
-  await ZKEdDSATicketPCDPackage.init!({
+  await ZKEdDSATicketPCDPackage.init?.({
     wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
     zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });

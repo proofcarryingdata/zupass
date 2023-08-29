@@ -248,7 +248,7 @@ async function verifyProof(
   // in general i am of the opinion that verification shouldn't require you
   // to call init...
   const fullPath = path.join(__dirname, "../../public");
-  await ZKEdDSATicketPCDPackage.init!({
+  await ZKEdDSATicketPCDPackage.init?.({
     wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
     zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
