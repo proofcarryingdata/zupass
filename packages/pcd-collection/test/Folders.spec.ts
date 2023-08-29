@@ -109,6 +109,7 @@ describe("Folder manipulation", async function () {
     expect(isRootFolder("")).to.eq(true);
     expect(isRootFolder("/")).to.eq(true);
     expect(isRootFolder("/////")).to.eq(true);
+    expect(isRootFolder("a")).to.eq(false);
   });
 
   it("getNameFromPath", function () {
