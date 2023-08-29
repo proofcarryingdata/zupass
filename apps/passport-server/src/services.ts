@@ -74,4 +74,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.semaphoreService.stop();
   services.pretixSyncService?.stop();
   services.metricsService.stop();
+  services.telegramService?.stop();
 }

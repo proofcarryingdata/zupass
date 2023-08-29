@@ -183,6 +183,10 @@ export class TelegramService {
 
     return verified;
   }
+
+  public stop(): void {
+    this.bot.stop();
+  }
 }
 
 export async function startTelegramService(
