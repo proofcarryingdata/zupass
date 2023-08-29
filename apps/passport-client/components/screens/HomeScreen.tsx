@@ -8,12 +8,7 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import {
-  useFolders,
-  usePCDCollectionWithHash,
-  usePCDsInFolder,
-  useSelf
-} from "../../src/appHooks";
+import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -35,11 +30,6 @@ export function HomeScreenImpl() {
 
   const pcds = usePCDsInFolder(browsingPath);
   const folders = useFolders(browsingPath);
-
-  const { pcds: pcds2, hash } = usePCDCollectionWithHash();
-  useEffect(() => {
-    console.log(pcds2.getAllInFolder("/"));
-  }, [pcds2, hash]);
 
   const self = useSelf();
   const navigate = useNavigate();
