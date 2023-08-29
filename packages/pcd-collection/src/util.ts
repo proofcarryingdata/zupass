@@ -94,10 +94,10 @@ export function splitPath(path: string): string[] {
 }
 
 /**
- * Joins path segments with the separator.
+ * Joins path segments with the separator, escaping each segment.
  */
 export function joinPath(...segments: string[]) {
-  return segments.join(PATH_SEP);
+  return segments.map(escapePathSegment).join(PATH_SEP);
 }
 
 /**

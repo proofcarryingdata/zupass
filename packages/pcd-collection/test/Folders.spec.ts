@@ -90,6 +90,7 @@ describe("Folder manipulation", async function () {
 
   it("joinPath", function () {
     expect(joinPath("a", "b", "c")).to.eq("a/b/c");
+    expect(joinPath("a/b", "b", "c")).to.eq("ab/b/c");
   });
 
   it("normalizePath", function () {
