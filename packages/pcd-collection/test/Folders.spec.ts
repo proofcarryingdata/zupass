@@ -12,7 +12,7 @@ import {
   splitPath
 } from "../src/util";
 
-describe.only("Folder manipulation", async function () {
+describe("Folder manipulation", async function () {
   this.timeout(30 * 1000);
 
   it("getFoldersInFolder", async function () {
