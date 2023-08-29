@@ -75,6 +75,8 @@ export class IssuanceService {
         )
       }))
     );
+    // clear out old pcds if they were there
+    actions.push({ folder: "Devconnect", pcds: [] });
 
     return { actions };
   }
