@@ -31,6 +31,16 @@ export function usePCDs(): PCD[] {
   return [...pcds.getAll()];
 }
 
+export function usePCDsInFolder(folder: string): PCD[] {
+  const { pcds } = usePCDCollectionWithHash();
+  return [...pcds.getAllPCDsInFolder(folder)];
+}
+
+export function useFolders(path: string) {
+  const { pcds } = usePCDCollectionWithHash();
+  return pcds.getFoldersInFolder(path);
+}
+
 export function usePCDCollection(): PCDCollection {
   const { pcds } = usePCDCollectionWithHash();
   return pcds;

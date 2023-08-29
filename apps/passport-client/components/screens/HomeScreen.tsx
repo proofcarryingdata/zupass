@@ -1,10 +1,17 @@
+import {
+  getNameFromPath,
+  getParentFolder,
+  isRootFolder
+} from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { usePCDs, useSelf } from "../../src/appHooks";
+import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
+import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
@@ -18,10 +25,12 @@ export const HomeScreen = React.memo(HomeScreenImpl);
  */
 export function HomeScreenImpl() {
   useSyncE2EEStorage();
-
-  const pcds = usePCDs();
   const self = useSelf();
   const navigate = useNavigate();
+
+  const [browsingFolder, setBrowsingFolder] = useState("/");
+  const pcdsInFolder = usePCDsInFolder(browsingFolder);
+  const foldersInFolder = useFolders(browsingFolder);
 
   useEffect(() => {
     if (self == null) {
@@ -55,31 +64,41 @@ export function HomeScreenImpl() {
     }
   });
 
-  const mainIdPCD = useMemo(() => {
-    return pcds[0]?.id;
-  }, [pcds]);
+  const mainPCDId = useMemo(() => {
+    if (pcdsInFolder[0]?.type === SemaphoreIdentityPCDTypeName) {
+      return pcdsInFolder[0]?.id;
+    }
+  }, [pcdsInFolder]);
   const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
     let selected;
 
     // if user just added a PCD, highlight that one
     if (sessionStorage.newAddedPCDID != null) {
-      selected = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
+      selected = pcdsInFolder.find(
+        (pcd) => pcd.id === sessionStorage.newAddedPCDID
+      );
     } else {
-      selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+      selected = pcdsInFolder.find((pcd) => pcd.id === selectedPCDID);
     }
 
     // default to first PCD if no selected PCD found
     if (selected === undefined) {
-      selected = pcds[0];
+      selected = pcdsInFolder[0];
     }
 
     return selected;
-  }, [pcds, selectedPCDID]);
+  }, [pcdsInFolder, selectedPCDID]);
 
   const onPcdClick = useCallback((id: string) => {
     setSelectedPCDID(id);
   }, []);
+
+  const onFolderClick = useCallback((folder: string) => {
+    setBrowsingFolder(folder);
+  }, []);
+
+  const isRoot = isRootFolder(browsingFolder);
 
   if (self == null) return null;
 
@@ -91,15 +110,38 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {pcds.map((pcd) => (
-            <WrappedPCDCard
-              key={pcd.id}
-              pcd={pcd}
-              mainIdPCD={mainIdPCD}
-              onPcdClick={onPcdClick}
-              expanded={pcd.id === selectedPCD?.id}
-            />
-          ))}
+          <FolderExplorerContainer>
+            {!isRoot && (
+              <FolderDetails
+                noChildFolders={foldersInFolder.length === 0}
+                folder={browsingFolder}
+                onFolderClick={onFolderClick}
+              />
+            )}
+            {foldersInFolder.map((folder) => {
+              return (
+                <FolderCard
+                  key={folder}
+                  onFolderClick={onFolderClick}
+                  folder={folder}
+                />
+              );
+            })}
+          </FolderExplorerContainer>
+          <Separator />
+          {pcdsInFolder.length > 0 ? (
+            pcdsInFolder.map((pcd) => (
+              <WrappedPCDCard
+                key={pcd.id}
+                pcd={pcd}
+                mainIdPCD={mainPCDId}
+                onPcdClick={onPcdClick}
+                expanded={pcd.id === selectedPCD?.id}
+              />
+            ))
+          ) : (
+            <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+          )}
           <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
@@ -107,6 +149,134 @@ export function HomeScreenImpl() {
     </>
   );
 }
+
+const NoPcdsContainer = styled.div`
+  padding: 32;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+`;
+
+function FolderDetails({
+  folder,
+  onFolderClick,
+  noChildFolders
+}: {
+  folder: string;
+  onFolderClick: (folder: string) => void;
+  noChildFolders: boolean;
+}) {
+  const onUpOneClick = useCallback(() => {
+    onFolderClick(getParentFolder(folder));
+  }, [folder, onFolderClick]);
+
+  return (
+    <FolderHeader
+      onClick={onUpOneClick}
+      style={noChildFolders ? { borderBottom: "none" } : undefined}
+    >
+      <span className="btn">
+        <img src={icons.upArrow} width={18} height={18} />
+      </span>
+      <span className="name">{folder}</span>
+    </FolderHeader>
+  );
+}
+
+function FolderCard({
+  folder,
+  onFolderClick
+}: {
+  folder: string;
+  onFolderClick: (folder: string) => void;
+}) {
+  const onClick = useCallback(() => {
+    onFolderClick(folder);
+  }, [folder, onFolderClick]);
+
+  return (
+    <FolderEntryContainer onClick={onClick}>
+      <img src={icons.folder} width={20} height={20} />
+      {getNameFromPath(folder)}
+    </FolderEntryContainer>
+  );
+}
+
+const FolderExplorerContainer = styled.div`
+  border-radius: 12px;
+  border: 1px solid grey;
+  background: var(--primary-dark);
+  overflow: hidden;
+  margin: 12px 8px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
+`;
+
+const Separator = styled.div`
+  width: 100%;
+  height: 1px;
+  margin-top: 32px;
+  margin-bottom: 32px;
+  background-color: grey;
+`;
+
+const FolderHeader = styled.div`
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: row;
+  border-bottom: 1px solid grey;
+  background: var(--bg-dark-gray);
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--bg-lite-gray);
+  }
+
+  .name {
+    flex-grow: 1;
+    padding: 12px 16px;
+    border-left: none;
+    box-sizing: border-box;
+  }
+
+  .btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 0;
+    display: inline-block;
+    padding-top: 16px;
+    padding-left: 16px;
+  }
+`;
+
+const FolderEntryContainer = styled.div`
+  user-select: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: row;
+  gap: 12px;
+  border-bottom: 1px solid grey;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--primary-lite);
+  }
+`;
 
 const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
 

@@ -25,8 +25,7 @@ export function LoadingIssuedPCDs() {
 }
 
 const Container = styled.div`
-  width: 100%;
-  margin-top: 16px;
+  margin: 12px 9px;
   box-sizing: border-box;
   display: flex;
   justify-content: flex-start;

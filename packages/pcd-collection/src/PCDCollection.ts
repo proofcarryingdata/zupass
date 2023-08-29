@@ -1,6 +1,8 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { getFoldersInFolder, isRootFolder } from "./util";
+
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -28,15 +30,11 @@ export class PCDCollection {
     this.hashEmitter = new Emitter();
   }
 
-  public getAllFolderNames(): string[] {
-    const result = new Set<string>();
-    Object.entries(this.folders).forEach(([_pcdId, folder]) =>
-      result.add(folder)
-    );
-    return Array.from(result);
+  public getFoldersInFolder(folderPath: string): string[] {
+    return getFoldersInFolder(folderPath, Object.values(this.folders));
   }
 
-  public setFolder(pcdId: string, folder: string): void {
+  public setPCDFolder(pcdId: string, folder: string): void {
     if (!this.hasPCDWithId(pcdId)) {
       throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
     }
@@ -45,7 +43,7 @@ export class PCDCollection {
     this.recalculateAndEmitHash();
   }
 
-  public getFolder(pcdId: string): string | undefined {
+  public getFolderOfPCD(pcdId: string): string | undefined {
     if (!this.hasPCDWithId(pcdId)) {
       return undefined;
     }
@@ -55,7 +53,15 @@ export class PCDCollection {
     )?.[1];
   }
 
-  public getAllInFolder(folder: string): PCD[] {
+  public getAllPCDsInFolder(folder: string): PCD[] {
+    if (isRootFolder(folder)) {
+      const pcdIdsInFolders = new Set([...Object.keys(this.folders)]);
+      const pcdsNotInFolders = this.pcds.filter(
+        (pcd) => !pcdIdsInFolders.has(pcd.id)
+      );
+      return pcdsNotInFolders;
+    }
+
     const pcdIds = Object.entries(this.folders)
       .filter(([_pcdId, f]) => f === folder)
       .map(([pcdId, _f]) => pcdId);
@@ -63,15 +69,15 @@ export class PCDCollection {
     return this.getByIds(pcdIds);
   }
 
-  public removeAllInFolder(folder: string): void {
-    const inFolder = this.getAllInFolder(folder);
+  public removeAllPCDsInFolder(folder: string): void {
+    const inFolder = this.getAllPCDsInFolder(folder);
     inFolder.forEach((pcd) => this.remove(pcd.id));
   }
 
-  public replaceFolderContents(folder: string, pcds: PCD[]): void {
-    this.removeAllInFolder(folder);
+  public replacePCDsInFolder(folder: string, pcds: PCD[]): void {
+    this.removeAllPCDsInFolder(folder);
     this.addAll(pcds, { upsert: true });
-    pcds.forEach((pcd) => this.setFolder(pcd.id, folder));
+    pcds.forEach((pcd) => this.setPCDFolder(pcd.id, folder));
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(

@@ -2,8 +2,8 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData,
-  getEdDSATicketData
+  getEdDSATicketData,
+  ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -15,6 +15,7 @@ import {
   IssuedPCDsRequest,
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
+import { joinPath } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -65,11 +66,19 @@ export class IssuanceService {
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-    const serialized = await Promise.all(
-      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+    const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
+    const actions = await Promise.all(
+      Object.entries(ticketsByEvent).map(async ([eventName, tickets]) => ({
+        folder: joinPath("Devconnect", eventName),
+        pcds: await Promise.all(
+          tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+        )
+      }))
     );
+    // clear out old pcds if they were there
+    actions.push({ folder: "Devconnect", pcds: [] });
 
-    return { pcds: serialized, folder: "Devconnect" };
+    return { actions };
   }
 
   public async handleCheckInRequest(

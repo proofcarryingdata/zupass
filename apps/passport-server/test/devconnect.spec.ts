@@ -822,17 +822,21 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const responseBody = response.body as IssuedPCDsResponse;
+      expect(responseBody.actions.length).to.eq(2);
 
-      expect(responseBody.folder).to.eq("Devconnect");
+      const firstAction = responseBody.actions[0];
 
-      expect(Array.isArray(responseBody.pcds)).to.eq(true);
+      // the name of this event is left over from a previous test
+      expect(firstAction.folder).to.eq("Devconnect/Won't sync to this");
+
+      expect(Array.isArray(firstAction.pcds)).to.eq(true);
       // originally there were 6 orders in the mock data
       // but one was deleted in an earlier test
       // since we don't fetch tickets with is_deleted = true
       // there will only be 5 PCDs
-      expect(responseBody.pcds.length).to.eq(5);
+      expect(firstAction.pcds.length).to.eq(5);
 
-      const ticketPCD = responseBody.pcds[0];
+      const ticketPCD = firstAction.pcds[0];
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
@@ -858,12 +862,14 @@ describe("devconnect functionality", function () {
     );
     const response1 = expressResponse1.body as IssuedPCDsResponse;
     const response2 = expressResponse2.body as IssuedPCDsResponse;
+    const action1 = response1.actions[0];
+    const action2 = response2.actions[0];
 
     const pcds1 = await Promise.all(
-      response1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
+      action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
     const pcds2 = await Promise.all(
-      response2.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
+      action2.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
@@ -901,11 +907,13 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
+    expect(responseBody.actions.length).to.eq(2);
+    const action = responseBody.actions[0];
 
-    expect(responseBody.folder).to.eq("Devconnect");
+    expect(action.folder).to.eq("Devconnect/New name");
 
-    expect(Array.isArray(responseBody.pcds)).to.eq(true);
-    const ticketPCD = responseBody.pcds[0];
+    expect(Array.isArray(action.pcds)).to.eq(true);
+    const ticketPCD = action.pcds[0];
     expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
     const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
@@ -941,11 +949,12 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
+    expect(responseBody.actions.length).to.eq(2);
+    const action = responseBody.actions[0];
+    expect(action.folder).to.eq("Devconnect/New name");
 
-    expect(responseBody.folder).to.eq("Devconnect");
-
-    expect(Array.isArray(responseBody.pcds)).to.eq(true);
-    const ticketPCD = responseBody.pcds[0];
+    expect(Array.isArray(action.pcds)).to.eq(true);
+    const ticketPCD = action.pcds[0];
     expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
     const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
@@ -987,9 +996,9 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
-
-    const serializedTicket = issueResponseBody
-      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    expect(issueResponseBody.actions.length).to.eq(2);
+    const action = issueResponseBody.actions[0];
+    const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
@@ -1099,7 +1108,7 @@ describe("devconnect functionality", function () {
         "asdf"
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.pcds).to.deep.eq([]);
+      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
     }
   );
 
@@ -1112,7 +1121,7 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.pcds).to.deep.eq([]);
+      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
     }
   );
 

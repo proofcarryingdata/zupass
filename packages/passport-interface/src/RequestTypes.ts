@@ -104,6 +104,10 @@ export interface IssuedPCDsRequest {
  * The response body that the server responds with to an {@link IssuedPCDsRequest}.
  */
 export interface IssuedPCDsResponse {
+  actions: FolderReplacementAction[];
+}
+
+export interface FolderReplacementAction {
   pcds: SerializedPCD[];
   folder: string;
 }

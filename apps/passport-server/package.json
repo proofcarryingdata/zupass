@@ -16,6 +16,7 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
+    "@pcd/pcd-collection": "0.6.2",
     "@pcd/eddsa-pcd": "0.1.1",
     "@pcd/eddsa-ticket-pcd": "0.1.1",
     "@pcd/ethereum-ownership-pcd": "0.6.2",
