@@ -1176,6 +1176,11 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@grammyjs/types@3.2.0":
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/@grammyjs/types/-/types-3.2.0.tgz#571c51173337283e7bcb1d0f1e4fe25674546c5d"
+  integrity sha512-NGKVDkcB3K2dMhAn0llP8y15juWl/PTqIkg7gHwSD4RVzztkE5aHJ4eLOKi/cKMMmin+m5aMVTqRLc56KoNndA==
+
 "@grpc/grpc-js@^1.7.1", "@grpc/grpc-js@^1.7.3":
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.9.1.tgz#d6df7943cd2875a4feaf725f85ff605c08ac245d"
@@ -6853,6 +6858,16 @@ graceful-fs@^4.1.2, graceful-fs@^4.1.5, graceful-fs@^4.1.6, graceful-fs@^4.2.0, 
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
+grammy@^1.18.1:
+  version "1.18.1"
+  resolved "https://registry.yarnpkg.com/grammy/-/grammy-1.18.1.tgz#bf356b7bd91a80c015f934dfb1769e8272f8216e"
+  integrity sha512-XibZgAQjKvR9gP+8j0UGvAKzZiXdp7/TWHG666pRXIOXM5Irghcsw4LQmqkMNEZBCK2fQvkUbMspuHHEGq/dTQ==
+  dependencies:
+    "@grammyjs/types" "3.2.0"
+    abort-controller "^3.0.0"
+    debug "^4.3.4"
+    node-fetch "^2.6.11"
+
 grapheme-splitter@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/grapheme-splitter/-/grapheme-splitter-1.0.4.tgz#9cf3a665c6247479896834af35cf1dbb4400767e"
@@ -8819,6 +8834,13 @@ node-addon-api@^3.0.0:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
+
+node-fetch@^2.6.11:
+  version "2.7.0"
+  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.7.0.tgz#d0f0fa6e3e2dc1d27efcd8ad99d550bda94d187d"
+  integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
+  dependencies:
+    whatwg-url "^5.0.0"
 
 node-fetch@^2.6.12, node-fetch@^2.6.7:
   version "2.6.13"

@@ -17,6 +17,7 @@ import { PretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
+import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
 
 export interface ApplicationContext {
@@ -42,6 +43,7 @@ export interface GlobalServices {
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
+  telegramService: TelegramService | null;
 }
 
 export interface PCDPass {
@@ -75,4 +77,6 @@ export interface EnvironmentVariables {
   ROLLBAR_TOKEN?: string;
   SUPPRESS_LOGGING?: string;
   SERVER_EDDSA_PRIVATE_KEY?: string;
+  TELEGRAM_BOT_TOKEN?: string;
+  TELEGRAM_PRIVATE_CHAT_ID?: string;
 }
