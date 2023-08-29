@@ -17,7 +17,15 @@ export interface ZuzaluPretixTicket {
 export interface TelegramConversation {
   telegram_user_id: number;
   telegram_chat_id: number;
-  verified?: boolean;
+  verified: boolean;
+}
+
+/**
+ * A mapping of event IDs to Telegram channels
+ */
+export interface TelegramEvent {
+  ticket_event_id: string;
+  telegram_chat_id: number;
 }
 
 /**

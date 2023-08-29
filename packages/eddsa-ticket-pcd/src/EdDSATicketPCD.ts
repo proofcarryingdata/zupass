@@ -179,7 +179,6 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
   }
 
   const ticketData = getEdDSATicketData(pcd);
-
   if (!ticketData) {
     return {
       header: "Ticket",
@@ -199,7 +198,7 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
 
   return {
     header: header,
-    displayName: "ticket-" + pcd.id.substring(0, 4)
+    displayName: `${ticketData.eventName} (${ticketData.ticketName})`
   };
 }
 

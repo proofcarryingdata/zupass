@@ -18,7 +18,6 @@ export async function startServices(
   context: ApplicationContext,
   apis: APIs
 ): Promise<GlobalServices> {
-  console.log("starting services hehe");
   await startTelemetry(context);
   const telegramService = await startTelegramService(context);
   const discordService = await startDiscordService();

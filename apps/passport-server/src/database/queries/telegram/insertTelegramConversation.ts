@@ -1,22 +1,21 @@
 import { Pool } from "postgres-pool";
-import { TelegramConversation } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Insert a zuzalu pretix ticket into the database, if they have not been
- * inserted yet. This does not insert an identity commitment for them.
+ * Insert a Telegram conversation into the database.
  */
-export async function insertTelegramConversation(
+export async function insertTelegramVerification(
   client: Pool,
-  params: TelegramConversation
+  telegramUserId: number,
+  telegramChatId: number
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id)
-values ($1, $2)
+insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id, verified)
+values ($1, $2, true)
 on conflict do nothing;`,
-    [params.telegram_user_id, params.telegram_chat_id]
+    [telegramUserId, telegramChatId]
   );
   return result.rowCount;
 }

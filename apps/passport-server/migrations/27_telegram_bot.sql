@@ -8,3 +8,10 @@ create table telegram_bot_conversations (
   -- whether the user has been verified via PCDPass
   verified BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+create table telegram_bot_events (
+  -- the event ID matching the ticketData from the PCD
+  ticket_event_id UUID NOT NULL,
+  -- the ID of the Telegram channel granted access to
+  telegram_chat_id BIGINT NOT NULL
+);

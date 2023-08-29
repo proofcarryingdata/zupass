@@ -1,6 +1,8 @@
 import express, { Request, Response } from "express";
+import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { decodeString } from "../../util/util";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -9,11 +11,19 @@ export function initTelegramRoutes(
 ): void {
   logger("[INIT] initializing Telegram routes");
 
-  // Redirected from
-  // them to create their passport.
-  app.get("/telegram/verify", async (req: Request, res: Response) => {
+  /**
+   * When the user issues the `start` command to the bot, they are sent to
+   * the passport client. Once they have selected their PCD, they will be
+   * directed here, with the proof in the query parameters.
+   *
+   * If we can verify the PCD, the bot will send them a message containing
+   * an invite to the chat. In that case, we redirect the user back to
+   * Telegram.
+   */
+  app.get("/telegram/verify/:id", async (req: Request, res: Response) => {
     try {
-      const { proof, telegram_user_id } = req.query;
+      const { proof } = req.query;
+      const telegram_user_id = decodeString(req.params.id, "id");
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
       }
@@ -28,6 +38,8 @@ export function initTelegramRoutes(
         );
       }
 
+      logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
+
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
@@ -40,7 +52,7 @@ export function initTelegramRoutes(
         res.redirect(await telegramService.getBotURL());
       } else {
         res.set("Content-Type", "text/html");
-        res.send(Buffer.from("<div>Failed to verify</div>"));
+        res.sendFile(path.resolve("resources/telegram/error.html"));
       }
     } catch (e) {
       logger(e);
