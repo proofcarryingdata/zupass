@@ -66,6 +66,36 @@ export function getDevconnectMockPretixAPIServer(
         return res(ctx.json(settings));
       })
     );
+
+    handlers.push(
+      rest.get(orgUrl + "/events/:event/checkinlists", (req, res, ctx) => {
+        if (getAuthToken(req) !== org.token) {
+          return res(ctx.status(403), ctx.text("Invalid token"));
+        }
+        return res(
+          ctx.json({ results: [{ id: 1, name: "Test" }], next: null })
+        );
+      })
+    );
+
+    handlers.push(
+      rest.post(orgUrl + "/checkinrpc/redeem", async (req, res, ctx) => {
+        if (getAuthToken(req) !== org.token) {
+          return res(ctx.status(403), ctx.text("Invalid token"));
+        }
+        const body = new Map(Object.entries(await req.json()));
+        if (
+          !body.has("secret") ||
+          !body.has("lists") ||
+          typeof body.get("secret") !== "string" ||
+          !Array.isArray(body.get("lists"))
+        ) {
+          return res(ctx.status(400), ctx.json({}));
+        }
+
+        return res(ctx.json({ status: "ok" }));
+      })
+    );
   }
 
   const server = setupServer(...handlers);

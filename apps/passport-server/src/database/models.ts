@@ -27,12 +27,23 @@ export interface DevconnectPretixTicket {
   is_consumed: boolean;
   position_id: string;
   secret: string;
-  checker?: string;
-  checkin_timestamp?: string;
+  pretix_checkin_timestamp: Date | null;
 }
 
-export interface DevconnectPretixTicketDB extends DevconnectPretixTicket {
+export interface DevconnectPretixTicketWithCheckin
+  extends DevconnectPretixTicket {
+  checker: string | null;
+  pcdpass_checkin_timestamp: Date | null;
+}
+
+export interface DevconnectPretixTicketDB
+  extends DevconnectPretixTicketWithCheckin {
   id: string;
+}
+
+export interface DevconnectPretixTicketDBWithCheckinListID
+  extends DevconnectPretixTicketDB {
+  checkin_list_id: string;
 }
 
 // DevconnectPretixTicket with all relevant fields for ticket PCD included,
@@ -124,6 +135,7 @@ export interface PretixEventInfo {
   id: string;
   pretix_events_config_id: string;
   event_name: string;
+  checkin_list_id: string;
 }
 
 export interface PretixItemInfo {

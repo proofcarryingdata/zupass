@@ -20,5 +20,15 @@ export function pretixTicketsDifferent(
     return true;
   }
 
+  if (oldTicket.is_consumed !== newTicket.is_consumed) {
+    return true;
+  }
+
+  if (
+    oldTicket.pretix_checkin_timestamp !== newTicket.pretix_checkin_timestamp
+  ) {
+    return true;
+  }
+
   return false;
 }
