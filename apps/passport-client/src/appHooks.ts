@@ -33,7 +33,7 @@ export function usePCDs(): PCD[] {
 
 export function usePCDsInFolder(folder: string): PCD[] {
   const { pcds } = usePCDCollectionWithHash();
-  return [...pcds.getAllInFolder(folder)];
+  return [...pcds.getAllPCDsInFolder(folder)];
 }
 
 export function useFolders(path: string) {

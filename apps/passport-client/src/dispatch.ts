@@ -423,7 +423,7 @@ async function sync(state: AppState, update: ZuUpdate) {
       const response = await loadIssuedPCDs(state);
       for (const action of response.actions) {
         const deserialized = await state.pcds.deserializeAll(action.pcds);
-        state.pcds.replaceFolderContents(action.folder, deserialized);
+        state.pcds.replacePCDsInFolder(action.folder, deserialized);
       }
 
       await savePCDs(state.pcds);
