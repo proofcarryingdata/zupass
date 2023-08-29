@@ -9,6 +9,7 @@ import {
   isChild,
   isFolderAncestor,
   isRootFolder,
+  joinPath,
   normalizePath,
   splitPath
 } from "../src/util";
@@ -85,6 +86,10 @@ describe("Folder manipulation", async function () {
     expect(splitPath("/")).to.have.members([]);
     expect(splitPath("//////")).to.have.members([]);
     expect(splitPath("////a/////b")).to.have.members(["a", "b"]);
+  });
+
+  it("joinPath", function () {
+    expect(joinPath("a", "b", "c")).to.eq("a/b/c");
   });
 
   it("normalizePath", function () {

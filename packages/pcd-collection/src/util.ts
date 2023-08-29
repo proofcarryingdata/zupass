@@ -1,6 +1,6 @@
 import _ from "lodash";
 
-export const PATH_SEP = PATH_SEP;
+export const PATH_SEP = "/";
 
 /**
  * Gets the list of folders that are direct descendants of a given
@@ -91,6 +91,13 @@ export function isFolderAncestor(path: string, folderPath: string): boolean {
  */
 export function splitPath(path: string): string[] {
   return path.split(PATH_SEP).filter((p) => p !== "");
+}
+
+/**
+ * Joins path segments with the separator.
+ */
+export function joinPath(...segments: string[]) {
+  return segments.join(PATH_SEP);
 }
 
 /**
