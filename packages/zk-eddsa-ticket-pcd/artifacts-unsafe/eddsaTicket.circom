@@ -73,41 +73,18 @@ template PartialTicket () {
     revealNullifierHash * (1 - revealNullifierHash) === 0;
 
     // calculate message
-    component messageHasher = Poseidon(8);
-    messageHasher.inputs[0] <== ticketId;
-    messageHasher.inputs[1] <== eventId;
-    messageHasher.inputs[2] <== productId;
-    messageHasher.inputs[3] <== timestampConsumed;
-    messageHasher.inputs[4] <== timestampSigned;
-    messageHasher.inputs[5] <== attendeeSemaphoreId;
-    messageHasher.inputs[6] <== isConsumed;
-    messageHasher.inputs[7] <== isRevoked;
+    signal messageHash <== Poseidon(8)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked]);
 
     // verify signature
-    component sigVerifier = EdDSAPoseidonVerifier();
-    sigVerifier.enabled <== 1;
-    sigVerifier.Ax <== Ax;
-    sigVerifier.Ay <== Ay;
-    sigVerifier.S <== S;
-    sigVerifier.R8x <== R8x;
-    sigVerifier.R8y <== R8y;
-    sigVerifier.M <== messageHasher.out;
+    EdDSAPoseidonVerifier()(1, Ax, Ay, S, R8x, R8y, messageHash);
 
     // verify knowledge of semaphore ID
-    component semaSecretHasher = Poseidon(2);
-    semaSecretHasher.inputs[0] <== identityNullifier;
-    semaSecretHasher.inputs[1] <== identityTrapdoor;
-    signal semaSecret <== semaSecretHasher.out;
-    component semaIDHasher = Poseidon(1);
-    semaIDHasher.inputs[0] <== semaSecret;
-    signal semaIDCommitment <== semaIDHasher.out;
+    signal semaSecret <== Poseidon(2)([identityNullifier, identityTrapdoor]);
+    signal semaIDCommitment <== Poseidon(1)([semaSecret]);
     attendeeSemaphoreId === semaIDCommitment;
 
     // calculate nullifier
-    component nullifierHasher = Poseidon(2);
-    nullifierHasher.inputs[0] <== externalNullifier;
-    nullifierHasher.inputs[1] <== identityNullifier;
-    signal nullifierHash <== nullifierHasher.out;
+    signal nullifierHash <== Poseidon(2)([externalNullifier, identityNullifier]);
 
     // calculate revealed ticket fields
     signal output revealedTicketId <== ValueOrNegativeOne()(ticketId, revealTicketId);
