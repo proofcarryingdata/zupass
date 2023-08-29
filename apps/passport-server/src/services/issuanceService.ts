@@ -2,8 +2,8 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData,
-  getEdDSATicketData
+  getEdDSATicketData,
+  ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -69,7 +69,7 @@ export class IssuanceService {
       pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
     );
 
-    return { pcds: serialized, folder: "Devconnect" };
+    return { actions: [{ pcds: serialized, folder: "Devconnect" }] };
   }
 
   public async handleCheckInRequest(

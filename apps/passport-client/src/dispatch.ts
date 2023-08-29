@@ -421,8 +421,11 @@ async function sync(state: AppState, update: ZuUpdate) {
 
     try {
       const response = await loadIssuedPCDs(state);
-      const deserialized = await state.pcds.deserializeAll(response.pcds);
-      state.pcds.replaceFolderContents(response.folder, deserialized);
+      for (const action of response.actions) {
+        const deserialized = await state.pcds.deserializeAll(action.pcds);
+        state.pcds.replaceFolderContents(action.folder, deserialized);
+      }
+
       await savePCDs(state.pcds);
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
