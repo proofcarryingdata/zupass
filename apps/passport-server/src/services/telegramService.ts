@@ -6,6 +6,7 @@ import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEv
 import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { sleep } from "../util/util";
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -82,10 +83,34 @@ export class TelegramService {
         );
       }
     });
+  }
 
-    bot.start({
-      allowed_updates: ["chat_join_request", "chat_member", "message"]
-    });
+  /**
+   * Telegram does not allow two instances of a bot to be running at once.
+   * During deployment, a new instance of the app will be started before the
+   * old one is shut down, so we might end up with two instances running at
+   * the same time. This method allows us to delay starting the bot by an
+   * amount configurable per-environment.
+   *
+   * Since this function awaits on bot.start(), it will likely be very long-
+   * lived.
+   */
+  public async startBot(): Promise<void> {
+    const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
+    if (startDelay > 0) {
+      logger(`[TELEGRAM] Delaying bot startup by ${startDelay} milliseconds`);
+      await sleep(startDelay);
+    }
+
+    logger(`[TELEGRAM] Starting bot`);
+    try {
+      // This will not resolve while the bot remains running.
+      await this.bot.start({
+        allowed_updates: ["chat_join_request", "chat_member", "message"]
+      });
+    } catch (e) {
+      logger(`[TELEGRAM] Error starting bot: ${e}`);
+    }
   }
 
   public async getBotURL(): Promise<string> {
@@ -211,5 +236,9 @@ export async function startTelegramService(
   const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
   await bot.init();
 
-  return new TelegramService(context, bot);
+  const service = new TelegramService(context, bot);
+  // Start the bot, but do not await on the result here.
+  service.startBot();
+
+  return service;
 }
