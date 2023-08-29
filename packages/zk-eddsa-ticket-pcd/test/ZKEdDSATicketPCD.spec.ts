@@ -14,7 +14,7 @@ import "mocha";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import {
-  EdDSATicketFieldsRequest,
+  EdDSATicketFieldsToReveal,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
   ZKEdDSATicketPCDPackage,
@@ -32,7 +32,7 @@ const wasmFilePath = path.join(
 
 let toArgs: (
   ticketData: ITicketData,
-  fieldsRequested: EdDSATicketFieldsRequest,
+  fieldsToReveal: EdDSATicketFieldsToReveal,
   withNullifier: boolean
 ) => Promise<ZKEdDSATicketPCDArgs>;
 
@@ -73,15 +73,9 @@ describe("EdDSA partial ticket should work", function () {
     isRevoked: false
   };
 
-  const fieldsRequested1: EdDSATicketFieldsRequest = {
-    revealTicketId: false,
+  const fieldsToReveal1: EdDSATicketFieldsToReveal = {
     revealEventId: true,
-    revealProductId: true,
-    revealTimestampConsumed: false,
-    revealTimestampSigned: false,
-    revealAttendeeSemaphoreId: false,
-    revealIsConsumed: false,
-    revealIsRevoked: false
+    revealProductId: true
   };
 
   this.beforeAll(async function () {
@@ -95,7 +89,7 @@ describe("EdDSA partial ticket should work", function () {
 
     toArgs = async (
       ticketData: ITicketData,
-      fieldsRequested: EdDSATicketFieldsRequest,
+      fieldsToReveal: EdDSATicketFieldsToReveal,
       withNullifier: boolean
     ) => {
       let ticketPCD = await EdDSATicketPCDPackage.prove({
@@ -134,8 +128,8 @@ describe("EdDSA partial ticket should work", function () {
           argumentType: ArgumentTypeName.PCD,
           pcdType: SemaphoreIdentityPCDTypeName
         },
-        fieldsRequested: {
-          value: fieldsRequested,
+        fieldsToReveal: {
+          value: fieldsToReveal,
           argumentType: ArgumentTypeName.Object
         },
         watermark: {
@@ -156,7 +150,7 @@ describe("EdDSA partial ticket should work", function () {
   });
 
   it("should be able to generate and verify a valid proof", async function () {
-    const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, true);
     pcd1 = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     const claim = pcd1.claim;
@@ -175,7 +169,7 @@ describe("EdDSA partial ticket should work", function () {
   });
 
   it("should not verify a proof with invalid partialTicket fields", async function () {
-    const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, true);
     const invalidPCD = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     // set ticketId to be some random uuid
@@ -186,7 +180,7 @@ describe("EdDSA partial ticket should work", function () {
   });
 
   it("should not verify a proof with invalid watermark", async function () {
-    const pcdArgs = await toArgs(ticketData1, fieldsRequested1, true);
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, true);
     const invalidPCD = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     invalidPCD.claim.watermark = "111";
@@ -196,7 +190,7 @@ describe("EdDSA partial ticket should work", function () {
   });
 
   it("should verify a PCD without nullifier requested", async function () {
-    const pcdArgs = await toArgs(ticketData1, fieldsRequested1, false);
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, false);
     const pcd2 = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
     let verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd2);

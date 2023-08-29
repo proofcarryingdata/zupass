@@ -20,14 +20,12 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
-import {
-  STATIC_SIGNATURE_PCD_NULLIFIER,
-  generateMessageHash
-} from "@pcd/semaphore-signature-pcd";
+import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./util/declarations/circomlibjs.d.ts" />
 /// <reference path="./util/declarations/snarkjs.d.ts" />
 import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
@@ -40,6 +38,17 @@ import {
   isNegativeOne
 } from "./util/utils";
 
+/**
+ * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
+ * @param signal The initial message.
+ * @returns The outputted hash, fed in as a signal to the Semaphore proof.
+ */
+export function generateMessageHash(signal: string): bigint {
+  // right shift to fit into a field element, which is 254 bits long
+  // shift by 8 ensures we have a 253 bit element
+  return BigInt("0x" + sha256(signal)) >> BigInt(8);
+}
+
 export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
   "dummy-nullifier-for-eddsa-ticket-pcds"
 );
@@ -50,15 +59,15 @@ let babyJub: BabyJub;
 let eddsa: Eddsa;
 let initArgs: ZKEdDSATicketPCDInitArgs | undefined = undefined;
 
-export interface EdDSATicketFieldsRequest {
-  revealTicketId: boolean;
-  revealEventId: boolean;
-  revealProductId: boolean;
-  revealTimestampConsumed: boolean;
-  revealTimestampSigned: boolean;
-  revealAttendeeSemaphoreId: boolean;
-  revealIsConsumed: boolean;
-  revealIsRevoked: boolean;
+export interface EdDSATicketFieldsToReveal {
+  revealTicketId?: boolean;
+  revealEventId?: boolean;
+  revealProductId?: boolean;
+  revealTimestampConsumed?: boolean;
+  revealTimestampSigned?: boolean;
+  revealAttendeeSemaphoreId?: boolean;
+  revealIsConsumed?: boolean;
+  revealIsRevoked?: boolean;
 }
 
 export interface ZKEdDSATicketPCDInitArgs {
@@ -71,8 +80,8 @@ export interface ZKEdDSATicketPCDArgs {
   ticket: PCDArgument<EdDSATicketPCD>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
 
-  // `fieldsRequested`, `externalNullifier`, `watermark` are usually app-specified
-  fieldsRequested: ObjectArgument<EdDSATicketFieldsRequest>;
+  // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified
+  fieldsToReveal: ObjectArgument<EdDSATicketFieldsToReveal>;
   watermark: BigIntArgument;
 
   // provide externalNullifier field to request a nullifierHash
@@ -133,7 +142,7 @@ export async function prove(
     throw new Error("Cannot make proof: missing identity PCD");
   }
 
-  const dataRequestObj = args.fieldsRequested.value;
+  const dataRequestObj = args.fieldsToReveal.value;
   if (!dataRequestObj) {
     throw new Error("Cannot make proof: missing fields request object");
   }

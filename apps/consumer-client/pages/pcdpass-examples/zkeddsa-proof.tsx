@@ -6,13 +6,13 @@ import {
   useSerializedPCD
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { generateMessageHash } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
-  EdDSATicketFieldsRequest,
+  EdDSATicketFieldsToReveal,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage
+  ZKEdDSATicketPCDPackage,
+  generateMessageHash
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { useEffect, useState } from "react";
@@ -30,7 +30,7 @@ export default function Page() {
   );
   const externalNullifier = generateMessageHash("consumer-client").toString();
 
-  const fieldsRequested: EdDSATicketFieldsRequest = {
+  const fieldsToReveal: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
     revealEventId: true,
     revealProductId: true,
@@ -52,7 +52,7 @@ export default function Page() {
   const { pcd } = useZKEdDSATicketProof(
     pcdStr,
     onVerified,
-    fieldsRequested,
+    fieldsToReveal,
     watermark,
     externalNullifier
   );
@@ -87,7 +87,7 @@ export default function Page() {
             openZKEdDSATicketPopup(
               PCDPASS_URL,
               window.location.origin + "/popup",
-              fieldsRequested,
+              fieldsToReveal,
               watermark,
               externalNullifier
             )
@@ -135,14 +135,14 @@ export default function Page() {
  *
  * @param urlToPassportWebsite URL of passport website
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
- * @param fieldsRequested Ticket data fields that site is requesting for user to reveal
+ * @param fieldsToReveal Ticket data fields that site is requesting for user to reveal
  * @param watermark Challenge to watermark this proof to
  * @param externalNullifier Optional unique identifier for this ZKEdDSATicketPCD
  */
 export function openZKEdDSATicketPopup(
   urlToPassportWebsite: string,
   popupUrl: string,
-  fieldsRequested: EdDSATicketFieldsRequest,
+  fieldsToReveal: EdDSATicketFieldsToReveal,
   watermark: bigint,
   externalNullifier?: string
 ) {
@@ -159,9 +159,9 @@ export function openZKEdDSATicketPopup(
       value: undefined,
       userProvided: true
     },
-    fieldsRequested: {
+    fieldsToReveal: {
       argumentType: ArgumentTypeName.Object,
-      value: fieldsRequested,
+      value: fieldsToReveal,
       userProvided: false
     },
     watermark: {
@@ -197,7 +197,7 @@ export function openZKEdDSATicketPopup(
 function useZKEdDSATicketProof(
   pcdStr: string,
   onVerified: (valid: boolean) => void,
-  fieldsRequested: EdDSATicketFieldsRequest,
+  fieldsToReveal: EdDSATicketFieldsToReveal,
   watermark: bigint,
   externalNullifier?: string
 ): { pcd: ZKEdDSATicketPCD | undefined; error: any } {
@@ -208,14 +208,14 @@ function useZKEdDSATicketProof(
     if (zkEdDSATicketPCD) {
       verifyProof(
         zkEdDSATicketPCD,
-        fieldsRequested,
+        fieldsToReveal,
         watermark,
         externalNullifier
       ).then(onVerified);
     }
   }, [
     zkEdDSATicketPCD,
-    fieldsRequested,
+    fieldsToReveal,
     watermark,
     externalNullifier,
     onVerified
@@ -229,7 +229,7 @@ function useZKEdDSATicketProof(
 
 async function verifyProof(
   pcd: ZKEdDSATicketPCD,
-  fieldsRequested: EdDSATicketFieldsRequest,
+  fieldsToReveal: EdDSATicketFieldsToReveal,
   watermark: bigint,
   externalNullifier?: string
 ): Promise<boolean> {
@@ -265,23 +265,23 @@ async function verifyProof(
   const sameWatermark = pcd.claim.watermark === watermark.toString();
 
   const pTicket = pcd.claim.partialTicket;
-  const sameFieldsRequested =
+  const samefieldsToReveal =
     Object.prototype.hasOwnProperty.call(pTicket, "ticketId") ===
-      fieldsRequested.revealTicketId &&
+      fieldsToReveal.revealTicketId &&
     Object.prototype.hasOwnProperty.call(pTicket, "eventId") ===
-      fieldsRequested.revealEventId &&
+      fieldsToReveal.revealEventId &&
     Object.prototype.hasOwnProperty.call(pTicket, "productId") ===
-      fieldsRequested.revealProductId;
+      fieldsToReveal.revealProductId;
   Object.prototype.hasOwnProperty.call(pTicket, "timestampConsumed") ===
-    fieldsRequested.revealTimestampConsumed &&
+    fieldsToReveal.revealTimestampConsumed &&
     Object.prototype.hasOwnProperty.call(pTicket, "timestampSigned") ===
-      fieldsRequested.revealTimestampSigned &&
+      fieldsToReveal.revealTimestampSigned &&
     Object.prototype.hasOwnProperty.call(pTicket, "attendeeSemaphoreId") ===
-      fieldsRequested.revealAttendeeSemaphoreId &&
+      fieldsToReveal.revealAttendeeSemaphoreId &&
     Object.prototype.hasOwnProperty.call(pTicket, "isConsumed") ===
-      fieldsRequested.revealIsConsumed &&
+      fieldsToReveal.revealIsConsumed &&
     Object.prototype.hasOwnProperty.call(pTicket, "isRevoked") ===
-      fieldsRequested.revealIsRevoked;
+      fieldsToReveal.revealIsRevoked;
 
-  return sameExternalNullifier && sameWatermark && sameFieldsRequested;
+  return sameExternalNullifier && sameWatermark && samefieldsToReveal;
 }

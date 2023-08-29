@@ -7,3 +7,4 @@ artifacts-unsafe
 !artifacts-unsafe/eddsaTicket.zkey
 !artifacts-unsafe/generate_artifacts.sh
 !artifacts-unsafe/verification_key.json
+!artifacts-unsafe/README.md
