@@ -1,12 +1,6 @@
 import { expect } from "chai";
-import _ from "lodash";
 import "mocha";
-import {
-  getAllAncestors,
-  isDirectDescendant,
-  isFolderAncestor,
-  splitPath
-} from "../src/util";
+import { getAllAncestors, isFolderAncestor, splitPath } from "../src/util";
 
 describe.only("Folder manipulation logic", async function () {
   this.timeout(30 * 1000);
@@ -45,30 +39,5 @@ describe.only("Folder manipulation logic", async function () {
       "a",
       ""
     ]);
-  });
-
-  it("asdf", async function () {
-    const folderPath = "1/a";
-    const allPaths = ["1/a/b/d", "1/a/b/c", "1/a/q/f"];
-
-    console.log("folderPath", folderPath);
-
-    const descendantsOfFolder = _.uniq(
-      allPaths.filter((p) => isFolderAncestor(p, folderPath))
-    );
-
-    console.log("descendantsOfFolder", descendantsOfFolder);
-
-    const descendantsWithMissing = _.uniq(
-      descendantsOfFolder.flatMap((path) => getAllAncestors(path))
-    ).filter((a) => a !== "");
-
-    console.log("descendantsWithMissing", descendantsWithMissing);
-
-    const directDescendants = descendantsWithMissing.filter((d) =>
-      isDirectDescendant(folderPath, d)
-    );
-
-    console.log("directDescendants", directDescendants);
   });
 });
