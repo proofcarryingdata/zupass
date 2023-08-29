@@ -99,8 +99,13 @@ export interface ZKEdDSATicketPCDClaim {
   nullifierHash?: string;
 }
 
+// snarkjs proof
 export interface ZKEdDSATicketPCDProof {
-  proof: any;
+  pi_a: [string, string, string];
+  pi_b: [[string, string], [string, string], [string, string]];
+  pi_c: [string, string, string];
+  protocol: string;
+  curve: string;
 }
 
 export class ZKEdDSATicketPCD
@@ -255,7 +260,7 @@ export async function prove(
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
-  return new ZKEdDSATicketPCD(uuid(), claim, { proof });
+  return new ZKEdDSATicketPCD(uuid(), claim, proof as ZKEdDSATicketPCDProof);
 }
 
 function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
@@ -291,7 +296,7 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
 
 export async function verify(pcd: ZKEdDSATicketPCD): Promise<boolean> {
   let publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16.verify(vkey, publicSignals, pcd.proof.proof);
+  return groth16.verify(vkey, publicSignals, pcd.proof);
 }
 
 export async function serialize(

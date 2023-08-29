@@ -94,7 +94,7 @@ export default function Page() {
           }
           disabled={valid}
         >
-          Request PCDpass Membership Proof
+          Request PCDpass Ticket Proof
         </button>
         {!!pcd && (
           <>
