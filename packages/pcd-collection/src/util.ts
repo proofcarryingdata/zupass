@@ -1,5 +1,7 @@
 import _ from "lodash";
 
+export const PATH_SEP = PATH_SEP;
+
 /**
  * Gets the list of folders that are direct descendants of a given
  * path, given a list of directories that are present. For example,
@@ -41,7 +43,7 @@ export function getAllAncestors(path: string): string[] {
 
   while (parts.length > 0) {
     parts.pop();
-    result.push(parts.join("/"));
+    result.push(parts.join(PATH_SEP));
   }
 
   return result;
@@ -56,7 +58,7 @@ export function isChild(parent: string, child: string): boolean {
   const descendantParts = splitPath(child);
   descendantParts.pop();
 
-  if (normalizedPath === descendantParts.join("/")) {
+  if (normalizedPath === descendantParts.join(PATH_SEP)) {
     return true;
   }
 
@@ -88,14 +90,14 @@ export function isFolderAncestor(path: string, folderPath: string): boolean {
  * Splits a path via the path separator.
  */
 export function splitPath(path: string): string[] {
-  return path.split("/").filter((p) => p !== "");
+  return path.split(PATH_SEP).filter((p) => p !== "");
 }
 
 /**
  * Removes unnecessary path separators from a path.
  */
 export function normalizePath(path: string): string {
-  return splitPath(path).join("/");
+  return splitPath(path).join(PATH_SEP);
 }
 
 /**
@@ -104,7 +106,7 @@ export function normalizePath(path: string): string {
 export function getParentFolder(folderPath: string): string {
   const parts = splitPath(folderPath);
   parts.pop();
-  return parts.join("/");
+  return parts.join(PATH_SEP);
 }
 
 /**
