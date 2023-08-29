@@ -20,7 +20,7 @@ export function getFoldersInFolder(
   console.log("descendantsWithMissing", descendantsWithMissing);
 
   const directDescendants = descendantsWithMissing.filter((d) =>
-    isDirectDescendant(folderPath, d)
+    isChild(folderPath, d)
   );
 
   console.log("directDescendants", directDescendants);
@@ -40,13 +40,16 @@ export function getAllAncestors(path: string): string[] {
   return result;
 }
 
-export function isDirectDescendant(path: string, descendant: string) {
-  const normalizedPath = normalizePath(path);
-  const descendantParts = splitPath(descendant);
+export function isChild(parent: string, child: string): boolean {
+  const normalizedPath = normalizePath(parent);
+  const descendantParts = splitPath(child);
   descendantParts.pop();
+
   if (normalizedPath === descendantParts.join("/")) {
     return true;
   }
+
+  return false;
 }
 
 export function isFolderAncestor(path: string, folderPath: string): boolean {
@@ -86,5 +89,10 @@ export function isRootFolder(folderPath: string): boolean {
 
 export function getNameFromPath(path: string): string {
   const parts = splitPath(path);
+
+  if (parts.length === 0) {
+    return "";
+  }
+
   return parts[parts.length - 1];
 }
