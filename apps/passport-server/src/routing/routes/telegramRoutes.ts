@@ -43,16 +43,16 @@ export function initTelegramRoutes(
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      const verified = await telegramService.verifyEdDSATicket(
-        proof,
-        parseInt(telegram_user_id)
-      );
-
-      if (verified) {
+      try {
+        await telegramService.handleVerification(
+          proof,
+          parseInt(telegram_user_id)
+        );
         res.redirect(await telegramService.getBotURL());
-      } else {
+      } catch (e) {
         res.set("Content-Type", "text/html");
         res.sendFile(path.resolve("resources/telegram/error.html"));
+        res.sendStatus(500);
       }
     } catch (e) {
       logger(e);

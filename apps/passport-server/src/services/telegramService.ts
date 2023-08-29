@@ -1,5 +1,6 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { Bot, InlineKeyboard } from "grammy";
+import { Chat, ChatFromGetChat } from "grammy/types";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
@@ -39,7 +40,8 @@ export class TelegramService {
         logger(
           `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
         );
-        this.bot.api.approveChatJoinRequest(chatId, userId);
+        await this.bot.api.approveChatJoinRequest(chatId, userId);
+        await this.bot.api.sendMessage(userId, "Your invitation was approved!");
       }
     });
 
@@ -118,17 +120,9 @@ export class TelegramService {
     return `https://t.me/${username}`;
   }
 
-  /**
-   * Verify that a PCD relates to an event, and that the event has an
-   * associated chat. If so, invite the user to the chat and record them
-   * for later approval when they request to join.
-   *
-   * This is called from the /telegram/verify route.
-   */
-  public async verifyEdDSATicket(
-    serializedEdDSATicket: string,
-    telegramUserId: number
-  ): Promise<boolean> {
+  private async verifyPCD(
+    serializedEdDSATicket: string
+  ): Promise<EdDSATicketPCD | null> {
     let pcd: EdDSATicketPCD;
 
     try {
@@ -140,82 +134,100 @@ export class TelegramService {
     }
 
     // Right now, we are only verifying that the PCD is authentic
-    const verified = await EdDSATicketPCDPackage.verify(pcd);
+    if (await EdDSATicketPCDPackage.verify(pcd)) {
+      return pcd;
+    } else {
+      return null;
+    }
+  }
 
-    if (verified) {
-      logger(
-        `[TELEGRAM] Verified PCD for ${telegramUserId}, event ${pcd.claim.ticket.eventId}`
-      );
+  private chatIsGroup(
+    chat: ChatFromGetChat
+  ): chat is Chat.GroupGetChat | Chat.SupergroupGetChat {
+    // Chat must be a group chat of some kind
+    return (
+      chat?.type === "channel" ||
+      chat?.type === "group" ||
+      chat?.type === "supergroup"
+    );
+  }
 
-      // Find the event which matches the PCD
-      // For this to work, the `telegram_bot_events` table must be populated.
-      const event = await fetchTelegramEvent(
-        this.context.dbPool,
-        pcd.claim.ticket.eventId
-      );
-
-      if (!event) {
-        logger(
-          `[TELEGRAM] User ${telegramUserId} attempted to use a ticket for event ${pcd.claim.ticket.eventId}, which has no matching chat`
-        );
-        return false;
+  private async sendInviteLink(
+    userId: number,
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
+  ): Promise<void> {
+    // Send the user an invite link. When they follow the link, this will
+    // trigger a "join request", which the bot will respond to.
+    logger(`[TELEGRAM] Creating chat invite link to ${chat.id} for ${userId}`);
+    const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
+      creates_join_request: true,
+      name: "test invite link"
+    });
+    await this.bot.api.sendMessage(
+      userId,
+      `You are verified 🫡! Here is your invite link to ${chat.title}.`,
+      {
+        reply_markup: new InlineKeyboard().url(
+          `Join ${chat.title} channel`,
+          inviteLink.invite_link
+        )
       }
+    );
+  }
 
-      try {
-        // The event is linked to a chat. Make sure we can access it.
-        const chat = await this.bot.api.getChat(event.telegram_chat_id);
+  /**
+   * Verify that a PCD relates to an event, and that the event has an
+   * associated chat. If so, invite the user to the chat and record them
+   * for later approval when they request to join.
+   *
+   * This is called from the /telegram/verify route.
+   */
+  public async handleVerification(
+    serializedEdDSATicket: string,
+    telegramUserId: number
+  ): Promise<void> {
+    // Verify PCD
+    const pcd = await this.verifyPCD(serializedEdDSATicket);
 
-        // Chat must be a group chat of some kind
-        if (
-          chat?.type !== "channel" &&
-          chat?.type !== "group" &&
-          chat?.type !== "supergroup"
-        ) {
-          logger(
-            `[TELEGRAM] Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
-          );
-          return false;
-        }
-
-        // We've verified that the chat exists, now add the user to our list.
-        // This will be important later when the user requests to join.
-        await insertTelegramVerification(
-          this.context.dbPool,
-          telegramUserId,
-          event.telegram_chat_id
-        );
-
-        // Send the user an invite link. When they follow the link, this will
-        // trigger a "join request", which the bot will respond to.
-        logger(
-          `[TELEGRAM] Creating chat invite link to ${event.telegram_chat_id} for ${telegramUserId}`
-        );
-        const inviteLink = await this.bot.api.createChatInviteLink(
-          event.telegram_chat_id,
-          {
-            creates_join_request: true,
-            name: "test invite link"
-          }
-        );
-        await this.bot.api.sendMessage(
-          telegramUserId,
-          `You are verified 🫡! Here is your invite link to ${chat.title}.`,
-          {
-            reply_markup: new InlineKeyboard().url(
-              `Join ${chat.title} channel`,
-              inviteLink.invite_link
-            )
-          }
-        );
-      } catch (e) {
-        logger(
-          `[TELEGRAM] Could not create or send invite link due to error: ${e}`
-        );
-        return false;
-      }
+    if (!pcd) {
+      throw new Error(`Could not verify PCD for ${telegramUserId}`);
     }
 
-    return verified;
+    logger(
+      `[TELEGRAM] Verified PCD for ${telegramUserId}, event ${pcd.claim.ticket.eventId}`
+    );
+
+    // Find the event which matches the PCD
+    // For this to work, the `telegram_bot_events` table must be populated.
+    const event = await fetchTelegramEvent(
+      this.context.dbPool,
+      pcd.claim.ticket.eventId
+    );
+    if (!event) {
+      throw new Error(
+        `User ${telegramUserId} attempted to use a ticket for event ${pcd.claim.ticket.eventId}, which has no matching chat`
+      );
+    }
+
+    // The event is linked to a chat. Make sure we can access it.
+    const chatId = event.telegram_chat_id;
+    const chat = await this.bot.api.getChat(chatId);
+    if (!this.chatIsGroup(chat)) {
+      throw new Error(
+        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+      );
+    }
+
+    // We've verified that the chat exists, now add the user to our list.
+    // This will be important later when the user requests to join.
+    await insertTelegramVerification(
+      this.context.dbPool,
+      telegramUserId,
+      event.telegram_chat_id
+    );
+
+    // Send invite link
+    await this.sendInviteLink(telegramUserId, chat);
   }
 
   public stop(): void {
