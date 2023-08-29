@@ -65,11 +65,17 @@ export class IssuanceService {
     request: IssuedPCDsRequest
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-    const serialized = await Promise.all(
-      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+    const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
+    const actions = await Promise.all(
+      Object.entries(ticketsByEvent).map(async ([eventName, tickets]) => ({
+        folder: "Devconnect/" + eventName,
+        pcds: await Promise.all(
+          tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+        )
+      }))
     );
 
-    return { actions: [{ pcds: serialized, folder: "Devconnect" }] };
+    return { actions };
   }
 
   public async handleCheckInRequest(
