@@ -23,6 +23,7 @@ import {
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./util/declarations/circomlibjs.d.ts" />
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./util/declarations/snarkjs.d.ts" />
 import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import { sha256 } from "js-sha256";
@@ -185,28 +186,26 @@ export async function prove(
 
   const snarkInput = {
     ticketId: ticketAsBigIntArray[0].toString(),
-    revealTicketId: !!dataRequestObj.revealTicketId ? "1" : "0",
+    revealTicketId: dataRequestObj.revealTicketId ? "1" : "0",
     eventId: ticketAsBigIntArray[1].toString(),
-    revealEventId: !!dataRequestObj.revealEventId ? "1" : "0",
+    revealEventId: dataRequestObj.revealEventId ? "1" : "0",
     productId: ticketAsBigIntArray[2].toString(),
-    revealProductId: !!dataRequestObj.revealProductId ? "1" : "0",
+    revealProductId: dataRequestObj.revealProductId ? "1" : "0",
     timestampConsumed: ticketAsBigIntArray[3].toString(),
-    revealTimestampConsumed: !!dataRequestObj.revealTimestampConsumed
-      ? "1"
-      : "0",
+    revealTimestampConsumed: dataRequestObj.revealTimestampConsumed ? "1" : "0",
     timestampSigned: ticketAsBigIntArray[4].toString(),
-    revealTimestampSigned: !!dataRequestObj.revealTimestampSigned ? "1" : "0",
+    revealTimestampSigned: dataRequestObj.revealTimestampSigned ? "1" : "0",
     attendeeSemaphoreId: ticketAsBigIntArray[5].toString(),
-    revealAttendeeSemaphoreId: !!dataRequestObj.revealAttendeeSemaphoreId
+    revealAttendeeSemaphoreId: dataRequestObj.revealAttendeeSemaphoreId
       ? "1"
       : "0",
     isConsumed: ticketAsBigIntArray[6].toString(),
-    revealIsConsumed: !!dataRequestObj.revealIsConsumed ? "1" : "0",
+    revealIsConsumed: dataRequestObj.revealIsConsumed ? "1" : "0",
     isRevoked: ticketAsBigIntArray[7].toString(),
-    revealIsRevoked: !!dataRequestObj.revealIsRevoked ? "1" : "0",
+    revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
     externalNullifier:
       args.externalNullifier?.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
-    revealNullifierHash: !!args.externalNullifier ? "1" : "0",
+    revealNullifierHash: args.externalNullifier ? "1" : "0",
     Ax: babyJub.F.toObject(fromHexString(pubKey[0])).toString(),
     Ay: babyJub.F.toObject(fromHexString(pubKey[1])).toString(),
     R8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
@@ -255,7 +254,7 @@ export async function prove(
     signer: pubKey
   };
 
-  if (!!args.externalNullifier) {
+  if (args.externalNullifier) {
     claim.nullifierHash = publicSignals[8];
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
@@ -270,14 +269,30 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
   const negOne =
     "21888242871839275222246405745257275088548364400416034343698204186575808495616";
 
-  ret.push(!!t.ticketId ? uuidToBigInt(t.ticketId).toString() : negOne);
-  ret.push(!!t.eventId ? uuidToBigInt(t.eventId).toString() : negOne);
-  ret.push(!!t.productId ? uuidToBigInt(t.productId).toString() : negOne);
-  ret.push(!!t.timestampConsumed ? t.timestampConsumed.toString() : negOne);
-  ret.push(!!t.timestampSigned ? t.timestampSigned.toString() : negOne);
+  ret.push(
+    t.ticketId === undefined ? negOne : uuidToBigInt(t.ticketId).toString()
+  );
+  ret.push(
+    t.eventId === undefined ? negOne : uuidToBigInt(t.eventId).toString()
+  );
+  ret.push(
+    t.productId === undefined ? negOne : uuidToBigInt(t.productId).toString()
+  );
+  ret.push(
+    t.timestampConsumed === undefined ? negOne : t.timestampConsumed.toString()
+  );
+  ret.push(
+    t.timestampSigned === undefined ? negOne : t.timestampSigned.toString()
+  );
   ret.push(t.attendeeSemaphoreId || negOne);
-  ret.push(!!t.isConsumed ? booleanToBigInt(t.isConsumed).toString() : negOne);
-  ret.push(!!t.isRevoked ? booleanToBigInt(t.isRevoked).toString() : negOne);
+  ret.push(
+    t.isConsumed === undefined
+      ? negOne
+      : booleanToBigInt(t.isConsumed).toString()
+  );
+  ret.push(
+    t.isRevoked === undefined ? negOne : booleanToBigInt(t.isRevoked).toString()
+  );
   ret.push(claim.nullifierHash || negOne);
 
   // for some reason the public inputs to the circuit
@@ -295,7 +310,7 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
 }
 
 export async function verify(pcd: ZKEdDSATicketPCD): Promise<boolean> {
-  let publicSignals = publicSignalsFromClaim(pcd.claim);
+  const publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof);
 }
 

@@ -12,6 +12,6 @@ export const isNegativeOne = (value: string) =>
 export const decStringToBigIntToUuid = (value: string) => {
   let hexStr = BigInt(value).toString(16);
   while (hexStr.length < 32) hexStr = "0" + hexStr;
-  let buf = Buffer.from(hexStr, "hex");
+  const buf = Buffer.from(hexStr, "hex");
   return stringify(buf);
 };
