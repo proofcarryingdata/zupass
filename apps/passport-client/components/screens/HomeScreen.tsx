@@ -135,7 +135,7 @@ export function HomeScreenImpl() {
               />
             );
           })}
-          <Separator />
+          {pcds.length > 0 && folders.length > 0 && <Separator />}
           {pcds.map((pcd) => (
             <WrappedPCDCard
               key={pcd.id}
