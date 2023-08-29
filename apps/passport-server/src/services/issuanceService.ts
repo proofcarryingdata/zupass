@@ -15,6 +15,7 @@ import {
   IssuedPCDsRequest,
   IssuedPCDsResponse
 } from "@pcd/passport-interface";
+import { escapePathSegment } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -68,7 +69,7 @@ export class IssuanceService {
     const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
     const actions = await Promise.all(
       Object.entries(ticketsByEvent).map(async ([eventName, tickets]) => ({
-        folder: "Devconnect/" + eventName,
+        folder: "Devconnect/" + escapePathSegment(eventName),
         pcds: await Promise.all(
           tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
         )
