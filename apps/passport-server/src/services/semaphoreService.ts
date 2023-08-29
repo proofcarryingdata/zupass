@@ -4,7 +4,7 @@ import { Pool } from "postgres-pool";
 import {
   CommitmentRow,
   HistoricSemaphoreGroup,
-  LoggedinPCDPassUser,
+  LoggedinPCDpassUser,
   LoggedInZuzaluUser,
   ZuzaluUserRole
 } from "../database/models";
@@ -26,7 +26,7 @@ import { traced } from "./telemetryService";
 
 /**
  * Responsible for maintaining semaphore groups for all the categories of users
- * that PCDPass/Zupass is aware of.
+ * that PCDpass/Zupass is aware of.
  */
 export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
@@ -47,7 +47,7 @@ export class SemaphoreService {
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "PCDPass Users", group: new Group("5", 16) }
+      { name: "PCDpass Users", group: new Group("5", 16) }
     ];
   }
 
@@ -55,7 +55,7 @@ export class SemaphoreService {
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
   public groupVisitors = (): NamedGroup => this.getNamedGroup("3");
   public groupOrganizers = (): NamedGroup => this.getNamedGroup("4");
-  public groupPCDPass = (): NamedGroup => this.getNamedGroup("5");
+  public groupPCDpass = (): NamedGroup => this.getNamedGroup("5");
 
   public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -74,7 +74,7 @@ export class SemaphoreService {
    */
   public async getUserByUUID(
     uuid: string
-  ): Promise<LoggedInZuzaluUser | LoggedinPCDPassUser | null> {
+  ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -96,7 +96,7 @@ export class SemaphoreService {
       commitment.email
     );
 
-    const pcdpassUser: LoggedinPCDPassUser = {
+    const pcdpassUser: LoggedinPCDpassUser = {
       ...commitment,
       superuserEventConfigIds: superuserPrivilages.map(
         (s) => s.pretix_events_config_id
@@ -112,7 +112,7 @@ export class SemaphoreService {
    */
   public async getUserByEmail(
     email: string
-  ): Promise<LoggedInZuzaluUser | LoggedinPCDPassUser | null> {
+  ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
     // prevents client from thinking the user has been logged out
     // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
@@ -134,7 +134,7 @@ export class SemaphoreService {
       commitment.email
     );
 
-    const pcdpassUser: LoggedinPCDPassUser = {
+    const pcdpassUser: LoggedinPCDpassUser = {
       ...commitment,
       superuserEventConfigIds: superuserPrivilages.map(
         (s) => s.pretix_events_config_id

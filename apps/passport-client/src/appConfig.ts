@@ -5,7 +5,7 @@ interface AppConfig {
   passportServer: string;
   // The amount of time a zuzalu qr code proof is valid for
   maxIdentityProofAgeMs: number;
-  // whether this is the zuzalu version of the application, or the generic PCDPass
+  // whether this is the zuzalu version of the application, or the generic PCDpass
   // TODO: medium-term figure out how to get rid of this/ do this better
   isZuzalu: boolean;
   // token that allows the client to upload errors to rollbar
@@ -20,7 +20,7 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: 1000 * 60 * 60 * 4,
   isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
   rollbarToken: process.env.ROLLBAR_TOKEN,
-  rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
+  rollbarEnvName: process.env.ROLLBAR_ENV_NAME
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

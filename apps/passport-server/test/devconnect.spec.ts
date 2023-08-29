@@ -57,7 +57,7 @@ import {
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
-import { PCDPass } from "../src/types";
+import { PCDpass } from "../src/types";
 import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
@@ -71,14 +71,14 @@ import {
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
-import { testLoginPCDPass } from "./user/testLoginPCDPass";
+import { testLoginPCDpass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("devconnect functionality", function () {
   this.timeout(30_000);
 
-  let application: PCDPass;
+  let application: PCDpass;
   let _emailAPI: IEmailAPI;
   let mocker: DevconnectPretixDataMocker;
 
@@ -386,7 +386,7 @@ describe("devconnect functionality", function () {
 
   /**
    * This test shows the case where a ticket has been checked in with
-   * Pretix, but not in PCDPass. The ticket will be marked as consumed
+   * Pretix, but not in PCDpass. The ticket will be marked as consumed
    * on the basis of data received from Pretix.
    */
   step("should be able to sync a checked-in ticket", async function () {
@@ -500,7 +500,7 @@ describe("devconnect functionality", function () {
 
   /**
    * This shows end-to-end sync for a ticket that gets consumed in
-   * PCDPass.
+   * PCDpass.
    */
   step(
     "should be able to check in a ticket and sync to Pretix",
@@ -600,7 +600,7 @@ describe("devconnect functionality", function () {
       expect(consumedTicketAfterSync?.checker).to.eq(checkerEmail);
       // And ticket should have a pretix checkin timestamp!
       expect(consumedTicketAfterSync?.pretix_checkin_timestamp).to.be.not.null;
-      // Expect Pretix checkin timestamp to match PCDPass checkin timestamp
+      // Expect Pretix checkin timestamp to match PCDpass checkin timestamp
       // Note that this is the value we pushed to Pretix, and we have not yet
       // fetched Pretix's representation of this check-in. In the API docs
       // it is indicated that Pretix will use the timestamp provided.
@@ -795,7 +795,7 @@ describe("devconnect functionality", function () {
   );
 
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(
+    const result = await testLoginPCDpass(
       application,
       mocker.get().organizer1.EMAIL_1,
       {
@@ -961,7 +961,7 @@ describe("devconnect functionality", function () {
   let checkerUser: User;
   let checkerIdentity: Identity;
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(
+    const result = await testLoginPCDpass(
       application,
       mocker.get().organizer1.EMAIL_2,
       {

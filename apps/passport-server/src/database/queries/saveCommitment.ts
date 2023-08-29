@@ -4,7 +4,7 @@ import { sqlQuery } from "../sqlQuery";
 
 /**
  * Saves a new commitment. Overwrites any existing commitment for this email.
- * Returns the commitment UUID. Works for both Zupass users and PCDPass users.
+ * Returns the commitment UUID. Works for both Zupass users and PCDpass users.
  */
 export async function insertCommitment(
   client: Pool,

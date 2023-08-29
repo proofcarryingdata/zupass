@@ -8,7 +8,7 @@ export interface User {
   /** Email address they used to register */
   email: string;
 
-  /** PCDPass-specific user metadata */
+  /** PCDpass-specific user metadata */
   superuserEventConfigIds?: number[];
 
   /** Zuzalu-specific user metadata */

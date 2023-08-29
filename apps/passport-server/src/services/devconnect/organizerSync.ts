@@ -5,8 +5,8 @@ import {
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
   DevconnectPretixOrder,
-  IDevconnectPretixAPI,
-  getI18nString
+  getI18nString,
+  IDevconnectPretixAPI
 } from "../../apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixEventConfig,
@@ -765,7 +765,7 @@ export class OrganizerSync {
           // In this.ordersToDevconnectPretixTickets(), we set is_consumed
           // based on data from Pretix, but since there has been no push-sync
           // yet, this will be set to 'false'. Instead, we should ensure
-          // that is_consumed remains true, so that the PCDPass UI shows the
+          // that is_consumed remains true, so that the PCDpass UI shows the
           // expected values while sync remains pending.
           if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
             updatedTicket.is_consumed = true;

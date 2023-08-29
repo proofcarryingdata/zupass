@@ -2,16 +2,16 @@ import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
 export async function testLoginZupass(
-  application: PCDPass,
+  application: PCDpass,
   email: string,
   {
     force,
     expectAlreadyRegistered,
     expectDoesntHaveTicket,
-    expectEmailInvalid,
+    expectEmailInvalid
   }: {
     expectAlreadyRegistered: boolean;
     force: boolean;
@@ -74,7 +74,7 @@ export async function testLoginZupass(
   expect(newUserResponseJson.email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
-  await userService.handleGetPcdPassUser(
+  await userService.handleGetPCDpassUser(
     newUserResponseJson.uuid,
     getUserResponse
   );

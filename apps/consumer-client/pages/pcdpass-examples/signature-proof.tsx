@@ -3,7 +3,7 @@ import {
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphoreSignatureProof,
+  useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
@@ -42,10 +42,10 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>PCDPass Semaphore Signature Proof</h2>
+      <h2>PCDpass Semaphore Signature Proof</h2>
       <p>
-        This page shows a working example of an integration with PCDPass which
-        requests and verifies a semaphore signature from a holder of PCDPass.
+        This page shows a working example of an integration with PCDpass which
+        requests and verifies a semaphore signature from a holder of PCDpass.
       </p>
       <ExampleContainer>
         <input
@@ -91,7 +91,7 @@ export default function Page() {
         )}
         {signatureProof != null && (
           <>
-            <p>Got Semaphore Signature Proof from PCDPass</p>
+            <p>Got Semaphore Signature Proof from PCDpass</p>
 
             <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}

@@ -9,10 +9,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   EdDSATicketFieldsToReveal,
+  generateMessageHash,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage,
-  generateMessageHash
+  ZKEdDSATicketPCDPackage
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { useEffect, useState } from "react";
@@ -60,9 +60,9 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>PCDPass ZKEdDSA Ticket Proof</h2>
+      <h2>PCDpass ZKEdDSA Ticket Proof</h2>
       <p>
-        This page shows a working example of an integration with the PCDPass
+        This page shows a working example of an integration with the PCDpass
         application which requests and verifies that the user has a certain
         EdDSA-signed ticket.
       </p>

@@ -154,7 +154,7 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 - static site is deployed to https://zupass.org/
 - server is deployed to https://api.zupass.com/
 
-### PCDPass
+### PCDpass
 
 - static site is deployed to https://pcdpass.xyz/
 - server is deployed to https://api.pcdpass.xyz/
@@ -165,7 +165,6 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 - server is deployed to https://consumer-server.onrender.com
 
 ## For Developers: Adding a new PCD Type
-
 
 ### `PCDPackage`
 
@@ -190,6 +189,7 @@ Next, the PCD implementation (as represented by its `PCDPackage`) must be added 
 Adding the new `PCDPackage` to the appropriate places is necessary for Zupass to be able to 'handle' the new type of PCD correctly.
 
 Here are a few example pull requests that integrate a new `PCDPackage` into Zupass are:
+
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 - https://github.com/proofcarryingdata/zupass/pull/154
@@ -199,10 +199,12 @@ The Zupass team reserves the right to reject any proposed PCD according to our d
 ### Internal vs. External
 
 Some `PCDPackage` implementations live inside of the Zupass repository:
+
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 
 Others live outside off the Zupass repository:
+
 - https://github.com/proofcarryingdata/zupass/pull/154
 
 The choice between Internal and External is yours to make. In either case, we will review the code for security vulnerabilities, testing, code quality, and documentation.
@@ -212,5 +214,6 @@ The choice between Internal and External is yours to make. In either case, we wi
 We recommend that you add an example for how a developer may create and consume your new type of PCD in the `consumer-client` app included in this repository. Check out how other PCDs have done this by navigating to http://localhost:3001/ after running `yarn dev` in the root of your project - this is where the `consumer-client` application lives.
 
 We also recommend that you create a comprehensive test suite for your new PCD, so that we can be confident in your implementation. A few test suites we think are good can be found in the following PCD implementations:
+
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-group-pcd/test/SemaphoreGroupPCD.spec.ts
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/test/RSAPCD.spec.ts

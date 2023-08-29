@@ -2,10 +2,10 @@ import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
 export async function testDeviceLogin(
-  application: PCDPass,
+  application: PCDpass,
   email: string,
   secret: string
 ): Promise<{ user: User; identity: Identity } | undefined> {
@@ -30,7 +30,7 @@ export async function testDeviceLogin(
   expect(newDeviceLoginResponseJson.email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
-  await userService.handleGetPcdPassUser(
+  await userService.handleGetPCDpassUser(
     newDeviceLoginResponseJson.uuid,
     getUserResponse
   );
@@ -43,7 +43,7 @@ export async function testDeviceLogin(
 }
 
 export async function testFailedDeviceLogin(
-  application: PCDPass,
+  application: PCDpass,
   email: string,
   secret: string
 ): Promise<void> {

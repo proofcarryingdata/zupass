@@ -1,6 +1,6 @@
 Hi there,
 
-Welcome to PCDPass.
+Welcome to PCDpass.
 
 Here's the code to verify your email:
 {{token}}

@@ -11,7 +11,7 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
-import { PCDPass } from "../src/types";
+import { PCDpass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -19,7 +19,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 describe("server-side proving functionality", function () {
   this.timeout(15_000);
 
-  let application: PCDPass;
+  let application: PCDpass;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);

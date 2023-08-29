@@ -173,7 +173,7 @@ and t.is_deleted = false
 }
 
 /**
- * Fetches tickets which have been consumed in PCDPass, but not checked in
+ * Fetches tickets which have been consumed in PCDpass, but not checked in
  * on Pretix.
  */
 export async function fetchDevconnectTicketsAwaitingSync(

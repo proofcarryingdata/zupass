@@ -3,12 +3,12 @@ import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { decodeString, normalizeEmail } from "../../util/util";
 
-export function initPCDPassRoutes(
+export function initPCDpassRoutes(
   app: express.Application,
   _context: ApplicationContext,
   { userService, rollbarService }: GlobalServices
 ): void {
-  logger("[INIT] initializing PCDPass routes");
+  logger("[INIT] initializing PCDpass routes");
 
   app.get("/pcdpass/", (req: Request, res: Response) => {
     res.sendStatus(200);
@@ -21,7 +21,7 @@ export function initPCDPassRoutes(
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
       const force = decodeString(req.query.force, "force") === "true";
-      await userService.handleSendPcdPassEmail(email, commitment, force, res);
+      await userService.handleSendPCDpassEmail(email, commitment, force, res);
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);
@@ -35,7 +35,7 @@ export function initPCDPassRoutes(
       const token = decodeString(req.query.token, "token");
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
-      await userService.handleNewPcdPassUser(token, email, commitment, res);
+      await userService.handleNewPCDpassUser(token, email, commitment, res);
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);
@@ -60,7 +60,7 @@ export function initPCDPassRoutes(
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
     try {
       const uuid = req.params.uuid;
-      await userService.handleGetPcdPassUser(uuid, res);
+      await userService.handleGetPCDpassUser(uuid, res);
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

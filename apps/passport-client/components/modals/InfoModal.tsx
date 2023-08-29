@@ -11,7 +11,7 @@ export function InfoModal() {
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={240}>
-        {appConfig.isZuzalu ? <ZuzaluContent /> : <PCDPassContent />}
+        {appConfig.isZuzalu ? <ZuzaluContent /> : <PCDpassContent />}
       </CenterColumn>
     </div>
   );
@@ -33,11 +33,11 @@ function ZuzaluContent() {
   );
 }
 
-function PCDPassContent() {
+function PCDpassContent() {
   return (
     <>
       <TextCenter>
-        PCDPass is a product of 0xPARC. For app support, contact{" "}
+        PCDpass is a product of 0xPARC. For app support, contact{" "}
         <a href="mailto:passport@0xparc.org">passport@0xparc.org</a>.
       </TextCenter>
     </>
