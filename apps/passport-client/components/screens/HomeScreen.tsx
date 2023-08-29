@@ -11,7 +11,6 @@ import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
-import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -173,11 +172,12 @@ function FolderDetails({
   }, [folder, onFolderClick]);
 
   return (
-    <FolderHeader style={noChildFolders ? { borderBottom: "none" } : undefined}>
+    <FolderHeader
+      onClick={onUpOneClick}
+      style={noChildFolders ? { borderBottom: "none" } : undefined}
+    >
       <span className="btn">
-        <CircleButton onClick={onUpOneClick} diameter={18} padding={10}>
-          <img src={icons.upArrow} width={18} height={18} />
-        </CircleButton>
+        <img src={icons.upArrow} width={18} height={18} />
       </span>
       <span className="name">{folder}</span>
     </FolderHeader>
@@ -196,10 +196,10 @@ function FolderCard({
   }, [folder, onFolderClick]);
 
   return (
-    <FolderRowContainer onClick={onClick}>
+    <FolderEntryContainer onClick={onClick}>
       <img src={icons.folder} width={20} height={20} />
       {getNameFromPath(folder)}
-    </FolderRowContainer>
+    </FolderEntryContainer>
   );
 }
 
@@ -231,7 +231,13 @@ const FolderHeader = styled.div`
   align-items: flex-start;
   flex-direction: row;
   border-bottom: 1px solid grey;
-  background: var(--bg-lite-gray);
+  background: var(--bg-dark-gray);
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    background: var(--bg-lite-gray);
+  }
 
   .name {
     flex-grow: 1;
@@ -247,12 +253,13 @@ const FolderHeader = styled.div`
     align-items: center;
     flex-grow: 0;
     display: inline-block;
-    padding-top: 6px;
-    padding-left: 8px;
+    padding-top: 16px;
+    padding-left: 16px;
   }
 `;
 
-const FolderRowContainer = styled.div`
+const FolderEntryContainer = styled.div`
+  user-select: none;
   padding: 12px 16px;
   cursor: pointer;
   display: flex;
