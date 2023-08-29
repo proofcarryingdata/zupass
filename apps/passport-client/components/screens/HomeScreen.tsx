@@ -127,16 +127,20 @@ export function HomeScreenImpl() {
               );
             })}
           </FolderExplorerContainer>
-          {pcds.length > 0 && folders.length > 0 && <Separator />}
-          {pcds.map((pcd) => (
-            <WrappedPCDCard
-              key={pcd.id}
-              pcd={pcd}
-              mainIdPCD={mainPCDId}
-              onPcdClick={onPcdClick}
-              expanded={pcd.id === selectedPCD?.id}
-            />
-          ))}
+          <Separator />
+          {pcds.length > 0 ? (
+            pcds.map((pcd) => (
+              <WrappedPCDCard
+                key={pcd.id}
+                pcd={pcd}
+                mainIdPCD={mainPCDId}
+                onPcdClick={onPcdClick}
+                expanded={pcd.id === selectedPCD?.id}
+              />
+            ))
+          ) : (
+            <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+          )}
           <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
@@ -144,6 +148,14 @@ export function HomeScreenImpl() {
     </>
   );
 }
+
+const NoPcdsContainer = styled.div`
+  padding: 32;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+`;
 
 function FolderDetails({
   folder,
