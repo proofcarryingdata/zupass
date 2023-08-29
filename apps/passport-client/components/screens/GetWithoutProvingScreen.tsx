@@ -23,8 +23,14 @@ export function GetWithoutProvingScreen() {
   const dispatch = useDispatch();
   const pcds = usePCDCollection();
   const params = new URLSearchParams(location.search);
-  const [selectedPCDID, setSelectedPCDID] = useState<string>("none");
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
+  const filteredPCDs = pcds
+    .getAll()
+    .filter((pcd) => pcd.type === request.pcdType);
+  // If we only have one matching PCD, then make that the default selection
+  const defaultSelection =
+    filteredPCDs.length === 1 ? filteredPCDs[0].id : "none";
+  const [selectedPCDID, setSelectedPCDID] = useState<string>(defaultSelection);
 
   const onSendClick = useCallback(async () => {
     if (selectedPCDID === undefined) return;
@@ -73,17 +79,14 @@ export function GetWithoutProvingScreen() {
           onChange={(e) => setSelectedPCDID(e.target.value)}
         >
           <option value="none">select</option>
-          {pcds
-            .getAll()
-            .filter((pcd) => pcd.type === request.pcdType)
-            .map((pcd) => {
-              const pcdPackage = pcds.getPackage(pcd.type);
-              return (
-                <option key={pcd.id} value={pcd.id}>
-                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
-                </option>
-              );
-            })}
+          {filteredPCDs.map((pcd) => {
+            const pcdPackage = pcds.getPackage(pcd.type);
+            return (
+              <option key={pcd.id} value={pcd.id}>
+                {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
+              </option>
+            );
+          })}
         </select>
         <Spacer h={16} />
         <Button onClick={onSendClick}>Send</Button>
