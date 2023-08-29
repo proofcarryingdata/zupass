@@ -1,4 +1,8 @@
-import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
+import {
+  getNameFromPath,
+  getParentFolder,
+  isRootFolder
+} from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -184,7 +188,7 @@ function FolderCard({
   return (
     <FolderCardContainer onClick={onClick}>
       <img src={icons.folder} width={20} height={20} />
-      {folder}
+      {getNameFromPath(folder)}
     </FolderCardContainer>
   );
 }

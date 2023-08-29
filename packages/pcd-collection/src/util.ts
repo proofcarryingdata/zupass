@@ -83,3 +83,8 @@ export function getParentFolder(folderPath: string): string {
 export function isRootFolder(folderPath: string): boolean {
   return normalizePath(folderPath) === "";
 }
+
+export function getNameFromPath(path: string): string {
+  const parts = splitPath(path);
+  return parts[parts.length - 1];
+}
