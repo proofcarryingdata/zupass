@@ -63,16 +63,10 @@ export class PCDCollection {
 
   public getAllInFolder(folder: string): PCD[] {
     if (isRootFolder(folder)) {
-      console.log("GETTING ROOT FOLDER CONTENTS");
-
       const pcdIdsInFolders = new Set([...Object.keys(this.folders)]);
-      console.log("PCDS IN A FOLDER", pcdIdsInFolders);
-
       const pcdsNotInFolders = this.pcds.filter(
         (pcd) => !pcdIdsInFolders.has(pcd.id)
       );
-      console.log("PCDS NOT IN A FOLDER", pcdsNotInFolders);
-
       return pcdsNotInFolders;
     }
 
