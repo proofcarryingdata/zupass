@@ -2,14 +2,14 @@ import _ from "lodash";
 
 /**
  * Gets the list of folders that are direct descendants of a given
- * path, given a full list of directories that are present. For example,
+ * path, given a list of directories that are present. For example,
  * if the full list of paths is something like:
  *
  * a/b/c/d
  * a/b/q/r
  *
  * ... then this function would say that the list of child folders of
- * a/b is [c, q], even though a/b/c and a/b/q are not explicitly listed.
+ * a/b is [a/b/c, a/b/q], even though a/b/c and a/b/q are not explicitly listed.
  */
 export function getFoldersInFolder(
   folderPath: string,
