@@ -17,7 +17,10 @@ html {
 
   background: var(--bg-dark-primary);
   color: var(--white);
-  font: 16px PlexSans, system-ui, sans-serif;
+  font:
+    16px PlexSans,
+    system-ui,
+    sans-serif;
   line-height: 1.5;
 }
 

@@ -1,4 +1,5 @@
 import closeWhite from "./close-white.svg";
+import folder from "./folder.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";
 import logo from "./logo.svg";
@@ -6,11 +7,14 @@ import qrCenterLoading from "./qr-center-loading.svg";
 import qrCenter from "./qr-center.svg";
 import settingsAccent from "./settings-accent.svg";
 import settingsPrimary from "./settings-primary.svg";
+import upArrow from "./up-arrow.svg";
 import verifyInProgress from "./verify-in-progress.svg";
 import verifyInvalid from "./verify-invalid.svg";
 import verifyValid from "./verify-valid.svg";
 
 export const icons = {
+  upArrow,
+  folder,
   closeWhite,
   infoAccent,
   infoPrimary,
@@ -21,5 +25,5 @@ export const icons = {
   settingsPrimary,
   verifyInProgress,
   verifyInvalid,
-  verifyValid,
+  verifyValid
 };

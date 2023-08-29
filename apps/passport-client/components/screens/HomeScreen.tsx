@@ -12,6 +12,7 @@ import {
 } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
+import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
@@ -103,6 +104,8 @@ export function HomeScreenImpl() {
     setBrowsingPath(folder);
   }, []);
 
+  const isRoot = isRootFolder(browsingPath);
+
   if (self == null) return null;
 
   return (
@@ -113,7 +116,12 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <FolderDetails folder={browsingPath} onFolderClick={onFolderClick} />
+          {!isRoot && (
+            <FolderDetails
+              folder={browsingPath}
+              onFolderClick={onFolderClick}
+            />
+          )}
           {folders.map((folder) => {
             return (
               <FolderCard
@@ -123,6 +131,7 @@ export function HomeScreenImpl() {
               />
             );
           })}
+          <Separator />
           {pcds.map((pcd) => (
             <WrappedPCDCard
               key={pcd.id}
@@ -147,16 +156,17 @@ function FolderDetails({
   folder: string;
   onFolderClick: (folder: string) => void;
 }) {
-  const isRoot = isRootFolder(folder);
-
   const onUpOneClick = useCallback(() => {
     onFolderClick(getParentFolder(folder));
   }, [folder, onFolderClick]);
 
   return (
-    <div>
-      {folder} {!isRoot && <button onClick={onUpOneClick}>up one</button>}
-    </div>
+    <DirectoryTopRow>
+      <span className="btn" onClick={onUpOneClick}>
+        <img src={icons.upArrow} width={18} height={18} />
+      </span>
+      <span className="name">{folder}</span>
+    </DirectoryTopRow>
   );
 }
 
@@ -171,8 +181,57 @@ function FolderCard({
     onFolderClick(folder);
   }, [folder, onFolderClick]);
 
-  return <FolderCardContainer onClick={onClick}>{folder}</FolderCardContainer>;
+  return (
+    <FolderCardContainer onClick={onClick}>
+      <img src={icons.folder} width={20} height={20} />
+      {folder}
+    </FolderCardContainer>
+  );
 }
+
+const Separator = styled.div`
+  width: 100%;
+  height: 1px;
+  margin-top: 32px;
+  margin-bottom: 32px;
+  background-color: grey;
+`;
+
+const DirectoryTopRow = styled.div`
+  margin: 12px 8px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  flex-direction: row;
+
+  .name {
+    flex-grow: 1;
+    background-color: black;
+    padding: 12px 16px;
+    border-radius: 0px 12px 12px 0px;
+    border-left: none;
+    background: #1d2022;
+    border: 1px solid var(--accent-dark);
+    box-sizing: border-box;
+  }
+
+  .btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px 20px;
+    cursor: pointer;
+    border-radius: 12px 0px 0px 12px;
+    border: 1px solid var(--accent-dark);
+    border-right: none;
+    background: #1d2022;
+
+    &:hover {
+      background: var(--bg-dark-grey);
+    }
+  }
+`;
 
 const FolderCardContainer = styled.div`
   /* width: 100%; */
@@ -184,6 +243,11 @@ const FolderCardContainer = styled.div`
   padding: 12px 16px;
   box-sizing: border-box;
   cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: row;
+  gap: 12px;
 
   &:hover {
     background: var(--primary-lite);
