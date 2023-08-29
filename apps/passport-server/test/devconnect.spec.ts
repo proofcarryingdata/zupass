@@ -822,7 +822,7 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const responseBody = response.body as IssuedPCDsResponse;
-      expect(responseBody.actions.length).to.eq(1);
+      expect(responseBody.actions.length).to.eq(2);
 
       const firstAction = responseBody.actions[0];
 
@@ -907,7 +907,7 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
-    expect(responseBody.actions.length).to.eq(1);
+    expect(responseBody.actions.length).to.eq(2);
     const action = responseBody.actions[0];
 
     expect(action.folder).to.eq("Devconnect/New name");
@@ -949,7 +949,7 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
-    expect(responseBody.actions.length).to.eq(1);
+    expect(responseBody.actions.length).to.eq(2);
     const action = responseBody.actions[0];
     expect(action.folder).to.eq("Devconnect/New name");
 
@@ -996,7 +996,7 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
-    expect(issueResponseBody.actions.length).to.eq(1);
+    expect(issueResponseBody.actions.length).to.eq(2);
     const action = issueResponseBody.actions[0];
     const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
@@ -1108,7 +1108,7 @@ describe("devconnect functionality", function () {
         "asdf"
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.actions).to.deep.eq([]);
+      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
     }
   );
 
@@ -1121,7 +1121,7 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.actions).to.deep.eq([]);
+      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
     }
   );
 
