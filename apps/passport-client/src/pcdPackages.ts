@@ -11,6 +11,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
+import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import { appConfig } from "./appConfig";
 import { makeEncodedVerifyLink } from "./qr";
 
@@ -78,6 +79,11 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await EdDSAPCDPackage.init({});
 
+  await ZKEdDSATicketPCDPackage.init({
+    wasmFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
+    zkeyFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
+  });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -90,6 +96,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     RSAPCDPackage,
     RSATicketPCDPackage,
     EdDSAPCDPackage,
-    EdDSATicketPCDPackage
+    EdDSATicketPCDPackage,
+    ZKEdDSATicketPCDPackage
   ];
 }

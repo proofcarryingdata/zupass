@@ -20,6 +20,7 @@
     "@pcd/webauthn-pcd": "0.6.2",
     "@pcd/semaphore-group-pcd": "0.6.2",
     "@pcd/semaphore-identity-pcd": "0.6.2",
+    "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
     "@semaphore-protocol/group": "^3.10.0",
     "@semaphore-protocol/identity": "^3.10.0",
     "@simplewebauthn/browser": "^7.2.0",
