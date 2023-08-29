@@ -79,6 +79,13 @@ describe("EdDSA partial ticket should work", function () {
     revealProductId: true
   };
 
+  const fieldsToReveal2: EdDSATicketFieldsToReveal = {
+    revealEventId: true,
+    revealProductId: true,
+    revealIsConsumed: true,
+    revealIsRevoked: true
+  };
+
   this.beforeAll(async function () {
     await EdDSAPCDPackage.init?.({});
     await EdDSATicketPCDPackage.init?.({});
@@ -167,6 +174,30 @@ describe("EdDSA partial ticket should work", function () {
       EXTERNAL_NULLIFIER.toString()
     );
     expect(pcd1.claim.nullifierHash).to.be.not.equal(undefined);
+  });
+
+  it("should not show externalNullifier and nullifierHash if not requested", async function () {
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, false);
+    const pcd = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
+
+    const claim = pcd.claim;
+    expect(pcd.claim.externalNullifier).to.be.equal(undefined);
+    expect(pcd.claim.nullifierHash).to.be.equal(undefined);
+
+    const verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd1);
+    expect(verificationRes).to.be.true;
+  });
+
+  it("should reveal isConsumed and isRevoked if requested", async function () {
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal2, true);
+    const pcd = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
+
+    const claim = pcd.claim;
+    expect(claim.partialTicket.isConsumed).to.be.equal(ticketData1.isConsumed);
+    expect(claim.partialTicket.isRevoked).to.be.equal(ticketData1.isRevoked);
+
+    const verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd);
+    expect(verificationRes).to.be.true;
   });
 
   it("should not verify a proof with invalid partialTicket fields", async function () {
