@@ -4,7 +4,28 @@ export function getFoldersInFolder(
   folderPath: string,
   allPaths: string[]
 ): string[] {
-  return _.uniq(allPaths.filter((p) => isFolderAncestor(p, folderPath)));
+  console.log("folderPath", folderPath);
+
+  const descendantsOfFolder = _.uniq(
+    allPaths.filter((p) => isFolderAncestor(p, folderPath))
+  );
+
+  console.log("descendantsOfFolder", descendantsOfFolder);
+
+  const descendantsWithMissing = _.uniq([
+    ...descendantsOfFolder.flatMap((path) => getAllAncestors(path)),
+    ...descendantsOfFolder
+  ]).filter((a) => a !== "");
+
+  console.log("descendantsWithMissing", descendantsWithMissing);
+
+  const directDescendants = descendantsWithMissing.filter((d) =>
+    isDirectDescendant(folderPath, d)
+  );
+
+  console.log("directDescendants", directDescendants);
+
+  return directDescendants;
 }
 
 export function getAllAncestors(path: string): string[] {
@@ -17,6 +38,15 @@ export function getAllAncestors(path: string): string[] {
   }
 
   return result;
+}
+
+export function isDirectDescendant(path: string, descendant: string) {
+  const normalizedPath = normalizePath(path);
+  const descendantParts = splitPath(descendant);
+  descendantParts.pop();
+  if (normalizedPath === descendantParts.join("/")) {
+    return true;
+  }
 }
 
 export function isFolderAncestor(path: string, folderPath: string): boolean {
