@@ -67,16 +67,42 @@ export class IssuanceService {
   ): Promise<IssuedPCDsResponse> {
     const pcds = await this.issueDevconnectPretixTicketPCDs(request);
     const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
-    const actions = await Promise.all(
-      Object.entries(ticketsByEvent).map(async ([eventName, tickets]) => ({
-        folder: joinPath("Devconnect", eventName),
-        pcds: await Promise.all(
-          tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-        )
-      }))
+
+    const devconnectTickets = Object.entries(ticketsByEvent).filter(
+      ([eventName]) => eventName !== "SBC SRW"
     );
+
+    const srwTickets = Object.entries(ticketsByEvent).filter(
+      ([eventName]) => eventName === "SBC SRW"
+    );
+
+    const actions = [];
+
     // clear out old pcds if they were there
+    actions.push({ folder: "SBC SRW", pcds: [] });
     actions.push({ folder: "Devconnect", pcds: [] });
+
+    actions.push(
+      ...(await Promise.all(
+        devconnectTickets.map(async ([eventName, tickets]) => ({
+          folder: joinPath("Devconnect", eventName),
+          pcds: await Promise.all(
+            tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+          )
+        }))
+      ))
+    );
+
+    actions.push(
+      ...(await Promise.all(
+        srwTickets.map(async ([_, tickets]) => ({
+          folder: "SBC SRW",
+          pcds: await Promise.all(
+            tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+          )
+        }))
+      ))
+    );
 
     return { actions };
   }
