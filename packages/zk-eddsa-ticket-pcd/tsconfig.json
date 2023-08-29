@@ -4,6 +4,7 @@
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "resolveJsonModule": true,
-    "typeRoots": ["src/util/declarations/"]
+    "typeRoots": ["src/util/declarations/"],
+    "lib": ["dom"]
   }
 }
