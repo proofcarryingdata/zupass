@@ -11,6 +11,7 @@ import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
+import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -25,14 +26,12 @@ export const HomeScreen = React.memo(HomeScreenImpl);
  */
 export function HomeScreenImpl() {
   useSyncE2EEStorage();
-
-  const [browsingPath, setBrowsingPath] = useState("/");
-
-  const pcds = usePCDsInFolder(browsingPath);
-  const folders = useFolders(browsingPath);
-
   const self = useSelf();
   const navigate = useNavigate();
+
+  const [browsingFolder, setBrowsingFolder] = useState("/");
+  const pcdsInFolder = usePCDsInFolder(browsingFolder);
+  const foldersInFolder = useFolders(browsingFolder);
 
   useEffect(() => {
     if (self == null) {
@@ -67,38 +66,40 @@ export function HomeScreenImpl() {
   });
 
   const mainPCDId = useMemo(() => {
-    if (pcds[0]?.type === SemaphoreIdentityPCDTypeName) {
-      return pcds[0]?.id;
+    if (pcdsInFolder[0]?.type === SemaphoreIdentityPCDTypeName) {
+      return pcdsInFolder[0]?.id;
     }
-  }, [pcds]);
+  }, [pcdsInFolder]);
   const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
     let selected;
 
     // if user just added a PCD, highlight that one
     if (sessionStorage.newAddedPCDID != null) {
-      selected = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
+      selected = pcdsInFolder.find(
+        (pcd) => pcd.id === sessionStorage.newAddedPCDID
+      );
     } else {
-      selected = pcds.find((pcd) => pcd.id === selectedPCDID);
+      selected = pcdsInFolder.find((pcd) => pcd.id === selectedPCDID);
     }
 
     // default to first PCD if no selected PCD found
     if (selected === undefined) {
-      selected = pcds[0];
+      selected = pcdsInFolder[0];
     }
 
     return selected;
-  }, [pcds, selectedPCDID]);
+  }, [pcdsInFolder, selectedPCDID]);
 
   const onPcdClick = useCallback((id: string) => {
     setSelectedPCDID(id);
   }, []);
 
   const onFolderClick = useCallback((folder: string) => {
-    setBrowsingPath(folder);
+    setBrowsingFolder(folder);
   }, []);
 
-  const isRoot = isRootFolder(browsingPath);
+  const isRoot = isRootFolder(browsingFolder);
 
   if (self == null) return null;
 
@@ -113,11 +114,12 @@ export function HomeScreenImpl() {
           <FolderExplorerContainer>
             {!isRoot && (
               <FolderDetails
-                folder={browsingPath}
+                noChildFolders={foldersInFolder.length === 0}
+                folder={browsingFolder}
                 onFolderClick={onFolderClick}
               />
             )}
-            {folders.map((folder) => {
+            {foldersInFolder.map((folder) => {
               return (
                 <FolderCard
                   key={folder}
@@ -128,8 +130,8 @@ export function HomeScreenImpl() {
             })}
           </FolderExplorerContainer>
           <Separator />
-          {pcds.length > 0 ? (
-            pcds.map((pcd) => (
+          {pcdsInFolder.length > 0 ? (
+            pcdsInFolder.map((pcd) => (
               <WrappedPCDCard
                 key={pcd.id}
                 pcd={pcd}
@@ -159,22 +161,26 @@ const NoPcdsContainer = styled.div`
 
 function FolderDetails({
   folder,
-  onFolderClick
+  onFolderClick,
+  noChildFolders
 }: {
   folder: string;
   onFolderClick: (folder: string) => void;
+  noChildFolders: boolean;
 }) {
   const onUpOneClick = useCallback(() => {
     onFolderClick(getParentFolder(folder));
   }, [folder, onFolderClick]);
 
   return (
-    <DirectoryTopRow>
-      <span className="btn" onClick={onUpOneClick}>
-        <img src={icons.upArrow} width={18} height={18} />
+    <FolderHeader style={noChildFolders ? { borderBottom: "none" } : undefined}>
+      <span className="btn">
+        <CircleButton onClick={onUpOneClick} diameter={18} padding={10}>
+          <img src={icons.upArrow} width={18} height={18} />
+        </CircleButton>
       </span>
       <span className="name">{folder}</span>
-    </DirectoryTopRow>
+    </FolderHeader>
   );
 }
 
@@ -190,16 +196,16 @@ function FolderCard({
   }, [folder, onFolderClick]);
 
   return (
-    <FolderCardContainer onClick={onClick}>
+    <FolderRowContainer onClick={onClick}>
       <img src={icons.folder} width={20} height={20} />
       {getNameFromPath(folder)}
-    </FolderCardContainer>
+    </FolderRowContainer>
   );
 }
 
 const FolderExplorerContainer = styled.div`
   border-radius: 12px;
-  border: 1px solid var(--accent-dark);
+  border: 1px solid grey;
   background: var(--primary-dark);
   overflow: hidden;
   margin: 12px 8px;
@@ -218,39 +224,35 @@ const Separator = styled.div`
   background-color: grey;
 `;
 
-const DirectoryTopRow = styled.div`
+const FolderHeader = styled.div`
   box-sizing: border-box;
   display: flex;
   justify-content: center;
-  align-items: stretch;
+  align-items: flex-start;
   flex-direction: row;
-  border-bottom: 1px solid var(--accent-dark);
+  border-bottom: 1px solid grey;
+  background: var(--bg-lite-gray);
 
   .name {
     flex-grow: 1;
-    background-color: black;
     padding: 12px 16px;
     border-left: none;
-    background: #1d2022;
     box-sizing: border-box;
   }
 
   .btn {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 4px 20px;
-    cursor: pointer;
-    border-right: 1px solid var(--accent-dark);
-    background: #1d2022;
-
-    &:hover {
-      background: var(--bg-dark-grey);
-    }
+    flex-grow: 0;
+    display: inline-block;
+    padding-top: 6px;
+    padding-left: 8px;
   }
 `;
 
-const FolderCardContainer = styled.div`
+const FolderRowContainer = styled.div`
   padding: 12px 16px;
   cursor: pointer;
   display: flex;
@@ -258,6 +260,11 @@ const FolderCardContainer = styled.div`
   align-items: center;
   flex-direction: row;
   gap: 12px;
+  border-bottom: 1px solid grey;
+
+  &:last-child {
+    border-bottom: none;
+  }
 
   &:hover {
     background: var(--primary-lite);
