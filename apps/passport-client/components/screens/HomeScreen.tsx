@@ -110,21 +110,23 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          {!isRoot && (
-            <FolderDetails
-              folder={browsingPath}
-              onFolderClick={onFolderClick}
-            />
-          )}
-          {folders.map((folder) => {
-            return (
-              <FolderCard
-                key={folder}
+          <FolderExplorerContainer>
+            {!isRoot && (
+              <FolderDetails
+                folder={browsingPath}
                 onFolderClick={onFolderClick}
-                folder={folder}
               />
-            );
-          })}
+            )}
+            {folders.map((folder) => {
+              return (
+                <FolderCard
+                  key={folder}
+                  onFolderClick={onFolderClick}
+                  folder={folder}
+                />
+              );
+            })}
+          </FolderExplorerContainer>
           {pcds.length > 0 && folders.length > 0 && <Separator />}
           {pcds.map((pcd) => (
             <WrappedPCDCard
@@ -183,6 +185,19 @@ function FolderCard({
   );
 }
 
+const FolderExplorerContainer = styled.div`
+  border-radius: 12px;
+  border: 1px solid var(--accent-dark);
+  background: var(--primary-dark);
+  overflow: hidden;
+  margin: 12px 8px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
+`;
+
 const Separator = styled.div`
   width: 100%;
   height: 1px;
@@ -192,21 +207,19 @@ const Separator = styled.div`
 `;
 
 const DirectoryTopRow = styled.div`
-  margin: 12px 8px;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: stretch;
   flex-direction: row;
+  border-bottom: 1px solid var(--accent-dark);
 
   .name {
     flex-grow: 1;
     background-color: black;
     padding: 12px 16px;
-    border-radius: 0px 12px 12px 0px;
     border-left: none;
     background: #1d2022;
-    border: 1px solid var(--accent-dark);
     box-sizing: border-box;
   }
 
@@ -216,9 +229,7 @@ const DirectoryTopRow = styled.div`
     align-items: center;
     padding: 4px 20px;
     cursor: pointer;
-    border-radius: 12px 0px 0px 12px;
-    border: 1px solid var(--accent-dark);
-    border-right: none;
+    border-right: 1px solid var(--accent-dark);
     background: #1d2022;
 
     &:hover {
@@ -228,14 +239,7 @@ const DirectoryTopRow = styled.div`
 `;
 
 const FolderCardContainer = styled.div`
-  /* width: 100%; */
-  border-radius: 12px;
-  border: 1px solid var(--accent-dark);
-  background: var(--primary-dark);
-  overflow: hidden;
-  margin: 12px 8px;
   padding: 12px 16px;
-  box-sizing: border-box;
   cursor: pointer;
   display: flex;
   justify-content: flex-start;
