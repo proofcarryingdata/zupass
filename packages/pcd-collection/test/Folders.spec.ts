@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { isFolderAncestor, splitPath } from "../src/util";
+import { getAllAncestors, isFolderAncestor, splitPath } from "../src/util";
 
 describe.only("Folder manipulation logic", async function () {
   this.timeout(30 * 1000);
@@ -26,5 +26,18 @@ describe.only("Folder manipulation logic", async function () {
     expect(isFolderAncestor("/a/b", "b")).to.eq(false);
     expect(isFolderAncestor("/a/b/c", "/a/b/c")).to.eq(false);
     expect(isFolderAncestor("/", "/")).to.eq(false);
+  });
+
+  it("should properly generate ancestor folders", async function () {
+    expect(getAllAncestors("/a/b")).to.deep.eq(["a", ""]);
+    expect(getAllAncestors("/a/b/c")).to.deep.eq(["a/b", "a", ""]);
+    expect(getAllAncestors("/a/b/c/d/e/f")).to.deep.eq([
+      "a/b/c/d/e",
+      "a/b/c/d",
+      "a/b/c",
+      "a/b",
+      "a",
+      ""
+    ]);
   });
 });

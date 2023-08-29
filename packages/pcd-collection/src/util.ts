@@ -7,6 +7,18 @@ export function getFoldersInFolder(
   return _.uniq(allPaths.filter((p) => isFolderAncestor(p, folderPath)));
 }
 
+export function getAllAncestors(path: string): string[] {
+  const parts = splitPath(path);
+  const result = [];
+
+  while (parts.length > 0) {
+    parts.pop();
+    result.push(parts.join("/"));
+  }
+
+  return result;
+}
+
 export function isFolderAncestor(path: string, folderPath: string): boolean {
   const pathParts = splitPath(path);
   const folderParts = splitPath(folderPath);
