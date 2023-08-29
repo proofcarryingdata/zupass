@@ -185,7 +185,7 @@ export class DevconnectPretixSyncService {
 }
 
 /**
- * Kick off a period sync from Pretix into PCDPassport
+ * Kick off a period sync from Pretix into PCDpass
  */
 export async function startDevconnectPretixSyncService(
   context: ApplicationContext,

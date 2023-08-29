@@ -99,7 +99,7 @@ function TicketError({
         <>
           <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
           <Spacer h={8} />
-          <span>This ticket was not issued by PCDPass.</span>
+          <span>This ticket was not issued by PCDpass.</span>
         </>
       );
       break;

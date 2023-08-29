@@ -1,9 +1,9 @@
 import chai from "chai";
 import { Response } from "superagent";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
 export function makeGetRequest(
-  application: PCDPass,
+  application: PCDpass,
   path: string
 ): Promise<Response> {
   const { expressContext } = application;

@@ -4,7 +4,7 @@ import { sqlQuery } from "../sqlQuery";
 /**
  * Fetches the token corresponding to a particular email address,
  * if we have sent them a token, null otherwise. Works for both
- * Zupass users and PCDPass users.
+ * Zupass users and PCDpass users.
  */
 export async function fetchEmailToken(
   client: Pool,
@@ -21,7 +21,7 @@ export async function fetchEmailToken(
 
 /**
  * Sets the email auth token for a given user. Works for both
- * Zupass users and PCDPass users.
+ * Zupass users and PCDpass users.
  */
 export async function insertEmailToken(
   client: Pool,

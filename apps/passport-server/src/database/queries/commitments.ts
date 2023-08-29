@@ -4,7 +4,7 @@ import { sqlQuery } from "../sqlQuery";
 
 /**
  * Fetches the identity commitment row corresponding to a particular
- * email from the database. Works for both Zupass users and PCDPass
+ * email from the database. Works for both Zupass users and PCDpass
  * users.
  */
 export async function fetchCommitment(
@@ -22,7 +22,7 @@ export async function fetchCommitment(
 
 /**
  * Fetches the identity commitment row corresponding to a particular
- * email from the database. Works for both Zupass users and PCDPass
+ * email from the database. Works for both Zupass users and PCDpass
  * users.
  */
 export async function fetchCommitmentByUuid(

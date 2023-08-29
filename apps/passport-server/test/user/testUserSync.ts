@@ -12,9 +12,9 @@ import { expect } from "chai";
 import "chai-spies";
 import "mocha";
 import httpMocks from "node-mocks-http";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
-export async function testUserSync(application: PCDPass): Promise<void> {
+export async function testUserSync(application: PCDpass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const syncKey = await crypto.generateRandomKey();
 

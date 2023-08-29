@@ -1,14 +1,14 @@
 import { expect } from "chai";
 import "mocha";
 import { startApplication, stopApplication } from "../src/application";
-import { PCDPass } from "../src/types";
+import { PCDpass } from "../src/types";
 import { makeGetRequest } from "./requests/makeRequest";
 import { overrideEnvironment, zuzaluTestingEnv } from "./util/env";
 
 describe("web server functionality", function () {
   this.timeout(15_000);
 
-  let application: PCDPass;
+  let application: PCDpass;
 
   this.beforeAll(async function () {
     await overrideEnvironment(zuzaluTestingEnv);

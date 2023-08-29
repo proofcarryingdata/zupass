@@ -1,7 +1,7 @@
 import {
   openGroupMembershipPopup,
   usePassportPopupMessages,
-  useSemaphoreGroupProof,
+  useSemaphoreGroupProof
 } from "@pcd/passport-interface";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
@@ -31,14 +31,14 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>PCDPass Semaphore Group Membership Proof</h2>
+      <h2>PCDpass Semaphore Group Membership Proof</h2>
       <p>
-        This page shows a working example of an integration with the PCDPass
+        This page shows a working example of an integration with the PCDpass
         application which requests and verifies that a particular user is a
-        registered user of PCDPass.
+        registered user of PCDpass.
       </p>
       <p>
-        The PCDPass Semaphore Group is maintained by the Passport Server
+        The PCDpass Semaphore Group is maintained by the Passport Server
         application. To be able to use this flow in production, to be able to
         generate this proof, you have to have signed in on{" "}
         <a href={"https://pcdpass.xyz"}>pcdpass.xyz</a>. To use this flow
@@ -65,11 +65,11 @@ export default function Page() {
           }
           disabled={valid}
         >
-          Request PCDPass Membership Proof
+          Request PCDpass Membership Proof
         </button>
         {proof != null && (
           <>
-            <p>Got PCDPass Membership Proof from Passport</p>
+            <p>Got PCDpass Membership Proof from Passport</p>
             <CollapsableCode code={JSON.stringify(proof, null, 2)} />
             {group && <p>✅ Loaded group, {group.members.length} members</p>}
             {valid === undefined && <p>❓ Proof verifying</p>}

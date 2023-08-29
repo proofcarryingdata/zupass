@@ -6,14 +6,14 @@ import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
-import { PCDPass } from "../src/types";
+import { PCDpass } from "../src/types";
 import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
-import { testLoginPCDPass } from "./user/testLoginPCDPass";
+import { testLoginPCDpass } from "./user/testLoginPCDPass";
 import { testUserSync } from "./user/testUserSync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -23,7 +23,7 @@ describe("pcd-pass functionality", function () {
   this.timeout(15_000);
 
   const testEmail = randomEmail();
-  let application: PCDPass;
+  let application: PCDpass;
   let user: User;
   let identity: Identity;
   let emailAPI: IEmailAPI;
@@ -56,7 +56,7 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    const result = await testLoginPCDPass(application, testEmail, {
+    const result = await testLoginPCDpass(application, testEmail, {
       force: false,
       expectUserAlreadyLoggedIn: false,
       expectEmailIncorrect: false
@@ -75,7 +75,7 @@ describe("pcd-pass functionality", function () {
     "should not be able to login with invalid email address",
     async function () {
       expect(
-        await testLoginPCDPass(application, "test", {
+        await testLoginPCDpass(application, "test", {
           force: false,
           expectUserAlreadyLoggedIn: false,
           expectEmailIncorrect: true
@@ -99,14 +99,14 @@ describe("pcd-pass functionality", function () {
     "should not be able to log in a 2nd time without force option",
     async function () {
       expect(
-        await testLoginPCDPass(application, testEmail, {
+        await testLoginPCDpass(application, testEmail, {
           force: false,
           expectUserAlreadyLoggedIn: true,
           expectEmailIncorrect: false
         })
       ).to.eq(undefined);
 
-      const result = await testLoginPCDPass(application, testEmail, {
+      const result = await testLoginPCDpass(application, testEmail, {
         force: true,
         expectUserAlreadyLoggedIn: true,
         expectEmailIncorrect: false

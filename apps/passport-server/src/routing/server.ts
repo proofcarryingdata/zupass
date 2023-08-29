@@ -10,7 +10,7 @@ import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
-import { initPCDPassRoutes } from "./routes/pcdpassRoutes";
+import { initPCDpassRoutes } from "./routes/pcdpassRoutes";
 import { initProvingRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
@@ -84,7 +84,7 @@ function initAllRoutes(
   initSemaphoreRoutes(app, context, globalServices);
   initE2EERoutes(app, context, globalServices);
   initZuzaluRoutes(app, context, globalServices);
-  initPCDPassRoutes(app, context, globalServices);
+  initPCDpassRoutes(app, context, globalServices);
   initProvingRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);

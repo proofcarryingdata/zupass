@@ -2,15 +2,15 @@ import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import httpMocks from "node-mocks-http";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
-export async function testLoginPCDPass(
-  application: PCDPass,
+export async function testLoginPCDpass(
+  application: PCDpass,
   email: string,
   {
     force,
     expectUserAlreadyLoggedIn,
-    expectEmailIncorrect,
+    expectEmailIncorrect
   }: {
     force: boolean;
     expectUserAlreadyLoggedIn: boolean;
@@ -21,7 +21,7 @@ export async function testLoginPCDPass(
   const identity = new Identity();
   const commitment = identity.commitment.toString();
   const sendEmailResponse = httpMocks.createResponse();
-  await userService.handleSendPcdPassEmail(
+  await userService.handleSendPCDpassEmail(
     email,
     commitment,
     force,
@@ -52,7 +52,7 @@ export async function testLoginPCDPass(
   }
 
   const newUserResponse = httpMocks.createResponse();
-  await userService.handleNewPcdPassUser(
+  await userService.handleNewPCDpassUser(
     token,
     email,
     commitment,
@@ -67,7 +67,7 @@ export async function testLoginPCDPass(
   expect(newUserResponseJson.email).to.eq(email);
 
   const getUserResponse = httpMocks.createResponse();
-  await userService.handleGetPcdPassUser(
+  await userService.handleGetPCDpassUser(
     newUserResponseJson.uuid,
     getUserResponse
   );

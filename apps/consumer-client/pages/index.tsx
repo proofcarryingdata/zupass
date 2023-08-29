@@ -57,11 +57,11 @@ export default function Page() {
       </div>
 
       <div>
-        <h2>PCDPass Examples</h2>
+        <h2>PCDpass Examples</h2>
         <ol>
           <li>
             <a href="/pcdpass-examples/group-proof">
-              PCDPass Group Membership Proof
+              PCDpass Group Membership Proof
             </a>
           </li>
           <li>

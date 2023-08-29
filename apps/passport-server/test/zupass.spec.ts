@@ -8,7 +8,7 @@ import { stopApplication } from "../src/application";
 import { LoggedInZuzaluUser, ZuzaluUserRole } from "../src/database/models";
 import { PretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
-import { PCDPass } from "../src/types";
+import { PCDpass } from "../src/types";
 import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import {
   getMockPretixAPI,
@@ -29,7 +29,7 @@ import { randomEmail } from "./util/util";
 describe("zupass functionality", function () {
   this.timeout(15_000);
 
-  let application: PCDPass;
+  let application: PCDpass;
   let residentUser: User | undefined;
   let visitorUser: User | undefined;
   let organizerUser: User | undefined;

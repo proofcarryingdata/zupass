@@ -3,15 +3,15 @@ import {
   PendingPCD,
   ProveRequest,
   StatusRequest,
-  StatusResponse,
+  StatusResponse
 } from "@pcd/passport-interface";
 import chai, { expect } from "chai";
 import { Response } from "superagent";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
 export async function sendProveRequest(
-  application: PCDPass,
+  application: PCDpass,
   proveRequest: ProveRequest,
   handler: (r: Response) => Promise<void>
 ): Promise<Response> {
@@ -34,7 +34,7 @@ export async function sendProveRequest(
 }
 
 export async function sendStatusRequest(
-  application: PCDPass,
+  application: PCDpass,
   statusRequest: StatusRequest,
   handler?: (r: Response) => Promise<void>
 ): Promise<Response> {
@@ -57,7 +57,7 @@ export async function sendStatusRequest(
 }
 
 export async function waitForSettledStatus(
-  application: PCDPass,
+  application: PCDpass,
   statusRequest: StatusRequest,
   handler?: (r: Response) => Promise<void>
 ): Promise<Response> {
@@ -75,7 +75,7 @@ export async function waitForSettledStatus(
 }
 
 export async function submitAndWaitForPendingPCD(
-  application: PCDPass,
+  application: PCDpass,
   proveRequest: ProveRequest,
   settledResponseHandler: (status: Response) => Promise<void>
 ): Promise<void> {
@@ -92,7 +92,7 @@ export async function submitAndWaitForPendingPCD(
   );
 
   const statusRequest: StatusRequest = {
-    hash: proveResponse.body.hash,
+    hash: proveResponse.body.hash
   };
 
   const settledStatusResponse = await waitForSettledStatus(

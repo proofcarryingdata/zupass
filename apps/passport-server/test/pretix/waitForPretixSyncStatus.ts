@@ -1,10 +1,10 @@
 import chai from "chai";
 import { PretixSyncStatus } from "../../src/services/types";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
 export async function waitForPretixSyncStatus(
-  application: PCDPass
+  application: PCDpass
 ): Promise<PretixSyncStatus> {
   const { expressContext } = application;
 

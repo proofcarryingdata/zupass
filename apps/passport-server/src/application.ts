@@ -6,7 +6,7 @@ import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
-import { APIs, ApplicationContext, PCDPass } from "./types";
+import { APIs, ApplicationContext, PCDpass } from "./types";
 import { logger } from "./util/logger";
 
 import process from "node:process";
@@ -27,7 +27,7 @@ process.on("unhandledRejection", (reason) => {
  */
 export async function startApplication(
   apiOverrides?: Partial<APIs>
-): Promise<PCDPass> {
+): Promise<PCDpass> {
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
 
@@ -57,7 +57,7 @@ export async function startApplication(
   };
 }
 
-export async function stopApplication(app?: PCDPass): Promise<void> {
+export async function stopApplication(app?: PCDpass): Promise<void> {
   if (!app) return;
   await stopServices(app.services);
   await app.context.dbPool.end();

@@ -10,10 +10,10 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import chai from "chai";
 import { Response } from "superagent";
-import { PCDPass } from "../../src/types";
+import { PCDpass } from "../../src/types";
 
 export async function requestIssuanceServiceEnabled(
-  application: PCDPass
+  application: PCDpass
 ): Promise<boolean> {
   const response = await chai
     .request(application.expressContext.app)
@@ -24,7 +24,7 @@ export async function requestIssuanceServiceEnabled(
 }
 
 export async function requestServerRSAPublicKey(
-  application: PCDPass
+  application: PCDpass
 ): Promise<Response> {
   return new Promise((resolve, reject) => {
     const { expressContext } = application;
@@ -43,7 +43,7 @@ export async function requestServerRSAPublicKey(
 }
 
 export async function requestServerEdDSAPublicKey(
-  application: PCDPass
+  application: PCDpass
 ): Promise<Response> {
   return new Promise((resolve, reject) => {
     const { expressContext } = application;
@@ -62,7 +62,7 @@ export async function requestServerEdDSAPublicKey(
 }
 
 export async function requestIssuedPCDs(
-  application: PCDPass,
+  application: PCDpass,
   identity: Identity,
   signedMessage: string
 ): Promise<Response> {
@@ -103,7 +103,7 @@ export async function requestIssuedPCDs(
 }
 
 export async function requestCheckIn(
-  application: PCDPass,
+  application: PCDpass,
   ticket: EdDSATicketPCD,
   checkerIdentity: Identity
 ): Promise<Response> {

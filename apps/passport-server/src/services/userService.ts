@@ -1,6 +1,6 @@
 import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Response } from "express";
-import { LoggedinPCDPassUser, ZuzaluUser } from "../database/models";
+import { LoggedinPCDpassUser, ZuzaluUser } from "../database/models";
 import { fetchCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectDeviceLoginTicket,
@@ -191,7 +191,7 @@ export class UserService {
     res.json(user || null);
   }
 
-  public async handleSendPcdPassEmail(
+  public async handleSendPCDpassEmail(
     email: string,
     commitment: string,
     force: boolean,
@@ -236,12 +236,12 @@ export class UserService {
       res.json({ token });
     } else {
       logger(`[ZUID] Sending token=${token} to email=${email}`);
-      await this.emailService.sendPCDPassEmail(email, token);
+      await this.emailService.sendPCDpassEmail(email, token);
       res.sendStatus(200);
     }
   }
 
-  public async handleNewPcdPassUser(
+  public async handleNewPCDpassUser(
     token: string,
     email: string,
     commitment: string,
@@ -281,7 +281,7 @@ export class UserService {
         commitmentRow.email
       );
 
-      const pcdpassUser: LoggedinPCDPassUser = {
+      const pcdpassUser: LoggedinPCDpassUser = {
         ...commitmentRow,
         superuserEventConfigIds: superuserPrivilages.map(
           (s) => s.pretix_events_config_id
@@ -298,7 +298,7 @@ export class UserService {
     }
   }
 
-  public async handleGetPcdPassUser(
+  public async handleGetPCDpassUser(
     uuid: string,
     res: Response
   ): Promise<void> {
@@ -347,7 +347,7 @@ export class UserService {
         commitmentRow.email
       );
 
-      const pcdpassUser: LoggedinPCDPassUser = {
+      const pcdpassUser: LoggedinPCDpassUser = {
         ...commitmentRow,
         superuserEventConfigIds: superuserPrivilages.map(
           (s) => s.pretix_events_config_id

@@ -49,7 +49,7 @@ export class EmailService {
 
     return {
       text,
-      html,
+      html
     };
   }
 
@@ -72,7 +72,7 @@ export class EmailService {
 
     return {
       text,
-      html,
+      html
     };
   }
 
@@ -88,7 +88,7 @@ export class EmailService {
         to: to,
         from: "passport@0xparc.org",
         subject: "Welcome to your Zuzalu Passport",
-        ...(await this.composePretixEmail(name, token)),
+        ...(await this.composePretixEmail(name, token))
       };
 
       try {
@@ -99,20 +99,22 @@ export class EmailService {
       } catch (e) {
         logger(e);
         this.rollbarService?.reportError(e);
-        throw new Error(`Email send error, failed to email ${to}`, {cause: e});
+        throw new Error(`Email send error, failed to email ${to}`, {
+          cause: e
+        });
       }
     });
   }
 
-  public async sendPCDPassEmail(to: string, token: string): Promise<void> {
+  public async sendPCDpassEmail(to: string, token: string): Promise<void> {
     return traced("Email", "sendEmail", async (span) => {
       span?.setAttribute("email", to);
 
       const msg = {
         to: to,
         from: "passport@0xparc.org",
-        subject: "Welcome to PCDPass",
-        ...(await this.composeGenericEmail(token)),
+        subject: "Welcome to PCDpass",
+        ...(await this.composeGenericEmail(token))
       };
 
       try {
@@ -124,7 +126,9 @@ export class EmailService {
       } catch (e) {
         logger(e);
         this.rollbarService?.reportError(e);
-        throw new Error(`Email send error, failed to email ${to}`), {cause: e};
+        throw (
+          (new Error(`Email send error, failed to email ${to}`), { cause: e })
+        );
       }
     });
   }

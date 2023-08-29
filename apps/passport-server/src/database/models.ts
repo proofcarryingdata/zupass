@@ -96,7 +96,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   commitment: string;
 }
 
-export interface LoggedinPCDPassUser extends CommitmentRow {
+export interface LoggedinPCDpassUser extends CommitmentRow {
   superuserEventConfigIds: string[];
 }
 

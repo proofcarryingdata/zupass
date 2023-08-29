@@ -46,7 +46,7 @@ export interface GlobalServices {
   telegramService: TelegramService | null;
 }
 
-export interface PCDPass {
+export interface PCDpass {
   context: ApplicationContext;
   services: GlobalServices;
   apis: APIs;

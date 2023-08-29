@@ -19,16 +19,16 @@ const define = {
   "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV || "development"),
   ...(process.env.ROLLBAR_TOKEN !== undefined
     ? {
-        "process.env.ROLLBAR_TOKEN": JSON.stringify(process.env.ROLLBAR_TOKEN),
+        "process.env.ROLLBAR_TOKEN": JSON.stringify(process.env.ROLLBAR_TOKEN)
       }
     : {}),
   ...(process.env.ROLLBAR_ENV_NAME !== undefined
     ? {
         "process.env.ROLLBAR_ENV_NAME": JSON.stringify(
           process.env.ROLLBAR_ENV_NAME
-        ),
+        )
       }
-    : {}),
+    : {})
 };
 
 const passportAppOpts: BuildOptions = {
@@ -39,15 +39,15 @@ const passportAppOpts: BuildOptions = {
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
       process: true,
-      buffer: true,
-    }),
+      buffer: true
+    })
   ],
   loader: {
-    ".svg": "dataurl",
+    ".svg": "dataurl"
   },
   outdir: "public/js",
   metafile: true,
-  define,
+  define
 };
 
 const serviceWorkerOpts: BuildOptions = {
@@ -58,8 +58,8 @@ const serviceWorkerOpts: BuildOptions = {
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
       process: true,
-      buffer: true,
-    }),
+      buffer: true
+    })
   ],
   // The output directory here needs to be `public/` rather than
   // `public/js` in order for the service worker to be served from
@@ -73,7 +73,7 @@ const serviceWorkerOpts: BuildOptions = {
   // is invoked, so that each new production deploy invalidates the previous
   // service worker, which clears the website's application code (html, js, etc.),
   // so that clients are not forever stuck on one version of the code.
-  define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) },
+  define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) }
 };
 
 run(process.argv[2])
@@ -97,7 +97,7 @@ async function run(command: string) {
 
       const serviceWorkerRes = await build({
         ...serviceWorkerOpts,
-        minify: true,
+        minify: true
       });
       console.error("Built", serviceWorkerRes);
       break;
@@ -111,7 +111,7 @@ async function run(command: string) {
       const { host } = await ctx.serve({
         servedir: "public",
         port: 3000,
-        host: "0.0.0.0",
+        host: "0.0.0.0"
       });
 
       console.log(`Serving passport client on ${host}`);
@@ -128,8 +128,8 @@ function compileHtml() {
   const template = Handlebars.compile(indexHtmlTemplateSource);
 
   const html = template({
-    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDPass",
-    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
+    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDpass",
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css"
   });
 
   fs.writeFileSync(path.join("public", "index.html"), html);

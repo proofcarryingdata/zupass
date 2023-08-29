@@ -6,7 +6,7 @@ export async function requestUser(uuid: string): Promise<Response> {
     return requestZuzaluUser(uuid);
   }
 
-  return requestPCDPassUser(uuid);
+  return requestPCDpassUser(uuid);
 }
 
 export async function requestZuzaluUser(uuid: string): Promise<Response> {
@@ -15,7 +15,7 @@ export async function requestZuzaluUser(uuid: string): Promise<Response> {
   return response;
 }
 
-export async function requestPCDPassUser(uuid: string): Promise<Response> {
+export async function requestPCDpassUser(uuid: string): Promise<Response> {
   const url = `${appConfig.passportServer}/pcdpass/participant/${uuid}`;
   const response = await fetch(url);
   return response;
