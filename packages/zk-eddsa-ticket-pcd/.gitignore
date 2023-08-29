@@ -1,6 +1,7 @@
 *.js
 *.ts.map
 dist
+!.eslintrc.js
 artifacts-unsafe
 !artifacts-unsafe/eddsaTicket.wasm
 !artifacts-unsafe/eddsaTicket.circom
