@@ -58,6 +58,13 @@ describe("PCDCollection", async function () {
     const folder2 = "FOLDER_2";
     const folder3 = "FOLDER_3";
 
+    collection.setPCDFolder(pcdList[0].id, folder1);
+    collection.setPCDFolder(pcdList[3].id, folder1);
+    collection.setPCDFolder(pcdList[1].id, folder2);
+    collection.setPCDFolder(pcdList[4].id, folder2);
+    collection.setPCDFolder(pcdList[2].id, folder3);
+    collection.setPCDFolder(pcdList[5].id, folder3);
+
     expect(collection.getFolderOfPCD(pcdList[0].id)).to.eq(folder1);
     expect(collection.getFolderOfPCD(pcdList[1].id)).to.eq(folder2);
     expect(collection.getFolderOfPCD(pcdList[2].id)).to.eq(folder3);

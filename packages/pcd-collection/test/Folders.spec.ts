@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import {
+  escapePathSegment,
   getAllAncestors,
   getFoldersInFolder,
   getNameFromPath,
@@ -108,5 +109,11 @@ describe("Folder manipulation", async function () {
     expect(getNameFromPath("a/b/c")).to.eq("c");
     expect(getNameFromPath("a")).to.eq("a");
     expect(getNameFromPath("")).to.eq("");
+  });
+
+  it("escapePathSegment", function () {
+    expect(escapePathSegment("a/b/c")).to.eq("abc");
+    expect(escapePathSegment("a")).to.eq("a");
+    expect(escapePathSegment("")).to.eq("");
   });
 });

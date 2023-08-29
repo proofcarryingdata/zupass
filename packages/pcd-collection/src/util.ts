@@ -128,3 +128,10 @@ export function getNameFromPath(path: string): string {
 
   return parts[parts.length - 1];
 }
+
+/**
+ * Removes any path separators from a file name.
+ */
+export function escapePathSegment(name: string): string {
+  return name.replace(/\//g, "");
+}
