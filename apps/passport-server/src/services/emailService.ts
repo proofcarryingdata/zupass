@@ -3,7 +3,6 @@ import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
@@ -108,8 +107,6 @@ export class EmailService {
   }
 
   public async sendPCDpassEmail(to: string, token: string): Promise<void> {
-    await sleep(3000);
-
     return traced("Email", "sendEmail", async (span) => {
       span?.setAttribute("email", to);
 

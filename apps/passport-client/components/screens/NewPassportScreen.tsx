@@ -101,7 +101,6 @@ function SendEmailVerification({ email }: { email: string }) {
         <CenterColumn w={280}>
           {emailSent && (
             <>
-              {" "}
               <BigInput
                 disabled={verifyingCode}
                 ref={inRef}
