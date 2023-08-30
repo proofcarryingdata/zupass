@@ -182,7 +182,11 @@ async function login(
 ) {
   let user: User;
   try {
-    const res = await submitNewUser(email, token, state.identity);
+    const res = await submitNewUser(
+      email,
+      token,
+      state.identity.commitment.toString()
+    );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
   } catch (e) {
@@ -207,7 +211,11 @@ async function deviceLogin(
 ) {
   let user: User;
   try {
-    const res = await submitDeviceLogin(email, secret, state.identity);
+    const res = await submitDeviceLogin(
+      email,
+      secret,
+      state.identity.commitment.toString()
+    );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
   } catch (e) {
@@ -246,9 +254,9 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Save PCDs to E2EE storage.
   await uploadStorage();
 
-  window.location.hash = "#/";
+  window.location.hash = "#/login-interstitial";
 
-  // Ask user to save their sync key
+  // Ask user to save their Master Password
   update({ modal: "save-sync" });
 }
 
@@ -350,7 +358,7 @@ async function loadFromSync(
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
-  window.location.hash = "#/";
+  window.location.hash = "#/login-interstitial";
 }
 
 function userInvalid(update: ZuUpdate) {

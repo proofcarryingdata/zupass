@@ -1,4 +1,3 @@
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
@@ -12,7 +11,6 @@ describe("EdDSA ticket should work", function () {
 
   this.beforeAll(async () => {
     await EdDSATicketPCDPackage.init!({});
-    await EdDSAPCDPackage.init!({});
 
     // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
     const prvKey =

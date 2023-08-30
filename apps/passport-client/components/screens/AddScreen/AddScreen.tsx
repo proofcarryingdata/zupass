@@ -8,6 +8,10 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelf } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
+import {
+  clearAllPendingRequests,
+  setPendingAddRequest
+} from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -26,18 +30,23 @@ export function AddScreen() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
-
   const screen = getScreen(request);
+
   useEffect(() => {
     if (screen === null) {
       err(dispatch, "Unsupported request", `Expected a PCD ADD request`);
     }
   }, [dispatch, screen]);
 
+  useEffect(() => {
+    if (self == null) {
+      clearAllPendingRequests();
+      setPendingAddRequest(JSON.stringify(request));
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
+
   if (self == null) {
-    sessionStorage.pendingAddRequest = JSON.stringify(request);
-    window.location.href = "/#/login";
-    window.location.reload();
     return null;
   }
 

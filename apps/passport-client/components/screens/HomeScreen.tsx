@@ -9,6 +9,13 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  getPendingAddRequest,
+  getPendingGetWithoutProvingRequest,
+  getPendingHaloRequest,
+  getPendingProofRequest
+} from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -36,20 +43,25 @@ export function HomeScreenImpl() {
     if (self == null) {
       console.log("Redirecting to login screen");
       navigate("/login");
-    } else if (sessionStorage.pendingProofRequest != null) {
+    } else if (getPendingProofRequest() != null) {
       console.log("Redirecting to prove screen");
-      const encReq = encodeURIComponent(sessionStorage.pendingProofRequest);
+      const encReq = encodeURIComponent(getPendingProofRequest());
+      clearAllPendingRequests();
       navigate("/prove?request=" + encReq);
-      delete sessionStorage.pendingProofRequest;
-    } else if (sessionStorage.pendingAddRequest != null) {
+    } else if (getPendingAddRequest() != null) {
       console.log("Redirecting to add screen");
-      const encReq = encodeURIComponent(sessionStorage.pendingAddRequest);
+      const encReq = encodeURIComponent(getPendingAddRequest());
+      clearAllPendingRequests();
       navigate("/add?request=" + encReq);
-      delete sessionStorage.pendingAddRequest;
-    } else if (sessionStorage.pendingHaloRequest != null) {
+    } else if (getPendingHaloRequest() != null) {
       console.log("Redirecting to halo screen");
-      navigate(`/halo${sessionStorage.pendingHaloRequest}`);
-      delete sessionStorage.pendingHaloRequest;
+      clearAllPendingRequests();
+      navigate(`/halo${getPendingHaloRequest()}`);
+    } else if (getPendingGetWithoutProvingRequest()) {
+      console.log("Redirecting to get without proving screen");
+      const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
+      clearAllPendingRequests();
+      navigate(`/get-without-proving?request=${encReq}`);
     }
   });
 
@@ -110,25 +122,27 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <FolderExplorerContainer>
-            {!isRoot && (
-              <FolderDetails
-                noChildFolders={foldersInFolder.length === 0}
-                folder={browsingFolder}
-                onFolderClick={onFolderClick}
-              />
-            )}
-            {foldersInFolder.map((folder) => {
-              return (
-                <FolderCard
-                  key={folder}
+          {!(foldersInFolder.length === 0 && isRoot) && (
+            <FolderExplorerContainer>
+              {!isRoot && (
+                <FolderDetails
+                  noChildFolders={foldersInFolder.length === 0}
+                  folder={browsingFolder}
                   onFolderClick={onFolderClick}
-                  folder={folder}
                 />
-              );
-            })}
-          </FolderExplorerContainer>
-          <Separator />
+              )}
+              {foldersInFolder.map((folder) => {
+                return (
+                  <FolderCard
+                    key={folder}
+                    onFolderClick={onFolderClick}
+                    folder={folder}
+                  />
+                );
+              })}
+            </FolderExplorerContainer>
+          )}
+          {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
           {pcdsInFolder.length > 0 ? (
             pcdsInFolder.map((pcd) => (
               <WrappedPCDCard
@@ -197,7 +211,7 @@ function FolderCard({
 
   return (
     <FolderEntryContainer onClick={onClick}>
-      <img src={icons.folder} width={20} height={20} />
+      <img src={icons.folder} width={18} height={18} />
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
@@ -254,7 +268,7 @@ const FolderHeader = styled.div`
     flex-grow: 0;
     display: inline-block;
     padding-top: 16px;
-    padding-left: 16px;
+    padding-left: 12px;
   }
 `;
 

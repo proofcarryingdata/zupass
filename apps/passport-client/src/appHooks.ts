@@ -3,6 +3,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState, PendingAction } from "./state";
 import { useSelector } from "./subscribe";
@@ -89,4 +90,15 @@ export function useIsLoggedIn(): boolean {
 
 export function useUploadedId(): string | undefined {
   return useSelector<string | undefined>((s) => s.uploadedUploadId, []);
+}
+
+export function useQuery(): URLSearchParams | undefined {
+  const location = useLocation();
+  try {
+    const params = new URLSearchParams(location.search);
+    return params;
+  } catch (e) {
+    console.log("failed to parse query string params", e);
+    return undefined;
+  }
 }

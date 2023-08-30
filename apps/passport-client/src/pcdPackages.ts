@@ -77,8 +77,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     makeEncodedVerifyLink
   });
 
-  await EdDSAPCDPackage.init({});
-
   await ZKEdDSATicketPCDPackage.init({
     wasmFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
     zkeyFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"

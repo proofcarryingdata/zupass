@@ -4,11 +4,17 @@ import {
   passportDecrypt
 } from "@pcd/passport-crypto";
 import React, { useCallback, useState } from "react";
-import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
-import { appConfig } from "../../src/appConfig";
 import { useDispatch } from "../../src/appHooks";
-import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
+import {
+  BackgroundGlow,
+  BigInput,
+  Button,
+  CenterColumn,
+  H2,
+  Spacer,
+  TextCenter
+} from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -24,6 +30,17 @@ export function SyncExistingScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSyncClick = useCallback(() => {
+    if (syncKey === "") {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Missing Password",
+          message: "You must enter a Master Password.",
+          dismissToCurrentPage: true
+        }
+      });
+      return;
+    }
     const load = async () => {
       let storage: EncryptedPacket;
       try {
@@ -32,19 +49,18 @@ export function SyncExistingScreen() {
         const blobHash = await getHash(syncKey);
         storage = await downloadEncryptedStorage(blobHash);
         if (!storage) {
-          throw new Error("no e2ee for this sync key found");
+          throw new Error("no e2ee for this Master Password found");
         }
       } catch (e: unknown) {
         console.error(e);
         dispatch({
           type: "error",
           error: {
-            title: "Sync failed",
+            title: "Failed to Log In",
             message:
-              "Couldn't load end-to-end encrypted backup. " +
-              `If this is your first time using ${
-                appConfig.isZuzalu ? "zupass.org" : "pcdpass.xyz"
-              }, please generate a new passport instead.`
+              "Couldn't login with this Master Password. If you've lost access to your Master Password" +
+              " you can reset your account from the homepage of this website.",
+            dismissToCurrentPage: true
           }
         });
         setIsLoading(false);
@@ -69,7 +85,12 @@ export function SyncExistingScreen() {
       console.error(e);
       dispatch({
         type: "error",
-        error: { title: "Sync failed", message, stack }
+        error: {
+          title: "Failed to Log In",
+          message,
+          stack,
+          dismissToCurrentPage: true
+        }
       });
     });
   }, [syncKey, dispatch]);
@@ -80,52 +101,55 @@ export function SyncExistingScreen() {
 
   return (
     <AppContainer bg="primary">
-      <Container>
+      <BackgroundGlow
+        y={224}
+        from="var(--bg-lite-primary)"
+        to="var(--bg-dark-primary)"
+      >
         <Spacer h={64} />
         <TextCenter>
-          <H2>SYNC EXISTING PASSPORT</H2>
+          <H2>LOGIN WITH MASTER PASSWORD</H2>
           <Spacer h={32} />
           <TextCenter>
-            If you've already created your passport on another device, you can
-            sync it here. You can find your sync key on your existing device by
-            clicking on the settings icon.
+            If you've already registered, you can sync with your other device
+            here using your Master Password. You can find your Master Password
+            on your existing device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
-          <BigInput
-            disabled={isLoading}
-            type="text"
-            placeholder="sync key"
-            value={syncKey}
-            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-              setSyncKey(e.target.value);
-            }, [])}
-          ></BigInput>
-          <Spacer h={16} />
-          {!isLoading && (
-            <>
-              <Button style="primary" type="submit" onClick={onSyncClick}>
-                Sync
-              </Button>
-              <Spacer h={8} />
-              <Button style="danger" type="submit" onClick={onClose}>
-                Back
-              </Button>
-            </>
-          )}
-          {isLoading && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
-          <Spacer h={32} />
+          <CenterColumn w={280}>
+            <BigInput
+              disabled={isLoading}
+              type="text"
+              placeholder="Master Password"
+              value={syncKey}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSyncKey(e.target.value);
+                },
+                []
+              )}
+            ></BigInput>
+            <Spacer h={8} />
+            {!isLoading && (
+              <>
+                <Button style="primary" type="submit" onClick={onSyncClick}>
+                  Login
+                </Button>
+                <Spacer h={8} />
+                <Button type="submit" onClick={onClose}>
+                  Cancel
+                </Button>
+              </>
+            )}
+            {isLoading && (
+              <div>
+                <RippleLoader />
+              </div>
+            )}
+          </CenterColumn>
         </TextCenter>
-      </Container>
+      </BackgroundGlow>
+      <Spacer h={64} />
     </AppContainer>
   );
 }
-
-const Container = styled.div`
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-`;

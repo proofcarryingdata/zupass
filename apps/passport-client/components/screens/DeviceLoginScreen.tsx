@@ -21,15 +21,19 @@ export function DeviceLoginScreen() {
     });
   }, [dispatch, email, secret]);
 
+  const onCancelClick = useCallback(() => {
+    window.location.href = "#/";
+  }, []);
+
   return (
     <AppContainer bg="primary">
       <Container>
         <Spacer h={64} />
         <TextCenter>
-          <H2>DEVICE LOGIN</H2>
+          <H2>EVENT HOST LOGIN</H2>
           <Spacer h={32} />
           <TextCenter>
-            Log in using the device-specific email and secret key
+            Login using the device-specific email and secret key
           </TextCenter>
         </TextCenter>
         <Spacer h={24} />
@@ -56,11 +60,16 @@ export function DeviceLoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit" onClick={onAuthenticate}>
-              Authenticate
+              Login
+            </Button>
+            <Spacer h={8} />
+            <Button style="primary" type="submit" onClick={onCancelClick}>
+              Cancel
             </Button>
           </form>
         </CenterColumn>
       </Container>
+      <Spacer h={64} />
     </AppContainer>
   );
 }

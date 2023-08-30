@@ -3,11 +3,14 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
+import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
+import { LoginInterstitialScreen } from "../components/screens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
@@ -119,6 +122,18 @@ function RouterImpl() {
         <Route path="/">
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+          <Route
+            path="login-interstitial"
+            element={<LoginInterstitialScreen />}
+          />
+          <Route
+            path="already-registered"
+            element={<AlreadyRegisteredScreen />}
+          />
+          <Route
+            path="enter-confirmation-code"
+            element={<EnterConfirmationCodeScreen />}
+          />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
             path="get-without-proving"
@@ -165,7 +180,7 @@ async function loadInitialState(): Promise<AppState> {
   if (userInvalid) {
     modal = "invalid-participant";
   } else if (self != null && !localStorage["savedSyncKey"]) {
-    console.log("Asking existing user to save their sync key...");
+    console.log("Asking existing user to save their Master Password...");
     modal = "save-sync";
   }
 

@@ -60,12 +60,19 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   }
 }
 
+let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;
 let poseidon: PoseidonFn;
 
-export async function init(): Promise<void> {
-  eddsa = await buildEddsa();
-  poseidon = await buildPoseidon();
+async function ensureInitialized() {
+  if (!initializedPromise) {
+    initializedPromise = (async () => {
+      eddsa = await buildEddsa();
+      poseidon = await buildPoseidon();
+    })();
+  }
+
+  await initializedPromise;
 }
 
 const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
@@ -73,6 +80,8 @@ const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
 const toHexString = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
 
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
+  await ensureInitialized();
+
   if (!args.privateKey.value) {
     throw new Error("No private key value provided");
   }
@@ -104,6 +113,8 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 }
 
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
+  await ensureInitialized();
+
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
   const pubKey = pcd.claim.publicKey.map(fromHexString);
   const hashedMessage = poseidon(pcd.claim.message);
@@ -162,8 +173,7 @@ export const EdDSAPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
-  init
+  deserialize
 };
 
 export function getEdDSAPublicKey(privateKey: string): [string, string] {

@@ -18,11 +18,7 @@ export function SettingsModal() {
   }, [syncKey]);
 
   const clearPassport = useCallback(() => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear your passport? This will delete your passport data."
-      )
-    ) {
+    if (window.confirm("Are you sure you want to log out?")) {
       dispatch({ type: "reset-passport" });
     }
   }, [dispatch]);
@@ -40,11 +36,11 @@ export function SettingsModal() {
         </LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>
-          {justCopied ? "Copied" : "Copy Key for Sync"}
+          {justCopied ? "Copied" : "Copy Master Password"}
         </Button>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
-          Clear Passport
+          Log Out
         </Button>
       </CenterColumn>
     </>

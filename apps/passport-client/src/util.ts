@@ -1,3 +1,4 @@
+import validator from "email-validator";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
@@ -30,7 +31,7 @@ export async function nextFrame() {
 export function err(dispatch: Dispatcher, title: string, message: string) {
   dispatch({
     type: "error",
-    error: { title, message },
+    error: { title, message }
   });
 }
 
@@ -55,4 +56,8 @@ export function bigintToUuid(bigint: bigint): string {
 
 export function randomEmail() {
   return uuid().slice(0, 8) + "@test.com";
+}
+
+export function validateEmail(email: string): boolean {
+  return validator.validate(email);
 }

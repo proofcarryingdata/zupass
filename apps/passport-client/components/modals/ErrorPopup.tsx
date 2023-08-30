@@ -45,6 +45,9 @@ const ErrorBg = styled.div`
   justify-content: flex-start;
   align-items: center;
   padding-top: 64px;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-bottom: 64px;
   flex-direction: column;
 `;
 
@@ -53,5 +56,5 @@ const ErrorWrap = styled.div`
   padding: 24px;
   background-color: var(--primary-dark);
   display: inline-block;
-  width: 400px;
+  max-width: 400px;
 `;

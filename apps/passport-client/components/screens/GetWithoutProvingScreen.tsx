@@ -3,11 +3,15 @@ import {
   PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useDispatch, usePCDCollection } from "../../src/appHooks";
+import { useDispatch, usePCDCollection, useSelf } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
+import {
+  clearAllPendingRequests,
+  setPendingGetWithoutProvingRequest
+} from "../../src/sessionStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -21,12 +25,14 @@ import { AppHeader } from "../shared/AppHeader";
 export function GetWithoutProvingScreen() {
   const location = useLocation();
   const dispatch = useDispatch();
+  const self = useSelf();
   const pcds = usePCDCollection();
   const params = new URLSearchParams(location.search);
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
   const filteredPCDs = pcds
     .getAll()
     .filter((pcd) => pcd.type === request.pcdType);
+
   // If we only have one matching PCD, then make that the default selection
   const defaultSelection =
     filteredPCDs.length === 1 ? filteredPCDs[0].id : "none";
@@ -40,6 +46,14 @@ export function GetWithoutProvingScreen() {
     const serializedPCD = await pcdPackage.serialize(pcd);
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
+
+  useEffect(() => {
+    if (self == null) {
+      clearAllPendingRequests();
+      setPendingGetWithoutProvingRequest(JSON.stringify(request));
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(
@@ -56,6 +70,10 @@ export function GetWithoutProvingScreen() {
       "Unsupported PCD Type",
       `You cannot request a Semaphore Identity PCD.`
     );
+    return null;
+  }
+
+  if (self == null) {
     return null;
   }
 

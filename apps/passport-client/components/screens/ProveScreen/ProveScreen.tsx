@@ -4,6 +4,10 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelf } from "../../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  setPendingProofRequest
+} from "../../../src/sessionStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -18,18 +22,23 @@ export function ProveScreen() {
   const self = useSelf();
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
-
   const screen = getScreen(request);
+
   useEffect(() => {
     if (screen === null) {
       err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     }
   }, [dispatch, screen]);
 
+  useEffect(() => {
+    if (self == null) {
+      clearAllPendingRequests();
+      setPendingProofRequest(JSON.stringify(request));
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
+
   if (self == null) {
-    sessionStorage.pendingProofRequest = JSON.stringify(request);
-    window.location.href = "/#/login";
-    window.location.reload();
     return null;
   }
 
@@ -69,13 +78,15 @@ function getScreen(request: PCDGetRequest) {
   }
 
   return (
-    <AppContainer bg="gray">
-      <MaybeModal fullScreen />
-      <Spacer h={24} />
-      <H2>{title.toUpperCase()}</H2>
-      <Spacer h={24} />
-      <CenterColumn w={280}>{body}</CenterColumn>
-      <Spacer h={24} />
-    </AppContainer>
+    <>
+      <MaybeModal fullScreen={true} />
+      <AppContainer bg="gray">
+        <Spacer h={24} />
+        <H2>{title.toUpperCase()}</H2>
+        <Spacer h={24} />
+        <CenterColumn w={280}>{body}</CenterColumn>
+        <Spacer h={24} />
+      </AppContainer>
+    </>
   );
 }

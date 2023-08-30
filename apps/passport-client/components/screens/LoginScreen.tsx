@@ -1,8 +1,15 @@
-import { ChangeEvent, FormEvent, useCallback, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState
+} from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -20,24 +27,50 @@ import { AppContainer } from "../shared/AppContainer";
 
 export function LoginScreen() {
   const dispatch = useDispatch();
+  const query = useQuery();
+  const redirectedFromAction = query?.get("redirectedFromAction") === "true";
+
   const self = useSelf();
   const [email, setEmail] = useState("");
 
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      dispatch({
-        type: "new-passport",
-        email: email.toLocaleLowerCase("en-US")
-      });
+
+      if (email === "") {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Enter an Email",
+            message: "You must enter an email address to register.",
+            dismissToCurrentPage: true
+          }
+        });
+      } else if (validateEmail(email) === false) {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Invalid Email",
+            message: `'${email}' is not a valid email.`,
+            dismissToCurrentPage: true
+          }
+        });
+      } else {
+        dispatch({
+          type: "new-passport",
+          email: email.toLocaleLowerCase("en-US")
+        });
+      }
     },
     [dispatch, email]
   );
 
-  // Redirect to home if already logged in
-  if (self != null) {
-    window.location.hash = "#/";
-  }
+  useEffect(() => {
+    // Redirect to home if already logged in
+    if (self != null) {
+      window.location.hash = "#/";
+    }
+  }, [self]);
 
   return (
     <AppContainer bg="primary">
@@ -47,13 +80,30 @@ export function LoginScreen() {
         to="var(--bg-dark-primary)"
       >
         <Spacer h={64} />
-        <LoginHeader />
-        <Spacer h={16} />
+        {redirectedFromAction ? (
+          <>
+            <TextCenter>
+              <H2>LOGIN</H2>
+            </TextCenter>
+            <Spacer h={32} />
+            <TextCenter>
+              To complete this request, you need to either log into your
+              existing PCDpass account, or create a new one.
+            </TextCenter>
+          </>
+        ) : (
+          <>
+            <LoginHeader />
+          </>
+        )}
+
+        <Spacer h={24} />
+
         <CenterColumn w={280}>
           <form onSubmit={onGenPass}>
             <BigInput
               type="text"
-              placeholder="email address"
+              placeholder="your email address"
               value={email}
               onChange={useCallback(
                 (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
@@ -62,7 +112,7 @@ export function LoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit">
-              Generate Pass
+              Register
             </Button>
           </form>
         </CenterColumn>
@@ -70,26 +120,28 @@ export function LoginScreen() {
         <HR />
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>Login with Sync Key</LinkButton>
+          <LinkButton to={"/sync-existing"}>
+            Login with Master Password
+          </LinkButton>
           {appConfig.isZuzalu && (
             <>
               <Spacer h={8} />
               <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
             </>
           )}
-          {!appConfig.isZuzalu && (
+          {!appConfig.isZuzalu && !redirectedFromAction && (
             <>
-              <Spacer h={24} />
+              <Spacer h={8} />
               <TextCenter>
                 <DeviceLoginLink to={"/device-login"}>
-                  Device Login
+                  Event Host Login
                 </DeviceLoginLink>
               </TextCenter>
             </>
           )}
         </CenterColumn>
-        <Spacer h={24} />
       </BackgroundGlow>
+      <Spacer h={64} />
     </AppContainer>
   );
 }
@@ -115,6 +167,7 @@ function LoginHeader() {
   return (
     <TextCenter>
       <H1>PCDPASS</H1>
+      <Spacer h={24} />
       <Description>
         This experimental passport uses zero-knowledge proofs to prove aspects
         of your identity to other websites.
