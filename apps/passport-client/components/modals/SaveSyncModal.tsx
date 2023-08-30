@@ -41,7 +41,7 @@ export function SaveSyncModal() {
         </KeyLine>
         <Spacer h={64} />
         <CenterColumn w={256}>
-          <Button onClick={close}>I've Saved My Key</Button>
+          <Button onClick={close}>I've Saved My Master Password</Button>
         </CenterColumn>
       </Wrap>
     </Modal>
