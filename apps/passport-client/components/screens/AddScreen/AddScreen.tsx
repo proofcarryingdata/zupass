@@ -36,8 +36,7 @@ export function AddScreen() {
 
   if (self == null) {
     sessionStorage.pendingAddRequest = JSON.stringify(request);
-    window.location.href = "/#/login";
-    window.location.reload();
+    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 

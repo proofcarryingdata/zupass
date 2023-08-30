@@ -86,8 +86,7 @@ export function AddHaloScreen({
   const onLoginClick = () => {
     console.log(location.search);
     sessionStorage.pendingHaloRequest = location.search;
-    window.location.href = "/#/login";
-    window.location.reload();
+    window.location.href = "/#/login?redirectedFromAction=true";
   };
 
   let content: ReactNode;

@@ -28,7 +28,7 @@ export function ProveScreen() {
 
   if (self == null) {
     sessionStorage.pendingProofRequest = JSON.stringify(request);
-    window.location.href = "/#/login";
+    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 

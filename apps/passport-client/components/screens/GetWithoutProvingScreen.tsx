@@ -62,8 +62,8 @@ export function GetWithoutProvingScreen() {
   }
 
   if (self == null) {
-    sessionStorage.pendingProofRequest = JSON.stringify(request);
-    window.location.href = "/#/login";
+    sessionStorage.pendingGetWithoutProvingRequest = JSON.stringify(request);
+    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 

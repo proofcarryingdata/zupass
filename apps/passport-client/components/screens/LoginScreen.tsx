@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -20,6 +20,9 @@ import { AppContainer } from "../shared/AppContainer";
 
 export function LoginScreen() {
   const dispatch = useDispatch();
+  const query = useQuery();
+  const redirectedFromAction = query?.get("redirectedFromAction") === "true";
+
   const self = useSelf();
   const [email, setEmail] = useState("");
 
@@ -47,8 +50,13 @@ export function LoginScreen() {
         to="var(--bg-dark-primary)"
       >
         <Spacer h={64} />
-        <LoginHeader />
-        <Spacer h={16} />
+        {!redirectedFromAction && (
+          <>
+            <LoginHeader />
+            <Spacer h={16} />
+          </>
+        )}
+
         <CenterColumn w={280}>
           <form onSubmit={onGenPass}>
             <BigInput
