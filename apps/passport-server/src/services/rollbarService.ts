@@ -23,7 +23,11 @@ export class RollbarService {
   }
 
   public reportError(e: any): void {
-    this.rollbar.error(e);
+    if (e instanceof Error) {
+      this.rollbar.error(e, e.cause as object | undefined);
+    } else {
+      this.rollbar.error(e);
+    }
   }
 
   public log(log: string): void {
