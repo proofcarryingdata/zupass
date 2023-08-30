@@ -138,3 +138,8 @@ td,
 th {
   padding: 0;
 }
+
+form {
+  margin: 0;
+  padding: 0;
+}

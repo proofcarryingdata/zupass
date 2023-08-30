@@ -111,7 +111,7 @@ export function SyncExistingScreen() {
                 []
               )}
             ></BigInput>
-            <Spacer h={16} />
+            <Spacer h={8} />
             {!isLoading && (
               <>
                 <Button style="primary" type="submit" onClick={onSyncClick}>

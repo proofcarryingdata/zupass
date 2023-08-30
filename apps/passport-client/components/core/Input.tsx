@@ -20,5 +20,6 @@ export const BigInput = styled.input`
   &:disabled {
     user-select: none;
     pointer-events: none;
+    background: rgba(0, 0, 0, 0.05);
   }
 `;

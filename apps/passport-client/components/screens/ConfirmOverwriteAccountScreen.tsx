@@ -71,13 +71,13 @@ export function ConfirmOverwriteAccountScreen() {
           <TextCenter>
             You've already registered for PCDpass. You can log in with your
             Master Password. If you've lost your Master Password, you can reset
-            your account here. Resetting your account will let you access your
+            your account. Resetting your account will let you access your
             tickets, but you'll lose all non-ticket PCDs.
           </TextCenter>
-          <Spacer h={24} />
+          <Spacer h={32} />
           <CenterColumn w={280}>
             <BigInput value={email} disabled={true} />
-            <Spacer h={16} />
+            <Spacer h={8} />
             <Button onClick={onLoginWithMasterPasswordClick}>
               Login with Master Password
             </Button>

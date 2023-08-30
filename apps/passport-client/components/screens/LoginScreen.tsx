@@ -60,14 +60,14 @@ export function LoginScreen() {
               To complete this request, you need to either log into your
               existing PCDpass account, or create a new one.
             </TextCenter>
-            <Spacer h={32} />
           </>
         ) : (
           <>
             <LoginHeader />
-            <Spacer h={32} />
           </>
         )}
+
+        <Spacer h={24} />
 
         <CenterColumn w={280}>
           <form onSubmit={onGenPass}>
@@ -101,7 +101,7 @@ export function LoginScreen() {
           )}
           {!appConfig.isZuzalu && (
             <>
-              <Spacer h={16} />
+              <Spacer h={8} />
               <TextCenter>
                 <DeviceLoginLink to={"/device-login"}>
                   Event Host Login
@@ -137,6 +137,7 @@ function LoginHeader() {
   return (
     <TextCenter>
       <H1>PCDPASS</H1>
+      <Spacer h={24} />
       <Description>
         This experimental passport uses zero-knowledge proofs to prove aspects
         of your identity to other websites.
