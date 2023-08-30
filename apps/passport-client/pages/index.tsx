@@ -3,6 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { ConfirmOverwriteAccountScreen } from "../components/screens/ConfirmOverwriteAccountScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -119,6 +120,10 @@ function RouterImpl() {
         <Route path="/">
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+          <Route
+            path="confirm-overwrite-account"
+            element={<ConfirmOverwriteAccountScreen />}
+          />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
             path="get-without-proving"
