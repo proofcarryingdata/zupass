@@ -175,7 +175,7 @@ async function loadInitialState(): Promise<AppState> {
   if (userInvalid) {
     modal = "invalid-participant";
   } else if (self != null && !localStorage["savedSyncKey"]) {
-    console.log("Asking existing user to save their sync key...");
+    console.log("Asking existing user to save their Master Password...");
     modal = "save-sync";
   }
 

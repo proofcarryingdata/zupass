@@ -256,7 +256,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   window.location.hash = "#/";
 
-  // Ask user to save their sync key
+  // Ask user to save their Master Password
   update({ modal: "save-sync" });
 }
 

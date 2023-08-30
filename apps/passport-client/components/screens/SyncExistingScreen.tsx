@@ -32,7 +32,7 @@ export function SyncExistingScreen() {
         const blobHash = await getHash(syncKey);
         storage = await downloadEncryptedStorage(blobHash);
         if (!storage) {
-          throw new Error("no e2ee for this sync key found");
+          throw new Error("no e2ee for this Master Password found");
         }
       } catch (e: unknown) {
         console.error(e);
@@ -87,14 +87,14 @@ export function SyncExistingScreen() {
           <Spacer h={32} />
           <TextCenter>
             If you've already created your passport on another device, you can
-            sync it here. You can find your sync key on your existing device by
-            clicking on the settings icon.
+            sync it here. You can find your Master Password on your existing
+            device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
           <BigInput
             disabled={isLoading}
             type="text"
-            placeholder="sync key"
+            placeholder="Master Password"
             value={syncKey}
             onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
               setSyncKey(e.target.value);

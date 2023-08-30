@@ -78,7 +78,9 @@ export function LoginScreen() {
         <HR />
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>Login with Sync Key</LinkButton>
+          <LinkButton to={"/sync-existing"}>
+            Login with Master Password
+          </LinkButton>
           {appConfig.isZuzalu && (
             <>
               <Spacer h={8} />

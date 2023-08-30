@@ -31,8 +31,8 @@ export function SaveSyncModal() {
         </TextCenter>
         <Spacer h={32} />
         <TextCenter>
-          <strong>Please save your sync key.</strong> This key secures your
-          passport and lets you log in on different devices.
+          <strong>Please save your Master Password.</strong> This key secures
+          your passport and lets you log in on different devices.
         </TextCenter>
         <Spacer h={32} />
         <KeyLine>

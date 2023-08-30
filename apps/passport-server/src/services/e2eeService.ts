@@ -1,12 +1,12 @@
 import {
   LoadE2EERequest,
   LoadE2EEResponse,
-  SaveE2EERequest,
+  SaveE2EERequest
 } from "@pcd/passport-interface";
 import { Response } from "express";
 import {
   fetchEncryptedStorage,
-  insertEncryptedStorage,
+  insertEncryptedStorage
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -40,13 +40,15 @@ export class E2EEService {
       );
 
       if (!storageModel) {
-        logger(`can't load e2ee: never saved sync key ${request.blobKey}`);
+        logger(
+          `can't load e2ee: never saved Master Password ${request.blobKey}`
+        );
         res.sendStatus(404);
         return;
       }
 
       const result: LoadE2EEResponse = {
-        encryptedStorage: JSON.parse(storageModel.encrypted_blob),
+        encryptedStorage: JSON.parse(storageModel.encrypted_blob)
       };
 
       res.json(result);
