@@ -24,6 +24,19 @@ export function EnterConfirmationCodeScreen() {
 
   const onCreateClick = useCallback(async () => {
     const token = input;
+
+    if (token === "") {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Enter Token",
+          message:
+            "Check your email for an access token from passport@0xparc.org",
+          dismissToCurrentPage: true
+        }
+      });
+      return;
+    }
     setVerifyingCode(true);
     await sleep(3000);
     await dispatch({ type: "login", email, token });
