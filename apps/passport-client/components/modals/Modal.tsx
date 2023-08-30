@@ -36,7 +36,6 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const body = getModalBody(modal);
 
   if (body == null) return null;
-
   return (
     <Modal
       fullScreen={fullScreen}
@@ -68,26 +67,22 @@ function getModalBody(modal: AppState["modal"]) {
   }
 }
 
-export function Modal({
-  onClose,
-  children,
-  fullScreen
-}: {
+export function Modal(props: {
   onClose?: () => void;
   children: ReactNode;
   fullScreen?: boolean;
 }) {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
-    <ModalBg onClick={onClose}>
-      <ModalWrap fullScreen={fullScreen} onClick={ignore}>
-        {onClose && (
-          <CircleButton diameter={20} padding={16} onClick={onClose}>
+    <ModalBg onClick={props.onClose}>
+      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
+        {props.onClose && (
+          <CircleButton diameter={20} padding={16} onClick={props.onClose}>
             <img src={icons.closeWhite} width={20} height={20} />
           </CircleButton>
         )}
         <Spacer h={32} />
-        {children}
+        {props.children}
       </ModalWrap>
     </ModalBg>
   );
@@ -103,31 +98,24 @@ const ModalBg = styled.div`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: column;
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   background: radial-gradient(circle, var(--bg-lite-gray), var(--bg-dark-gray));
-  margin: 32px 32px;
-  width: 400px;
-  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  margin: 64px auto;
   min-height: 480px;
   padding: 12px;
   border-radius: 12px;
 
-  ${({ fullScreen }) => {
-    // alert(fullScreen);
-    return fullScreen
-      ? css`
-          width: 100vw;
-          max-width: 100vw;
-          height: 100vh;
-          margin: 0;
-          border-radius: 0;
-        `
-      : css``;
-  }}
+  ${({ fullScreen }) =>
+    fullScreen &&
+    css`
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      margin: 0;
+      border-radius: 0;
+    `}
 `;
