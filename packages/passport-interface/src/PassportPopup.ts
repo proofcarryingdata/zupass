@@ -45,11 +45,20 @@ export function usePassportPopupSetup() {
       return;
     }
 
-    // Single page client-side apps need a hash router because
-    // there is no server to direct all traffic.
-    // If the URL contains a hash it will be removed to read the search parameters.
-    const url = new URL(window.location.href.replace("#", ""));
-    const params = url.searchParams;
+    let params;
+
+    // Hash routing is commonly used in web applications to enable client-side
+    // routing without requiring server-side configuration, typically single-page applications.
+    // Without hash routing, the server should always serve the same index.html file for any route.
+    // Some providers, like Github Pages, don't provide this feature.
+    // To read the parameters of a URL with hash routing, the hash must first be removed.
+    if (window.location.href.includes(window.location.origin + "/#/")) {
+      const url = new URL(window.location.href.replace("#", ""));
+
+      params = url.searchParams;
+    } else {
+      params = new URLSearchParams(window.location.search);
+    }
 
     const paramsProofUrl = params.get("proofUrl");
     const paramsProof = params.get("proof");
