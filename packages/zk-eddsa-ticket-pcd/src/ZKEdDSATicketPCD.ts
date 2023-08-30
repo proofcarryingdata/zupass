@@ -1,9 +1,9 @@
 import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  booleanToBigInt,
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  booleanToBigInt,
   ticketDataToBigInts,
   uuidToBigInt
 } from "@pcd/eddsa-ticket-pcd";
@@ -25,7 +25,7 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 /// <reference path="./util/declarations/circomlibjs.d.ts" />
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./util/declarations/snarkjs.d.ts" />
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
@@ -56,6 +56,7 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
 
 export const ZKEdDSATicketPCDTypeName = "zk-eddsa-ticket-pcd";
 
+let initializedPromise: Promise<void> | undefined;
 let babyJub: BabyJub;
 let eddsa: Eddsa;
 let initArgs: ZKEdDSATicketPCDInitArgs | undefined = undefined;
@@ -127,13 +128,28 @@ export class ZKEdDSATicketPCD
 
 export async function init(args: ZKEdDSATicketPCDInitArgs) {
   initArgs = args;
-  babyJub = await buildBabyjub();
-  eddsa = await buildEddsa();
+}
+
+async function ensureInitialized() {
+  if (!initArgs) {
+    throw new Error("missing init args");
+  }
+
+  if (!initializedPromise) {
+    initializedPromise = (async () => {
+      babyJub = await buildBabyjub();
+      eddsa = await buildEddsa();
+    })();
+  }
+
+  await initializedPromise;
 }
 
 export async function prove(
   args: ZKEdDSATicketPCDArgs
 ): Promise<ZKEdDSATicketPCD> {
+  await ensureInitialized();
+
   if (!initArgs) {
     throw new Error("Cannot make proof: init has not been called yet");
   }
@@ -310,6 +326,8 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
 }
 
 export async function verify(pcd: ZKEdDSATicketPCD): Promise<boolean> {
+  await ensureInitialized();
+
   const publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof);
 }
