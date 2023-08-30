@@ -18,11 +18,7 @@ export function SettingsModal() {
   }, [syncKey]);
 
   const clearPassport = useCallback(() => {
-    if (
-      window.confirm(
-        "Are you sure you want to clear your passport? This will delete your passport data."
-      )
-    ) {
+    if (window.confirm("Are you sure you want to log out?")) {
       dispatch({ type: "reset-passport" });
     }
   }, [dispatch]);
