@@ -1,5 +1,4 @@
 import { appConfig } from "../appConfig";
-import { sleep } from "../util";
 
 export async function requestUser(uuid: string): Promise<Response> {
   if (appConfig.isZuzalu) {
@@ -140,7 +139,6 @@ export async function requestLoginCode(
   identityCommitment: string,
   force = false
 ): Promise<string | undefined> {
-  await sleep(5000);
   const loginResponse = await requestConfirmationEmail(
     email,
     identityCommitment,

@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { useDispatch, useQuery } from "../../src/appHooks";
-import { sleep } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -37,7 +36,6 @@ export function EnterConfirmationCodeScreen() {
       return;
     }
     setVerifyingCode(true);
-    await sleep(3000);
     await dispatch({ type: "login", email, token });
     setVerifyingCode(false);
   }, [dispatch, email, input]);
