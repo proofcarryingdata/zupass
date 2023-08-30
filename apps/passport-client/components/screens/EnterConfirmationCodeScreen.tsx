@@ -5,6 +5,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
+  H2,
   Spacer,
   TextCenter
 } from "../core";
@@ -20,7 +21,7 @@ export function EnterConfirmationCodeScreen() {
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
 
-  const onOverwriteClick = useCallback(async () => {
+  const onCreateClick = useCallback(async () => {
     const token = input;
     setVerifyingCode(true);
     await dispatch({ type: "login", email, token });
@@ -41,18 +42,26 @@ export function EnterConfirmationCodeScreen() {
           to="var(--bg-dark-primary)"
         >
           <Spacer h={64} />
-          <TextCenter> enter confirmation code</TextCenter>
+          <TextCenter>
+            <H2>ENTER CONFIRMATION CODE</H2>
+          </TextCenter>
+          <Spacer h={32} />
+          <TextCenter>
+            We've sent you a confirmation code, please enter it below to set up
+            your account.
+          </TextCenter>
           <Spacer h={24} />
           <CenterColumn w={280}>
+            <BigInput value={email} disabled />
+            <Spacer h={8} />
             <BigInput
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              placeholder="confirmation code"
             />
-            <Spacer h={16} />
-            <Button onClick={onOverwriteClick} style="danger">
-              Overwrite
-            </Button>
-            <Spacer h={16} />
+            <Spacer h={8} />
+            <Button onClick={onCreateClick}>Login</Button>
+            <Spacer h={8} />
             <Button onClick={onCancelClick}>Cancel</Button>
           </CenterColumn>
         </BackgroundGlow>

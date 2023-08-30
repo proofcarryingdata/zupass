@@ -7,6 +7,8 @@ import {
   BigInput,
   Button,
   CenterColumn,
+  H2,
+  HR,
   Spacer,
   TextCenter
 } from "../core";
@@ -41,6 +43,10 @@ export function ConfirmOverwriteAccountScreen() {
       .catch((e) => err(dispatch, "Email failed", e.message));
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
+  const onLoginWithMasterPasswordClick = useCallback(() => {
+    window.location.href = "#/sync-existing";
+  }, []);
+
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
   }, []);
@@ -56,17 +62,32 @@ export function ConfirmOverwriteAccountScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <div>you've already registered, are you sure?</div>
+            <H2>YOU'VE ALREADY REGISTERED</H2>
+          </TextCenter>
+          <Spacer h={32} />
+          <TextCenter>
+            You've already registered for PCDpass. You can log in with your
+            Master Password. If you've lost your Master Password, you can reset
+            your account here. Resetting your account will let you access your
+            tickets, but you'll lose all non-ticket PCDs.
           </TextCenter>
           <Spacer h={24} />
           <CenterColumn w={280}>
             <BigInput value={email} disabled />
             <Spacer h={16} />
-            <Button onClick={onOverwriteClick} style="danger">
-              Overwrite
+            <Button onClick={onLoginWithMasterPasswordClick}>
+              Login with Master Password
             </Button>
-            <Spacer h={16} />
+            <Spacer h={8} />
             <Button onClick={onCancelClick}>Cancel</Button>
+          </CenterColumn>
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
+          <CenterColumn w={280}>
+            <Button onClick={onOverwriteClick} style="danger">
+              Reset Account
+            </Button>
           </CenterColumn>
         </BackgroundGlow>
       </AppContainer>

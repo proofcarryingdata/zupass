@@ -108,7 +108,7 @@ export function SyncExistingScreen() {
               </Button>
               <Spacer h={8} />
               <Button style="danger" type="submit" onClick={onClose}>
-                Back
+                Cancel
               </Button>
             </>
           )}
