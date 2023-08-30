@@ -66,4 +66,6 @@ const KeyPre = styled.div`
   padding: 12px 12px 4px 12px;
   overflow: hidden;
   text-overflow: ellipsis;
+  user-select: none;
+  pointer-events: none;
 `;

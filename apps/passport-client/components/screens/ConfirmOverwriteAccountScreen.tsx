@@ -76,7 +76,7 @@ export function ConfirmOverwriteAccountScreen() {
           </TextCenter>
           <Spacer h={24} />
           <CenterColumn w={280}>
-            <BigInput value={email} disabled />
+            <BigInput value={email} disabled={true} />
             <Spacer h={16} />
             <Button onClick={onLoginWithMasterPasswordClick}>
               Login with Master Password
