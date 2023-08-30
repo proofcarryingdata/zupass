@@ -89,10 +89,10 @@ export function LoginScreen() {
           )}
           {!appConfig.isZuzalu && (
             <>
-              <Spacer h={24} />
+              <Spacer h={16} />
               <TextCenter>
                 <DeviceLoginLink to={"/device-login"}>
-                  Device Login
+                  Event Host Login
                 </DeviceLoginLink>
               </TextCenter>
             </>

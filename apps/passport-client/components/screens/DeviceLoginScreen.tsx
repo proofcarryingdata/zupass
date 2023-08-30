@@ -26,7 +26,7 @@ export function DeviceLoginScreen() {
       <Container>
         <Spacer h={64} />
         <TextCenter>
-          <H2>DEVICE LOGIN</H2>
+          <H2>EVENT HOST LOGIN</H2>
           <Spacer h={32} />
           <TextCenter>
             Log in using the device-specific email and secret key

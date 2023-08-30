@@ -8,7 +8,14 @@ import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch } from "../../src/appHooks";
-import { BigInput, Button, H2, Spacer, TextCenter } from "../core";
+import {
+  BigInput,
+  Button,
+  CenterColumn,
+  H2,
+  Spacer,
+  TextCenter
+} from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -83,7 +90,7 @@ export function SyncExistingScreen() {
       <Container>
         <Spacer h={64} />
         <TextCenter>
-          <H2>SYNC EXISTING PASSPORT</H2>
+          <H2>LOGIN WITH MASTER PASSWORD</H2>
           <Spacer h={32} />
           <TextCenter>
             If you've already created your passport on another device, you can
@@ -91,33 +98,38 @@ export function SyncExistingScreen() {
             device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
-          <BigInput
-            disabled={isLoading}
-            type="text"
-            placeholder="Master Password"
-            value={syncKey}
-            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-              setSyncKey(e.target.value);
-            }, [])}
-          ></BigInput>
-          <Spacer h={16} />
-          {!isLoading && (
-            <>
-              <Button style="primary" type="submit" onClick={onSyncClick}>
-                Sync
-              </Button>
-              <Spacer h={8} />
-              <Button style="danger" type="submit" onClick={onClose}>
-                Cancel
-              </Button>
-            </>
-          )}
-          {isLoading && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
-          <Spacer h={32} />
+          <CenterColumn w={280}>
+            <BigInput
+              disabled={isLoading}
+              type="text"
+              placeholder="Master Password"
+              value={syncKey}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSyncKey(e.target.value);
+                },
+                []
+              )}
+            ></BigInput>
+            <Spacer h={16} />
+            {!isLoading && (
+              <>
+                <Button style="primary" type="submit" onClick={onSyncClick}>
+                  Login
+                </Button>
+                <Spacer h={8} />
+                <Button type="submit" onClick={onClose}>
+                  Cancel
+                </Button>
+              </>
+            )}
+            {isLoading && (
+              <div>
+                <RippleLoader />
+              </div>
+            )}
+            <Spacer h={32} />
+          </CenterColumn>
         </TextCenter>
       </Container>
     </AppContainer>
