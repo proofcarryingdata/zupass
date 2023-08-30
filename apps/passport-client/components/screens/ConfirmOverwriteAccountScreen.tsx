@@ -12,11 +12,8 @@ export function ConfirmOverwriteAccountScreen() {
   const email = query?.get("email");
   const identityCommitment = query?.get("identityCommitment");
 
-  alert(email);
-
   const onEmailSuccess = useCallback(
     (devToken: string | undefined) => {
-      alert();
       if (devToken === undefined) {
         setEmailSent(true);
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
@@ -44,11 +41,11 @@ export function ConfirmOverwriteAccountScreen() {
       <div>you've already registered, are you sure?</div>
       <BigInput value={email} disabled />
       <Spacer h={16} />
-      <Button onClick={onOverwriteClick}>Overwrite</Button>
-      <Spacer h={16} />
-      <Button onClick={onNeverMindClick} style="danger">
-        Never Mind
+      <Button onClick={onOverwriteClick} style="danger">
+        Overwrite
       </Button>
+      <Spacer h={16} />
+      <Button onClick={onNeverMindClick}>Never Mind</Button>
     </div>
   );
 }
