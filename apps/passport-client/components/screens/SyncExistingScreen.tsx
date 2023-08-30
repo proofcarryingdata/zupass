@@ -31,6 +31,17 @@ export function SyncExistingScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const onSyncClick = useCallback(() => {
+    if (syncKey === "") {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Missing Password",
+          message: "You must enter a Master Password.",
+          dismissToCurrentPage: true
+        }
+      });
+      return;
+    }
     const load = async () => {
       let storage: EncryptedPacket;
       try {
