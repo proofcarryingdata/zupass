@@ -7,7 +7,6 @@ import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
-// todo: handle case when user is logged in - they shouldn't be able to get to this screen
 export function LoginInterstitialScreen() {
   useSyncE2EEStorage();
 
@@ -19,7 +18,6 @@ export function LoginInterstitialScreen() {
     }
   }, [loadedIssuedPCDs]);
 
-  // todo: style this
   return (
     <>
       <MaybeModal />
