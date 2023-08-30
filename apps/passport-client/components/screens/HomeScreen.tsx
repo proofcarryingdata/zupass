@@ -211,7 +211,7 @@ function FolderCard({
 
   return (
     <FolderEntryContainer onClick={onClick}>
-      <img src={icons.folder} width={20} height={20} />
+      <img src={icons.folder} width={18} height={18} />
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
@@ -268,7 +268,7 @@ const FolderHeader = styled.div`
     flex-grow: 0;
     display: inline-block;
     padding-top: 16px;
-    padding-left: 16px;
+    padding-left: 12px;
   }
 `;
 
