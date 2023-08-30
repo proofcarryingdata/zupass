@@ -87,51 +87,46 @@ export function SyncExistingScreen() {
 
   return (
     <AppContainer bg="primary">
-      <Container>
-        <Spacer h={64} />
+      <Spacer h={64} />
+      <TextCenter>
+        <H2>LOGIN WITH MASTER PASSWORD</H2>
+        <Spacer h={32} />
         <TextCenter>
-          <H2>LOGIN WITH MASTER PASSWORD</H2>
-          <Spacer h={32} />
-          <TextCenter>
-            If you've already created your passport on another device, you can
-            sync it here. You can find your Master Password on your existing
-            device by clicking on the settings icon.
-          </TextCenter>
-          <Spacer h={32} />
-          <CenterColumn w={280}>
-            <BigInput
-              disabled={isLoading}
-              type="text"
-              placeholder="Master Password"
-              value={syncKey}
-              onChange={useCallback(
-                (e: React.ChangeEvent<HTMLInputElement>) => {
-                  setSyncKey(e.target.value);
-                },
-                []
-              )}
-            ></BigInput>
-            <Spacer h={8} />
-            {!isLoading && (
-              <>
-                <Button style="primary" type="submit" onClick={onSyncClick}>
-                  Login
-                </Button>
-                <Spacer h={8} />
-                <Button type="submit" onClick={onClose}>
-                  Cancel
-                </Button>
-              </>
-            )}
-            {isLoading && (
-              <div>
-                <RippleLoader />
-              </div>
-            )}
-            <Spacer h={32} />
-          </CenterColumn>
+          If you've already created your passport on another device, you can
+          sync it here using your Master Password. You can find your Master
+          Password on your existing device by clicking on the settings icon.
         </TextCenter>
-      </Container>
+        <Spacer h={32} />
+        <CenterColumn w={280}>
+          <BigInput
+            disabled={isLoading}
+            type="text"
+            placeholder="Master Password"
+            value={syncKey}
+            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+              setSyncKey(e.target.value);
+            }, [])}
+          ></BigInput>
+          <Spacer h={8} />
+          {!isLoading && (
+            <>
+              <Button style="primary" type="submit" onClick={onSyncClick}>
+                Login
+              </Button>
+              <Spacer h={8} />
+              <Button type="submit" onClick={onClose}>
+                Cancel
+              </Button>
+            </>
+          )}
+          {isLoading && (
+            <div>
+              <RippleLoader />
+            </div>
+          )}
+          <Spacer h={32} />
+        </CenterColumn>
+      </TextCenter>
     </AppContainer>
   );
 }
