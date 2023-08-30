@@ -18,17 +18,22 @@ export function ProveScreen() {
   const self = useSelf();
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
-
   const screen = getScreen(request);
+
   useEffect(() => {
     if (screen === null) {
       err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     }
   }, [dispatch, screen]);
 
+  useEffect(() => {
+    if (self == null) {
+      sessionStorage.pendingProofRequest = JSON.stringify(request);
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
+
   if (self == null) {
-    sessionStorage.pendingProofRequest = JSON.stringify(request);
-    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 
