@@ -44,7 +44,7 @@ export function SettingsModal() {
         </Button>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
-          Clear Passport
+          Log Out
         </Button>
       </CenterColumn>
     </>
