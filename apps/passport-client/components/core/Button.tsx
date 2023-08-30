@@ -37,7 +37,7 @@ const buttonStyle = `
   opacity: 1;
   cursor: pointer;
   &:hover {
-    opacity: 0.95;
+    background: var(--accent-darker);
   }
   &:active {
     opacity: 0.9;
@@ -62,6 +62,9 @@ const BtnBase = styled.button<{ size?: "large" | "small" }>`
 const BtnDanger = styled(BtnBase)`
   color: #fff;
   background: var(--danger);
+  &:hover {
+    background: var(--danger-lite);
+  }
 `;
 
 export const LinkButton = styled(Link)`
