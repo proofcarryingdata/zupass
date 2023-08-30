@@ -3,7 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
-import { ConfirmOverwriteAccountScreen } from "../components/screens/ConfirmOverwriteAccountScreen";
+import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
@@ -127,8 +127,8 @@ function RouterImpl() {
             element={<LoginInterstitialScreen />}
           />
           <Route
-            path="confirm-overwrite-account"
-            element={<ConfirmOverwriteAccountScreen />}
+            path="already-registered"
+            element={<AlreadyRegisteredScreen />}
           />
           <Route
             path="enter-confirmation-code"

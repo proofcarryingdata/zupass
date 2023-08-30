@@ -64,7 +64,7 @@ function SendEmailVerification({ email }: { email: string }) {
       .catch((e) => {
         const message = e.message as string;
         if (message.includes("already registered")) {
-          window.location.href = `#/confirm-overwrite-account?email=${encodeURIComponent(
+          window.location.href = `#/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()

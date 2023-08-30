@@ -17,7 +17,7 @@ import { AppContainer } from "../shared/AppContainer";
 
 // todo: handle case when user is logged in - they shouldn't be able to get to this screen
 // todo: rename this to something that better reflects what this screen is
-export function ConfirmOverwriteAccountScreen() {
+export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
