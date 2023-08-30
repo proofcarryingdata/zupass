@@ -1,4 +1,10 @@
-import { ChangeEvent, FormEvent, useCallback, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useState
+} from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
@@ -59,10 +65,12 @@ export function LoginScreen() {
     [dispatch, email]
   );
 
-  // Redirect to home if already logged in
-  if (self != null) {
-    window.location.hash = "#/";
-  }
+  useEffect(() => {
+    // Redirect to home if already logged in
+    if (self != null) {
+      window.location.hash = "#/";
+    }
+  }, [self]);
 
   return (
     <AppContainer bg="primary">
