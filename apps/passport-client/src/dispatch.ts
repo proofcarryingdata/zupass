@@ -182,7 +182,11 @@ async function login(
 ) {
   let user: User;
   try {
-    const res = await submitNewUser(email, token, state.identity);
+    const res = await submitNewUser(
+      email,
+      token,
+      state.identity.commitment.toString()
+    );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
   } catch (e) {
@@ -207,7 +211,11 @@ async function deviceLogin(
 ) {
   let user: User;
   try {
-    const res = await submitDeviceLogin(email, secret, state.identity);
+    const res = await submitDeviceLogin(
+      email,
+      secret,
+      state.identity.commitment.toString()
+    );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
   } catch (e) {

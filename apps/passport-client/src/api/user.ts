@@ -128,3 +128,36 @@ export async function submitDeviceLogin(
   if (!res.ok) throw new Error(await res.text());
   return res;
 }
+
+/**
+ * Server checks that email address is on the list, then sends the code. In the
+ * case that verification emails are disabled on the server, also returns the
+ * confirmation code, so the client can automatically 'verify' the user.
+ */
+export async function requestLoginCode(
+  email: string,
+  identityCommitment: string,
+  force = false
+): Promise<string | undefined> {
+  const loginResponse = await requestConfirmationEmail(
+    email,
+    identityCommitment,
+    force
+  );
+  const responseText = await loginResponse.text();
+
+  try {
+    // in the case that email verification is disabled, we get back
+    // the token in the response to this request
+    const parsedResponse = JSON.parse(responseText);
+    if (parsedResponse.token) {
+      return parsedResponse.token;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+
+  if (loginResponse.ok) return undefined;
+
+  throw new Error(responseText);
+}

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { requestConfirmationEmail } from "../../src/api/user";
+import { requestLoginCode } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -166,39 +166,6 @@ function Header() {
       </>
     );
   }
-}
-
-/**
- * Server checks that email address is on the list, then sends the code. In the
- * case that verification emails are disabled on the server, also returns the
- * confirmation code, so the client can automatically 'verify' the user.
- */
-async function requestLoginCode(
-  email: string,
-  identityCommitment: string,
-  force = false
-): Promise<string | undefined> {
-  const loginResponse = await requestConfirmationEmail(
-    email,
-    identityCommitment,
-    force
-  );
-  const responseText = await loginResponse.text();
-
-  try {
-    // in the case that email verification is disabled, we get back
-    // the token in the response to this request
-    const parsedResponse = JSON.parse(responseText);
-    if (parsedResponse.token) {
-      return parsedResponse.token;
-    }
-  } catch (e) {
-    console.log(e);
-  }
-
-  if (loginResponse.ok) return undefined;
-
-  throw new Error(responseText);
 }
 
 const PItalic = styled.p`

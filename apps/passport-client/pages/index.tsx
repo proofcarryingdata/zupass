@@ -6,6 +6,7 @@ import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { ConfirmOverwriteAccountScreen } from "../components/screens/ConfirmOverwriteAccountScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
+import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -123,6 +124,10 @@ function RouterImpl() {
           <Route
             path="confirm-overwrite-account"
             element={<ConfirmOverwriteAccountScreen />}
+          />
+          <Route
+            path="enter-confirmation-code"
+            element={<EnterConfirmationCodeScreen />}
           />
           <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
