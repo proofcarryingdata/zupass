@@ -36,6 +36,7 @@ export function NewPassportScreen() {
   if (pendingAction == null || pendingAction.type !== "new-passport") {
     return null;
   }
+
   return <SendEmailVerification email={pendingAction.email} />;
 }
 
@@ -43,10 +44,9 @@ function SendEmailVerification({ email }: { email: string }) {
   const identity = useIdentity();
   const dispatch = useDispatch();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
 
-  // Request email verification from the server.
-  const [emailSent, setEmailSent] = useState(false);
   useEffect(() => {
     if (triedSendingEmail) return;
     setTriedSendingEmail(true);
@@ -69,22 +69,6 @@ function SendEmailVerification({ email }: { email: string }) {
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
           )}`;
-
-          //           const result = window.confirm(`
-          // This email is already registered. Do you want to continue anyway?
-
-          // This will clear your old passport.
-
-          // IF YOU STILL HAVE YOUR OLD PASSPORT, CANCEL
-          // AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
-          //           if (result) {
-          //             requestLoginCode(email, identity.commitment.toString(), true)
-          //               .then(handleResult)
-          //               .catch((e) => err(dispatch, "Email failed", e.message));
-          //           } else {
-          //             window.location.href = "#/";
-          //             window.location.reload();
-          //           }
         } else {
           err(dispatch, "Email failed", message);
         }
@@ -110,26 +94,32 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <Header />
-          <PItalic>Generating passport...</PItalic>
-          <PItalic>Sending verification email...</PItalic>
+          <RippleLoader />
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <BigInput
-            disabled={verifyingCode}
-            ref={inRef}
-            placeholder="code from email"
-          />
-          <Spacer h={8} />
+          {emailSent && (
+            <>
+              {" "}
+              <BigInput
+                disabled={verifyingCode}
+                ref={inRef}
+                placeholder="code from email"
+              />
+              <Spacer h={8} />
+            </>
+          )}
           {verifyingCode && (
             <div>
               <RippleLoader />
             </div>
           )}
-          {!verifyingCode && <Button onClick={verify}>Verify</Button>}
+          {!verifyingCode && emailSent && (
+            <Button onClick={verify}>Verify</Button>
+          )}
         </CenterColumn>
-        {!verifyingCode && (
+        {!verifyingCode && emailSent && (
           <>
             <Spacer h={48} />
             <HR />
