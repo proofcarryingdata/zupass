@@ -50,10 +50,22 @@ export function LoginScreen() {
         to="var(--bg-dark-primary)"
       >
         <Spacer h={64} />
-        {!redirectedFromAction && (
+        {redirectedFromAction ? (
+          <>
+            <TextCenter>
+              <H2>LOGIN</H2>
+            </TextCenter>
+            <Spacer h={32} />
+            <TextCenter>
+              To complete this request, you need to either log into your
+              existing PCDpass account, or create a new one.
+            </TextCenter>
+            <Spacer h={32} />
+          </>
+        ) : (
           <>
             <LoginHeader />
-            <Spacer h={16} />
+            <Spacer h={32} />
           </>
         )}
 
@@ -70,7 +82,7 @@ export function LoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit">
-              Generate Pass
+              Register
             </Button>
           </form>
         </CenterColumn>
