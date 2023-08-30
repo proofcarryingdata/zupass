@@ -51,7 +51,8 @@ export function SyncExistingScreen() {
               "Couldn't load end-to-end encrypted backup. " +
               `If this is your first time using ${
                 appConfig.isZuzalu ? "zupass.org" : "pcdpass.xyz"
-              }, please generate a new passport instead.`
+              }, please generate a new passport instead.`,
+            dismissToCurrentPage: true
           }
         });
         setIsLoading(false);
@@ -76,7 +77,12 @@ export function SyncExistingScreen() {
       console.error(e);
       dispatch({
         type: "error",
-        error: { title: "Sync failed", message, stack }
+        error: {
+          title: "Sync failed",
+          message,
+          stack,
+          dismissToCurrentPage: true
+        }
       });
     });
   }, [syncKey, dispatch]);
