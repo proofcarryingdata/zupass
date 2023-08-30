@@ -8,13 +8,20 @@ import { insertTelegramVerification } from "../database/queries/telegram/insertT
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { sleep } from "../util/util";
+import { RollbarService } from "./rollbarService";
 
 export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
+  private rollbarService: RollbarService | null;
 
-  public constructor(context: ApplicationContext, bot: Bot) {
+  public constructor(
+    context: ApplicationContext,
+    rollbarService: RollbarService | null,
+    bot: Bot
+  ) {
     this.context = context;
+    this.rollbarService = rollbarService;
     this.bot = bot;
 
     // Users gain access to gated chats by requesting to join. The bot
@@ -24,65 +31,83 @@ export class TelegramService {
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
     this.bot.on("chat_join_request", async (ctx) => {
-      const chatId = ctx.chatJoinRequest.chat.id;
-      const userId = ctx.chatJoinRequest.user_chat_id;
+      try {
+        const chatId = ctx.chatJoinRequest.chat.id;
+        const userId = ctx.chatJoinRequest.user_chat_id;
 
-      logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
+        logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
 
-      // Check if this user is verified for the chat in question
-      const isVerified = await fetchTelegramVerificationStatus(
-        this.context.dbPool,
-        userId,
-        chatId
-      );
-
-      if (isVerified) {
-        logger(
-          `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
+        // Check if this user is verified for the chat in question
+        const isVerified = await fetchTelegramVerificationStatus(
+          this.context.dbPool,
+          userId,
+          chatId
         );
-        await this.bot.api.approveChatJoinRequest(chatId, userId);
-        await this.bot.api.sendMessage(userId, "Your invitation was approved!");
+
+        if (isVerified) {
+          logger(
+            `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
+          );
+          await this.bot.api.approveChatJoinRequest(chatId, userId);
+          await this.bot.api.sendMessage(
+            userId,
+            "Your invitation was approved!"
+          );
+        }
+      } catch (e) {
+        logger("[TELEGRAM] chat_join_request error", e);
+        this.rollbarService?.reportError(e);
       }
     });
 
     // When a user joins the channel, remove their verification, so they
     // cannot rejoin without verifying again.
     this.bot.on("chat_member", async (ctx) => {
-      const newMember = ctx.update.chat_member.new_chat_member;
-      if (newMember.status === "member") {
-        logger(
-          `[TELEGRAM] Deleting verification for user ${newMember.user.id} in chat ${ctx.chat.id}`
-        );
-        deleteTelegramVerification(
-          this.context.dbPool,
-          newMember.user.id,
-          ctx.chat.id
-        );
+      try {
+        const newMember = ctx.update.chat_member.new_chat_member;
+        if (newMember.status === "member") {
+          logger(
+            `[TELEGRAM] Deleting verification for user ${newMember.user.id} in chat ${ctx.chat.id}`
+          );
+          await deleteTelegramVerification(
+            this.context.dbPool,
+            newMember.user.id,
+            ctx.chat.id
+          );
+        }
+      } catch (e) {
+        logger("[TELEGRAM] chat_member error", e);
+        this.rollbarService?.reportError(e);
       }
     });
 
     // The "start" command initiates the process of invitation and approval.
     this.bot.command("start", async (ctx) => {
-      // Only process the command if it comes as a private message.
-      if (ctx.message) {
-        const userId = ctx.message.from.id;
-        ctx.reply(
-          "Welcome! 👋\n\nPlease verify your credentials via the Passport app, so we can add you to the correct channels.",
-          {
-            reply_markup: new InlineKeyboard().url(
-              "Verify with Passport 🚀",
-              encodeURI(
-                `${
-                  process.env.PASSPORT_CLIENT_URL
-                }/#/get-without-proving?request=${JSON.stringify({
-                  type: "GetWithoutProving",
-                  returnUrl: `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`,
-                  pcdType: "eddsa-ticket-pcd"
-                })}`
+      try {
+        // Only process the command if it comes as a private message.
+        if (ctx.message) {
+          const userId = ctx.message.from.id;
+          await ctx.reply(
+            "Welcome! 👋\n\nPlease verify your credentials via the Passport app, so we can add you to the correct channels.",
+            {
+              reply_markup: new InlineKeyboard().url(
+                "Verify with Passport 🚀",
+                encodeURI(
+                  `${
+                    process.env.PASSPORT_CLIENT_URL
+                  }/#/get-without-proving?request=${JSON.stringify({
+                    type: "GetWithoutProving",
+                    returnUrl: `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`,
+                    pcdType: "eddsa-ticket-pcd"
+                  })}`
+                )
               )
-            )
-          }
-        );
+            }
+          );
+        }
+      } catch (e) {
+        logger("[TELEGRAM] start error", e);
+        this.rollbarService?.reportError(e);
       }
     });
   }
@@ -111,7 +136,8 @@ export class TelegramService {
         allowed_updates: ["chat_join_request", "chat_member", "message"]
       });
     } catch (e) {
-      logger(`[TELEGRAM] Error starting bot: ${e}`);
+      logger(`[TELEGRAM] Error starting bot`, e);
+      this.rollbarService?.reportError(e);
     }
   }
 
@@ -236,7 +262,8 @@ export class TelegramService {
 }
 
 export async function startTelegramService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  rollbarService: RollbarService | null
 ): Promise<TelegramService | null> {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
     logger(
@@ -248,7 +275,7 @@ export async function startTelegramService(
   const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
   await bot.init();
 
-  const service = new TelegramService(context, bot);
+  const service = new TelegramService(context, rollbarService, bot);
   // Start the bot, but do not await on the result here.
   service.startBot();
 
