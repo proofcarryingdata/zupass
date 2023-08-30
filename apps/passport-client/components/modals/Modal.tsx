@@ -68,22 +68,26 @@ function getModalBody(modal: AppState["modal"]) {
   }
 }
 
-export function Modal(props: {
+export function Modal({
+  onClose,
+  children,
+  fullScreen
+}: {
   onClose?: () => void;
   children: ReactNode;
   fullScreen?: boolean;
 }) {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
-    <ModalBg onClick={props.onClose}>
-      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
-        {props.onClose && (
-          <CircleButton diameter={20} padding={16} onClick={props.onClose}>
+    <ModalBg onClick={onClose}>
+      <ModalWrap fullScreen={fullScreen} onClick={ignore}>
+        {onClose && (
+          <CircleButton diameter={20} padding={16} onClick={onClose}>
             <img src={icons.closeWhite} width={20} height={20} />
           </CircleButton>
         )}
         <Spacer h={32} />
-        {props.children}
+        {children}
       </ModalWrap>
     </ModalBg>
   );
@@ -114,8 +118,9 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   padding: 12px;
   border-radius: 12px;
 
-  ${({ fullScreen }) =>
-    fullScreen
+  ${({ fullScreen }) => {
+    // alert(fullScreen);
+    return fullScreen
       ? css`
           width: 100vw;
           max-width: 100vw;
@@ -123,5 +128,6 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
           margin: 0;
           border-radius: 0;
         `
-      : css``}
+      : css``;
+  }}
 `;

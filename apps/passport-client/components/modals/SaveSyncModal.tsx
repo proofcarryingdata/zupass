@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSyncKey } from "../../src/appHooks";
 import { Button, CenterColumn, H2, Spacer, TextCenter } from "../core";
-import { Modal } from "./Modal";
 
 export function SaveSyncModal() {
   const dispatch = useDispatch();
@@ -24,27 +23,25 @@ export function SaveSyncModal() {
   if (syncKey == null) return null;
 
   return (
-    <Modal>
-      <Wrap>
-        <TextCenter>
-          <H2>WELCOME TO {appConfig.isZuzalu ? "ZUPASS" : "PCDPASS"}</H2>
-        </TextCenter>
-        <Spacer h={32} />
-        <TextCenter>
-          <strong>Please save your Master Password.</strong> This key secures
-          your passport and lets you log in on different devices.
-        </TextCenter>
-        <Spacer h={32} />
-        <KeyLine>
-          <KeyPre>{syncKey}</KeyPre>
-          <Button onClick={copyKey}>{justCopied ? "Copied" : "Copy"}</Button>
-        </KeyLine>
-        <Spacer h={64} />
-        <CenterColumn w={256}>
-          <Button onClick={close}>I've Saved My Master Password</Button>
-        </CenterColumn>
-      </Wrap>
-    </Modal>
+    <Wrap>
+      <TextCenter>
+        <H2>WELCOME TO {appConfig.isZuzalu ? "ZUPASS" : "PCDPASS"}</H2>
+      </TextCenter>
+      <Spacer h={32} />
+      <TextCenter>
+        <strong>Please save your Master Password.</strong> This key secures your
+        passport and lets you log in on different devices.
+      </TextCenter>
+      <Spacer h={32} />
+      <KeyLine>
+        <KeyPre>{syncKey}</KeyPre>
+        <Button onClick={copyKey}>{justCopied ? "Copied" : "Copy"}</Button>
+      </KeyLine>
+      <Spacer h={64} />
+      <CenterColumn w={256}>
+        <Button onClick={close}>I've Saved My Master Password</Button>
+      </CenterColumn>
+    </Wrap>
   );
 }
 
