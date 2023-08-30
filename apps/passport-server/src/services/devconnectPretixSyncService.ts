@@ -212,6 +212,6 @@ export async function startDevconnectPretixSyncService(
     semaphoreService
   );
 
-  // pretixSyncService.startSyncLoop();
+  pretixSyncService.startSyncLoop();
   return pretixSyncService;
 }
