@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -29,10 +30,31 @@ export function LoginScreen() {
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      dispatch({
-        type: "new-passport",
-        email: email.toLocaleLowerCase("en-US")
-      });
+
+      if (email === "") {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Enter an Email",
+            message: "You must enter an email address to register.",
+            dismissToCurrentPage: true
+          }
+        });
+      } else if (validateEmail(email) === false) {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Invalid Email",
+            message: `'${email}' is not a valid email.`,
+            dismissToCurrentPage: true
+          }
+        });
+      } else {
+        dispatch({
+          type: "new-passport",
+          email: email.toLocaleLowerCase("en-US")
+        });
+      }
     },
     [dispatch, email]
   );
@@ -73,7 +95,7 @@ export function LoginScreen() {
           <form onSubmit={onGenPass}>
             <BigInput
               type="text"
-              placeholder="email address"
+              placeholder="your email address"
               value={email}
               onChange={useCallback(
                 (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
