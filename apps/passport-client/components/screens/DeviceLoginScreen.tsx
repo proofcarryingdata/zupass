@@ -29,7 +29,7 @@ export function DeviceLoginScreen() {
           <H2>EVENT HOST LOGIN</H2>
           <Spacer h={32} />
           <TextCenter>
-            Log in using the device-specific email and secret key
+            Login using the device-specific email and secret key
           </TextCenter>
         </TextCenter>
         <Spacer h={24} />
@@ -56,7 +56,7 @@ export function DeviceLoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit" onClick={onAuthenticate}>
-              Authenticate
+              Login
             </Button>
           </form>
         </CenterColumn>
