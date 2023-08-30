@@ -18,7 +18,6 @@ export function EnterConfirmationCodeScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
   const email = query?.get("email");
-  // todo: handle loading state
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
 
