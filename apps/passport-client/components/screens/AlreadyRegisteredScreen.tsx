@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { requestLoginCode } from "../../src/api/user";
-import { useDispatch, useQuery } from "../../src/appHooks";
+import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { err } from "../../src/util";
 import {
   BackgroundGlow,
@@ -15,10 +15,9 @@ import {
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
-// todo: handle case when user is logged in - they shouldn't be able to get to this screen
-// todo: rename this to something that better reflects what this screen is
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
+  const self = useSelf();
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const query = useQuery();
@@ -53,6 +52,16 @@ export function AlreadyRegisteredScreen() {
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
   }, []);
+
+  useEffect(() => {
+    if (self) {
+      window.location.href = "#/";
+    }
+  }, [self]);
+
+  if (self) {
+    return null;
+  }
 
   return (
     <>
