@@ -92,9 +92,9 @@ export function SyncExistingScreen() {
         <H2>LOGIN WITH MASTER PASSWORD</H2>
         <Spacer h={32} />
         <TextCenter>
-          If you've already created your passport on another device, you can
-          sync it here using your Master Password. You can find your Master
-          Password on your existing device by clicking on the settings icon.
+          If you've already registered, you can sync with your other device here
+          using your Master Password. You can find your Master Password on your
+          existing device by clicking on the settings icon.
         </TextCenter>
         <Spacer h={32} />
         <CenterColumn w={280}>
