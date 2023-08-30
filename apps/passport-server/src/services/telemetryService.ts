@@ -135,5 +135,10 @@ export function setError(e: Error | any, span?: Span): void {
 
   if (e instanceof Error && e.stack) {
     span?.setAttribute("error_trace", e.stack);
+
+    if (e.cause instanceof Error && e.cause.stack) {
+      span?.setAttribute("error_cause", e.cause.message);
+      span?.setAttribute("error_cause_stack", e.cause.stack);
+    }
   }
 }
