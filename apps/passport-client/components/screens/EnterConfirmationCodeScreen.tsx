@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { useDispatch, useQuery } from "../../src/appHooks";
+import { sleep } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -9,6 +10,7 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -23,7 +25,7 @@ export function EnterConfirmationCodeScreen() {
   const onCreateClick = useCallback(async () => {
     const token = input;
     setVerifyingCode(true);
-    // todo: handle dev mode
+    await sleep(3000);
     await dispatch({ type: "login", email, token });
     setVerifyingCode(false);
   }, [dispatch, email, input]);
@@ -58,11 +60,21 @@ export function EnterConfirmationCodeScreen() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="confirmation code"
+              disabled={verifyingCode}
             />
-            <Spacer h={8} />
-            <Button onClick={onCreateClick}>Login</Button>
-            <Spacer h={8} />
-            <Button onClick={onCancelClick}>Cancel</Button>
+            {verifyingCode ? (
+              <>
+                <Spacer h={16} />
+                <RippleLoader />
+              </>
+            ) : (
+              <>
+                <Spacer h={8} />
+                <Button onClick={onCreateClick}>Login</Button>
+                <Spacer h={8} />
+                <Button onClick={onCancelClick}>Cancel</Button>
+              </>
+            )}
           </CenterColumn>
         </BackgroundGlow>
       </AppContainer>

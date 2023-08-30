@@ -12,6 +12,7 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
@@ -19,7 +20,6 @@ export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
   const self = useSelf();
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
   const query = useQuery();
   const email = query?.get("email");
   const identityCommitment = query?.get("identityCommitment");
@@ -27,7 +27,6 @@ export function AlreadyRegisteredScreen() {
   const onEmailSuccess = useCallback(
     (devToken: string | undefined) => {
       if (devToken === undefined) {
-        setEmailSent(true);
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
         )}&identityCommitment=${encodeURIComponent(identityCommitment)}`;
@@ -39,10 +38,13 @@ export function AlreadyRegisteredScreen() {
   );
 
   const onOverwriteClick = useCallback(() => {
+    setSendingEmail(true);
     requestLoginCode(email, identityCommitment, true)
       .then(onEmailSuccess)
-      // todo: display to user
-      .catch((e) => err(dispatch, "Email failed", e.message));
+      .catch((e) => {
+        err(dispatch, "Email failed", e.message);
+        setSendingEmail(false);
+      });
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
@@ -84,23 +86,29 @@ export function AlreadyRegisteredScreen() {
             tickets, but you'll lose all non-ticket PCDs.
           </TextCenter>
           <Spacer h={32} />
-          <CenterColumn w={280}>
-            <BigInput value={email} disabled={true} />
-            <Spacer h={8} />
-            <Button onClick={onLoginWithMasterPasswordClick}>
-              Login with Master Password
-            </Button>
-            <Spacer h={8} />
-            <Button onClick={onCancelClick}>Cancel</Button>
-          </CenterColumn>
-          <Spacer h={24} />
-          <HR />
-          <Spacer h={24} />
-          <CenterColumn w={280}>
-            <Button onClick={onOverwriteClick} style="danger">
-              Reset Account
-            </Button>
-          </CenterColumn>
+          {sendingEmail ? (
+            <RippleLoader />
+          ) : (
+            <>
+              <CenterColumn w={280}>
+                <BigInput value={email} disabled={true} />
+                <Spacer h={8} />
+                <Button onClick={onLoginWithMasterPasswordClick}>
+                  Login with Master Password
+                </Button>
+                <Spacer h={8} />
+                <Button onClick={onCancelClick}>Cancel</Button>
+              </CenterColumn>
+              <Spacer h={24} />
+              <HR />
+              <Spacer h={24} />
+              <CenterColumn w={280}>
+                <Button onClick={onOverwriteClick} style="danger">
+                  Reset Account
+                </Button>
+              </CenterColumn>
+            </>
+          )}
         </BackgroundGlow>
       </AppContainer>
     </>
