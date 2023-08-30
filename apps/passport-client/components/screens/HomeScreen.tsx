@@ -122,25 +122,27 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <FolderExplorerContainer>
-            {!isRoot && (
-              <FolderDetails
-                noChildFolders={foldersInFolder.length === 0}
-                folder={browsingFolder}
-                onFolderClick={onFolderClick}
-              />
-            )}
-            {foldersInFolder.map((folder) => {
-              return (
-                <FolderCard
-                  key={folder}
+          {!(foldersInFolder.length === 0 && isRoot) && (
+            <FolderExplorerContainer>
+              {!isRoot && (
+                <FolderDetails
+                  noChildFolders={foldersInFolder.length === 0}
+                  folder={browsingFolder}
                   onFolderClick={onFolderClick}
-                  folder={folder}
                 />
-              );
-            })}
-          </FolderExplorerContainer>
-          <Separator />
+              )}
+              {foldersInFolder.map((folder) => {
+                return (
+                  <FolderCard
+                    key={folder}
+                    onFolderClick={onFolderClick}
+                    folder={folder}
+                  />
+                );
+              })}
+            </FolderExplorerContainer>
+          )}
+          {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
           {pcdsInFolder.length > 0 ? (
             pcdsInFolder.map((pcd) => (
               <WrappedPCDCard
