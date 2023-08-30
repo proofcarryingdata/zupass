@@ -19,9 +19,9 @@ export async function startServices(
   apis: APIs
 ): Promise<GlobalServices> {
   await startTelemetry(context);
-  const telegramService = await startTelegramService(context);
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
+  const telegramService = await startTelegramService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(
     context,

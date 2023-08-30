@@ -48,8 +48,12 @@ export function initTelegramRoutes(
           proof,
           parseInt(telegram_user_id)
         );
+        logger(
+          `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
+        );
         res.redirect(await telegramService.getBotURL());
       } catch (e) {
+        rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
         res.sendFile(path.resolve("resources/telegram/error.html"));
         res.sendStatus(500);
