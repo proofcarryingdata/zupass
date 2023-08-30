@@ -108,64 +108,70 @@ export class OrganizerSync {
 
   // Conduct a single sync run
   public async run(): Promise<void> {
-    let fetchedData;
-    this._isRunning = true;
+    return traced("OrganizerSync", "run", async (span) => {
+      span?.setAttribute("org_url", this.organizer.orgURL);
+      span?.setAttribute("events_count", this.organizer.events.length);
+      span?.setAttribute("org_id", this.organizer.id);
 
-    try {
-      try {
-        fetchedData = await this.fetchData();
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
-        );
-        this.rollbarService?.reportError(e);
-
-        throw new Error("Data failed to fetch", {
-          cause: errorCause("fetching", this.organizer.id, e)
-        });
-      }
+      let fetchedData;
+      this._isRunning = true;
 
       try {
-        this.validate(fetchedData);
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
-        );
-        this.rollbarService?.reportError(e);
+        try {
+          fetchedData = await this.fetchData();
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
+          );
+          this.rollbarService?.reportError(e);
 
-        throw new Error("Data failed to validate", {
-          cause: errorCause("validating", this.organizer.id, e)
-        });
+          throw new Error("Data failed to fetch", {
+            cause: errorCause("fetching", this.organizer.id, e)
+          });
+        }
+
+        try {
+          this.validate(fetchedData);
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
+          );
+          this.rollbarService?.reportError(e);
+
+          throw new Error("Data failed to validate", {
+            cause: errorCause("validating", this.organizer.id, e)
+          });
+        }
+
+        try {
+          await this.save(fetchedData);
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
+          );
+          this.rollbarService?.reportError(e);
+
+          throw new Error("Data failed to save", {
+            cause: errorCause("saving", this.organizer.id, e)
+          });
+        }
+
+        try {
+          await this.pushCheckins();
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
+          );
+          this.rollbarService?.reportError(e);
+
+          throw new Error("Check-in sync failed", {
+            cause: errorCause("pushingCheckins", this.organizer.id, e)
+          });
+        }
+      } finally {
+        this._isRunning = false;
       }
-
-      try {
-        await this.save(fetchedData);
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
-        );
-        this.rollbarService?.reportError(e);
-
-        throw new Error("Data failed to save", {
-          cause: errorCause("saving", this.organizer.id, e)
-        });
-      }
-
-      try {
-        await this.pushCheckins();
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
-        );
-        this.rollbarService?.reportError(e);
-
-        throw new Error("Check-in sync failed", {
-          cause: errorCause("pushingCheckins", this.organizer.id, e)
-        });
-      }
-    } finally {
-      this._isRunning = false;
-    }
+    });
   }
 
   public cancel(): void {
