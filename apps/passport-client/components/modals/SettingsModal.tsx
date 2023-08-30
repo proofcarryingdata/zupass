@@ -40,7 +40,7 @@ export function SettingsModal() {
         </LinkButton>
         <Spacer h={16} />
         <Button onClick={copySyncKey}>
-          {justCopied ? "Copied" : "Copy Key for Sync"}
+          {justCopied ? "Copied" : "Copy Master Password"}
         </Button>
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
