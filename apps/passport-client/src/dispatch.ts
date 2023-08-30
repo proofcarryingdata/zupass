@@ -358,7 +358,7 @@ async function loadFromSync(
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
-  window.location.hash = "#/";
+  window.location.hash = "#/login-interstitial";
 }
 
 function userInvalid(update: ZuUpdate) {
