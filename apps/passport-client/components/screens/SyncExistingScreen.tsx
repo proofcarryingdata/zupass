@@ -46,7 +46,7 @@ export function SyncExistingScreen() {
         dispatch({
           type: "error",
           error: {
-            title: "Sync failed",
+            title: "Failed to Log In",
             message:
               "Couldn't load end-to-end encrypted backup. " +
               `If this is your first time using ${
@@ -78,7 +78,7 @@ export function SyncExistingScreen() {
       dispatch({
         type: "error",
         error: {
-          title: "Sync failed",
+          title: "Failed to Log In",
           message,
           stack,
           dismissToCurrentPage: true
