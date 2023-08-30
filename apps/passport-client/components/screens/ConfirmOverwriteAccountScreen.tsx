@@ -2,7 +2,16 @@ import { useCallback, useState } from "react";
 import { requestLoginCode } from "../../src/api/user";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import { err } from "../../src/util";
-import { BigInput, Button, Spacer } from "../core";
+import {
+  BackgroundGlow,
+  BigInput,
+  Button,
+  CenterColumn,
+  Spacer,
+  TextCenter
+} from "../core";
+import { MaybeModal } from "../modals/Modal";
+import { AppContainer } from "../shared/AppContainer";
 
 export function ConfirmOverwriteAccountScreen() {
   const dispatch = useDispatch();
@@ -32,20 +41,35 @@ export function ConfirmOverwriteAccountScreen() {
       .catch((e) => err(dispatch, "Email failed", e.message));
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
-  const onNeverMindClick = useCallback(() => {
+  const onCancelClick = useCallback(() => {
     window.location.href = "#/";
   }, []);
 
   return (
-    <div>
-      <div>you've already registered, are you sure?</div>
-      <BigInput value={email} disabled />
-      <Spacer h={16} />
-      <Button onClick={onOverwriteClick} style="danger">
-        Overwrite
-      </Button>
-      <Spacer h={16} />
-      <Button onClick={onNeverMindClick}>Never Mind</Button>
-    </div>
+    <>
+      <MaybeModal />
+      <AppContainer bg="primary">
+        <BackgroundGlow
+          y={224}
+          from="var(--bg-lite-primary)"
+          to="var(--bg-dark-primary)"
+        >
+          <Spacer h={64} />
+          <TextCenter>
+            <div>you've already registered, are you sure?</div>
+          </TextCenter>
+          <Spacer h={24} />
+          <CenterColumn w={280}>
+            <BigInput value={email} disabled />
+            <Spacer h={16} />
+            <Button onClick={onOverwriteClick} style="danger">
+              Overwrite
+            </Button>
+            <Spacer h={16} />
+            <Button onClick={onCancelClick}>Cancel</Button>
+          </CenterColumn>
+        </BackgroundGlow>
+      </AppContainer>
+    </>
   );
 }
