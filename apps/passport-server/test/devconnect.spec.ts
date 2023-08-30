@@ -822,21 +822,21 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const responseBody = response.body as IssuedPCDsResponse;
-      expect(responseBody.actions.length).to.eq(2);
+      expect(responseBody.actions.length).to.eq(3);
 
-      const firstAction = responseBody.actions[0];
+      const devconnectAction = responseBody.actions[2];
 
       // the name of this event is left over from a previous test
-      expect(firstAction.folder).to.eq("Devconnect/Won't sync to this");
+      expect(devconnectAction.folder).to.eq("Devconnect/Won't sync to this");
 
-      expect(Array.isArray(firstAction.pcds)).to.eq(true);
+      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
       // originally there were 6 orders in the mock data
       // but one was deleted in an earlier test
       // since we don't fetch tickets with is_deleted = true
       // there will only be 5 PCDs
-      expect(firstAction.pcds.length).to.eq(5);
+      expect(devconnectAction.pcds.length).to.eq(5);
 
-      const ticketPCD = firstAction.pcds[0];
+      const ticketPCD = devconnectAction.pcds[0];
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
@@ -907,13 +907,13 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
-    expect(responseBody.actions.length).to.eq(2);
-    const action = responseBody.actions[0];
+    expect(responseBody.actions.length).to.eq(3);
+    const devconnectAction = responseBody.actions[2];
 
-    expect(action.folder).to.eq("Devconnect/New name");
+    expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
-    expect(Array.isArray(action.pcds)).to.eq(true);
-    const ticketPCD = action.pcds[0];
+    expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
+    const ticketPCD = devconnectAction.pcds[0];
     expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
     const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
@@ -949,12 +949,12 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as IssuedPCDsResponse;
-    expect(responseBody.actions.length).to.eq(2);
-    const action = responseBody.actions[0];
-    expect(action.folder).to.eq("Devconnect/New name");
+    expect(responseBody.actions.length).to.eq(3);
+    const devconnectAction = responseBody.actions[2];
+    expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
-    expect(Array.isArray(action.pcds)).to.eq(true);
-    const ticketPCD = action.pcds[0];
+    expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
+    const ticketPCD = devconnectAction.pcds[0];
     expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
     const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
@@ -996,9 +996,10 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
-    expect(issueResponseBody.actions.length).to.eq(2);
-    const action = issueResponseBody.actions[0];
-    const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    expect(issueResponseBody.actions.length).to.eq(3);
+    const devconnectAction = issueResponseBody.actions[2];
+    const serializedTicket = devconnectAction
+      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
@@ -1108,7 +1109,10 @@ describe("devconnect functionality", function () {
         "asdf"
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
+      expect(response.actions).to.deep.eq([
+        { folder: "SBC SRW", pcds: [] },
+        { folder: "Devconnect", pcds: [] }
+      ]);
     }
   );
 
@@ -1121,7 +1125,10 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const response = expressResponse.body as IssuedPCDsResponse;
-      expect(response.actions).to.deep.eq([{ folder: "Devconnect", pcds: [] }]);
+      expect(response.actions).to.deep.eq([
+        { folder: "SBC SRW", pcds: [] },
+        { folder: "Devconnect", pcds: [] }
+      ]);
     }
   );
 
