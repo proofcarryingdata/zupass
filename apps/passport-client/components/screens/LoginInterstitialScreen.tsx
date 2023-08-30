@@ -4,7 +4,6 @@ import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BackgroundGlow, CenterColumn } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
-import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
 export function LoginInterstitialScreen() {
@@ -20,7 +19,6 @@ export function LoginInterstitialScreen() {
 
   return (
     <>
-      <MaybeModal />
       <AppContainer bg="primary">
         <BackgroundGlow
           y={224}

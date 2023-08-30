@@ -36,6 +36,7 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const body = getModalBody(modal);
 
   if (body == null) return null;
+
   return (
     <Modal
       fullScreen={fullScreen}
@@ -98,24 +99,29 @@ const ModalBg = styled.div`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: column;
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   background: radial-gradient(circle, var(--bg-lite-gray), var(--bg-dark-gray));
-  width: 100%;
-  max-width: 420px;
-  margin: 64px auto;
+  margin: 32px 32px;
+  width: 400px;
+  box-sizing: border-box;
   min-height: 480px;
   padding: 12px;
   border-radius: 12px;
 
   ${({ fullScreen }) =>
-    fullScreen &&
-    css`
-      width: 100vw;
-      max-width: 100vw;
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-    `}
+    fullScreen
+      ? css`
+          width: 100vw;
+          max-width: 100vw;
+          height: 100vh;
+          margin: 0;
+          border-radius: 0;
+        `
+      : css``}
 `;

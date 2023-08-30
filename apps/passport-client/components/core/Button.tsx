@@ -26,6 +26,7 @@ export function Button({
 }
 
 const buttonStyle = `
+  word-break: break-word;
   width: 100%;
   padding: 12px;
   color: var(--bg-dark-primary);

@@ -78,13 +78,15 @@ function getScreen(request: PCDGetRequest) {
   }
 
   return (
-    <AppContainer bg="gray">
-      <MaybeModal fullScreen />
-      <Spacer h={24} />
-      <H2>{title.toUpperCase()}</H2>
-      <Spacer h={24} />
-      <CenterColumn w={280}>{body}</CenterColumn>
-      <Spacer h={24} />
-    </AppContainer>
+    <>
+      <MaybeModal fullScreen={true} />
+      <AppContainer bg="gray">
+        <Spacer h={24} />
+        <H2>{title.toUpperCase()}</H2>
+        <Spacer h={24} />
+        <CenterColumn w={280}>{body}</CenterColumn>
+        <Spacer h={24} />
+      </AppContainer>
+    </>
   );
 }

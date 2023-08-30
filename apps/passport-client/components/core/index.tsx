@@ -55,7 +55,7 @@ export const HR = styled.hr`
 `;
 
 export const CenterColumn = styled.div<{ w: number }>`
-  width: ${(p) => p.w + "px"};
+  max-width: ${(p) => p.w + "px"};
   margin: 0 auto;
 `;
 
