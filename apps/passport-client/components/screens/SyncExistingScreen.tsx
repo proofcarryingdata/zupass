@@ -5,7 +5,6 @@ import {
 } from "@pcd/passport-crypto";
 import React, { useCallback, useState } from "react";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
-import { appConfig } from "../../src/appConfig";
 import { useDispatch } from "../../src/appHooks";
 import {
   BackgroundGlow,
@@ -59,10 +58,8 @@ export function SyncExistingScreen() {
           error: {
             title: "Failed to Log In",
             message:
-              "Couldn't load end-to-end encrypted backup. " +
-              `If this is your first time using ${
-                appConfig.isZuzalu ? "zupass.org" : "pcdpass.xyz"
-              }, please generate a new passport instead.`,
+              "Couldn't login with this Master Password. If you've lost access to your Master Password" +
+              " you can reset your account from the homepage of this website.",
             dismissToCurrentPage: true
           }
         });
