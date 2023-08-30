@@ -4,11 +4,11 @@ import {
   passportDecrypt
 } from "@pcd/passport-crypto";
 import React, { useCallback, useState } from "react";
-import styled from "styled-components";
 import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch } from "../../src/appHooks";
 import {
+  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -104,52 +104,55 @@ export function SyncExistingScreen() {
 
   return (
     <AppContainer bg="primary">
-      <Spacer h={64} />
-      <TextCenter>
-        <H2>LOGIN WITH MASTER PASSWORD</H2>
-        <Spacer h={32} />
+      <BackgroundGlow
+        y={224}
+        from="var(--bg-lite-primary)"
+        to="var(--bg-dark-primary)"
+      >
+        <Spacer h={64} />
         <TextCenter>
-          If you've already registered, you can sync with your other device here
-          using your Master Password. You can find your Master Password on your
-          existing device by clicking on the settings icon.
-        </TextCenter>
-        <Spacer h={32} />
-        <CenterColumn w={280}>
-          <BigInput
-            disabled={isLoading}
-            type="text"
-            placeholder="Master Password"
-            value={syncKey}
-            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-              setSyncKey(e.target.value);
-            }, [])}
-          ></BigInput>
-          <Spacer h={8} />
-          {!isLoading && (
-            <>
-              <Button style="primary" type="submit" onClick={onSyncClick}>
-                Login
-              </Button>
-              <Spacer h={8} />
-              <Button type="submit" onClick={onClose}>
-                Cancel
-              </Button>
-            </>
-          )}
-          {isLoading && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
+          <H2>LOGIN WITH MASTER PASSWORD</H2>
           <Spacer h={32} />
-        </CenterColumn>
-      </TextCenter>
+          <TextCenter>
+            If you've already registered, you can sync with your other device
+            here using your Master Password. You can find your Master Password
+            on your existing device by clicking on the settings icon.
+          </TextCenter>
+          <Spacer h={32} />
+          <CenterColumn w={280}>
+            <BigInput
+              disabled={isLoading}
+              type="text"
+              placeholder="Master Password"
+              value={syncKey}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLInputElement>) => {
+                  setSyncKey(e.target.value);
+                },
+                []
+              )}
+            ></BigInput>
+            <Spacer h={8} />
+            {!isLoading && (
+              <>
+                <Button style="primary" type="submit" onClick={onSyncClick}>
+                  Login
+                </Button>
+                <Spacer h={8} />
+                <Button type="submit" onClick={onClose}>
+                  Cancel
+                </Button>
+              </>
+            )}
+            {isLoading && (
+              <div>
+                <RippleLoader />
+              </div>
+            )}
+            <Spacer h={32} />
+          </CenterColumn>
+        </TextCenter>
+      </BackgroundGlow>
     </AppContainer>
   );
 }
-
-const Container = styled.div`
-  padding: 16px;
-  width: 100%;
-  max-width: 100%;
-`;
