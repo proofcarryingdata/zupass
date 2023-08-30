@@ -1,4 +1,3 @@
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage, ITicketData } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
@@ -87,7 +86,6 @@ describe("EdDSA partial ticket should work", function () {
   };
 
   this.beforeAll(async function () {
-    await EdDSAPCDPackage.init?.({});
     await EdDSATicketPCDPackage.init?.({});
     if (!ZKEdDSATicketPCDPackage.init) return;
     await ZKEdDSATicketPCDPackage.init({
