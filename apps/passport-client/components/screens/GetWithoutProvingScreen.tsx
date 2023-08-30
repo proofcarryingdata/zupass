@@ -8,6 +8,10 @@ import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { useDispatch, usePCDCollection, useSelf } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
+import {
+  clearAllPendingRequests,
+  setPendingGetWithoutProvingRequest
+} from "../../src/sessionStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -45,7 +49,8 @@ export function GetWithoutProvingScreen() {
 
   useEffect(() => {
     if (self == null) {
-      sessionStorage.pendingGetWithoutProvingRequest = JSON.stringify(request);
+      clearAllPendingRequests();
+      setPendingGetWithoutProvingRequest(JSON.stringify(request));
       window.location.href = "/#/login?redirectedFromAction=true";
     }
   }, [request, self]);

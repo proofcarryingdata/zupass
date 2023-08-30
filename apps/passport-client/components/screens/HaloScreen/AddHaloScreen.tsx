@@ -12,6 +12,10 @@ import {
   useIsDownloaded,
   useIsLoggedIn
 } from "../../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  setPendingHaloRequest
+} from "../../../src/sessionStorage";
 import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, Spacer, TextCenter } from "../../core";
@@ -84,8 +88,8 @@ export function AddHaloScreen({
   }, [dispatch, pcd]);
 
   const onLoginClick = () => {
-    console.log(location.search);
-    sessionStorage.pendingHaloRequest = location.search;
+    clearAllPendingRequests();
+    setPendingHaloRequest(location.search);
     window.location.href = "/#/login?redirectedFromAction=true";
   };
 

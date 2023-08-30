@@ -9,6 +9,13 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  getPendingAddRequest,
+  getPendingGetWithoutProvingRequest,
+  getPendingHaloRequest,
+  getPendingProofRequest
+} from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -36,20 +43,25 @@ export function HomeScreenImpl() {
     if (self == null) {
       console.log("Redirecting to login screen");
       navigate("/login");
-    } else if (sessionStorage.pendingProofRequest != null) {
+    } else if (getPendingProofRequest() != null) {
       console.log("Redirecting to prove screen");
-      const encReq = encodeURIComponent(sessionStorage.pendingProofRequest);
+      const encReq = encodeURIComponent(getPendingProofRequest());
+      clearAllPendingRequests();
       navigate("/prove?request=" + encReq);
-      delete sessionStorage.pendingProofRequest;
-    } else if (sessionStorage.pendingAddRequest != null) {
+    } else if (getPendingAddRequest() != null) {
       console.log("Redirecting to add screen");
-      const encReq = encodeURIComponent(sessionStorage.pendingAddRequest);
+      const encReq = encodeURIComponent(getPendingAddRequest());
+      clearAllPendingRequests();
       navigate("/add?request=" + encReq);
-      delete sessionStorage.pendingAddRequest;
-    } else if (sessionStorage.pendingHaloRequest != null) {
+    } else if (getPendingHaloRequest() != null) {
       console.log("Redirecting to halo screen");
-      navigate(`/halo${sessionStorage.pendingHaloRequest}`);
-      delete sessionStorage.pendingHaloRequest;
+      clearAllPendingRequests();
+      navigate(`/halo${getPendingHaloRequest()}`);
+    } else if (getPendingGetWithoutProvingRequest()) {
+      console.log("Redirecting to get without proving screen");
+      const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
+      clearAllPendingRequests();
+      navigate(`/get-without-proving?request=${encReq}`);
     }
   });
 

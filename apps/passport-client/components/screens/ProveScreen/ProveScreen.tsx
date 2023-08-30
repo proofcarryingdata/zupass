@@ -4,6 +4,10 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelf } from "../../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  setPendingProofRequest
+} from "../../../src/sessionStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -28,7 +32,8 @@ export function ProveScreen() {
 
   useEffect(() => {
     if (self == null) {
-      sessionStorage.pendingProofRequest = JSON.stringify(request);
+      clearAllPendingRequests();
+      setPendingProofRequest(JSON.stringify(request));
       window.location.href = "/#/login?redirectedFromAction=true";
     }
   }, [request, self]);
