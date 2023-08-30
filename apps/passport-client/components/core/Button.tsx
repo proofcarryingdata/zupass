@@ -8,7 +8,7 @@ export function Button({
   style,
   type,
   size,
-  disabled,
+  disabled
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -27,7 +27,6 @@ export function Button({
 
 const buttonStyle = `
   width: 100%;
-  height: 48px;
   padding: 12px;
   color: var(--bg-dark-primary);
   border: none;
