@@ -10,6 +10,7 @@ import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirma
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
+import { LoginInterstitialScreen } from "../components/screens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
@@ -121,6 +122,10 @@ function RouterImpl() {
         <Route path="/">
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+          <Route
+            path="login-interstitial"
+            element={<LoginInterstitialScreen />}
+          />
           <Route
             path="confirm-overwrite-account"
             element={<ConfirmOverwriteAccountScreen />}

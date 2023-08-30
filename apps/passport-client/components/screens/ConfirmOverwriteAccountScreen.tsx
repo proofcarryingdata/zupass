@@ -15,6 +15,8 @@ import {
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 
+// todo: handle case when user is logged in - they shouldn't be able to get to this screen
+// todo: rename this to something that better reflects what this screen is
 export function ConfirmOverwriteAccountScreen() {
   const dispatch = useDispatch();
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -40,6 +42,7 @@ export function ConfirmOverwriteAccountScreen() {
   const onOverwriteClick = useCallback(() => {
     requestLoginCode(email, identityCommitment, true)
       .then(onEmailSuccess)
+      // todo: display to user
       .catch((e) => err(dispatch, "Email failed", e.message));
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 

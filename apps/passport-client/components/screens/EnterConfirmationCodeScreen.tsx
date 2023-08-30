@@ -16,14 +16,14 @@ export function EnterConfirmationCodeScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
   const email = query?.get("email");
-  const identityCommitment = query?.get("identityCommitment");
-
+  // todo: handle loading state
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
 
   const onCreateClick = useCallback(async () => {
     const token = input;
     setVerifyingCode(true);
+    // todo: handle dev mode
     await dispatch({ type: "login", email, token });
     setVerifyingCode(false);
   }, [dispatch, email, input]);

@@ -254,7 +254,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Save PCDs to E2EE storage.
   await uploadStorage();
 
-  window.location.hash = "#/";
+  window.location.hash = "#/login-interstitial";
 
   // Ask user to save their Master Password
   update({ modal: "save-sync" });
