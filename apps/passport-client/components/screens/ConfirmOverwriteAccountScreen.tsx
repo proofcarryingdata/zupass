@@ -1,10 +1,16 @@
 import { useCallback } from "react";
-import { Button } from "../core";
+import { useQuery } from "../../src/appHooks";
+import { BigInput, Button, Spacer } from "../core";
 
 export function ConfirmOverwriteAccountScreen() {
+  const query = useQuery();
+  const email = query?.get("email");
+  const identityCommitment = query?.get("identityCommitment");
+
   const onOverwriteClick = useCallback(() => {
     alert("overwrite");
   }, []);
+
   const onNeverMindClick = useCallback(() => {
     alert("never mind");
   }, []);
@@ -12,8 +18,13 @@ export function ConfirmOverwriteAccountScreen() {
   return (
     <div>
       <div>you've already registered, are you sure?</div>
+      <BigInput value={email} disabled />
+      <Spacer h={16} />
       <Button onClick={onOverwriteClick}>Overwrite</Button>
-      <Button onClick={onNeverMindClick}>Never Mind</Button>
+      <Spacer h={16} />
+      <Button onClick={onNeverMindClick} style="danger">
+        Never Mind
+      </Button>
     </div>
   );
 }

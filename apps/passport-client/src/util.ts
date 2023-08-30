@@ -30,7 +30,7 @@ export async function nextFrame() {
 export function err(dispatch: Dispatcher, title: string, message: string) {
   dispatch({
     type: "error",
-    error: { title, message },
+    error: { title, message }
   });
 }
 

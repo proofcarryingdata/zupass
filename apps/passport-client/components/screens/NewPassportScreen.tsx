@@ -1,4 +1,3 @@
-import { Identity } from "@semaphore-protocol/identity";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { requestConfirmationEmail } from "../../src/api/user";
@@ -60,26 +59,32 @@ function SendEmailVerification({ email }: { email: string }) {
       }
     };
 
-    requestLoginCode(email, identity)
+    requestLoginCode(email, identity.commitment.toString())
       .then(handleResult)
       .catch((e) => {
         const message = e.message as string;
         if (message.includes("already registered")) {
-          const result = window.confirm(`
-This email is already registered. Do you want to continue anyway?
+          window.location.href = `#/confirm-overwrite-account?email=${encodeURIComponent(
+            email
+          )}&identityCommitment=${encodeURIComponent(
+            identity.commitment.toString()
+          )}`;
 
-This will clear your old passport.
+          //           const result = window.confirm(`
+          // This email is already registered. Do you want to continue anyway?
 
-IF YOU STILL HAVE YOUR OLD PASSPORT, CANCEL 
-AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
-          if (result) {
-            requestLoginCode(email, identity, true)
-              .then(handleResult)
-              .catch((e) => err(dispatch, "Email failed", e.message));
-          } else {
-            window.location.href = "#/";
-            window.location.reload();
-          }
+          // This will clear your old passport.
+
+          // IF YOU STILL HAVE YOUR OLD PASSPORT, CANCEL
+          // AND LOG IN WITH YOUR SYNC KEY INSTEAD.`);
+          //           if (result) {
+          //             requestLoginCode(email, identity.commitment.toString(), true)
+          //               .then(handleResult)
+          //               .catch((e) => err(dispatch, "Email failed", e.message));
+          //           } else {
+          //             window.location.href = "#/";
+          //             window.location.reload();
+          //           }
         } else {
           err(dispatch, "Email failed", message);
         }
@@ -170,10 +175,14 @@ function Header() {
  */
 async function requestLoginCode(
   email: string,
-  identity: Identity,
+  identityCommitment: string,
   force = false
 ): Promise<string | undefined> {
-  const loginResponse = await requestConfirmationEmail(email, identity, force);
+  const loginResponse = await requestConfirmationEmail(
+    email,
+    identityCommitment,
+    force
+  );
   const responseText = await loginResponse.text();
 
   try {

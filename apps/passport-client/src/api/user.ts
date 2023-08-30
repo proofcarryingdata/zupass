@@ -1,4 +1,3 @@
-import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../appConfig";
 
 export async function requestUser(uuid: string): Promise<Response> {
@@ -23,36 +22,36 @@ export async function requestPCDpassUser(uuid: string): Promise<Response> {
 
 export async function requestConfirmationEmail(
   email: string,
-  identity: Identity,
+  identityCommitment: string,
   force: boolean
 ): Promise<Response> {
   if (appConfig.isZuzalu) {
-    return requestZuzaluConfirmationEmail(email, identity, force);
+    return requestZuzaluConfirmationEmail(email, identityCommitment, force);
   }
 
-  return requestGenericConfirmationEmail(email, identity, force);
+  return requestGenericConfirmationEmail(email, identityCommitment, force);
 }
 
 export async function submitNewUser(
   email: string,
   token: string,
-  identity: Identity
+  identityCommitment: string
 ): Promise<Response> {
   if (appConfig.isZuzalu) {
-    return submitNewZuzaluUser(email, token, identity);
+    return submitNewZuzaluUser(email, token, identityCommitment);
   }
 
-  return submitNewGenericUser(email, token, identity);
+  return submitNewGenericUser(email, token, identityCommitment);
 }
 
 export async function requestZuzaluConfirmationEmail(
   email: string,
-  identity: Identity,
+  identityCommitment: string,
   force: boolean
 ): Promise<Response> {
   const params = new URLSearchParams({
     email,
-    commitment: identity.commitment.toString(),
+    commitment: identityCommitment,
     force: force ? "true" : "false"
   }).toString();
   const url = `${appConfig.passportServer}/zuzalu/send-login-email?${params}`;
@@ -63,14 +62,14 @@ export async function requestZuzaluConfirmationEmail(
 export async function submitNewZuzaluUser(
   email: string,
   token: string,
-  identity: Identity
+  identityCommitment: string
 ): Promise<Response> {
   // Verify the token, save the participant to local storage, redirect to
   // the home page.
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identity.commitment.toString()
+    commitment: identityCommitment
   }).toString();
   const loginUrl = `${appConfig.passportServer}/zuzalu/new-participant?${query}`;
 
@@ -81,12 +80,12 @@ export async function submitNewZuzaluUser(
 
 export async function requestGenericConfirmationEmail(
   email: string,
-  identity: Identity,
+  identityCommitment: string,
   force: boolean
 ): Promise<Response> {
   const params = new URLSearchParams({
     email,
-    commitment: identity.commitment.toString(),
+    commitment: identityCommitment,
     force: force ? "true" : "false"
   }).toString();
   const url = `${appConfig.passportServer}/pcdpass/send-login-email?${params}`;
@@ -97,14 +96,14 @@ export async function requestGenericConfirmationEmail(
 export async function submitNewGenericUser(
   email: string,
   token: string,
-  identity: Identity
+  identityCommitment: string
 ): Promise<Response> {
   // Verify the token, save the participant to local storage, redirect to
   // the home page.
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identity.commitment.toString()
+    commitment: identityCommitment
   }).toString();
   const loginUrl = `${appConfig.passportServer}/pcdpass/new-participant?${query}`;
 
@@ -116,12 +115,12 @@ export async function submitNewGenericUser(
 export async function submitDeviceLogin(
   email: string,
   secret: string,
-  identity: Identity
+  identityCommitment: string
 ): Promise<Response> {
   const query = new URLSearchParams({
     email,
     secret,
-    commitment: identity.commitment.toString()
+    commitment: identityCommitment
   }).toString();
   const loginUrl = `${appConfig.passportServer}/pcdpass/device-login?${query}`;
 
