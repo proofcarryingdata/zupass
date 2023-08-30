@@ -21,6 +21,10 @@ export function DeviceLoginScreen() {
     });
   }, [dispatch, email, secret]);
 
+  const onCancelClick = useCallback(() => {
+    window.location.href = "#/";
+  }, []);
+
   return (
     <AppContainer bg="primary">
       <Container>
@@ -57,6 +61,10 @@ export function DeviceLoginScreen() {
             <Spacer h={8} />
             <Button style="primary" type="submit" onClick={onAuthenticate}>
               Login
+            </Button>
+            <Spacer h={8} />
+            <Button style="primary" type="submit" onClick={onCancelClick}>
+              Cancel
             </Button>
           </form>
         </CenterColumn>
