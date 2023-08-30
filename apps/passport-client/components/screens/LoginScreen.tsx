@@ -99,7 +99,7 @@ export function LoginScreen() {
               <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
             </>
           )}
-          {!appConfig.isZuzalu && (
+          {!appConfig.isZuzalu && !redirectedFromAction && (
             <>
               <Spacer h={8} />
               <TextCenter>
