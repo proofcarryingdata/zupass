@@ -26,17 +26,22 @@ export function AddScreen() {
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
-
   const screen = getScreen(request);
+
   useEffect(() => {
     if (screen === null) {
       err(dispatch, "Unsupported request", `Expected a PCD ADD request`);
     }
   }, [dispatch, screen]);
 
+  useEffect(() => {
+    if (self == null) {
+      sessionStorage.pendingAddRequest = JSON.stringify(request);
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
+
   if (self == null) {
-    sessionStorage.pendingAddRequest = JSON.stringify(request);
-    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 
