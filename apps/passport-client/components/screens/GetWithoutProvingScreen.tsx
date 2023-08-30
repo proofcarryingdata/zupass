@@ -3,7 +3,7 @@ import {
   PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { useDispatch, usePCDCollection, useSelf } from "../../src/appHooks";
@@ -43,6 +43,13 @@ export function GetWithoutProvingScreen() {
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
 
+  useEffect(() => {
+    if (self == null) {
+      sessionStorage.pendingGetWithoutProvingRequest = JSON.stringify(request);
+      window.location.href = "/#/login?redirectedFromAction=true";
+    }
+  }, [request, self]);
+
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(
       dispatch,
@@ -62,8 +69,6 @@ export function GetWithoutProvingScreen() {
   }
 
   if (self == null) {
-    sessionStorage.pendingGetWithoutProvingRequest = JSON.stringify(request);
-    window.location.href = "/#/login?redirectedFromAction=true";
     return null;
   }
 
