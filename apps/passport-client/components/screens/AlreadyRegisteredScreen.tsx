@@ -110,6 +110,7 @@ export function AlreadyRegisteredScreen() {
             </>
           )}
         </BackgroundGlow>
+        <Spacer h={64} />
       </AppContainer>
     </>
   );

@@ -146,10 +146,10 @@ export function SyncExistingScreen() {
                 <RippleLoader />
               </div>
             )}
-            <Spacer h={32} />
           </CenterColumn>
         </TextCenter>
       </BackgroundGlow>
+      <Spacer h={64} />
     </AppContainer>
   );
 }

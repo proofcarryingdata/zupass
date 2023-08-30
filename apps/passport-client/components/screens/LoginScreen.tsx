@@ -132,8 +132,8 @@ export function LoginScreen() {
             </>
           )}
         </CenterColumn>
-        <Spacer h={24} />
       </BackgroundGlow>
+      <Spacer h={64} />
     </AppContainer>
   );
 }

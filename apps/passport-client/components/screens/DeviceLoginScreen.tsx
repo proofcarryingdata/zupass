@@ -69,6 +69,7 @@ export function DeviceLoginScreen() {
           </form>
         </CenterColumn>
       </Container>
+      <Spacer h={64} />
     </AppContainer>
   );
 }
