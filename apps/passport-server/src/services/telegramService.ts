@@ -88,10 +88,10 @@ export class TelegramService {
         if (ctx.message) {
           const userId = ctx.message.from.id;
           await ctx.reply(
-            "Welcome! 👋\n\nPlease verify your credentials via the Passport app, so we can add you to the correct channels.",
+            "Welcome! 👋\n\nPlease verify your PCDpass ticket to Stanford Research Workshop, so we can add you to the attendee Telegram group!",
             {
               reply_markup: new InlineKeyboard().url(
-                "Verify with Passport 🚀",
+                "Verify with PCDpass 🚀",
                 encodeURI(
                   `${
                     process.env.PASSPORT_CLIENT_URL
@@ -195,7 +195,7 @@ export class TelegramService {
     });
     await this.bot.api.sendMessage(
       userId,
-      `You are verified 🫡! Here is your invite link to ${chat.title}.`,
+      `You are verified! Press this button to join ${chat.title}. A dialog will pop which will prompt you to "Request to Join" the group, after which you'll be automatically added.`,
       {
         reply_markup: new InlineKeyboard().url(
           `Join ${chat.title} channel`,
