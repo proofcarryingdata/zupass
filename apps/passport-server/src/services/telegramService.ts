@@ -19,6 +19,17 @@ import { logger } from "../util/logger";
 import { sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
+const SRW_EVENT_ID_STAGING = "3fa6164c-4785-11ee-8178-763dbf30819c";
+const SRW_EVENT_ID_PROD = "264b2536-479c-11ee-8153-de1f187f7393";
+const TICKETING_PUBKEY_STAGING = [
+  "7cf4d97878d663502339c2baae74b12dcdd229279a9f6bfc83b167e808a32d26",
+  "c5a04b56d0f2d6b1ec10aa1b17298e31b4a087bdabd4a75d9523779e7dca5a17"
+];
+const TICKETING_PUBKEY_PROD = [
+  "a7da882cd090c14a62b70cf07010c1cabb373b17ebd2d120c9de039ceaedfa24",
+  "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09"
+];
+
 export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
@@ -234,23 +245,15 @@ export class TelegramService {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch =
-        pcd.claim.partialTicket.eventId ===
-        "3fa6164c-4785-11ee-8178-763dbf30819c";
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_STAGING;
       signerMatch =
-        pcd.claim.signer[0] ===
-          "7cf4d97878d663502339c2baae74b12dcdd229279a9f6bfc83b167e808a32d26" &&
-        pcd.claim.signer[1] ===
-          "c5a04b56d0f2d6b1ec10aa1b17298e31b4a087bdabd4a75d9523779e7dca5a17";
+        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
     } else {
-      eventIdMatch =
-        pcd.claim.partialTicket.eventId ===
-        "264b2536-479c-11ee-8153-de1f187f7393";
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
       signerMatch =
-        pcd.claim.signer[0] ===
-          "a7da882cd090c14a62b70cf07010c1cabb373b17ebd2d120c9de039ceaedfa24" &&
-        pcd.claim.signer[1] ===
-          "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09";
+        pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
     }
     if (
       (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
