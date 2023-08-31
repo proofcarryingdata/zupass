@@ -1,4 +1,13 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  EdDSATicketFieldsToReveal,
+  ZKEdDSATicketPCD,
+  ZKEdDSATicketPCDArgs,
+  ZKEdDSATicketPCDPackage
+} from "@pcd/zk-eddsa-ticket-pcd";
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
@@ -23,6 +32,14 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
+
+    this.bot.api.setMyDescription(
+      "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
+    );
+
+    this.bot.api.setMyShortDescription(
+      "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
+    );
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -87,20 +104,61 @@ export class TelegramService {
         // Only process the command if it comes as a private message.
         if (ctx.message) {
           const userId = ctx.message.from.id;
+
+          const fieldsToReveal: EdDSATicketFieldsToReveal = {
+            revealTicketId: true,
+            revealEventId: true,
+            revealProductId: true,
+            revealTimestampConsumed: false,
+            revealTimestampSigned: false,
+            revealAttendeeSemaphoreId: true,
+            revealIsConsumed: false,
+            revealIsRevoked: false
+          };
+
+          const args: ZKEdDSATicketPCDArgs = {
+            ticket: {
+              argumentType: ArgumentTypeName.PCD,
+              pcdType: EdDSATicketPCDPackage.name,
+              value: undefined,
+              userProvided: true
+            },
+            identity: {
+              argumentType: ArgumentTypeName.PCD,
+              pcdType: SemaphoreIdentityPCDPackage.name,
+              value: undefined,
+              userProvided: true
+            },
+            fieldsToReveal: {
+              argumentType: ArgumentTypeName.Object,
+              value: fieldsToReveal,
+              userProvided: false
+            },
+            watermark: {
+              argumentType: ArgumentTypeName.BigInt,
+              value: userId.toString(),
+              userProvided: false
+            }
+          };
+
+          const passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+          const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`;
+
+          const proofUrl = constructPassportPcdGetRequestUrl<
+            typeof ZKEdDSATicketPCDPackage
+          >(passportOrigin, returnUrl, ZKEdDSATicketPCDPackage.name, args, {
+            genericProveScreen: true,
+            title: "ZK-EdDSA Ticket Request",
+            description:
+              "Generate a ZK proof that you have a ticket for the research workshop!"
+          });
+
           await ctx.reply(
             "Welcome! 👋\n\nPlease verify your PCDpass ticket to Stanford Research Workshop, so we can add you to the attendee Telegram group!",
             {
               reply_markup: new InlineKeyboard().url(
                 "Verify with PCDpass 🚀",
-                encodeURI(
-                  `${
-                    process.env.PASSPORT_CLIENT_URL
-                  }/#/get-without-proving?request=${JSON.stringify({
-                    type: "GetWithoutProving",
-                    returnUrl: `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`,
-                    pcdType: "eddsa-ticket-pcd"
-                  })}`
-                )
+                proofUrl
               )
             }
           );
@@ -151,20 +209,51 @@ export class TelegramService {
   }
 
   private async verifyPCD(
-    serializedEdDSATicket: string
-  ): Promise<EdDSATicketPCD | null> {
-    let pcd: EdDSATicketPCD;
+    serializedZKEdDSATicket: string,
+    telegramUserId: number
+  ): Promise<ZKEdDSATicketPCD | null> {
+    let pcd: ZKEdDSATicketPCD;
 
     try {
-      pcd = await EdDSATicketPCDPackage.deserialize(
-        JSON.parse(serializedEdDSATicket).pcd
+      pcd = await ZKEdDSATicketPCDPackage.deserialize(
+        JSON.parse(serializedZKEdDSATicket).pcd
       );
     } catch (e) {
       throw new Error(`Deserialization error, ${e}`);
     }
 
-    // Right now, we are only verifying that the PCD is authentic
-    if (await EdDSATicketPCDPackage.verify(pcd)) {
+    // this is very bad but i am very tired
+    // hardcoded eventIDs and signing keys for SRW
+    let signerMatch = false;
+    let eventIdMatch = false;
+    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+      eventIdMatch = true;
+      signerMatch = true;
+    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
+      eventIdMatch =
+        pcd.claim.partialTicket.eventId ===
+        "3fa6164c-4785-11ee-8178-763dbf30819c";
+      signerMatch =
+        pcd.claim.signer[0] ===
+          "7cf4d97878d663502339c2baae74b12dcdd229279a9f6bfc83b167e808a32d26" &&
+        pcd.claim.signer[1] ===
+          "c5a04b56d0f2d6b1ec10aa1b17298e31b4a087bdabd4a75d9523779e7dca5a17";
+    } else {
+      eventIdMatch =
+        pcd.claim.partialTicket.eventId ===
+        "264b2536-479c-11ee-8153-de1f187f7393";
+      signerMatch =
+        pcd.claim.signer[0] ===
+          "a7da882cd090c14a62b70cf07010c1cabb373b17ebd2d120c9de039ceaedfa24" &&
+        pcd.claim.signer[1] ===
+          "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09";
+    }
+    if (
+      (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
+      pcd.claim.watermark === telegramUserId.toString() &&
+      eventIdMatch &&
+      signerMatch
+    ) {
       return pcd;
     } else {
       return null;
@@ -213,29 +302,31 @@ export class TelegramService {
    * This is called from the /telegram/verify route.
    */
   public async handleVerification(
-    serializedEdDSATicket: string,
+    serializedZKEdDSATicket: string,
     telegramUserId: number
   ): Promise<void> {
     // Verify PCD
-    const pcd = await this.verifyPCD(serializedEdDSATicket);
+    const pcd = await this.verifyPCD(serializedZKEdDSATicket, telegramUserId);
 
     if (!pcd) {
       throw new Error(`Could not verify PCD for ${telegramUserId}`);
     }
+    const { eventId } = pcd.claim.partialTicket;
+    if (!eventId) {
+      throw new Error(
+        `User ${telegramUserId} returned a ZK-ticket with no eventId.`
+      );
+    }
 
-    logger(
-      `[TELEGRAM] Verified PCD for ${telegramUserId}, event ${pcd.claim.ticket.eventId}`
-    );
+    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, event ${eventId}`);
 
     // Find the event which matches the PCD
     // For this to work, the `telegram_bot_events` table must be populated.
-    const event = await fetchTelegramEvent(
-      this.context.dbPool,
-      pcd.claim.ticket.eventId
-    );
+
+    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
     if (!event) {
       throw new Error(
-        `User ${telegramUserId} attempted to use a ticket for event ${pcd.claim.ticket.eventId}, which has no matching chat`
+        `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
       );
     }
 
