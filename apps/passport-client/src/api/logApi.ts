@@ -1,6 +1,9 @@
 import { appConfig } from "../appConfig";
 
-export async function logToServer(value: object): Promise<void> {
+export async function logToServer(
+  eventName: string,
+  value: object
+): Promise<void> {
   const url = `${appConfig.passportServer}/client-log`;
 
   try {
@@ -10,7 +13,7 @@ export async function logToServer(value: object): Promise<void> {
         "Content-Type": "application/json",
         Accept: "application/json"
       },
-      body: JSON.stringify(value)
+      body: JSON.stringify({ name: eventName, ...value })
     });
   } catch (e) {
     console.log("failed to log event to server", e);
