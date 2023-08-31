@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
@@ -45,12 +46,21 @@ export function LoginScreen() {
   const pendingProveRequest = query?.get(pendingProofRequestKey);
 
   useEffect(() => {
+    let pendingRequestForLogging: string | undefined = undefined;
+
     if (pendingGetWithoutProvingRequest != null) {
       setPendingGetWithoutProvingRequest(pendingGetWithoutProvingRequest);
+      pendingRequestForLogging = pendingGetWithoutProvingRequestKey;
     } else if (pendingAddRequest != null) {
       setPendingAddRequest(pendingAddRequest);
+      pendingRequestForLogging = pendingAddRequestKey;
     } else if (pendingProveRequest != null) {
       setPendingProofRequest(pendingProveRequest);
+      pendingRequestForLogging = pendingProofRequestKey;
+    }
+
+    if (pendingRequestForLogging != null) {
+      logToServer("login-with-pending", { pending: pendingRequestForLogging });
     }
   }, [pendingGetWithoutProvingRequest, pendingAddRequest, pendingProveRequest]);
 
