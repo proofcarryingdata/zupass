@@ -178,7 +178,6 @@ describe("EdDSA partial ticket should work", function () {
     const pcdArgs = await toArgs(ticketData1, fieldsToReveal1, false);
     const pcd = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
-    const claim = pcd.claim;
     expect(pcd.claim.externalNullifier).to.be.equal(undefined);
     expect(pcd.claim.nullifierHash).to.be.equal(undefined);
 

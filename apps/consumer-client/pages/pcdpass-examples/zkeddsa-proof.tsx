@@ -9,10 +9,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   EdDSATicketFieldsToReveal,
-  generateMessageHash,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage
+  ZKEdDSATicketPCDPackage,
+  generateMessageHash
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { useEffect, useState } from "react";
@@ -201,7 +201,7 @@ function useZKEdDSATicketProof(
   watermark: bigint,
   externalNullifier?: string
 ): { pcd: ZKEdDSATicketPCD | undefined; error: any } {
-  const [error, setError] = useState<Error | undefined>();
+  const [error, _setError] = useState<Error | undefined>();
   const zkEdDSATicketPCD = useSerializedPCD(ZKEdDSATicketPCDPackage, pcdStr);
 
   useEffect(() => {
