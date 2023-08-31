@@ -157,14 +157,6 @@ function Header() {
   }
 }
 
-const PItalic = styled.p`
-  font-size: 20px;
-  font-weight: 300;
-  font-style: italic;
-  color: rgba(var(--white-rgb), 0.5);
-  line-height: 2;
-`;
-
 const PHeavy = styled.p`
   font-size: 20px;
   font-weight: 400;

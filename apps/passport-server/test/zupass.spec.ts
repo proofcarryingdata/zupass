@@ -277,7 +277,7 @@ describe("zupass functionality", function () {
         throw new Error("expected user");
       }
 
-      const oldResidentCommitment = resident.commitment!;
+      const oldResidentCommitment = resident.commitment;
       const newResidentCommitment = residentUser.commitment;
 
       expect(oldResidentCommitment != null).to.be.true;

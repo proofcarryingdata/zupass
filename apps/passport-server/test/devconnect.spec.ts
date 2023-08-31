@@ -7,8 +7,7 @@ import {
 import {
   CheckInResponse,
   ISSUANCE_STRING,
-  IssuedPCDsResponse,
-  User
+  IssuedPCDsResponse
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
@@ -195,9 +194,8 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForDevconnectPretixSyncStatus(
-      application
-    );
+    const pretixSyncStatus =
+      await waitForDevconnectPretixSyncStatus(application);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -231,10 +229,6 @@ describe("devconnect functionality", function () {
       if (!eventBItemInfo) {
         throw new Error("expected to be able to fetch corresponding item info");
       }
-      const [{ id: item1EventBInfoID }] = await fetchPretixItemsInfoByEvent(
-        db,
-        eventBItemInfo.id
-      );
 
       expect(ticketsWithEmailEventAndItems).to.have.deep.members([
         {
@@ -505,9 +499,8 @@ describe("devconnect functionality", function () {
   step(
     "should be able to check in a ticket and sync to Pretix",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -779,7 +772,6 @@ describe("devconnect functionality", function () {
     }
   );
 
-  let user: User;
   let identity: Identity;
   let publicKey: NodeRSA;
 
@@ -810,7 +802,6 @@ describe("devconnect functionality", function () {
       throw new Error("failed to log in");
     }
 
-    user = result.user;
     identity = result.identity;
   });
 
@@ -968,7 +959,6 @@ describe("devconnect functionality", function () {
     expect(ticketData.ticketName).to.eq(updatedName);
   });
 
-  let checkerUser: User;
   let checkerIdentity: Identity;
   step("should be able to log in", async function () {
     const result = await testLoginPCDpass(
@@ -985,7 +975,6 @@ describe("devconnect functionality", function () {
       throw new Error("failed to log in");
     }
 
-    checkerUser = result.user;
     checkerIdentity = result.identity;
   });
 
@@ -1387,9 +1376,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an event we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1439,9 +1427,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if an active product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1492,9 +1479,8 @@ describe("devconnect functionality", function () {
   step(
     "should fail to sync if a superuser product we're tracking is deleted",
     async function () {
-      const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(
-        db
-      );
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }

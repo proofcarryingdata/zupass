@@ -16,7 +16,7 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -31,7 +31,7 @@ import styled from "styled-components";
 export function PCDArgs<T extends PCDPackage>({
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
@@ -60,7 +60,7 @@ export function ArgInput<T extends PCDPackage>({
   argName,
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   arg: Argument<any, any>;
   argName: string;
@@ -130,7 +130,7 @@ export function StringArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: StringArgument;
   argName: string;
@@ -173,7 +173,7 @@ export function NumberArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: NumberArgument;
   argName: string;
@@ -235,7 +235,7 @@ export function BigIntArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: BigIntArgument;
   argName: string;
@@ -297,7 +297,7 @@ export function BooleanArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: BooleanArgument;
   argName: string;
@@ -305,7 +305,7 @@ export function BooleanArgInput<T extends PCDPackage>({
   setArgs: (args: ArgsOf<T>) => void;
 }) {
   const onChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (_e: React.ChangeEvent<HTMLInputElement>) => {
       args[argName].value = !args[argName].value;
       setArgs(JSON.parse(JSON.stringify(args)));
     },
@@ -341,7 +341,7 @@ export function ObjectArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: ObjectArgument<any>;
   argName: string;
@@ -397,7 +397,7 @@ export function ObjectArgInput<T extends PCDPackage>({
           <textarea
             style={{
               width: "100%",
-              height: "4em",
+              height: "4em"
             }}
             value={JSON.stringify(arg.value)}
             onChange={onChange}
@@ -414,7 +414,7 @@ export function PCDArgInput<T extends PCDPackage>({
   argName,
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   arg: PCDArgument;
   argName: string;

@@ -5,23 +5,23 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName,
+  SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import {
   CircuitPubInput,
   MembershipProver,
   MembershipVerifier,
   ProverConfig,
-  PublicInput,
+  PublicInput
 } from "@personaelabs/spartan-ecdsa";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
@@ -58,7 +58,7 @@ export interface EthereumGroupPCDClaim {
 
 export enum GroupType {
   PUBLICKEY = "public_key",
-  ADDRESS = "address",
+  ADDRESS = "address"
 }
 
 export interface EthereumGroupPCDProof {
@@ -117,9 +117,9 @@ export async function init(args: EthereumGroupPCDInitArgs): Promise<void> {
     addrProver.initWasm(),
     pubkeyProver.initWasm(),
     addrVerifier.initWasm(),
-    pubkeyVerifier.initWasm(),
+    pubkeyVerifier.initWasm()
   ]);
-  return SemaphoreSignaturePCDPackage.init!(args);
+  return SemaphoreSignaturePCDPackage.init?.(args);
 }
 
 /**
@@ -191,12 +191,12 @@ export async function prove(
     identity: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDTypeName,
-      value: args.identity.value,
+      value: args.identity.value
     },
     signedMessage: {
       argumentType: ArgumentTypeName.String,
-      value: Buffer.from(proof).toString("hex"),
-    },
+      value: Buffer.from(proof).toString("hex")
+    }
   });
 
   return new EthereumGroupPCD(
@@ -206,13 +206,12 @@ export async function prove(
       groupType:
         args.groupType.value === "address"
           ? GroupType.ADDRESS
-          : GroupType.PUBLICKEY,
+          : GroupType.PUBLICKEY
     },
     {
-      signatureProof: await SemaphoreSignaturePCDPackage.serialize(
-        semaphoreSignature
-      ),
-      ethereumGroupProof: Buffer.from(proof).toString("hex"),
+      signatureProof:
+        await SemaphoreSignaturePCDPackage.serialize(semaphoreSignature),
+      ethereumGroupProof: Buffer.from(proof).toString("hex")
     }
   );
 }
@@ -221,9 +220,8 @@ export async function verify(pcd: EthereumGroupPCD): Promise<boolean> {
   const semaphoreSignature = await SemaphoreSignaturePCDPackage.deserialize(
     pcd.proof.signatureProof.pcd
   );
-  const signatureProofValid = await SemaphoreSignaturePCDPackage.verify(
-    semaphoreSignature
-  );
+  const signatureProofValid =
+    await SemaphoreSignaturePCDPackage.verify(semaphoreSignature);
 
   // the semaphore signature of the group membership proof must be valid
   if (!signatureProofValid) {
@@ -274,7 +272,7 @@ export async function serialize(
 ): Promise<SerializedPCD<EthereumGroupPCD>> {
   return {
     type: EthereumGroupPCDTypeName,
-    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd),
+    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd)
   } as SerializedPCD<EthereumGroupPCD>;
 }
 
@@ -305,7 +303,7 @@ export function getDisplayOptions(pcd: EthereumGroupPCD): DisplayOptions {
       pcd.claim.publicInput.circuitPubInput.merkleRoot
         .toString(16)
         .substring(0, 12),
-    displayName: "eth-group-" + pcd.id.substring(0, 4),
+    displayName: "eth-group-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -326,5 +324,5 @@ export const EthereumGroupPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

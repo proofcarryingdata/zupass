@@ -160,7 +160,9 @@ export class PretixSyncService {
       const updatedTickets = pretixTickets
         .filter((p) => existingTicketsByEmail.has(p.email))
         .filter((p) => {
-          const oldTicket = existingTicketsByEmail.get(p.email)!;
+          const oldTicket = existingTicketsByEmail.get(
+            p.email
+          ) as ZuzaluPretixTicket;
           const newTicket = p;
           return pretixTicketsDifferent(oldTicket, newTicket);
         });
@@ -323,7 +325,7 @@ export class PretixSyncService {
             ({
               date_from: subEvent?.date_from,
               date_to: subEvent?.date_to
-            } satisfies DateRange)
+            }) satisfies DateRange
         );
 
         return {

@@ -15,21 +15,21 @@ describe("RSA Ticket PCD should work", function () {
   let ticketPCD: RSATicketPCD;
 
   this.beforeAll(async () => {
-    await RSATicketPCDPackage.init!({});
+    await RSATicketPCDPackage.init?.({});
 
     rsaPCD = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: exportedKey,
+        value: exportedKey
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: message,
+        value: message
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
-      },
+        value: undefined
+      }
     });
   });
 
@@ -37,12 +37,12 @@ describe("RSA Ticket PCD should work", function () {
     ticketPCD = await RSATicketPCDPackage.prove({
       id: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
+        value: undefined
       },
       rsaPCD: {
         argumentType: ArgumentTypeName.PCD,
-        value: await RSAPCDPackage.serialize(rsaPCD),
-      },
+        value: await RSAPCDPackage.serialize(rsaPCD)
+      }
     });
 
     const valid = await RSATicketPCDPackage.verify(ticketPCD);

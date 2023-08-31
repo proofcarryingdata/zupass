@@ -1,5 +1,4 @@
 import { User } from "@pcd/passport-interface";
-import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -25,7 +24,6 @@ describe("pcd-pass functionality", function () {
   const testEmail = randomEmail();
   let application: PCDpass;
   let user: User;
-  let identity: Identity;
   let emailAPI: IEmailAPI;
 
   this.beforeAll(async () => {
@@ -67,7 +65,6 @@ describe("pcd-pass functionality", function () {
     }
 
     user = result.user;
-    identity = result.identity;
     expect(emailAPI.send).to.have.been.called.exactly(1);
   });
 
@@ -117,7 +114,6 @@ describe("pcd-pass functionality", function () {
       }
 
       user = result.user;
-      identity = result.identity;
       expect(emailAPI.send).to.have.been.called.exactly(2);
     }
   );

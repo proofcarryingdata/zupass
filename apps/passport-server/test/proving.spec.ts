@@ -80,7 +80,7 @@ describe("server-side proving functionality", function () {
         expect(settledStatusResponse).to.haveOwnProperty("serializedPCD");
 
         const parsedPCD = await SemaphoreSignaturePCDPackage.deserialize(
-          JSON.parse(settledStatusResponse.serializedPCD!).pcd
+          JSON.parse(settledStatusResponse.serializedPCD as string).pcd
         );
 
         expect(parsedPCD.claim).to.deep.eq(expectedResult.claim);
