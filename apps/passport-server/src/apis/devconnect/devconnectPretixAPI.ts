@@ -1,7 +1,7 @@
+import { setMaxListeners } from "events";
 import PQueue from "p-queue";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
-import { sleep } from "../../util/util";
 
 const TRACE_SERVICE = "Fetch";
 
@@ -58,64 +58,69 @@ export interface DevconnectPretixAPIOptions {
 
 export class DevconnectPretixAPI implements IDevconnectPretixAPI {
   private requestQueue: PQueue;
-  private abortController: AbortController;
+  private cancelController: AbortController;
+  private readonly maxConcurrentRequests: number;
+  private readonly intervalCap: number;
+  private readonly interval: number;
 
   public constructor(options?: DevconnectPretixAPIOptions) {
+    this.intervalCap = options?.requestsPerInterval ?? 100;
+    this.maxConcurrentRequests = options?.concurrency ?? 1;
+    this.interval = options?.intervalMs ?? 60_000;
+
     this.requestQueue = new PQueue({
-      concurrency: options?.concurrency ?? 1,
-      interval: options?.intervalMs ?? 60_000,
-      intervalCap: options?.requestsPerInterval ?? 100
+      concurrency: this.maxConcurrentRequests,
+      interval: this.interval,
+      intervalCap: this.intervalCap
     });
-    this.abortController = new AbortController();
+    this.cancelController = this.newCancelController();
   }
 
   private queuedFetch(
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
-    // We reset abort controller signals after use, so make sure that we
-    // stay bound to the current abort controller when the queued function
-    // executes.
-    const signal = this.abortController.signal;
+    // Set up an abort controller for this request.
+    const abortController = new AbortController();
+    const abortHandler = (): void => {
+      abortController.abort();
+    };
+
+    // Trigger the abort signal if our main "cancel" controller fires.
+    this.cancelController.signal.addEventListener("abort", abortHandler);
+
     return this.requestQueue.add(async () => {
-      // Create a function for doing the fetch, so we can retry it
-      const doFetch = async (): Promise<Response> => {
-        return fetch(input, {
-          signal,
+      try {
+        const result = await fetch(input, {
+          signal: abortController.signal,
           ...init
         });
-      };
 
-      let result = await doFetch();
-
-      // If Pretix wants us to slow down
-      // @see https://docs.pretix.eu/en/latest/api/ratelimit.html
-      let attempts = 0;
-      while (result.status === 429 && attempts < 5) {
-        attempts++;
-        logger(
-          `[DEVCONNECT PRETIX] Received status 429 while fetching after ${attempts} attempt(s): ${input}`
-        );
-        // Get how long to wait for
-        const retryAfter = result.headers.get("Retry-After");
-        if (retryAfter) {
-          const seconds = parseFloat(retryAfter);
-          // Wait for the specified time
-          await sleep(seconds * 1000);
-          // Try again
-          result = await doFetch();
-        } else {
-          break;
+        if (result.status === 429) {
+          logger(
+            `[DEVCONNECT PRETIX] Received 429 error, indicating that server-side rate-limiting has been activated.
+            API client is currently enforcing a limit of ${this.intervalCap} requests per ${this.interval} milliseconds`
+          );
         }
-      }
 
-      return result;
+        return result;
+      } finally {
+        this.cancelController.signal.removeEventListener("abort", abortHandler);
+      }
     });
   }
 
+  private newCancelController(): AbortController {
+    const ac = new AbortController();
+    // Since we never have more than maxConcurrentRequests at the same time,
+    // there should never be more than that number of event listeners.
+    setMaxListeners(this.maxConcurrentRequests, ac.signal);
+    return ac;
+  }
+
   public cancelPendingRequests(): void {
-    this.abortController.abort();
-    this.abortController = new AbortController();
+    this.cancelController.abort();
+    this.cancelController = this.newCancelController();
   }
 
   public async fetchAllEvents(
