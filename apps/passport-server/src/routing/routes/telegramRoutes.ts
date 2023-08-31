@@ -63,6 +63,7 @@ export function initTelegramRoutes(
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
       res.sendStatus(500);
+      res.sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
 }
