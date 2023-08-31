@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.6.3",
-    "@semaphore-protocol/group": "^3.10.0",
-    "@semaphore-protocol/identity": "^3.10.0",
-    "@semaphore-protocol/proof": "^3.10.0",
+    "@semaphore-protocol/group": "^3.11.0",
+    "@semaphore-protocol/identity": "^3.11.0",
+    "@semaphore-protocol/proof": "^3.11.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"
   },
