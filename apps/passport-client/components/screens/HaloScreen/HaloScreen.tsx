@@ -1,10 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useIsDownloaded } from "../../../src/appHooks";
-import {
-  useHasUploaded,
-  useSyncE2EEStorage
-} from "../../../src/useSyncE2EEStorage";
+import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
@@ -16,8 +13,7 @@ import { AddHaloScreen } from "./AddHaloScreen";
  */
 export function HaloScreen() {
   useSyncE2EEStorage();
-  const synced = useHasUploaded();
-  const isDownloaded = useIsDownloaded();
+  const syncSettled = useIsSyncSettled();
   const location = useLocation();
   const dispatch = useDispatch();
   const params = new URLSearchParams(location.search);
@@ -29,7 +25,7 @@ export function HaloScreen() {
     }
   }, [dispatch, screen]);
 
-  if (!synced || !isDownloaded) {
+  if (!syncSettled) {
     return (
       <AppContainer bg="gray">
         <SyncingPCDs />

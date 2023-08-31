@@ -3,15 +3,12 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useIsDownloaded, useSelf } from "../../../src/appHooks";
+import { useDispatch, useIsSyncSettled, useSelf } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
   setPendingProofRequest
 } from "../../../src/sessionStorage";
-import {
-  useHasUploaded,
-  useSyncE2EEStorage
-} from "../../../src/useSyncE2EEStorage";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -23,8 +20,7 @@ import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function ProveScreen() {
   useSyncE2EEStorage();
-  const synced = useHasUploaded();
-  const isDownloaded = useIsDownloaded();
+  const syncSettled = useIsSyncSettled();
   const location = useLocation();
   const dispatch = useDispatch();
   const self = useSelf();
@@ -50,7 +46,7 @@ export function ProveScreen() {
     return null;
   }
 
-  if (!synced || !isDownloaded) {
+  if (!syncSettled) {
     return (
       <AppContainer bg="gray">
         <SyncingPCDs />

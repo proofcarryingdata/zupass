@@ -8,7 +8,7 @@ import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
   useDispatch,
-  useIsDownloaded,
+  useIsSyncSettled,
   usePCDCollection,
   useSelf
 } from "../../src/appHooks";
@@ -17,10 +17,7 @@ import {
   clearAllPendingRequests,
   setPendingGetWithoutProvingRequest
 } from "../../src/sessionStorage";
-import {
-  useHasUploaded,
-  useSyncE2EEStorage
-} from "../../src/useSyncE2EEStorage";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -38,8 +35,7 @@ export function GetWithoutProvingScreen() {
   const dispatch = useDispatch();
   const self = useSelf();
   const pcds = usePCDCollection();
-  const synced = useHasUploaded();
-  const isDownloaded = useIsDownloaded();
+  const syncSettled = useIsSyncSettled();
   const params = new URLSearchParams(location.search);
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
   const filteredPCDs = pcds
@@ -90,7 +86,7 @@ export function GetWithoutProvingScreen() {
     return null;
   }
 
-  if (!synced || !isDownloaded) {
+  if (!syncSettled) {
     return <SyncingPCDs />;
   }
 
