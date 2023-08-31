@@ -13,6 +13,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
+import { logToServer } from "./api/logApi";
 import { submitDeviceLogin, submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
 import {
@@ -108,7 +109,7 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport();
+      return resetPassport(state);
     case "load-from-sync":
       return loadFromSync(action.encryptionKey, action.storage, state, update);
     case "set-modal":
@@ -267,9 +268,17 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
+    logToServer("invalid-user", {
+      oldCommitment: state.identity.commitment.toString(),
+      newCommitment: self.commitment.toString()
+    });
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
+    logToServer("invalid-user", {
+      oldUUID: state.self.uuid,
+      newUUID: self.uuid
+    });
   }
 
   if (userMismatched) {
@@ -292,7 +301,12 @@ function clearError(state: AppState, update: ZuUpdate) {
   update({ error: undefined });
 }
 
-function resetPassport() {
+async function resetPassport(state: AppState) {
+  await logToServer("logout", {
+    uuid: state.self?.uuid,
+    email: state.self?.email,
+    commitment: state.self?.commitment
+  });
   // Clear saved state.
   window.localStorage.clear();
   // Reload to clear in-memory state.

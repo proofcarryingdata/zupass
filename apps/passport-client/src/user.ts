@@ -2,8 +2,9 @@ import {
   DateRange,
   FullDateRange,
   User,
-  ZuzaluUserRole,
+  ZuzaluUserRole
 } from "@pcd/passport-interface";
+import { logToServer } from "./api/logApi";
 import { requestUser } from "./api/user";
 import { Dispatcher } from "./dispatch";
 
@@ -16,6 +17,7 @@ export async function pollUser(self: User, dispatch: Dispatcher) {
         // this user was previously a valid user, but now the
         // app isn't able to find them, so we should log the
         // user out of this passport.
+        logToServer("invalid-user", { reason: 404 });
         dispatch({ type: "participant-invalid" });
       }
       console.log("[USER_POLL] User not found, skipping update");
@@ -32,7 +34,7 @@ export async function pollUser(self: User, dispatch: Dispatcher) {
 export enum VisitorStatus {
   Current,
   Upcoming,
-  Expired,
+  Expired
 }
 
 /**
@@ -55,7 +57,7 @@ export function getVisitorStatus(user?: User):
     if (isDateInRanges(now, user.visitor_date_ranges)) {
       return {
         isVisitor: true,
-        status: VisitorStatus.Current,
+        status: VisitorStatus.Current
       };
     }
 
@@ -65,7 +67,7 @@ export function getVisitorStatus(user?: User):
 
     return {
       isVisitor: true,
-      status: VisitorStatus.Expired,
+      status: VisitorStatus.Expired
     };
   }
 
@@ -82,8 +84,8 @@ export function sanitizeDateRanges(ranges?: DateRange[]): FullDateRange[] {
     (range) =>
       ({
         date_from: range.date_from ?? ZUZALU_START_DATE,
-        date_to: range.date_to ?? ZUZALU_END_DATE,
-      } satisfies FullDateRange)
+        date_to: range.date_to ?? ZUZALU_END_DATE
+      }) satisfies FullDateRange
   );
 
   sanitized.sort((a, b) => {

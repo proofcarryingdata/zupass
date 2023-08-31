@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { logToServer } from "../../src/api/logApi";
 import { requestLoginCode } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -39,6 +40,7 @@ export function AlreadyRegisteredScreen() {
 
   const onOverwriteClick = useCallback(() => {
     setSendingEmail(true);
+    logToServer("overwrite-account-click", { email, identityCommitment });
     requestLoginCode(email, identityCommitment, true)
       .then(onEmailSuccess)
       .catch((e) => {
@@ -48,8 +50,12 @@ export function AlreadyRegisteredScreen() {
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
+    logToServer("login-with-master-password-click", {
+      email,
+      identityCommitment
+    });
     window.location.href = "#/sync-existing";
-  }, []);
+  }, [email, identityCommitment]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
