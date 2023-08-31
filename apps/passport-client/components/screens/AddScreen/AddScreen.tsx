@@ -10,6 +10,7 @@ import { useDispatch, useSelf } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
 import {
   clearAllPendingRequests,
+  pendingAddRequestKey,
   setPendingAddRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -41,8 +42,11 @@ export function AddScreen() {
   useEffect(() => {
     if (self == null) {
       clearAllPendingRequests();
-      setPendingAddRequest(JSON.stringify(request));
-      window.location.href = "/#/login?redirectedFromAction=true";
+      const stringifiedRequest = JSON.stringify(request);
+      setPendingAddRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
   }, [request, self]);
 

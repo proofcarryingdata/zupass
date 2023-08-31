@@ -4,7 +4,7 @@ export function clearAllPendingRequests(): void {
   clearPendingAddRequest();
 }
 
-const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
+export const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
 
 export function setPendingGetWithoutProvingRequest(request: string): void {
   sessionStorage.setItem(pendingGetWithoutProvingRequestKey, request);
@@ -19,7 +19,7 @@ export function getPendingGetWithoutProvingRequest(): string | undefined {
   return value == null ? undefined : value;
 }
 
-const pendingAddRequestKey = "pendingAddRequest";
+export const pendingAddRequestKey = "pendingAddRequest";
 
 export function setPendingAddRequest(request: string): void {
   sessionStorage.setItem(pendingAddRequestKey, request);
@@ -34,7 +34,7 @@ export function getPendingAddRequest(): string | undefined {
   return value == null ? undefined : value;
 }
 
-const pendingHaloRequestKey = "pendingHaloRequest";
+export const pendingHaloRequestKey = "pendingHaloRequest";
 
 export function setPendingHaloRequest(request: string): void {
   sessionStorage.setItem(pendingHaloRequestKey, request);
