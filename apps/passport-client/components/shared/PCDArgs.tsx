@@ -16,9 +16,9 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 /**
@@ -31,7 +31,7 @@ import styled from "styled-components";
 export function PCDArgs<T extends PCDPackage>({
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   args: ArgsOf<T>;
   setArgs: (args: ArgsOf<T>) => void;
@@ -60,7 +60,7 @@ export function ArgInput<T extends PCDPackage>({
   argName,
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   arg: Argument<any, any>;
   argName: string;
@@ -130,7 +130,7 @@ export function StringArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: StringArgument;
   argName: string;
@@ -173,7 +173,7 @@ export function NumberArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: NumberArgument;
   argName: string;
@@ -235,7 +235,7 @@ export function BigIntArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: BigIntArgument;
   argName: string;
@@ -297,7 +297,7 @@ export function BooleanArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: BooleanArgument;
   argName: string;
@@ -341,7 +341,7 @@ export function ObjectArgInput<T extends PCDPackage>({
   arg,
   argName,
   args,
-  setArgs,
+  setArgs
 }: {
   arg: ObjectArgument<any>;
   argName: string;
@@ -397,7 +397,7 @@ export function ObjectArgInput<T extends PCDPackage>({
           <textarea
             style={{
               width: "100%",
-              height: "4em",
+              height: "4em"
             }}
             value={JSON.stringify(arg.value)}
             onChange={onChange}
@@ -414,7 +414,7 @@ export function PCDArgInput<T extends PCDPackage>({
   argName,
   args,
   setArgs,
-  pcdCollection,
+  pcdCollection
 }: {
   arg: PCDArgument;
   argName: string;
@@ -422,23 +422,44 @@ export function PCDArgInput<T extends PCDPackage>({
   setArgs: (args: ArgsOf<T>) => void;
   pcdCollection: PCDCollection;
 }) {
-  const [value, setValue] = useState<PCD | undefined>(undefined);
+  const matchingPCDs = useMemo(
+    () =>
+      pcdCollection.getAll().filter((pcd) => {
+        return arg.pcdType === undefined || pcd.type === arg.pcdType;
+      }),
+    [arg, pcdCollection]
+  );
+
+  let defaultPCD: PCD | undefined = undefined;
+  if (matchingPCDs.length === 1) {
+    defaultPCD = matchingPCDs[0];
+  }
+  console.log(defaultPCD);
+
+  const [value, setValue] = useState<PCD | undefined>();
+
+  const setSelectedPcdId = useCallback(async (id) => {
+    const pcd = pcdCollection.getById(id);
+    if (pcd) {
+      const serialized = await pcdCollection.serialize(pcd);
+      args[argName].value = serialized;
+      setArgs(JSON.parse(JSON.stringify(args)));
+    } else {
+      args[argName].value = undefined;
+      setArgs(JSON.parse(JSON.stringify(args)));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (defaultPCD?.id) {
+      setSelectedPcdId(defaultPCD.id);
+    }
+  }, [defaultPCD]);
 
   const onChange = useCallback(
     async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const id = e.target.value;
-      const pcd = pcdCollection.getById(id);
-
-      console.log(id, pcd);
-
-      if (pcd) {
-        const serialized = await pcdCollection.serialize(pcd);
-        args[argName].value = serialized;
-        setArgs(JSON.parse(JSON.stringify(args)));
-      } else {
-        args[argName].value = undefined;
-        setArgs(JSON.parse(JSON.stringify(args)));
-      }
+      return setSelectedPcdId(id);
     },
     [argName, args, setArgs, pcdCollection]
   );
@@ -474,20 +495,14 @@ export function PCDArgInput<T extends PCDPackage>({
             <option key="none" value={"none"}>
               select
             </option>
-            {pcdCollection
-              .getAll()
-              .filter((pcd) => {
-                return arg.pcdType === undefined || pcd.type === arg.pcdType;
-              })
-              .map((pcd) => {
-                const pcdPackage = pcdCollection.getPackage(pcd.type);
-                return (
-                  <option key={pcd.id} value={pcd.id}>
-                    {pcdPackage?.getDisplayOptions(pcd)?.displayName ??
-                      pcd.type}
-                  </option>
-                );
-              })}
+            {matchingPCDs.map((pcd) => {
+              const pcdPackage = pcdCollection.getPackage(pcd.type);
+              return (
+                <option key={pcd.id} value={pcd.id}>
+                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
+                </option>
+              );
+            })}
           </select>
         </InputContainer>
       </Row>
