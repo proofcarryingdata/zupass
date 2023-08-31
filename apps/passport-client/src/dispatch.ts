@@ -13,6 +13,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
+import { logToServer } from "./api/logApi";
 import { submitDeviceLogin, submitNewUser } from "./api/user";
 import { appConfig } from "./appConfig";
 import {
@@ -267,9 +268,19 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
+    logToServer({
+      name: "invalid-user",
+      oldCommitment: state.identity.commitment.toString(),
+      newCommitment: self.commitment.toString()
+    });
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
+    logToServer({
+      name: "invalid-user",
+      oldUUID: state.self.uuid,
+      newUUID: self.uuid
+    });
   }
 
   if (userMismatched) {
