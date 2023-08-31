@@ -195,7 +195,7 @@ export class TelegramService {
     });
     await this.bot.api.sendMessage(
       userId,
-      `You are verified! Press this button to join ${chat.title}. A dialog will pop which will prompt you to "Request to Join" the group, after which you'll be automatically added.`,
+      `You are verified! Press this button to join ${chat.title}. A dialog will pop open which will prompt you to "Request to Join" the group, after which you'll be automatically added.`,
       {
         reply_markup: new InlineKeyboard().url(
           `Join ${chat.title} channel`,
