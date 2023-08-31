@@ -130,10 +130,14 @@ export class TelegramService {
     }
 
     logger(`[TELEGRAM] Starting bot`);
+
     try {
       // This will not resolve while the bot remains running.
       await this.bot.start({
-        allowed_updates: ["chat_join_request", "chat_member", "message"]
+        allowed_updates: ["chat_join_request", "chat_member", "message"],
+        onStart: (info) => {
+          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+        }
       });
     } catch (e) {
       logger(`[TELEGRAM] Error starting bot`, e);

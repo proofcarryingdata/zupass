@@ -53,13 +53,14 @@ export function initTelegramRoutes(
         );
         res.redirect(await telegramService.getBotURL());
       } catch (e) {
+        logger("[TELEGRAM] failed to verify", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
         res.sendFile(path.resolve("resources/telegram/error.html"));
         res.sendStatus(500);
       }
     } catch (e) {
-      logger(e);
+      logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
       res.sendStatus(500);
     }
