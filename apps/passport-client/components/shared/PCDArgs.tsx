@@ -422,15 +422,17 @@ export function PCDArgInput<T extends PCDPackage>({
   setArgs: (args: ArgsOf<T>) => void;
   pcdCollection: PCDCollection;
 }) {
+  const relevantPCDs = pcdCollection.getAll().filter((pcd) => {
+    return arg.pcdType === undefined || pcd.type === arg.pcdType;
+  });
+  const defaultPCD = relevantPCDs.length === 1 ? relevantPCDs[0] : undefined;
+  const [hasSetDefault, setHasSetDefault] = useState(false);
+
   const [value, setValue] = useState<PCD | undefined>(undefined);
 
-  const onChange = useCallback(
-    async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const id = e.target.value;
+  const setPCDById = useCallback(
+    async (id: string) => {
       const pcd = pcdCollection.getById(id);
-
-      console.log(id, pcd);
-
       if (pcd) {
         const serialized = await pcdCollection.serialize(pcd);
         args[argName].value = serialized;
@@ -440,8 +442,22 @@ export function PCDArgInput<T extends PCDPackage>({
         setArgs(JSON.parse(JSON.stringify(args)));
       }
     },
-    [argName, args, setArgs, pcdCollection]
+    [argName, args, pcdCollection, setArgs]
   );
+
+  const onChange = useCallback(
+    async (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const id = e.target.value;
+      return setPCDById(id);
+    },
+    [setPCDById]
+  );
+
+  useEffect(() => {
+    if (!hasSetDefault && defaultPCD) {
+      setPCDById(defaultPCD.id);
+    }
+  }, [defaultPCD, hasSetDefault, setPCDById]);
 
   useEffect(() => {
     async function deserialize() {
@@ -474,20 +490,14 @@ export function PCDArgInput<T extends PCDPackage>({
             <option key="none" value={"none"}>
               select
             </option>
-            {pcdCollection
-              .getAll()
-              .filter((pcd) => {
-                return arg.pcdType === undefined || pcd.type === arg.pcdType;
-              })
-              .map((pcd) => {
-                const pcdPackage = pcdCollection.getPackage(pcd.type);
-                return (
-                  <option key={pcd.id} value={pcd.id}>
-                    {pcdPackage?.getDisplayOptions(pcd)?.displayName ??
-                      pcd.type}
-                  </option>
-                );
-              })}
+            {relevantPCDs.map((pcd) => {
+              const pcdPackage = pcdCollection.getPackage(pcd.type);
+              return (
+                <option key={pcd.id} value={pcd.id}>
+                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
+                </option>
+              );
+            })}
           </select>
         </InputContainer>
       </Row>
