@@ -66,4 +66,45 @@ export function initTelegramRoutes(
       res.sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
+
+  /**
+   * When an EdDSATicket holder wants to send an anonymous message to
+   * the Telegram Q&A channel, they are first directed to passport client.
+   * Once they have created a ZKEdDSA proof, they will be directed here,
+   * with the proof in the query parameters.
+   *
+   * If we can verify the PCD, the bot will proceed with posting a message
+   * to the channel. The PartialTicket of the ZKEdDSATicket needs to have
+   * the `eventId` as a required field and the 'watermark' of the field
+   * will contain the anonymous message to be sent.
+   */
+  app.get("/telegram/message", async (req, res) => {
+    try {
+      const { proof } = req.query;
+      if (!proof || typeof proof !== "string") {
+        throw new Error("proof field needs to be a string and be non-empty");
+      }
+
+      logger("[TELEGRAM] Verifying anonymous message");
+
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
+      try {
+        const message = await telegramService.handleSendAnonymousMessage(proof);
+        logger(`[TELEGRAM] Posted anonymous message: ${message}`);
+      } catch (e) {
+        logger("[TELEGRAM] failed to send anonymous message", e);
+        rollbarService?.reportError(e);
+        res.set("Content-Type", "text/html");
+        res.sendFile(path.resolve("resources/telegram/error.html"));
+        res.sendStatus(500);
+      }
+    } catch (e) {
+      logger("[TELEGRAM] failed to send anonymous message", e);
+      rollbarService?.reportError(e);
+      res.sendStatus(500);
+      res.sendFile(path.resolve("resources/telegram/error.html"));
+    }
+  });
 }

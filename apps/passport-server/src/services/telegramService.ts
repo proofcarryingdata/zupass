@@ -271,6 +271,27 @@ export class TelegramService {
     }
   }
 
+  private async verifyZKEdDSATicketPCD(
+    serializedZKEdDSATicket: string
+  ): Promise<ZKEdDSATicketPCD | null> {
+    let pcd: ZKEdDSATicketPCD;
+
+    try {
+      pcd = await ZKEdDSATicketPCDPackage.deserialize(
+        JSON.parse(serializedZKEdDSATicket).pcd
+      );
+    } catch (e) {
+      throw new Error(`Deserialization error, ${e}`);
+    }
+
+    // Right now, we are only verifying that the PCD is authentic
+    if (await ZKEdDSATicketPCDPackage.verify(pcd)) {
+      return pcd;
+    } else {
+      return null;
+    }
+  }
+
   private chatIsGroup(
     chat: ChatFromGetChat
   ): chat is Chat.GroupGetChat | Chat.SupergroupGetChat {
@@ -280,6 +301,19 @@ export class TelegramService {
       chat?.type === "group" ||
       chat?.type === "supergroup"
     );
+  }
+
+  private async sendToAnonymousChannel(
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
+    message: string
+  ): Promise<void> {
+    // TODO: The only way I could find to send to a specific topic besides replying to
+    // the first message in that topic. Perhaps there's a better way. If not, it's probably
+    // worth just adding a `anonymous_channel_pinned_message_id` column to the Telegram
+    // events table.
+    await this.bot.api.sendMessage(chat.id, message, {
+      reply_to_message_id: 3 // FIXME: currently hardcoded based on my bot
+    });
   }
 
   private async sendInviteLink(
@@ -360,6 +394,50 @@ export class TelegramService {
 
     // Send invite link
     await this.sendInviteLink(telegramUserId, chat);
+  }
+
+  public async handleSendAnonymousMessage(
+    serializedZKEdDSATicket: string
+  ): Promise<string> {
+    const pcd = await this.verifyZKEdDSATicketPCD(serializedZKEdDSATicket);
+    if (!pcd) {
+      throw new Error("Could not verify PCD for anonymous message");
+    }
+
+    const {
+      watermark,
+      partialTicket: { eventId }
+    } = pcd.claim;
+    if (!eventId) {
+      throw new Error("Anonymous message PCD did not contain eventId");
+    }
+    if (!watermark) {
+      throw new Error("Anonymous message PCD did not contain watermark");
+    }
+
+    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
+    if (!event) {
+      throw new Error(
+        `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
+      );
+    }
+
+    logger(
+      `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
+    );
+
+    // The event is linked to a chat. Make sure we can access it.
+    const chatId = event.telegram_chat_id;
+    const chat = await this.bot.api.getChat(chatId);
+    if (!this.chatIsGroup(chat)) {
+      throw new Error(
+        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+      );
+    }
+
+    await this.sendToAnonymousChannel(chat, watermark);
+
+    return watermark;
   }
 
   public stop(): void {
