@@ -98,8 +98,10 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 
         if (result.status === 429) {
           logger(
-            `[DEVCONNECT PRETIX] Received 429 error, indicating that server-side rate-limiting has been activated.
-            API client is currently enforcing a limit of ${this.intervalCap} requests per ${this.interval} milliseconds`
+            `[DEVCONNECT PRETIX] Received 429 error while fetching ${input.toString()}.
+            API client is currently enforcing a limit of ${
+              this.intervalCap
+            } requests per ${this.interval} milliseconds.`
           );
         }
 
