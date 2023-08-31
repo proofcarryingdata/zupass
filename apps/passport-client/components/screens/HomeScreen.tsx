@@ -57,7 +57,7 @@ export function HomeScreenImpl() {
       console.log("Redirecting to halo screen");
       clearAllPendingRequests();
       navigate(`/halo${getPendingHaloRequest()}`);
-    } else if (getPendingGetWithoutProvingRequest()) {
+    } else if (getPendingGetWithoutProvingRequest() != null) {
       console.log("Redirecting to get without proving screen");
       const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
       clearAllPendingRequests();

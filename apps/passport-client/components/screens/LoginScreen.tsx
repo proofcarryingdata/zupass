@@ -9,6 +9,14 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import {
+  pendingAddRequestKey,
+  pendingGetWithoutProvingRequestKey,
+  pendingProofRequestKey,
+  setPendingAddRequest,
+  setPendingGetWithoutProvingRequest,
+  setPendingProofRequest
+} from "../../src/sessionStorage";
 import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
@@ -29,6 +37,22 @@ export function LoginScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
+
+  const pendingGetWithoutProvingRequest = query?.get(
+    pendingGetWithoutProvingRequestKey
+  );
+  const pendingAddRequest = query?.get(pendingAddRequestKey);
+  const pendingProveRequest = query?.get(pendingProofRequestKey);
+
+  useEffect(() => {
+    if (pendingGetWithoutProvingRequest != null) {
+      setPendingGetWithoutProvingRequest(pendingGetWithoutProvingRequest);
+    } else if (pendingAddRequest != null) {
+      setPendingAddRequest(pendingAddRequest);
+    } else if (pendingProveRequest != null) {
+      setPendingProofRequest(pendingProveRequest);
+    }
+  }, [pendingGetWithoutProvingRequest, pendingAddRequest, pendingProveRequest]);
 
   const self = useSelf();
   const [email, setEmail] = useState("");

@@ -15,6 +15,7 @@ import {
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import {
   clearAllPendingRequests,
+  pendingGetWithoutProvingRequestKey,
   setPendingGetWithoutProvingRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
@@ -59,8 +60,11 @@ export function GetWithoutProvingScreen() {
   useEffect(() => {
     if (self == null) {
       clearAllPendingRequests();
-      setPendingGetWithoutProvingRequest(JSON.stringify(request));
-      window.location.href = "/#/login?redirectedFromAction=true";
+      const stringifiedRequest = JSON.stringify(request);
+      setPendingGetWithoutProvingRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
   }, [request, self]);
 

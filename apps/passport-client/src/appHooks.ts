@@ -7,7 +7,6 @@ import { useLocation } from "react-router-dom";
 import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState, PendingAction } from "./state";
 import { useSelector } from "./subscribe";
-import { useHasUploaded } from "./useSyncE2EEStorage";
 
 export function usePCDCollectionWithHash(): {
   pcds: PCDCollection;
@@ -85,12 +84,11 @@ export function useIsDownloaded(): boolean | undefined {
   return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
 }
 
-export function useIsSyncSettled():boolean {
+export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
-  const isUploaded = useHasUploaded();
   const loadedIssued = useLoadedIssuedPCDs();
 
-  return isDownloaded && isUploaded && loadedIssued;
+  return isDownloaded && loadedIssued;
 }
 
 export function useIsLoggedIn(): boolean {
