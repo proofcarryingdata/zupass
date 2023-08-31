@@ -2,6 +2,7 @@ export function clearAllPendingRequests(): void {
   clearPendingHaloRequest();
   clearPendingGetWithoutProvingRequest();
   clearPendingAddRequest();
+  clearPendingProofRequest();
 }
 
 export const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
@@ -49,7 +50,7 @@ export function getPendingHaloRequest(): string | undefined {
   return value == null ? undefined : value;
 }
 
-const pendingProofRequestKey = "pendingProofRequest";
+export const pendingProofRequestKey = "pendingProofRequest";
 
 export function setPendingProofRequest(request: string): void {
   sessionStorage.setItem(pendingProofRequestKey, request);

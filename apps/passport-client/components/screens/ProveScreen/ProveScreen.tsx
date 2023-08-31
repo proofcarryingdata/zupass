@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 import { useDispatch, useIsSyncSettled, useSelf } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
+  pendingProofRequestKey,
   setPendingProofRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -37,8 +38,11 @@ export function ProveScreen() {
   useEffect(() => {
     if (self == null) {
       clearAllPendingRequests();
-      setPendingProofRequest(JSON.stringify(request));
-      window.location.href = "/#/login?redirectedFromAction=true";
+      const stringifiedRequest = JSON.stringify(request);
+      setPendingProofRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingProofRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
   }, [request, self]);
 

@@ -44,7 +44,7 @@ export function AddScreen() {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingAddRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}${encodeURIComponent(
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
         stringifiedRequest
       )}`;
     }

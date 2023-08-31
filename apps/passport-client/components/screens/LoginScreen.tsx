@@ -12,8 +12,10 @@ import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingGetWithoutProvingRequestKey,
+  pendingProofRequestKey,
   setPendingAddRequest,
-  setPendingGetWithoutProvingRequest
+  setPendingGetWithoutProvingRequest,
+  setPendingProofRequest
 } from "../../src/sessionStorage";
 import { validateEmail } from "../../src/util";
 import {
@@ -40,14 +42,17 @@ export function LoginScreen() {
     pendingGetWithoutProvingRequestKey
   );
   const pendingAddRequest = query?.get(pendingAddRequestKey);
+  const pendingProveRequest = query?.get(pendingProofRequestKey);
 
   useEffect(() => {
     if (pendingGetWithoutProvingRequest != null) {
       setPendingGetWithoutProvingRequest(pendingGetWithoutProvingRequest);
     } else if (pendingAddRequest != null) {
       setPendingAddRequest(pendingAddRequest);
+    } else if (pendingProveRequest != null) {
+      setPendingProofRequest(pendingProveRequest);
     }
-  }, [pendingGetWithoutProvingRequest, pendingAddRequest]);
+  }, [pendingGetWithoutProvingRequest, pendingAddRequest, pendingProveRequest]);
 
   const self = useSelf();
   const [email, setEmail] = useState("");
