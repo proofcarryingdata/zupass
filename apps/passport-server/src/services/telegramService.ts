@@ -141,7 +141,11 @@ export class TelegramService {
             }
           };
 
-          const passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+          let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+          if (passportOrigin === "http://localhost:3000/") {
+            // TG bot doesn't like localhost URLs
+            passportOrigin = "http://127.0.0.1:3000/";
+          }
           const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`;
 
           const proofUrl = constructPassportPcdGetRequestUrl<
