@@ -6,27 +6,40 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { useDispatch, usePCDCollection, useSelf } from "../../src/appHooks";
+import {
+  useDispatch,
+  useIsDownloaded,
+  usePCDCollection,
+  useSelf
+} from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import {
   clearAllPendingRequests,
   setPendingGetWithoutProvingRequest
 } from "../../src/sessionStorage";
+import {
+  useHasUploaded,
+  useSyncE2EEStorage
+} from "../../src/useSyncE2EEStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
+import { SyncingPCDs } from "../shared/SyncingPCDs";
 
 /**
  * Screen that allows the user to respond to a request from a third
  * party website asking for a particular PCD.
  */
 export function GetWithoutProvingScreen() {
+  useSyncE2EEStorage();
   const location = useLocation();
   const dispatch = useDispatch();
   const self = useSelf();
   const pcds = usePCDCollection();
+  const synced = useHasUploaded();
+  const isDownloaded = useIsDownloaded();
   const params = new URLSearchParams(location.search);
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
   const filteredPCDs = pcds
@@ -75,6 +88,10 @@ export function GetWithoutProvingScreen() {
 
   if (self == null) {
     return null;
+  }
+
+  if (!synced || !isDownloaded) {
+    return <SyncingPCDs />;
   }
 
   return (
