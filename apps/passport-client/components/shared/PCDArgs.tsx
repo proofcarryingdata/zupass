@@ -455,6 +455,7 @@ export function PCDArgInput<T extends PCDPackage>({
 
   useEffect(() => {
     if (!hasSetDefault && defaultPCD) {
+      setHasSetDefault(true);
       setPCDById(defaultPCD.id);
     }
   }, [defaultPCD, hasSetDefault, setPCDById]);
