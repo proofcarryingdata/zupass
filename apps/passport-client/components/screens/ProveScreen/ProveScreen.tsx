@@ -3,20 +3,28 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useSelf } from "../../../src/appHooks";
+import { useDispatch, useIsDownloaded, useSelf } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
   setPendingProofRequest
 } from "../../../src/sessionStorage";
+import {
+  useHasUploaded,
+  useSyncE2EEStorage
+} from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function ProveScreen() {
+  useSyncE2EEStorage();
+  const synced = useHasUploaded();
+  const isDownloaded = useIsDownloaded();
   const location = useLocation();
   const dispatch = useDispatch();
   const self = useSelf();
@@ -42,10 +50,19 @@ export function ProveScreen() {
     return null;
   }
 
+  if (!synced || !isDownloaded) {
+    return (
+      <AppContainer bg="gray">
+        <SyncingPCDs />
+      </AppContainer>
+    );
+  }
+
   if (screen == null) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }
+
   return screen;
 }
 
