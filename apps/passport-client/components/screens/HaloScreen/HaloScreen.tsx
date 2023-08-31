@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch } from "../../../src/appHooks";
+import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
+import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { AddHaloScreen } from "./AddHaloScreen";
 
 /**
@@ -11,10 +12,11 @@ import { AddHaloScreen } from "./AddHaloScreen";
  * corresponds to a specific Zuzalu Experience.
  */
 export function HaloScreen() {
+  useSyncE2EEStorage();
+  const syncSettled = useIsSyncSettled();
   const location = useLocation();
   const dispatch = useDispatch();
   const params = new URLSearchParams(location.search);
-  useSyncE2EEStorage();
 
   const screen = getScreen(params);
   useEffect(() => {
@@ -23,10 +25,19 @@ export function HaloScreen() {
     }
   }, [dispatch, screen]);
 
+  if (!syncSettled) {
+    return (
+      <AppContainer bg="gray">
+        <SyncingPCDs />
+      </AppContainer>
+    );
+  }
+
   if (screen == null) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }
+
   return screen;
 }
 

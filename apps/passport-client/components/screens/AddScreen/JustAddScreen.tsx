@@ -1,9 +1,8 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, useIsDownloaded } from "../../../src/appHooks";
+import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
 import { useDeserialized } from "../../../src/useDeserialized";
-import { useHasUploaded } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { Button, H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -21,8 +20,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
-  const hasUploaded = useHasUploaded();
-  const isDownloaded = useIsDownloaded();
+  const syncSettled = useIsSyncSettled();
 
   const onAddClick = useCallback(async () => {
     try {
@@ -35,7 +33,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   let content;
 
-  if (!isDownloaded) {
+  if (!syncSettled) {
     return <SyncingPCDs />;
   } else if (!added) {
     content = (
@@ -48,8 +46,6 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
         <Button onClick={onAddClick}>Add</Button>
       </>
     );
-  } else if (!hasUploaded) {
-    return <SyncingPCDs />;
   } else {
     content = <AddedPCD onCloseClick={() => window.close()} />;
   }
