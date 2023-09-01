@@ -1,5 +1,9 @@
 import { Pool } from "postgres-pool";
-import { getCacheValue, setCacheValue } from "../database/queries/cache";
+import {
+  CacheEntry,
+  getCacheValue,
+  setCacheValue
+} from "../database/queries/cache";
 
 export class PersistentCacheService {
   private db: Pool;
@@ -12,7 +16,7 @@ export class PersistentCacheService {
     return setCacheValue(this.db, key, value);
   }
 
-  public async getValue(key: string): Promise<string | undefined> {
+  public async getValue(key: string): Promise<CacheEntry | undefined> {
     return getCacheValue(this.db, key);
   }
 }

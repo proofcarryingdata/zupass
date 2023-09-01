@@ -349,6 +349,8 @@ export class IssuanceService {
       return cachedTicket;
     }
 
+    logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
+
     const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
       ticketData,
       this.eddsaPrivateKey
@@ -370,7 +372,11 @@ export class IssuanceService {
   private static async getTicketCacheKey(
     ticketData: ITicketData
   ): Promise<string> {
-    return getHash(JSON.stringify(ticketData));
+    const ticketCopy: any = { ...ticketData };
+    delete ticketCopy.timestampSigned;
+    const hash = await getHash(JSON.stringify(ticketCopy));
+    logger("hashed", ticketData, "to", hash);
+    return hash;
   }
 
   private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
@@ -384,8 +390,12 @@ export class IssuanceService {
   ): Promise<EdDSATicketPCD | undefined> {
     const key = await IssuanceService.getTicketCacheKey(ticketData);
     const serializedTicket = await this.cacheService.getValue(key);
-    if (!serializedTicket) return undefined;
-    const parsedTicket = JSON.parse(serializedTicket);
+    if (!serializedTicket) {
+      logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
+      return undefined;
+    }
+    logger(`[ISSUANCE] cache hit for ticket id ${ticketData.ticketId}`);
+    const parsedTicket = JSON.parse(serializedTicket.cache_value);
 
     try {
       const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
