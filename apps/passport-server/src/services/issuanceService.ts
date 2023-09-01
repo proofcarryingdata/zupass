@@ -38,6 +38,7 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
+import { traced } from "./telemetryService";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -318,55 +319,78 @@ export class IssuanceService {
   private async issueDevconnectPretixTicketPCDs(
     request: IssuedPCDsRequest
   ): Promise<EdDSATicketPCD[]> {
-    const commitmentRow = await this.checkUserExists(request.userProof);
-    const email = commitmentRow?.email;
+    return traced(
+      "IssuanceService",
+      "issueDevconnectPretixTicketPCDs",
+      async (span) => {
+        const commitmentRow = await this.checkUserExists(request.userProof);
+        const email = commitmentRow?.email;
+        if (commitmentRow) {
+          span?.setAttribute(
+            "commitment",
+            commitmentRow?.commitment?.toString() ?? ""
+          );
+        }
+        if (email) {
+          span?.setAttribute("email", email);
+        }
 
-    if (commitmentRow == null || email == null) {
-      return [];
-    }
+        if (commitmentRow == null || email == null) {
+          return [];
+        }
 
-    const commitmentId = commitmentRow.commitment.toString();
-    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
-      this.context.dbPool,
-      email
+        const commitmentId = commitmentRow.commitment.toString();
+        const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
+          this.context.dbPool,
+          email
+        );
+
+        const tickets = await Promise.all(
+          ticketsDB
+            .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
+            .map((ticketData) => this.getOrGenerateTicket(ticketData))
+        );
+
+        span?.setAttribute("ticket_count", tickets.length);
+
+        return tickets;
+      }
     );
-
-    const tickets = await Promise.all(
-      ticketsDB
-        .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
-        .map((ticketData) => this.getOrGenerateTicket(ticketData))
-    );
-
-    return tickets;
   }
 
   private async getOrGenerateTicket(
     ticketData: ITicketData
   ): Promise<EdDSATicketPCD> {
-    const cachedTicket = await this.getCachedTicket(ticketData);
+    return traced("IssuanceService", "getOrGenerateTicket", async (span) => {
+      span?.setAttribute("ticket_id", ticketData.ticketId);
+      span?.setAttribute("ticket_email", ticketData.attendeeEmail);
+      span?.setAttribute("ticket_name", ticketData.attendeeName);
 
-    if (cachedTicket) {
-      return cachedTicket;
-    }
+      const cachedTicket = await this.getCachedTicket(ticketData);
 
-    logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
+      if (cachedTicket) {
+        return cachedTicket;
+      }
 
-    const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
-      ticketData,
-      this.eddsaPrivateKey
-    );
+      logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
 
-    try {
-      this.cacheTicket(generatedTicket);
-    } catch (e) {
-      this.rollbarService?.reportError(e);
-      logger(
-        `[ISSUANCE] error caching ticket ${ticketData.ticketId} ` +
-          `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+      const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
+        ticketData,
+        this.eddsaPrivateKey
       );
-    }
 
-    return generatedTicket;
+      try {
+        this.cacheTicket(generatedTicket);
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger(
+          `[ISSUANCE] error caching ticket ${ticketData.ticketId} ` +
+            `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+        );
+      }
+
+      return generatedTicket;
+    });
   }
 
   private static async getTicketCacheKey(
@@ -375,7 +399,6 @@ export class IssuanceService {
     const ticketCopy: any = { ...ticketData };
     delete ticketCopy.timestampSigned;
     const hash = await getHash(JSON.stringify(ticketCopy));
-    logger("hashed", ticketData, "to", hash);
     return hash;
   }
 

@@ -4,6 +4,7 @@ import {
   getCacheValue,
   setCacheValue
 } from "../database/queries/cache";
+import { traced } from "./telemetryService";
 
 export class PersistentCacheService {
   private db: Pool;
@@ -13,11 +14,19 @@ export class PersistentCacheService {
   }
 
   public async setValue(key: string, value: string): Promise<void> {
-    return setCacheValue(this.db, key, value);
+    return traced("Cache", "setValue", (span) => {
+      span?.setAttribute("cache_key", key);
+      return setCacheValue(this.db, key, value);
+    });
   }
 
   public async getValue(key: string): Promise<CacheEntry | undefined> {
-    return getCacheValue(this.db, key);
+    return traced("Cache", "getValue", async (span) => {
+      span?.setAttribute("cache_key", key);
+      const value = getCacheValue(this.db, key);
+      span?.setAttribute("hit", value != null);
+      return value;
+    });
   }
 }
 
