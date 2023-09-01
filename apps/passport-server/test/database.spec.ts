@@ -245,11 +245,17 @@ describe("database reads and writes", function () {
 
   step("should be able to interact with the cache", async function () {
     await setCacheValue(db, "key", "value");
-    expect(await getCacheValue(db, "key")).to.eq("value");
+    const firstEntry = await getCacheValue(db, "key");
+    expect(firstEntry?.cache_value).to.eq("value");
     await setCacheValue(db, "key", "value2");
-    expect(await getCacheValue(db, "key")).to.eq("value2");
+    const editedFirstEntry = await getCacheValue(db, "key");
+    expect(editedFirstEntry?.cache_value).to.eq("value2");
+    expect(editedFirstEntry?.time_created?.getTime()).to.eq(
+      firstEntry?.time_created?.getTime()
+    );
 
     await setCacheValue(db, "spongebob", "squarepants");
-    expect(await getCacheValue(db, "key")).to.eq("value2");
+    const spongebob = await getCacheValue(db, "key");
+    expect(spongebob?.cache_value).to.eq("value2");
   });
 });
