@@ -33,9 +33,11 @@ import {
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { PersistentCacheService } from "./persistentCacheService";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
+  private readonly cacheService: PersistentCacheService;
 
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
@@ -44,10 +46,12 @@ export class IssuanceService {
 
   public constructor(
     context: ApplicationContext,
+    cacheService: PersistentCacheService,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
   ) {
     this.context = context;
+    this.cacheService = cacheService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
@@ -378,7 +382,8 @@ export class IssuanceService {
 }
 
 export function startIssuanceService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  cacheService: PersistentCacheService
 ): IssuanceService | null {
   if (context.isZuzalu) {
     logger("[INIT] not starting issuance service for zuzalu");
@@ -393,7 +398,12 @@ export function startIssuanceService(
     return null;
   }
 
-  const issuanceService = new IssuanceService(context, rsaKey, eddsaKey);
+  const issuanceService = new IssuanceService(
+    context,
+    cacheService,
+    rsaKey,
+    eddsaKey
+  );
   return issuanceService;
 }
 
