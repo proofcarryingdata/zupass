@@ -77,10 +77,14 @@ export class TelegramService {
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
-          await this.bot.api.sendMessage(
-            userId,
-            "Your invitation was approved!"
-          );
+          const inviteLink = await ctx.createChatInviteLink();
+          await this.bot.api.sendMessage(userId, `You're approved.`, {
+            reply_markup: new InlineKeyboard().url(
+              `Join`,
+              inviteLink.invite_link
+            )
+          });
+          await this.bot.api.sendMessage(userId, `Congrats!`);
         }
       } catch (e) {
         logger("[TELEGRAM] chat_join_request error", e);
@@ -165,14 +169,14 @@ export class TelegramService {
             genericProveScreen: true,
             title: "ZK-EdDSA Ticket Request",
             description:
-              "Generate a ZK proof that you have a ticket for the research workshop!"
+              "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
           });
 
           await ctx.reply(
-            "Welcome! 👋\n\nPlease verify your PCDpass ticket to Stanford Research Workshop, so we can add you to the attendee Telegram group!",
+            "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
             {
               reply_markup: new InlineKeyboard().url(
-                "Verify with PCDpass 🚀",
+                "Generate ZKP 🚀",
                 proofUrl
               )
             }
@@ -291,10 +295,10 @@ export class TelegramService {
     });
     await this.bot.api.sendMessage(
       userId,
-      `You are verified! Press this button to join ${chat.title}. A dialog will pop open which will prompt you to "Request to Join" the group, after which you'll be automatically added.`,
+      `You've generated a ZK proof! Press this button to send your proof to the chat.`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Join ${chat.title} channel`,
+          `Send ZKP`,
           inviteLink.invite_link
         )
       }
