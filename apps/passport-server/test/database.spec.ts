@@ -5,6 +5,7 @@ import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
+import { getCacheValue, setCacheValue } from "../src/database/queries/cache";
 import {
   fetchAllCommitments,
   fetchCommitment,
@@ -240,5 +241,15 @@ describe("database reads and writes", function () {
     await removeCommitment(db, email);
     const deletedCommitment = await fetchCommitment(db, email);
     expect(deletedCommitment).to.eq(null);
+  });
+
+  step("should be able to interact with the cache", async function () {
+    await setCacheValue(db, "key", "value");
+    expect(await getCacheValue(db, "key")).to.eq("value");
+    await setCacheValue(db, "key", "value2");
+    expect(await getCacheValue(db, "key")).to.eq("value2");
+
+    await setCacheValue(db, "spongebob", "squarepants");
+    expect(await getCacheValue(db, "key")).to.eq("value2");
   });
 });
