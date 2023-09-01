@@ -15,7 +15,7 @@ import {
   generateMessageHash
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PCDPASS_URL } from "../../src/constants";
@@ -30,16 +30,38 @@ export default function Page() {
   );
   const externalNullifier = generateMessageHash("consumer-client").toString();
 
-  const fieldsToReveal: EdDSATicketFieldsToReveal = {
-    revealTicketId: false,
-    revealEventId: true,
-    revealProductId: true,
-    revealTimestampConsumed: false,
-    revealTimestampSigned: false,
-    revealAttendeeSemaphoreId: false,
-    revealIsConsumed: false,
-    revealIsRevoked: false
-  };
+  const [revealTicketId, setRevealTicketId] = useState(false);
+  const [revealEventId, setRevealEventId] = useState(true);
+  const [revealProductId, setRevealProductId] = useState(true);
+  const [revealTimestampConsumed, setRevealTimestampConsumed] = useState(false);
+  const [revealTimestampSigned, setRevealTimestampSigned] = useState(false);
+  const [revealAttendeeSemaphoreId, setRevealAttendeeSemaphoreId] =
+    useState(false);
+  const [revealIsConsumed, setRevealIsConsumed] = useState(false);
+  const [revealIsRevoked, setRevealIsRevoked] = useState(false);
+
+  const fieldsToReveal: EdDSATicketFieldsToReveal = useMemo(
+    () => ({
+      revealTicketId,
+      revealEventId,
+      revealProductId,
+      revealTimestampConsumed,
+      revealTimestampSigned,
+      revealAttendeeSemaphoreId,
+      revealIsConsumed,
+      revealIsRevoked
+    }),
+    [
+      revealTicketId,
+      revealEventId,
+      revealProductId,
+      revealTimestampConsumed,
+      revealTimestampSigned,
+      revealAttendeeSemaphoreId,
+      revealIsConsumed,
+      revealIsRevoked
+    ]
+  );
 
   // Populate PCD from either client-side or server-side proving using passport popup
   const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
@@ -96,6 +118,94 @@ export default function Page() {
         >
           Request PCDpass Ticket Proof
         </button>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealTicketId}
+            onChange={() => {
+              setRevealTicketId((checked) => !checked);
+            }}
+          />
+          request ticketId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealEventId}
+            onChange={() => {
+              setRevealEventId((checked) => !checked);
+            }}
+          />
+          request eventId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealProductId}
+            onChange={() => {
+              setRevealProductId((checked) => !checked);
+            }}
+          />
+          request productId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealTimestampConsumed}
+            onChange={() => {
+              setRevealTimestampConsumed((checked) => !checked);
+            }}
+          />
+          request timestampConsumed?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealTimestampSigned}
+            onChange={() => {
+              setRevealTimestampSigned((checked) => !checked);
+            }}
+          />
+          request timestampSigned?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealAttendeeSemaphoreId}
+            onChange={() => {
+              setRevealAttendeeSemaphoreId((checked) => !checked);
+            }}
+          />
+          request attendeeSemaphoreId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealIsConsumed}
+            onChange={() => {
+              setRevealIsConsumed((checked) => !checked);
+            }}
+          />
+          request isConsumed?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealIsRevoked}
+            onChange={() => {
+              setRevealIsRevoked((checked) => !checked);
+            }}
+          />
+          request isRevoked?
+        </label>
         {!!pcd && (
           <>
             <p>Got PCDpass ZKEdDSA Proof from Passport</p>
@@ -114,8 +224,20 @@ export default function Page() {
                 <p>{`Product ID: ${
                   pcd.claim.partialTicket.productId || "HIDDEN"
                 }`}</p>
+                <p>{`Timestamp Consumed: ${
+                  pcd.claim.partialTicket.timestampConsumed || "HIDDEN"
+                }`}</p>
+                <p>{`Timestamp Signed: ${
+                  pcd.claim.partialTicket.timestampSigned || "HIDDEN"
+                }`}</p>
                 <p>{`Semaphore ID: ${
                   pcd.claim.partialTicket.attendeeSemaphoreId || "HIDDEN"
+                }`}</p>
+                <p>{`Is Consumed?: ${
+                  pcd.claim.partialTicket.isConsumed || "HIDDEN"
+                }`}</p>
+                <p>{`Is Revoked?: ${
+                  pcd.claim.partialTicket.isRevoked || "HIDDEN"
                 }`}</p>
                 {pcd.claim.nullifierHash && (
                   <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
