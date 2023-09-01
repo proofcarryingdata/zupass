@@ -53,7 +53,11 @@ export async function startServices(
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(context.dbPool);
-  const issuanceService = startIssuanceService(context, persistentCacheService);
+  const issuanceService = startIssuanceService(
+    context,
+    persistentCacheService,
+    rollbarService
+  );
   const services: GlobalServices = {
     semaphoreService,
     userService,

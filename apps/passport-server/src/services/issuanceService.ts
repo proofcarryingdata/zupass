@@ -37,10 +37,12 @@ import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pr
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { PersistentCacheService } from "./persistentCacheService";
+import { RollbarService } from "./rollbarService";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
+  private readonly rollbarService: RollbarService | null;
 
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
@@ -50,11 +52,13 @@ export class IssuanceService {
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
+    rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
   ) {
     this.context = context;
     this.cacheService = cacheService;
+    this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
@@ -330,15 +334,48 @@ export class IssuanceService {
     const tickets = await Promise.all(
       ticketsDB
         .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
-        .map((ticketData) =>
-          IssuanceService.ticketDataToTicketPCD(
-            ticketData,
-            this.eddsaPrivateKey
-          )
-        )
+        .map((ticketData) => this.getOrGenerateTicket(ticketData))
     );
 
     return tickets;
+  }
+
+  private async getOrGenerateTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD> {
+    const cachedTicket = await this.getCachedTicket(ticketData);
+
+    if (cachedTicket) {
+      return cachedTicket;
+    }
+
+    const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
+      ticketData,
+      this.eddsaPrivateKey
+    );
+
+    return generatedTicket;
+  }
+
+  private async getCachedTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD | undefined> {
+    const key = await getHash(JSON.stringify(ticketData));
+    const serializedTicket = await this.cacheService.getValue(key);
+    if (!serializedTicket) return undefined;
+
+    const parsedTicket = JSON.parse(serializedTicket);
+
+    try {
+      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+        parsedTicket.pcd
+      );
+      return deserializedTicket;
+    } catch (e) {
+      logger("[ISSUANCE]", `failed to parse cached ticket ${key}`, e);
+      this.rollbarService?.reportError(e);
+      return undefined;
+    }
   }
 
   private static async ticketDataToTicketPCD(
@@ -395,7 +432,8 @@ export class IssuanceService {
 
 export function startIssuanceService(
   context: ApplicationContext,
-  cacheService: PersistentCacheService
+  cacheService: PersistentCacheService,
+  rollbarService: RollbarService | null
 ): IssuanceService | null {
   if (context.isZuzalu) {
     logger("[INIT] not starting issuance service for zuzalu");
@@ -413,9 +451,11 @@ export function startIssuanceService(
   const issuanceService = new IssuanceService(
     context,
     cacheService,
+    rollbarService,
     rsaKey,
     eddsaKey
   );
+
   return issuanceService;
 }
 
