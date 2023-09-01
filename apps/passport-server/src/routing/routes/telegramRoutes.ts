@@ -80,18 +80,22 @@ export function initTelegramRoutes(
    */
   app.get("/telegram/message", async (req, res) => {
     try {
-      const { proof } = req.query;
+      const { proof, message } = req.query;
+
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
       }
 
-      logger("[TELEGRAM] Verifying anonymous message");
+      if (!message || typeof message !== "string") {
+        throw new Error("message field needs to be a string and be non-empty");
+      }
 
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
+
       try {
-        const message = await telegramService.handleSendAnonymousMessage(proof);
+        await telegramService.handleSendAnonymousMessage(proof, message);
         logger(`[TELEGRAM] Posted anonymous message: ${message}`);
         res.sendStatus(200);
       } catch (e) {

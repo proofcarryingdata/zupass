@@ -19,6 +19,7 @@
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.13",
     "js-cookie": "^3.0.5",
+    "js-sha256": "^0.10.1",
     "next": "13.4.13",
     "postcss": "8.4.27",
     "react": "18.2.0",

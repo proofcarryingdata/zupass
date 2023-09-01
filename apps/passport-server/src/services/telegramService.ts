@@ -10,6 +10,7 @@ import {
 } from "@pcd/zk-eddsa-ticket-pcd";
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
+import sha256 from "js-sha256";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
@@ -280,6 +281,7 @@ export class TelegramService {
       pcd = await ZKEdDSATicketPCDPackage.deserialize(
         JSON.parse(serializedZKEdDSATicket).pcd
       );
+      console.log("PCDPCDPCDPCPD    ", pcd);
     } catch (e) {
       throw new Error(`Deserialization error, ${e}`);
     }
@@ -288,6 +290,7 @@ export class TelegramService {
     if (await ZKEdDSATicketPCDPackage.verify(pcd)) {
       return pcd;
     } else {
+      logger("[TELEGRAM] pcd invalid");
       return null;
     }
   }
@@ -398,9 +401,13 @@ export class TelegramService {
   }
 
   public async handleSendAnonymousMessage(
-    serializedZKEdDSATicket: string
-  ): Promise<string> {
+    serializedZKEdDSATicket: string,
+    message: string
+  ): Promise<void> {
+    logger("[TELEGRAM] Verifying anonymous message");
+
     const pcd = await this.verifyZKEdDSATicketPCD(serializedZKEdDSATicket);
+
     if (!pcd) {
       throw new Error("Could not verify PCD for anonymous message");
     }
@@ -409,11 +416,26 @@ export class TelegramService {
       watermark,
       partialTicket: { eventId }
     } = pcd.claim;
+
     if (!eventId) {
       throw new Error("Anonymous message PCD did not contain eventId");
     }
+
     if (!watermark) {
       throw new Error("Anonymous message PCD did not contain watermark");
+    }
+
+    function getMessageWatermark(message: string): bigint {
+      const hashed = sha256.sha256(message).substring(0, 16);
+      return BigInt("0x" + hashed);
+    }
+
+    if (getMessageWatermark(message).toString() !== watermark.toString()) {
+      throw new Error(
+        `Anonymous message string ${message} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+          message
+        ).toString()}`
+      );
     }
 
     const event = await fetchTelegramEvent(this.context.dbPool, eventId);
@@ -440,9 +462,7 @@ export class TelegramService {
       );
     }
 
-    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, watermark);
-
-    return watermark;
+    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, message);
   }
 
   public stop(): void {

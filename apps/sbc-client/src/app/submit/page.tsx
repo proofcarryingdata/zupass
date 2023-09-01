@@ -1,9 +1,18 @@
 "use client";
 
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import sha256 from "js-sha256";
 import { useCallback, useState } from "react";
 
+function getMessageWatermark(message: string): bigint {
+  const hashed = sha256.sha256(message).substring(0, 16);
+  return BigInt("0x" + hashed);
+}
+
 function requestProof(message: string) {
+  const watermark = getMessageWatermark(message).toString();
+  console.log("WATERMARK", watermark);
+
   const args = {
     ticket: {
       argumentType: "PCD",
@@ -26,14 +35,16 @@ function requestProof(message: string) {
     },
     watermark: {
       argumentType: "String",
-      value: "12345",
+      value: watermark,
       userProvided: false
     }
   };
 
   const proofUrl = constructPassportPcdGetRequestUrl(
     "http://localhost:3000",
-    "http://localhost:3002/telegram/message",
+    `http://localhost:3002/telegram/message?message=${encodeURIComponent(
+      message
+    )}`,
     "zk-eddsa-ticket-pcd",
     args,
     {

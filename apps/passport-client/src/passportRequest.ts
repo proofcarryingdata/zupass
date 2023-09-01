@@ -48,11 +48,13 @@ export function safeRedirectPending(returnUrl: string, pendingPCD: PendingPCD) {
 // Redirects to the returnUrl with the serialized PCD in the query string.
 export function safeRedirect(returnUrl: string, serializedPCD?: SerializedPCD) {
   validateReturnUrl(returnUrl);
+  const hasQuery = returnUrl.includes("?");
+  const queryMarker = hasQuery ? "&" : "?";
 
   if (serializedPCD) {
     const encPCD = encodeURIComponent(JSON.stringify(serializedPCD));
-    window.location.href = `${returnUrl}?proof=${encPCD}&finished=true`;
+    window.location.href = `${returnUrl}${queryMarker}proof=${encPCD}&finished=true`;
   } else {
-    window.location.href = `${returnUrl}?finished=true`;
+    window.location.href = `${returnUrl}${queryMarker}finished=true`;
   }
 }
