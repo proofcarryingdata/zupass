@@ -310,10 +310,6 @@ export class TelegramService {
     anonChatId: number,
     message: string
   ): Promise<void> {
-    // TODO: The only way I could find to send to a specific topic besides replying to
-    // the first message in that topic. Perhaps there's a better way. If not, it's probably
-    // worth just adding a `anonymous_channel_pinned_message_id` column to the Telegram
-    // events table.
     await this.bot.api.sendMessage(groupId, message, {
       message_thread_id: anonChatId
     });
