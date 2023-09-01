@@ -305,7 +305,6 @@ export class TelegramService {
         pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
     }
 
-    // Right now, we are only verifying that the PCD is authentic
     if (
       (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
       eventIdMatch &&
