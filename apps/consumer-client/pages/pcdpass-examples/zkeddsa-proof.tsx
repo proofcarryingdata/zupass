@@ -261,6 +261,11 @@ export default function Page() {
                     ? pcd.claim.partialTicket.isRevoked
                     : "HIDDEN"
                 }`}</p>
+                <p>{`Signer: ${pcd.claim.signer}`}</p>
+                <p>{`Watermark: ${pcd.claim.watermark}`}</p>
+                {pcd.claim.externalNullifier && (
+                  <p>{`Nullifier Hash: ${pcd.claim.externalNullifier}`}</p>
+                )}
                 {pcd.claim.nullifierHash && (
                   <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
                 )}
