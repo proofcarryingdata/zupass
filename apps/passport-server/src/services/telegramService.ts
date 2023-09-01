@@ -260,6 +260,7 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
     }
+
     if (
       (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
       pcd.claim.watermark === telegramUserId.toString() &&
@@ -285,8 +286,31 @@ export class TelegramService {
       throw new Error(`Deserialization error, ${e}`);
     }
 
+    // this is very bad but i am very tired
+    // hardcoded eventIDs and signing keys for SRW
+    let signerMatch = false;
+    let eventIdMatch = false;
+    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+      eventIdMatch = true;
+      signerMatch = true;
+    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_STAGING;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
+    } else {
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
+    }
+
     // Right now, we are only verifying that the PCD is authentic
-    if (await ZKEdDSATicketPCDPackage.verify(pcd)) {
+    if (
+      (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
+      eventIdMatch &&
+      signerMatch
+    ) {
       return pcd;
     } else {
       logger("[TELEGRAM] pcd invalid");
