@@ -93,6 +93,7 @@ export function initTelegramRoutes(
       try {
         const message = await telegramService.handleSendAnonymousMessage(proof);
         logger(`[TELEGRAM] Posted anonymous message: ${message}`);
+        res.sendStatus(200);
       } catch (e) {
         logger("[TELEGRAM] failed to send anonymous message", e);
         rollbarService?.reportError(e);
