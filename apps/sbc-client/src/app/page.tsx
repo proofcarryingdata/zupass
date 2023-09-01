@@ -41,8 +41,8 @@ function requestProof(message: string) {
   };
 
   const proofUrl = constructPassportPcdGetRequestUrl(
-    "http://localhost:3000",
-    `http://localhost:3002/telegram/message?message=${encodeURIComponent(
+    "http://pcdpass.xyz",
+    `http://api.pcdpass.xyz/telegram/message?message=${encodeURIComponent(
       message
     )}`,
     "zk-eddsa-ticket-pcd",
