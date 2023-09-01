@@ -354,16 +354,37 @@ export class IssuanceService {
       this.eddsaPrivateKey
     );
 
+    try {
+      this.cacheTicket(generatedTicket);
+    } catch (e) {
+      this.rollbarService?.reportError(e);
+      logger(
+        `[ISSUANCE] error caching ticket ${ticketData.ticketId} ` +
+          `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+      );
+    }
+
     return generatedTicket;
+  }
+
+  private static async getTicketCacheKey(
+    ticketData: ITicketData
+  ): Promise<string> {
+    return getHash(JSON.stringify(ticketData));
+  }
+
+  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+    const key = await IssuanceService.getTicketCacheKey(ticket.claim.ticket);
+    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    this.cacheService.setValue(key, JSON.stringify(serialized));
   }
 
   private async getCachedTicket(
     ticketData: ITicketData
   ): Promise<EdDSATicketPCD | undefined> {
-    const key = await getHash(JSON.stringify(ticketData));
+    const key = await IssuanceService.getTicketCacheKey(ticketData);
     const serializedTicket = await this.cacheService.getValue(key);
     if (!serializedTicket) return undefined;
-
     const parsedTicket = JSON.parse(serializedTicket);
 
     try {
