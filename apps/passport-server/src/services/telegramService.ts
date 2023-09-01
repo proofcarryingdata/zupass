@@ -281,7 +281,6 @@ export class TelegramService {
       pcd = await ZKEdDSATicketPCDPackage.deserialize(
         JSON.parse(serializedZKEdDSATicket).pcd
       );
-      console.log("PCDPCDPCDPCPD    ", pcd);
     } catch (e) {
       throw new Error(`Deserialization error, ${e}`);
     }
