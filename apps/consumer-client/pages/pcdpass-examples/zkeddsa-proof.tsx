@@ -216,28 +216,50 @@ export default function Page() {
               <>
                 <p>✅ Proof is valid</p>
                 <p>{`Ticket ID: ${
-                  pcd.claim.partialTicket.ticketId || "HIDDEN"
+                  pcd.claim.partialTicket.ticketId !== undefined
+                    ? pcd.claim.partialTicket.ticketId
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Event ID: ${
-                  pcd.claim.partialTicket.eventId || "HIDDEN"
+                  pcd.claim.partialTicket.eventId !== undefined
+                    ? pcd.claim.partialTicket.eventId
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Product ID: ${
-                  pcd.claim.partialTicket.productId || "HIDDEN"
+                  pcd.claim.partialTicket.productId !== undefined
+                    ? pcd.claim.partialTicket.productId
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Timestamp Consumed: ${
-                  pcd.claim.partialTicket.timestampConsumed || "HIDDEN"
+                  // timestampConsumed can be 0, which is falsey
+                  // so test for undefined
+                  pcd.claim.partialTicket.timestampConsumed !== undefined
+                    ? pcd.claim.partialTicket.timestampConsumed
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Timestamp Signed: ${
-                  pcd.claim.partialTicket.timestampSigned || "HIDDEN"
+                  pcd.claim.partialTicket.timestampSigned !== undefined
+                    ? pcd.claim.partialTicket.timestampSigned
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Semaphore ID: ${
-                  pcd.claim.partialTicket.attendeeSemaphoreId || "HIDDEN"
+                  pcd.claim.partialTicket.attendeeSemaphoreId !== undefined
+                    ? pcd.claim.partialTicket.attendeeSemaphoreId
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Is Consumed?: ${
-                  pcd.claim.partialTicket.isConsumed || "HIDDEN"
+                  // isConsumed can be true, false, or undefined
+                  // undefined means it is not revealed in this PCD
+                  pcd.claim.partialTicket.isConsumed !== undefined
+                    ? pcd.claim.partialTicket.isConsumed
+                    : "HIDDEN"
                 }`}</p>
                 <p>{`Is Revoked?: ${
-                  pcd.claim.partialTicket.isRevoked || "HIDDEN"
+                  // isConsumed can be true, false, or undefined
+                  // undefined means it is not revealed in this PCD
+                  pcd.claim.partialTicket.isRevoked !== undefined
+                    ? pcd.claim.partialTicket.isRevoked
+                    : "HIDDEN"
                 }`}</p>
                 {pcd.claim.nullifierHash && (
                   <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
