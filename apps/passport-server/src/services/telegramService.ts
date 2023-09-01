@@ -10,6 +10,7 @@ import {
 } from "@pcd/zk-eddsa-ticket-pcd";
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
+import sha256 from "js-sha256";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
@@ -259,6 +260,7 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
     }
+
     if (
       (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
       pcd.claim.watermark === telegramUserId.toString() &&
@@ -267,6 +269,50 @@ export class TelegramService {
     ) {
       return pcd;
     } else {
+      return null;
+    }
+  }
+
+  private async verifyZKEdDSATicketPCD(
+    serializedZKEdDSATicket: string
+  ): Promise<ZKEdDSATicketPCD | null> {
+    let pcd: ZKEdDSATicketPCD;
+
+    try {
+      pcd = await ZKEdDSATicketPCDPackage.deserialize(
+        JSON.parse(serializedZKEdDSATicket).pcd
+      );
+    } catch (e) {
+      throw new Error(`Deserialization error, ${e}`);
+    }
+
+    // this is very bad but i am very tired
+    // hardcoded eventIDs and signing keys for SRW
+    let signerMatch = false;
+    let eventIdMatch = false;
+    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+      eventIdMatch = true;
+      signerMatch = true;
+    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_STAGING;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
+    } else {
+      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
+    }
+
+    if (
+      (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
+      eventIdMatch &&
+      signerMatch
+    ) {
+      return pcd;
+    } else {
+      logger("[TELEGRAM] pcd invalid");
       return null;
     }
   }
@@ -280,6 +326,16 @@ export class TelegramService {
       chat?.type === "group" ||
       chat?.type === "supergroup"
     );
+  }
+
+  private async sendToAnonymousChannel(
+    groupId: number,
+    anonChatId: number,
+    message: string
+  ): Promise<void> {
+    await this.bot.api.sendMessage(groupId, message, {
+      message_thread_id: anonChatId
+    });
   }
 
   private async sendInviteLink(
@@ -360,6 +416,71 @@ export class TelegramService {
 
     // Send invite link
     await this.sendInviteLink(telegramUserId, chat);
+  }
+
+  public async handleSendAnonymousMessage(
+    serializedZKEdDSATicket: string,
+    message: string
+  ): Promise<void> {
+    logger("[TELEGRAM] Verifying anonymous message");
+
+    const pcd = await this.verifyZKEdDSATicketPCD(serializedZKEdDSATicket);
+
+    if (!pcd) {
+      throw new Error("Could not verify PCD for anonymous message");
+    }
+
+    const {
+      watermark,
+      partialTicket: { eventId }
+    } = pcd.claim;
+
+    if (!eventId) {
+      throw new Error("Anonymous message PCD did not contain eventId");
+    }
+
+    if (!watermark) {
+      throw new Error("Anonymous message PCD did not contain watermark");
+    }
+
+    function getMessageWatermark(message: string): bigint {
+      const hashed = sha256.sha256(message).substring(0, 16);
+      return BigInt("0x" + hashed);
+    }
+
+    if (getMessageWatermark(message).toString() !== watermark.toString()) {
+      throw new Error(
+        `Anonymous message string ${message} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+          message
+        ).toString()}`
+      );
+    }
+
+    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
+    if (!event) {
+      throw new Error(
+        `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
+      );
+    }
+
+    logger(
+      `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
+    );
+
+    if (event.anon_chat_id == null) {
+      throw new Error(`this group doesn't have an anon channel`);
+    }
+
+    // The event is linked to a chat. Make sure we can access it.
+    const chatId = event.telegram_chat_id;
+    const chat = await this.bot.api.getChat(chatId);
+    if (!this.chatIsGroup(chat)) {
+      throw new Error(
+        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+      );
+    }
+
+    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, message);
   }
 
   public stop(): void {
