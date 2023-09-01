@@ -304,15 +304,16 @@ export class TelegramService {
   }
 
   private async sendToAnonymousChannel(
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
+    groupId: number,
+    anonChatId: number,
     message: string
   ): Promise<void> {
     // TODO: The only way I could find to send to a specific topic besides replying to
     // the first message in that topic. Perhaps there's a better way. If not, it's probably
     // worth just adding a `anonymous_channel_pinned_message_id` column to the Telegram
     // events table.
-    await this.bot.api.sendMessage(chat.id, message, {
-      reply_to_message_id: 3 // FIXME: currently hardcoded based on my bot
+    await this.bot.api.sendMessage(groupId, message, {
+      message_thread_id: anonChatId
     });
   }
 
@@ -426,6 +427,10 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
+    if (event.anon_chat_id == null) {
+      throw new Error(`this group doesn't have an anon channel`);
+    }
+
     // The event is linked to a chat. Make sure we can access it.
     const chatId = event.telegram_chat_id;
     const chat = await this.bot.api.getChat(chatId);
@@ -435,7 +440,7 @@ export class TelegramService {
       );
     }
 
-    await this.sendToAnonymousChannel(chat, watermark);
+    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, watermark);
 
     return watermark;
   }

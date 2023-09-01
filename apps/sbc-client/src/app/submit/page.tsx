@@ -26,7 +26,7 @@ function requestProof(message: string) {
     },
     watermark: {
       argumentType: "String",
-      value: "5",
+      value: "12345",
       userProvided: false
     }
   };
