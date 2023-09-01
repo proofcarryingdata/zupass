@@ -23,7 +23,10 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
-import { CommitmentRow } from "../database/models";
+import {
+  CommitmentRow,
+  DevconnectPretixTicketDBWithEmailAndItem
+} from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectPretixTicketByTicketId,
@@ -305,8 +308,42 @@ export class IssuanceService {
     return storedCommitment;
   }
 
-  private async ticketDataToTicketPCD(
-    ticketData: ITicketData
+  /**
+   * Fetch all DevconnectPretixTicket entities under a given user's email.
+   */
+  private async issueDevconnectPretixTicketPCDs(
+    request: IssuedPCDsRequest
+  ): Promise<EdDSATicketPCD[]> {
+    const commitmentRow = await this.checkUserExists(request.userProof);
+    const email = commitmentRow?.email;
+
+    if (commitmentRow == null || email == null) {
+      return [];
+    }
+
+    const commitmentId = commitmentRow.commitment.toString();
+    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
+      this.context.dbPool,
+      email
+    );
+
+    const tickets = await Promise.all(
+      ticketsDB
+        .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
+        .map((ticketData) =>
+          IssuanceService.ticketDataToTicketPCD(
+            ticketData,
+            this.eddsaPrivateKey
+          )
+        )
+    );
+
+    return tickets;
+  }
+
+  private static async ticketDataToTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
   ): Promise<EdDSATicketPCD> {
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
@@ -316,7 +353,7 @@ export class IssuanceService {
         argumentType: ArgumentTypeName.Object
       },
       privateKey: {
-        value: this.eddsaPrivateKey,
+        value: eddsaPrivateKey,
         argumentType: ArgumentTypeName.String
       },
       id: {
@@ -328,56 +365,31 @@ export class IssuanceService {
     return ticketPCD;
   }
 
-  /**
-   * Fetch all DevconnectPretixTicket entities under a given user's email.
-   */
-  private async issueDevconnectPretixTicketPCDs(
-    request: IssuedPCDsRequest
-  ): Promise<EdDSATicketPCD[]> {
-    const commitment = await this.checkUserExists(request.userProof);
-    const email = commitment?.email;
+  private static ticketRowToTicketData(
+    t: DevconnectPretixTicketDBWithEmailAndItem,
+    semaphoreId: string
+  ): ITicketData {
+    return {
+      // unsigned fields
+      attendeeName: t.full_name,
+      attendeeEmail: t.email,
+      eventName: t.event_name,
+      ticketName: t.item_name,
+      checkerEmail: t.checker ?? undefined,
 
-    if (commitment == null || email == null) {
-      return [];
-    }
-
-    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
-      this.context.dbPool,
-      email
-    );
-
-    const tickets = await Promise.all(
-      ticketsDB
-        // convert to ITicketData
-        .map(
-          (t) =>
-            ({
-              // unsigned fields
-              attendeeName: t.full_name,
-              attendeeEmail: t.email,
-              eventName: t.event_name,
-              ticketName: t.item_name,
-              checkerEmail: t.checker ?? undefined,
-
-              // signed fields
-              ticketId: t.id,
-              eventId: t.pretix_events_config_id,
-              productId: t.devconnect_pretix_items_info_id,
-              timestampConsumed:
-                t.pcdpass_checkin_timestamp == null
-                  ? 0
-                  : new Date(t.pcdpass_checkin_timestamp).getTime(),
-              timestampSigned: Date.now(),
-              attendeeSemaphoreId: commitment.commitment,
-              isConsumed: t.is_consumed,
-              isRevoked: t.is_deleted
-            }) satisfies ITicketData
-        )
-        // convert to serialized ticket PCD
-        .map((ticketData) => this.ticketDataToTicketPCD(ticketData))
-    );
-
-    return tickets;
+      // signed fields
+      ticketId: t.id,
+      eventId: t.pretix_events_config_id,
+      productId: t.devconnect_pretix_items_info_id,
+      timestampConsumed:
+        t.pcdpass_checkin_timestamp == null
+          ? 0
+          : new Date(t.pcdpass_checkin_timestamp).getTime(),
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId: semaphoreId,
+      isConsumed: t.is_consumed,
+      isRevoked: t.is_deleted
+    } satisfies ITicketData;
   }
 }
 
