@@ -8,7 +8,8 @@
     "./artifacts/*",
     "./src/*",
     "./dist/*",
-    "./README.md"
+    "./README.md",
+    "./LICENSE"
   ],
   "exports": {
     ".": {
