@@ -45,3 +45,24 @@ export async function getCacheValue(
 
   return result.rows[0];
 }
+
+export async function deleteExpiredCacheEntries(
+  db: Pool,
+  maxAgeInDays: number,
+  maxEntries: number
+): Promise<void> {
+  await sqlQuery(
+    db,
+    `
+with nonExpired as (
+  select * from cache
+  where time_created > NOW() - interval '$1 day'
+  order by id desc
+  limit $2
+)
+delete from cache
+where id < (select min(nonExpired.id) from nonExpired)
+  `,
+    [maxAgeInDays, maxEntries]
+  );
+}
