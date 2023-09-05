@@ -7,7 +7,8 @@
   "files": [
     "./src/*",
     "./dist/*",
-    "./README.md"
+    "./README.md",
+    "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
