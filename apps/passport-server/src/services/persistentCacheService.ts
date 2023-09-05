@@ -52,9 +52,9 @@ export class PersistentCacheService {
   }
 
   public async setValue(key: string, value: string): Promise<void> {
-    return traced("Cache", "setValue", (span) => {
+    return traced("Cache", "setValue", async (span) => {
       span?.setAttribute("cache_key", key);
-      return setCacheValue(this.db, key, value);
+      await setCacheValue(this.db, key, value);
     });
   }
 
