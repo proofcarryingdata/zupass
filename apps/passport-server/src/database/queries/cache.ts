@@ -12,8 +12,8 @@ export async function setCacheValue(
   db: Pool,
   key: string,
   value: string
-): Promise<void> {
-  await sqlQuery(
+): Promise<CacheEntry> {
+  const result = await sqlQuery(
     db,
     `
 insert into cache(
@@ -24,9 +24,12 @@ insert into cache(
 values ($1, $2, NOW(), NOW()) 
 on conflict(cache_key) do update 
 set cache_value = $2,
-time_updated = NOW();`,
+time_updated = NOW()
+returning *;`,
     [key, value]
   );
+
+  return result.rows[0];
 }
 
 export async function getCacheValue(
@@ -46,6 +49,11 @@ export async function getCacheValue(
   return result.rows[0];
 }
 
+export async function getCacheSize(db: Pool): Promise<number> {
+  const result = await sqlQuery(db, `select count(*) from cache;`);
+  return parseInt(result.rows[0].count);
+}
+
 export async function deleteExpiredCacheEntries(
   db: Pool,
   maxAgeInDays: number,
@@ -57,7 +65,7 @@ export async function deleteExpiredCacheEntries(
 with deleted as (
   with nonExpired as (
     select * from cache
-    where time_created > NOW() - interval '$1 day'
+    where time_created > NOW() - $1 * (interval '1 day')
     order by id desc
     limit $2
   )
@@ -70,5 +78,5 @@ select count(*) as deleted_count from deleted;
     [maxAgeInDays, maxEntries]
   );
 
-  return result.rows[0].deleted_count;
+  return parseInt(result.rows[0].deleted_count, 10);
 }
