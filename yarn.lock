@@ -2780,7 +2780,7 @@
     "@noble/hashes" "~1.3.0"
     "@scure/base" "~1.1.0"
 
-"@semaphore-protocol/group@^3.10.0":
+"@semaphore-protocol/group@^3.11.0":
   version "3.11.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.11.0.tgz#603fdac016401486e38a9564d0f59664261e0f23"
   integrity sha512-fvv1+zY3Z7HUnE044wOJ3wDX31maK2l5T8e3yL4WtHyMmK8ucu2wOd4mDnsH1LwkwWaPN+kvnE/SvA+9qBQsIA==
@@ -2801,7 +2801,7 @@
     "@ethersproject/strings" "^5.6.1"
     circomlibjs "0.0.8"
 
-"@semaphore-protocol/identity@^3.10.0":
+"@semaphore-protocol/identity@^3.10.0", "@semaphore-protocol/identity@^3.11.0":
   version "3.11.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.11.0.tgz#32a6f7d6ae6dab529b4b08ae32055219f46ebe07"
   integrity sha512-z82ZyZuUeq2+l9/cnCB/sCYdPOb0TQRl0S4w1BdnsAGBCRaE8lt8+fprSdEGc0ay0kCZIiIp0iLWB5d9Frf+Ug==
@@ -2812,7 +2812,7 @@
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
 
-"@semaphore-protocol/proof@^3.10.0":
+"@semaphore-protocol/proof@^3.11.0":
   version "3.11.0"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.11.0.tgz#bafc180790b7400d34b5b19c5003a0b81d7a8222"
   integrity sha512-MMETUKk+ILhDu+Yk3qyIT2u9R4GWe+rP8EtAVZ+kp6Eg2BEDX0k8JeKjymN3puWyZYAZWx6OYUldEj6w+KvmUw==
