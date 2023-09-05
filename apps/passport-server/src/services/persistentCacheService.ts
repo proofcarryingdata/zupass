@@ -35,14 +35,12 @@ export class PersistentCacheService {
   }
 
   public start(): void {
-    this.expirationInterval = setInterval(() => {
-      try {
-        this.expireOldEntries();
-      } catch (e) {
-        logger("failed to expire old cache entries", e);
-        this.rollbarService?.reportError(e);
-      }
-    }, PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS);
+    logger("[CACHE] starting expiration loop");
+    this.tryExpireOldEntries();
+    this.expirationInterval = setInterval(
+      this.tryExpireOldEntries.bind(this),
+      PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS
+    );
   }
 
   public stop(): void {
@@ -67,8 +65,17 @@ export class PersistentCacheService {
     });
   }
 
+  private async tryExpireOldEntries(): Promise<void> {
+    try {
+      this.expireOldEntries();
+    } catch (e) {
+      logger("failed to expire old cache entries", e);
+      this.rollbarService?.reportError(e);
+    }
+  }
   private async expireOldEntries(): Promise<void> {
     return traced("Cache", "expireOldEntries", async (span) => {
+      logger("[CACHE] expiring old entries");
       const deleted_count = await deleteExpiredCacheEntries(
         this.db,
         PersistentCacheService.MAX_CACHE_ENTRY_AGE_DAYS,
@@ -83,6 +90,7 @@ export function startPersistentCacheService(
   db: Pool,
   rollbarService: RollbarService | null
 ): PersistentCacheService {
+  logger("[INIT] starting PersistentCacheService");
   const cacheService = new PersistentCacheService(db, rollbarService);
   cacheService.start();
   return cacheService;
