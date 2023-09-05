@@ -54,6 +54,14 @@ export async function getCacheSize(db: Pool): Promise<number> {
   return parseInt(result.rows[0].count);
 }
 
+/**
+ * This function prevents unbounded growth of the cache table.
+ *
+ * Deletes entries from the cache that are
+ * - either older than {@link maxAgeInDays}
+ * - or not one of the first {@link maxEntries} entries in the cache table
+ * @returns the amount of entries deleted
+ */
 export async function deleteExpiredCacheEntries(
   db: Pool,
   maxAgeInDays: number,
