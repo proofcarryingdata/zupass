@@ -397,6 +397,10 @@ export class IssuanceService {
     ticketData: ITicketData
   ): Promise<string> {
     const ticketCopy: any = { ...ticketData };
+    // the reason we remove `timestampSigned` from the cache key
+    // is that it changes every time we instantiate `ITicketData`
+    // for a particular devconnect ticket, rendering the caching
+    // ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(JSON.stringify(ticketCopy));
     return hash;
