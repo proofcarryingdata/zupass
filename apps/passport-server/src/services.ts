@@ -52,7 +52,10 @@ export async function startServices(
   );
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
-  const persistentCacheService = startPersistentCacheService(context.dbPool);
+  const persistentCacheService = startPersistentCacheService(
+    context.dbPool,
+    rollbarService
+  );
   const issuanceService = startIssuanceService(
     context,
     persistentCacheService,
@@ -82,4 +85,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.pretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
+  services.persistentCacheService.stop();
 }

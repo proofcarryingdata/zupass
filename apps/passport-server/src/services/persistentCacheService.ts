@@ -1,16 +1,54 @@
 import { Pool } from "postgres-pool";
 import {
   CacheEntry,
+  deleteExpiredCacheEntries,
   getCacheValue,
   setCacheValue
 } from "../database/queries/cache";
+import { logger } from "../util/logger";
+import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export class PersistentCacheService {
-  private db: Pool;
+  /**
+   * Entries in the cache live for a maximum of this many days.
+   */
+  private static readonly MAX_CACHE_ENTRY_AGE_DAYS = 7;
 
-  public constructor(db: Pool) {
+  /**
+   * There can be a maximum of this many entries in the cache.
+   */
+  private static readonly MAX_CACHE_ENTRY_COUNT = 10_000;
+
+  /**
+   * Entries are aged out of the cache once every this many milliseconds.
+   */
+  private static readonly CACHE_GARBAGE_COLLECT_INTERVAL_MS = 60_000;
+
+  private expirationInterval: NodeJS.Timer | undefined;
+  private db: Pool;
+  private rollbarService: RollbarService | null;
+
+  public constructor(db: Pool, rollbarService: RollbarService | null) {
     this.db = db;
+    this.rollbarService = rollbarService;
+  }
+
+  public start(): void {
+    this.expirationInterval = setInterval(() => {
+      try {
+        this.expireOldEntries();
+      } catch (e) {
+        logger("failed to expire old cache entries", e);
+        this.rollbarService?.reportError(e);
+      }
+    }, PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS);
+  }
+
+  public stop(): void {
+    if (this.expirationInterval) {
+      clearInterval(this.expirationInterval);
+    }
   }
 
   public async setValue(key: string, value: string): Promise<void> {
@@ -28,9 +66,24 @@ export class PersistentCacheService {
       return value;
     });
   }
+
+  private async expireOldEntries(): Promise<void> {
+    return traced("Cache", "expireOldEntries", async (span) => {
+      const deleted_count = await deleteExpiredCacheEntries(
+        this.db,
+        PersistentCacheService.MAX_CACHE_ENTRY_AGE_DAYS,
+        PersistentCacheService.MAX_CACHE_ENTRY_COUNT
+      );
+      span?.setAttribute("deleted_count", deleted_count);
+    });
+  }
 }
 
-export function startPersistentCacheService(db: Pool): PersistentCacheService {
-  const cacheService = new PersistentCacheService(db);
+export function startPersistentCacheService(
+  db: Pool,
+  rollbarService: RollbarService | null
+): PersistentCacheService {
+  const cacheService = new PersistentCacheService(db, rollbarService);
+  cacheService.start();
   return cacheService;
 }
