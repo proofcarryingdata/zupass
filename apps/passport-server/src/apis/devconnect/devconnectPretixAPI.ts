@@ -1,9 +1,10 @@
 import { setMaxListeners } from "events";
 import PQueue from "p-queue";
+import { instrumentedFetch } from "../../apis/fetch";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
 
-const TRACE_SERVICE = "Fetch";
+const TRACE_SERVICE = "DevconnectPretixAPI";
 
 export type FetchFn = (
   input: RequestInfo | URL,
@@ -91,7 +92,7 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
 
     return this.requestQueue.add(async () => {
       try {
-        const result = await fetch(input, {
+        const result = await instrumentedFetch(input, {
           signal: abortController.signal,
           ...init
         });
