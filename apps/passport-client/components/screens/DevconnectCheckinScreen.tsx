@@ -403,6 +403,7 @@ const Container = styled.div`
   margin-top: 64px;
   color: var(--bg-dark-primary);
   width: 400px;
+  padding: 0px 32px;
 `;
 
 const CheckinSuccess = styled.span`
