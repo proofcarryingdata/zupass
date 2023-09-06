@@ -14,9 +14,24 @@ export interface PCD<C = unknown, P = unknown> {
  * {@link PCDPackage} of a {@link PCD} type defines the code necessary to
  * derive meaning from and operate on the data within a {@link PCD}.
  *
- * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated by this {@link PCDPackage}
- * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated by this {@link PCDPackage}
- * @typeParam {@link A} the type of the arguments passed into {@link PCDPackage#prove} to instantiate a new {@link PCD}
+ * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated
+ *   by this {@link PCDPackage}
+ *
+ * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated
+ *   by this {@link PCDPackage}
+ *
+ * @typeParam {@link A} - the type of the arguments passed into {@link PCDPackage#prove}
+ *   to instantiate a new {@link PCD}. It is important that {@link A} can be serialized
+ *   and deserialized using {@code JSON.stringify} {@code JSON.parse}, because these arguments
+ *   should be able to be passed over the wire trivially. This may cause the type of {@link A}
+ *   to be less convenient that desired. Eg. you may have to pass {@code BigInt}s in as strings,
+ *   etc. Another important note about {@link A} is that each of its fields must implement the
+ *   {@link Argument} interface. This is important because it enables PCDpass to introspect the
+ *   arguments, and to implement useful features like the {@code GenericProveScreen}, which is
+ *   a screen that automatically build a UI which lets a user input all the arguments required to
+ *   instantiate a new instance of a particular {@link PCD} based on the request it gets from a
+ *   third party.
+ *
  * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the init function is present to instantiate a new {@link PCD}
  */
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
@@ -42,8 +57,24 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
     pcd: PCD<C, P>;
     returnHeader?: boolean;
   }) => React.ReactElement;
+
+  /**
+   * Initializes this {@link PCDPackage} so that it can be used in the current context.
+   * This is an optional field, because not all packages need to be initialized.
+   */
   init?: (initArgs: I) => Promise<void>;
+
+  /**
+   * This is effectively the constructor of the {@link PCD} that this {@link PCDPackage}
+   * encapsulates.
+   */
   prove(args: A): Promise<PCD<C, P>>;
+
+  /**
+   * This function lets consumers of the {@link PCD} encapsulated by this {@link PCDPackage}
+   * verify whether the {@link PCD}'s {@link PCD#claim} corresponds correctly to its
+   * {@link PCD#proof}.
+   */
   verify(pcd: PCD<C, P>): Promise<boolean>;
   serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
   deserialize(seralized: string): Promise<PCD<C, P>>;
