@@ -6,6 +6,7 @@ import { Emitter } from "./emitter";
 
 export type PendingAction =
   | { type: "new-passport"; email: string }
+  | { type: "create-password"; email: string; token: string }
   | { type: "save-sync-key" };
 
 export type GetState = () => AppState;

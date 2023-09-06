@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
+import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
@@ -23,9 +24,9 @@ import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -130,6 +131,7 @@ function RouterImpl() {
             path="already-registered"
             element={<AlreadyRegisteredScreen />}
           />
+          <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
@@ -179,9 +181,6 @@ async function loadInitialState(): Promise<AppState> {
 
   if (userInvalid) {
     modal = "invalid-participant";
-  } else if (self != null && !localStorage["savedSyncKey"]) {
-    console.log("Asking existing user to save their Master Password...");
-    modal = "save-sync";
   }
 
   return {

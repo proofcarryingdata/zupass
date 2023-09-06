@@ -137,6 +137,7 @@ export function LoginScreen() {
           <form onSubmit={onGenPass}>
             <BigInput
               type="text"
+              autoFocus
               placeholder="your email address"
               value={email}
               onChange={useCallback(
@@ -146,7 +147,7 @@ export function LoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit">
-              Register
+              Continue
             </Button>
           </form>
         </CenterColumn>
@@ -154,9 +155,6 @@ export function LoginScreen() {
         <HR />
         <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>
-            Login with Master Password
-          </LinkButton>
           {appConfig.isZuzalu && (
             <>
               <Spacer h={8} />

@@ -55,7 +55,7 @@ function SendEmailVerification({ email }: { email: string }) {
       if (devToken === undefined) {
         setEmailSent(true);
       } else {
-        dispatch({ type: "login", email, token: devToken });
+        dispatch({ type: "verify-token", email, token: devToken });
       }
     };
 
@@ -80,7 +80,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const verify = useCallback(async () => {
     const token = inRef.current?.value || "";
     setVerifyingCode(true);
-    await dispatch({ type: "login", email, token });
+    await dispatch({ type: "verify-token", email, token });
     setVerifyingCode(false);
   }, [dispatch, email]);
 
@@ -104,6 +104,7 @@ function SendEmailVerification({ email }: { email: string }) {
               <BigInput
                 disabled={verifyingCode}
                 ref={inRef}
+                autoFocus
                 placeholder="code from email"
               />
               <Spacer h={8} />

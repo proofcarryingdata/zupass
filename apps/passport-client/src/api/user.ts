@@ -32,6 +32,23 @@ export async function requestConfirmationEmail(
   return requestGenericConfirmationEmail(email, identityCommitment, force);
 }
 
+export async function verifyTokenServer(
+  email: string,
+  token: string
+): Promise<Response> {
+  // Verify the token, save the participant to local storage, redirect to
+  // the home page.
+  const query = new URLSearchParams({
+    email,
+    token
+  }).toString();
+  const loginUrl = `${appConfig.passportServer}/pcdpass/verify-token?${query}`;
+
+  const res = await fetch(loginUrl, { method: "POST" });
+  if (!res.ok) throw new Error(await res.text());
+  return res;
+}
+
 export async function submitNewUser(
   email: string,
   token: string,

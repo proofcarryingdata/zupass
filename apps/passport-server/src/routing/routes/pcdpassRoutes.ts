@@ -6,7 +6,7 @@ import { decodeString, normalizeEmail } from "../../util/util";
 export function initPCDpassRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService, rollbarService }: GlobalServices
+  { userService, rollbarService, emailTokenService }: GlobalServices
 ): void {
   logger("[INIT] initializing PCDpass routes");
 
@@ -22,6 +22,28 @@ export function initPCDpassRoutes(
       const commitment = decodeString(req.query.commitment, "commitment");
       const force = decodeString(req.query.force, "force") === "true";
       await userService.handleSendPCDpassEmail(email, commitment, force, res);
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  // Verify the token associated with the email address
+  // @returns { verified: boolean, message?: string }
+  app.post("/pcdpass/verify-token", async (req: Request, res: Response) => {
+    try {
+      const token = decodeString(req.query.token, "token");
+      const email = normalizeEmail(decodeString(req.query.email, "email"));
+      if (await emailTokenService.checkTokenCorrect(email, token)) {
+        res.send({ verified: true });
+      } else {
+        res.send({
+          verified: false,
+          message:
+            "Wrong token. If you got more than one email, use the latest one."
+        });
+      }
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

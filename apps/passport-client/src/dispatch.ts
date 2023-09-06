@@ -14,7 +14,11 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { logToServer } from "./api/logApi";
-import { submitDeviceLogin, submitNewUser } from "./api/user";
+import {
+  submitDeviceLogin,
+  submitNewUser,
+  verifyTokenServer
+} from "./api/user";
 import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
@@ -42,6 +46,12 @@ export type Action =
     }
   | {
       type: "login";
+      email: string;
+      password: string;
+      token: string;
+    }
+  | {
+      type: "verify-token";
       email: string;
       token: string;
     }
@@ -97,7 +107,10 @@ export async function dispatch(
     case "new-passport":
       return genPassport(state.identity, action.email, update);
     case "login":
-      return login(action.email, action.token, state, update);
+      console.log("LOGIN???");
+      return login(action.email, action.token, action.password, state, update);
+    case "verify-token":
+      return verifyToken(action.email, action.token, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -134,6 +147,7 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
+  console.log("genPassword start");
   // Show the NewPassportScreen.
   // This will save the sema identity & request email verification.
   update({ pendingAction: { type: "new-passport", email } });
@@ -142,17 +156,38 @@ async function genPassport(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
-  const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-
   await savePCDs(pcds);
-  await saveEncryptionKey(encryptionKey);
 
   update({
     pcds,
-    encryptionKey,
     pendingAction: { type: "new-passport", email }
   });
+  console.log("genPassword end");
+}
+
+async function verifyToken(email: string, token: string, update: ZuUpdate) {
+  console.log("verify token");
+  const res = await verifyTokenServer(email, token);
+  const { verified, message } = await res.json();
+  console.log("res", JSON.stringify({ verified, message }));
+  if (verified) {
+    update({
+      pendingAction: {
+        type: "create-password",
+        email,
+        token
+      }
+    });
+    window.location.hash = `#/create-password`;
+  } else {
+    update({
+      error: {
+        title: "Login failed",
+        message,
+        dismissToCurrentPage: true
+      }
+    });
+  }
 }
 
 /**
@@ -178,11 +213,17 @@ async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
 async function login(
   email: string,
   token: string,
+  password: string,
   state: AppState,
   update: ZuUpdate
 ) {
   let user: User;
   try {
+    const crypto = await PCDCrypto.newInstance();
+    // TODO: Generate salt, store it
+    const encryptionKey = await crypto.argon2(password, 32);
+    await saveEncryptionKey(encryptionKey);
+
     const res = await submitNewUser(
       email,
       token,
@@ -256,9 +297,6 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
-
-  // Ask user to save their Master Password
-  update({ modal: "save-sync" });
 }
 
 // Runs periodically, whenever we poll new participant info.

@@ -24,6 +24,7 @@ export function AlreadyRegisteredScreen() {
   const query = useQuery();
   const email = query?.get("email");
   const identityCommitment = query?.get("identityCommitment");
+  const [password, setPassword] = useState("");
 
   const onEmailSuccess = useCallback(
     (devToken: string | undefined) => {
@@ -32,7 +33,7 @@ export function AlreadyRegisteredScreen() {
           email
         )}&identityCommitment=${encodeURIComponent(identityCommitment)}`;
       } else {
-        dispatch({ type: "login", email, token: devToken });
+        dispatch({ type: "verify-token", email, token: devToken });
       }
     },
     [dispatch, email, identityCommitment]
@@ -50,6 +51,7 @@ export function AlreadyRegisteredScreen() {
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
+    // TODO: FIX LOGIN, NEEDS SALT
     logToServer("login-with-master-password-click", {
       email,
       identityCommitment
@@ -82,14 +84,13 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>YOU'VE ALREADY REGISTERED</H2>
+            <H2>LOGIN</H2>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>
-            You've already registered for PCDpass. You can log in with your
-            Master Password. If you've lost your Master Password, you can reset
-            your account. Resetting your account will let you access your
-            tickets, but you'll lose all non-ticket PCDs.
+            Welcome back! Enter your password below to continue. Resetting your
+            account will let you access your tickets, but you'll lose all
+            non-ticket PCDs.
           </TextCenter>
           <Spacer h={32} />
           {sendingEmail ? (
@@ -97,13 +98,18 @@ export function AlreadyRegisteredScreen() {
           ) : (
             <>
               <CenterColumn w={280}>
-                <BigInput value={email} disabled={true} />
+                {/* For password manager autofill */}
+                <input hidden type="text" value={email} />
+                <BigInput
+                  type="password"
+                  value={password}
+                  placeholder="Enter your password..."
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 <Spacer h={8} />
-                <Button onClick={onLoginWithMasterPasswordClick}>
-                  Login with Master Password
-                </Button>
+                <Button onClick={onLoginWithMasterPasswordClick}>Next</Button>
                 <Spacer h={8} />
-                <Button onClick={onCancelClick}>Cancel</Button>
+                <Button onClick={onCancelClick}>Back</Button>
               </CenterColumn>
               <Spacer h={24} />
               <HR />
