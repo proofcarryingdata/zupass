@@ -169,6 +169,7 @@ const NoPcdsContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
   color: rgba(255, 255, 255, 0.7);
 `;
 
