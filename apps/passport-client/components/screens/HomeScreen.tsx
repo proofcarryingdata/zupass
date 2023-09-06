@@ -236,6 +236,7 @@ const Separator = styled.div`
   margin-top: 32px;
   margin-bottom: 32px;
   background-color: grey;
+  user-select: none;
 `;
 
 const FolderHeader = styled.div`
