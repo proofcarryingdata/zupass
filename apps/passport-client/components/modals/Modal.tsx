@@ -1,5 +1,5 @@
 import React, { ReactNode, useCallback, useEffect } from "react";
-import styled, { css } from "styled-components";
+import styled, { createGlobalStyle, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
@@ -36,6 +36,7 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const body = getModalBody(modal);
 
   if (body == null) return null;
+
   return (
     <Modal
       fullScreen={fullScreen}
@@ -74,19 +75,29 @@ export function Modal(props: {
 }) {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
-    <ModalBg onClick={props.onClose}>
-      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
-        {props.onClose && (
-          <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-            <img src={icons.closeWhite} width={20} height={20} />
-          </CircleButton>
-        )}
-        <Spacer h={32} />
-        {props.children}
-      </ModalWrap>
-    </ModalBg>
+    <>
+      <NoScroll />
+      <ModalBg onClick={props.onClose}>
+        <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
+          {props.onClose && (
+            <CircleButton diameter={20} padding={16} onClick={props.onClose}>
+              <img src={icons.closeWhite} width={20} height={20} />
+            </CircleButton>
+          )}
+          <Spacer h={32} />
+          {props.children}
+        </ModalWrap>
+      </ModalBg>
+    </>
   );
 }
+
+const NoScroll = createGlobalStyle`
+  html, body {
+    overflow: hidden;
+    max-height: 100vh;
+  }
+`;
 
 const ModalBg = styled.div`
   position: fixed;
