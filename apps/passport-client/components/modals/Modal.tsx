@@ -81,7 +81,12 @@ export function Modal(props: {
         <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
           {props.onClose && (
             <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-              <img src={icons.closeWhite} width={20} height={20} />
+              <img
+                draggable="false"
+                src={icons.closeWhite}
+                width={20}
+                height={20}
+              />
             </CircleButton>
           )}
           <Spacer h={32} />
