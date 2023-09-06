@@ -53,11 +53,6 @@ export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
   ? PCD<C, P>
   : T;
 
-export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
-  type: T;
-  specificType: U;
-}
-
 export enum ArgumentTypeName {
   String = "String",
   Number = "Number",
