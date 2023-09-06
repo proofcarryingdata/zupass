@@ -24,7 +24,17 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
    * The unique name identifying the type of {@link PCD} this package encapsulates.
    */
   name: string;
+
+  /**
+   * Intended for use by PCDpass. Given a {@link PCD}, returns some information about
+   * how this {@link PCD} should be displayed to the user within the passport app.
+   */
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+
+  /**
+   * Intended to be used by PCDpass. Given a {@link PCD}, renders the body of a card
+   * that appears in PCDpass representing this {@link PCD}.
+   */
   renderCardBody?: ({
     pcd,
     returnHeader
