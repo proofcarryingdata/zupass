@@ -191,7 +191,7 @@ function FolderDetails({
       style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
       <span className="btn">
-        <img src={icons.upArrow} width={18} height={18} />
+        <img draggable="false" src={icons.upArrow} width={18} height={18} />
       </span>
       <span className="name">{folder}</span>
     </FolderHeader>
@@ -211,7 +211,7 @@ function FolderCard({
 
   return (
     <FolderEntryContainer onClick={onClick}>
-      <img src={icons.folder} width={18} height={18} />
+      <img draggable="false" src={icons.folder} width={18} height={18} />
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
