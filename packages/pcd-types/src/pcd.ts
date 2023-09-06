@@ -95,19 +95,39 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
    * {@link PCD#proof}.
    */
   verify(pcd: PCD<C, P>): Promise<boolean>;
+
+  /**
+   * Serializes an instance of this package's {@link PCD} so that it can be stored on disk
+   * or transfered over the wire.
+   */
   serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
+
+  /**
+   * Sister method to {@link PCDPackage.serialize} - converts {@link SerializedPCD.pcd} back
+   * into an instance of this package's {@link PCD} type.
+   */
   deserialize(seralized: string): Promise<PCD<C, P>>;
 }
 
 /**
- *
+ * The input and output of a {@link PCDPackage}'s {@link PCDPackage.serialize} and
+ * {@link PCDPackage.deserialize} methods.
  */
 export interface SerializedPCD<_T extends PCD = PCD> {
   type: string;
   pcd: string;
 }
 
+/**
+ * Given a type extending {@link PCDPackage}, extracts the type of the parameter of its
+ * {@link PCDPackage.prove} function.
+ */
 export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
+
+/**
+ * Given a type extending {@link PCDPackage}, extracts the type of {@link PCD} it
+ * encapsulates.
+ */
 export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
   ? PCD<C, P>
   : T;
@@ -133,17 +153,10 @@ export interface DisplayOptions {
   displayName?: string;
 }
 
-export enum ArgumentTypeName {
-  String = "String",
-  Number = "Number",
-  BigInt = "BigInt",
-  Boolean = "Boolean",
-  Object = "Object",
-  StringArray = "StringArray",
-  PCD = "PCD",
-  Unknown = "Unknown"
-}
-
+/**
+ * Every field of the object passed into the {@link PCDPackage.prove} function
+ * must conform to this interface.
+ */
 export interface Argument<
   TypeName extends ArgumentTypeName,
   ValueType = unknown
@@ -153,6 +166,22 @@ export interface Argument<
   remoteUrl?: string;
   userProvided?: boolean;
   description?: string;
+}
+
+/**
+ * Fields of the object passed into {@link PCDPackage.prove} can only represent
+ * one of the following types. {@link Unknown} is included to be used in a similar
+ * way as {@code unknown} is used in TypeScript.
+ */
+export enum ArgumentTypeName {
+  String = "String",
+  Number = "Number",
+  BigInt = "BigInt",
+  Boolean = "Boolean",
+  Object = "Object",
+  StringArray = "StringArray",
+  PCD = "PCD",
+  Unknown = "Unknown"
 }
 
 export type StringArgument = Argument<ArgumentTypeName.String, string>;
