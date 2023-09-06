@@ -1,5 +1,5 @@
 import { ReactNode, useCallback } from "react";
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
 import { useAppError, useDispatch } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
 
@@ -21,17 +21,25 @@ export function AppContainer({
 
   const col = bg === "gray" ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
   return (
-    <Background color={col}>
-      <Container>
-        {children}
-        {error && <ErrorPopup error={error} onClose={onClose} />}
-      </Container>
-    </Background>
+    <>
+      <GlobalBackground color={col} />
+      <Background>
+        <Container>
+          {children}
+          {error && <ErrorPopup error={error} onClose={onClose} />}
+        </Container>
+      </Background>
+    </>
   );
 }
 
-const Background = styled.div<{ color: string }>`
-  background-color: ${(p) => p.color};
+const GlobalBackground = createGlobalStyle<{ color: string }>`
+  html {
+    background-color: ${(p) => p.color};
+  }
+`;
+
+const Background = styled.div`
   width: 100%;
   min-height: 100%;
   min-height: 100vh;
