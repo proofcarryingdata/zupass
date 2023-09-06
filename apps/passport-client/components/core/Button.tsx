@@ -26,6 +26,7 @@ export function Button({
 }
 
 const buttonStyle = `
+  user-select: none;
   word-break: break-word;
   width: 100%;
   padding: 12px;
