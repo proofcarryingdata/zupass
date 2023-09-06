@@ -277,8 +277,8 @@ describe("database reads and writes", function () {
     );
 
     await setCacheValue(db, "spongebob", "squarepants");
-    const spongebob = await getCacheValue(db, "key");
-    expect(spongebob?.cache_value).to.eq("value2");
+    const spongebob = await getCacheValue(db, "spongebob");
+    expect(spongebob?.cache_value).to.eq("squarepants");
 
     // age nothing out
     const beforeFirstAgeOut = await getCacheSize(db);
