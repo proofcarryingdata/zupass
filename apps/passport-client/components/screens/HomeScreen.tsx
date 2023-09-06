@@ -42,26 +42,26 @@ export function HomeScreenImpl() {
   useEffect(() => {
     if (self == null) {
       console.log("Redirecting to login screen");
-      navigate("/login");
+      navigate("/login", { replace: true });
     } else if (getPendingProofRequest() != null) {
       console.log("Redirecting to prove screen");
       const encReq = encodeURIComponent(getPendingProofRequest());
       clearAllPendingRequests();
-      navigate("/prove?request=" + encReq);
+      navigate("/prove?request=" + encReq, { replace: true });
     } else if (getPendingAddRequest() != null) {
       console.log("Redirecting to add screen");
       const encReq = encodeURIComponent(getPendingAddRequest());
       clearAllPendingRequests();
-      navigate("/add?request=" + encReq);
+      navigate("/add?request=" + encReq, { replace: true });
     } else if (getPendingHaloRequest() != null) {
       console.log("Redirecting to halo screen");
       clearAllPendingRequests();
-      navigate(`/halo${getPendingHaloRequest()}`);
+      navigate(`/halo${getPendingHaloRequest()}`, { replace: true });
     } else if (getPendingGetWithoutProvingRequest() != null) {
       console.log("Redirecting to get without proving screen");
       const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
       clearAllPendingRequests();
-      navigate(`/get-without-proving?request=${encReq}`);
+      navigate(`/get-without-proving?request=${encReq}`, { replace: true });
     }
   });
 
