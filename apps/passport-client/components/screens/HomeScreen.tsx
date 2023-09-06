@@ -5,7 +5,13 @@ import {
 } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState
+} from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
@@ -111,6 +117,11 @@ export function HomeScreenImpl() {
   }, []);
 
   const isRoot = isRootFolder(browsingFolder);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
+  }, []);
 
   if (self == null) return null;
 
