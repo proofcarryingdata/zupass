@@ -1,8 +1,9 @@
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 import { requireEnv } from "../util/util";
+import { instrumentedFetch } from "./fetch";
 
-const TRACE_SERVICE = "Fetch";
+const TRACE_SERVICE = "PretixAPI";
 
 export interface IPretixAPI {
   config: PretixConfig;
@@ -26,7 +27,7 @@ export class PretixAPI implements IPretixAPI {
       let url = `${this.config.orgUrl}/events/${eventID}/orders/`;
       while (url != null) {
         logger(`[PRETIX] Fetching ${url}`);
-        const res = await fetch(url, {
+        const res = await instrumentedFetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }
         });
         if (!res.ok) {
@@ -52,7 +53,7 @@ export class PretixAPI implements IPretixAPI {
       let url = `${this.config.orgUrl}/events/${eventID}/subevents/`;
       while (url != null) {
         logger(`[PRETIX] Fetching ${url}`);
-        const res = await fetch(url, {
+        const res = await instrumentedFetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }
         });
         if (!res.ok) {
