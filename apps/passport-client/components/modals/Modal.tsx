@@ -98,6 +98,7 @@ const ModalBg = styled.div`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
+  padding: 0px 12px;
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
