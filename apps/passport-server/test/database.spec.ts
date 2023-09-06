@@ -6,6 +6,13 @@ import { Pool } from "postgres-pool";
 import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
+  CacheEntry,
+  deleteExpiredCacheEntries,
+  getCacheSize,
+  getCacheValue,
+  setCacheValue
+} from "../src/database/queries/cache";
+import {
   fetchAllCommitments,
   fetchCommitment,
   fetchCommitmentByPublicCommitment,
@@ -28,6 +35,7 @@ import {
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
+import { sqlQuery } from "../src/database/sqlQuery";
 import { randomEmailToken } from "../src/util/util";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
@@ -240,5 +248,60 @@ describe("database reads and writes", function () {
     await removeCommitment(db, email);
     const deletedCommitment = await fetchCommitment(db, email);
     expect(deletedCommitment).to.eq(null);
+  });
+
+  step("should be able to interact with the cache", async function () {
+    // insert a bunch of old entries
+    const oldEntries: CacheEntry[] = [];
+    for (let i = 0; i < 20; i++) {
+      oldEntries.push(await setCacheValue(db, "i_" + i, i + ""));
+    }
+    await sqlQuery(
+      db,
+      `
+    update cache
+      set time_created = NOW() - interval '5 days',
+      time_updated = NOW() - interval '5 days'
+    `
+    );
+
+    // old entries inserted, let's insert some 'new' ones
+    await setCacheValue(db, "key", "value");
+    const firstEntry = await getCacheValue(db, "key");
+    expect(firstEntry?.cache_value).to.eq("value");
+    await setCacheValue(db, "key", "value2");
+    const editedFirstEntry = await getCacheValue(db, "key");
+    expect(editedFirstEntry?.cache_value).to.eq("value2");
+    expect(editedFirstEntry?.time_created?.getTime()).to.eq(
+      firstEntry?.time_created?.getTime()
+    );
+
+    await setCacheValue(db, "spongebob", "squarepants");
+    const spongebob = await getCacheValue(db, "spongebob");
+    expect(spongebob?.cache_value).to.eq("squarepants");
+
+    // age nothing out
+    const beforeFirstAgeOut = await getCacheSize(db);
+    expect(beforeFirstAgeOut).to.eq(22);
+    const firstDeleteCount = await deleteExpiredCacheEntries(db, 10, 22);
+    expect(firstDeleteCount).to.eq(0);
+    const afterFirstAgeOut = await getCacheSize(db);
+    expect(afterFirstAgeOut).to.eq(beforeFirstAgeOut);
+
+    // age entries older than 10 days or entries that are not one of the 20
+    // most recently added entries
+    const beforeSecondAgeOut = await getCacheSize(db);
+    const secondDeleteCount = await deleteExpiredCacheEntries(db, 10, 20);
+    expect(secondDeleteCount).to.eq(2);
+    const afterSecondAgeOut = await getCacheSize(db);
+    expect(afterSecondAgeOut).to.eq(beforeSecondAgeOut - 2);
+
+    // age entries older than 3 days or entries that are not one of the 20
+    // most recently added entries
+    const beforeThirdAgeOut = await getCacheSize(db);
+    const thirdDeleteCount = await deleteExpiredCacheEntries(db, 3, 20);
+    expect(thirdDeleteCount).to.eq(18);
+    const afterThirdAgeOut = await getCacheSize(db);
+    expect(afterThirdAgeOut).to.eq(beforeThirdAgeOut - 18);
   });
 });

@@ -555,11 +555,11 @@ export class OrganizerSync {
 
         // Step 1 of saving: insert items that are new
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Inserting ${itemsToInsert.length} item infos`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${itemsToInsert.length} item infos`
         );
         for (const item of itemsToInsert) {
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Inserting item info ${JSON.stringify(item)}`
           );
@@ -585,14 +585,14 @@ export class OrganizerSync {
 
         // For the active item that have changed, update them in the database.
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
         );
         for (const item of itemsToUpdate) {
           const oldItem = existingItemsInfoByItemID.get(
             item.id.toString()
           ) as PretixItemInfo;
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Updating item info ${JSON.stringify(
               oldItem
@@ -615,11 +615,11 @@ export class OrganizerSync {
           (existing) => !newActiveItemsByItemID.has(existing.item_id)
         );
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}]  Deleting ${itemsToRemove.length} item infos`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}]  Deleting ${itemsToRemove.length} item infos`
         );
         for (const item of itemsToRemove) {
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Deleting item info ${JSON.stringify(item)}`
           );
@@ -693,11 +693,11 @@ export class OrganizerSync {
 
         // Step 1 of saving: insert tickets that are new
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Inserting ${newTickets.length} new tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${newTickets.length} new tickets`
         );
         for (const ticket of newTickets) {
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Inserting ticket ${JSON.stringify(ticket)}`
           );
@@ -733,14 +733,14 @@ export class OrganizerSync {
 
         // For the tickets that have changed, update them in the database.
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
         );
         for (const updatedTicket of updatedTickets) {
           const oldTicket = existingTicketsByPositionId.get(
             updatedTicket.position_id
           );
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
               updatedTicket
@@ -790,11 +790,11 @@ export class OrganizerSync {
           (existing) => !newTicketsByPositionId.has(existing.position_id)
         );
         logger(
-          `[DEVCONNECT PRETIX] [${organizer.orgURL}::${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
         );
         for (const removedTicket of removedTickets) {
           logger(
-            `[DEVCONNECT PRETIX] [${organizer.orgURL}::${
+            `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Deleting ticket ${JSON.stringify(removedTicket)}`
           );

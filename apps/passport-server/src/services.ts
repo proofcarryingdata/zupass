@@ -5,6 +5,7 @@ import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startMetricsService } from "./services/metricsService";
+import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startPretixSyncService } from "./services/pretixSyncService";
 import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
@@ -51,7 +52,15 @@ export async function startServices(
   );
   const e2eeService = startE2EEService(context, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
-  const issuanceService = startIssuanceService(context);
+  const persistentCacheService = startPersistentCacheService(
+    context.dbPool,
+    rollbarService
+  );
+  const issuanceService = startIssuanceService(
+    context,
+    persistentCacheService,
+    rollbarService
+  );
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -64,7 +73,8 @@ export async function startServices(
     metricsService,
     issuanceService,
     discordService,
-    telegramService
+    telegramService,
+    persistentCacheService
   };
   return services;
 }
@@ -75,4 +85,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.pretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
+  services.persistentCacheService.stop();
 }

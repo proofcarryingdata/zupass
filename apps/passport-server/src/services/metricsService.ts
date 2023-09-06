@@ -1,8 +1,9 @@
+import { getCacheSize } from "../database/queries/cache";
 import { fetchCommitmentsCount } from "../database/queries/commitments";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import {
   fetchLoggedInZuzaluUserCount,
-  fetchSyncedZuzaluTicketCount,
+  fetchSyncedZuzaluTicketCount
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -14,6 +15,7 @@ interface Metrics {
   e2eeCount: number;
   loggedInZuzaluUsersCount: number;
   zuzaluTicketsCount: number;
+  cacheSize: number;
 }
 
 export class MetricsService {
@@ -64,6 +66,7 @@ export class MetricsService {
       e2eeCount: await fetchE2EEStorageCount(db),
       loggedInZuzaluUsersCount: await fetchLoggedInZuzaluUserCount(db),
       zuzaluTicketsCount: await fetchSyncedZuzaluTicketCount(db),
+      cacheSize: await getCacheSize(db)
     };
 
     return metrics;

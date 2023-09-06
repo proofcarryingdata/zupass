@@ -13,6 +13,7 @@ import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
 import { MetricsService } from "./services/metricsService";
+import { PersistentCacheService } from "./services/persistentCacheService";
 import { PretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -44,6 +45,7 @@ export interface GlobalServices {
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
+  persistentCacheService: PersistentCacheService;
 }
 
 export interface PCDpass {

@@ -23,7 +23,10 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
-import { CommitmentRow } from "../database/models";
+import {
+  CommitmentRow,
+  DevconnectPretixTicketDBWithEmailAndItem
+} from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectPretixTicketByTicketId,
@@ -33,9 +36,14 @@ import {
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { PersistentCacheService } from "./persistentCacheService";
+import { RollbarService } from "./rollbarService";
+import { traced } from "./telemetryService";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
+  private readonly cacheService: PersistentCacheService;
+  private readonly rollbarService: RollbarService | null;
 
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
@@ -44,10 +52,14 @@ export class IssuanceService {
 
   public constructor(
     context: ApplicationContext,
+    cacheService: PersistentCacheService,
+    rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
   ) {
     this.context = context;
+    this.cacheService = cacheService;
+    this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
@@ -301,8 +313,132 @@ export class IssuanceService {
     return storedCommitment;
   }
 
-  private async ticketDataToTicketPCD(
+  /**
+   * Fetch all DevconnectPretixTicket entities under a given user's email.
+   */
+  private async issueDevconnectPretixTicketPCDs(
+    request: IssuedPCDsRequest
+  ): Promise<EdDSATicketPCD[]> {
+    return traced(
+      "IssuanceService",
+      "issueDevconnectPretixTicketPCDs",
+      async (span) => {
+        const commitmentRow = await this.checkUserExists(request.userProof);
+        const email = commitmentRow?.email;
+        if (commitmentRow) {
+          span?.setAttribute(
+            "commitment",
+            commitmentRow?.commitment?.toString() ?? ""
+          );
+        }
+        if (email) {
+          span?.setAttribute("email", email);
+        }
+
+        if (commitmentRow == null || email == null) {
+          return [];
+        }
+
+        const commitmentId = commitmentRow.commitment.toString();
+        const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
+          this.context.dbPool,
+          email
+        );
+
+        const tickets = await Promise.all(
+          ticketsDB
+            .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
+            .map((ticketData) => this.getOrGenerateTicket(ticketData))
+        );
+
+        span?.setAttribute("ticket_count", tickets.length);
+
+        return tickets;
+      }
+    );
+  }
+
+  private async getOrGenerateTicket(
     ticketData: ITicketData
+  ): Promise<EdDSATicketPCD> {
+    return traced("IssuanceService", "getOrGenerateTicket", async (span) => {
+      span?.setAttribute("ticket_id", ticketData.ticketId);
+      span?.setAttribute("ticket_email", ticketData.attendeeEmail);
+      span?.setAttribute("ticket_name", ticketData.attendeeName);
+
+      const cachedTicket = await this.getCachedTicket(ticketData);
+
+      if (cachedTicket) {
+        return cachedTicket;
+      }
+
+      logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
+
+      const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
+        ticketData,
+        this.eddsaPrivateKey
+      );
+
+      try {
+        this.cacheTicket(generatedTicket);
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger(
+          `[ISSUANCE] error caching ticket ${ticketData.ticketId} ` +
+            `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+        );
+      }
+
+      return generatedTicket;
+    });
+  }
+
+  private static async getTicketCacheKey(
+    ticketData: ITicketData
+  ): Promise<string> {
+    const ticketCopy: any = { ...ticketData };
+    // the reason we remove `timestampSigned` from the cache key
+    // is that it changes every time we instantiate `ITicketData`
+    // for a particular devconnect ticket, rendering the caching
+    // ineffective.
+    delete ticketCopy.timestampSigned;
+    const hash = await getHash(JSON.stringify(ticketCopy));
+    return hash;
+  }
+
+  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+    const key = await IssuanceService.getTicketCacheKey(ticket.claim.ticket);
+    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    this.cacheService.setValue(key, JSON.stringify(serialized));
+  }
+
+  private async getCachedTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD | undefined> {
+    const key = await IssuanceService.getTicketCacheKey(ticketData);
+    const serializedTicket = await this.cacheService.getValue(key);
+    if (!serializedTicket) {
+      logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
+      return undefined;
+    }
+    logger(`[ISSUANCE] cache hit for ticket id ${ticketData.ticketId}`);
+    const parsedTicket = JSON.parse(serializedTicket.cache_value);
+
+    try {
+      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+        parsedTicket.pcd
+      );
+      return deserializedTicket;
+    } catch (e) {
+      logger("[ISSUANCE]", `failed to parse cached ticket ${key}`, e);
+      this.rollbarService?.reportError(e);
+      return undefined;
+    }
+  }
+
+  private static async ticketDataToTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
   ): Promise<EdDSATicketPCD> {
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
@@ -312,7 +448,7 @@ export class IssuanceService {
         argumentType: ArgumentTypeName.Object
       },
       privateKey: {
-        value: this.eddsaPrivateKey,
+        value: eddsaPrivateKey,
         argumentType: ArgumentTypeName.String
       },
       id: {
@@ -324,61 +460,38 @@ export class IssuanceService {
     return ticketPCD;
   }
 
-  /**
-   * Fetch all DevconnectPretixTicket entities under a given user's email.
-   */
-  private async issueDevconnectPretixTicketPCDs(
-    request: IssuedPCDsRequest
-  ): Promise<EdDSATicketPCD[]> {
-    const commitment = await this.checkUserExists(request.userProof);
-    const email = commitment?.email;
+  private static ticketRowToTicketData(
+    t: DevconnectPretixTicketDBWithEmailAndItem,
+    semaphoreId: string
+  ): ITicketData {
+    return {
+      // unsigned fields
+      attendeeName: t.full_name,
+      attendeeEmail: t.email,
+      eventName: t.event_name,
+      ticketName: t.item_name,
+      checkerEmail: t.checker ?? undefined,
 
-    if (commitment == null || email == null) {
-      return [];
-    }
-
-    const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
-      this.context.dbPool,
-      email
-    );
-
-    const tickets = await Promise.all(
-      ticketsDB
-        // convert to ITicketData
-        .map(
-          (t) =>
-            ({
-              // unsigned fields
-              attendeeName: t.full_name,
-              attendeeEmail: t.email,
-              eventName: t.event_name,
-              ticketName: t.item_name,
-              checkerEmail: t.checker ?? undefined,
-
-              // signed fields
-              ticketId: t.id,
-              eventId: t.pretix_events_config_id,
-              productId: t.devconnect_pretix_items_info_id,
-              timestampConsumed:
-                t.pcdpass_checkin_timestamp == null
-                  ? 0
-                  : new Date(t.pcdpass_checkin_timestamp).getTime(),
-              timestampSigned: Date.now(),
-              attendeeSemaphoreId: commitment.commitment,
-              isConsumed: t.is_consumed,
-              isRevoked: t.is_deleted
-            }) satisfies ITicketData
-        )
-        // convert to serialized ticket PCD
-        .map((ticketData) => this.ticketDataToTicketPCD(ticketData))
-    );
-
-    return tickets;
+      // signed fields
+      ticketId: t.id,
+      eventId: t.pretix_events_config_id,
+      productId: t.devconnect_pretix_items_info_id,
+      timestampConsumed:
+        t.pcdpass_checkin_timestamp == null
+          ? 0
+          : new Date(t.pcdpass_checkin_timestamp).getTime(),
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId: semaphoreId,
+      isConsumed: t.is_consumed,
+      isRevoked: t.is_deleted
+    } satisfies ITicketData;
   }
 }
 
 export function startIssuanceService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  cacheService: PersistentCacheService,
+  rollbarService: RollbarService | null
 ): IssuanceService | null {
   if (context.isZuzalu) {
     logger("[INIT] not starting issuance service for zuzalu");
@@ -393,7 +506,14 @@ export function startIssuanceService(
     return null;
   }
 
-  const issuanceService = new IssuanceService(context, rsaKey, eddsaKey);
+  const issuanceService = new IssuanceService(
+    context,
+    cacheService,
+    rollbarService,
+    rsaKey,
+    eddsaKey
+  );
+
   return issuanceService;
 }
 
