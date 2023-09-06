@@ -1,11 +1,29 @@
 /**
- * This type represents the core idea of the PCD ecosystem.
- * This is an atomic piece of self-evident data.
+ * This type represents the core idea of the PCD ecosystem. This is an atomic
+ * piece of self-evident data.
  */
 export interface PCD<C = unknown, P = unknown> {
+  /**
+   * Uniquely identifies this instance. PCDpass cannot have more than one
+   * {@link PCD} with the same id.
+   */
   id: string;
+
+  /**
+   * Refers to {@link PCDPackage#name} - each {@link PCD} must come from a
+   * particular {@link PCDPackage}.
+   */
   type: string;
+
+  /**
+   * Human- or end-user-application-interpretable data.
+   */
   claim: C;
+
+  /**
+   * Data, which when combined with this {@link PCD}'s {@link PCD#claim},
+   * can be uesd to verify whether this {@link PCD} is valid or invalid.
+   */
   proof: P;
 }
 
@@ -32,7 +50,8 @@ export interface PCD<C = unknown, P = unknown> {
  *   instantiate a new instance of a particular {@link PCD} based on the request it gets from a
  *   third party.
  *
- * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the init function is present to instantiate a new {@link PCD}
+ * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the
+ *   init function is present to instantiate a new {@link PCD}
  */
 export interface PCDPackage<C = any, P = any, A = any, I = any> {
   /**
