@@ -1,3 +1,7 @@
+/**
+ * This type represents the core idea of the PCD ecosystem.
+ * This is an atomic piece of self-evident data.
+ */
 export interface PCD<C = unknown, P = unknown> {
   id: string;
   type: string;
@@ -5,10 +9,48 @@ export interface PCD<C = unknown, P = unknown> {
   proof: P;
 }
 
+/**
+ * Each type of {@link PCD} has a corresponding {@link PCDPackage}. The
+ * {@link PCDPackage} of a {@link PCD} type defines the code necessary to
+ * derive meaning from and operate on the data within a {@link PCD}.
+ *
+ * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated by this {@link PCDPackage}
+ * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated by this {@link PCDPackage}
+ * @typeParam {@link A} the type of the arguments passed into {@link PCDPackage#prove} to instantiate a new {@link PCD}
+ * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the init function is present to instantiate a new {@link PCD}
+ */
+export interface PCDPackage<C = any, P = any, A = any, I = any> {
+  /**
+   * The unique name identifying the type of {@link PCD} this package encapsulates.
+   */
+  name: string;
+  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+  renderCardBody?: ({
+    pcd,
+    returnHeader
+  }: {
+    pcd: PCD<C, P>;
+    returnHeader?: boolean;
+  }) => React.ReactElement;
+  init?: (initArgs: I) => Promise<void>;
+  prove(args: A): Promise<PCD<C, P>>;
+  verify(pcd: PCD<C, P>): Promise<boolean>;
+  serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
+  deserialize(seralized: string): Promise<PCD<C, P>>;
+}
+
+/**
+ *
+ */
 export interface SerializedPCD<_T extends PCD = PCD> {
   type: string;
   pcd: string;
 }
+
+export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
+export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
+  ? PCD<C, P>
+  : T;
 
 /**
  * This interface can be optionally returned by the package ƒor any given
@@ -30,28 +72,6 @@ export interface DisplayOptions {
    */
   displayName?: string;
 }
-
-export interface PCDPackage<C = any, P = any, A = any, I = any> {
-  name: string;
-  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
-  renderCardBody?: ({
-    pcd,
-    returnHeader
-  }: {
-    pcd: PCD<C, P>;
-    returnHeader?: boolean;
-  }) => React.ReactElement;
-  init?: (initArgs: I) => Promise<void>;
-  prove(args: A): Promise<PCD<C, P>>;
-  verify(pcd: PCD<C, P>): Promise<boolean>;
-  serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
-  deserialize(seralized: string): Promise<PCD<C, P>>;
-}
-
-export type ArgsOf<T> = T extends PCDPackage<any, any, infer U, any> ? U : T;
-export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
-  ? PCD<C, P>
-  : T;
 
 export enum ArgumentTypeName {
   String = "String",
