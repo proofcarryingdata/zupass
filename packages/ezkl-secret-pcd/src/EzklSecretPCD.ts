@@ -80,6 +80,7 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
   const poseidonHash = await getPoseidonHash();
 
   const buffer = new TextEncoder().encode(
+    // args.secret.value
     JSONBig().stringify(JSON.parse(args.secret.value))
   );
 

@@ -4,9 +4,6 @@ import styled from "styled-components";
 import { EzklSecretPCD } from "./EzklSecretPCD";
 
 export function EzklSecretCardBody({ pcd }: { pcd: EzklSecretPCD }) {
-  // console.log(JSON.stringify(pcd, null, 2));
-  // pcd.proof
-  console.log(EzklSecretPCD.deserialize);
   return (
     <Container>
       <p>EZKL Secret PCD</p>
