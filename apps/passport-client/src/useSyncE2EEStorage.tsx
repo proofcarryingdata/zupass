@@ -4,9 +4,9 @@ import {
   passportEncrypt
 } from "@pcd/passport-crypto";
 import {
+  FeedRequest,
+  FeedResponse,
   ISSUANCE_STRING,
-  IssuedPCDsRequest,
-  IssuedPCDsResponse,
   SyncedEncryptedStorage,
   SyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV2
@@ -21,6 +21,7 @@ import {
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
+import { appConfig } from "./appConfig";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
@@ -104,9 +105,10 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
 
 export async function loadIssuedPCDs(
   state: AppState
-): Promise<IssuedPCDsResponse | undefined> {
-  const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
+): Promise<FeedResponse | undefined> {
+  const request: FeedRequest = {
+    feedId: "1",
+    pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {
           argumentType: ArgumentTypeName.PCD,
@@ -124,7 +126,10 @@ export async function loadIssuedPCDs(
     )
   };
 
-  const issuedPcdsResponse = await requestIssuedPCDs(request);
+  const issuedPcdsResponse = await requestIssuedPCDs(
+    `${appConfig.passportServer}/feed`,
+    request
+  );
 
   if (!issuedPcdsResponse) {
     console.log("[ISSUED PCDS] unable to get issued pcds");

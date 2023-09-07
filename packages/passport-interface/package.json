@@ -31,6 +31,7 @@
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",
+    "@pcd/emitter": "0.0.3",
     "react": "^18.2.0"
   },
   "devDependencies": {

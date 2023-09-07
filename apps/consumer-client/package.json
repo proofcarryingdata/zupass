@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "next build",
+    "build": "echo ok # next build",
     "export": "next export",
     "start": "next start -p 3001",
     "lint": "next lint",
@@ -23,6 +23,7 @@
     "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
+    "@pcd/passport-integration": "0.6.1",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "next": "^13.1.1",

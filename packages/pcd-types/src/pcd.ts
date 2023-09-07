@@ -180,6 +180,31 @@ export interface DisplayOptions {
  * Every field of the object passed into the {@link PCDPackage.prove} function
  * must conform to this interface.
  */
+export interface PCDPackage<C = any, P = any, A = any, I = any> {
+  name: string;
+  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
+  renderCardBody?: ({
+    pcd,
+    returnHeader
+  }: {
+    pcd: PCD<C, P>;
+    returnHeader?: boolean;
+  }) => React.ReactElement;
+  init?: (initArgs: I) => Promise<void>;
+  prove(args: A): Promise<PCD<C, P>>;
+  verify(pcd: PCD<C, P>): Promise<boolean>;
+  serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
+  deserialize(seralized: string): Promise<PCD<C, P>>;
+}
+
+export type PCDTypeNameOf<T> = T extends PCDPackage<any, any, any, any>
+  ? T["name"]
+  : T;
+export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
+  type: T;
+  specificType: U;
+}
+
 export interface Argument<
   TypeName extends ArgumentTypeName,
   ValueType = unknown

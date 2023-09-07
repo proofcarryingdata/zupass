@@ -1,4 +1,6 @@
+export * from "../test/MockFeedApi";
 export * from "./EncryptedStorage";
+export * from "./FeedHost";
 export * from "./PassportInterface";
 export * from "./PassportPopup";
 export * from "./PendingPCDIntegration";
@@ -7,5 +9,6 @@ export * from "./RequestTypes";
 export * from "./SemaphoreGroupIntegration";
 export * from "./SemaphoreSignatureIntegration";
 export * from "./SerializedPCDIntegration";
+export * from "./SubscriptionManager";
 export * from "./User";
 export * from "./zuzalu";
