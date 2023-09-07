@@ -3,6 +3,31 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { EzklSecretCardBody } from "./CardBody";
 
+function stringToFloat(str: string) {
+  let result = "";
+  for (let i = 0; i < str.length; i++) {
+    result += str.charCodeAt(i).toString();
+  }
+  return parseFloat(result);
+}
+
+function unit8ArrayToJsonObect(uint8Array: Uint8Array) {
+  // let string = new TextDecoder("utf-8").decode(uint8Array);
+  let string = new TextDecoder().decode(uint8Array);
+  let jsonObject = JSON.parse(string);
+  return jsonObject;
+}
+
+async function getFloatToVecU64() {
+  try {
+    const module = await import("@ezkljs/engine/web/ezkl");
+    const floatToVecU64 = module.floatToVecU64;
+    return floatToVecU64;
+  } catch (err) {
+    console.error("Failed to import module:", err);
+  }
+}
+
 async function getPoseidonHash() {
   try {
     const module = await import("@ezkljs/engine/web/ezkl");
@@ -65,30 +90,36 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
   }
 
   const init = await getInit();
-
   if (!init) {
     throw new Error("Init not found");
   }
-
   await init(
     // undefined,
     "http://localhost:3000/ezkl-artifacts/ezkl_bg.wasm",
     new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
   );
 
+  const float = stringToFloat(args.secret.value);
+
+  const floatToVecU64 = await getFloatToVecU64();
+  if (!floatToVecU64) {
+    throw new Error("Float to vec u64 not found");
+  }
+  const u64Ser = floatToVecU64(float, 0);
+  const u64Output = unit8ArrayToJsonObect(new Uint8Array(u64Ser.buffer));
+  const u64Array = [u64Output];
+
+  const string = JSONBig.stringify(u64Array);
+  const buffer = new TextEncoder().encode(string);
+  const u64sOutputSer = new Uint8ClampedArray(buffer.buffer);
+
   const poseidonHash = await getPoseidonHash();
-
-  const buffer = new TextEncoder().encode(
-    // args.secret.value
-    JSONBig().stringify(JSON.parse(args.secret.value))
-  );
-
-  const clampedBuffer = new Uint8ClampedArray(buffer);
-
   if (!poseidonHash) {
     throw new Error("Poseidon hash not found");
   }
-  const hash = await poseidonHash(clampedBuffer);
+  const hash = await poseidonHash(u64sOutputSer);
+
+  console.log("hash", hash)
 
   const claim: EzklSecretPCDClaim = { hash };
   const proof: EzklSecretPCDProof = { clearSecret: args.secret.value };
