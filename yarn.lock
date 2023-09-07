@@ -3380,7 +3380,7 @@
   dependencies:
     "@types/libsodium-wrappers" "*"
 
-"@types/libsodium-wrappers@*", "@types/libsodium-wrappers@^0.7.10":
+"@types/libsodium-wrappers@*":
   version "0.7.10"
   resolved "https://registry.npmjs.org/@types/libsodium-wrappers/-/libsodium-wrappers-0.7.10.tgz"
   integrity sha512-BqI9B92u+cM3ccp8mpHf+HzJ8fBlRwdmyd6+fz3p99m3V6ifT5O3zmOMi612PGkpeFeG/G6loxUnzlDNhfjPSA==
@@ -8558,18 +8558,6 @@ libsodium-wrappers-sumo@^0.7.11:
   integrity sha512-DGypHOmJbB1nZn89KIfGOAkDgfv5N6SBGC3Qvmy/On0P0WD1JQvNRS/e3UL3aFF+xC0m+MYz5M+MnRnK2HMrKQ==
   dependencies:
     libsodium-sumo "^0.7.11"
-
-libsodium-wrappers@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.npmjs.org/libsodium-wrappers/-/libsodium-wrappers-0.7.11.tgz"
-  integrity sha512-SrcLtXj7BM19vUKtQuyQKiQCRJPgbpauzl3s0rSwD+60wtHqSUuqcoawlMDheCJga85nKOQwxNYQxf/CKAvs6Q==
-  dependencies:
-    libsodium "^0.7.11"
-
-libsodium@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.npmjs.org/libsodium/-/libsodium-0.7.11.tgz"
-  integrity sha512-WPfJ7sS53I2s4iM58QxY3Inb83/6mjlYgcmZs7DJsvDlnmVUwNinBCi5vBT43P6bHRy01O4zsMU2CoVR6xJ40A==
 
 lilconfig@^2.0.5, lilconfig@^2.1.0:
   version "2.1.0"
