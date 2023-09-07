@@ -105,12 +105,12 @@ export function AlreadyRegisteredScreen() {
   }, []);
 
   useEffect(() => {
-    if (self) {
+    if (self || !email) {
       window.location.href = "#/";
     }
-  }, [self]);
+  }, [self, email]);
 
-  if (self) {
+  if (self || !email) {
     return null;
   }
 
