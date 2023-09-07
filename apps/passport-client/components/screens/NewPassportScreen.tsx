@@ -70,7 +70,7 @@ function SendEmailVerification({ email }: { email: string }) {
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
-          )}&salt=${salt}`;
+          )}&salt=${encodeURIComponent(salt)}`;
         } else {
           err(dispatch, "Email failed", message);
         }

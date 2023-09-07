@@ -92,7 +92,7 @@ export function AlreadyRegisteredScreen() {
         error: {
           title: "Password incorrect",
           message:
-            "Double-check your password. If you've lost access, please click 'Forgot password' below.",
+            "Double-check your password. If you've lost access, please click 'Reset Account' below.",
           dismissToCurrentPage: true
         }
       });
@@ -125,14 +125,14 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>YOU'VE ALREADY REGISTERED</H2>
+            <H2>LOGIN</H2>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>
-            You've already registered for PCDpass. You can log in with your
-            Master Password. If you've lost your Master Password, you can reset
-            your account. Resetting your account will let you access your
-            tickets, but you'll lose all non-ticket PCDs.
+            Welcome back! Enter your password below to continue. If you've lost
+            your password, you can reset your account. Resetting your account
+            will let you access your tickets, but you'll lose all non-ticket
+            PCDs.
           </TextCenter>
           <Spacer h={32} />
           {isLoading ? (

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, usePendingAction, useSelf } from "../../src/appHooks";
+import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -14,17 +14,17 @@ import {
 import { AppContainer } from "../shared/AppContainer";
 
 export function CreatePasswordScreen() {
-  const pendingAction = usePendingAction();
   const dispatch = useDispatch();
-  console.log("CreatePasswordScreen", JSON.stringify(pendingAction));
+  const query = useQuery();
+  const email = query?.get("email");
+  const token = query?.get("token");
 
-  // FIXME: Weird redux bug
-  //   useEffect(() => {
-  //     if (pendingAction == null || pendingAction.type !== "create-password") {
-  //       window.location.hash = "#/";
-  //       window.location.reload();
-  //     }
-  //   }, [pendingAction]);
+  useEffect(() => {
+    if (!email || !token) {
+      window.location.hash = "#/";
+      window.location.reload();
+    }
+  }, [email, token]);
 
   const self = useSelf();
   const [password, setPassword] = useState("");
@@ -36,10 +36,6 @@ export function CreatePasswordScreen() {
       window.location.hash = "#/";
     }
   }, [self]);
-
-  if (pendingAction == null || pendingAction.type !== "create-password") {
-    return null;
-  }
 
   const onCreatePassword = async () => {
     // TODO: Password strength
@@ -73,8 +69,8 @@ export function CreatePasswordScreen() {
     } else {
       dispatch({
         type: "login",
-        email: pendingAction.email,
-        token: pendingAction.token,
+        email,
+        token,
         password
       });
     }
@@ -95,7 +91,7 @@ export function CreatePasswordScreen() {
         <CenterColumn w={280}>
           <form onSubmit={onCreatePassword}>
             {/* For password manager autofill */}
-            <input hidden value={pendingAction.email} />
+            <input hidden value={email} />
             <BigInput
               autoFocus
               type="password"

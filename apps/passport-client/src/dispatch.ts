@@ -168,14 +168,9 @@ async function verifyToken(email: string, token: string, update: ZuUpdate) {
   const { verified, message } = await res.json();
   console.log("res", JSON.stringify({ verified, message }));
   if (verified) {
-    update({
-      pendingAction: {
-        type: "create-password",
-        email,
-        token
-      }
-    });
-    window.location.hash = `#/create-password`;
+    window.location.hash = `#/create-password?email=${encodeURIComponent(
+      email
+    )}&token=${encodeURIComponent(token)}`;
   } else {
     update({
       error: {
