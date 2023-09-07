@@ -1,7 +1,9 @@
+import { PCDCrypto } from "@pcd/passport-crypto";
 import { useCallback, useEffect, useState } from "react";
 import { logToServer } from "../../src/api/logApi";
 import { requestLoginCode } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { downloadAndDecryptStorage } from "../../src/localstorage";
 import { err } from "../../src/util";
 import {
   BackgroundGlow,
@@ -20,11 +22,12 @@ import { AppContainer } from "../shared/AppContainer";
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
   const self = useSelf();
-  const [sendingEmail, setSendingEmail] = useState(false);
+  const [isLoading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
   const query = useQuery();
   const email = query?.get("email");
+  const salt = query?.get("salt");
   const identityCommitment = query?.get("identityCommitment");
-  const [password, setPassword] = useState("");
 
   const onEmailSuccess = useCallback(
     (devToken: string | undefined) => {
@@ -40,24 +43,62 @@ export function AlreadyRegisteredScreen() {
   );
 
   const onOverwriteClick = useCallback(() => {
-    setSendingEmail(true);
+    setLoading(true);
     logToServer("overwrite-account-click", { email, identityCommitment });
     requestLoginCode(email, identityCommitment, true)
       .then(onEmailSuccess)
       .catch((e) => {
         err(dispatch, "Email failed", e.message);
-        setSendingEmail(false);
+        setLoading(false);
       });
   }, [dispatch, email, identityCommitment, onEmailSuccess]);
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
-    // TODO: FIX LOGIN, NEEDS SALT
     logToServer("login-with-master-password-click", {
       email,
       identityCommitment
     });
     window.location.href = "#/sync-existing";
   }, [email, identityCommitment]);
+
+  const onSubmitPassword = useCallback(async () => {
+    if (!password) {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Missing password",
+          message: "Please enter a password",
+          dismissToCurrentPage: true
+        }
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const crypto = await PCDCrypto.newInstance();
+      const syncKey = await crypto.argon2(password, salt, 32);
+      const storage = await downloadAndDecryptStorage(syncKey);
+      dispatch({
+        type: "load-from-sync",
+        storage,
+        encryptionKey: syncKey
+      });
+      setLoading(false);
+    } catch (e) {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Password incorrect",
+          message:
+            "Double-check your password. If you've lost access, please click 'Forgot password' below.",
+          dismissToCurrentPage: true
+        }
+      });
+      setLoading(false);
+    }
+  }, [dispatch, password, salt]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
@@ -84,32 +125,43 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>LOGIN</H2>
+            <H2>YOU'VE ALREADY REGISTERED</H2>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>
-            Welcome back! Enter your password below to continue. Resetting your
-            account will let you access your tickets, but you'll lose all
-            non-ticket PCDs.
+            You've already registered for PCDpass. You can log in with your
+            Master Password. If you've lost your Master Password, you can reset
+            your account. Resetting your account will let you access your
+            tickets, but you'll lose all non-ticket PCDs.
           </TextCenter>
           <Spacer h={32} />
-          {sendingEmail ? (
+          {isLoading ? (
             <RippleLoader />
           ) : (
             <>
               <CenterColumn w={280}>
-                {/* For password manager autofill */}
-                <input hidden type="text" value={email} />
-                <BigInput
-                  type="password"
-                  value={password}
-                  placeholder="Enter your password..."
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <BigInput value={email} disabled={true} />
                 <Spacer h={8} />
-                <Button onClick={onLoginWithMasterPasswordClick}>Next</Button>
+                {!salt && (
+                  <Button onClick={onLoginWithMasterPasswordClick}>
+                    Login with Master Password
+                  </Button>
+                )}
+                {salt && (
+                  <form onSubmit={onSubmitPassword}>
+                    <BigInput
+                      placeholder="Password"
+                      autoFocus
+                      value={password}
+                      type="password"
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <Spacer h={8} />
+                    <Button type="submit">Login</Button>
+                  </form>
+                )}
                 <Spacer h={8} />
-                <Button onClick={onCancelClick}>Back</Button>
+                <Button onClick={onCancelClick}>Cancel</Button>
               </CenterColumn>
               <Spacer h={24} />
               <HR />

@@ -132,7 +132,7 @@ function Header() {
       <H1>PCDPASS</H1>
       <Spacer h={24} />
       <Description>
-        Create a secure, unique password. This password will be used to generate
+        Choose a secure, unique password. This password will be used to generate
         your key to secure your data.
       </Description>
     </TextCenter>

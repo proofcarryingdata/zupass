@@ -32,17 +32,27 @@ export class PCDCrypto {
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 
+  public generateSalt(
+    length: number = this.sodium.crypto_pwhash_SALTBYTES
+  ): HexString {
+    if (length < this.sodium.crypto_pwhash_SALTBYTES) {
+      throw Error(
+        `Salt must be at least ${this.sodium.crypto_pwhash_SALTBYTES}`
+      );
+    }
+    const buffer = this.sodium.randombytes_buf(length);
+    return utils.arrayBufferToHexString(buffer);
+  }
+
   public argon2(
     password: Utf8String,
-    length: number,
-    salt?: HexString
+    salt: HexString,
+    length: number
   ): HexString {
     const result = this.sodium.crypto_pwhash(
       length,
       utils.stringToArrayBuffer(password),
-      salt
-        ? utils.hexStringToArrayBuffer(salt)
-        : this.sodium.randombytes_buf(this.sodium.crypto_pwhash_SALTBYTES),
+      utils.hexStringToArrayBuffer(salt),
       this.sodium.crypto_pwhash_OPSLIMIT_MODERATE,
       this.sodium.crypto_pwhash_MEMLIMIT_MODERATE,
       this.sodium.crypto_pwhash_ALG_DEFAULT,

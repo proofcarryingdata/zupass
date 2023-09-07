@@ -1,6 +1,8 @@
-import { User } from "@pcd/passport-interface";
+import { getHash, passportDecrypt } from "@pcd/passport-crypto";
+import { SyncedEncryptedStorage, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
+import { downloadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { getPackages } from "./pcdPackages";
 
 const OLD_PCDS_KEY = "pcds"; // deprecated
@@ -25,6 +27,21 @@ export async function loadPCDs(): Promise<PCDCollection> {
     await getPackages(),
     serializedCollection ?? "{}"
   );
+}
+
+export async function downloadAndDecryptStorage(
+  syncKey: string
+): Promise<SyncedEncryptedStorage> {
+  console.log("downloading e2ee storage...");
+  const blobHash = await getHash(syncKey);
+  const storage = await downloadEncryptedStorage(blobHash);
+  if (!storage) {
+    throw new Error("no e2ee for this syncKey found");
+  }
+  console.log("downloaded encrypted storage");
+  const decrypted = await passportDecrypt(storage, syncKey);
+  console.log("decrypted encrypted storage");
+  return JSON.parse(decrypted);
 }
 
 export function saveEncryptionKey(key: string): void {

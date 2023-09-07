@@ -14,6 +14,18 @@ export function initPCDpassRoutes(
     res.sendStatus(200);
   });
 
+  app.get("/pcdpass/salt", async (req: Request, res: Response) => {
+    try {
+      const email = normalizeEmail(decodeString(req.query.email, "email"));
+      const salt = await userService.getSaltByEmail(email);
+      res.send({ salt: salt ?? "" }); // null becomes "null" in JSON, so switch to '' for empty
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
   // Check that email is on the list. Send email with the login code, allowing
   // them to create their passport.
   app.post("/pcdpass/send-login-email", async (req: Request, res: Response) => {
@@ -57,7 +69,15 @@ export function initPCDpassRoutes(
       const token = decodeString(req.query.token, "token");
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
-      await userService.handleNewPCDpassUser(token, email, commitment, res);
+      const salt = decodeString(req.query.salt, "salt");
+
+      await userService.handleNewPCDpassUser(
+        token,
+        email,
+        commitment,
+        salt,
+        res
+      );
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

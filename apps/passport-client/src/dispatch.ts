@@ -107,7 +107,6 @@ export async function dispatch(
     case "new-passport":
       return genPassport(state.identity, action.email, update);
     case "login":
-      console.log("LOGIN???");
       return login(action.email, action.token, action.password, state, update);
     case "verify-token":
       return verifyToken(action.email, action.token, update);
@@ -147,7 +146,6 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
-  console.log("genPassword start");
   // Show the NewPassportScreen.
   // This will save the sema identity & request email verification.
   update({ pendingAction: { type: "new-passport", email } });
@@ -162,7 +160,6 @@ async function genPassport(
     pcds,
     pendingAction: { type: "new-passport", email }
   });
-  console.log("genPassword end");
 }
 
 async function verifyToken(email: string, token: string, update: ZuUpdate) {
@@ -220,14 +217,15 @@ async function login(
   let user: User;
   try {
     const crypto = await PCDCrypto.newInstance();
-    // TODO: Generate salt, store it
-    const encryptionKey = await crypto.argon2(password, 32);
+    const salt = await crypto.generateSalt();
+    const encryptionKey = await crypto.argon2(password, salt, 32);
     await saveEncryptionKey(encryptionKey);
 
     const res = await submitNewUser(
       email,
       token,
-      state.identity.commitment.toString()
+      state.identity.commitment.toString(),
+      salt
     );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();

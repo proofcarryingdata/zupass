@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { requestLoginCode } from "../../src/api/user";
+import { fetchSaltFromServer, requestLoginCode } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -61,14 +61,16 @@ function SendEmailVerification({ email }: { email: string }) {
 
     requestLoginCode(email, identity.commitment.toString())
       .then(handleResult)
-      .catch((e) => {
+      .catch(async (e) => {
         const message = e.message as string;
         if (message.includes("already registered")) {
+          const res = await fetchSaltFromServer(email);
+          const { salt } = await res.json();
           window.location.href = `#/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
-          )}`;
+          )}&salt=${salt}`;
         } else {
           err(dispatch, "Email failed", message);
         }

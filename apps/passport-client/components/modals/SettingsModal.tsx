@@ -35,10 +35,14 @@ export function SettingsModal() {
           {appConfig.isZuzalu ? "Verify a Passport" : "Scan Ticket"}
         </LinkButton>
         <Spacer h={16} />
-        <Button onClick={copySyncKey}>
-          {justCopied ? "Copied" : "Copy Master Password"}
-        </Button>
-        <Spacer h={16} />
+        {appConfig.isZuzalu && (
+          <>
+            <Button onClick={copySyncKey}>
+              {justCopied ? "Copied" : "Copy Master Password"}
+            </Button>
+            <Spacer h={16} />
+          </>
+        )}
         <Button onClick={clearPassport} style="danger">
           Log Out
         </Button>
