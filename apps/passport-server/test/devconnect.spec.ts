@@ -7,8 +7,7 @@ import {
 import {
   CheckInResponse,
   FeedResponse,
-  ISSUANCE_STRING,
-  IssuedPCDsResponse
+  ISSUANCE_STRING
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -71,6 +70,7 @@ import {
 } from "./issuance/issuance";
 import {
   DevconnectPretixDataMocker,
+  IMockDevconnectPretixData,
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
@@ -94,9 +94,15 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
   let server: SetupServer;
+  let backupData: IMockDevconnectPretixData;
+
+  this.beforeEach(async () => {
+    backupData = mocker.backup();
+  });
 
   this.afterEach(async () => {
     server.resetHandlers();
+    mocker.restore(backupData);
   });
 
   this.beforeAll(async () => {
@@ -138,7 +144,8 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    server = getDevconnectMockPretixAPIServer(mocker.get());
+    const orgUrls = mocker.get().organizersByOrgUrl.keys();
+    server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
@@ -944,18 +951,15 @@ describe("devconnect functionality", function () {
         ISSUANCE_STRING
       );
       const responseBody = response.body as FeedResponse;
+
       expect(responseBody.actions.length).to.eq(3);
       const action = responseBody.actions[2] as AppendToFolderAction;
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-      expect(action.folder).to.eq("Devconnect");
+      expect(action.folder).to.eq("Devconnect/Event A");
 
       expect(Array.isArray(action.pcds)).to.eq(true);
-      // originally there were 6 orders in the mock data
-      // but one was deleted in an earlier test
-      // since we don't fetch tickets with is_deleted = true
-      // there will only be 5 PCDs
-      expect(action.pcds.length).to.eq(5);
+      expect(action.pcds.length).to.eq(6);
 
       const ticketPCD = action.pcds[0];
 
@@ -1028,9 +1032,9 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const responseBody = response.body as FeedResponse;
-    console.log(responseBody);
-    expect(responseBody.actions.length).to.eq(1);
-    const devconnectAction = responseBody.actions[0] as ReplaceInFolderAction;
+    expect(responseBody.actions.length).to.eq(3);
+
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
     expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
     expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
@@ -1070,10 +1074,10 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const responseBody = response.body as IssuedPCDsResponse;
+    const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2];
-    expect(devconnectAction.folder).to.eq("Devconnect/New name");
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+    expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
     expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
     const ticketPCD = devconnectAction.pcds[0];
@@ -1116,7 +1120,7 @@ describe("devconnect functionality", function () {
       ISSUANCE_STRING
     );
     const issueResponseBody = issueResponse.body as FeedResponse;
-    const action = issueResponseBody.actions[0] as ReplaceInFolderAction;
+    const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
 
     const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
@@ -1230,8 +1234,8 @@ describe("devconnect functionality", function () {
 
       const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
 
       const action = response.actions[0] as ReplaceInFolderAction;
@@ -1250,8 +1254,8 @@ describe("devconnect functionality", function () {
 
       const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
 
       const action = response.actions[0] as ReplaceInFolderAction;
