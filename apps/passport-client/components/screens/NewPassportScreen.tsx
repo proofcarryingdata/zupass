@@ -80,11 +80,12 @@ function SendEmailVerification({ email }: { email: string }) {
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
   const verify = useCallback(async () => {
+    if (verifyingCode) return;
     const token = inRef.current?.value || "";
     setVerifyingCode(true);
     await dispatch({ type: "verify-token", email, token });
     setVerifyingCode(false);
-  }, [dispatch, email]);
+  }, [dispatch, email, verifyingCode]);
 
   return (
     <AppContainer bg="primary">
@@ -100,27 +101,29 @@ function SendEmailVerification({ email }: { email: string }) {
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
         <Spacer h={24} />
-        <CenterColumn w={280}>
-          {emailSent && (
-            <>
-              <BigInput
-                disabled={verifyingCode}
-                ref={inRef}
-                autoFocus
-                placeholder="code from email"
-              />
-              <Spacer h={8} />
-            </>
-          )}
-          {verifyingCode && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
-          {!verifyingCode && emailSent && (
-            <Button onClick={verify}>Verify</Button>
-          )}
-        </CenterColumn>
+        <form onSubmit={verify}>
+          <CenterColumn w={280}>
+            {emailSent && (
+              <>
+                <BigInput
+                  disabled={verifyingCode}
+                  ref={inRef}
+                  autoFocus
+                  placeholder="code from email"
+                />
+                <Spacer h={8} />
+              </>
+            )}
+            {verifyingCode && (
+              <div>
+                <RippleLoader />
+              </div>
+            )}
+            {!verifyingCode && emailSent && (
+              <Button type="submit">Verify</Button>
+            )}
+          </CenterColumn>
+        </form>
         {!verifyingCode && emailSent && (
           <>
             <Spacer h={48} />
