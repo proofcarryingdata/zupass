@@ -148,7 +148,7 @@ export class PCDCollection {
       );
     }
 
-    return false;
+    return true;
   }
 
   public getSize(): number {
