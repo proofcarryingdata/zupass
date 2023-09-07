@@ -20,15 +20,15 @@ export class DiscordService {
     }
   }
 
-  public async sendAlert(msg: string): Promise<void> {
-    if (process.env.NODE_ENV !== "production") {
-      logger("[DISCORD] not in production, not sending alert");
-      return;
-    }
+  public async sendAlert(msg: string): Promise<unknown> {
+    // if (process.env.NODE_ENV !== "production") {
+    //   logger("[DISCORD] not in production, not sending alert");
+    //   return;
+    // }
 
-    traced("Discord", "sendAlert", async () => {
+    return traced("Discord", "sendAlert", async () => {
       logger(`[DISCORD] sending alert ${msg}`);
-      this.alertsChannel?.send(msg);
+      return this.alertsChannel?.send(msg);
     });
   }
 }
