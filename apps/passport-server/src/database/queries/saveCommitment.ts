@@ -31,11 +31,10 @@ ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3`,
     client,
     `\
 SELECT uuid FROM commitments
-WHERE email = $1 AND commitment = $2 AND salt = $3`,
-    [email, commitment, salt]
+WHERE email = $1 AND commitment = $2`,
+    [email, commitment]
   );
   const uuid = uuidResult.rows[0]?.uuid as string | undefined;
-  console.log({ uuidResult });
   if (uuid == null) {
     throw new Error(
       `Failed to save commitment. Wrong email? ${email} ${commitment} ${salt}`

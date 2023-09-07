@@ -22,7 +22,8 @@ describe("Passport encryption", function () {
       encryptionKey
     );
     const decrypted = await passportDecrypt(encrypted, encryptionKey);
-    const parsed = JSON.parse(decrypted);
+    const parsed =
+      typeof decrypted === "object" ? decrypted : JSON.parse(decrypted);
     const destinationPCDs = parsed.pcds as Array<{ id: number }>;
     assert.equal(destinationPCDs.length, 1);
     assert.equal(destinationPCDs[0].id, sourcePCDs[0].id);

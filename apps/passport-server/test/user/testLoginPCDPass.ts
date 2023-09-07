@@ -1,6 +1,8 @@
+import { arrayBufferToHexString } from "@pcd/passport-crypto/src/utils";
 import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import { randomBytes } from "crypto";
 import httpMocks from "node-mocks-http";
 import { PCDpass } from "../../src/types";
 
@@ -52,10 +54,12 @@ export async function testLoginPCDpass(
   }
 
   const newUserResponse = httpMocks.createResponse();
+  const salt = arrayBufferToHexString(randomBytes(32));
   await userService.handleNewPCDpassUser(
     token,
     email,
     commitment,
+    salt,
     newUserResponse
   );
 
