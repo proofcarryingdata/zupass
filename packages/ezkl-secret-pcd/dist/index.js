@@ -69,11 +69,12 @@ var import_passport_ui = require("@pcd/passport-ui");
 var import_styled_components = __toESM(require("styled-components"));
 var import_jsx_runtime = require("react/jsx-runtime");
 function EzklSecretCardBody({ pcd }) {
+  console.log(EzklSecretPCD.deserialize);
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Container, { children: [
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "EZKL Secret PCD" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Separator, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Group Root" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.hash })
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Secret" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.proof.clearSecret })
   ] });
 }
 var Container = import_styled_components.default.div`
@@ -125,7 +126,7 @@ function prove(args) {
     }
     yield init(
       // undefined,
-      "http://localhost:3000/ezkl_bg.wasm",
+      "http://localhost:3000/ezkl-artifacts/ezkl_bg.wasm",
       new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
     );
     const poseidonHash = yield getPoseidonHash();
