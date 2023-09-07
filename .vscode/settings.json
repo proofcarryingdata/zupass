@@ -12,12 +12,12 @@
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescript]": {
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": false
     }
   },
   "[typescriptreact]": {
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": false
     }
   }
 }

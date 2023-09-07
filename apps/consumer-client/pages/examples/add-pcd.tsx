@@ -12,6 +12,7 @@ import {
   usePassportPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -58,6 +59,11 @@ export default function Page() {
         </li>
       </ul>
       <ExampleContainer>
+        <button onClick={addEzklSecretProofPCD}>
+          prove and add an ezkl secret
+        </button>
+        <br />
+        <br />
         <button onClick={addGroupMembershipProofPCD}>
           prove and add a group membership proof
         </button>
@@ -258,6 +264,28 @@ function AddEthGroupPCDButton() {
   );
 }
 
+async function addEzklSecretProofPCD() {
+  const url = constructPassportPcdProveAndAddRequestUrl<
+    typeof EzklSecretPCDPackage
+  >(
+    ZUPASS_URL,
+    window.location.origin + "/popup",
+    EzklSecretPCDPackage.name,
+    {
+      secret: {
+        argumentType: ArgumentTypeName.String,
+        value: undefined,
+        userProvided: true
+      }
+    },
+    {
+      title: "EZKL Secret Proof"
+    }
+  );
+
+  sendPassportRequest(url);
+}
+
 async function addGroupMembershipProofPCD() {
   const url = constructPassportPcdProveAndAddRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -370,9 +398,8 @@ async function addIdentityPCD() {
     identity: new Identity()
   });
 
-  const serializedNewIdentity = await SemaphoreIdentityPCDPackage.serialize(
-    newIdentity
-  );
+  const serializedNewIdentity =
+    await SemaphoreIdentityPCDPackage.serialize(newIdentity);
 
   const url = constructPassportPcdAddRequestUrl(
     ZUPASS_URL,
@@ -426,9 +453,8 @@ async function addWebAuthnPCD() {
     origin: window.location.origin
   });
 
-  const serializedNewCredential = await WebAuthnPCDPackage.serialize(
-    newCredential
-  );
+  const serializedNewCredential =
+    await WebAuthnPCDPackage.serialize(newCredential);
 
   // Add new WebAuthn PCD to Passport.
   const url = constructPassportPcdAddRequestUrl(

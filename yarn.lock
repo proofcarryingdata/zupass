@@ -1206,6 +1206,11 @@
     "@ethersproject/properties" "^5.7.0"
     "@ethersproject/strings" "^5.7.0"
 
+"@ezkljs/engine@1.18.0":
+  version "1.18.0"
+  resolved "https://registry.yarnpkg.com/@ezkljs/engine/-/engine-1.18.0.tgz#8576a59be404ffa422cd187b7510f071f0217b5d"
+  integrity sha512-RxN2aq3kTkn/kA6xk6Z6N+C+u6ETHYB6EB0dfXhxcAaIhTd0IsO7SEC9ZYPK0rNGuG+rIa81D/gjakIJIxIrNA==
+
 "@grammyjs/types@3.2.0":
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/@grammyjs/types/-/types-3.2.0.tgz#571c51173337283e7bcb1d0f1e4fe25674546c5d"
