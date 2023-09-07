@@ -11,7 +11,7 @@ import {
   isAppendToFolderPermission,
   isReplaceInFolderPermission
 } from "./permissions";
-import { getFoldersInFolder, isRootFolder } from "./util";
+import { getFoldersInFolder, isFolderAncestor, isRootFolder } from "./util";
 
 /**
  * This class represents all the PCDs a user may have, and also
@@ -91,7 +91,7 @@ export class PCDCollection {
       isAppendToFolderAction(action) &&
       isAppendToFolderPermission(permission)
     ) {
-      if (action.folder !== permission.folder) {
+      if (!isFolderAncestor(action.folder, permission.folder)) {
         return false;
       }
 
@@ -114,7 +114,7 @@ export class PCDCollection {
       isReplaceInFolderAction(action) &&
       isReplaceInFolderPermission(permission)
     ) {
-      if (action.folder !== permission.folder) {
+      if (!isFolderAncestor(action.folder, permission.folder)) {
         console.log(
           `action folder ${action.folder} doesn't match permission ${permission.folder}`
         );

@@ -153,6 +153,14 @@ export class IssuanceService {
             {
               folder: "Devconnect",
               type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission,
+            {
+              folder: "SBC SRW",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "SBC SRW",
+              type: PCDPermissionType.ReplaceInFolder
             } as ReplaceInFolderPermission
           ]
         }
