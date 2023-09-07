@@ -7,13 +7,13 @@ import {
 
 describe("File System", async function () {
   it("executing actions from a feed should work", async function () {
-    const action: AppendToFolderAction = {
+    const _action: AppendToFolderAction = {
       type: PCDActionType.AppendToFolder,
       folder: "test",
       pcds: []
     };
 
-    const permission: AppendToFolderPermission = {
+    const _permission: AppendToFolderPermission = {
       type: PCDPermissionType.AppendToFolder,
       folder: "test"
     };
