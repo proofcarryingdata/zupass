@@ -7,7 +7,6 @@ async function getPoseidonHash() {
   try {
     const module = await import("@ezkljs/engine/web/ezkl");
     const poseidonHash = module.poseidonHash;
-    // use poseidonHash here
     return poseidonHash;
   } catch (err) {
     console.error("Failed to import module:", err);
@@ -23,7 +22,7 @@ async function getInit() {
     console.error("Failed to import module:", err);
   }
 }
-export const EzklSecretPCDTypeName = "ezkl-group-secret";
+export const EzklSecretPCDTypeName = "ezkl-secret-pcd";
 
 // all fields in Args need to conform to interface Argument from pcd.ts
 export interface EzklSecretPCDArgs {
