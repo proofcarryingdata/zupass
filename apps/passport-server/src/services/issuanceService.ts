@@ -138,19 +138,6 @@ export class IssuanceService {
           );
 
           return { actions };
-
-          /*  const serializedPCDs = await Promise.all(
-            pcds.map(EdDSATicketPCDPackage.serialize)
-          );
-          return {
-            actions: [
-              {
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Devconnect",
-                pcds: serializedPCDs
-              } as ReplaceInFolderAction
-            ]
-          };*/
         },
         feed: {
           id: "1",
@@ -216,51 +203,6 @@ export class IssuanceService {
   public getEdDSAPublicKey(): EDdSAPublicKey {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
-
-  // public async handleIssueRequest(
-  //   request: IssuedPCDsRequest
-  // ): Promise<IssuedPCDsResponse> {
-  //   const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-  // const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
-
-  // const devconnectTickets = Object.entries(ticketsByEvent).filter(
-  //   ([eventName]) => eventName !== "SBC SRW"
-  // );
-
-  // const srwTickets = Object.entries(ticketsByEvent).filter(
-  //   ([eventName]) => eventName === "SBC SRW"
-  // );
-
-  // const actions = [];
-
-  // // clear out old pcds if they were there
-  // actions.push({ folder: "SBC SRW", pcds: [] });
-  // actions.push({ folder: "Devconnect", pcds: [] });
-
-  // actions.push(
-  //   ...(await Promise.all(
-  //     devconnectTickets.map(async ([eventName, tickets]) => ({
-  //       folder: joinPath("Devconnect", eventName),
-  //       pcds: await Promise.all(
-  //         tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-  //       )
-  //     }))
-  //   ))
-  // );
-
-  // actions.push(
-  //   ...(await Promise.all(
-  //     srwTickets.map(async ([_, tickets]) => ({
-  //       folder: "SBC SRW",
-  //       pcds: await Promise.all(
-  //         tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-  //       )
-  //     }))
-  //   ))
-  // );
-
-  // return { actions };
-  // }
 
   public async handleCheckInRequest(
     request: CheckInRequest
