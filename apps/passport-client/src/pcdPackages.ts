@@ -9,6 +9,8 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
+import { EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
+import { EzklDisplayPCDPackage } from "@pcd/ezkl-display-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
@@ -97,6 +99,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
     ZKEdDSATicketPCDPackage,
-    EzklSecretPCDPackage
+    EzklSecretPCDPackage,
+    EzklGroupPCDPackage,
+    EzklDisplayPCDPackage
   ];
 }
