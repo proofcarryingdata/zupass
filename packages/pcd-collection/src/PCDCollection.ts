@@ -91,7 +91,10 @@ export class PCDCollection {
       isAppendToFolderAction(action) &&
       isAppendToFolderPermission(permission)
     ) {
-      if (!isFolderAncestor(action.folder, permission.folder)) {
+      if (
+        action.folder !== permission.folder &&
+        !isFolderAncestor(action.folder, permission.folder)
+      ) {
         return false;
       }
 
@@ -114,7 +117,10 @@ export class PCDCollection {
       isReplaceInFolderAction(action) &&
       isReplaceInFolderPermission(permission)
     ) {
-      if (!isFolderAncestor(action.folder, permission.folder)) {
+      if (
+        action.folder !== permission.folder &&
+        !isFolderAncestor(action.folder, permission.folder)
+      ) {
         console.log(
           `action folder ${action.folder} doesn't match permission ${permission.folder}`
         );
