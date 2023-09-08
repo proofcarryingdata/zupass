@@ -7,7 +7,7 @@ export function InfoModal() {
     <div>
       <Spacer h={32} />
       <TextCenter>
-        <img src={icons.infoPrimary} width={34} height={34} />
+        <img draggable="false" src={icons.infoPrimary} width={34} height={34} />
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={240}>

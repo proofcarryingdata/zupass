@@ -5,7 +5,13 @@ import {
 } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState
+} from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
@@ -42,26 +48,26 @@ export function HomeScreenImpl() {
   useEffect(() => {
     if (self == null) {
       console.log("Redirecting to login screen");
-      navigate("/login");
+      navigate("/login", { replace: true });
     } else if (getPendingProofRequest() != null) {
       console.log("Redirecting to prove screen");
       const encReq = encodeURIComponent(getPendingProofRequest());
       clearAllPendingRequests();
-      navigate("/prove?request=" + encReq);
+      navigate("/prove?request=" + encReq, { replace: true });
     } else if (getPendingAddRequest() != null) {
       console.log("Redirecting to add screen");
       const encReq = encodeURIComponent(getPendingAddRequest());
       clearAllPendingRequests();
-      navigate("/add?request=" + encReq);
+      navigate("/add?request=" + encReq, { replace: true });
     } else if (getPendingHaloRequest() != null) {
       console.log("Redirecting to halo screen");
       clearAllPendingRequests();
-      navigate(`/halo${getPendingHaloRequest()}`);
+      navigate(`/halo${getPendingHaloRequest()}`, { replace: true });
     } else if (getPendingGetWithoutProvingRequest() != null) {
       console.log("Redirecting to get without proving screen");
       const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
       clearAllPendingRequests();
-      navigate(`/get-without-proving?request=${encReq}`);
+      navigate(`/get-without-proving?request=${encReq}`, { replace: true });
     }
   });
 
@@ -111,6 +117,11 @@ export function HomeScreenImpl() {
   }, []);
 
   const isRoot = isRootFolder(browsingFolder);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
+  }, []);
 
   if (self == null) return null;
 
@@ -169,6 +180,7 @@ const NoPcdsContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  user-select: none;
   color: rgba(255, 255, 255, 0.7);
 `;
 
@@ -191,7 +203,7 @@ function FolderDetails({
       style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
       <span className="btn">
-        <img src={icons.upArrow} width={18} height={18} />
+        <img draggable="false" src={icons.upArrow} width={18} height={18} />
       </span>
       <span className="name">{folder}</span>
     </FolderHeader>
@@ -211,7 +223,7 @@ function FolderCard({
 
   return (
     <FolderEntryContainer onClick={onClick}>
-      <img src={icons.folder} width={18} height={18} />
+      <img draggable="false" src={icons.folder} width={18} height={18} />
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
@@ -236,6 +248,7 @@ const Separator = styled.div`
   margin-top: 32px;
   margin-bottom: 32px;
   background-color: grey;
+  user-select: none;
 `;
 
 const FolderHeader = styled.div`

@@ -98,5 +98,7 @@ export const BackgroundGlow = styled.div<{
 `;
 
 export function ZuLogo() {
-  return <img src={icons.logo} width="160px" height="155px" />;
+  return (
+    <img draggable="false" src={icons.logo} width="160px" height="155px" />
+  );
 }

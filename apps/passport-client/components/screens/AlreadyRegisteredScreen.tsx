@@ -1,5 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { logToServer } from "../../src/api/logApi";
 import { requestLoginCode } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
@@ -109,6 +109,11 @@ export function AlreadyRegisteredScreen() {
       window.location.href = "#/";
     }
   }, [self, email]);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
+  }, []);
 
   if (self || !email) {
     return null;
