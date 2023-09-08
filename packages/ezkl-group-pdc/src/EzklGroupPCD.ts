@@ -108,8 +108,8 @@ export interface EzklGroupPCDClaim {
 }
 
 export interface EzklGroupPCDProof {
-  // proof: Uint8Array;
-  witness: Uint8ClampedArray;
+  proof: Uint8ClampedArray;
+  // witness: Uint8ClampedArray;
 }
 
 export class EzklGroupPCD implements PCD<EzklGroupPCDClaim, EzklGroupPCDProof> {
@@ -146,11 +146,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
     args.displayPCD.value.pcd
   );
   const { secretPCD } = displayPCD.proof;
-  console.log("secretPCD", secretPCD);
-  // const { secretPCD } = args.displayPCD.value.
-  // const secretPCD = await EzklSecretPCDPackage.deserialize(
-  //   args.displayPCD.value.pcd
-  // );
 
   console.log("AFTER SECRET PCD", secretPCD);
 
@@ -170,12 +165,15 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   if (!genWitness) {
     throw new Error("Failed to import module genWitness");
   }
+  console.log("AFTER GEN WITNESS CHECK");
 
   // FETCH COMPILED MODEL
   const compiliedModelResp = await fetch("/ezkl-artifacts/network.compiled");
+  console.log("AFTER FETCH COMPILED MODEL");
   if (!compiliedModelResp.ok) {
     throw new Error("Failed to fetch network.compiled");
   }
+  console.log("AFTER LOAD COMPILED MODEL");
   const modelBuf = await compiliedModelResp.arrayBuffer();
   const model = new Uint8ClampedArray(modelBuf);
   console.log("AFTER LOAD MODEL");
@@ -226,21 +224,32 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   console.log("witness", witness);
 
   // FETCH PK
-  // const pkResp = await fetch("/ezkl-artifacts/test.pk");
-  // if (!pkResp.ok) {
-  //   throw new Error("Failed to fetch pk.key");
-  // }
-  // const pkBuf = await pkResp.arrayBuffer();
-  // const pk = new Uint8ClampedArray(pkBuf);
+  const pkResp = await fetch("/ezkl-artifacts/test.pk");
+  if (!pkResp.ok) {
+    throw new Error("Failed to fetch pk.key");
+  }
+  const pkBuf = await pkResp.arrayBuffer();
+  const pk = new Uint8ClampedArray(pkBuf);
 
-  // // FETCH SRS
-  // const srsResp = await fetch("/ezkl-artifacts/kzg.srs");
-  // if (!srsResp.ok) {
-  //   throw new Error("Failed to fetch kzg.srs");
-  // }
-  // const srsBuf = await srsResp.arrayBuffer();
-  // const srs = new Uint8ClampedArray(srsBuf);
-  return new EzklGroupPCD(uuid(), { groupName: "GROUP1" }, { witness });
+  // FETCH SRS
+  const srsResp = await fetch("/ezkl-artifacts/kzg.srs");
+  if (!srsResp.ok) {
+    throw new Error("Failed to fetch kzg.srs");
+  }
+  const srsBuf = await srsResp.arrayBuffer();
+  const srs = new Uint8ClampedArray(srsBuf);
+
+  const ezklProve = await getProve();
+  if (!ezklProve) {
+    throw new Error("Failed to import module");
+  }
+  const proof = new Uint8ClampedArray(
+    await ezklProve(witness, pk, model, settings, srs)
+  );
+
+  console.log("PROOF", proof);
+
+  return new EzklGroupPCD(uuid(), { groupName: "GROUP1" }, { proof });
 
   // const { model, pk, settings, srs, witness } = args;
 
