@@ -1,6 +1,9 @@
 /**
- * This type represents the core idea of the PCD ecosystem. This is an atomic
- * piece of self-evident data.
+ * All PCDs consist of a "claim", which is the human-interpretable statement
+ * that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached
+ * to the "claim," which is a cryptographic or mathematical proof of the claim.
+ * All PCDs within this SDK also expose a `prove` and `verify` function, which
+ * allow you to instantiate them, and verify that they are indeed correct.
  */
 export interface PCD<C = unknown, P = unknown> {
   /**
@@ -21,8 +24,7 @@ export interface PCD<C = unknown, P = unknown> {
   claim: C;
 
   /**
-   * Data, which when combined with this {@link PCD}'s {@link PCD#claim},
-   * can be uesd to verify whether this {@link PCD} is valid or invalid.
+   * A cryptographic proof of the {@link PCD#claim}.
    */
   proof: P;
 }
@@ -85,7 +87,8 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
 
   /**
    * This is effectively the constructor of the {@link PCD} that this {@link PCDPackage}
-   * encapsulates.
+   * encapsulates. It generates a proof and derives a claim from the args, and returns a
+   * new PCD instance.
    */
   prove(args: A): Promise<PCD<C, P>>;
 
@@ -98,7 +101,7 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
 
   /**
    * Serializes an instance of this package's {@link PCD} so that it can be stored on disk
-   * or transfered over the wire.
+   * or sent over a network.
    */
   serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
 
