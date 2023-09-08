@@ -107,9 +107,6 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
 
   const float = stringToFloat(args.secret.value);
 
-  console.log("float", float);
-  console.log("typeof float", typeof float);
-
   const floatToVecU64 = await getFloatToVecU64();
   if (!floatToVecU64) {
     throw new Error("Float to vec u64 not found");
@@ -127,8 +124,6 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
     throw new Error("Poseidon hash not found");
   }
   const hash = await poseidonHash(u64sOutputSer);
-
-  console.log("hash", hash);
 
   const claim: EzklSecretPCDClaim = { hash };
   const proof: EzklSecretPCDProof = { clearSecret: args.secret.value };
@@ -161,7 +156,6 @@ export async function deserialize(serialized: string): Promise<EzklSecretPCD> {
 }
 
 export function getDisplayOptions(pcd: EzklSecretPCD): DisplayOptions {
-  console.log("ezkl secret pdc getDisplayOptions", pcd);
   return {
     header: "Ezkl Secret PCD",
     // displayName: "ezkl-secret-" + pcd.id.substring(0, 4)

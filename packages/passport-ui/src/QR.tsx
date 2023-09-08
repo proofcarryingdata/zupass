@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);
-  const compressedData = gzip(unencoded);
+  const compressedData = gzip(unencoded, { level: 9 });
   const base64CompressedData = Buffer.from(compressedData).toString("base64");
   console.log(
     `Compressed: ${compressedData.length}, base64: ${base64CompressedData.length}`
@@ -33,7 +33,7 @@ export function QRDisplayWithRegenerateAndStorage({
   loadingLogo,
   loadedLogo,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
@@ -117,7 +117,7 @@ export function QRDisplay({
   value,
   logoOverlay,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value?: string;
   logoOverlay?: React.ReactNode;
@@ -150,7 +150,7 @@ const QRWrap = styled.div`
 export function QR({
   value,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value: string;
   fgColor: string;

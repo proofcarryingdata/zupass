@@ -130,24 +130,13 @@ export class EzklGroupPCD implements PCD<EzklGroupPCDClaim, EzklGroupPCDProof> {
 }
 
 export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("=========================================");
-  console.log("in group prove", args);
   if (!args.displayPCD.value) {
     throw new Error("Cannot make group proof: missing secret pcd");
   }
-  console.log("ARGS", args);
   const displayPCD = await EzklDisplayPCDPackage.deserialize(
     args.displayPCD.value.pcd
   );
   const { secretPCD } = displayPCD.proof;
-
-  console.log("AFTER SECRET PCD", secretPCD);
 
   const genWitness = await getGenWitness();
   const init = await getInit();
@@ -156,27 +145,21 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
     throw new Error("Failed to import module init");
   }
   await init(
-    // undefined,
     "http://localhost:3000/ezkl-artifacts/ezkl_bg.wasm",
     new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
   );
-  console.log("AFTER INIT");
 
   if (!genWitness) {
     throw new Error("Failed to import module genWitness");
   }
-  console.log("AFTER GEN WITNESS CHECK");
 
   // FETCH COMPILED MODEL
   const compiliedModelResp = await fetch("/ezkl-artifacts/network.compiled");
-  console.log("AFTER FETCH COMPILED MODEL");
   if (!compiliedModelResp.ok) {
     throw new Error("Failed to fetch network.compiled");
   }
-  console.log("AFTER LOAD COMPILED MODEL");
   const modelBuf = await compiliedModelResp.arrayBuffer();
   const model = new Uint8ClampedArray(modelBuf);
-  console.log("AFTER LOAD MODEL");
 
   // FETCH SETTINGS
   const settingsResp = await fetch("/ezkl-artifacts/settings.json");
@@ -185,9 +168,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   }
   const settingsBuf = await settingsResp.arrayBuffer();
   const settings = new Uint8ClampedArray(settingsBuf);
-  console.log("AFTER LOAD SETTINGS");
-
-  console.log("AFTER LOAD FILES");
 
   const { clearSecret } = secretPCD.proof;
   const float = stringToFloat(clearSecret);
@@ -206,7 +186,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   if (!poseidonHash) {
     throw new Error("Poseidon hash not found");
   }
-  console.log("u64sOutputSer", u64sOutputSer);
   const hash = await poseidonHash(u64sOutputSer);
   const hashString = new TextDecoder().decode(hash);
   const jsonHash = JSONBig.parse(hashString);
@@ -221,7 +200,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   const witness = new Uint8ClampedArray(
     genWitness(model, witnessInput, settings)
   );
-  console.log("witness", witness);
 
   // FETCH PK
   const pkResp = await fetch("/ezkl-artifacts/test.pk");
@@ -248,6 +226,22 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   );
 
   console.log("PROOF", proof);
+
+  const verify = await getVerify();
+  if (!verify) {
+    throw new Error("Failed to import module verify");
+  }
+
+  // LOAD VK
+  const vkResp = await fetch("/ezkl-artifacts/test.vk");
+  if (!vkResp.ok) {
+    throw new Error("Failed to fetch test.vk");
+  }
+  const vkBuf = await vkResp.arrayBuffer();
+  const vk = new Uint8ClampedArray(vkBuf);
+
+  const verified = await verify(proof, vk, settings, srs);
+  console.log("VERIFIED", verified);
 
   return new EzklGroupPCD(uuid(), { groupName: "GROUP1" }, { proof });
 
