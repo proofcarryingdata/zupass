@@ -16,6 +16,7 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "build": "tsup src/index.ts",
     "dev": "tsup src/index.ts --watch",
+    "docs": "typedoc src/index.ts --out ../../docs/semaphore-group-pcd",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"
@@ -46,7 +47,8 @@
     "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
-    "ts-mocha": "^10.0.0"
+    "ts-mocha": "^10.0.0",
+    "typedoc": "^0.25.1"
   },
   "publishConfig": {
     "access": "public"
