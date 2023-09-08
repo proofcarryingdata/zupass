@@ -29,6 +29,11 @@ export class DiscordService {
       return alertsChannel?.send(msg);
     });
   }
+
+  public async stop(): Promise<void> {
+    const client = await this.clientPromise;
+    client.destroy();
+  }
 }
 
 export async function startDiscordService(): Promise<DiscordService | null> {
