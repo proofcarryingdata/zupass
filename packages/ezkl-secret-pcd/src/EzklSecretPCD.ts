@@ -1,4 +1,10 @@
-import { PCD, PCDPackage, SerializedPCD, StringArgument } from "@pcd/pcd-types";
+import {
+  DisplayOptions,
+  PCD,
+  PCDPackage,
+  SerializedPCD,
+  StringArgument
+} from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { EzklSecretCardBody } from "./CardBody";
@@ -119,7 +125,7 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
   }
   const hash = await poseidonHash(u64sOutputSer);
 
-  console.log("hash", hash)
+  console.log("hash", hash);
 
   const claim: EzklSecretPCDClaim = { hash };
   const proof: EzklSecretPCDProof = { clearSecret: args.secret.value };
@@ -151,6 +157,15 @@ export async function deserialize(serialized: string): Promise<EzklSecretPCD> {
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: EzklSecretPCD): DisplayOptions {
+  console.log("ezkl secret pdc getDisplayOptions", pcd);
+  return {
+    header: "Ezkl Secret PCD",
+    // displayName: "ezkl-secret-" + pcd.id.substring(0, 4)
+    displayName: "ezkl-secret-" + pcd.id.substring(0, 4)
+  };
+}
+
 // look into this later
 export const EzklSecretPCDPackage: PCDPackage<
   EzklSecretPCDClaim,
@@ -159,6 +174,7 @@ export const EzklSecretPCDPackage: PCDPackage<
 > = {
   name: EzklSecretPCDTypeName,
   renderCardBody: EzklSecretCardBody,
+  getDisplayOptions,
   prove,
   verify,
   serialize,
