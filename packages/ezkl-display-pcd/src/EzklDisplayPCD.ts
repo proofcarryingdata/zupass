@@ -43,6 +43,16 @@ async function getInit() {
   }
 }
 
+async function getProve() {
+  try {
+    const module = await import("@ezkljs/engine/web/ezkl");
+    const init = module.prove;
+    return init;
+  } catch (err) {
+    console.error("Failed to import module:", err);
+  }
+}
+
 async function getGenWitness() {
   try {
     const module = await import("@ezkljs/engine/web/ezkl");
@@ -99,11 +109,12 @@ export interface EzklDisplayPCDProof {
   // pk: Uint8ClampedArray;
   // model: Uint8ClampedArray;
   // settings: Uint8ClampedArray;
-  witness: Uint8Array;
-  pk: Uint8ClampedArray;
-  model: Uint8ClampedArray;
-  settings: Uint8ClampedArray;
-  srs: Uint8ClampedArray;
+  // witness: Uint8ClampedArray;
+  // pk: Uint8ClampedArray;
+  // model: Uint8ClampedArray;
+  // settings: Uint8ClampedArray;
+  // srs: Uint8ClampedArray;
+  secretPCD: EzklSecretPCD;
 }
 
 export class EzklDisplayPCD
@@ -127,6 +138,19 @@ export class EzklDisplayPCD
 
 //userProvided: true
 export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
+  if (!args.secretPCD.value) {
+    throw new Error("Cannot make group proof: missing secret pcd");
+  }
+  console.log("ARGS", args);
+  return new EzklDisplayPCD(
+    uuid(),
+    { groupName: "GROUP1" },
+    {
+      secretPCD: await EzklSecretPCDPackage.deserialize(
+        args.secretPCD.value.pcd
+      )
+    }
+  );
   console.log("DISPLAY", args);
   if (!args.secretPCD.value) {
     throw new Error("Cannot make group proof: missing secret pcd");
@@ -141,6 +165,12 @@ export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
   if (!init) {
     throw new Error("Failed to import module init");
   }
+  await init(
+    // undefined,
+    "http://localhost:3000/ezkl-artifacts/ezkl_bg.wasm",
+    new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
+  );
+
   if (!genWitness) {
     throw new Error("Failed to import module genWitness");
   }
@@ -167,19 +197,16 @@ export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
   console.log("clearSecret", clearSecret);
   const float = stringToFloat(clearSecret);
   console.log("float", float);
+  console.log("typeof float", typeof float);
+
   const floatToVecU64 = await getFloatToVecU64();
-  console.log("floatToVecU64", floatToVecU64);
   if (!floatToVecU64) {
     throw new Error("Float to vec u64 not found");
   }
-  console.log("floatToVecU64", floatToVecU64);
-
   const u64Ser = floatToVecU64(float, 0);
-  console.log("u64Ser", u64Ser);
+  console.log("successfully called floatToVecU64");
   const u64Output = unit8ArrayToJsonObect(new Uint8Array(u64Ser.buffer));
-  console.log("u64Output", u64Output);
   const u64Array = [u64Output];
-  console.log("u64Array", u64Array);
 
   const string = JSONBig.stringify(u64Array);
   const buffer = new TextEncoder().encode(string);
@@ -189,14 +216,27 @@ export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
   if (!poseidonHash) {
     throw new Error("Poseidon hash not found");
   }
-  console.log("before poseidon hash", clearSecret);
+  console.log("u64sOutputSer", u64sOutputSer);
   const hash = await poseidonHash(u64sOutputSer);
-  console.log("after poseidon hash", hash);
+  const hashString = new TextDecoder().decode(hash);
+  const jsonHash = JSONBig.parse(hashString);
+  const inputObj = {
+    input_data: jsonHash,
+    output_data: [[]]
+  };
+  console.log("hash", jsonHash);
+  const jsonWitness = JSONBig.stringify(inputObj);
+  const encodedWitness = new TextEncoder().encode(jsonWitness);
+  const witnessInput = new Uint8ClampedArray(encodedWitness.buffer);
+  console.log("witnessInput", witnessInput);
 
-  const witness = genWitness(model, hash, settings);
+  const witness = new Uint8ClampedArray(
+    genWitness(model, witnessInput, settings)
+  );
+  console.log("witness", witness);
 
   // FETCH PK
-  const pkResp = await fetch("/ezkl-artifacts/pk.key");
+  const pkResp = await fetch("/ezkl-artifacts/test.pk");
   if (!pkResp.ok) {
     throw new Error("Failed to fetch pk.key");
   }
@@ -214,7 +254,17 @@ export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
   // call prove on the EzklGroupPCD
   // pass in the fetched Pk
 
-  return new EzklDisplayPCD(
+  // const ezklProve = await getProve();
+  // if (!ezklProve) {
+  //   throw new Error("Failed to import module ezklProve");
+  // }
+
+  // const proof = await ezklProve(witness, pk, model, settings, srs);
+  // console.log("proof", proof);
+
+  console.log("ABOUT TO RETURN");
+
+  const pcd = new EzklDisplayPCD(
     uuid(),
     { groupName: "GROUP1" },
     {
@@ -226,25 +276,11 @@ export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
     }
   );
 
-  // const url = "https://hub.ezkl.org/pcd/get-pk";
-  // const response = await fetch(url, {
-  //   method: "GET"
-  // });
-  // const data = await response.json();
-  // // const pk = data.pk;
+  const serialized = await EzklDisplayPCDPackage.serialize(pcd);
+  console.log("serialized", serialized);
 
-  // // call prove on the EzklGroupPCD
-  // // pass in the fetched Pk
-  // const groupPCD = await EzklGroupPCDPackage.prove({
-  //   name: "GROUP1",
-  //   pk
-  // });
-
-  // return new EzklDisplayPCD(
-  //   uuid(),
-  //   { groupName: "GROUP1" },
-  //   { hex: groupPCD.proof.hex }
-  // );
+  console.log("pcd", pcd);
+  return pcd;
 }
 
 // NOTE: look at semaphore camera code

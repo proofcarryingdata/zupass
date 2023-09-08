@@ -90,6 +90,13 @@ export class EzklGroupPCD implements PCD<EzklGroupPCDClaim, EzklGroupPCDProof> {
 }
 
 export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
+  console.log("==============================");
+  console.log("==============================");
+  console.log("==============================");
+  console.log("==============================");
+  console.log("==============================");
+  console.log("==============================");
+  console.log("==============================");
   // const
 
   // we need the secret from the secret pcd

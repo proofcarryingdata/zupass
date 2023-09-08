@@ -108,6 +108,7 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
   const float = stringToFloat(args.secret.value);
 
   console.log("float", float);
+  console.log("typeof float", typeof float);
 
   const floatToVecU64 = await getFloatToVecU64();
   if (!floatToVecU64) {
