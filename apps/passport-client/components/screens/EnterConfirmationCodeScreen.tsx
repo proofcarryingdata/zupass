@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import {
   BackgroundGlow,
@@ -42,6 +42,11 @@ export function EnterConfirmationCodeScreen() {
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
+  }, []);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
   return (

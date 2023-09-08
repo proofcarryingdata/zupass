@@ -84,7 +84,7 @@ export function VerifyScreen() {
       <BackgroundGlow y={96} {...{ from, to }}>
         <Spacer h={48} />
         <TextCenter>
-          <img width="90" height="90" src={icon} />
+          <img draggable="false" width="90" height="90" src={icon} />
           <Spacer h={24} />
           {result == null && <H4>VERIFYING PROOF...</H4>}
           {result?.valid && <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>}

@@ -143,3 +143,9 @@ form {
   margin: 0;
   padding: 0;
 }
+
+img {
+  -webkit-touch-callout: none;
+  user-select: none;
+  user-drag: none;
+}

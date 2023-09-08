@@ -7,12 +7,12 @@ import { HaLoNoncePCD } from "./HaLoNoncePCD";
 // Read-only API key into Airtable with no sensitive data
 const base = new Airtable({
   apiKey:
-    "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2",
+    "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2"
 }).base("appJcTn3eQUXKQEKT");
 
 export function HaLoNonceCardBody({
   pcd,
-  returnHeader,
+  returnHeader
 }: {
   pcd: HaLoNoncePCD;
   returnHeader?: boolean;
@@ -26,7 +26,7 @@ export function HaLoNonceCardBody({
 
     base("Image link")
       .select({
-        fields: ["pubKeyHex", "imageUrl", "experienceName"],
+        fields: ["pubKeyHex", "imageUrl", "experienceName"]
       })
       .eachPage(
         function page(records, fetchNextPage) {
@@ -79,7 +79,7 @@ export function HaLoNonceCardBody({
 
   return (
     <Container>
-      <img src={imageUrl} />
+      <img draggable="false" src={imageUrl} />
       <Spacer h={8} />
       <center>
         <FieldLabel>

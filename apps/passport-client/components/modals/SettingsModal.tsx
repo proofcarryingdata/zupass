@@ -27,7 +27,12 @@ export function SettingsModal() {
     <>
       <Spacer h={32} />
       <TextCenter>
-        <img src={icons.settingsPrimary} width={34} height={34} />
+        <img
+          draggable="false"
+          src={icons.settingsPrimary}
+          width={34}
+          height={34}
+        />
       </TextCenter>
       <Spacer h={32} />
       <CenterColumn w={280}>
