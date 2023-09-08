@@ -53,8 +53,8 @@ export class PCDCrypto {
       length,
       utils.stringToArrayBuffer(password),
       utils.hexStringToArrayBuffer(salt),
-      this.sodium.crypto_pwhash_OPSLIMIT_MODERATE,
-      this.sodium.crypto_pwhash_MEMLIMIT_MODERATE,
+      this.sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+      this.sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
       this.sodium.crypto_pwhash_ALG_DEFAULT,
       "hex"
     );
