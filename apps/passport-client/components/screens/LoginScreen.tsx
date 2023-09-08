@@ -5,7 +5,6 @@ import {
   useEffect,
   useState
 } from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
@@ -202,14 +201,4 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
-`;
-
-const DeviceLoginLink = styled(Link)`
-  color: #aaa;
-  &:hover {
-    text-decoration: underline;
-  }
-  &:visited {
-    color: #aaa;
-  }
 `;
