@@ -107,6 +107,8 @@ export async function prove(args: EzklSecretPCDArgs): Promise<EzklSecretPCD> {
 
   const float = stringToFloat(args.secret.value);
 
+  console.log("float", float);
+
   const floatToVecU64 = await getFloatToVecU64();
   if (!floatToVecU64) {
     throw new Error("Float to vec u64 not found");

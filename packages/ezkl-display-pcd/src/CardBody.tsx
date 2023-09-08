@@ -13,6 +13,7 @@ import {
 
 export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
   // const ticketData = getTicketData(pcd);
+  console.log(`[QR] rendering, timestamp ${Date.now()}`, pcd);
 
   return (
     <Container>

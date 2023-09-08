@@ -1,4 +1,10 @@
-import { PCD, PCDArgument, PCDPackage, SerializedPCD, StringArgument } from "@pcd/pcd-types";
+import {
+  PCD,
+  PCDArgument,
+  PCDPackage,
+  SerializedPCD,
+  StringArgument
+} from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
@@ -9,8 +15,7 @@ async function getProve() {
     const module = await import("@ezkljs/engine/web/ezkl");
     const prove = module.prove;
     return prove;
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Failed to import module:", err);
   }
 }
@@ -20,8 +25,7 @@ async function getVerify() {
     const module = await import("@ezkljs/engine/web/ezkl");
     const verify = module.verify;
     return verify;
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Failed to import module:", err);
   }
 }
@@ -46,15 +50,15 @@ async function getGenWitness() {
   }
 }
 
-
 export const EzklGroupPCDTypeName = "ezkl-group-pcd";
 
 export interface EzklGroupPCDArgs {
   group: "GROUP1";
-  // identity: Uint8ClampedArray;
-  secretPCD: PCDArgument<EzklSecretPCD>;
+  witness: Uint8ClampedArray;
   pk: Uint8ClampedArray;
-  // signal: BigIntArgument
+  model: Uint8ClampedArray;
+  settings: Uint8ClampedArray;
+  srs: Uint8ClampedArray;
 }
 
 export interface EzklGroupPCDClaim {
@@ -85,22 +89,21 @@ export class EzklGroupPCD implements PCD<EzklGroupPCDClaim, EzklGroupPCDProof> {
   }
 }
 
-
 export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
-  //
-
-  const pk = args.pk;
+  // const
 
   // we need the secret from the secret pcd
   // const secretPCD = await deserializeSemaphoreGroup(args.secretPCD);
   // input is serialized secret pcd
-  const input = "sereialized secret pcd" as unknown as Uint8ClampedArray;
+  // const input = "sereialized secret pcd" as unknown as Uint8ClampedArray;
 
-  // we need the pk
-  // comes from display PCD
-  const model = "model.ezkl" as unknown as Uint8ClampedArray;
-  const settings = "settings.json" as unknown as Uint8ClampedArray;
-  const srs = "kzg.srs" as unknown as Uint8ClampedArray;
+  // // we need the pk
+  // // comes from display PCD
+  // const model = "model.ezkl" as unknown as Uint8ClampedArray;
+  // const settings = "settings.json" as unknown as Uint8ClampedArray;
+  // const srs = "kzg.srs" as unknown as Uint8ClampedArray;
+
+  const { model, pk, settings, srs, witness } = args;
 
   const init = await getInit();
   if (!init) {
@@ -113,10 +116,10 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
     new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
   );
 
-  const genWitness = await getGenWitness();
-  if (!genWitness) {
-    throw new Error("Failed to import module");
-  }
+  // const genWitness = await getGenWitness();
+  // if (!genWitness) {
+  //   throw new Error("Failed to import module");
+  // }
 
   const ezklProve = await getProve();
   if (!ezklProve) {
@@ -124,7 +127,7 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   }
 
   // call genWitness
-  const witness = new Uint8ClampedArray(genWitness(model, input, settings));
+  // const witness = new Uint8ClampedArray(genWitness(model, input, settings));
 
   const proof = await ezklProve(witness, pk, model, settings, srs);
 
@@ -136,7 +139,7 @@ export async function verify(pcd: EzklGroupPCD): Promise<boolean> {
   if (!ezklVerify) {
     throw new Error("Failed to import module");
   }
-  
+
   const vk = "vk.key" as unknown as Uint8ClampedArray;
   const settings = "settings.json" as unknown as Uint8ClampedArray;
   const srs = "kzg.srs" as unknown as Uint8ClampedArray;
