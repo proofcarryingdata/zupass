@@ -24,6 +24,7 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
+import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
   StateContext,
@@ -185,6 +186,8 @@ async function loadInitialState(): Promise<AppState> {
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
   const subscriptions = await loadSubscriptions();
+
+  await addDefaultSubscriptions(identity, subscriptions);
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 

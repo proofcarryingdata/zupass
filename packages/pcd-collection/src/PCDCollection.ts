@@ -72,7 +72,6 @@ export class PCDCollection {
         return false;
       }
     }
-
     return false;
   }
 
@@ -95,6 +94,9 @@ export class PCDCollection {
         action.folder !== permission.folder &&
         !isFolderAncestor(action.folder, permission.folder)
       ) {
+        console.log(
+          `action folder ${action.folder} doesn't match permission ${permission.folder}`
+        );
         return false;
       }
 
@@ -105,6 +107,8 @@ export class PCDCollection {
           throw new Error(`pcd with ${pcd.id} already exists`);
         }
       }
+
+      console.log(`adding pcds ${pcds} to folder ${action.folder}`);
 
       this.addAll(pcds);
       this.bulkSetFolder(
@@ -148,7 +152,7 @@ export class PCDCollection {
       );
     }
 
-    return true;
+    return false;
   }
 
   public getSize(): number {
