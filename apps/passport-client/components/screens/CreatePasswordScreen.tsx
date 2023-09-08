@@ -11,6 +11,7 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 export function CreatePasswordScreen() {
@@ -115,7 +116,9 @@ export function CreatePasswordScreen() {
         <Spacer h={24} />
         <HR />
         <Spacer h={24} />
-        <CenterColumn w={280}></CenterColumn>
+        <CenterColumn w={280}>
+          <LinkButton to={"/"}>Cancel</LinkButton>
+        </CenterColumn>
       </BackgroundGlow>
       <Spacer h={64} />
     </AppContainer>
