@@ -14,8 +14,8 @@ export async function updateDevconnectPretixTicket(
     `\
 update devconnect_pretix_tickets
 set full_name=$1, is_deleted=$2, secret=$3, is_consumed=$4, checker=$5,
-pcdpass_checkin_timestamp=$6, pretix_checkin_timestamp=$7
-where position_id=$8
+pcdpass_checkin_timestamp=$6, pretix_checkin_timestamp=$7, email=$8
+where position_id=$9
 returning *`,
     [
       params.full_name,
@@ -25,6 +25,7 @@ returning *`,
       params.checker,
       params.pcdpass_checkin_timestamp,
       params.pretix_checkin_timestamp,
+      params.email,
       params.position_id
     ]
   );
