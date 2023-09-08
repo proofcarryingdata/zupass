@@ -11,14 +11,42 @@ import {
 } from "./EzklDisplayPCD";
 // import { getQRCodeColorOverride, getTicketData } from "./utils";
 import { EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 
 export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
   // const ticketData = getTicketData(pcd);
-  console.log(`[QR] rendering, timestamp ${Date.now()}`, pcd);
 
   useEffect(() => {
     const callProve = async () => {
-      await EzklGroupPCDPackage.prove(pcd);
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      console.log("===");
+      const serializedDisplayPCD = await EzklDisplayPCDPackage.serialize(pcd);
+      // console.log("serializedGroupArgs", serializedGroupArgs);
+
+      const groupProof = await EzklGroupPCDPackage.prove({
+        displayPCD: {
+          argumentType: ArgumentTypeName.PCD,
+          value: serializedDisplayPCD
+        }
+      });
+
+      //   {
+      //   displayPCD: {
+      //     argumentType: ArgumentTypeName.PCD,
+      //     value: pcd,
+      //     userProvided: false
+      //   }
+      // };
+      // const groupProof = await EzklGroupPCDPackage.prove();
+      // console.log("groupProof", groupProof);
     };
 
     callProve();

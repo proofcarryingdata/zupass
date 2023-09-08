@@ -138,6 +138,12 @@ export class EzklDisplayPCD
 
 //userProvided: true
 export async function prove(args: EzklDisplayPCDArgs): Promise<EzklDisplayPCD> {
+  console.log("88888888888888888888");
+  console.log("88888888888888888888");
+  console.log("88888888888888888888");
+  console.log("88888888888888888888");
+  console.log("88888888888888888888");
+  console.log("args", args);
   if (!args.secretPCD.value) {
     throw new Error("Cannot make group proof: missing secret pcd");
   }
