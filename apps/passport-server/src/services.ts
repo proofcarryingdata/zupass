@@ -86,4 +86,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.metricsService.stop();
   services.telegramService?.stop();
   services.persistentCacheService.stop();
+  await services.discordService?.stop();
 }

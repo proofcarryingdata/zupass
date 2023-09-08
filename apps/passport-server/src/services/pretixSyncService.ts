@@ -383,6 +383,11 @@ export function startPretixSyncService(
     return null;
   }
 
+  if (process.env.PRETIX_SYNC_DISABLED) {
+    logger("[PRETIX] not starting because PRETIX_SYNC_DISABLED");
+    return null;
+  }
+
   const pretixSyncService = new PretixSyncService(
     context,
     pretixAPI,
@@ -391,5 +396,6 @@ export function startPretixSyncService(
   );
 
   pretixSyncService.startSyncLoop();
+
   return pretixSyncService;
 }

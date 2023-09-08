@@ -205,6 +205,11 @@ export async function startDevconnectPretixSyncService(
     return null;
   }
 
+  if (process.env.PRETIX_SYNC_DISABLED) {
+    logger("[DEVCONNECT PRETIX] not starting because PRETIX_SYNC_DISABLED");
+    return null;
+  }
+
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
     devconnectPretixAPIFactory,
@@ -213,5 +218,6 @@ export async function startDevconnectPretixSyncService(
   );
 
   pretixSyncService.startSyncLoop();
+
   return pretixSyncService;
 }
