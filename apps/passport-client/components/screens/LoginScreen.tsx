@@ -151,24 +151,14 @@ export function LoginScreen() {
             </Button>
           </form>
         </CenterColumn>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
         <CenterColumn w={280}>
           {appConfig.isZuzalu && (
             <>
+              <Spacer h={24} />
+              <HR />
+              <Spacer h={24} />
               <Spacer h={8} />
               <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
-            </>
-          )}
-          {!appConfig.isZuzalu && !redirectedFromAction && (
-            <>
-              <Spacer h={8} />
-              <TextCenter>
-                <DeviceLoginLink to={"/device-login"}>
-                  Event Host Login
-                </DeviceLoginLink>
-              </TextCenter>
             </>
           )}
         </CenterColumn>
