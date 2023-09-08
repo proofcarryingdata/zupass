@@ -13,10 +13,6 @@
     "dev": {
       "cache": false
     },
-    "docs": {
-      "outputs": ["docs/**"],
-      "cache": false
-    },
     "test": {
       "outputs": [],
       "cache": false

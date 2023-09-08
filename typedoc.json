@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["packages/*"],
+  "name": "PCD SDK",
+  "entryPointStrategy": "packages",
+  "exclude": ["**/emitter", "**/eslint-config-custom", "**/tsconfig"]
+}
