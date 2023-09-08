@@ -1,15 +1,14 @@
 {
   "files.exclude": {
     "**/.next": true,
-    "**/.turbo": true,
-    ".gitignore": true,
+    "**/.turbo": true
   },
   "files.associations": {
     "*.env": "properties",
     "*.env.example": "properties",
     "*.env.local.example": "properties"
   },
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescript]": {
     "editor.codeActionsOnSave": {
