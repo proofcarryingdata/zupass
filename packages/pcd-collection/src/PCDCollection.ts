@@ -115,6 +115,8 @@ export class PCDCollection {
         pcds.map((pcd) => pcd.id),
         action.folder
       );
+
+      return true;
     }
 
     if (
@@ -150,6 +152,8 @@ export class PCDCollection {
         pcds.map((pcd) => pcd.id),
         action.folder
       );
+
+      return true;
     }
 
     return false;
