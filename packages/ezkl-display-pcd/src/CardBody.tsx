@@ -12,6 +12,7 @@ import {
 // import { getQRCodeColorOverride, getTicketData } from "./utils";
 import { EzklGroupPCD, EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import GifQR from "./GifQR";
 
 export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
   // const ticketData = getTicketData(pcd);
@@ -35,13 +36,15 @@ export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
     callProve();
   }, [pcd]);
 
-  // console.log("groupPCD", groupPCD?.proof.proof);
+  // const arrProof = stringToUint8ClampedArray(groupPCD?.proof?.proof);
+  console.log("groupPCD");
   return (
     <Container>
       <h1>hello this is a display</h1>
       {/* {groupPCD && <TicketQR pcd={groupPCD} />} */}
       {groupPCD && (
-        <div style={{ overflowWrap: "break-word" }}>{groupPCD.proof.proof}</div>
+        // <div style={{ overflowWrap: "break-word" }}>{groupPCD.proof.proof}</div>
+        <GifQR proof={groupPCD.proof.proof.toString()} />
       )}
       {/* <TicketInfo>
         <span>{ticketData.attendeeName}</span>

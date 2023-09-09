@@ -7,6 +7,7 @@ import {
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { gzip } from "pako";
 
 import { EzklSecretPCD, EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
 import { EzklDisplayPCD, EzklDisplayPCDPackage } from "@pcd/ezkl-display-pcd";
@@ -227,6 +228,10 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
 
   console.log("PROOF", proof);
 
+  const compressedData = new Uint8ClampedArray(gzip(proof, { level: 9 }));
+
+  console.log("COMPRESSED DATA", compressedData);
+
   const verify = await getVerify();
   if (!verify) {
     throw new Error("Failed to import module verify");
@@ -243,7 +248,11 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   const verified = await verify(proof, vk, settings, srs);
   console.log("VERIFIED", verified);
 
-  return new EzklGroupPCD(uuid(), { groupName: "GROUP1" }, { proof });
+  return new EzklGroupPCD(
+    uuid(),
+    { groupName: "GROUP1" },
+    { proof: compressedData }
+  );
 
   // const { model, pk, settings, srs, witness } = args;
 

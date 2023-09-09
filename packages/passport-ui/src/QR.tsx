@@ -5,7 +5,7 @@ import styled from "styled-components";
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);
-  const compressedData = gzip(unencoded, { level: 9 });
+  const compressedData = gzip(unencoded);
   const base64CompressedData = Buffer.from(compressedData).toString("base64");
   console.log(
     `Compressed: ${compressedData.length}, base64: ${base64CompressedData.length}`
