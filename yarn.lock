@@ -10328,6 +10328,13 @@ react-is@^18.0.0:
   resolved "https://registry.npmjs.org/react-is/-/react-is-18.2.0.tgz"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
 
+react-password-strength-bar@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/react-password-strength-bar/-/react-password-strength-bar-0.4.1.tgz#381073552a99d3401b884195c5fa9a7d56913dd0"
+  integrity sha512-2NvYz4IUU8k7KDZgsXKoJWreKCZLKGaqF5QhIVhc09OsPBFXFMh0BeghNkBIRkaxLeI7/xjivknDCYfluBCXKA==
+  dependencies:
+    zxcvbn "4.4.2"
+
 react-qr-reader@^3.0.0-beta-1:
   version "3.0.0-beta-1"
   resolved "https://registry.npmjs.org/react-qr-reader/-/react-qr-reader-3.0.0-beta-1.tgz"
@@ -12859,3 +12866,8 @@ zod@3.21.4:
   version "3.21.4"
   resolved "https://registry.npmjs.org/zod/-/zod-3.21.4.tgz"
   integrity sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==
+
+zxcvbn@4.4.2:
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/zxcvbn/-/zxcvbn-4.4.2.tgz#28ec17cf09743edcab056ddd8b1b06262cc73c30"
+  integrity sha512-Bq0B+ixT/DMyG8kgX2xWcI5jUvCwqrMxSFam7m0lAf78nf04hv6lNCsyLYdyYTrCVMqNDY/206K7eExYCeSyUQ==

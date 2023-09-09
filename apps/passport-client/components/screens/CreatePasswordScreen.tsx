@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PasswordStrengthBar from "react-password-strength-bar";
 import styled from "styled-components";
 import { verifyTokenServer } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
@@ -17,11 +18,14 @@ import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 
+const PASSWORD_MINIMUM_LENGTH = 8;
+
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
+  const [score, setScore] = useState(0);
   const [revealPassword, setRevealPassword] = useState(false);
 
   useEffect(() => {
@@ -57,13 +61,31 @@ export function CreatePasswordScreen() {
   }, [self]);
 
   const onCreatePassword = async () => {
-    // TODO: Password strength
     if (password === "") {
       dispatch({
         type: "error",
         error: {
           title: "Password empty",
           message: "Please enter a password",
+          dismissToCurrentPage: true
+        }
+      });
+    } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Password too short",
+          message: `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters`,
+          dismissToCurrentPage: true
+        }
+      });
+    } else if (score < 2) {
+      // Must not be "too guessable" or "very guessable"
+      dispatch({
+        type: "error",
+        error: {
+          title: "Password too weak",
+          message: "Please use a stronger password.",
           dismissToCurrentPage: true
         }
       });
@@ -136,6 +158,17 @@ export function CreatePasswordScreen() {
               placeholder="Confirm password"
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+            <Spacer h={8} />
+            <PasswordStrengthBarContainer>
+              <PasswordStrengthBar
+                // To account for border radius of input box
+                style={{ width: "calc(100% - 46px" }}
+                password={password}
+                scoreWordStyle={{ display: "none" }}
+                minLength={PASSWORD_MINIMUM_LENGTH}
+                onChangeScore={(score) => setScore(score)}
+              />
+            </PasswordStrengthBarContainer>
             <Spacer h={24} />
             <Button style="primary" type="submit">
               Continue
@@ -189,4 +222,9 @@ const ShowHidePasswordIconContainer = styled.div`
 
 const ShowHidePasswordIcon = styled.img`
   cursor: pointer;
+`;
+
+const PasswordStrengthBarContainer = styled.div`
+  display: flex;
+  justify-content: center;
 `;
