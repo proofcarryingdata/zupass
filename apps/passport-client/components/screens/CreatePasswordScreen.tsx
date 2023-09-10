@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
+import { verifyTokenServer } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -23,10 +25,24 @@ export function CreatePasswordScreen() {
   const [revealPassword, setRevealPassword] = useState(false);
 
   useEffect(() => {
-    if (!email || !token) {
-      window.location.hash = "#/";
-      window.location.reload();
+    async function checkIfShouldRedirect() {
+      try {
+        if (!email || !validateEmail(email) || !token) {
+          throw new Error("Invalid email or token, redirecting to login");
+        }
+        const { verified } = await verifyTokenServer(email, token).then((res) =>
+          res.json()
+        );
+        if (!verified) {
+          throw new Error("Token is incorrect, redirecting to login");
+        }
+      } catch (e) {
+        console.error(e);
+        window.location.hash = "#/login";
+        window.location.reload();
+      }
     }
+    checkIfShouldRedirect();
   }, [email, token]);
 
   const self = useSelf();
