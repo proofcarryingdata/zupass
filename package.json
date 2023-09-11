@@ -15,6 +15,7 @@
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test --concurrency=1 && yarn clean",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
@@ -24,7 +25,8 @@
   },
   "devDependencies": {
     "prettier": "^3.0.0",
-    "prettier-plugin-organize-imports": "^3.2.2"
+    "prettier-plugin-organize-imports": "^3.2.2",
+    "typedoc": "^0.25.1"
   },
   "engines": {
     "node": ">=18"
