@@ -484,14 +484,6 @@ async function sync(state: AppState, update: ZuUpdate) {
     });
 
     try {
-      /*
-      // This code might have better folder support?
-      const response = await loadIssuedPCDs(state);
-      for (const action of response.actions) {
-        const deserialized = await state.pcds.deserializeAll(action.pcds);
-        state.pcds.replacePCDsInFolder(action.folder, deserialized);
-      }*/
-
       console.log("[SYNC] loading issued pcds");
       const actions = await state.subscriptions.pollSubscriptions();
       await applyActions(state.pcds, actions);
