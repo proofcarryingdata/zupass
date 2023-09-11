@@ -226,18 +226,8 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   const proof = new Uint8ClampedArray(
     await ezklProve(witness, pk, model, settings, srs)
   );
-
-  // console.log("PROOF", proof);
-  // console.log("PROOF LENGTH", proof.length);
-
   const compressedData = new Uint8ClampedArray(gzip(proof, { level: 9 }));
 
-  // console.log("COMPRESSED DATA", compressedData);
-  // console.log("Compressed Data.length", compressedData.length);
-  // console.log(
-  //   "Compressed Data.toString().length",
-  //   compressedData.toString().length
-  // );
   function convertCompressedDataToString(compressedData: Uint8ClampedArray) {
     let string = "";
     for (let i = 0; i < compressedData.length; i++) {
@@ -255,8 +245,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   }
 
   const compressedDataStr = convertCompressedDataToString(compressedData);
-  // console.log("Compressed Data String", compressedDataStr);
-  // console.log("Compressed Data String.length", compressedDataStr.length);
 
   const verify = await getVerify();
   if (!verify) {
@@ -280,36 +268,6 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
     // { proof: compressedData }
     { proof: compressedDataStr }
   );
-
-  // const { model, pk, settings, srs, witness } = args;
-
-  // const init = await getInit();
-  // if (!init) {
-  //   throw new Error("Failed to import module");
-  // }
-
-  // await init(
-  //   // undefined,
-  //   "http://localhost:3000/ezkl-artifacts/ezkl_bg.wasm",
-  //   new WebAssembly.Memory({ initial: 20, maximum: 1024, shared: true })
-  // );
-
-  // const genWitness = await getGenWitness();
-  // if (!genWitness) {
-  //   throw new Error("Failed to import module");
-  // }
-
-  // const ezklProve = await getProve();
-  // if (!ezklProve) {
-  //   throw new Error("Failed to import module");
-  // }
-
-  // call genWitness
-  // const witness = new Uint8ClampedArray(genWitness(model, input, settings));
-
-  // const proof = await ezklProve(witness, pk, model, settings, srs);
-
-  // return new EzklGroupPCD(uuid(), { groupName: "GROUP1" }, { hex: proof });
 }
 
 export async function verify(pcd: EzklGroupPCD): Promise<boolean> {
