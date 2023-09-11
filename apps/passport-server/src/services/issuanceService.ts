@@ -5,6 +5,7 @@ import {
   ITicketData,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckInRequest,
@@ -22,8 +23,10 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  PCDAction,
   PCDActionType,
   PCDPermissionType,
+  ReplaceInFolderAction,
   ReplaceInFolderPermission,
   joinPath
 } from "@pcd/pcd-collection";
@@ -189,6 +192,50 @@ export class IssuanceService {
               folder: "Frogs",
               type: PCDPermissionType.AppendToFolder
             } as AppendToFolderPermission
+          ]
+        }
+      },
+      {
+        handleRequest: async (
+          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<FeedResponse> => {
+          const pcds = await this.issueEmailPCDs(
+            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+          );
+          const actions: PCDAction[] = [];
+
+          // Clear out the folder
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "Email",
+            pcds: []
+          } as ReplaceInFolderAction);
+
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "Email",
+            pcds: await Promise.all(
+              pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+            )
+          } as ReplaceInFolderAction);
+
+          return { actions };
+        },
+        feed: {
+          id: PCDPassFeedIds.Email,
+          name: "Attested emails",
+          description: "Your attested emails",
+          inputPCDType: EmailPCDPackage.name,
+          partialArgs: undefined,
+          permissions: [
+            {
+              folder: "Email",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "Email",
+              type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission
           ]
         }
       }
@@ -623,6 +670,54 @@ export class IssuanceService {
     );
 
     return [frogPCD];
+  }
+
+  /**
+   *
+   */
+  private async issueEmailPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EmailPCD[]> {
+    return traced(
+      "IssuanceService",
+      "issueDevconnectPretixTicketPCDs",
+      async (span) => {
+        const commitmentRow = await this.checkUserExists(credential);
+        const email = commitmentRow?.email;
+        if (commitmentRow) {
+          span?.setAttribute(
+            "commitment",
+            commitmentRow?.commitment?.toString() ?? ""
+          );
+        }
+        if (email) {
+          span?.setAttribute("email", email);
+        }
+
+        if (commitmentRow == null || email == null) {
+          return [];
+        }
+
+        const stableId = "attested-email-" + email;
+
+        return [
+          await EmailPCDPackage.prove({
+            privateKey: {
+              value: this.eddsaPrivateKey,
+              argumentType: ArgumentTypeName.String
+            },
+            id: {
+              value: stableId,
+              argumentType: ArgumentTypeName.String
+            },
+            email: {
+              value: { emailAddress: email },
+              argumentType: ArgumentTypeName.Object
+            }
+          })
+        ];
+      }
+    );
   }
 }
 

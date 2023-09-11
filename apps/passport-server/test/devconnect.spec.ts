@@ -7,7 +7,8 @@ import {
 import {
   CheckInResponse,
   FeedResponse,
-  ISSUANCE_STRING
+  ISSUANCE_STRING,
+  PCDPassFeedIds
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -967,7 +968,8 @@ describe("devconnect functionality", function () {
       const response = await requestIssuedPCDs(
         application,
         identity,
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
       );
       const responseBody = response.body as FeedResponse;
 
@@ -997,12 +999,14 @@ describe("devconnect functionality", function () {
     const expressResponse1 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const expressResponse2 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const response1 = expressResponse1.body as FeedResponse;
     const response2 = expressResponse2.body as FeedResponse;
@@ -1048,7 +1052,8 @@ describe("devconnect functionality", function () {
     const response = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
@@ -1091,7 +1096,8 @@ describe("devconnect functionality", function () {
     const response = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
@@ -1136,7 +1142,8 @@ describe("devconnect functionality", function () {
     const issueResponse = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const issueResponseBody = issueResponse.body as FeedResponse;
     const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
@@ -1248,7 +1255,8 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         identity,
-        "asdf"
+        "asdf",
+        PCDPassFeedIds.Devconnect
       );
 
       const response = expressResponse.body as FeedResponse;
@@ -1268,7 +1276,8 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         new Identity(),
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
       );
 
       const response = expressResponse.body as FeedResponse;

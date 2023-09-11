@@ -1614,6 +1614,11 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@juanelas/base64@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@juanelas/base64/-/base64-1.1.2.tgz#968ff0f9c48adcfa79a0802385d56a2a661cb6cd"
+  integrity sha512-mr2pfRQpWap0Uq4tlrCgp3W+Yjx1/Bpq4QJsYeAQUh1mExgyQvXz7xUhmYT2HcLLspuAL5dpnos8P2QhaCSXsQ==
+
 "@manypkg/find-root@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@manypkg/find-root/-/find-root-1.1.0.tgz#a62d8ed1cd7e7d4c11d9d52a8397460b5d4ad29f"
@@ -4421,6 +4426,13 @@ big-integer@^1.6.42, big-integer@^1.6.48:
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
   integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
 
+bigint-conversion@^2.4.2:
+  version "2.4.2"
+  resolved "https://registry.yarnpkg.com/bigint-conversion/-/bigint-conversion-2.4.2.tgz#30c50c76d370ed90f34b4fe47c7d5b14dda8361e"
+  integrity sha512-2s3aRYaQtYGqY1w6x2PQqYbHUjktOWX0S0dkv7c+FjRnkKspictZ4IaEKmGEtZJjT2ccR29ufPB7QPEDfSs4bg==
+  dependencies:
+    "@juanelas/base64" "^1.1.2"
+
 bignumber.js@^9.0.0:
   version "9.1.2"
   resolved "https://registry.yarnpkg.com/bignumber.js/-/bignumber.js-9.1.2.tgz#b7c4242259c008903b13707983b5f4bbd31eda0c"
@@ -4541,6 +4553,11 @@ body-parser@^1.16.0:
     raw-body "2.5.2"
     type-is "~1.6.18"
     unpipe "1.0.0"
+
+boring-avatars@^1.10.1:
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/boring-avatars/-/boring-avatars-1.10.1.tgz#0e40811043cb3412bee38a0b6ca14f85fcdb0d2b"
+  integrity sha512-WcgHDeLrazCR03CDPEvCchLsUecZAZvs4F6FnMiGlTEjyQQf15Q5TRl4EUaAQ1dacvhPq7lC9EOTWkCojQ6few==
 
 brace-expansion@^1.1.7:
   version "1.1.11"

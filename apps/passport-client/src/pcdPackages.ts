@@ -1,5 +1,6 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
@@ -83,6 +84,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
 
+  await EmailPCDPackage.init({});
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -97,6 +100,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
     ZKEdDSATicketPCDPackage,
-    RSAImagePCDPackage
+    RSAImagePCDPackage,
+    EmailPCDPackage
   ];
 }
