@@ -6,9 +6,9 @@ import { EzklSecretPCD } from "./EzklSecretPCD";
 export function EzklSecretCardBody({ pcd }: { pcd: EzklSecretPCD }) {
   return (
     <Container>
-      <p>EZKL Secret PCD</p>
+      {/* <p>EZKL Secret PCD</p>
 
-      <Separator />
+      <Separator /> */}
 
       <FieldLabel>Secret</FieldLabel>
       <TextContainer>{pcd.proof.clearSecret}</TextContainer>

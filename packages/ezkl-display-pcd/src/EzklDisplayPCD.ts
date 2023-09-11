@@ -181,9 +181,18 @@ export async function deserialize(serialized: string): Promise<EzklDisplayPCD> {
   return JSONBig().parse(serialized);
 }
 
+export function getDisplayOptions(pcd: EzklDisplayPCD): DisplayOptions {
+  return {
+    header: "Ezkl Display PCD",
+    // displayName: "ezkl-secret-" + pcd.id.substring(0, 4)
+    displayName: "ezkl-display-" + pcd.id.substring(0, 4)
+  };
+}
+
 export const EzklDisplayPCDPackage: PCDPackage = {
   name: EzklDisplayPCDTypeName,
   renderCardBody: EzklDisplayCardBody,
+  getDisplayOptions,
   prove,
   verify,
   serialize,
