@@ -163,7 +163,6 @@ async function genPassport(
 }
 
 async function verifyToken(email: string, token: string, update: ZuUpdate) {
-  console.log("verify token");
   const res = await verifyTokenServer(email, token);
   const { verified, message } = await res.json();
   console.log("res", JSON.stringify({ verified, message }));
