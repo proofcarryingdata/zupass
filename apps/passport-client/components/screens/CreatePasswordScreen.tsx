@@ -66,7 +66,7 @@ export function CreatePasswordScreen() {
         type: "error",
         error: {
           title: "Password empty",
-          message: "Please enter a password",
+          message: "Please enter a password.",
           dismissToCurrentPage: true
         }
       });
@@ -75,7 +75,7 @@ export function CreatePasswordScreen() {
         type: "error",
         error: {
           title: "Password too short",
-          message: `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters`,
+          message: `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`,
           dismissToCurrentPage: true
         }
       });
@@ -84,8 +84,11 @@ export function CreatePasswordScreen() {
       dispatch({
         type: "error",
         error: {
-          title: "Password too weak",
-          message: "Please use a stronger password.",
+          title: "Password is too weak",
+          // Inspired by Dashlane's zxcvbn guidance:
+          // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
+          message:
+            "Try adding another word to the end. Uncommon words make a password stronger.",
           dismissToCurrentPage: true
         }
       });
@@ -94,7 +97,7 @@ export function CreatePasswordScreen() {
         type: "error",
         error: {
           title: "Confirm password",
-          message: "Please confirm your password",
+          message: "Please confirm your password.",
           dismissToCurrentPage: true
         }
       });
@@ -103,7 +106,7 @@ export function CreatePasswordScreen() {
         type: "error",
         error: {
           title: "Confirmation failed",
-          message: "Your passwords do not match",
+          message: "Your passwords do not match.",
           dismissToCurrentPage: true
         }
       });
