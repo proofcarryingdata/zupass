@@ -1,7 +1,7 @@
-import Link from "next/link";
 import React, { useCallback, useState } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { PCD_GITHUB_URL } from "../src/constants";
+import { PCD_GITHUB_URL } from "../constants";
 
 export const Container = styled.div`
   font-family: system-ui, sans-serif;
@@ -12,7 +12,7 @@ export const Container = styled.div`
 `;
 
 export const HomeLink = () => {
-  return <Link href={"/"}>Home</Link>;
+  return <Link to={"/"}>Home</Link>;
 };
 
 export const CodeLink = ({
@@ -22,7 +22,7 @@ export const CodeLink = ({
   file: string;
   children: React.ReactNode;
 }) => {
-  return <Link href={PCD_GITHUB_URL + file}>{children}</Link>;
+  return <a href={PCD_GITHUB_URL + file}>{children}</a>;
 };
 
 export const CollapsableCode = ({

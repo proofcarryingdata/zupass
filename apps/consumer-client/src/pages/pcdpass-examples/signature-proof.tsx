@@ -3,13 +3,13 @@ import {
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphoreSignatureProof,
+  useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
+import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -20,7 +20,7 @@ export default function Page() {
   const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     passportPendingPCDStr,
-    ZUPASS_SERVER_URL
+    PCDPASS_SERVER_URL
   );
   const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
 
@@ -42,14 +42,10 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>Zuzalu Semaphore Signature Proof</h2>
+      <h2>PCDpass Semaphore Signature Proof</h2>
       <p>
-        This page shows a working example of an integration with the Zuzalu
-        Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Participants Semaphore Group. Although the
-        data that is returned is not specific for Zuzalu, this specific request
-        shows a specific screen within the passport which was specifically
-        designed for Zuzalu.
+        This page shows a working example of an integration with PCDpass which
+        requests and verifies a semaphore signature from a holder of PCDpass.
       </p>
       <ExampleContainer>
         <input
@@ -65,7 +61,7 @@ export default function Page() {
           onClick={useCallback(
             () =>
               openSemaphoreSignaturePopup(
-                ZUPASS_URL,
+                PCDPASS_URL,
                 window.location.origin + "/popup",
                 messageToSign,
                 serverProving
@@ -95,7 +91,7 @@ export default function Page() {
         )}
         {signatureProof != null && (
           <>
-            <p>Got Semaphore Signature Proof from Passport</p>
+            <p>Got Semaphore Signature Proof from PCDpass</p>
 
             <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}

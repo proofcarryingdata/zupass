@@ -2,12 +2,12 @@ import {
   openSignedZuzaluUUIDPopup,
   useFetchUser,
   usePassportPopupMessages,
-  useSemaphoreSignatureProof,
+  useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
+import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to

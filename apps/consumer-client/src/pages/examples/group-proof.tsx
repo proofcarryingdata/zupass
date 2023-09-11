@@ -20,7 +20,7 @@ import {
   ZUPASS_SERVER_URL,
   ZUPASS_URL,
   ZUZALU_SEMAPHORE_GROUP_URL,
-} from "../../src/constants";
+} from "../../constants";
 
 /**
  * Example page which shows how to use the generic prove screen to

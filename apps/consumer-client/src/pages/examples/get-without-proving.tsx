@@ -1,13 +1,13 @@
 import {
   getWithoutProvingUrl,
-  usePassportPopupMessages,
+  usePassportPopupMessages
 } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useMemo } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL } from "../../src/constants";
-import { sendPassportRequest } from "../../src/util";
+import { ZUPASS_URL } from "../../constants";
+import { sendPassportRequest } from "../../util";
 
 /**
  * Example page which shows how to get a PCD from the passport without

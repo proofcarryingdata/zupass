@@ -1,3 +1,4 @@
+import { PendingPCDStatus } from "@pcd/passport-interface";
 import styled from "styled-components";
 
 /**
@@ -24,14 +25,6 @@ export const PendingPCDStatusDisplay = ({
     </>
   );
 };
-
-export enum PendingPCDStatus {
-  QUEUED = "queued",
-  PROVING = "proving",
-  COMPLETE = "complete",
-  ERROR = "error",
-  NONE = "none"
-}
 
 const statusColor: Record<PendingPCDStatus, string> = {
   [PendingPCDStatus.ERROR]: "#f44336",

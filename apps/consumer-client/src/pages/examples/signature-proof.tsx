@@ -3,7 +3,7 @@ import {
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphoreSignatureProof,
+  useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -12,8 +12,8 @@ import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
-import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../src/constants";
-import { sendPassportRequest } from "../../src/util";
+import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../constants";
+import { sendPassportRequest } from "../../util";
 
 /**
  * Example page which shows how to use the generic prove screen to
@@ -114,20 +114,20 @@ function requestSemaphoreSignature(proveOnServer: boolean) {
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
         userProvided: true,
-        description: "The identity with which to sign a message.",
+        description: "The identity with which to sign a message."
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         value: "1",
         userProvided: true,
-        description: "The message you want to sign.",
-      },
+        description: "The message you want to sign."
+      }
     },
     {
       genericProveScreen: true,
       title: "Semaphore Signature Proof",
       description: "Sign any message with your Semaphore identity.",
-      proveOnServer: proveOnServer,
+      proveOnServer: proveOnServer
     }
   );
 

@@ -29,8 +29,8 @@ import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
-import { sendPassportRequest } from "../../src/util";
+import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../constants";
+import { sendPassportRequest } from "../../util";
 
 /**
  * Example 3rd party application page which shows how to add
@@ -370,9 +370,8 @@ async function addIdentityPCD() {
     identity: new Identity()
   });
 
-  const serializedNewIdentity = await SemaphoreIdentityPCDPackage.serialize(
-    newIdentity
-  );
+  const serializedNewIdentity =
+    await SemaphoreIdentityPCDPackage.serialize(newIdentity);
 
   const url = constructPassportPcdAddRequestUrl(
     ZUPASS_URL,
@@ -426,9 +425,8 @@ async function addWebAuthnPCD() {
     origin: window.location.origin
   });
 
-  const serializedNewCredential = await WebAuthnPCDPackage.serialize(
-    newCredential
-  );
+  const serializedNewCredential =
+    await WebAuthnPCDPackage.serialize(newCredential);
 
   // Add new WebAuthn PCD to Passport.
   const url = constructPassportPcdAddRequestUrl(

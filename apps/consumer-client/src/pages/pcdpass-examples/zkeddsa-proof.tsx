@@ -18,7 +18,7 @@ import path from "path";
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PCDPASS_URL } from "../../src/constants";
+import { PCDPASS_URL } from "../../constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to

@@ -1,11 +1,7 @@
-import { PCD_GITHUB_URL } from "../src/constants";
+import { Link } from "react-router-dom";
+import { PCD_GITHUB_URL } from "../constants";
 
-/**
- * Landing page of the example 'consumer client' application, which is a
- * directory of examples for how to use the PCD SDK and integrate with
- * the passport.
- */
-export default function Page() {
+function Page() {
   return (
     <div>
       <h1>PCD Example Directory</h1>
@@ -19,16 +15,20 @@ export default function Page() {
         <h2>Generic Examples</h2>
         <ol>
           <li>
-            <a href="/examples/group-proof">Semaphore Group Membership Proof</a>
+            <Link to="/examples/group-proof">
+              Semaphore Group Membership Proof
+            </Link>
           </li>
           <li>
-            <a href="/examples/signature-proof">Semaphore Signature Proof</a>
+            <Link to="/examples/signature-proof">
+              Semaphore Signature Proof
+            </Link>
           </li>
           <li>
-            <a href="/examples/add-pcd">Add PCDs to the Passport</a>
+            <Link to="/examples/add-pcd">Add PCDs to the Passport</Link>
           </li>
           <li>
-            <a href="/examples/get-without-proving">Get Without Proving</a>
+            <Link to="/examples/get-without-proving">Get Without Proving</Link>
           </li>
         </ol>
       </div>
@@ -36,22 +36,24 @@ export default function Page() {
         <h2>Zuzalu-Specific Examples [DEPRECATED]</h2>
         <ol>
           <li>
-            <a href="/zuzalu-examples/group-proof">
+            <Link to="/zuzalu-examples/group-proof">
               [DEPRECATED] Zuzalu Group Membership Proof
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/zuzalu-examples/uuid-proof">
+            <Link to="/zuzalu-examples/uuid-proof">
               [DEPRECATED] Zuzalu Identity-Revealing Proof
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/zuzalu-examples/sign-in">[DEPRECATED] Zuzalu Sign In</a>
+            <Link to="/zuzalu-examples/sign-in">
+              [DEPRECATED] Zuzalu Sign In
+            </Link>
           </li>
           <li>
-            <a href="/zuzalu-examples/signature-proof">
+            <Link to="/zuzalu-examples/signature-proof">
               [DEPRECATED] Semaphore Signature Proof
-            </a>
+            </Link>
           </li>
         </ol>
       </div>
@@ -60,20 +62,24 @@ export default function Page() {
         <h2>PCDpass Examples</h2>
         <ol>
           <li>
-            <a href="/pcdpass-examples/group-proof">
+            <Link to="/pcdpass-examples/group-proof">
               PCDpass Group Membership Proof
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/pcdpass-examples/signature-proof">
+            <Link to="/pcdpass-examples/signature-proof">
               Semaphore Signature Proof
-            </a>
+            </Link>
           </li>
           <li>
-            <a href="/pcdpass-examples/zkeddsa-proof">ZKEdDSA Ticket Proof</a>
+            <Link to="/pcdpass-examples/zkeddsa-proof">
+              ZKEdDSA Ticket Proof
+            </Link>
           </li>
         </ol>
       </div>
     </div>
   );
 }
+
+export default Page;

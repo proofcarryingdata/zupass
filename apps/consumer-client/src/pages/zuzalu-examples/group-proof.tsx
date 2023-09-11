@@ -1,12 +1,12 @@
 import {
   openGroupMembershipPopup,
   usePassportPopupMessages,
-  useSemaphoreGroupProof,
+  useSemaphoreGroupProof
 } from "@pcd/passport-interface";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../src/constants";
+import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
