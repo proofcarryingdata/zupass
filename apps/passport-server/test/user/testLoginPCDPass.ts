@@ -1,4 +1,4 @@
-import { arrayBufferToHexString } from "@pcd/passport-crypto/src/utils";
+import { arrayBufferToHexString } from "@pcd/passport-crypto";
 import { User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";

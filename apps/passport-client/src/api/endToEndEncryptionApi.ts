@@ -1,8 +1,13 @@
-import { EncryptedPacket } from "@pcd/passport-crypto";
+import {
+  EncryptedPacket,
+  getHash,
+  passportDecrypt
+} from "@pcd/passport-crypto";
 import {
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
+  SyncedEncryptedStorage
 } from "@pcd/passport-interface";
 import { appConfig } from "../appConfig";
 
@@ -10,7 +15,7 @@ export async function downloadEncryptedStorage(
   blobKey: string
 ): Promise<EncryptedPacket | null> {
   const request: LoadE2EERequest = {
-    blobKey,
+    blobKey
   };
 
   const url = `${appConfig.passportServer}/sync/load`;
@@ -20,8 +25,8 @@ export async function downloadEncryptedStorage(
     body: JSON.stringify(request),
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+      Accept: "application/json"
+    }
   });
 
   if (response.status === 404) {
@@ -36,13 +41,28 @@ export async function downloadEncryptedStorage(
   return res.encryptedStorage as EncryptedPacket;
 }
 
+export async function downloadAndDecryptStorage(
+  syncKey: string
+): Promise<SyncedEncryptedStorage> {
+  console.log("downloading e2ee storage...");
+  const blobHash = await getHash(syncKey);
+  const storage = await downloadEncryptedStorage(blobHash);
+  if (!storage) {
+    throw new Error("no e2ee for this syncKey found");
+  }
+  console.log("downloaded encrypted storage");
+  const decrypted = await passportDecrypt(storage, syncKey);
+  console.log("decrypted encrypted storage");
+  return JSON.parse(decrypted);
+}
+
 export async function uploadEncryptedStorage(
   blobKey: string,
   encryptedStorage: EncryptedPacket
 ): Promise<void> {
   const request: SaveE2EERequest = {
     blobKey,
-    encryptedBlob: JSON.stringify(encryptedStorage),
+    encryptedBlob: JSON.stringify(encryptedStorage)
   };
 
   const url = `${appConfig.passportServer}/sync/save`;
@@ -51,7 +71,7 @@ export async function uploadEncryptedStorage(
     body: JSON.stringify(request),
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+      Accept: "application/json"
+    }
   });
 }

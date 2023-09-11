@@ -1,9 +1,9 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
 import { logToServer } from "../../src/api/logApi";
 import { requestLoginCode } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
-import { downloadAndDecryptStorage } from "../../src/localstorage";
 import { err } from "../../src/util";
 import {
   BackgroundGlow,

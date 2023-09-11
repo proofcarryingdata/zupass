@@ -1,7 +1,7 @@
 import { SyncedEncryptedStorage } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
+import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
 import { useDispatch, useSelf } from "../../src/appHooks";
-import { downloadAndDecryptStorage } from "../../src/localstorage";
 import {
   BackgroundGlow,
   BigInput,
