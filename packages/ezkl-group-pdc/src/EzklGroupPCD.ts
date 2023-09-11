@@ -109,7 +109,8 @@ export interface EzklGroupPCDClaim {
 }
 
 export interface EzklGroupPCDProof {
-  proof: Uint8ClampedArray;
+  // proof: Uint8ClampedArray;
+  proof: string;
   // witness: Uint8ClampedArray;
 }
 
@@ -226,11 +227,36 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
     await ezklProve(witness, pk, model, settings, srs)
   );
 
-  console.log("PROOF", proof);
+  // console.log("PROOF", proof);
+  // console.log("PROOF LENGTH", proof.length);
 
   const compressedData = new Uint8ClampedArray(gzip(proof, { level: 9 }));
 
-  console.log("COMPRESSED DATA", compressedData);
+  // console.log("COMPRESSED DATA", compressedData);
+  // console.log("Compressed Data.length", compressedData.length);
+  // console.log(
+  //   "Compressed Data.toString().length",
+  //   compressedData.toString().length
+  // );
+  function convertCompressedDataToString(compressedData: Uint8ClampedArray) {
+    let string = "";
+    for (let i = 0; i < compressedData.length; i++) {
+      // string += String.fromCharCode(compressedData[i]);
+      const elmToStr = compressedData[i].toString();
+      if (elmToStr.length === 1) {
+        string += "00" + elmToStr;
+      } else if (elmToStr.length === 2) {
+        string += "0" + elmToStr;
+      } else {
+        string += elmToStr;
+      }
+    }
+    return string;
+  }
+
+  const compressedDataStr = convertCompressedDataToString(compressedData);
+  // console.log("Compressed Data String", compressedDataStr);
+  // console.log("Compressed Data String.length", compressedDataStr.length);
 
   const verify = await getVerify();
   if (!verify) {
@@ -251,7 +277,8 @@ export async function prove(args: EzklGroupPCDArgs): Promise<EzklGroupPCD> {
   return new EzklGroupPCD(
     uuid(),
     { groupName: "GROUP1" },
-    { proof: compressedData }
+    // { proof: compressedData }
+    { proof: compressedDataStr }
   );
 
   // const { model, pk, settings, srs, witness } = args;

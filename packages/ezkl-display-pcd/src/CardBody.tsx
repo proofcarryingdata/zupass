@@ -37,7 +37,7 @@ export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
   }, [pcd]);
 
   // const arrProof = stringToUint8ClampedArray(groupPCD?.proof?.proof);
-  console.log("groupPCD");
+  console.log("DISPLAY CARD", groupPCD?.proof?.proof);
   return (
     <Container>
       <h1>hello this is a display</h1>
