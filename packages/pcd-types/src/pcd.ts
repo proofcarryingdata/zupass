@@ -48,7 +48,7 @@ export interface PCD<C = unknown, P = unknown> {
  *   etc. Another important note about {@link A} is that each of its fields must implement the
  *   {@link Argument} interface. This is important because it enables PCDpass to introspect the
  *   arguments, and to implement useful features like the {@code GenericProveScreen}, which is
- *   a screen that automatically build a UI which lets a user input all the arguments required to
+ *   a screen that automatically builds a UI which lets a user input all the arguments required to
  *   instantiate a new instance of a particular {@link PCD} based on the request it gets from a
  *   third party.
  *
@@ -136,7 +136,7 @@ export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
   : T;
 
 /**
- * This interface can be optionally returned by the package ƒor any given
+ * This interface can be optionally returned by the package for any given
  * PCD, which allows the package some degree of control over how the PCD
  * is displayed in the passport application.
  */
