@@ -118,7 +118,7 @@ export class TelegramService {
     this.bot.command("start", async (ctx) => {
       try {
         // Only process the command if it comes as a private message.
-        if (ctx.message) {
+        if (ctx.message && ctx.chat.type === "private") {
           const userId = ctx.message.from.id;
 
           const fieldsToReveal: EdDSATicketFieldsToReveal = {
@@ -192,6 +192,30 @@ export class TelegramService {
         logger("[TELEGRAM] start error", e);
         this.rollbarService?.reportError(e);
       }
+    });
+
+    // The "setup" command helps prospective event organizer to collect necessary information.
+    // Currently, this just prints the ID of the channel.
+    this.bot.command("setup", async (ctx) => {
+      if (ctx.chat?.type === "private") {
+        await ctx.reply(
+          "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+        );
+        return;
+      }
+
+      const admins = await ctx.getChatAdministrators();
+      const isAdmin = admins.some(
+        (admin) => admin.user.id === this.bot.botInfo.id
+      );
+      if (!isAdmin) {
+        await ctx.reply(
+          "Please add me as an admin to the telegram channel associated with your event."
+        );
+        return;
+      }
+
+      await ctx.reply("Your telegram channel id is " + ctx.chat.id);
     });
   }
 
