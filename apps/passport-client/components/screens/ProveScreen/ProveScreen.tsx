@@ -34,9 +34,8 @@ export function ProveScreen() {
       // NB: Telegram bot doesn't support localhost url and we had to use 127.0.0.1 instead
       // We redirect back to localhost in development mode
       if (window.location.hostname === "127.0.0.1") {
-        window.location.href = window.location.href.replace(
-          "://127.0.0.1",
-          "://localhost"
+        window.location.replace(
+          window.location.href.replace("://127.0.0.1", "://localhost")
         );
       }
     }
