@@ -73,7 +73,7 @@ import { testLoginPCDpass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
-describe.only("devconnect functionality", function () {
+describe("devconnect functionality", function () {
   this.timeout(30_000);
 
   let application: PCDpass;
