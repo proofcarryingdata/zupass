@@ -1,13 +1,15 @@
 import { Identity } from "@semaphore-protocol/identity";
-import { requestLoginCode } from "./api/user";
+import { requestLoginCode, submitNewUser } from "./api/user";
 
 async function testSingleUser() {
   const email = 'ivan@0xparc.org';
   const identity = new Identity();
-  
 
   const code: string | undefined = await requestLoginCode(email, identity.commitment.toString(), true);
-  console.log(`got code ${code}`);
+  const newUserResponse = await submitNewUser(email, code, identity.commitment.toString());
+  const user = await newUserResponse.json();
+
+  console.log('logged in as user', user);
 }
 
 async function runLoadTest() {
