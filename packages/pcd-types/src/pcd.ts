@@ -3,9 +3,9 @@
  * that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached
  * to the "claim," which is a cryptographic or mathematical proof of the claim.
  * A PCD consists of only data. The code and algorithms associated with each type
- * of PCD lives in that PCD type's corresponding {@link PCDPackage}. The package 
- * exposes, among other things, `prove` and `verify` functions, which allow you to 
- * create new instances of the PCD and, and verify that instances of the PCD are 
+ * of PCD lives in that PCD type's corresponding {@link PCDPackage}. The package
+ * exposes, among other things, `prove` and `verify` functions, which allow you to
+ * create new instances of the PCD and, and verify that instances of the PCD are
  * indeed correct respectively.
  */
 export interface PCD<C = unknown, P = unknown> {
@@ -18,17 +18,25 @@ export interface PCD<C = unknown, P = unknown> {
 
   /**
    * Refers to {@link PCDPackage#name} - each {@link PCD} must come from a
-   * particular {@link PCDPackage}.
+   * particular {@link PCDPackage}. By convention, this is a string like
+   * `'semaphore-identity-pcd'`, or `'rsa-ticket-pcd'`. These type names
+   * are intended to be globally unique - i.e. no two distinct PCD types
+   * should have the same type name.
    */
   type: string;
 
   /**
-   * Human- or end-user-application-interpretable data.
+   * Information encoded in this PCD that is intended to be consumed by the
+   * business logic of some application. For example, a type of PCD that could
+   * exist is one that is able to prove that its creator knows the prime factorization
+   * of a really big number. In that case, the really big number would be the claim,
+   * and a ZK proof of its prime factorization would go in the {@link PCD#proof}.
+   *
    */
   claim: C;
 
   /**
-   * A cryptographic proof of the {@link PCD#claim}.
+   * A cryptographic or mathematical proof of the {@link PCD#claim}.
    */
   proof: P;
 }
