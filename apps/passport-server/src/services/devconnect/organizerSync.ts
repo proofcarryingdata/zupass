@@ -37,6 +37,7 @@ import {
 } from "../../database/queries/pretixItemInfo";
 import { pretixTicketsDifferent } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
+import { normalizeEmail } from "../../util/util";
 import { RollbarService } from "../rollbarService";
 import { setError, traced } from "../telemetryService";
 
@@ -866,7 +867,7 @@ export class OrganizerSync {
               })
             );
           }
-          const email = (attendee_email || order.email).toLowerCase();
+          const email = normalizeEmail(attendee_email || order.email);
           const pretix_checkin_timestamp =
             checkins.length > 0 ? checkins[0].datetime : null;
 
