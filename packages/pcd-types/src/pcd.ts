@@ -118,11 +118,15 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   /**
    * Serializes an instance of this package's {@link PCD} so that it can be stored on disk
    * or sent over a network.
+   *
+   * More concretely, this function returns a promise of `SerializedPCD<PCD<C, P>>`
+   * and {@link PCDPackage.deserialize} takes `SerializedPCD<PCD<C, P>>.pcd` as a parameter
+   * and returns an instance of PCD<C, P>.
    */
   serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
 
   /**
-   * Sister method to {@link PCDPackage.serialize} - converts {@link SerializedPCD.pcd} back
+   * Sibling method to {@link PCDPackage.serialize} - converts {@link SerializedPCD.pcd} back
    * into an instance of this package's {@link PCD} type.
    */
   deserialize(seralized: string): Promise<PCD<C, P>>;
