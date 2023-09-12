@@ -2,8 +2,11 @@
  * All PCDs consist of a "claim", which is the human-interpretable statement
  * that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached
  * to the "claim," which is a cryptographic or mathematical proof of the claim.
- * All PCDs within this SDK also expose a `prove` and `verify` function, which
- * allow you to instantiate them, and verify that they are indeed correct.
+ * A PCD consists of only data. The code and algorithms associated with each type
+ * of PCD lives in that PCD type's corresponding {@link PCDPackage}. The package 
+ * exposes, among other things, `prove` and `verify` functions, which allow you to 
+ * create new instances of the PCD and, and verify that instances of the PCD are 
+ * indeed correct respectively.
  */
 export interface PCD<C = unknown, P = unknown> {
   /**
