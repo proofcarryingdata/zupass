@@ -109,7 +109,7 @@ export async function dispatch(
     case "login":
       return login(action.email, action.token, action.password, state, update);
     case "verify-token":
-      return verifyToken(action.email, action.token, update);
+      return verifyToken(action.email, action.token, state, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -162,10 +162,20 @@ async function genPassport(
   });
 }
 
-async function verifyToken(email: string, token: string, update: ZuUpdate) {
+async function verifyToken(
+  email: string,
+  token: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  // For Zupass, skip directly to login as we don't let users set their password
+  if (appConfig.isZuzalu) {
+    // Password can be empty string for the argon2 KDF. Random salt ensures that
+    // this generated key is not less secure than generating a random key.
+    return login(email, token, "", state, update);
+  }
   const res = await verifyTokenServer(email, token);
   const { verified, message } = await res.json();
-  console.log("res", JSON.stringify({ verified, message }));
   if (verified) {
     window.location.hash = `#/create-password?email=${encodeURIComponent(
       email
@@ -289,6 +299,11 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
+
+  // If on Zupass legacy login, ask user to save their Master Password
+  if (appConfig.isZuzalu) {
+    update({ modal: "save-sync" });
+  }
 }
 
 // Runs periodically, whenever we poll new participant info.

@@ -181,6 +181,14 @@ async function loadInitialState(): Promise<AppState> {
 
   if (userInvalid) {
     modal = "invalid-participant";
+  } else if (
+    // If on Zupass legacy login, ask user to save their Master Password
+    appConfig.isZuzalu &&
+    self != null &&
+    !localStorage["savedSyncKey"]
+  ) {
+    console.log("Asking existing user to save their Master Password...");
+    modal = "save-sync";
   }
 
   return {
