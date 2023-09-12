@@ -82,6 +82,10 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   /**
    * Intended to be used by PCDpass. Given a {@link PCD}, renders the body of a card
    * that appears in PCDpass representing this {@link PCD}.
+   *
+   * If the {@link DisplayOptions#header} returned by {@link PCDPackage#getDisplayOptions}
+   * is undefined, PCDpass will call this function with the `returnHeader` field set to true,
+   * and use the result as the header of the card.
    */
   renderCardBody?: ({
     pcd,
