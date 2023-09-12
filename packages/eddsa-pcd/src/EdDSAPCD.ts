@@ -176,7 +176,11 @@ export const EdDSAPCDPackage: PCDPackage<
   deserialize
 };
 
-export function getEdDSAPublicKey(privateKey: string): [string, string] {
+export async function getEdDSAPublicKey(
+  privateKey: string
+): Promise<[string, string]> {
+  await ensureInitialized();
+
   return eddsa.prv2pub(fromHexString(privateKey)).map(toHexString) as [
     string,
     string
