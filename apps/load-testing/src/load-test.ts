@@ -1,1 +1,1 @@
-console.log("load testing")
+console.log("load testing");
