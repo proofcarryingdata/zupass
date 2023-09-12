@@ -291,6 +291,129 @@ describe("devconnect functionality", function () {
     }
   );
 
+  step(
+    "updating a position's email address causes the ticket to change ownership",
+    async function () {
+      const order = mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug);
+      const orderCode = order ? order[0].code : undefined;
+
+      if (!orderCode) {
+        throw new Error("expected to be able to find order");
+      }
+
+      const updatedEmail = "abcdefg.com";
+      let oldEmail: string | null = "";
+
+      mocker.updateOrder(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        orderCode,
+        (order) => {
+          oldEmail = order.positions[0].attendee_email;
+          order.positions[0].attendee_email = updatedEmail;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
+        application.context.dbPool
+      );
+
+      expect(tickets).to.have.length(14);
+
+      const ticketsWithEmailEventAndItems = tickets.map((o) => ({
+        email: o.email,
+        itemInfoID: o.devconnect_pretix_items_info_id
+      }));
+
+      // Get item info IDs for event A
+      const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+      if (!eventAItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
+      const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+        await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
+
+      // Get item info IDs for event B
+      const eventBItemInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventBItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
+
+      expect(ticketsWithEmailEventAndItems).to.have.deep.members([
+        {
+          email: updatedEmail,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_3,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        }
+      ]);
+
+      // restore the email of that position back to what it was prior to this test case
+      mocker.updateOrder(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        orderCode,
+        (order) => {
+          order.positions[0].attendee_email = oldEmail;
+        }
+      );
+    }
+  );
+
   step("removing an order causes soft deletion of ticket", async function () {
     const ordersForEventA =
       mocker
