@@ -10,7 +10,7 @@ import { requestLoginCode, submitNewUser } from "./api/user";
 
 
 async function testSingleUser() {
-  const email = 'ivan@0xparc.org';
+  const email = 'ivan' + Math.random() + '@0xparc.org';
   const identity = new Identity();
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();
@@ -37,20 +37,27 @@ async function testSingleUser() {
       })
     )
   };
-  console.log("proved that I am a user");
-  console.log("getting issued pcds")
-  const issuedPCDs = await requestIssuedPCDs(request)
-  console.log("get issued pcds", issuedPCDs)
-  console.log("saving e2ee data");
-  const encryptedStorage = await passportEncrypt(
-    JSON.stringify({
-      a: "b"
-    }),
-    encryptionKey
-  );
-  
-  await uploadEncryptedStorage(encryptionKey, encryptedStorage);
-  console.log("saved e2ee data");
+
+  const userLoop = async () => {
+    console.log("proved that I am a user");
+    console.log("getting issued pcds")
+    const issuedPCDs = await requestIssuedPCDs(request)
+    console.log("get issued pcds", issuedPCDs)
+    console.log("saving e2ee data");
+    const encryptedStorage = await passportEncrypt(
+      JSON.stringify({
+        a: "b"
+      }),
+      encryptionKey
+    );
+    
+    await uploadEncryptedStorage(encryptionKey, encryptedStorage);
+    console.log("saved e2ee data");
+  }
+
+  setInterval(() => {
+    userLoop();
+  }, 5000);
 }
 
 async function runLoadTest() {
@@ -58,12 +65,17 @@ async function runLoadTest() {
     wasmFilePath: "../passport-server/public/semaphore-artifacts/16.wasm", 
     zkeyFilePath: "../passport-server/public/semaphore-artifacts/16.zkey"
   })
-  await testSingleUser();
+  
+  for (let i = 0; i < 25; i++) {
+    setTimeout(() => {
+      testSingleUser();
+    }, Math.random() * 1000 * 5)
+  }
 }
 
 runLoadTest().then(() => {
-  console.log("finished running load test");
-  process.exit(0);
+  console.log("finished starting load test");
+  // process.exit(0);
 }).catch(e => {
   console.log("error running load test");
   console.log(e);

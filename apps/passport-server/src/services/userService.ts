@@ -298,7 +298,7 @@ export class UserService {
       };
 
       const jsonP = JSON.stringify(pcdpassUser);
-      logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
+      logger(`[ZUID] logged in a PCDpass user: ${jsonP}`);
       res.json(pcdpassUser);
     } catch (e) {
       logger(e);
