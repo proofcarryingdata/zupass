@@ -1,8 +1,10 @@
+import { passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
 import { ISSUANCE_STRING, IssuedPCDsRequest } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { requestLoginCode, submitNewUser } from "./api/user";
 
@@ -10,6 +12,8 @@ import { requestLoginCode, submitNewUser } from "./api/user";
 async function testSingleUser() {
   const email = 'ivan@0xparc.org';
   const identity = new Identity();
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = await crypto.generateRandomKey();
   const code: string | undefined = await requestLoginCode(email, identity.commitment.toString(), true);
   const newUserResponse = await submitNewUser(email, code, identity.commitment.toString());
   const user = await newUserResponse.json();
@@ -37,7 +41,16 @@ async function testSingleUser() {
   console.log("getting issued pcds")
   const issuedPCDs = await requestIssuedPCDs(request)
   console.log("get issued pcds", issuedPCDs)
-
+  console.log("saving e2ee data");
+  const encryptedStorage = await passportEncrypt(
+    JSON.stringify({
+      a: "b"
+    }),
+    encryptionKey
+  );
+  
+  await uploadEncryptedStorage(encryptionKey, encryptedStorage);
+  console.log("saved e2ee data");
 }
 
 async function runLoadTest() {
