@@ -102,7 +102,7 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   init?: (initArgs: I) => Promise<void>;
 
   /**
-   * This is effectively the constructor of the {@link PCD} that this {@link PCDPackage}
+   * This is effectively a factory for instances of the {@link PCD} that this {@link PCDPackage}
    * encapsulates. It generates a proof and derives a claim from the args, and returns a
    * new PCD instance.
    */
