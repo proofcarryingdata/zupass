@@ -11,5 +11,7 @@ export const babyJubNegativeOne = BigInt(
  *
  * @param value integer encoded in a string
  */
-export const babyJubIsNegativeOne = (value: string) =>
-  BigInt(value) === babyJubNegativeOne || BigInt(value) === BigInt(-1);
+export function babyJubIsNegativeOne(value: string): boolean {
+  const bigintValue = BigInt(value);
+  return bigintValue === babyJubNegativeOne || bigintValue === BigInt(-1);
+}
