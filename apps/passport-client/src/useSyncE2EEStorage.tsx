@@ -7,9 +7,9 @@ import {
   ISSUANCE_STRING,
   IssuedPCDsRequest,
   IssuedPCDsResponse,
-  isSyncedEncryptedStorageV2,
   SyncedEncryptedStorage,
-  SyncedEncryptedStorageV2
+  SyncedEncryptedStorageV2,
+  isSyncedEncryptedStorageV2
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -40,6 +40,10 @@ import { useOnStateChange } from "./subscribe";
 export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
+  if (pcds.size() === 0) {
+    console.error("[SYNC] skipping upload, no pcds in localStorage");
+    return;
+  }
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({

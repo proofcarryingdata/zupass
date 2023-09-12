@@ -1,4 +1,6 @@
 import closeWhite from "./close-white.svg";
+import eyeClosed from "./eye-closed.svg";
+import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";
@@ -25,5 +27,7 @@ export const icons = {
   settingsPrimary,
   verifyInProgress,
   verifyInvalid,
-  verifyValid
+  verifyValid,
+  eyeClosed,
+  eyeOpen
 };

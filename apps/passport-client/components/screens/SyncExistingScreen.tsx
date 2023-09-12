@@ -1,11 +1,7 @@
-import {
-  EncryptedPacket,
-  getHash,
-  passportDecrypt
-} from "@pcd/passport-crypto";
-import React, { useCallback, useState } from "react";
-import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
-import { useDispatch } from "../../src/appHooks";
+import { SyncedEncryptedStorage } from "@pcd/passport-interface";
+import { useCallback, useEffect, useState } from "react";
+import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
+import { useDispatch, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -28,6 +24,13 @@ export function SyncExistingScreen() {
   const dispatch = useDispatch();
   const [syncKey, setSyncKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const self = useSelf();
+
+  useEffect(() => {
+    if (self) {
+      window.location.href = "#/";
+    }
+  }, [self]);
 
   const onSyncClick = useCallback(() => {
     if (syncKey === "") {
@@ -35,22 +38,17 @@ export function SyncExistingScreen() {
         type: "error",
         error: {
           title: "Missing Password",
-          message: "You must enter a Master Password.",
+          message: "You must enter a password.",
           dismissToCurrentPage: true
         }
       });
       return;
     }
     const load = async () => {
-      let storage: EncryptedPacket;
+      let storage: SyncedEncryptedStorage;
       try {
-        console.log("downloading e2ee storage...");
         setIsLoading(true);
-        const blobHash = await getHash(syncKey);
-        storage = await downloadEncryptedStorage(blobHash);
-        if (!storage) {
-          throw new Error("no e2ee for this Master Password found");
-        }
+        storage = await downloadAndDecryptStorage(syncKey);
       } catch (e: unknown) {
         console.error(e);
         dispatch({
@@ -67,13 +65,9 @@ export function SyncExistingScreen() {
         return;
       }
 
-      console.log("downloaded encrypted storage");
-      const decrypted = await passportDecrypt(storage, syncKey);
-      console.log("decrypted encrypted storage");
-
       dispatch({
         type: "load-from-sync",
-        storage: JSON.parse(decrypted),
+        storage,
         encryptionKey: syncKey
       });
 

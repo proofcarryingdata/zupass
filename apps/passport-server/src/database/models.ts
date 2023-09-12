@@ -95,6 +95,7 @@ export interface DevconnectSuperuser {
 export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
   commitment: string;
+  salt: null; // Zupass users never have a password salt
 }
 
 export interface LoggedinPCDpassUser extends CommitmentRow {
@@ -111,6 +112,7 @@ export interface CommitmentRow {
   uuid: string;
   commitment: string;
   email: string;
+  salt: string | null;
 }
 
 export interface EncryptedStorageModel {

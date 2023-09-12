@@ -62,6 +62,14 @@ export class UserService {
     return fetchAllZuzaluUsers(this.context.dbPool);
   }
 
+  public async getSaltByEmail(email: string): Promise<string | null> {
+    const user = await this.semaphoreService.getUserByEmail(email);
+    if (!user) {
+      throw Error("User does not exist");
+    }
+    return user.salt;
+  }
+
   public async handleSendZuzaluEmail(
     email: string,
     commitment: string,
@@ -245,6 +253,7 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
+    salt: string,
     res: Response
   ): Promise<void> {
     logger(
@@ -264,7 +273,7 @@ export class UserService {
 
       // Save commitment to DB.
       logger(`[ZUID] Saving new commitment: ${commitment}`);
-      await insertCommitment(this.context.dbPool, { email, commitment });
+      await insertCommitment(this.context.dbPool, { email, commitment, salt });
 
       // Reload Merkle trees
       await this.semaphoreService.reload();

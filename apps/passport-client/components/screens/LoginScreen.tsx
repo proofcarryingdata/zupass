@@ -5,7 +5,6 @@ import {
   useEffect,
   useState
 } from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
@@ -76,7 +75,7 @@ export function LoginScreen() {
           type: "error",
           error: {
             title: "Enter an Email",
-            message: "You must enter an email address to register.",
+            message: "You must enter an email address to continue.",
             dismissToCurrentPage: true
           }
         });
@@ -137,6 +136,7 @@ export function LoginScreen() {
           <form onSubmit={onGenPass}>
             <BigInput
               type="text"
+              autoFocus
               placeholder="your email address"
               value={email}
               onChange={useCallback(
@@ -146,31 +146,18 @@ export function LoginScreen() {
             />
             <Spacer h={8} />
             <Button style="primary" type="submit">
-              Register
+              Continue
             </Button>
           </form>
         </CenterColumn>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
         <CenterColumn w={280}>
-          <LinkButton to={"/sync-existing"}>
-            Login with Master Password
-          </LinkButton>
           {appConfig.isZuzalu && (
             <>
+              <Spacer h={24} />
+              <HR />
+              <Spacer h={24} />
               <Spacer h={8} />
               <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
-            </>
-          )}
-          {!appConfig.isZuzalu && !redirectedFromAction && (
-            <>
-              <Spacer h={8} />
-              <TextCenter>
-                <DeviceLoginLink to={"/device-login"}>
-                  Event Host Login
-                </DeviceLoginLink>
-              </TextCenter>
             </>
           )}
         </CenterColumn>
@@ -214,14 +201,4 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
-`;
-
-const DeviceLoginLink = styled(Link)`
-  color: #aaa;
-  &:hover {
-    text-decoration: underline;
-  }
-  &:visited {
-    color: #aaa;
-  }
 `;

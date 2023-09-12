@@ -1,3 +1,4 @@
+import { HexString } from "@pcd/passport-crypto";
 import { appConfig } from "../appConfig";
 
 export async function requestUser(uuid: string): Promise<Response> {
@@ -32,16 +33,46 @@ export async function requestConfirmationEmail(
   return requestGenericConfirmationEmail(email, identityCommitment, force);
 }
 
+export async function fetchSaltFromServer(email: string): Promise<Response> {
+  const query = new URLSearchParams({
+    email
+  }).toString();
+
+  const saltUrl = `${appConfig.passportServer}/pcdpass/salt?${query}`;
+
+  const res = await fetch(saltUrl);
+  if (!res.ok) throw new Error(await res.text());
+  return res;
+}
+
+export async function verifyTokenServer(
+  email: string,
+  token: string
+): Promise<Response> {
+  // Verify the token, save the participant to local storage, redirect to
+  // the home page.
+  const query = new URLSearchParams({
+    email,
+    token
+  }).toString();
+  const loginUrl = `${appConfig.passportServer}/pcdpass/verify-token?${query}`;
+
+  const res = await fetch(loginUrl, { method: "POST" });
+  if (!res.ok) throw new Error(await res.text());
+  return res;
+}
+
 export async function submitNewUser(
   email: string,
   token: string,
-  identityCommitment: string
+  identityCommitment: string,
+  salt: HexString
 ): Promise<Response> {
   if (appConfig.isZuzalu) {
     return submitNewZuzaluUser(email, token, identityCommitment);
   }
 
-  return submitNewGenericUser(email, token, identityCommitment);
+  return submitNewGenericUser(email, token, identityCommitment, salt);
 }
 
 export async function requestZuzaluConfirmationEmail(
@@ -96,14 +127,16 @@ export async function requestGenericConfirmationEmail(
 export async function submitNewGenericUser(
   email: string,
   token: string,
-  identityCommitment: string
+  identityCommitment: string,
+  salt: HexString
 ): Promise<Response> {
   // Verify the token, save the participant to local storage, redirect to
   // the home page.
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identityCommitment
+    commitment: identityCommitment,
+    salt
   }).toString();
   const loginUrl = `${appConfig.passportServer}/pcdpass/new-participant?${query}`;
 

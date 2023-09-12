@@ -36,7 +36,7 @@ export function EnterConfirmationCodeScreen() {
       return;
     }
     setVerifyingCode(true);
-    await dispatch({ type: "login", email, token });
+    await dispatch({ type: "verify-token", email, token });
     setVerifyingCode(false);
   }, [dispatch, email, input]);
 

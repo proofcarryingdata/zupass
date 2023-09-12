@@ -14,7 +14,11 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { logToServer } from "./api/logApi";
-import { submitDeviceLogin, submitNewUser } from "./api/user";
+import {
+  submitDeviceLogin,
+  submitNewUser,
+  verifyTokenServer
+} from "./api/user";
 import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
@@ -42,6 +46,12 @@ export type Action =
     }
   | {
       type: "login";
+      email: string;
+      password: string;
+      token: string;
+    }
+  | {
+      type: "verify-token";
       email: string;
       token: string;
     }
@@ -97,7 +107,9 @@ export async function dispatch(
     case "new-passport":
       return genPassport(state.identity, action.email, update);
     case "login":
-      return login(action.email, action.token, state, update);
+      return login(action.email, action.token, action.password, state, update);
+    case "verify-token":
+      return verifyToken(action.email, action.token, state, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -142,17 +154,41 @@ async function genPassport(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
-  const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-
   await savePCDs(pcds);
-  await saveEncryptionKey(encryptionKey);
 
   update({
     pcds,
-    encryptionKey,
     pendingAction: { type: "new-passport", email }
   });
+}
+
+async function verifyToken(
+  email: string,
+  token: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  // For Zupass, skip directly to login as we don't let users set their password
+  if (appConfig.isZuzalu) {
+    // Password can be empty string for the argon2 KDF. Random salt ensures that
+    // this generated key is not less secure than generating a random key.
+    return login(email, token, "", state, update);
+  }
+  const res = await verifyTokenServer(email, token);
+  const { verified, message } = await res.json();
+  if (verified) {
+    window.location.hash = `#/create-password?email=${encodeURIComponent(
+      email
+    )}&token=${encodeURIComponent(token)}`;
+  } else {
+    update({
+      error: {
+        title: "Login failed",
+        message,
+        dismissToCurrentPage: true
+      }
+    });
+  }
 }
 
 /**
@@ -178,15 +214,22 @@ async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
 async function login(
   email: string,
   token: string,
+  password: string,
   state: AppState,
   update: ZuUpdate
 ) {
   let user: User;
   try {
+    const crypto = await PCDCrypto.newInstance();
+    const salt = await crypto.generateSalt();
+    const encryptionKey = await crypto.argon2(password, salt, 32);
+    await saveEncryptionKey(encryptionKey);
+
     const res = await submitNewUser(
       email,
       token,
-      state.identity.commitment.toString()
+      state.identity.commitment.toString(),
+      salt
     );
     if (!res.ok) throw new Error(await res.text());
     user = await res.json();
@@ -257,8 +300,10 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Save PCDs to E2EE storage.
   await uploadStorage();
 
-  // Ask user to save their Master Password
-  update({ modal: "save-sync" });
+  // If on Zupass legacy login, ask user to save their Master Password
+  if (appConfig.isZuzalu) {
+    update({ modal: "save-sync" });
+  }
 }
 
 // Runs periodically, whenever we poll new participant info.
