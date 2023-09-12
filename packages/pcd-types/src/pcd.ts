@@ -11,7 +11,8 @@
 export interface PCD<C = unknown, P = unknown> {
   /**
    * Uniquely identifies this instance. PCDpass cannot have more than one
-   * {@link PCD} with the same id.
+   * {@link PCD} with the same id. In practice this is often a UUID generated
+   * by the {@link PCDPackage#prove} function.
    */
   id: string;
 
