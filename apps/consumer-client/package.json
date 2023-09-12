@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "ts-node build.ts dev",
     "build": "tsc --noEmit && ts-node build.ts build",
-    "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "clean": "rm -rf node_modules public/js"
   },
@@ -28,7 +27,6 @@
     "@pcd/semaphore-identity-pcd": "0.6.2",
     "@pcd/webauthn-pcd": "0.6.2",
     "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
-    "@pcd/passport-integration": "0.6.1",
     "@pcd/rsa-image-pcd": "0.0.1",
     "@pcd/rsa-ticket-pcd": "0.1.1",
     "@semaphore-protocol/group": "^3.11.0",

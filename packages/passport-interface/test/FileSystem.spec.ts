@@ -1,11 +1,10 @@
-import { FeedSubscriptionManager, MockFeedApi } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
-import { applyActions } from "../src";
+import { FeedSubscriptionManager, MockFeedApi, applyActions } from "../src";
 
-describe("File System", async function () {
+describe("feed actions", async function () {
   const mockFeedApi = new MockFeedApi();
   const packages: PCDPackage[] = [SemaphoreIdentityPCDPackage];
 

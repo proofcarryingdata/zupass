@@ -1,6 +1,7 @@
 import {
   FeedSubscriptionManager,
-  ISSUANCE_STRING
+  ISSUANCE_STRING,
+  PCDPassFeedIds
 } from "@pcd/passport-interface";
 import {
   AppendToFolderPermission,
@@ -19,27 +20,26 @@ export async function addDefaultSubscriptions(
   identity: Identity,
   subscriptions: FeedSubscriptionManager
 ) {
-  const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({
-          identity: identity
-        })
-      )
-    },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      value: ISSUANCE_STRING
-    }
-  });
-
-  if (signaturePCD && !subscriptions.hasProvider(DEFAULT_FEED_URL)) {
+  if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: await SemaphoreIdentityPCDPackage.serialize(
+          await SemaphoreIdentityPCDPackage.prove({
+            identity: identity
+          })
+        )
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: ISSUANCE_STRING
+      }
+    });
     subscriptions.addProvider(DEFAULT_FEED_URL);
     subscriptions.subscribe(
       DEFAULT_FEED_URL,
       {
-        id: "1",
+        id: PCDPassFeedIds.Devconnect,
         name: "Devconnect",
         description: "Devconnect Tickets",
         permissions: [

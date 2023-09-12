@@ -1,5 +1,5 @@
 import { Emitter } from "@pcd/emitter";
-import { PCDAction, PCDPermission } from "@pcd/pcd-collection";
+import { PCDAction, PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import {
   ArgsOf,
   PCDOf,
@@ -8,6 +8,24 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import { IFeedApi } from "./FeedAPI";
+
+export const enum PCDPassFeedIds {
+  Devconnect = "1",
+  Frogs = "2"
+}
+
+export async function applyActions(
+  collection: PCDCollection,
+  actions: SubscriptionActions[]
+) {
+  for (const actionSet of actions) {
+    for (const action of actionSet.actions) {
+      // tryExec already handles any exceptions that can come from executing
+      // actions
+      await collection.tryExec(action, actionSet.subscription.feed.permissions);
+    }
+  }
+}
 
 /**
  * Class responsible for storing the list of feed providers this application is

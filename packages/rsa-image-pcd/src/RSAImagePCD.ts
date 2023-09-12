@@ -53,7 +53,7 @@ export async function prove(args: RSAImagePCDArgs): Promise<RSAImagePCD> {
   }
 
   if (args.privateKey.value == null) {
-    throw new Error("missing title");
+    throw new Error("missing private key");
   }
 
   const proof = await RSAPCDPackage.prove({
@@ -110,12 +110,12 @@ export async function deserialize(serialized: string): Promise<RSAImagePCD> {
 
 export function getDisplayOptions(pcd: RSAImagePCD): DisplayOptions {
   // todo: create a helper for this
-  const ticketData = JSON.parse(pcd.proof.rsaPCD.claim.message);
-  const header = ticketData.title;
+  const imageData = JSON.parse(pcd.proof.rsaPCD.claim.message);
+  const header = imageData.title;
 
   return {
     header: header,
-    displayName: "ticket-" + pcd.id.substring(0, 4)
+    displayName: "image-" + pcd.id.substring(0, 4)
   };
 }
 

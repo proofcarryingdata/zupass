@@ -1,6 +1,6 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { applyActions } from "@pcd/passport-integration";
 import {
+  applyActions,
   isSyncedEncryptedStorageV2,
   SyncedEncryptedStorage,
   User

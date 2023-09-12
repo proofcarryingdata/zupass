@@ -16,7 +16,8 @@ import {
   FeedResponse,
   ISSUANCE_STRING,
   ListFeedsRequest,
-  ListFeedsResponse
+  ListFeedsResponse,
+  PCDPassFeedIds
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -140,7 +141,7 @@ export class IssuanceService {
           return { actions };
         },
         feed: {
-          id: "1",
+          id: PCDPassFeedIds.Devconnect,
           name: "Devconnect Tickets",
           description: "Get your Devconnect tickets here!",
           inputPCDType: EdDSATicketPCDPackage.name,
@@ -178,7 +179,7 @@ export class IssuanceService {
           };
         },
         feed: {
-          id: "2",
+          id: PCDPassFeedIds.Frogs,
           name: "Frogs",
           description: "Get your Frogs here!",
           inputPCDType: undefined,

@@ -4,7 +4,7 @@ import "mocha";
 import NodeRSA from "node-rsa";
 import { RSAImagePCD, RSAImagePCDPackage } from "../src";
 
-describe("RSA Ticket PCD should work", function () {
+describe("RSA Image PCD should work", function () {
   this.timeout(1000 * 30);
 
   const key = new NodeRSA({ b: 2048 });

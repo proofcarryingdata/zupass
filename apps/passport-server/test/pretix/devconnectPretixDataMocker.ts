@@ -69,6 +69,14 @@ export class DevconnectPretixDataMocker {
     return this.mockData;
   }
 
+  public getOrgByUrl(orgUrl: string): IOrganizer {
+    const org = this.get().organizersByOrgUrl.get(orgUrl);
+    if (!org) {
+      throw new Error(`Could not find organizer for ${orgUrl}`);
+    }
+    return org;
+  }
+
   public removeOrder(orgUrl: string, eventID: string, code: string): void {
     const org = this.mockData.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
