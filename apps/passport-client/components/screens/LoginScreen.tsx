@@ -75,7 +75,7 @@ export function LoginScreen() {
           type: "error",
           error: {
             title: "Enter an Email",
-            message: "You must enter an email address to register.",
+            message: "You must enter an email address to continue.",
             dismissToCurrentPage: true
           }
         });
