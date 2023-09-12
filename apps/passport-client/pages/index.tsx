@@ -131,7 +131,9 @@ function RouterImpl() {
             path="already-registered"
             element={<AlreadyRegisteredScreen />}
           />
-          <Route path="create-password" element={<CreatePasswordScreen />} />
+          {!appConfig.isZuzalu && (
+            <Route path="create-password" element={<CreatePasswordScreen />} />
+          )}
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
