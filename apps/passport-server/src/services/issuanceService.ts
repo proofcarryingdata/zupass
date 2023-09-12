@@ -152,7 +152,6 @@ export class IssuanceService {
       }
 
       const checkerSuperUserPermissions =
-        // here
         await fetchDevconnectSuperusersForEmail(
           this.context.dbPool,
           checker.email
