@@ -1,4 +1,4 @@
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { EDdSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -60,6 +60,7 @@ import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
+  requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
 } from "./issuance/issuance";
 import {
@@ -896,17 +897,35 @@ describe("devconnect functionality", function () {
   );
 
   let identity: Identity;
-  let publicKey: NodeRSA;
+  let publicKeyRSA: NodeRSA;
+  let publicKeyEdDSA: EDdSAPublicKey;
 
   step(
-    "anyone should be able to request the server's public key",
+    "anyone should be able to request the server's RSA public key",
     async function () {
       const publicKeyResponse = await requestServerRSAPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
-      publicKey = new NodeRSA(publicKeyResponse.text, "public");
-      expect(publicKey.getKeySize()).to.eq(2048);
-      expect(publicKey.isPublic(true)).to.eq(true);
-      expect(publicKey.isPrivate()).to.eq(false); // just to be safe
+      publicKeyRSA = new NodeRSA(publicKeyResponse.text, "public");
+      expect(publicKeyRSA.getKeySize()).to.eq(2048);
+      expect(publicKeyRSA.isPublic(true)).to.eq(true);
+      expect(publicKeyRSA.isPrivate()).to.eq(false); // just to be safe
+    }
+  );
+
+  step(
+    "anyone should be able to request the server's EdDSA public key",
+    async function () {
+      const publicKeyResponse = await requestServerEdDSAPublicKey(application);
+      expect(publicKeyResponse.status).to.eq(200);
+      publicKeyEdDSA = JSON.parse(publicKeyResponse.text);
+      const [xValue, yValue] = publicKeyEdDSA;
+      // Check lengths - should be 32 bytes in hex
+      expect(xValue.length).to.eq(64);
+      expect(yValue.length).to.eq(64);
+      // Just to be safe, check against a regex
+      const regex32ByteHexString = /^[0-9A-Fa-f]{64}$/;
+      expect(regex32ByteHexString.test(xValue)).to.eq(true);
+      expect(regex32ByteHexString.test(yValue)).to.eq(true);
     }
   );
 
