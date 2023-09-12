@@ -167,7 +167,7 @@ export function CreatePasswordScreen() {
                 // To account for border radius of input box
                 style={{ width: "calc(100% - 46px" }}
                 password={password}
-                scoreWordStyle={{ display: "none" }}
+                barColors={["#ddd", "#f4c24d", "#f4c24d", "#f4c24d", "#f4c24d"]}
                 minLength={PASSWORD_MINIMUM_LENGTH}
                 onChangeScore={(score) => setScore(score)}
               />
