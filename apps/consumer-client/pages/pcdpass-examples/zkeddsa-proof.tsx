@@ -264,7 +264,7 @@ export default function Page() {
                 <p>{`Signer: ${pcd.claim.signer}`}</p>
                 <p>{`Watermark: ${pcd.claim.watermark}`}</p>
                 {pcd.claim.externalNullifier && (
-                  <p>{`Nullifier Hash: ${pcd.claim.externalNullifier}`}</p>
+                  <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
                 )}
                 {pcd.claim.nullifierHash && (
                   <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
