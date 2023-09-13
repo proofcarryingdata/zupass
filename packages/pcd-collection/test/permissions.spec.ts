@@ -282,4 +282,23 @@ describe("Permissions", async function () {
       .to.be.false;
     expect(collection.getAllPCDsInFolder("test").length).to.eq(1);
   });
+
+  it("should not allow action types to be assigned to permission types or vice-versa", async function () {
+    // First create two sets, consisting of the action and permission types
+    // casted to strings
+    const actionTypes = new Set(Object.values(PCDActionType) as string[]);
+    const permissionTypes = new Set(
+      Object.values(PCDPermissionType) as string[]
+    );
+
+    // Then find the intersection of these two sets
+    const intersection = [...actionTypes].filter((type) =>
+      permissionTypes.has(type)
+    );
+
+    // The intersection should be empty
+    // This means that the string representations of action types should
+    // never overlap with the string representations of permission types.
+    expect(intersection).to.be.empty;
+  });
 });

@@ -1,4 +1,6 @@
-// TODO: test that PCDPermissionType and PCDActionType don't overlap
+// This enum should never overlap with PCDActionType
+// See test "hould not allow action types to be assigned to permission
+// types or vice-versa" in permissions.spec.ts
 export enum PCDPermissionType {
   ReplaceInFolder = "ReplaceInFolder_permission",
   AppendToFolder = "AppendToFolder_permission"
