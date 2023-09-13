@@ -68,8 +68,6 @@ export function CreatePasswordScreen() {
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
       );
     } else if (!checkPasswordStrength(password)) {
-      // Inspired by Dashlane's zxcvbn guidance:
-      // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
       setErrorMessage("Password is too weak.");
     } else if (confirmPassword === "") {
       setErrorMessage("Please confirm your password.");
