@@ -2,7 +2,6 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
-import esbuildServerProxy from "./serve";
 
 const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
@@ -45,17 +44,13 @@ async function run(command: string) {
 
       const options = {
         host: "0.0.0.0",
-        port: 3003,
+        port: 3001,
         servedir: "public"
       };
 
-      const proxyPort = 3001;
+      const { host, port } = await ctx.serve(options);
 
-      const { host } = await ctx.serve(options);
-
-      esbuildServerProxy(options, proxyPort);
-
-      console.log(`Serving consumer client on http://${host}:${proxyPort}`);
+      console.log(`Serving consumer client on http://${host}:${port}`);
       break;
     default:
       throw new Error(`Unknown command ${command}`);

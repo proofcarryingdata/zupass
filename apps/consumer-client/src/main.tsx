@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import AddPCD from "./pages/examples/add-pcd";
 import GetWithoutProving from "./pages/examples/get-without-proving";
@@ -16,7 +16,7 @@ import ZuzaluSignIn from "./pages/zuzalu-examples/sign-in";
 import ZuzaluSignatureProof from "./pages/zuzalu-examples/signature-proof";
 import ZuzaluUuidProof from "./pages/zuzalu-examples/uuid-proof";
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   { path: "/", element: <Home /> },
   { path: "popup", element: <PassportPopupRedirect /> },
 
