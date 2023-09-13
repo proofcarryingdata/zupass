@@ -70,9 +70,7 @@ export function CreatePasswordScreen() {
     } else if (!checkPasswordStrength(password)) {
       // Inspired by Dashlane's zxcvbn guidance:
       // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
-      setErrorMessage(
-        "Password is too weak. Try adding another word or two to the end."
-      );
+      setErrorMessage("Password is too weak.");
     } else if (confirmPassword === "") {
       setErrorMessage("Please confirm your password.");
     } else if (password !== confirmPassword) {
@@ -107,6 +105,7 @@ export function CreatePasswordScreen() {
               value={password}
               setValue={setPassword}
               placeholder="Password"
+              autoFocus
               revealPassword={revealPassword}
               setRevealPassword={setRevealPassword}
             />
@@ -119,9 +118,7 @@ export function CreatePasswordScreen() {
               setRevealPassword={setRevealPassword}
             />
             <Spacer h={8} />
-            {passwordError && (
-              <ErrorMessage minHeight={8}>{passwordError}</ErrorMessage>
-            )}
+            {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
             <Spacer h={16} />
             <Button style="primary" type="submit">
               Continue

@@ -9,19 +9,21 @@ interface SetPasswordInputProps {
   revealPassword: boolean;
   setRevealPassword: Dispatch<SetStateAction<boolean>>;
   placeholder: string;
+  autoFocus?: boolean;
 }
 
 export function SetPasswordInput({
   value,
   setValue,
   revealPassword,
+  autoFocus,
   setRevealPassword,
   placeholder
 }: SetPasswordInputProps) {
   return (
     <Container>
       <BigInput
-        autoFocus
+        autoFocus={autoFocus}
         type={revealPassword ? "text" : "password"}
         placeholder={placeholder}
         value={value}
