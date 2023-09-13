@@ -1,4 +1,11 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
+import { ISSUANCE_STRING } from "@pcd/passport-interface";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import * as fs from "fs";
 import * as path from "path";
@@ -14,6 +21,7 @@ export interface UserConfig {
   encryptionKey: string;
   serializedIdentity: string;
   salt: string;
+  serializedIdentityProof: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 export interface TestSetupData {
@@ -38,13 +46,31 @@ async function setupLoadTestData(
 
   for (let i = 0; i < config.userCount; i++) {
     const identity = new Identity();
-
-    users.push({
+    const newUser = {
       email: `ivan+${Math.random()}@0xparc.org`,
       encryptionKey: runtimeData.crypto.generateRandomKey(),
       serializedIdentity: identity.toString(),
-      salt: runtimeData.crypto.generateSalt()
-    });
+      salt: runtimeData.crypto.generateSalt(),
+      serializedIdentityProof: await SemaphoreSignaturePCDPackage.serialize(
+        await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: ISSUANCE_STRING
+          }
+        })
+      )
+    };
+    console.log(`generated new user ${newUser.email}`);
+
+    users.push(newUser);
   }
 
   const data: TestSetupData = {

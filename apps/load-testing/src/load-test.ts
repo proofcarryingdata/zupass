@@ -1,8 +1,10 @@
 import { passportEncrypt } from "@pcd/passport-crypto";
-import { ISSUANCE_STRING, IssuedPCDsRequest } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { IssuedPCDsRequest } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
@@ -14,6 +16,7 @@ export interface SingleUserData {
   identity: Identity;
   email: string;
   salt: string;
+  serializedIdentityProof: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 async function dataToSingleUserDatas(
@@ -25,7 +28,8 @@ async function dataToSingleUserDatas(
         email: u.email,
         encryptionKey: u.encryptionKey,
         identity: new Identity(u.serializedIdentity),
-        salt: u.salt
+        salt: u.salt,
+        serializedIdentityProof: u.serializedIdentityProof
       };
     }
   );
@@ -50,28 +54,11 @@ export async function testSingleUser(
   );
   const user = await newUserResponse.json();
   console.log("logged in as user", user);
-  console.log("proving that I am a user");
   const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: data.identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    )
+    userProof: data.serializedIdentityProof
   };
 
   const userLoop = async () => {
-    console.log("proved that I am a user");
     console.log("getting issued pcds");
     const issuedPCDs = await requestIssuedPCDs(request);
     console.log("get issued pcds", issuedPCDs);
