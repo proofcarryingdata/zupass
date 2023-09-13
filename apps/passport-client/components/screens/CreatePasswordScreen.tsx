@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import PasswordStrengthBar from "react-password-strength-bar";
 import styled from "styled-components";
 import { verifyTokenServer } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { checkPasswordStrength } from "../../src/password";
 import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
@@ -14,6 +14,7 @@ import {
   TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { ErrorMessage } from "../core/error";
 import { AppContainer } from "../shared/AppContainer";
 import { SetPasswordInput } from "../shared/SetPasswordInput";
 
@@ -24,8 +25,8 @@ export function CreatePasswordScreen() {
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
-  const [score, setScore] = useState(0);
   const [revealPassword, setRevealPassword] = useState(false);
+  const [passwordError, setErrorMessage] = useState("");
 
   useEffect(() => {
     async function checkIfShouldRedirect() {
@@ -61,54 +62,21 @@ export function CreatePasswordScreen() {
 
   const onCreatePassword = async () => {
     if (password === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Password empty",
-          message: "Please enter a password.",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Please enter a password.");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Password too short",
-          message: `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`,
-          dismissToCurrentPage: true
-        }
-      });
-    } else if (score < 2) {
-      // Must not be "too guessable" or "very guessable"
-      dispatch({
-        type: "error",
-        error: {
-          title: "Password is too weak",
-          // Inspired by Dashlane's zxcvbn guidance:
-          // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
-          message:
-            "Try adding another word to the end. Uncommon words make a password stronger.",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage(
+        `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
+      );
+    } else if (!checkPasswordStrength(password)) {
+      // Inspired by Dashlane's zxcvbn guidance:
+      // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
+      setErrorMessage(
+        "Password is too weak. Try adding another word or two to the end."
+      );
     } else if (confirmPassword === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Confirm password",
-          message: "Please confirm your password.",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Please confirm your password.");
     } else if (password !== confirmPassword) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Confirmation failed",
-          message: "Your passwords do not match.",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Your passwords do not match.");
     } else {
       dispatch({
         type: "login",
@@ -151,17 +119,10 @@ export function CreatePasswordScreen() {
               setRevealPassword={setRevealPassword}
             />
             <Spacer h={8} />
-            <PasswordStrengthBarContainer>
-              <PasswordStrengthBar
-                // To account for border radius of input box
-                style={{ width: "calc(100% - 46px" }}
-                password={password}
-                barColors={["#ddd", "#f4c24d", "#f4c24d", "#f4c24d", "#f4c24d"]}
-                minLength={PASSWORD_MINIMUM_LENGTH}
-                onChangeScore={(score) => setScore(score)}
-              />
-            </PasswordStrengthBarContainer>
-            <Spacer h={24} />
+            {passwordError && (
+              <ErrorMessage minHeight={8}>{passwordError}</ErrorMessage>
+            )}
+            <Spacer h={16} />
             <Button style="primary" type="submit">
               Continue
             </Button>
@@ -196,9 +157,4 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
-`;
-
-const PasswordStrengthBarContainer = styled.div`
-  display: flex;
-  justify-content: center;
 `;
