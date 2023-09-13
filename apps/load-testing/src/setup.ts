@@ -5,35 +5,35 @@ import * as path from "path";
 
 const SAVED_DATA_DIR = path.join(process.cwd(), "DATA");
 
-export interface LoadTestConfig {
+export interface Config {
   userCount: number;
 }
 
-export interface SingleUserConfig {
+export interface UserConfig {
   email: string;
   encryptionKey: string;
   serializedIdentity: string;
 }
 
-export interface LoadTestSetupData {
-  config: LoadTestConfig;
-  users: SingleUserConfig[];
+export interface TestSetupData {
+  config: Config;
+  users: UserConfig[];
 }
 
-export interface LoadTestRuntimeData {
+export interface TestRuntimeData {
   crypto: PCDCrypto;
 }
 
-export interface LoadTestData {
-  setupData: LoadTestSetupData;
-  runtimeData: LoadTestRuntimeData;
+export interface TestData {
+  setupData: TestSetupData;
+  runtimeData: TestRuntimeData;
 }
 
 async function setupLoadTestData(
-  config: LoadTestConfig,
-  runtimeData: LoadTestRuntimeData
-): Promise<LoadTestSetupData> {
-  const users: SingleUserConfig[] = [];
+  config: Config,
+  runtimeData: TestRuntimeData
+): Promise<TestSetupData> {
+  const users: UserConfig[] = [];
 
   for (let i = 0; i < config.userCount; i++) {
     const identity = new Identity();
@@ -45,7 +45,7 @@ async function setupLoadTestData(
     });
   }
 
-  const data: LoadTestSetupData = {
+  const data: TestSetupData = {
     config,
     users
   };
@@ -53,19 +53,21 @@ async function setupLoadTestData(
   return data;
 }
 
-function getConfigFilePath(config: LoadTestConfig): string {
+function getConfigFilePath(config: Config): string {
   return path.join(SAVED_DATA_DIR, `${config.userCount}-users.json`);
 }
 
-async function saveLoadTestData(data: LoadTestSetupData): Promise<void> {
+async function saveLoadTestData(data: TestSetupData): Promise<void> {
   const stringified = JSON.stringify(data, null, 2);
   fs.mkdirSync(SAVED_DATA_DIR, { recursive: true });
-  fs.writeFileSync(getConfigFilePath(data.config), stringified);
+  const filePath = getConfigFilePath(data.config);
+  console.log(`SAVING TEST DATA TO ${filePath}`);
+  fs.writeFileSync(filePath, stringified);
 }
 
 async function loadLoadTestData(
-  config: LoadTestConfig
-): Promise<LoadTestSetupData | undefined> {
+  config: Config
+): Promise<TestSetupData | undefined> {
   try {
     const data = fs.readFileSync(getConfigFilePath(config)).toString();
     return JSON.parse(data);
@@ -74,22 +76,22 @@ async function loadLoadTestData(
   }
 }
 
-async function setupRuntimeData(): Promise<LoadTestRuntimeData> {
+async function setupRuntimeData(): Promise<TestRuntimeData> {
   return {
     crypto: await PCDCrypto.newInstance()
   };
 }
 
-export async function getLoadTestData(
-  config: LoadTestConfig
-): Promise<LoadTestData> {
+export async function getLoadTestData(config: Config): Promise<TestData> {
   const runtimeData = await setupRuntimeData();
   const savedData = await loadLoadTestData(config);
 
   if (savedData != null) {
+    console.log("LOADED CACHED TEST DATA");
     return { setupData: savedData, runtimeData };
   }
 
+  console.log("CACHE MISS - GENERATING NEW TEST DATA");
   const generatedData = await setupLoadTestData(config, runtimeData);
   await saveLoadTestData(generatedData);
 

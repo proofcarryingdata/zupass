@@ -7,12 +7,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { requestLoginCode, submitNewUser } from "./api/user";
-import {
-  getLoadTestData,
-  LoadTestConfig,
-  LoadTestData,
-  LoadTestRuntimeData
-} from "./setup";
+import { Config, getLoadTestData, TestData, TestRuntimeData } from "./setup";
 
 export interface SingleUserData {
   encryptionKey: string;
@@ -21,7 +16,7 @@ export interface SingleUserData {
 }
 
 async function dataToSingleUserDatas(
-  data: LoadTestData
+  data: TestData
 ): Promise<SingleUserData[]> {
   let datas: SingleUserData[] = data.setupData.users.map(
     (u): SingleUserData => {
@@ -37,7 +32,7 @@ async function dataToSingleUserDatas(
 }
 
 export async function testSingleUser(
-  runtimeData: LoadTestRuntimeData,
+  runtimeData: TestRuntimeData,
   data: SingleUserData
 ) {
   const code: string | undefined = await requestLoginCode(
@@ -100,13 +95,13 @@ export async function runLoadTest() {
     zkeyFilePath: "../passport-server/public/semaphore-artifacts/16.zkey"
   });
 
-  const config: LoadTestConfig = {
+  const config: Config = {
     userCount: 5
   };
 
   const loadTestData = await getLoadTestData(config);
 
-  console.log(loadTestData);
+  console.log(JSON.stringify(loadTestData.setupData, null, 2));
 
   const singleUserDatas = await dataToSingleUserDatas(loadTestData);
 
