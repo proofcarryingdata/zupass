@@ -13,6 +13,7 @@ export interface UserConfig {
   email: string;
   encryptionKey: string;
   serializedIdentity: string;
+  salt: string;
 }
 
 export interface TestSetupData {
@@ -41,7 +42,8 @@ async function setupLoadTestData(
     users.push({
       email: `ivan+${Math.random()}@0xparc.org`,
       encryptionKey: runtimeData.crypto.generateRandomKey(),
-      serializedIdentity: identity.toString()
+      serializedIdentity: identity.toString(),
+      salt: runtimeData.crypto.generateSalt()
     });
   }
 

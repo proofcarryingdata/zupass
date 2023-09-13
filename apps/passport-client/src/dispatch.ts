@@ -218,7 +218,7 @@ async function login(
   let user: User;
   try {
     const crypto = await PCDCrypto.newInstance();
-    const salt = await crypto.generateSalt();
+    const salt = crypto.generateSalt();
     const encryptionKey = await crypto.argon2(password, salt, 32);
     await saveEncryptionKey(encryptionKey);
     update({
