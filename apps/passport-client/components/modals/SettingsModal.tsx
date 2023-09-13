@@ -41,13 +41,14 @@ export function SettingsModal() {
         </LinkButton>
         <Spacer h={16} />
         {appConfig.isZuzalu && (
-          <>
-            <Button onClick={copySyncKey}>
-              {justCopied ? "Copied" : "Copy Sync Key"}
-            </Button>
-            <Spacer h={16} />
-          </>
+          <Button onClick={copySyncKey}>
+            {justCopied ? "Copied" : "Copy Sync Key"}
+          </Button>
         )}
+        {!appConfig.isZuzalu && (
+          <LinkButton to="/change-password">Change Password</LinkButton>
+        )}
+        <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
           Log Out
         </Button>

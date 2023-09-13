@@ -5,6 +5,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
+import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
@@ -137,7 +138,16 @@ function RouterImpl() {
             element={<AlreadyRegisteredScreen />}
           />
           {!appConfig.isZuzalu && (
-            <Route path="create-password" element={<CreatePasswordScreen />} />
+            <>
+              <Route
+                path="create-password"
+                element={<CreatePasswordScreen />}
+              />
+              <Route
+                path="change-password"
+                element={<ChangePasswordScreen />}
+              />
+            </>
           )}
           <Route
             path="enter-confirmation-code"
@@ -152,7 +162,9 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
+          {appConfig.isZuzalu && (
+            <Route path="sync-existing" element={<SyncExistingScreen />} />
+          )}
           <Route
             path="verify"
             element={
