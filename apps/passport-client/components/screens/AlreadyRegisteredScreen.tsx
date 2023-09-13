@@ -149,7 +149,7 @@ export function AlreadyRegisteredScreen() {
                 <Spacer h={8} />
                 {!salt && (
                   <Button onClick={onLoginWithMasterPasswordClick}>
-                    Login with Master Password
+                    Login with Sync Key
                   </Button>
                 )}
                 {salt && (

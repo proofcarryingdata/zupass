@@ -152,7 +152,7 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          <Route path="sync-existing" element={<SyncExistingScreen />} />
+          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
           <Route
             path="verify"
             element={
@@ -196,12 +196,12 @@ async function loadInitialState(): Promise<AppState> {
   if (userInvalid) {
     modal = "invalid-participant";
   } else if (
-    // If on Zupass legacy login, ask user to save their Master Password
+    // If on Zupass legacy login, ask user to save their Sync Key
     appConfig.isZuzalu &&
     self != null &&
     !localStorage["savedSyncKey"]
   ) {
-    console.log("Asking existing user to save their Master Password...");
+    console.log("Asking existing user to save their Sync Key...");
     modal = "save-sync";
   }
 

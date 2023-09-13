@@ -300,7 +300,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Save PCDs to E2EE storage.
   await uploadStorage();
 
-  // If on Zupass legacy login, ask user to save their Master Password
+  // If on Zupass legacy login, ask user to save their Sync Key
   if (appConfig.isZuzalu) {
     update({ modal: "save-sync" });
   }
