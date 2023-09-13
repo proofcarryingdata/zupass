@@ -29,7 +29,7 @@ export function SaveSyncModal() {
       </TextCenter>
       <Spacer h={32} />
       <TextCenter>
-        <strong>Please save your Master Password.</strong> This key secures your
+        <strong>Please save your Sync Key.</strong> This key secures your
         passport and lets you log in on different devices.
       </TextCenter>
       <Spacer h={32} />
@@ -39,7 +39,7 @@ export function SaveSyncModal() {
       </KeyLine>
       <Spacer h={64} />
       <CenterColumn w={256}>
-        <Button onClick={close}>I've Saved My Master Password</Button>
+        <Button onClick={close}>I've Saved My Sync Key</Button>
       </CenterColumn>
     </Wrap>
   );

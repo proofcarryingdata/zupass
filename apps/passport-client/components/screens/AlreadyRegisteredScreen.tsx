@@ -147,9 +147,15 @@ export function AlreadyRegisteredScreen() {
               <CenterColumn w={280}>
                 <BigInput value={email} disabled={true} />
                 <Spacer h={8} />
+                {/*
+                 * If a user has a `salt` field, then that means they chose their own password
+                 * and we saved the randomly generated salt for them. This is default true for
+                 * new PCDPass accounts, but false for Zupass accounts, where we give them a
+                 * Sync Key instead.
+                 */}
                 {!salt && (
                   <Button onClick={onLoginWithMasterPasswordClick}>
-                    Login with Master Password
+                    Login with Sync Key
                   </Button>
                 )}
                 {salt && (
