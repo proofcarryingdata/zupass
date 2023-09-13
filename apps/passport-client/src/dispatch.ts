@@ -221,6 +221,9 @@ async function login(
     const salt = await crypto.generateSalt();
     const encryptionKey = await crypto.argon2(password, salt, 32);
     await saveEncryptionKey(encryptionKey);
+    update({
+      encryptionKey
+    })
 
     const res = await submitNewUser(
       email,
