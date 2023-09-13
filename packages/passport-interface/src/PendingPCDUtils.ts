@@ -30,13 +30,13 @@ export enum PendingPCDStatus {
   PROVING = "proving",
   COMPLETE = "complete",
   ERROR = "error",
-  NONE = "none",
+  NONE = "none"
 }
 
 export function isSettledPendingPCDStatus(status: PendingPCDStatus) {
   return [
     PendingPCDStatus.ERROR,
     PendingPCDStatus.COMPLETE,
-    PendingPCDStatus.NONE,
+    PendingPCDStatus.NONE
   ].includes(status);
 }

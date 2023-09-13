@@ -176,10 +176,14 @@ export interface DisplayOptions {
   displayName?: string;
 }
 
-/**
- * Every field of the object passed into the {@link PCDPackage.prove} function
- * must conform to this interface.
- */
+export type PCDTypeNameOf<T> = T extends PCDPackage<any, any, any, any>
+  ? T["name"]
+  : T;
+export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
+  type: T;
+  specificType: U;
+}
+
 export interface Argument<
   TypeName extends ArgumentTypeName,
   ValueType = unknown

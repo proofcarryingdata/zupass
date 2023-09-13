@@ -10,6 +10,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -49,7 +50,8 @@ export class ProvingService {
     RSAPCDPackage,
     RSATicketPCDPackage,
     EdDSAPCDPackage,
-    EdDSATicketPCDPackage
+    EdDSATicketPCDPackage,
+    RSAImagePCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {

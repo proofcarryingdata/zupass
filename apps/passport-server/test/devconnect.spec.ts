@@ -6,9 +6,15 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
-  ISSUANCE_STRING,
-  IssuedPCDsResponse
+  FeedResponse,
+  ISSUANCE_STRING
 } from "@pcd/passport-interface";
+import {
+  AppendToFolderAction,
+  PCDActionType,
+  ReplaceInFolderAction,
+  isReplaceInFolderAction
+} from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -65,6 +71,7 @@ import {
 } from "./issuance/issuance";
 import {
   DevconnectPretixDataMocker,
+  IMockDevconnectPretixData,
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
@@ -88,9 +95,15 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
   let server: SetupServer;
+  let backupData: IMockDevconnectPretixData;
+
+  this.beforeEach(async () => {
+    backupData = mocker.backup();
+  });
 
   this.afterEach(async () => {
     server.resetHandlers();
+    mocker.restore(backupData);
   });
 
   this.beforeAll(async () => {
@@ -132,7 +145,8 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    server = getDevconnectMockPretixAPIServer(mocker.get());
+    const orgUrls = mocker.get().organizersByOrgUrl.keys();
+    server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
@@ -955,22 +969,18 @@ describe("devconnect functionality", function () {
         identity,
         ISSUANCE_STRING
       );
-      const responseBody = response.body as IssuedPCDsResponse;
+      const responseBody = response.body as FeedResponse;
+
       expect(responseBody.actions.length).to.eq(3);
+      const action = responseBody.actions[2] as AppendToFolderAction;
 
-      const devconnectAction = responseBody.actions[2];
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.folder).to.eq("Devconnect/Event A");
 
-      // the name of this event is left over from a previous test
-      expect(devconnectAction.folder).to.eq("Devconnect/Won't sync to this");
+      expect(Array.isArray(action.pcds)).to.eq(true);
+      expect(action.pcds.length).to.eq(6);
 
-      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-      // originally there were 6 orders in the mock data
-      // but one was deleted in an earlier test
-      // since we don't fetch tickets with is_deleted = true
-      // there will only be 5 PCDs
-      expect(devconnectAction.pcds.length).to.eq(5);
-
-      const ticketPCD = devconnectAction.pcds[0];
+      const ticketPCD = action.pcds[0];
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
@@ -994,10 +1004,10 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const response1 = expressResponse1.body as IssuedPCDsResponse;
-    const response2 = expressResponse2.body as IssuedPCDsResponse;
-    const action1 = response1.actions[0];
-    const action2 = response2.actions[0];
+    const response1 = expressResponse1.body as FeedResponse;
+    const response2 = expressResponse2.body as FeedResponse;
+    const action1 = response1.actions[0] as AppendToFolderAction;
+    const action2 = response2.actions[0] as AppendToFolderAction;
 
     const pcds1 = await Promise.all(
       action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
@@ -1040,10 +1050,11 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const responseBody = response.body as IssuedPCDsResponse;
+    const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2];
 
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+    expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
     expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
     expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
@@ -1082,10 +1093,10 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const responseBody = response.body as IssuedPCDsResponse;
+    const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2];
-    expect(devconnectAction.folder).to.eq("Devconnect/New name");
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+    expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
     expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
     const ticketPCD = devconnectAction.pcds[0];
@@ -1127,11 +1138,10 @@ describe("devconnect functionality", function () {
       identity,
       ISSUANCE_STRING
     );
-    const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
-    expect(issueResponseBody.actions.length).to.eq(3);
-    const devconnectAction = issueResponseBody.actions[2];
-    const serializedTicket = devconnectAction
-      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    const issueResponseBody = issueResponse.body as FeedResponse;
+    const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+
+    const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
@@ -1240,11 +1250,15 @@ describe("devconnect functionality", function () {
         identity,
         "asdf"
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
+
+      const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
+
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 
@@ -1256,11 +1270,15 @@ describe("devconnect functionality", function () {
         new Identity(),
         ISSUANCE_STRING
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
+
+      const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
+
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 

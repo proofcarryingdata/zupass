@@ -1,7 +1,8 @@
 import {
   CheckInRequest,
   CheckTicketRequest,
-  IssuedPCDsRequest
+  FeedRequest,
+  ListFeedsRequest
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
@@ -44,15 +45,30 @@ export function initPCDIssuanceRoutes(
     }
   });
 
-  app.post("/issue/", async (req: Request, res: Response) => {
+  app.post("/feeds", async (req, res) => {
     try {
       if (!issuanceService) {
         throw new Error("issuance service not instantiated");
       }
 
-      const request = req.body as IssuedPCDsRequest;
-      const response = await issuanceService.handleIssueRequest(request);
-      res.status(200).json(response);
+      const request = req.body as FeedRequest;
+
+      res.json(await issuanceService.handleFeedRequest(request));
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/feeds", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+
+      const request = req.body as ListFeedsRequest;
+      res.json(await issuanceService.handleListFeedsRequest(request));
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

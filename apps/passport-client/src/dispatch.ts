@@ -1,5 +1,6 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  applyActions,
   isSyncedEncryptedStorageV2,
   SyncedEncryptedStorage,
   User
@@ -31,11 +32,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
-import {
-  downloadStorage,
-  loadIssuedPCDs,
-  uploadStorage
-} from "./useSyncE2EEStorage";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -487,13 +484,11 @@ async function sync(state: AppState, update: ZuUpdate) {
     });
 
     try {
-      const response = await loadIssuedPCDs(state);
-      for (const action of response.actions) {
-        const deserialized = await state.pcds.deserializeAll(action.pcds);
-        state.pcds.replacePCDsInFolder(action.folder, deserialized);
-      }
-
+      console.log("[SYNC] loading issued pcds");
+      const actions = await state.subscriptions.pollSubscriptions();
+      await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
+      console.log("[SYNC] loaded and saved issued pcds");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }

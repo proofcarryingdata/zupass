@@ -1,8 +1,10 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EncryptedPacket } from "@pcd/passport-crypto";
-import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { PCDAction } from "@pcd/pcd-collection";
+import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
+import { Feed } from "./SubscriptionManager";
 
 export interface ProveRequest<T extends PCDPackage = PCDPackage> {
   pcdType: string;
@@ -141,3 +143,18 @@ export interface CheckInRequest {
 }
 
 export type CheckInResponse = CheckTicketResponse;
+
+export interface ListFeedsRequest {}
+
+export interface ListFeedsResponse {
+  feeds: Feed[];
+}
+
+export interface FeedRequest<T extends PCDPackage = PCDPackage> {
+  feedId: string;
+  pcd?: SerializedPCD<PCDOf<T>>;
+}
+
+export interface FeedResponse {
+  actions: PCDAction[];
+}

@@ -3,6 +3,7 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
@@ -17,11 +18,13 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
+import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
+import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
   StateContext,
@@ -34,8 +37,10 @@ import {
   loadIdentity,
   loadPCDs,
   loadSelf,
+  loadSubscriptions,
   loadUserInvalid,
-  saveIdentity
+  saveIdentity,
+  saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
@@ -159,6 +164,8 @@ function RouterImpl() {
             }
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
+          <Route path="subscriptions" element={<SubscriptionsScreen />} />
+          <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -178,6 +185,11 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
+  const subscriptions = await loadSubscriptions();
+
+  await addDefaultSubscriptions(identity, subscriptions);
+
+  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   let modal = "" as AppState["modal"];
 
@@ -199,7 +211,8 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    userInvalid: userInvalid
+    userInvalid: userInvalid,
+    subscriptions
   };
 }
 

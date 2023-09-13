@@ -23,7 +23,8 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   SUPPRESS_LOGGING: "true",
   SERVER_RSA_PRIVATE_KEY_BASE64: undefined,
   SERVER_EDDSA_PRIVATE_KEY: undefined,
-  PRETIX_SYNC_DISABLED: undefined
+  PRETIX_SYNC_DISABLED: undefined,
+  PASSPORT_CLIENT_URL: "http://localhost:3000"
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({

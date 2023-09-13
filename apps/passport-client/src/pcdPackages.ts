@@ -5,6 +5,7 @@ import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -95,6 +96,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     RSATicketPCDPackage,
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
-    ZKEdDSATicketPCDPackage
+    ZKEdDSATicketPCDPackage,
+    RSAImagePCDPackage
   ];
 }
