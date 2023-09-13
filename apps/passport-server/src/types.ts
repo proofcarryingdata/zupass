@@ -81,4 +81,5 @@ export interface EnvironmentVariables {
   SERVER_EDDSA_PRIVATE_KEY?: string;
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_PRIVATE_CHAT_ID?: string;
+  PASSPORT_CLIENT_URL?: string;
 }

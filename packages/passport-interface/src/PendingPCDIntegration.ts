@@ -24,7 +24,7 @@ export function usePendingPCD(
         const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
 
         const request: StatusRequest = {
-          hash: pendingPCD.hash,
+          hash: pendingPCD.hash
         };
 
         fetch(`${passportURL}pcds/status`, {
@@ -32,8 +32,8 @@ export function usePendingPCD(
           body: JSON.stringify(request),
           headers: {
             "Content-Type": "application/json",
-            Accept: "application/json",
-          },
+            Accept: "application/json"
+          }
         })
           .then((response) => response.json())
           .then((data: StatusResponse) => {

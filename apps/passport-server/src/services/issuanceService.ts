@@ -11,12 +11,24 @@ import {
   CheckInResponse,
   CheckTicketRequest,
   CheckTicketResponse,
+  FeedHost,
+  FeedRequest,
+  FeedResponse,
   ISSUANCE_STRING,
-  IssuedPCDsRequest,
-  IssuedPCDsResponse
+  ListFeedsRequest,
+  ListFeedsResponse,
+  PCDPassFeedIds
 } from "@pcd/passport-interface";
-import { joinPath } from "@pcd/pcd-collection";
+import {
+  AppendToFolderAction,
+  AppendToFolderPermission,
+  PCDActionType,
+  PCDPermissionType,
+  ReplaceInFolderPermission,
+  joinPath
+} from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -36,6 +48,7 @@ import {
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { timeBasedId } from "../util/timeBasedId";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
@@ -44,6 +57,7 @@ export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
+  private readonly feedHost: FeedHost;
 
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
@@ -64,6 +78,131 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
+
+    this.feedHost = new FeedHost([
+      {
+        handleRequest: async (
+          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<FeedResponse> => {
+          const pcds = await this.issueDevconnectPretixTicketPCDs(
+            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+          );
+          const ticketsByEvent = _.groupBy(
+            pcds,
+            (pcd) => pcd.claim.ticket.eventName
+          );
+
+          const devconnectTickets = Object.entries(ticketsByEvent).filter(
+            ([eventName]) => eventName !== "SBC SRW"
+          );
+
+          const srwTickets = Object.entries(ticketsByEvent).filter(
+            ([eventName]) => eventName === "SBC SRW"
+          );
+
+          const actions = [];
+
+          // clear out old pcds if they were there
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "SBC SRW",
+            pcds: []
+          });
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "Devconnect",
+            pcds: []
+          });
+
+          actions.push(
+            ...(await Promise.all(
+              devconnectTickets.map(async ([eventName, tickets]) => ({
+                type: PCDActionType.ReplaceInFolder,
+                folder: joinPath("Devconnect", eventName),
+                pcds: await Promise.all(
+                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                )
+              }))
+            ))
+          );
+
+          actions.push(
+            ...(await Promise.all(
+              srwTickets.map(async ([_, tickets]) => ({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "SBC SRW",
+                pcds: await Promise.all(
+                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                )
+              }))
+            ))
+          );
+
+          return { actions };
+        },
+        feed: {
+          id: PCDPassFeedIds.Devconnect,
+          name: "Devconnect Tickets",
+          description: "Get your Devconnect tickets here!",
+          inputPCDType: EdDSATicketPCDPackage.name,
+          partialArgs: undefined,
+          permissions: [
+            {
+              folder: "Devconnect",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "Devconnect",
+              type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission,
+            {
+              folder: "SBC SRW",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "SBC SRW",
+              type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission
+          ]
+        }
+      },
+      {
+        handleRequest: async (_req: FeedRequest): Promise<FeedResponse> => {
+          return {
+            actions: [
+              {
+                pcds: await this.issueFrogPCDs(),
+                folder: "Frogs",
+                type: PCDActionType.AppendToFolder
+              } as AppendToFolderAction
+            ]
+          };
+        },
+        feed: {
+          id: PCDPassFeedIds.Frogs,
+          name: "Frogs",
+          description: "Get your Frogs here!",
+          inputPCDType: undefined,
+          partialArgs: undefined,
+          permissions: [
+            {
+              folder: "Frogs",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission
+          ]
+        }
+      }
+    ]);
+  }
+
+  public async handleListFeedsRequest(
+    request: ListFeedsRequest
+  ): Promise<ListFeedsResponse> {
+    return this.feedHost.handleListFeedsRequest(request);
+  }
+
+  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
+    return this.feedHost.handleFeedRequest(request);
   }
 
   public getRSAPublicKey(): string {
@@ -72,51 +211,6 @@ export class IssuanceService {
 
   public getEdDSAPublicKey(): Promise<EDdSAPublicKey> {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
-  }
-
-  public async handleIssueRequest(
-    request: IssuedPCDsRequest
-  ): Promise<IssuedPCDsResponse> {
-    const pcds = await this.issueDevconnectPretixTicketPCDs(request);
-    const ticketsByEvent = _.groupBy(pcds, (pcd) => pcd.claim.ticket.eventName);
-
-    const devconnectTickets = Object.entries(ticketsByEvent).filter(
-      ([eventName]) => eventName !== "SBC SRW"
-    );
-
-    const srwTickets = Object.entries(ticketsByEvent).filter(
-      ([eventName]) => eventName === "SBC SRW"
-    );
-
-    const actions = [];
-
-    // clear out old pcds if they were there
-    actions.push({ folder: "SBC SRW", pcds: [] });
-    actions.push({ folder: "Devconnect", pcds: [] });
-
-    actions.push(
-      ...(await Promise.all(
-        devconnectTickets.map(async ([eventName, tickets]) => ({
-          folder: joinPath("Devconnect", eventName),
-          pcds: await Promise.all(
-            tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-          )
-        }))
-      ))
-    );
-
-    actions.push(
-      ...(await Promise.all(
-        srwTickets.map(async ([_, tickets]) => ({
-          folder: "SBC SRW",
-          pcds: await Promise.all(
-            tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-          )
-        }))
-      ))
-    );
-
-    return { actions };
   }
 
   public async handleCheckInRequest(
@@ -317,13 +411,13 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    request: IssuedPCDsRequest
+    credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
-        const commitmentRow = await this.checkUserExists(request.userProof);
+        const commitmentRow = await this.checkUserExists(credential);
         const email = commitmentRow?.email;
         if (commitmentRow) {
           span?.setAttribute(
@@ -485,6 +579,50 @@ export class IssuanceService {
       isConsumed: t.is_consumed,
       isRevoked: t.is_deleted
     } satisfies ITicketData;
+  }
+
+  private async issueFrogPCDs(): Promise<SerializedPCD[]> {
+    const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
+    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+
+    if (!serverUrl) {
+      logger("[ISSUE] can't issue frogs - unaware of the client location");
+      return [];
+    }
+
+    const frogPaths: string[] = [
+      "images/frogs/frog.jpeg",
+      "images/frogs/frog2.jpeg",
+      "images/frogs/frog3.jpeg",
+      "images/frogs/frog4.jpeg"
+    ];
+
+    const randomFrogPath = _.sample(frogPaths);
+
+    const id = timeBasedId(FROG_INTERVAL_MS) + "";
+
+    const frogPCD = await RSAImagePCDPackage.serialize(
+      await RSAImagePCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: this.exportedRSAPrivateKey
+        },
+        url: {
+          argumentType: ArgumentTypeName.String,
+          value: serverUrl + "/" + randomFrogPath
+        },
+        title: {
+          argumentType: ArgumentTypeName.String,
+          value: "frog " + id
+        },
+        id: {
+          argumentType: ArgumentTypeName.String,
+          value: id
+        }
+      })
+    );
+
+    return [frogPCD];
   }
 }
 

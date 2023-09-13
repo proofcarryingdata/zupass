@@ -1,4 +1,5 @@
-import { User } from "@pcd/passport-interface";
+import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
+import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { getPackages } from "./pcdPackages";
@@ -24,6 +25,19 @@ export async function loadPCDs(): Promise<PCDCollection> {
   return await PCDCollection.deserialize(
     await getPackages(),
     serializedCollection ?? "{}"
+  );
+}
+
+export async function saveSubscriptions(
+  subscriptions: FeedSubscriptionManager
+): Promise<void> {
+  window.localStorage["subscriptions"] = subscriptions.serialize();
+}
+
+export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
+  return FeedSubscriptionManager.deserialize(
+    new NetworkFeedApi(),
+    window.localStorage["subscriptions"] ?? "{}"
   );
 }
 
