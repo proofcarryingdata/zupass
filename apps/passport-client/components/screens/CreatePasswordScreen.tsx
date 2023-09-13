@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { verifyTokenServer } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { checkPasswordStrength } from "../../src/password";
 import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
-  BigInput,
   Button,
   CenterColumn,
   H1,
@@ -14,8 +14,11 @@ import {
   TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
-import { icons } from "../icons";
+import { ErrorMessage } from "../core/error";
 import { AppContainer } from "../shared/AppContainer";
+import { SetPasswordInput } from "../shared/SetPasswordInput";
+
+const PASSWORD_MINIMUM_LENGTH = 8;
 
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();
@@ -23,6 +26,7 @@ export function CreatePasswordScreen() {
   const email = query?.get("email");
   const token = query?.get("token");
   const [revealPassword, setRevealPassword] = useState(false);
+  const [passwordError, setErrorMessage] = useState("");
 
   useEffect(() => {
     async function checkIfShouldRedirect() {
@@ -57,34 +61,18 @@ export function CreatePasswordScreen() {
   }, [self]);
 
   const onCreatePassword = async () => {
-    // TODO: Password strength
     if (password === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Password empty",
-          message: "Please enter a password",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Please enter a password.");
+    } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
+      setErrorMessage(
+        `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
+      );
+    } else if (!checkPasswordStrength(password)) {
+      setErrorMessage("Password is too weak.");
     } else if (confirmPassword === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Confirm password",
-          message: "Please confirm your password",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Please confirm your password.");
     } else if (password !== confirmPassword) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Confirmation failed",
-          message: "Your passwords do not match",
-          dismissToCurrentPage: true
-        }
-      });
+      setErrorMessage("Your passwords do not match.");
     } else {
       dispatch({
         type: "login",
@@ -111,32 +99,25 @@ export function CreatePasswordScreen() {
           <form onSubmit={onCreatePassword}>
             {/* For password manager autofill */}
             <input hidden value={email} />
-            <PasswordInputContainer>
-              <BigInput
-                autoFocus
-                type={revealPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <ShowHidePasswordIconContainer>
-                <ShowHidePasswordIcon
-                  draggable="false"
-                  src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
-                  width={32}
-                  height={32}
-                  onClick={() => setRevealPassword((curr) => !curr)}
-                />
-              </ShowHidePasswordIconContainer>
-            </PasswordInputContainer>
-            <Spacer h={8} />
-            <BigInput
-              type={revealPassword ? "text" : "password"}
-              value={confirmPassword}
-              placeholder="Confirm password"
-              onChange={(e) => setConfirmPassword(e.target.value)}
+            <SetPasswordInput
+              value={password}
+              setValue={setPassword}
+              placeholder="Password"
+              autoFocus
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
             />
-            <Spacer h={24} />
+            <Spacer h={8} />
+            <SetPasswordInput
+              value={confirmPassword}
+              setValue={setConfirmPassword}
+              placeholder="Confirm password"
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
+            />
+            <Spacer h={8} />
+            {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
+            <Spacer h={16} />
             <Button style="primary" type="submit">
               Continue
             </Button>
@@ -171,22 +152,4 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
-`;
-
-const PasswordInputContainer = styled.div`
-  width: 100%;
-  position: relative;
-`;
-
-const ShowHidePasswordIconContainer = styled.div`
-  position: absolute;
-  right: 12px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  top: 0;
-`;
-
-const ShowHidePasswordIcon = styled.img`
-  cursor: pointer;
 `;

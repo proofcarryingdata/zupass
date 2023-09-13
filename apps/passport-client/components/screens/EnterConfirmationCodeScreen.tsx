@@ -85,7 +85,7 @@ export function EnterConfirmationCodeScreen() {
             ) : (
               <>
                 <Spacer h={8} />
-                <Button onClick={onCreateClick}>Login</Button>
+                <Button onClick={onCreateClick}>Continue</Button>
                 <Spacer h={8} />
                 <Button onClick={onCancelClick}>Cancel</Button>
               </>
