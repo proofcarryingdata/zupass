@@ -144,7 +144,7 @@ import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
 import { constructPassportPcdGetRequestUrl, openPassportPopup } from "@pcd/passport-interface"
 import { ArgumentTypeName } from "@pcd/pcd-types"
 
-const url = constructPassportPcdGetRequestUrl(
+const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
     process.env.PCDPASS_URL as string,
     window.location.origin + "/popup",
     EdDSAPCDPackage.name,
