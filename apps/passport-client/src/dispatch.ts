@@ -223,7 +223,7 @@ async function login(
     await saveEncryptionKey(encryptionKey);
     update({
       encryptionKey
-    })
+    });
 
     const res = await submitNewUser(
       email,
