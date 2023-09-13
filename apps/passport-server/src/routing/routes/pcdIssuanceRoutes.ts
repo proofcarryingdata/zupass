@@ -53,6 +53,10 @@ export function initPCDIssuanceRoutes(
       }
 
       const request = req.body as FeedRequest;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3a793b3b (Generic issuance (#516))
       res.json(await issuanceService.handleFeedRequest(request));
     } catch (e) {
       rollbarService?.reportError(e);
