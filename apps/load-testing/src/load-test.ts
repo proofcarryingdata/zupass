@@ -1,4 +1,4 @@
-import { passportEncrypt, PCDCrypto } from "@pcd/passport-crypto";
+import { passportEncrypt } from "@pcd/passport-crypto";
 import { ISSUANCE_STRING, IssuedPCDsRequest } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -14,12 +14,24 @@ import {
   LoadTestRuntimeData
 } from "./setup";
 
-export interface SingleUserData {}
+export interface SingleUserData {
+  encryptionKey: string;
+  identity: Identity;
+  email: string;
+}
 
 async function dataToSingleUserDatas(
   data: LoadTestData
 ): Promise<SingleUserData[]> {
-  const datas = [];
+  let datas: SingleUserData[] = data.setupData.users.map(
+    (u): SingleUserData => {
+      return {
+        email: u.email,
+        encryptionKey: u.encryptionKey,
+        identity: new Identity(u.serializedIdentity)
+      };
+    }
+  );
 
   return datas;
 }
@@ -28,19 +40,15 @@ export async function testSingleUser(
   runtimeData: LoadTestRuntimeData,
   data: SingleUserData
 ) {
-  const email = "ivan" + Math.random() + "@0xparc.org";
-  const identity = new Identity();
-  const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
   const code: string | undefined = await requestLoginCode(
-    email,
-    identity.commitment.toString(),
+    data.email,
+    data.identity.commitment.toString(),
     true
   );
   const newUserResponse = await submitNewUser(
-    email,
+    data.email,
     code,
-    identity.commitment.toString()
+    data.identity.commitment.toString()
   );
   const user = await newUserResponse.json();
   console.log("logged in as user", user);
@@ -52,7 +60,7 @@ export async function testSingleUser(
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity: identity
+              identity: data.identity
             })
           )
         },
@@ -74,10 +82,10 @@ export async function testSingleUser(
       JSON.stringify({
         a: "b"
       }),
-      encryptionKey
+      data.encryptionKey
     );
 
-    await uploadEncryptedStorage(encryptionKey, encryptedStorage);
+    await uploadEncryptedStorage(data.encryptionKey, encryptedStorage);
     console.log("saved e2ee data");
   };
 

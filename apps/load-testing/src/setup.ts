@@ -1,3 +1,5 @@
+import { PCDCrypto } from "@pcd/passport-crypto";
+import { Identity } from "@semaphore-protocol/identity";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -7,11 +9,20 @@ export interface LoadTestConfig {
   userCount: number;
 }
 
-export interface LoadTestSetupData {
-  config: LoadTestConfig;
+export interface SingleUserConfig {
+  email: string;
+  encryptionKey: string;
+  serializedIdentity: string;
 }
 
-export interface LoadTestRuntimeData {}
+export interface LoadTestSetupData {
+  config: LoadTestConfig;
+  users: SingleUserConfig[];
+}
+
+export interface LoadTestRuntimeData {
+  crypto: PCDCrypto;
+}
 
 export interface LoadTestData {
   setupData: LoadTestSetupData;
@@ -22,8 +33,21 @@ async function setupLoadTestData(
   config: LoadTestConfig,
   runtimeData: LoadTestRuntimeData
 ): Promise<LoadTestSetupData> {
+  const users: SingleUserConfig[] = [];
+
+  for (let i = 0; i < config.userCount; i++) {
+    const identity = new Identity();
+
+    users.push({
+      email: `ivan+${Math.random()}@0xparc.org`,
+      encryptionKey: runtimeData.crypto.generateRandomKey(),
+      serializedIdentity: identity.toString()
+    });
+  }
+
   const data: LoadTestSetupData = {
-    config
+    config,
+    users
   };
 
   return data;
@@ -51,7 +75,9 @@ async function loadLoadTestData(
 }
 
 async function setupRuntimeData(): Promise<LoadTestRuntimeData> {
-  return {};
+  return {
+    crypto: await PCDCrypto.newInstance()
+  };
 }
 
 export async function getLoadTestData(
