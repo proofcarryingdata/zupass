@@ -11,7 +11,7 @@ html {
   --accent-lite: #ffe5a4;
   --danger: #a95940;
   --danger-lite: #b36851;
-  --danger-bright: #df7f62;
+  --danger-bright: #fc9575;
   --danger-rgb: 169, 89, 64;
   --white: #ffffff;
   --white-rgb: 255, 255, 255;
@@ -20,7 +20,10 @@ html {
 
   background: var(--bg-dark-primary);
   color: var(--white);
-  font: 16px PlexSans, system-ui, sans-serif;
+  font:
+    16px PlexSans,
+    system-ui,
+    sans-serif;
   line-height: 1.5;
 }
 
