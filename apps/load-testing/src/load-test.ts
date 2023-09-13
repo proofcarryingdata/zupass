@@ -13,6 +13,7 @@ export interface SingleUserData {
   encryptionKey: string;
   identity: Identity;
   email: string;
+  salt: string;
 }
 
 async function dataToSingleUserDatas(
@@ -23,7 +24,8 @@ async function dataToSingleUserDatas(
       return {
         email: u.email,
         encryptionKey: u.encryptionKey,
-        identity: new Identity(u.serializedIdentity)
+        identity: new Identity(u.serializedIdentity),
+        salt: u.salt
       };
     }
   );
@@ -43,7 +45,8 @@ export async function testSingleUser(
   const newUserResponse = await submitNewUser(
     data.email,
     code,
-    data.identity.commitment.toString()
+    data.identity.commitment.toString(),
+    data.salt
   );
   const user = await newUserResponse.json();
   console.log("logged in as user", user);

@@ -21,9 +21,10 @@ export async function requestConfirmationEmail(
 export async function submitNewUser(
   email: string,
   token: string,
-  identityCommitment: string
+  identityCommitment: string,
+  salt: string
 ): Promise<Response> {
-  return submitNewGenericUser(email, token, identityCommitment);
+  return submitNewGenericUser(email, token, identityCommitment, salt);
 }
 
 export async function requestGenericConfirmationEmail(
@@ -44,14 +45,16 @@ export async function requestGenericConfirmationEmail(
 export async function submitNewGenericUser(
   email: string,
   token: string,
-  identityCommitment: string
+  identityCommitment: string,
+  salt: string
 ): Promise<Response> {
   // Verify the token, save the participant to local storage, redirect to
   // the home page.
   const query = new URLSearchParams({
     email,
     token,
-    commitment: identityCommitment
+    commitment: identityCommitment,
+    salt: salt
   }).toString();
   const loginUrl = `${SERVER_URL}/pcdpass/new-participant?${query}`;
 
