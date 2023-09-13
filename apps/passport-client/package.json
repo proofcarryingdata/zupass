@@ -45,7 +45,8 @@
     "react-qr-reader": "^3.0.0-beta-1",
     "react-router-dom": "^6.9.0",
     "rollbar": "^2.26.1",
-    "styled-components": "^5.3.6"
+    "styled-components": "^5.3.6",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -62,6 +63,7 @@
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
+    "@types/zxcvbn": "^4.4.2",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",
