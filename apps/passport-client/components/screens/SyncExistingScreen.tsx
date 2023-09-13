@@ -56,7 +56,7 @@ export function SyncExistingScreen() {
           error: {
             title: "Failed to Log In",
             message:
-              "Couldn't login with this Master Password. If you've lost access to your Master Password" +
+              "Couldn't login with this Sync Key. If you've lost access to your Sync Key" +
               " you can reset your account from the homepage of this website.",
             dismissToCurrentPage: true
           }
@@ -102,11 +102,11 @@ export function SyncExistingScreen() {
       >
         <Spacer h={64} />
         <TextCenter>
-          <H2>LOGIN WITH MASTER PASSWORD</H2>
+          <H2>LOGIN WITH SYNC KEY</H2>
           <Spacer h={32} />
           <TextCenter>
             If you've already registered, you can sync with your other device
-            here using your Master Password. You can find your Master Password
+            here using your Sync Key. You can find your Sync Key
             on your existing device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
@@ -114,7 +114,7 @@ export function SyncExistingScreen() {
             <BigInput
               disabled={isLoading}
               type="text"
-              placeholder="Master Password"
+              placeholder="Sync Key"
               value={syncKey}
               onChange={useCallback(
                 (e: React.ChangeEvent<HTMLInputElement>) => {

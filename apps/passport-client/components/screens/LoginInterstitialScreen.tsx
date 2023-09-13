@@ -1,5 +1,6 @@
 import { Spacer } from "@pcd/passport-ui";
 import { useEffect, useLayoutEffect } from "react";
+import { appConfig } from "../../src/appConfig";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BackgroundGlow, CenterColumn } from "../core";
@@ -12,7 +13,7 @@ export function LoginInterstitialScreen() {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   useEffect(() => {
-    if (loadedIssuedPCDs) {
+    if (loadedIssuedPCDs || appConfig.isZuzalu) {
       window.location.href = "#/";
     }
   }, [loadedIssuedPCDs]);

@@ -43,7 +43,7 @@ export function SettingsModal() {
         {appConfig.isZuzalu && (
           <>
             <Button onClick={copySyncKey}>
-              {justCopied ? "Copied" : "Copy Master Password"}
+              {justCopied ? "Copied" : "Copy Sync Key"}
             </Button>
             <Spacer h={16} />
           </>
