@@ -28,6 +28,8 @@
     "@pcd/semaphore-identity-pcd": "0.6.2",
     "@pcd/webauthn-pcd": "0.6.2",
     "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
+    "@pcd/rsa-image-pcd": "0.0.1",
+    "@pcd/rsa-ticket-pcd": "0.1.1",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",

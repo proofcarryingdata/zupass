@@ -1,4 +1,5 @@
-import { User } from "@pcd/passport-interface";
+import { wrap, Wrapper } from "@pcd/emitter";
+import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
@@ -108,4 +109,19 @@ export function useQuery(): URLSearchParams | undefined {
     console.log("failed to parse query string params", e);
     return undefined;
   }
+}
+
+export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
+  const subs = useSelector<FeedSubscriptionManager>((s) => s.subscriptions, []);
+  const [wrappedSubs, setWrappedSubs] = useState<
+    Wrapper<FeedSubscriptionManager>
+  >(() => wrap(subs));
+
+  useEffect(() => {
+    return subs.updatedEmitter.listen(() => {
+      setWrappedSubs(wrap(subs));
+    });
+  }, [subs]);
+
+  return wrappedSubs;
 }

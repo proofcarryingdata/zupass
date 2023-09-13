@@ -1,5 +1,9 @@
 # consumer-client
 
+## 0.0.18
+
+Removed nextjs, replaced with single-page app architecture.
+
 ## 0.0.17
 
 ### Patch Changes

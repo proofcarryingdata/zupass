@@ -1,19 +1,21 @@
 import { RestRequest, rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
-import { IMockDevconnectPretixData } from "./devconnectPretixDataMocker";
+import { DevconnectPretixDataMocker } from "./devconnectPretixDataMocker";
 
 function getAuthToken(req: RestRequest): string | undefined {
   return req.headers.get("Authorization")?.split(" ")[1];
 }
 
 export function getDevconnectMockPretixAPIServer(
-  mockData: IMockDevconnectPretixData
+  orgs: IterableIterator<string>,
+  mocker: DevconnectPretixDataMocker
 ): SetupServer {
   const handlers = [];
 
-  for (const [orgUrl, org] of mockData.organizersByOrgUrl) {
+  for (const orgUrl of orgs) {
     handlers.push(
       rest.get(orgUrl + "/events", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -25,6 +27,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.get(orgUrl + "/events/:event", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -38,6 +41,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -48,6 +52,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.get(orgUrl + "/events/:event/orders", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -59,6 +64,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.get(orgUrl + "/events/:event/settings", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -69,6 +75,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.get(orgUrl + "/events/:event/checkinlists", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
@@ -80,6 +87,7 @@ export function getDevconnectMockPretixAPIServer(
 
     handlers.push(
       rest.post(orgUrl + "/checkinrpc/redeem", async (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
         if (getAuthToken(req) !== org.token) {
           return res(ctx.status(403), ctx.text("Invalid token"));
         }
