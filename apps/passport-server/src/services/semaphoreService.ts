@@ -88,7 +88,8 @@ export class SemaphoreService {
     const commitment = await fetchCommitmentByUuid(this.dbPool, uuid);
 
     if (!commitment) {
-      throw new Error("no user with that email exists");
+      logger("[SEMA] no user with that email exists");
+      return null;
     }
 
     const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
@@ -126,7 +127,8 @@ export class SemaphoreService {
     const commitment = await fetchCommitment(this.dbPool, email);
 
     if (!commitment) {
-      throw new Error("no user with that email exists");
+      logger("[SEMA] no user with that email exists");
+      return null;
     }
 
     const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
