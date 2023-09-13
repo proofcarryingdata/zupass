@@ -7,19 +7,27 @@ import { Identity } from "@semaphore-protocol/identity";
 import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { requestLoginCode, submitNewUser } from "./api/user";
-import { getLoadTestData, LoadTestSetupData } from "./setup";
+import {
+  getLoadTestData,
+  LoadTestConfig,
+  LoadTestData,
+  LoadTestRuntimeData
+} from "./setup";
 
 export interface SingleUserData {}
 
 async function dataToSingleUserDatas(
-  data: LoadTestSetupData
+  data: LoadTestData
 ): Promise<SingleUserData[]> {
   const datas = [];
 
   return datas;
 }
 
-export async function testSingleUser(data: SingleUserData) {
+export async function testSingleUser(
+  runtimeData: LoadTestRuntimeData,
+  data: SingleUserData
+) {
   const email = "ivan" + Math.random() + "@0xparc.org";
   const identity = new Identity();
   const crypto = await PCDCrypto.newInstance();
@@ -84,13 +92,20 @@ export async function runLoadTest() {
     zkeyFilePath: "../passport-server/public/semaphore-artifacts/16.zkey"
   });
 
-  const loadTestData = await getLoadTestData();
+  const config: LoadTestConfig = {
+    userCount: 5
+  };
+
+  const loadTestData = await getLoadTestData(config);
+
+  console.log(loadTestData);
+
   const singleUserDatas = await dataToSingleUserDatas(loadTestData);
 
-  for (const data of singleUserDatas) {
+  for (const singleUserData of singleUserDatas) {
     setTimeout(
       () => {
-        testSingleUser(data);
+        testSingleUser(loadTestData.runtimeData, singleUserData);
       },
       Math.random() * 1000 * 5
     );
