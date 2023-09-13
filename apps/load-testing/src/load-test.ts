@@ -7,8 +7,19 @@ import { Identity } from "@semaphore-protocol/identity";
 import { uploadEncryptedStorage } from "./api/endToEndEncryptionApi";
 import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { requestLoginCode, submitNewUser } from "./api/user";
+import { getLoadTestData, LoadTestSetupData } from "./setup";
 
-async function testSingleUser() {
+export interface SingleUserData {}
+
+async function dataToSingleUserDatas(
+  data: LoadTestSetupData
+): Promise<SingleUserData[]> {
+  const datas = [];
+
+  return datas;
+}
+
+export async function testSingleUser(data: SingleUserData) {
   const email = "ivan" + Math.random() + "@0xparc.org";
   const identity = new Identity();
   const crypto = await PCDCrypto.newInstance();
@@ -67,28 +78,21 @@ async function testSingleUser() {
   }, 5000);
 }
 
-async function runLoadTest() {
+export async function runLoadTest() {
   await SemaphoreSignaturePCDPackage.init({
     wasmFilePath: "../passport-server/public/semaphore-artifacts/16.wasm",
     zkeyFilePath: "../passport-server/public/semaphore-artifacts/16.zkey"
   });
 
-  for (let i = 0; i < 25; i++) {
+  const loadTestData = await getLoadTestData();
+  const singleUserDatas = await dataToSingleUserDatas(loadTestData);
+
+  for (const data of singleUserDatas) {
     setTimeout(
       () => {
-        testSingleUser();
+        testSingleUser(data);
       },
       Math.random() * 1000 * 5
     );
   }
 }
-
-runLoadTest()
-  .then(() => {
-    console.log("finished starting load test");
-    // process.exit(0);
-  })
-  .catch((e) => {
-    console.log("error running load test");
-    console.log(e);
-  });
