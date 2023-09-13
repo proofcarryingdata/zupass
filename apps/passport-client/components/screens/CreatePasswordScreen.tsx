@@ -6,7 +6,6 @@ import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
-  BigInput,
   Button,
   CenterColumn,
   H1,
@@ -15,8 +14,8 @@ import {
   TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
-import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { SetPasswordInput } from "../shared/SetPasswordInput";
 
 const PASSWORD_MINIMUM_LENGTH = 8;
 
@@ -136,30 +135,20 @@ export function CreatePasswordScreen() {
           <form onSubmit={onCreatePassword}>
             {/* For password manager autofill */}
             <input hidden value={email} />
-            <PasswordInputContainer>
-              <BigInput
-                autoFocus
-                type={revealPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <ShowHidePasswordIconContainer>
-                <ShowHidePasswordIcon
-                  draggable="false"
-                  src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
-                  width={32}
-                  height={32}
-                  onClick={() => setRevealPassword((curr) => !curr)}
-                />
-              </ShowHidePasswordIconContainer>
-            </PasswordInputContainer>
+            <SetPasswordInput
+              value={password}
+              setValue={setPassword}
+              placeholder="Password"
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
+            />
             <Spacer h={8} />
-            <BigInput
-              type={revealPassword ? "text" : "password"}
+            <SetPasswordInput
               value={confirmPassword}
+              setValue={setConfirmPassword}
               placeholder="Confirm password"
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
             />
             <Spacer h={8} />
             <PasswordStrengthBarContainer>
@@ -207,24 +196,6 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
-`;
-
-const PasswordInputContainer = styled.div`
-  width: 100%;
-  position: relative;
-`;
-
-const ShowHidePasswordIconContainer = styled.div`
-  position: absolute;
-  right: 12px;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  top: 0;
-`;
-
-const ShowHidePasswordIcon = styled.img`
-  cursor: pointer;
 `;
 
 const PasswordStrengthBarContainer = styled.div`
