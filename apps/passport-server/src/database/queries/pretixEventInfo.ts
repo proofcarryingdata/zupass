@@ -30,6 +30,7 @@ export async function insertPretixEventsInfo(
     `\
       insert into devconnect_pretix_events_info (event_name, pretix_events_config_id, checkin_list_id, is_deleted)
       values ($1, $2, $3, FALSE)
+      on conflict (pretix_events_config_id) do update set event_name = $1, checkin_list_id = $3
       returning id`,
     [eventName, eventsConfigID, checkinListId]
   );

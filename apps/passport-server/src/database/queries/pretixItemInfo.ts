@@ -29,6 +29,7 @@ export async function insertPretixItemsInfo(
     `\
       insert into devconnect_pretix_items_info (item_id, devconnect_pretix_events_info_id, item_name)
       values ($1, $2, $3)
+      on conflict (item_id, devconnect_pretix_events_info_id) do update set item_name = $3
       returning id`,
     [item_id, eventInfoId, item_name]
   );
