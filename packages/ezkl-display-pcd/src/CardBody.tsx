@@ -14,6 +14,7 @@ import {
 import { EzklGroupPCD, EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import GifQR from "./GifQR";
+import { RingLoader } from "react-spinners";
 
 export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
   // const ticketData = getTicketData(pcd);
@@ -53,10 +54,17 @@ export function EzklDisplayCardBody({ pcd }: { pcd: EzklDisplayPCD }) {
     <Container>
       {/* <p>EZKL Group Membership PCD</p> */}
       {/* <Separator /> */}
-      {groupPCD && (
+      {groupPCD ? (
         <div>
           {/* <FieldLabel>Secret</FieldLabel> */}
           <GifQR proof={groupPCD.proof.proof.toString()} />
+        </div>
+      ) : (
+        <div className="w-full">
+          <RingLoader
+            color="#000000"
+            className="w-full m-auto flex justify-center"
+          />
         </div>
       )}
     </Container>
