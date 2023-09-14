@@ -62,7 +62,6 @@ export function CreatePasswordScreen() {
 
   const onCreatePassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMessage("");
     if (password === "") {
       setErrorMessage("Please enter a password.");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
@@ -107,7 +106,10 @@ export function CreatePasswordScreen() {
             <input hidden readOnly value={email} />
             <SetPasswordInput
               value={password}
-              setValue={setPassword}
+              setValue={(value) => {
+                setErrorMessage("");
+                setPassword(value);
+              }}
               placeholder="Password"
               autoFocus
               revealPassword={revealPassword}
@@ -116,7 +118,10 @@ export function CreatePasswordScreen() {
             <Spacer h={8} />
             <SetPasswordInput
               value={confirmPassword}
-              setValue={setConfirmPassword}
+              setValue={(value) => {
+                setErrorMessage("");
+                setConfirmPassword(value);
+              }}
               placeholder="Confirm password"
               revealPassword={revealPassword}
               setRevealPassword={setRevealPassword}
