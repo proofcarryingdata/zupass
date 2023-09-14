@@ -113,7 +113,7 @@ function AddEthAddrPCDButton() {
         .getSigner()
         .signMessage(pcd.claim.identityCommitment);
 
-      const popupUrl = window.location.origin + "/popup";
+      const popupUrl = window.location.origin + "#/popup";
 
       const proofUrl = constructPassportPcdProveAndAddRequestUrl<
         typeof EthereumOwnershipPCDPackage
@@ -157,7 +157,7 @@ function AddEthAddrPCDButton() {
 async function zupassSignIn(originalSiteName: string) {
   openSignedZuzaluSignInPopup(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     originalSiteName
   );
 }
@@ -214,7 +214,7 @@ function AddEthGroupPCDButton() {
       // Prove membership of the prover's public key in the tree
       const merkleProof = pubKeyTree.createProof(pubKeyIndex);
 
-      const popupUrl = window.location.origin + "/popup";
+      const popupUrl = window.location.origin + "#/popup";
       const proofUrl = constructPassportPcdProveAndAddRequestUrl<
         typeof EthereumGroupPCDPackage
       >(ZUPASS_URL, popupUrl, EthereumGroupPCDPackage.name, {
@@ -263,7 +263,7 @@ async function addGroupMembershipProofPCD() {
     typeof SemaphoreGroupPCDPackage
   >(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     SemaphoreGroupPCDPackage.name,
     {
       externalNullifier: {
@@ -310,7 +310,7 @@ async function addEdDSAPCD() {
     typeof EdDSAPCDPackage
   >(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     EdDSAPCDPackage.name,
     {
       message: {
@@ -342,7 +342,7 @@ async function addSignatureProofPCD() {
     typeof SemaphoreSignaturePCDPackage
   >(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     SemaphoreSignaturePCDPackage.name,
     {
       identity: {
@@ -375,7 +375,7 @@ async function addIdentityPCD() {
 
   const url = constructPassportPcdAddRequestUrl(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     serializedNewIdentity
   );
 
@@ -431,7 +431,7 @@ async function addWebAuthnPCD() {
   // Add new WebAuthn PCD to Passport.
   const url = constructPassportPcdAddRequestUrl(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     serializedNewCredential
   );
 
