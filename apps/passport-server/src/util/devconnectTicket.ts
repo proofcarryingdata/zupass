@@ -29,7 +29,8 @@ export function pretixTicketsDifferent(
   }
 
   if (
-    oldTicket.pretix_checkin_timestamp !== newTicket.pretix_checkin_timestamp
+    oldTicket.pretix_checkin_timestamp?.getTime() !==
+    newTicket.pretix_checkin_timestamp?.getTime()
   ) {
     return true;
   }

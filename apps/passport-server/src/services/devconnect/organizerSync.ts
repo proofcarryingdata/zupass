@@ -616,7 +616,7 @@ export class OrganizerSync {
           (existing) => !newActiveItemsByItemID.has(existing.item_id)
         );
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}]  Deleting ${itemsToRemove.length} item infos`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${itemsToRemove.length} item infos`
         );
         for (const item of itemsToRemove) {
           logger(

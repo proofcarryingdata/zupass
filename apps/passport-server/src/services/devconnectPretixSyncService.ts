@@ -131,7 +131,6 @@ export class DevconnectPretixSyncService {
     organizer: OrganizerSync
   ): Promise<void> {
     return traced(NAME, "syncSingleOrganizer", async (span) => {
-      span?.setAttribute("organizers_count", this.organizers.size);
       try {
         return await organizer.run();
       } catch (e) {
