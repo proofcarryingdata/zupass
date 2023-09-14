@@ -72,7 +72,7 @@ export function CreatePasswordScreen() {
       // Inspired by Dashlane's zxcvbn guidance:
       // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
       setErrorMessage(
-        "Password is too weak. Add another word or two. Uncommon words are better."
+        "Password is too weak. Try adding another word or two. Uncommon words are better."
       );
     } else if (confirmPassword === "") {
       setErrorMessage("Please confirm your password.");
