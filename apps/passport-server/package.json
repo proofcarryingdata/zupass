@@ -18,6 +18,7 @@
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@pcd/eddsa-pcd": "0.1.1",
     "@pcd/eddsa-ticket-pcd": "0.1.1",
+    "@pcd/email-pcd": "0.1.0",
     "@pcd/ethereum-ownership-pcd": "0.6.2",
     "@pcd/passport-interface": "0.6.2",
     "@pcd/pcd-collection": "0.6.2",
