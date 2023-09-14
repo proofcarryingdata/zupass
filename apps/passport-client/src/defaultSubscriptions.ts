@@ -35,7 +35,11 @@ export async function addDefaultSubscriptions(
         value: ISSUANCE_STRING
       }
     });
+    const serializedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+
     subscriptions.addProvider(DEFAULT_FEED_URL);
+
+    // Subscribe to Devconnect ticket feed
     subscriptions.subscribe(
       DEFAULT_FEED_URL,
       {
@@ -53,7 +57,28 @@ export async function addDefaultSubscriptions(
           } as ReplaceInFolderPermission
         ]
       },
-      await SemaphoreSignaturePCDPackage.serialize(signaturePCD)
+      serializedSignaturePCD
+    );
+
+    // Subscribe to attested email feed
+    subscriptions.subscribe(
+      DEFAULT_FEED_URL,
+      {
+        id: PCDPassFeedIds.Email,
+        name: "Email",
+        description: "Emails verified with PCDPass",
+        permissions: [
+          {
+            type: PCDPermissionType.AppendToFolder,
+            folder: "Email"
+          } as AppendToFolderPermission,
+          {
+            type: PCDPermissionType.ReplaceInFolder,
+            folder: "Email"
+          } as ReplaceInFolderPermission
+        ]
+      },
+      serializedSignaturePCD
     );
   }
 }
