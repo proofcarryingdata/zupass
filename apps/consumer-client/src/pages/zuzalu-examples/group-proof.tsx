@@ -62,7 +62,7 @@ export default function Page() {
           onClick={() =>
             openGroupMembershipPopup(
               ZUPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               ZUZALU_SEMAPHORE_GROUP_URL,
               "consumer-client"
             )
