@@ -69,7 +69,11 @@ export function CreatePasswordScreen() {
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
       );
     } else if (!checkPasswordStrength(password)) {
-      setErrorMessage("Password is too weak.");
+      // Inspired by Dashlane's zxcvbn guidance:
+      // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
+      setErrorMessage(
+        "Password is too weak. Try adding another word or two. Uncommon words are better."
+      );
     } else if (confirmPassword === "") {
       setErrorMessage("Please confirm your password.");
     } else if (password !== confirmPassword) {
@@ -102,7 +106,10 @@ export function CreatePasswordScreen() {
             <input hidden readOnly value={email} />
             <SetPasswordInput
               value={password}
-              setValue={setPassword}
+              setValue={(value) => {
+                setErrorMessage("");
+                setPassword(value);
+              }}
               placeholder="Password"
               autoFocus
               revealPassword={revealPassword}
@@ -111,7 +118,10 @@ export function CreatePasswordScreen() {
             <Spacer h={8} />
             <SetPasswordInput
               value={confirmPassword}
-              setValue={setConfirmPassword}
+              setValue={(value) => {
+                setErrorMessage("");
+                setConfirmPassword(value);
+              }}
               placeholder="Confirm password"
               revealPassword={revealPassword}
               setRevealPassword={setRevealPassword}
