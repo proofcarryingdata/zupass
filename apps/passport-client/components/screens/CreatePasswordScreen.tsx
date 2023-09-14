@@ -62,6 +62,7 @@ export function CreatePasswordScreen() {
 
   const onCreatePassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage("");
     if (password === "") {
       setErrorMessage("Please enter a password.");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
