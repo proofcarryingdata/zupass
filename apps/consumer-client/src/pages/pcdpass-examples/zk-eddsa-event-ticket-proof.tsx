@@ -115,7 +115,7 @@ export default function Page() {
           onClick={() =>
             openZKEdDSAEventTicketPopup(
               PCDPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               fieldsToReveal,
               watermark,
               validEventIds,
