@@ -1,8 +1,8 @@
 import {
-  openSignedZuzaluUUIDPopup,
-  useFetchUser,
-  usePassportPopupMessages,
-  useSemaphoreSignatureProof
+    openSignedZuzaluUUIDPopup,
+    useFetchUser,
+    usePassportPopupMessages,
+    useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
@@ -60,7 +60,7 @@ export default function Page() {
           onClick={() =>
             openSignedZuzaluUUIDPopup(
               ZUPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               "consumer-client"
             )
           }

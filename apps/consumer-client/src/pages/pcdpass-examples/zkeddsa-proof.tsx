@@ -9,10 +9,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   EdDSATicketFieldsToReveal,
+  generateMessageHash,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage,
-  generateMessageHash
+  ZKEdDSATicketPCDPackage
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { useEffect, useMemo, useState } from "react";
@@ -108,7 +108,7 @@ export default function Page() {
           onClick={() =>
             openZKEdDSATicketPopup(
               PCDPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               fieldsToReveal,
               watermark,
               externalNullifier

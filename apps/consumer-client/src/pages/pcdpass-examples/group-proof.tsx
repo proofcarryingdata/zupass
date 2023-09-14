@@ -58,7 +58,7 @@ export default function Page() {
           onClick={() =>
             openGroupMembershipPopup(
               PCDPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               PCDPASS_SEMAPHORE_GROUP_URL,
               "consumer-client"
             )

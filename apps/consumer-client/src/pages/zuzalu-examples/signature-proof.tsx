@@ -66,7 +66,7 @@ export default function Page() {
             () =>
               openSemaphoreSignaturePopup(
                 ZUPASS_URL,
-                window.location.origin + "/popup",
+                window.location.origin + "#/popup",
                 messageToSign,
                 serverProving
               ),

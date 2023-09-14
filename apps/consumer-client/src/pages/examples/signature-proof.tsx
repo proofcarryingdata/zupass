@@ -101,7 +101,7 @@ export default function Page() {
 }
 
 function requestSemaphoreSignature(proveOnServer: boolean) {
-  const popupUrl = window.location.origin + "/popup";
+  const popupUrl = window.location.origin + "#/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(

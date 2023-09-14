@@ -4,12 +4,12 @@ import {
   usePassportPopupMessages,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphoreGroupProof,
+  useSemaphoreGroupProof
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   generateMessageHash,
-  SemaphoreGroupPCDPackage,
+  SemaphoreGroupPCDPackage
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { useState } from "react";
@@ -19,7 +19,7 @@ import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDispla
 import {
   ZUPASS_SERVER_URL,
   ZUPASS_URL,
-  ZUZALU_SEMAPHORE_GROUP_URL,
+  ZUZALU_SEMAPHORE_GROUP_URL
 } from "../../constants";
 
 /**
@@ -138,7 +138,7 @@ function requestMembershipProof(
   proveOnServer: boolean,
   originalSiteName: string
 ) {
-  const popupUrl = window.location.origin + "/popup";
+  const popupUrl = window.location.origin + "#/popup";
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -151,13 +151,13 @@ function requestMembershipProof(
         userProvided: true,
         value: generateMessageHash(originalSiteName).toString(),
         description:
-          "You can choose a nullifier to prevent this signed message from being used across domains.",
+          "You can choose a nullifier to prevent this signed message from being used across domains."
       },
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
         remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
-        description: "The Semaphore group which you are proving you belong to.",
+        description: "The Semaphore group which you are proving you belong to."
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
@@ -165,15 +165,14 @@ function requestMembershipProof(
         value: undefined,
         userProvided: true,
         description:
-          "The Semaphore Identity which you are signing the message on behalf of.",
+          "The Semaphore Identity which you are signing the message on behalf of."
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
         value: "1",
-        description:
-          "The message you are signing with your Semaphore identity.",
-      },
+        description: "The message you are signing with your Semaphore identity."
+      }
     },
     {
       genericProveScreen: true,
@@ -181,7 +180,7 @@ function requestMembershipProof(
         "Generate a group membership proof using your passport's Semaphore Identity.",
       title: "Group Membership Proof",
       debug: debug,
-      proveOnServer: proveOnServer,
+      proveOnServer: proveOnServer
     }
   );
 

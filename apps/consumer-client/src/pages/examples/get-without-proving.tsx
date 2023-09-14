@@ -45,7 +45,7 @@ export default function Page() {
 function getProofWithoutProving() {
   const url = getWithoutProvingUrl(
     ZUPASS_URL,
-    window.location.origin + "/popup",
+    window.location.origin + "#/popup",
     SemaphoreSignaturePCDPackage.name
   );
   sendPassportRequest(url);
