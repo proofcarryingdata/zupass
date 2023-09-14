@@ -24,7 +24,7 @@
     "@pcd/passport-ui": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
     "@pcd/rsa-pcd": "0.1.2",
-    "bigint-conversion": "^2.4.2",
+    "@pcd/util": "0.0.1",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",

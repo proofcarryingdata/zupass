@@ -1,14 +1,14 @@
 import styled from "styled-components";
 import { EmailPCD } from "./EmailPCD";
-import { getEmailData } from "./utils";
+import { getEmailAddress } from "./utils";
 
 export function EmailCardBody({ pcd }: { pcd: EmailPCD }) {
-  const emailData = getEmailData(pcd);
+  const emailAddress = getEmailAddress(pcd);
 
   return (
     <Container>
       <EmailInfo>
-        <span>{emailData?.emailAddress}</span>
+        <span>{emailAddress}</span>
       </EmailInfo>
     </Container>
   );

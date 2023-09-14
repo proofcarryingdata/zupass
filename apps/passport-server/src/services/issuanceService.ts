@@ -673,7 +673,9 @@ export class IssuanceService {
   }
 
   /**
-   *
+   * Issues email PCDs based on the user's verified email address.
+   * Currently we only verify a single email address, but could provide
+   * multiple PCDs if it were possible to verify secondary emails.
    */
   private async issueEmailPCDs(
     credential: SerializedPCD<SemaphoreSignaturePCD>
@@ -710,9 +712,9 @@ export class IssuanceService {
               value: stableId,
               argumentType: ArgumentTypeName.String
             },
-            email: {
-              value: { emailAddress: email },
-              argumentType: ArgumentTypeName.Object
+            emailAddress: {
+              value: email,
+              argumentType: ArgumentTypeName.String
             }
           })
         ];

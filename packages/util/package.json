@@ -22,6 +22,7 @@
   "dependencies": {
     "@pcd/pcd-types": "0.6.3",
     "chai": "^4.3.7",
+    "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

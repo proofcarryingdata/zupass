@@ -84,8 +84,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
 
-  await EmailPCDPackage.init({});
-
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,

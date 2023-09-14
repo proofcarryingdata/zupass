@@ -74,10 +74,15 @@ describe("attested email feed functionality", function () {
       const deserializedPCD = await EmailPCDPackage.deserialize(
         action.pcds[0].pcd
       );
-      expect(deserializedPCD.claim.email.emailAddress).to.eq(testEmail);
+      expect(deserializedPCD.claim.emailAddress).to.eq(testEmail);
 
-      // Finally check that the PCD verifies
+      // Check that the PCD verifies
       expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
+
+      // Check the public key
+      expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
+        await application.services.issuanceService?.getEdDSAPublicKey()
+      );
     }
   );
 });

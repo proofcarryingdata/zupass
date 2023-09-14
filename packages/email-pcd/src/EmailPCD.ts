@@ -2,42 +2,30 @@ import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
   DisplayOptions,
-  ObjectArgument,
   PCD,
   PCDPackage,
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
+import { generateMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { EmailCardBody } from "./CardBody";
-import { emailDataToBigInts, getEmailData } from "./utils";
 
 export const EmailPCDTypeName = "email-pcd";
-
-export interface EmailPCDInitArgs {}
-
-export interface IEmailData {
-  emailAddress: string;
-}
-
-// Nothing to do other than to ensure that our dependency is initialized
-async function init(_args: EmailPCDInitArgs): Promise<void> {
-  EdDSAPCDPackage.init?.({});
-}
 
 export interface EmailPCDArgs {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
   // ticket information that is encoded into this pcd
-  email: ObjectArgument<IEmailData>;
+  emailAddress: StringArgument;
   // A unique string identifying the PCD
   id: StringArgument;
 }
 
 export interface EmailPCDClaim {
-  email: IEmailData;
+  emailAddress: string;
 }
 
 export interface EmailPCDProof {
@@ -62,15 +50,16 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
     throw new Error("missing private key");
   }
 
-  if (!args.email.value) {
+  if (!args.emailAddress.value) {
     throw new Error("missing email value");
   }
 
-  const serializedEmail = emailDataToBigInts(args.email.value);
+  // Hashes email and returns bigint representation of hash
+  const hashedEmail = generateMessageHash(args.emailAddress.value);
 
   const eddsaPCD = await EdDSAPCDPackage.prove({
     message: {
-      value: serializedEmail.map((b) => b.toString()),
+      value: [hashedEmail.toString()],
       argumentType: ArgumentTypeName.StringArray
     },
     privateKey: {
@@ -85,14 +74,18 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
 
   const id = args.id.value ?? uuid();
 
-  return new EmailPCD(id, { email: args.email.value }, { eddsaPCD });
+  return new EmailPCD(
+    id,
+    { emailAddress: args.emailAddress.value },
+    { eddsaPCD }
+  );
 }
 
 export async function verify(pcd: EmailPCD): Promise<boolean> {
-  const messageDerivedFromClaim = emailDataToBigInts(pcd.claim.email);
+  const messageDerivedFromClaim = generateMessageHash(pcd.claim.emailAddress);
 
-  if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
-    throw new Error(`email data does not match proof`);
+  if (!_.isEqual([messageDerivedFromClaim], pcd.proof.eddsaPCD.claim.message)) {
+    return false;
   }
 
   try {
@@ -115,7 +108,7 @@ export async function serialize(
     pcd: JSONBig().stringify({
       id: pcd.id,
       eddsaPCD: serializedEdDSAPCD,
-      email: pcd.claim.email
+      emailAddress: pcd.claim.emailAddress
     })
   } as SerializedPCD<EmailPCD>;
 }
@@ -127,23 +120,15 @@ export async function deserialize(serialized: string): Promise<EmailPCD> {
   );
   return new EmailPCD(
     deserializedWrapper.id,
-    { email: deserializedWrapper.email },
+    { emailAddress: deserializedWrapper.emailAddress },
     { eddsaPCD: deserializedEdDSAPCD }
   );
 }
 
 export function getDisplayOptions(pcd: EmailPCD): DisplayOptions {
-  const emailData = getEmailData(pcd);
-  if (!emailData) {
-    return {
-      header: "Attested email",
-      displayName: "email-" + pcd.id.substring(0, 4)
-    };
-  }
-
   return {
-    header: "Attested email",
-    displayName: emailData.emailAddress
+    header: "Verified email",
+    displayName: pcd.claim.emailAddress
   };
 }
 
@@ -155,12 +140,11 @@ export const EmailPCDPackage: PCDPackage<
   EmailPCDClaim,
   EmailPCDProof,
   EmailPCDArgs,
-  EmailPCDInitArgs
+  undefined
 > = {
   name: EmailPCDTypeName,
   renderCardBody: EmailCardBody,
   getDisplayOptions,
-  init,
   prove,
   verify,
   serialize,
