@@ -2,33 +2,33 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData,
-  getEdDSATicketData
+  getEdDSATicketData,
+  ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CheckInRequest,
-  CheckInResponse,
+  CheckTicketInRequest,
+  CheckTicketInResult,
   CheckTicketRequest,
-  CheckTicketResponse,
+  CheckTicketResult,
   FeedHost,
-  FeedRequest,
-  FeedResponse,
   ISSUANCE_STRING,
   ListFeedsRequest,
-  ListFeedsResponse,
-  PCDPassFeedIds
+  ListFeedsResponseValue,
+  PCDPassFeedIds,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
-  joinPath
+  ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -36,6 +36,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
 import {
@@ -49,6 +50,7 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
@@ -61,7 +63,6 @@ export class IssuanceService {
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
   private readonly feedHost: FeedHost;
-
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
@@ -85,8 +86,8 @@ export class IssuanceService {
     this.feedHost = new FeedHost([
       {
         handleRequest: async (
-          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<FeedResponse> => {
+          req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<PollFeedResponseValue> => {
           const pcds = await this.issueDevconnectPretixTicketPCDs(
             req.pcd as SerializedPCD<SemaphoreSignaturePCD>
           );
@@ -170,7 +171,9 @@ export class IssuanceService {
         }
       },
       {
-        handleRequest: async (_req: FeedRequest): Promise<FeedResponse> => {
+        handleRequest: async (
+          _req: PollFeedRequest
+        ): Promise<PollFeedResponseValue> => {
           return {
             actions: [
               {
@@ -197,8 +200,8 @@ export class IssuanceService {
       },
       {
         handleRequest: async (
-          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<FeedResponse> => {
+          req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<PollFeedResponseValue> => {
           const pcds = await this.issueEmailPCDs(
             req.pcd as SerializedPCD<SemaphoreSignaturePCD>
           );
@@ -244,11 +247,13 @@ export class IssuanceService {
 
   public async handleListFeedsRequest(
     request: ListFeedsRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return this.feedHost.handleListFeedsRequest(request);
   }
 
-  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
+  public async handleFeedRequest(
+    request: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
     return this.feedHost.handleFeedRequest(request);
   }
 
@@ -261,8 +266,8 @@ export class IssuanceService {
   }
 
   public async handleCheckInRequest(
-    request: CheckInRequest
-  ): Promise<CheckInResponse> {
+    request: CheckTicketInRequest
+  ): Promise<CheckTicketInResult> {
     try {
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
@@ -270,7 +275,7 @@ export class IssuanceService {
 
       const ticketValid = await this.checkTicket(ticketPCD);
 
-      if (!ticketValid.success) {
+      if (ticketValid.error != null) {
         return ticketValid;
       }
 
@@ -278,8 +283,8 @@ export class IssuanceService {
 
       if (!ticketData) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: { name: "InvalidTicket" },
+          success: false
         };
       }
 
@@ -287,8 +292,8 @@ export class IssuanceService {
 
       if (!checker) {
         return {
-          success: false,
-          error: { name: "NotSuperuser" }
+          error: { name: "NotSuperuser" },
+          success: false
         };
       }
 
@@ -303,7 +308,7 @@ export class IssuanceService {
       );
 
       if (!relevantSuperUserPermission) {
-        return { success: false, error: { name: "NotSuperuser" } };
+        return { error: { name: "NotSuperuser" }, success: false };
       }
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
@@ -314,23 +319,24 @@ export class IssuanceService {
 
       if (successfullyConsumed) {
         return {
+          value: undefined,
           success: true
         };
       }
 
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError" },
+        success: false
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in", { cause: e });
+      throw new PCDHTTPError(500, "failed to check in", { cause: e });
     }
   }
 
   public async handleCheckTicketRequest(
     request: CheckTicketRequest
-  ): Promise<CheckTicketResponse> {
+  ): Promise<CheckTicketResult> {
     try {
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
@@ -338,29 +344,35 @@ export class IssuanceService {
       return this.checkTicket(ticketPCD);
     } catch (e) {
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError" },
+        success: false
       };
     }
   }
 
   public async checkTicket(
     ticketPCD: EdDSATicketPCD
-  ): Promise<CheckTicketResponse> {
+  ): Promise<CheckTicketResult> {
     try {
       const proofPublicKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
       if (!proofPublicKey) {
         return {
-          success: false,
-          error: { name: "InvalidSignature" }
+          error: {
+            name: "InvalidSignature",
+            detailedMessage: "Ticket malformed: missing public key."
+          },
+          success: false
         };
       }
 
       const serverPublicKey = await this.getEdDSAPublicKey();
       if (!_.isEqual(serverPublicKey, proofPublicKey)) {
         return {
-          success: false,
-          error: { name: "InvalidSignature" }
+          error: {
+            name: "InvalidSignature",
+            detailedMessage: "This ticket was not signed by PCDpass."
+          },
+          success: false
         };
       }
 
@@ -368,8 +380,11 @@ export class IssuanceService {
 
       if (!ticket || !ticket.ticketId) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: {
+            name: "InvalidTicket",
+            detailedMessage: "Ticket malformed: missing data."
+          },
+          success: false
         };
       }
 
@@ -380,38 +395,40 @@ export class IssuanceService {
 
       if (!ticketInDb) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: {
+            name: "InvalidTicket",
+            detailedMessage: "Ticket does not exist on backend."
+          },
+          success: false
         };
       }
 
       if (ticketInDb.is_deleted) {
         return {
-          success: false,
-          error: { name: "TicketRevoked", revokedTimestamp: Date.now() }
+          error: { name: "TicketRevoked", revokedTimestamp: Date.now() },
+          success: false
         };
       }
 
       if (ticketInDb.is_consumed) {
         return {
-          success: false,
           error: {
             name: "AlreadyCheckedIn",
             checker: ticketInDb.checker ?? undefined,
             checkinTimestamp: (
               ticketInDb.pcdpass_checkin_timestamp ?? new Date()
             ).toISOString()
-          }
+          },
+          success: false
         };
       }
 
-      return { success: true };
+      return { value: undefined, success: true };
     } catch (e) {
       logger("Error when checking ticket", { error: e });
-
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
+        success: false
       };
     }
   }

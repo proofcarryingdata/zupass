@@ -1,4 +1,4 @@
-import { DateRange } from "@pcd/passport-interface";
+import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
 
 /**
  * All zuzalu tickets get synced to our database into this data structure.
@@ -100,12 +100,6 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 
 export interface LoggedinPCDpassUser extends CommitmentRow {
   superuserEventConfigIds: string[];
-}
-
-export enum ZuzaluUserRole {
-  Visitor = "visitor",
-  Resident = "resident",
-  Organizer = "organizer"
 }
 
 export interface CommitmentRow {

@@ -1,7 +1,7 @@
 import {
   PendingPCDStatus,
-  ProveRequest,
-  StatusResponse
+  ProofStatusResponseValue,
+  ServerProofRequest
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -33,22 +33,26 @@ describe("server-side proving functionality", function () {
   step(
     "should handle case when there is no matching pcd package",
     async function () {
-      const proveRequest: ProveRequest = {
-        args: {},
-        pcdType: ""
-      };
-
-      await submitAndWaitForPendingPCD(application, proveRequest, async (r) => {
-        const settledStatusResponse = r.body as StatusResponse;
-        expect(settledStatusResponse.status).to.eq(PendingPCDStatus.ERROR);
-      });
+      await submitAndWaitForPendingPCD(
+        application,
+        {
+          args: {},
+          pcdType: ""
+        },
+        async (r) => {
+          const settledStatusResponse = r.value as ProofStatusResponseValue;
+          expect(settledStatusResponse.status).to.eq(PendingPCDStatus.ERROR);
+        }
+      );
     }
   );
 
   step(
     "should be able to remotely prove semaphore signature pcd",
     async function () {
-      const proveRequest: ProveRequest<typeof SemaphoreSignaturePCDPackage> = {
+      const proveRequest: ServerProofRequest<
+        typeof SemaphoreSignaturePCDPackage
+      > = {
         args: {
           identity: {
             argumentType: ArgumentTypeName.PCD,
@@ -75,7 +79,7 @@ describe("server-side proving functionality", function () {
       );
 
       await submitAndWaitForPendingPCD(application, proveRequest, async (r) => {
-        const settledStatusResponse = r.body as StatusResponse;
+        const settledStatusResponse = r.value as ProofStatusResponseValue;
         expect(settledStatusResponse.status).to.eq(PendingPCDStatus.COMPLETE);
         expect(settledStatusResponse).to.haveOwnProperty("serializedPCD");
 

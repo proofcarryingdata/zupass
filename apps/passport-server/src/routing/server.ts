@@ -3,10 +3,11 @@ import express, { Application, NextFunction } from "express";
 import * as http from "http";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext, GlobalServices } from "../types";
+import { ApplicationContext, GlobalServices, PCDpass } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
+import { respondWithError } from "./pcdHttpError";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -19,60 +20,72 @@ import { initStatusRoutes } from "./routes/statusRoutes";
 import { initTelegramRoutes } from "./routes/telegramRoutes";
 import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 
-export async function startServer(
+export async function startHttpServer(
   context: ApplicationContext,
   globalServices: GlobalServices
-): Promise<{ app: Application; server: http.Server }> {
-  return new Promise<{ app: Application; server: http.Server }>(
-    (resolve, reject) => {
-      const port = IS_PROD ? process.env.PORT : 3002;
-      const app = express();
-
-      if (process.env.SUPPRESS_LOGGING !== "true") {
-        app.use(morgan("tiny"));
-      }
-
-      app.use(
-        express.json({
-          limit: "5mb"
-        })
-      );
-      app.use(cors());
-      app.use(tracingMiddleware());
-      app.use(
-        cors({
-          origin: "*",
-          methods: ["GET", "POST", "PUT", "DELETE"]
-        })
-      );
-
-      initAllRoutes(app, context, globalServices);
-
-      app.use(
-        (
-          err: Error,
-          req: express.Request,
-          res: express.Response,
-          _next: NextFunction
-        ) => {
-          logger(`[ERROR] ${req.method} ${req.url}`);
-          logger(err.stack);
-          globalServices.rollbarService?.reportError(err);
-          res.status(500).send(err.message);
-        }
-      );
-
-      const server = app.listen(port, () => {
-        logger(`[INIT] HTTP server listening on port ${port}`);
-        sendEvent(context, EventName.SERVER_START);
-        resolve({ server, app });
-      });
-
-      server.on("error", (e: Error) => {
-        reject(e);
-      });
+): Promise<{ app: Application; server: http.Server; localEndpoint: string }> {
+  return new Promise<{
+    app: Application;
+    server: http.Server;
+    localEndpoint: string;
+  }>((resolve, reject) => {
+    const envPort = parseInt(process.env.PORT ?? "", 10);
+    const port = IS_PROD ? envPort : 3002;
+    if (isNaN(port)) {
+      throw new Error("couldn't start http server, missing port");
     }
-  );
+
+    const localEndpoint = `http://localhost:${port}`;
+
+    const app = express();
+
+    if (process.env.SUPPRESS_LOGGING !== "true") {
+      app.use(morgan("tiny"));
+    }
+
+    app.use(
+      express.json({
+        limit: "5mb"
+      })
+    );
+    app.use(cors());
+    app.use(tracingMiddleware());
+    app.use(
+      cors({
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"]
+      })
+    );
+
+    initAllRoutes(app, context, globalServices);
+
+    app.use(
+      (
+        err: Error,
+        req: express.Request,
+        res: express.Response,
+        _next: NextFunction
+      ) => {
+        respondWithError(err, res);
+        globalServices.rollbarService?.reportError(err);
+        logger(`[HTTP ERROR] ${req.method} ${req.url}`, err);
+      }
+    );
+
+    const server = app.listen(port, () => {
+      logger(`[INIT] Passport Server server listening on ${localEndpoint}`);
+      sendEvent(context, EventName.SERVER_START);
+      resolve({
+        server,
+        app,
+        localEndpoint
+      });
+    });
+
+    server.on("error", (e: Error) => {
+      reject(e);
+    });
+  });
 }
 
 function initAllRoutes(
@@ -91,4 +104,17 @@ function initAllRoutes(
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
   initLogRoutes(app);
+}
+
+export function stopHttpServer(app: PCDpass): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    app.expressContext.server.close((err) => {
+      if (err) {
+        logger(`error stopping http server`, err);
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
 }

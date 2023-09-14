@@ -1,4 +1,4 @@
-import { User } from "@pcd/passport-interface";
+import { requestIssuanceServiceEnabled, User } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -6,7 +6,6 @@ import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
-import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
@@ -36,12 +35,15 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should have issuance service running", async function () {
-    const status = await requestIssuanceServiceEnabled(application);
-    expect(status).to.eq(true);
+    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
+      application.expressContext.localEndpoint
+    );
+    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
+    expect(issuanceServiceEnabledResult.value).to.eq(true);
   });
 
-  step("should not have a pretix service running", async function () {
-    const status = await waitForPretixSyncStatus(application);
+  step("should not have a zuzalu pretix service running", async function () {
+    const status = await waitForPretixSyncStatus(application, true);
     expect(status).to.eq(PretixSyncStatus.NoPretix);
   });
 

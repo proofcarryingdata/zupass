@@ -2,6 +2,10 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   applyActions,
   isSyncedEncryptedStorageV2,
+  requestCreateNewUser,
+  requestDeviceLogin,
+  requestLogToServer,
+  requestVerifyToken,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
@@ -14,13 +18,8 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
-import { logToServer } from "./api/logApi";
-import {
-  submitDeviceLogin,
-  submitNewUser,
-  verifyTokenServer
-} from "./api/user";
 import { appConfig } from "./appConfig";
+import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   saveEncryptionKey,
@@ -171,21 +170,27 @@ async function verifyToken(
     // this generated key is not less secure than generating a random key.
     return login(email, token, "", state, update);
   }
-  const res = await verifyTokenServer(email, token);
-  const { verified, message } = await res.json();
-  if (verified) {
+
+  const verifyTokenResult = await requestVerifyToken(
+    appConfig.passportServer,
+    email,
+    token
+  );
+
+  if (verifyTokenResult.success) {
     window.location.hash = `#/create-password?email=${encodeURIComponent(
       email
     )}&token=${encodeURIComponent(token)}`;
-  } else {
-    update({
-      error: {
-        title: "Login failed",
-        message,
-        dismissToCurrentPage: true
-      }
-    });
+    return;
   }
+
+  update({
+    error: {
+      title: "Login failed",
+      message: verifyTokenResult.error,
+      dismissToCurrentPage: true
+    }
+  });
 }
 
 /**
@@ -215,36 +220,36 @@ async function login(
   state: AppState,
   update: ZuUpdate
 ) {
-  let user: User;
-  try {
-    const crypto = await PCDCrypto.newInstance();
-    const salt = await crypto.generateSalt();
-    const encryptionKey = await crypto.argon2(password, salt, 32);
-    await saveEncryptionKey(encryptionKey);
-    update({
-      encryptionKey
-    });
+  const crypto = await PCDCrypto.newInstance();
+  const newSalt = await crypto.generateSalt();
+  const encryptionKey = await crypto.argon2(password, newSalt, 32);
 
-    const res = await submitNewUser(
-      email,
-      token,
-      state.identity.commitment.toString(),
-      salt
-    );
-    if (!res.ok) throw new Error(await res.text());
-    user = await res.json();
-  } catch (e) {
-    update({
-      error: {
-        title: "Login failed",
-        message: "Couldn't log in. " + e.message,
-        dismissToCurrentPage: true
-      }
-    });
-    return;
+  await saveEncryptionKey(encryptionKey);
+
+  update({
+    encryptionKey
+  });
+
+  const newUserResult = await requestCreateNewUser(
+    appConfig.passportServer,
+    appConfig.isZuzalu,
+    email,
+    token,
+    state.identity.commitment.toString(),
+    newSalt
+  );
+
+  if (newUserResult.success) {
+    return finishLogin(newUserResult.value, state, update);
   }
 
-  return finishLogin(user, state, update);
+  update({
+    error: {
+      title: "Login failed",
+      message: "Couldn't log in. " + newUserResult.error,
+      dismissToCurrentPage: true
+    }
+  });
 }
 
 async function deviceLogin(
@@ -253,27 +258,24 @@ async function deviceLogin(
   state: AppState,
   update: ZuUpdate
 ) {
-  let user: User;
-  try {
-    const res = await submitDeviceLogin(
-      email,
-      secret,
-      state.identity.commitment.toString()
-    );
-    if (!res.ok) throw new Error(await res.text());
-    user = await res.json();
-  } catch (e) {
-    update({
-      error: {
-        title: "Login failed",
-        message: "Couldn't log in. " + e.message,
-        dismissToCurrentPage: true
-      }
-    });
-    return;
+  const deviceLoginResult = await requestDeviceLogin(
+    appConfig.passportServer,
+    email,
+    secret,
+    state.identity.commitment.toString()
+  );
+
+  if (deviceLoginResult.success) {
+    return finishLogin(deviceLoginResult.value, state, update);
   }
 
-  return finishLogin(user, state, update);
+  update({
+    error: {
+      title: "Login failed",
+      message: "Couldn't log in. " + deviceLoginResult.error,
+      dismissToCurrentPage: true
+    }
+  });
 }
 
 /**
@@ -291,6 +293,8 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
       }
     });
   }
+
+  await addDefaultSubscriptions(identity, state.subscriptions);
 
   window.location.hash = "#/login-interstitial";
 
@@ -313,14 +317,14 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
-    logToServer("invalid-user", {
+    requestLogToServer(appConfig.passportServer, "invalid-user", {
       oldCommitment: state.identity.commitment.toString(),
       newCommitment: self.commitment.toString()
     });
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
-    logToServer("invalid-user", {
+    requestLogToServer(appConfig.passportServer, "invalid-user", {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
@@ -347,7 +351,7 @@ function clearError(state: AppState, update: ZuUpdate) {
 }
 
 async function resetPassport(state: AppState) {
-  await logToServer("logout", {
+  await requestLogToServer(appConfig.passportServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
     commitment: state.self?.commitment
@@ -382,8 +386,6 @@ async function loadFromSync(
   currentState: AppState,
   update: ZuUpdate
 ) {
-  console.log("loading from sync", storage);
-
   let pcds: PCDCollection;
 
   if (isSyncedEncryptedStorageV2(storage)) {
@@ -488,7 +490,12 @@ async function sync(state: AppState, update: ZuUpdate) {
 
     try {
       console.log("[SYNC] loading issued pcds");
+      console.log(
+        "[SYNC] active subscriptions",
+        state.subscriptions.getActiveSubscriptions()
+      );
       const actions = await state.subscriptions.pollSubscriptions();
+
       await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
       console.log("[SYNC] loaded and saved issued pcds");

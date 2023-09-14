@@ -2,7 +2,8 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { decodeString } from "../../util/util";
+import { checkQueryParam, checkUrlParam } from "../params";
+import { PCDHTTPError } from "../pcdHttpError";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -21,49 +22,47 @@ export function initTelegramRoutes(
    * Telegram.
    */
   app.get("/telegram/verify/:id", async (req: Request, res: Response) => {
+    const telegram_user_id = checkUrlParam(req, "id");
+    const proof = checkQueryParam(req, "proof");
+
+    if (!proof || typeof proof !== "string") {
+      throw new PCDHTTPError(
+        400,
+        "[TELEGRAM] proof field needs to be a string and be non-empty"
+      );
+    }
+
+    if (
+      !telegram_user_id ||
+      typeof telegram_user_id !== "string" ||
+      !/^-?\d+$/.test(telegram_user_id)
+    ) {
+      throw new PCDHTTPError(
+        400,
+        "telegram_user_id field needs to be a numeric string and be non-empty"
+      );
+    }
+
+    logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
+
+    if (!telegramService) {
+      throw new PCDHTTPError(503, "Telegram service not initialized");
+    }
+
     try {
-      const { proof } = req.query;
-      const telegram_user_id = decodeString(req.params.id, "id");
-      if (!proof || typeof proof !== "string") {
-        throw new Error("proof field needs to be a string and be non-empty");
-      }
-
-      if (
-        !telegram_user_id ||
-        typeof telegram_user_id !== "string" ||
-        !/^-?\d+$/.test(telegram_user_id)
-      ) {
-        throw new Error(
-          "telegram_user_id field needs to be a numeric string and be non-empty"
-        );
-      }
-
-      logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
-
-      if (!telegramService) {
-        throw new Error("Telegram service not initialized");
-      }
-      try {
-        await telegramService.handleVerification(
-          proof,
-          parseInt(telegram_user_id)
-        );
-        logger(
-          `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
-        );
-        res.redirect(await telegramService.getBotURL());
-      } catch (e) {
-        logger("[TELEGRAM] failed to verify", e);
-        rollbarService?.reportError(e);
-        res.set("Content-Type", "text/html");
-        res.sendFile(path.resolve("resources/telegram/error.html"));
-        res.sendStatus(500);
-      }
+      await telegramService.handleVerification(
+        proof,
+        parseInt(telegram_user_id)
+      );
+      logger(
+        `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
+      );
+      res.redirect(await telegramService.getBotURL());
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
-      res.sendStatus(500);
-      res.sendFile(path.resolve("resources/telegram/error.html"));
+      res.set("Content-Type", "text/html");
+      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
 
@@ -80,7 +79,8 @@ export function initTelegramRoutes(
    */
   app.get("/telegram/message", async (req, res) => {
     try {
-      const { proof, message } = req.query;
+      const proof = checkQueryParam(req, "proof");
+      const message = checkQueryParam(req, "message");
 
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
@@ -102,14 +102,12 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to send anonymous message", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.sendFile(path.resolve("resources/telegram/error.html"));
-        res.sendStatus(500);
+        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to send anonymous message", e);
       rollbarService?.reportError(e);
-      res.sendStatus(500);
-      res.sendFile(path.resolve("resources/telegram/error.html"));
+      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
 }

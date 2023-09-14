@@ -51,7 +51,13 @@ export class FeedSubscriptionManager {
   }
 
   public async listFeeds(providerUrl: string): Promise<Feed[]> {
-    return this.api.listFeeds(providerUrl).then((r) => r.feeds);
+    return this.api.listFeeds(providerUrl).then((r) => {
+      if (r.value) {
+        return r.value.feeds;
+      } else {
+        throw new Error(r.error);
+      }
+    });
   }
 
   public async pollSubscriptions(): Promise<SubscriptionActions[]> {
@@ -60,12 +66,18 @@ export class FeedSubscriptionManager {
     for (const subscription of this.activeSubscriptions) {
       try {
         responses.push({
-          actions: (
-            await this.api.pollFeed(subscription.providerUrl, {
+          actions: await this.api
+            .pollFeed(subscription.providerUrl, {
               feedId: subscription.feed.id,
               pcd: subscription.credential
             })
-          ).actions,
+            .then((r): PCDAction[] => {
+              if (r.value) {
+                return r.value.actions;
+              } else {
+                throw new Error(r.error);
+              }
+            }),
           subscription
         });
       } catch (e) {

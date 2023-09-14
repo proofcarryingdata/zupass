@@ -27,9 +27,9 @@ import { appConfig } from "../src/appConfig";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -50,7 +50,6 @@ class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
-    console.log("App.update", diff);
     this.setState(diff, () => {
       this.stateEmitter.emit(this.state);
     });
@@ -152,7 +151,9 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
+          {appConfig.isZuzalu && (
+            <Route path="sync-existing" element={<SyncExistingScreen />} />
+          )}
           <Route
             path="verify"
             element={

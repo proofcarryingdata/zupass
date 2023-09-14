@@ -1,8 +1,8 @@
 import {
-    openSignedZuzaluUUIDPopup,
-    useFetchUser,
-    usePassportPopupMessages,
-    useSemaphoreSignatureProof
+  openSignedZuzaluUUIDPopup,
+  useFetchUser,
+  usePassportPopupMessages,
+  useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
@@ -41,7 +41,7 @@ export default function Page() {
   }, [signatureProofValid, signatureProof]);
 
   // Finally, once we have the UUID, fetch the user data from Passport.
-  const { user } = useFetchUser(ZUPASS_SERVER_URL, uuid);
+  const { user } = useFetchUser(ZUPASS_SERVER_URL, true, uuid);
 
   return (
     <>

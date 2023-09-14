@@ -1,6 +1,6 @@
 import {
   fetchEmailToken,
-  insertEmailToken,
+  insertEmailToken
 } from "../database/queries/emailToken";
 import { ApplicationContext } from "../types";
 import { randomEmailToken } from "../util/util";

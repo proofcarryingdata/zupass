@@ -5,37 +5,27 @@ import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
+import { DateRange, ZuzaluUserRole } from "./zuzalu";
 
-export interface ProveRequest<T extends PCDPackage = PCDPackage> {
+/**
+ * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
+ */
+export interface ServerProofRequest<T extends PCDPackage = PCDPackage> {
   pcdType: string;
   args: ArgsOf<T>;
 }
 
-export interface ProveResponse {
-  /**
-   * JSON.stringify(SerializedPCD)
-   */
-  serializedPCD: string;
-}
-
-export interface VerifyRequest {
-  pcdType: string;
-
-  /**
-   * JSON.stringify(SerializedPCD)
-   */
-  serializedPCD: string;
-}
-
-export interface VerifyResponse {
-  verified: boolean;
-}
-
-export interface StatusRequest {
+/**
+ * Ask the server for the status of a queued server-side proof.
+ */
+export interface ProofStatusRequest {
   hash: string;
 }
 
-export interface StatusResponse {
+/**
+ * The server's response to a {@link ProofStatusRequest}.
+ */
+export interface ProofStatusResponseValue {
   status: PendingPCDStatus;
 
   /**
@@ -49,14 +39,20 @@ export interface StatusResponse {
   error: string | undefined;
 }
 
-export interface SupportedPCDsResponse {
+/**
+ * Ask the server what sorts of proofs it's able to instantiate for users.
+ */
+export interface SupportedPCDsResponseValue {
   names: string[];
 }
 
-export interface SaveE2EERequest {
+/**
+ * Ask the server to save e2ee a user's PCDs and other metadata.
+ */
+export interface UploadEncryptedStorageRequest {
   /**
    * On the server-side, encrypted storage is keyed by the hash of
-   * the encryption key.
+   * the user's encryption key.
    */
   blobKey: string;
 
@@ -66,9 +62,15 @@ export interface SaveE2EERequest {
   encryptedBlob: string;
 }
 
-export interface SaveE2EEResponse {}
+/**
+ * Response to {@link UploadEncryptedStorageRequest}
+ */
+export type UploadEncryptedStorageResponseValue = undefined;
 
-export interface LoadE2EERequest {
+/**
+ * Ask the server for an e2ee backup of a user's data given a `blobKey`.
+ */
+export interface DownloadEncryptedStorageRequest {
   /**
    * On the server-side, encrypted storage is keyed by the hash of
    * the encryption key.
@@ -76,55 +78,23 @@ export interface LoadE2EERequest {
   blobKey: string;
 }
 
-export interface LoadE2EEResponse {
-  /**
-   * The encrypted storage of all the user's PCDs.
-   */
-  encryptedStorage: EncryptedPacket;
-}
-
 /**
- * The string the client must sign with the user's semaphore identity
- * in order to be able to request the PCDs that the server wants to
- * issue the user.
+ * Ask the server to check whether this ticket is still eligible to be checked in.
  */
-export const ISSUANCE_STRING = "Issue me PCDs please.";
-
-/**
- * The POST request body of the client's request to the server which
- * asks for the PCDs that have been issued to the given user.
- */
-export interface IssuedPCDsRequest {
-  /**
-   * A semaphore signature by the user who is requesting the data. The
-   * signature is only accepted if it is of the string {@link ISSUANCE_STRING}.
-   */
-  userProof: SerializedPCD<SemaphoreSignaturePCD>;
-}
-
-/**
- * The response body that the server responds with to an {@link IssuedPCDsRequest}.
- */
-export interface IssuedPCDsResponse {
-  actions: FolderReplacementAction[];
-}
-
-export interface FolderReplacementAction {
-  pcds: SerializedPCD[];
-  folder: string;
-}
-
 export interface CheckTicketRequest {
   ticket: SerializedPCD<EdDSATicketPCD>;
 }
 
-export type CheckTicketResponse =
-  | {
-      success: true;
-    }
-  | { success: false; error: TicketError };
+/**
+ * Happy-path the server has nothing to say in response to a {@link CheckTicketRequest}
+ */
+export type CheckTicketReponseValue = undefined;
 
-export type TicketError =
+/**
+ * However, many problems can come up in {@link CheckTicketRequest}. This type
+ * enumerates all the possible problems.
+ */
+export type TicketError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
   | {
       name: "AlreadyCheckedIn";
@@ -135,26 +105,228 @@ export type TicketError =
   | { name: "InvalidTicket" }
   | { name: "TicketRevoked"; revokedTimestamp: number }
   | { name: "NetworkError" }
-  | { name: "ServerError" };
+  | { name: "ServerError" }
+);
 
-export interface CheckInRequest {
+/**
+ * A particular 'superuser' ticket-holder can request to check in
+ * another ticket that belongs to the same event.
+ */
+export interface CheckTicketInRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine whether the checker has the required permissions
+   * to check this ticket in.
+   */
   checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * The ticket to attempt to check in.
+   */
   ticket: SerializedPCD<EdDSATicketPCD>;
 }
 
-export type CheckInResponse = CheckTicketResponse;
+/**
+ * On the happy path, {@link CheckTicketInRequest} has nothing to say and
+ * just succeeds.
+ */
+export type CheckTicketInResponseValue = undefined;
 
-export interface ListFeedsRequest {}
+/**
+ * A {@link CheckTicketInRequest} can fail for a number of reasons.
+ */
+export type CheckTicketInError = TicketError;
 
-export interface ListFeedsResponse {
+/**
+ * Ask the PCDpass server, or a 3rd party server to return the list of feeds
+ * that it is hosting.
+ */
+export type ListFeedsRequest = unknown;
+
+/**
+ * Response to {@link ListFeedsRequest}.
+ */
+export interface ListFeedsResponseValue {
   feeds: Feed[];
 }
 
-export interface FeedRequest<T extends PCDPackage = PCDPackage> {
+/**
+ * Ask the PCDpass server, or a 3rd party server, to give the user
+ * some PCDs, given the particular feed and credential that the
+ * user supplies.
+ */
+export interface PollFeedRequest<T extends PCDPackage = PCDPackage> {
   feedId: string;
   pcd?: SerializedPCD<PCDOf<T>>;
 }
 
-export interface FeedResponse {
+/**
+ * Response to {@link PollFeedRequest}.
+ */
+export interface PollFeedResponseValue {
   actions: PCDAction[];
 }
+
+/**
+ * The PCDpass server returns this datastructure to users
+ * to represent PCDpass users.
+ */
+export interface PCDpassUserJson {
+  superuserEventConfigIds: string[];
+  // @todo - our uuids need to be more unique
+  uuid: string;
+  commitment: string;
+  email: string;
+  salt: string | null;
+}
+
+/**
+ * The Zupass server returns this datastructure to users
+ * to represent Zupass users.
+ */
+export interface ZupassUserJson {
+  email: string;
+  name: string;
+  role: ZuzaluUserRole;
+  visitor_date_ranges?: DateRange[] | null;
+  // @todo - our uuids need to be more unique
+  uuid: string;
+  commitment: string;
+  salt: null; // Zupass users never have a password salt
+}
+
+/**
+ * Ask the PCDpass server to send a confirmation email with a
+ * log-in token to the given email.
+ */
+export type ConfirmEmailRequest = {
+  /**
+   * Each email can have one account on Zupass/PCDpass.
+   */
+  email: string;
+
+  /**
+   * Public semaphore commitment of this user. The server never learns
+   * the user's private semaphore details.
+   */
+  commitment: string;
+
+  /**
+   * Whether or not to overwrite an existing user, if one is present.
+   * Required to be 'true' if a user with the same email already exists.
+   */
+  force: "true" | "false";
+};
+
+/**
+ * Response to {@link ConfirmEmailRequest}
+ */
+export type ConfirmEmailResponseValue =
+  | {
+      /**
+       * In development mode, the server can return a token
+       * to the client rather than sending it via an email,
+       * speeding up software development iteration. Check
+       * out the `BYPASS_EMAIL_REGISTRATION` environment variable
+       * elsewhere in this codebase to learn more.
+       */
+      devToken: string;
+    }
+  | undefined;
+
+/**
+ * Ask the PCDpass server for the salt of a particular user.
+ */
+export type SaltRequest = { email: string };
+
+/**
+ * Response to {@link SaltRequest}.
+ */
+export type SaltResponseValue = string | null;
+
+/**
+ * Ask the server to let us know if the given token is valid and
+ * OK to use for logging in / overwriting an existing account.
+ */
+export type VerifyTokenRequest = {
+  email: string;
+  token: string;
+};
+
+/**
+ * On the happy path, we don't need to say anything in response to
+ * {@link VerifyTokenRequest}.
+ */
+export type VerifyTokenResponseValue = undefined;
+
+/**
+ * Ask the server to log us in using a special login flow designed
+ * for use by the coworking space organizers.
+ */
+export type DeviceLoginRequest = {
+  email: string;
+  secret: string;
+  commitment: string;
+};
+
+/**
+ * Ask the PCDpass and Zupass server to create a new account with
+ * the given details, overwriting an existing account if one is
+ * present.
+ */
+export type CreateNewUserRequest = {
+  email: string;
+  token: string;
+  commitment: string;
+  /**
+   * Zupass users don't have a salt.
+   */
+  salt: string | null;
+};
+
+/**
+ * PCDpass responds with this when you ask to load an end-to-end
+ * encrypted blob.
+ */
+export type EncryptedStorageResultValue = EncryptedPacket;
+
+/**
+ * PCDpass responds with this when you ask it if it is able to
+ * issue tickets. Used primarily for testing.
+ */
+export type IssuanceEnabledResponseValue = boolean;
+
+/**
+ * PCDpass responds with this when you ask it whether it has
+ * synced the Zuzalu users yet.
+ */
+export type PretixSyncStatusResponseValue = string;
+
+/**
+ * In the case that loading an existing PCDpass or Zupass user fails,
+ * we can determine if it failed because the user does not exist,
+ * or due to some other error, such as intermittent network error,
+ * or the backend being down.
+ */
+export type LoadUserError =
+  | { userMissing: true; errorMessage?: never }
+  | { userMissing?: never; errorMessage: string };
+
+/**
+ * When you ask PCDpass for a user, it will respond with either
+ * a Zupass or PCDpass user.
+ */
+export type UserResponseValue = PCDpassUserJson | ZupassUserJson;
+
+/**
+ * PCDpass responds with this when you ask it if it knows of a given
+ * (id, rootHash) tuple.
+ */
+export type SemaphoreValidRootResponseValue = { valid: boolean };
+
+/**
+ * The string the client must sign with the user's semaphore identity
+ * in order to be able to request the PCDs that the server wants to
+ * issue the user.
+ */
+export const ISSUANCE_STRING = "Issue me PCDs please.";

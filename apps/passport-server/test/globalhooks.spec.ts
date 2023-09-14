@@ -1,6 +1,5 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import chaiHttp from "chai-http";
 import spies from "chai-spies";
 
 /**
@@ -9,5 +8,4 @@ import spies from "chai-spies";
 before(() => {
   chai.use(chaiAsPromised);
   chai.use(spies);
-  chai.use(chaiHttp);
 });

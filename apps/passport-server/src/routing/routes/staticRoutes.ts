@@ -14,6 +14,9 @@ export function initStaticRoutes(
     "semaphore-artifacts"
   );
 
+  /**
+   * We serve static assets out of the 'apps/passport-server/public' directory.
+   */
   app.use(
     "/static",
     express.static(context.publicResourcesDir, {
@@ -21,7 +24,7 @@ export function initStaticRoutes(
         if (path.startsWith(semaphoreResourcesPath)) {
           res.setHeader("Cache-Control", "max-age=31536000"); // one year
         }
-      },
+      }
     })
   );
 }

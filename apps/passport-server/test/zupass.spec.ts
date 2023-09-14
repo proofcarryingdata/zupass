@@ -1,15 +1,18 @@
-import { User } from "@pcd/passport-interface";
+import {
+  requestIssuanceServiceEnabled,
+  User,
+  ZuzaluUserRole
+} from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { getPretixConfig } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
-import { LoggedInZuzaluUser, ZuzaluUserRole } from "../src/database/models";
+import { LoggedInZuzaluUser } from "../src/database/models";
 import { PretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
-import { requestIssuanceServiceEnabled } from "./issuance/issuance";
 import {
   getMockPretixAPI,
   newMockZuzaluPretixAPI
@@ -72,7 +75,7 @@ describe("zupass functionality", function () {
   });
 
   step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application);
+    const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -80,8 +83,12 @@ describe("zupass functionality", function () {
   });
 
   step("should NOT have issuance service running", async function () {
-    const status = await requestIssuanceServiceEnabled(application);
-    expect(status).to.eq(false);
+    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
+      application.expressContext.localEndpoint
+    );
+    expect(issuanceServiceEnabledResult.value).to.eq(false);
+    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
+    expect(issuanceServiceEnabledResult.success).to.eq(true);
   });
 
   step(
@@ -489,7 +496,7 @@ describe("zupass functionality", function () {
         throw new Error("couldn't instantiate a new pretix api");
       }
       application.services.pretixSyncService?.replaceApi(newAPI);
-      const syncStatus = await waitForPretixSyncStatus(application);
+      const syncStatus = await waitForPretixSyncStatus(application, true);
       expect(syncStatus).to.eq(PretixSyncStatus.Synced);
 
       const newTicketHolders =

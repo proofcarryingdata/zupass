@@ -52,7 +52,11 @@ export interface PCDpass {
   context: ApplicationContext;
   services: GlobalServices;
   apis: APIs;
-  expressContext: { app: Application; server: http.Server };
+  expressContext: {
+    app: Application;
+    server: http.Server;
+    localEndpoint: string;
+  };
 }
 
 export interface APIs {
