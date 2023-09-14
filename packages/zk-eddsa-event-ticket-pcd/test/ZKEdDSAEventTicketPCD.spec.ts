@@ -88,6 +88,18 @@ describe("snarkInputFromValidEventIds helper", function () {
     }
     expect(snarkInputForValidEventIds(input)).deep.equal(expected);
   });
+  it("should reject input if too large", async function () {
+    const input: string[] = [];
+    const expected: string[] = [];
+    for (let i = 0; i < VALID_EVENT_IDS_MAX_LEN + 1; i++) {
+      const id = uuid();
+      input.push(id.toString());
+      expected.push(uuidToBigInt(id.toString()).toString());
+    }
+    assert.throws(() => {
+      snarkInputForValidEventIds(input);
+    });
+  });
 });
 
 describe("ZKEdDSAEventTicketPCD should work", function () {
@@ -315,6 +327,21 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       fieldsToReveal1,
       true /* withNullifier */,
       validEventIds2
+    );
+    await assert.rejects(async () => {
+      await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+    });
+  });
+
+  it("should not prove if validEventIds is too large", async function () {
+    const validEventIdsTooLarge = Array<string>(
+      VALID_EVENT_IDS_MAX_LEN + 1
+    ).fill(uuid());
+    const pcdArgs = await toArgs(
+      ticketData1,
+      fieldsToReveal1,
+      true /* withNullifier */,
+      validEventIdsTooLarge
     );
     await assert.rejects(async () => {
       await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
