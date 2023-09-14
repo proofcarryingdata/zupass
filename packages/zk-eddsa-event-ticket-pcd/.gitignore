@@ -3,9 +3,9 @@
 dist
 !.eslintrc.js
 artifacts-unsafe
-!artifacts-unsafe/eddsaTicket.wasm
-!artifacts-unsafe/eddsaTicket.circom
-!artifacts-unsafe/eddsaTicket.zkey
+!artifacts-unsafe/eddsaEventTicket.wasm
+!artifacts-unsafe/eddsaEventTicket.circom
+!artifacts-unsafe/eddsaEventTicket.zkey
 !artifacts-unsafe/generate_artifacts.sh
 !artifacts-unsafe/verification_key.json
 !artifacts-unsafe/README.md

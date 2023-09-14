@@ -1,0 +1,151 @@
+pragma circom 2.1.4;
+
+include "../../../node_modules/circomlib/circuits/poseidon.circom";
+include "../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
+
+// Helper template for revealed fields, set to -1 if not revealed.
+// The shouldRevealValue input is assumed (but not constrained) to be 0 or 1.  Should be constrained externally.
+template ValueOrNegativeOne() {
+    signal input value;
+    signal input shouldRevealValue; // assumed to be 0 or 1
+
+    signal output out;
+
+    out <== value * shouldRevealValue + (-1) * (1 - shouldRevealValue);
+}
+
+// Claim being proved: Attendee (by Semaphore ID) has ticket to event (eventId) signed by signer (EdDSA pubkey)
+// where eventId is in a list of events (array of eventIds).  Additionally a nullifier is calculated, and a watermark is
+// included (unmodiied).
+// Configuration options can determine which of the ticket and nullifier fields are revealed publicly.
+// Configuration can enable or diable the event ID list checking, for cases where any event ID is acceptable.
+template EdDSATicketToEventsPCD (nEvents) {
+    // Fields representing attendee's ticket, each of which can be confirably revealed or not in the proof.
+    // TODO: Consider a more extensible representation, such an array with known offsets and room for growth.
+    signal input ticketId;
+    signal input revealTicketId;
+
+    signal input ticketEventId;
+    signal input revealTicketEventId;
+
+    signal input ticketProductId;
+    signal input revealTicketProductId;
+
+    signal input ticketTimestampConsumed;
+    signal input revealTicketTimestampConsumed;
+
+    signal input ticketTimestampSigned;
+    signal input revealTicketTimestampSigned;
+
+    signal input ticketAttendeeSemaphoreId;
+    signal input revealTicketAttendeeSemaphoreId;
+
+    signal input ticketIsConsumed;
+    signal input revealTicketIsConsumed;
+
+    signal input ticketIsRevoked;
+    signal input revealTicketIsRevoked;
+
+    // Signer of ticket: EdDSA public key
+    signal input ticketSignerPubkeyAx;
+    signal input ticketSignerPubkeyAy;
+
+    // Signature of ticket: EdDSA signaure
+    signal input ticketSignatureR8x;
+    signal input ticketSignatureR8y;
+    signal input ticketSignatureS;
+
+    // Attendee's Semaphore identity (private key)
+    signal input semaphoreIdentityNullifier;
+    signal input semaphoreIdentityTrapdoor;
+
+    // Valid events ticket must correspond to.  Ignored if checkValidEventIds is 0.
+    // TODO: Replace with a Merkle proof?
+    signal input validEventIds[nEvents];
+    signal input checkValidEventIds;
+
+    // External nullifier, used to tie together nullifiers within a single category. 
+    signal input externalNullifier;
+
+    // Whether to reveal the nullifier hash, which can be used to tie together different proofs from the same semaphore ID.
+    signal input revealNullifierHash;
+
+    // Watermark allows prover to tie a proof to a challenge.  It's unconstrained, but included in the proof.
+    signal input watermark;
+
+    // Verify all revealX values are 1 or 0
+    revealTicketId * (1 - revealTicketId) === 0;
+    revealTicketEventId * (1 - revealTicketEventId) === 0;
+    revealTicketProductId * (1 - revealTicketProductId) === 0;
+    revealTicketTimestampConsumed * (1 - revealTicketTimestampConsumed) === 0;
+    revealTicketTimestampSigned * (1 - revealTicketTimestampSigned) === 0;
+    revealTicketAttendeeSemaphoreId * (1 - revealTicketAttendeeSemaphoreId) === 0;
+    revealTicketIsConsumed * (1 - revealTicketIsConsumed) === 0;
+    revealTicketIsRevoked * (1 - revealTicketIsRevoked) === 0;
+    revealNullifierHash * (1 - revealNullifierHash) === 0;
+
+    // Calculate "message" representing the ticket, which is a hash of the fields.
+    signal ticketMessageHash <== Poseidon(8)([
+        ticketId,
+        ticketEventId,
+        ticketProductId,
+        ticketTimestampConsumed,
+        ticketTimestampSigned,
+        ticketAttendeeSemaphoreId,
+        ticketIsConsumed,
+        ticketIsRevoked
+    ]);
+
+    // Verify ticket signature
+    EdDSAPoseidonVerifier()(
+        1,
+        ticketSignerPubkeyAx,
+        ticketSignerPubkeyAy,
+        ticketSignatureS,
+        ticketSignatureR8x,
+        ticketSignatureR8y,
+        ticketMessageHash
+    );
+
+    // Verify semaphore private identity matches the ID in the ticket by re-generating the public ID to compare.
+    signal semaSecret <== Poseidon(2)([
+        semaphoreIdentityNullifier,
+        semaphoreIdentityTrapdoor
+    ]);
+    signal semaIDCommitment <== Poseidon(1)([semaSecret]);
+    ticketAttendeeSemaphoreId === semaIDCommitment;
+
+    // checkValidEventIds config must be a boolean (0 or 1).
+    checkValidEventIds * (1 - checkValidEventIds) === 0;
+
+    // Check that the event ID (from the ticket) is one of the valid event IDs.
+    // This is a logical OR expressed in the fact that (ID - validID[i]) should be zero for some i, so the
+    // product of all terms should be zero.
+    signal oneofPartialProducts[nEvents+1];
+    oneofPartialProducts[0] <== 1;
+    for (var i = 0; i < nEvents; i++) {
+        oneofPartialProducts[i+1] <== oneofPartialProducts[i] * (ticketEventId - validEventIds[i]);
+    }
+    oneofPartialProducts[nEvents] * checkValidEventIds === 0;
+
+    // Calculate nullifier
+    signal nullifierHash <== Poseidon(2)([externalNullifier, semaphoreIdentityNullifier]);
+
+    // Dummy constraint on watermark to make sure it can't be compiled out.
+    signal watermarkSquared <== watermark * watermark;
+
+    // Revealed ticket fields get either the value or -1 based on configuration.
+    signal output revealedTicketId <== ValueOrNegativeOne()(ticketId, revealTicketId);
+    signal output revealedEventId <== ValueOrNegativeOne()(ticketEventId, revealTicketEventId);
+    signal output revealedProductId <== ValueOrNegativeOne()(ticketProductId, revealTicketProductId);
+    signal output revealedTimestampConsumed <== ValueOrNegativeOne()(ticketTimestampConsumed, revealTicketTimestampConsumed);
+    signal output revealedTimestampSigned <== ValueOrNegativeOne()(ticketTimestampSigned, revealTicketTimestampSigned);
+    signal output revealedAttendeeSemaphoreId <== ValueOrNegativeOne()(ticketAttendeeSemaphoreId, revealTicketAttendeeSemaphoreId);
+    signal output revealedIsConsumed <== ValueOrNegativeOne()(ticketIsConsumed, revealTicketIsConsumed);
+    signal output revealedIsRevoked <== ValueOrNegativeOne()(ticketIsRevoked, revealTicketIsRevoked);
+
+    // Revealed nullifier gets either the value or -1 based on configuration.
+    signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);
+}
+
+component main { public [ ticketSignerPubkeyAx, ticketSignerPubkeyAy, validEventIds, checkValidEventIds, externalNullifier, watermark ] } = EdDSATicketToEventsPCD(100);
