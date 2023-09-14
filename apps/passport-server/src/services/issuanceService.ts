@@ -18,6 +18,7 @@ import {
   ISSUANCE_STRING,
   ListFeedsRequest,
   ListFeedsResponse,
+  ListSingleFeedRequest,
   PCDPassFeedIds
 } from "@pcd/passport-interface";
 import {
@@ -34,7 +35,8 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
+  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
@@ -91,208 +93,217 @@ export class IssuanceService {
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
 
-    this.feedHost = new FeedHost([
-      {
-        handleRequest: async (
-          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<FeedResponse> => {
-          const pcds = await this.issueDevconnectPretixTicketPCDs(
-            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-          );
-          const ticketsByEvent = _.groupBy(
-            pcds,
-            (pcd) => pcd.claim.ticket.eventName
-          );
+    const FEED_PROVIDER_NAME = "PCDPass";
 
-          const devconnectTickets = Object.entries(ticketsByEvent).filter(
-            ([eventName]) => eventName !== "SBC SRW"
-          );
+    this.feedHost = new FeedHost(
+      [
+        {
+          handleRequest: async (
+            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<FeedResponse> => {
+            const pcds = await this.issueDevconnectPretixTicketPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const ticketsByEvent = _.groupBy(
+              pcds,
+              (pcd) => pcd.claim.ticket.eventName
+            );
 
-          const srwTickets = Object.entries(ticketsByEvent).filter(
-            ([eventName]) => eventName === "SBC SRW"
-          );
+            const devconnectTickets = Object.entries(ticketsByEvent).filter(
+              ([eventName]) => eventName !== "SBC SRW"
+            );
 
-          const actions = [];
+            const srwTickets = Object.entries(ticketsByEvent).filter(
+              ([eventName]) => eventName === "SBC SRW"
+            );
 
-          // clear out old pcds if they were there
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "SBC SRW",
-            pcds: []
-          });
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Devconnect",
-            pcds: []
-          });
+            const actions = [];
 
-          actions.push(
-            ...(await Promise.all(
-              devconnectTickets.map(async ([eventName, tickets]) => ({
-                type: PCDActionType.ReplaceInFolder,
-                folder: joinPath("Devconnect", eventName),
-                pcds: await Promise.all(
-                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              }))
-            ))
-          );
-
-          actions.push(
-            ...(await Promise.all(
-              srwTickets.map(async ([_, tickets]) => ({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "SBC SRW",
-                pcds: await Promise.all(
-                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              }))
-            ))
-          );
-
-          return { actions };
-        },
-        feed: {
-          id: PCDPassFeedIds.Devconnect,
-          name: "Devconnect Tickets",
-          description: "Get your Devconnect tickets here!",
-          inputPCDType: EdDSATicketPCDPackage.name,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Devconnect",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "Devconnect",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission,
-            {
+            // clear out old pcds if they were there
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
               folder: "SBC SRW",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "SBC SRW",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission
-          ]
-        }
-      },
-      {
-        handleRequest: async (_req: FeedRequest): Promise<FeedResponse> => {
-          return {
-            actions: [
+              pcds: []
+            });
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Devconnect",
+              pcds: []
+            });
+
+            actions.push(
+              ...(await Promise.all(
+                devconnectTickets.map(async ([eventName, tickets]) => ({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: joinPath("Devconnect", eventName),
+                  pcds: await Promise.all(
+                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                }))
+              ))
+            );
+
+            actions.push(
+              ...(await Promise.all(
+                srwTickets.map(async ([_, tickets]) => ({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: "SBC SRW",
+                  pcds: await Promise.all(
+                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                }))
+              ))
+            );
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Devconnect,
+            name: "Devconnect Tickets",
+            description: "Get your Devconnect tickets here!",
+            inputPCDType: EdDSATicketPCDPackage.name,
+            partialArgs: undefined,
+            permissions: [
               {
-                pcds: await this.issueFrogPCDs(),
+                folder: "Devconnect",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Devconnect",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission,
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (_req: FeedRequest): Promise<FeedResponse> => {
+            return {
+              actions: [
+                {
+                  pcds: await this.issueFrogPCDs(),
+                  folder: "Frogs",
+                  type: PCDActionType.AppendToFolder
+                } as AppendToFolderAction
+              ]
+            };
+          },
+          feed: {
+            id: PCDPassFeedIds.Frogs,
+            name: "Frogs",
+            description: "Get your Frogs here!",
+            inputPCDType: undefined,
+            partialArgs: undefined,
+            permissions: [
+              {
                 folder: "Frogs",
-                type: PCDActionType.AppendToFolder
-              } as AppendToFolderAction
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (
+            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<FeedResponse> => {
+            const pcds = await this.issueEmailPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const actions: PCDAction[] = [];
+
+            // Clear out the folder
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Email",
+              pcds: []
+            } as ReplaceInFolderAction);
+
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Email",
+              pcds: await Promise.all(
+                pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+              )
+            } as ReplaceInFolderAction);
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Email,
+            name: "PCDPass Verified Emails",
+            description: "Emails verified by PCDPass",
+            inputPCDType: EmailPCDPackage.name,
+            partialArgs: undefined,
+            permissions: [
+              {
+                folder: "Email",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Email",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (
+            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<FeedResponse> => {
+            const pcds = await this.issueZuzaluTicketPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const actions: PCDAction[] = [];
+
+            // Clear out the folder
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Zuzalu",
+              pcds: []
+            } as ReplaceInFolderAction);
+
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Zuzalu",
+              pcds: await Promise.all(
+                pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+              )
+            } as ReplaceInFolderAction);
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Zuzalu_1,
+            name: "Zuzalu tickets",
+            description: "Your Zuzalu Tickets",
+            inputPCDType: EdDSATicketPCD.name,
+            partialArgs: undefined,
+            permissions: [
+              {
+                folder: "Zuzalu",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Zuzalu",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
             ]
-          };
-        },
-        feed: {
-          id: PCDPassFeedIds.Frogs,
-          name: "Frogs",
-          description: "Get your Frogs here!",
-          inputPCDType: undefined,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Frogs",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission
-          ]
+          }
         }
-      },
-      {
-        handleRequest: async (
-          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<FeedResponse> => {
-          const pcds = await this.issueEmailPCDs(
-            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-          );
-          const actions: PCDAction[] = [];
-
-          // Clear out the folder
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Email",
-            pcds: []
-          } as ReplaceInFolderAction);
-
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Email",
-            pcds: await Promise.all(
-              pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
-            )
-          } as ReplaceInFolderAction);
-
-          return { actions };
-        },
-        feed: {
-          id: PCDPassFeedIds.Email,
-          name: "Attested emails",
-          description: "Your attested emails",
-          inputPCDType: EmailPCDPackage.name,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Email",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "Email",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission
-          ]
-        }
-      },
-      {
-        handleRequest: async (
-          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<FeedResponse> => {
-          const pcds = await this.issueZuzaluTicketPCDs(
-            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-          );
-          const actions: PCDAction[] = [];
-
-          // Clear out the folder
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Zuzalu",
-            pcds: []
-          } as ReplaceInFolderAction);
-
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Zuzalu",
-            pcds: await Promise.all(
-              pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-            )
-          } as ReplaceInFolderAction);
-
-          return { actions };
-        },
-        feed: {
-          id: PCDPassFeedIds.Zuzalu_1,
-          name: "Zuzalu tickets",
-          description: "Your Zuzalu Tickets",
-          inputPCDType: EdDSATicketPCD.name,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Zuzalu",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "Zuzalu",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission
-          ]
-        }
-      }
-    ]);
+      ],
+      `${process.env.PASSPORT_SERVER_URL}/feeds`,
+      FEED_PROVIDER_NAME
+    );
   }
 
   public async handleListFeedsRequest(
@@ -301,8 +312,18 @@ export class IssuanceService {
     return this.feedHost.handleListFeedsRequest(request);
   }
 
+  public async handleListSingleFeedRequest(
+    request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponse> {
+    return this.feedHost.handleListSingleFeedRequest(request);
+  }
+
   public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
     return this.feedHost.handleFeedRequest(request);
+  }
+
+  public hasFeedWithId(feedId: string): boolean {
+    return this.feedHost.hasFeedWithId(feedId);
   }
 
   public getRSAPublicKey(): string {

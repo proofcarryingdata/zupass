@@ -20,13 +20,22 @@ export interface AppState {
 
   // View state
   pendingAction?: PendingAction;
-  modal: "info" | "settings" | "save-sync" | "invalid-participant" | "";
+  modal:
+    | "info"
+    | "settings"
+    | "save-sync"
+    | "invalid-participant"
+    | "resolve-subscription-error"
+    | "";
 
   // User metadata.
   self?: User;
 
   // If set, shows an error popover.
   error?: AppError;
+
+  // If set, show the error resolution screen for this subscription
+  resolvingSubscriptionId: string;
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;

@@ -12,49 +12,85 @@ export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
   public constructor() {
-    this.feedHosts = new Map([
+    this.feedHosts = new Map<string, FeedHost>([
       [
         "http://localhost:3000/feed",
-        new FeedHost([
-          {
-            feed: {
-              description:
-                "returns a new semaphore identity each time it's invoked",
-              id: "1",
-              name: "identity drip",
-              permissions: [
-                {
-                  folder: "TEST",
-                  type: PCDPermissionType.ReplaceInFolder
-                } as PCDPermission
-              ],
-              inputPCDType: undefined,
-              partialArgs: undefined
-            },
-            handleRequest: async (_req: FeedRequest) => {
-              return {
-                actions: [
+        new FeedHost(
+          [
+            {
+              feed: {
+                description:
+                  "returns a new semaphore identity each time it's invoked",
+                id: "1",
+                name: "identity drip",
+                permissions: [
                   {
-                    type: PCDActionType.ReplaceInFolder,
                     folder: "TEST",
-                    pcds: [
-                      await SemaphoreIdentityPCDPackage.serialize(
-                        await SemaphoreIdentityPCDPackage.prove({
-                          identity: new Identity()
-                        })
-                      )
-                    ]
-                  }
-                ]
-              };
+                    type: PCDPermissionType.ReplaceInFolder
+                  } as PCDPermission
+                ],
+                inputPCDType: undefined,
+                partialArgs: undefined
+              },
+              handleRequest: async (_req: FeedRequest) => {
+                return {
+                  actions: [
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: "TEST",
+                      pcds: [
+                        await SemaphoreIdentityPCDPackage.serialize(
+                          await SemaphoreIdentityPCDPackage.prove({
+                            identity: new Identity()
+                          })
+                        )
+                      ]
+                    }
+                  ]
+                };
+              }
+            },
+            {
+              feed: {
+                description: "returns actions that are not permitted",
+                id: "2",
+                name: "bad feed",
+                permissions: [
+                  {
+                    folder: "TEST",
+                    type: PCDPermissionType.ReplaceInFolder
+                  } as PCDPermission
+                ],
+                inputPCDType: undefined,
+                partialArgs: undefined
+              },
+              handleRequest: async (_req: FeedRequest) => {
+                return {
+                  actions: [
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: "NOT TEST",
+                      pcds: [
+                        await SemaphoreIdentityPCDPackage.serialize(
+                          await SemaphoreIdentityPCDPackage.prove({
+                            identity: new Identity()
+                          })
+                        )
+                      ]
+                    }
+                  ]
+                };
+              }
             }
-          }
-        ])
+          ],
+          "http://localhost:3000/feed",
+          "Mock Provider"
+        )
       ]
     ]);
   }
 
-  public getProviders(): string[] {
+  public getProviderUrls(): string[] {
     return Array.from(this.feedHosts.keys());
   }
 

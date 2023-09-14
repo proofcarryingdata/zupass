@@ -152,7 +152,9 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
+          {appConfig.isZuzalu && (
+            <Route path="sync-existing" element={<SyncExistingScreen />} />
+          )}
           <Route
             path="verify"
             element={
@@ -214,7 +216,8 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     userInvalid: userInvalid,
-    subscriptions
+    subscriptions,
+    resolvingSubscriptionId: undefined
   };
 }
 
