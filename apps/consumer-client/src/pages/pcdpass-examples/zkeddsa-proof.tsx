@@ -109,7 +109,7 @@ export default function Page() {
           onClick={() =>
             openZKEdDSATicketPopup(
               PCDPASS_URL,
-              window.location.origin + "/popup",
+              window.location.origin + "#/popup",
               fieldsToReveal,
               watermark,
               externalNullifier

@@ -2,8 +2,7 @@ import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInRequest,
   FeedRequest,
-  ISSUANCE_STRING,
-  PCDPassFeedIds
+  ISSUANCE_STRING
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -65,10 +64,11 @@ export async function requestServerEdDSAPublicKey(
 export async function requestIssuedPCDs(
   application: PCDpass,
   identity: Identity,
-  signedMessage: string
+  signedMessage: string,
+  feedId: string
 ): Promise<Response> {
   const request: FeedRequest = {
-    feedId: PCDPassFeedIds.Devconnect,
+    feedId,
     pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {

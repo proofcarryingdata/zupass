@@ -1,5 +1,11 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState
+} from "react";
 import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
 import { logToServer } from "../../src/api/logApi";
 import { requestLoginCode } from "../../src/api/user";
@@ -61,44 +67,48 @@ export function AlreadyRegisteredScreen() {
     window.location.href = "#/sync-existing";
   }, [email, identityCommitment]);
 
-  const onSubmitPassword = useCallback(async () => {
-    if (!password) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Missing password",
-          message: "Please enter a password",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
-    }
+  const onSubmitPassword = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!password) {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Missing password",
+            message: "Please enter a password",
+            dismissToCurrentPage: true
+          }
+        });
+        return;
+      }
 
-    try {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const crypto = await PCDCrypto.newInstance();
-      const syncKey = await crypto.argon2(password, salt, 32);
-      const storage = await downloadAndDecryptStorage(syncKey);
-      dispatch({
-        type: "load-from-sync",
-        storage,
-        encryptionKey: syncKey
-      });
-      setLoading(false);
-    } catch (e) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Password incorrect",
-          message:
-            "Double-check your password. If you've lost access, please click 'Reset Account' below.",
-          dismissToCurrentPage: true
-        }
-      });
-      setLoading(false);
-    }
-  }, [dispatch, password, salt]);
+        const crypto = await PCDCrypto.newInstance();
+        const syncKey = await crypto.argon2(password, salt, 32);
+        const storage = await downloadAndDecryptStorage(syncKey);
+        dispatch({
+          type: "load-from-sync",
+          storage,
+          encryptionKey: syncKey
+        });
+        setLoading(false);
+      } catch (e) {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Password incorrect",
+            message:
+              "Double-check your password. If you've lost access, please click 'Reset Account' below.",
+            dismissToCurrentPage: true
+          }
+        });
+        setLoading(false);
+      }
+    },
+    [dispatch, password, salt]
+  );
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";

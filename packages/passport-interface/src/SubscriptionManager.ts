@@ -11,7 +11,8 @@ import { IFeedApi } from "./FeedAPI";
 
 export const enum PCDPassFeedIds {
   Devconnect = "1",
-  Frogs = "2"
+  Frogs = "2",
+  Email = "3"
 }
 
 export async function applyActions(

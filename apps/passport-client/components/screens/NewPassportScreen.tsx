@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { fetchSaltFromServer, requestLoginCode } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
@@ -79,13 +79,17 @@ function SendEmailVerification({ email }: { email: string }) {
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
-  const verify = useCallback(async () => {
-    if (verifyingCode) return;
-    const token = inRef.current?.value || "";
-    setVerifyingCode(true);
-    await dispatch({ type: "verify-token", email, token });
-    setVerifyingCode(false);
-  }, [dispatch, email, verifyingCode]);
+  const verify = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (verifyingCode) return;
+      const token = inRef.current?.value || "";
+      setVerifyingCode(true);
+      await dispatch({ type: "verify-token", email, token });
+      setVerifyingCode(false);
+    },
+    [dispatch, email, verifyingCode]
+  );
 
   return (
     <AppContainer bg="primary">

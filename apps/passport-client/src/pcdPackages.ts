@@ -1,5 +1,6 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
@@ -106,6 +107,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EdDSATicketPCDPackage,
     ZKEdDSAEventTicketPCDPackage,
     ZKEdDSATicketPCDPackage,
-    RSAImagePCDPackage
+    RSAImagePCDPackage,
+    EmailPCDPackage
   ];
 }
