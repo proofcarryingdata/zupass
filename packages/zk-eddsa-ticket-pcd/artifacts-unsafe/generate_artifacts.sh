@@ -1,3 +1,15 @@
+# This script performs circuit-specific setup and generates all necessary
+# artifacts for using eddsaTicket.circom.
+#
+# !!!! This is dev-mode setup and not secure for production use!!!!
+#
+# Prerequisites:
+# - Circom 2 compiler, installable from here: https://docs.circom.io/getting-started/installation/
+# - Powers-of-tau setup ceremony.
+#   This script assumes power 13 for 8K max constraints.
+#   The file powersOfTau28_hez_final_13.ptau is referenced here:
+#   https://github.com/iden3/snarkjs/blob/master/README.md
+
 rm -rf eddsaTicket_js
 rm eddsaTicket_0000.zkey
 rm eddsaTicket_0001.zkey

@@ -29,6 +29,7 @@
     "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
     "@pcd/rsa-image-pcd": "0.0.1",
     "@pcd/rsa-ticket-pcd": "0.1.1",
+    "@pcd/util": "0.0.1",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",

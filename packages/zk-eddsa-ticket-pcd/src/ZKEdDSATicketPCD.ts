@@ -1,11 +1,9 @@
 import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  booleanToBigInt,
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  ticketDataToBigInts,
-  uuidToBigInt
+  ticketDataToBigInts
 } from "@pcd/eddsa-ticket-pcd";
 import {
   BigIntArgument,
@@ -23,34 +21,26 @@ import {
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   babyJubIsNegativeOne,
+  booleanToBigInt,
   decStringToBigIntToUuid,
-  fromHexString
+  fromHexString,
+  generateSnarkMessageHash,
+  uuidToBigInt
 } from "@pcd/util";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../../util/src/declarations/circomlibjs.d.ts" />
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../../util/src/declarations/snarkjs.d.ts" />
 import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
-import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts-unsafe/verification_key.json";
 
+import {} from "@pcd/util";
 import { ZKEdDSATicketCardBody } from "./CardBody";
 
-/**
- * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
- * @param signal The initial message.
- * @returns The outputted hash, fed in as a signal to the Semaphore proof.
- */
-export function generateMessageHash(signal: string): bigint {
-  // right shift to fit into a field element, which is 254 bits long
-  // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> BigInt(8);
-}
-
-export const STATIC_TICKET_PCD_NULLIFIER = generateMessageHash(
+export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-ticket-pcds"
 );
 

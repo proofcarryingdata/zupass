@@ -1,10 +1,10 @@
 import { expect } from "chai";
 import "mocha";
-import { babyJubIsNegativeOne, babyJubNegativeOne } from "../src";
+import { BABY_JUB_NEGATIVE_ONE, babyJubIsNegativeOne } from "../src";
 
 describe("SNARKHelpers should work", async function () {
   it("BabyJubNegativeOne values should work", function () {
-    expect(babyJubNegativeOne).to.eq(
+    expect(BABY_JUB_NEGATIVE_ONE).to.eq(
       BigInt(
         "21888242871839275222246405745257275088548364400416034343698204186575808495616"
       )
@@ -16,6 +16,6 @@ describe("SNARKHelpers should work", async function () {
         "21888242871839275222246405745257275088548364400416034343698204186575808495616"
       )
     ).to.eq(true);
-    expect(babyJubIsNegativeOne(babyJubNegativeOne.toString())).to.eq(true);
+    expect(babyJubIsNegativeOne(BABY_JUB_NEGATIVE_ONE.toString())).to.eq(true);
   });
 });

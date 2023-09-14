@@ -1,4 +1,4 @@
-import { stringify } from "uuid";
+import { parse as uuidParse, stringify as uuidStringify } from "uuid";
 
 /**
  * Converts a byte array to a hex string.  Opposite of fromHexString().
@@ -22,5 +22,29 @@ export function decStringToBigIntToUuid(value: string): string {
   let hexStr = BigInt(value).toString(16);
   while (hexStr.length < 32) hexStr = "0" + hexStr;
   const buf = Buffer.from(hexStr, "hex");
-  return stringify(buf);
+  return uuidStringify(buf);
+}
+
+/**
+ * Converts a UUID string into a bigint.
+ */
+export function uuidToBigInt(v: string): bigint {
+  // a uuid is just a particular representation of 16 bytes
+  const bytes = uuidParse(v);
+  const hex = "0x" + Buffer.from(bytes).toString("hex");
+  return BigInt(hex);
+}
+
+/**
+ * Converts a native number to a bigint.
+ */
+export function numberToBigInt(v: number): bigint {
+  return BigInt(v);
+}
+
+/**
+ * Converts a boolean to a bigint value of 0 or 1.
+ */
+export function booleanToBigInt(v: boolean): bigint {
+  return BigInt(v ? 1 : 0);
 }

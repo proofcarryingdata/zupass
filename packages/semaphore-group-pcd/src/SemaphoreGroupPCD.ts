@@ -5,42 +5,30 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
-  SerializedPCD,
+  SerializedPCD
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   FullProof,
-  generateProof,
   Proof,
-  verifyProof,
+  generateProof,
+  verifyProof
 } from "@semaphore-protocol/proof";
-import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { SemaphoreGroupCardBody } from "./CardBody";
 import {
-  deserializeSemaphoreGroup,
   SerializedSemaphoreGroup,
+  deserializeSemaphoreGroup
 } from "./SerializedSemaphoreGroup";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
-
-/**
- * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
- * @param signal The initial message.
- * @returns The outputted hash, fed in as a signal to the Semaphore proof.
- */
-export function generateMessageHash(signal: string): bigint {
-  // right shift to fit into a field element, which is 254 bits long
-  // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> BigInt(8);
-}
 
 export interface SempahoreGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
@@ -165,7 +153,7 @@ export async function prove(
     args.signal.value,
     {
       zkeyFilePath: initArgs.zkeyFilePath,
-      wasmFilePath: initArgs.wasmFilePath,
+      wasmFilePath: initArgs.wasmFilePath
     }
   );
 
@@ -174,7 +162,7 @@ export async function prove(
     depth: deserializedGroup.depth,
     externalNullifier: args.externalNullifier.value.toString(),
     nullifierHash: fullProof.nullifierHash.toString(),
-    signal: args.signal.value.toString(),
+    signal: args.signal.value.toString()
   };
 
   const proof: SemaphoreGroupPCDProof = fullProof.proof;
@@ -188,7 +176,7 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
     merkleTreeRoot: pcd.claim.merkleRoot + "",
     nullifierHash: pcd.claim.nullifierHash,
     signal: pcd.claim.signal,
-    proof: pcd.proof,
+    proof: pcd.proof
   };
 
   const valid = await verifyProof(fullProof, pcd.claim.depth);
@@ -201,7 +189,7 @@ export async function serialize(
 ): Promise<SerializedPCD<SemaphoreGroupPCD>> {
   return {
     type: SemaphoreGroupPCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<SemaphoreGroupPCD>;
 }
 
@@ -214,7 +202,7 @@ export async function deserialize(
 export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
   return {
     header: "Semaphore Group Signal",
-    displayName: "semaphore-group-" + pcd.id.substring(0, 4),
+    displayName: "semaphore-group-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -235,5 +223,5 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

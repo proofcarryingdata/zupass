@@ -1,5 +1,5 @@
 import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
-import { parse as uuidParse } from "uuid";
+import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
@@ -16,23 +16,8 @@ export type SerializedTicket = [
   bigint
 ];
 
-export function numberToBigInt(v: number): bigint {
-  return BigInt(v);
-}
-
-export function booleanToBigInt(v: boolean): bigint {
-  return BigInt(v ? 1 : 0);
-}
-
 export function semaphoreIdToBigInt(v: string): bigint {
   return BigInt(v);
-}
-
-export function uuidToBigInt(v: string): bigint {
-  // a uuid is just a particular representation of 16 bytes
-  const bytes = uuidParse(v);
-  const hex = "0x" + Buffer.from(bytes).toString("hex");
-  return BigInt(hex);
 }
 
 export function ticketDataToBigInts(data: ITicketData): SerializedTicket {

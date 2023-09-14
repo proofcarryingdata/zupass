@@ -7,12 +7,12 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { generateSnarkMessageHash } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage,
-  generateMessageHash
+  ZKEdDSATicketPCDPackage
 } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { useEffect, useMemo, useState } from "react";
@@ -25,10 +25,11 @@ import { PCDPASS_URL } from "../../constants";
  * request a Semaphore Group Membership PCD as a third party developer.
  */
 export default function Page() {
-  const watermark = generateMessageHash(
+  const watermark = generateSnarkMessageHash(
     "consumer-client zk-eddsa-ticket-pcd challenge"
   );
-  const externalNullifier = generateMessageHash("consumer-client").toString();
+  const externalNullifier =
+    generateSnarkMessageHash("consumer-client").toString();
 
   const [revealTicketId, setRevealTicketId] = useState(false);
   const [revealEventId, setRevealEventId] = useState(true);
