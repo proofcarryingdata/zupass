@@ -26,7 +26,7 @@
     "@pcd/pcd-types": "^0.6.3",
     "@pcd/semaphore-identity-pcd": "0.6.2",
     "@pcd/semaphore-signature-pcd": "0.6.2",
-    "@pcd/util": "^0.0.1",
+    "@pcd/util": "0.0.1",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "circomlib": "^2.0.5",

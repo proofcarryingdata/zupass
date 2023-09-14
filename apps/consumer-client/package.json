@@ -26,6 +26,7 @@
     "@pcd/semaphore-group-pcd": "0.6.2",
     "@pcd/semaphore-identity-pcd": "0.6.2",
     "@pcd/webauthn-pcd": "0.6.2",
+    "@pcd/zk-eddsa-event-ticket-pcd": "0.0.1",
     "@pcd/zk-eddsa-ticket-pcd": "0.0.1",
     "@pcd/rsa-image-pcd": "0.0.1",
     "@pcd/rsa-ticket-pcd": "0.1.1",
