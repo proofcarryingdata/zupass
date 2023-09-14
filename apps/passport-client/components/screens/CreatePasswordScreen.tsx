@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import styled from "styled-components";
 import { verifyTokenServer } from "../../src/api/user";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
@@ -60,7 +60,8 @@ export function CreatePasswordScreen() {
     }
   }, [self]);
 
-  const onCreatePassword = async () => {
+  const onCreatePassword = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (password === "") {
       setErrorMessage("Please enter a password.");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
