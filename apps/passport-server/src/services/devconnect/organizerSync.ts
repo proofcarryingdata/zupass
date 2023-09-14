@@ -15,6 +15,7 @@ import {
 import {
   DevconnectPretixTicket,
   DevconnectPretixTicketDB,
+  PretixEventInfo,
   PretixItemInfo
 } from "../../database/models";
 import {
@@ -674,6 +675,7 @@ export class OrganizerSync {
         );
 
         const ticketsFromPretix = this.ordersToDevconnectTickets(
+          eventInfo,
           pretixOrders,
           updatedItemsInfo
         );
@@ -831,6 +833,7 @@ export class OrganizerSync {
    * subevent events they have in their order.
    */
   private ordersToDevconnectTickets(
+    eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
     itemsInfo: PretixItemInfo[]
   ): DevconnectPretixTicket[] {
@@ -859,7 +862,7 @@ export class OrganizerSync {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
-              `[DEVCONNECT PRETIX] Encountered order position without attendee email, defaulting to order email`,
+              `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
               JSON.stringify({
                 orderCode: order.code,
                 positionID: positionid,
