@@ -121,11 +121,11 @@ export class OrganizerSync {
         try {
           fetchedData = await this.fetchData();
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to fetch", {
             cause: errorCause("fetching", this.organizer.id, e)
           });
@@ -134,11 +134,11 @@ export class OrganizerSync {
         try {
           this.validate(fetchedData);
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to validate", {
             cause: errorCause("validating", this.organizer.id, e)
           });
@@ -147,11 +147,11 @@ export class OrganizerSync {
         try {
           await this.save(fetchedData);
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to save", {
             cause: errorCause("saving", this.organizer.id, e)
           });
@@ -160,11 +160,11 @@ export class OrganizerSync {
         try {
           await this.pushCheckins();
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Check-in sync failed", {
             cause: errorCause("pushingCheckins", this.organizer.id, e)
           });
