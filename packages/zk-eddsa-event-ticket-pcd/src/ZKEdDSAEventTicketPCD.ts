@@ -42,7 +42,7 @@ import vkey from "../artifacts-unsafe/verification_key.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
-  "dummy-nullifier-for-eddsa-ticket-pcds"
+  "dummy-nullifier-for-eddsa-event-ticket-pcds"
 );
 
 export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
@@ -508,8 +508,8 @@ export async function deserialize(
  */
 export function getDisplayOptions(pcd: ZKEdDSAEventTicketPCD): DisplayOptions {
   return {
-    header: "ZK EdDSA Ticket PCD",
-    displayName: "zk-eddsa-ticket-" + pcd.id.substring(0, 4)
+    header: "ZK EdDSA Event Ticket PCD",
+    displayName: "zk-eddsa-event-ticket-" + pcd.id.substring(0, 4)
   };
 }
 
