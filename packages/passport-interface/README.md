@@ -74,7 +74,7 @@ export default function App() {
 }
 ```
 
-### Adding a PCD to the passport
+### Adding a PCD to with the passport popup
 
 You can generate a PCD and add it to the passport with [`constructPassportPcdProveAndAddRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdProveAndAddRequestUrl.html).
 
@@ -92,12 +92,12 @@ const url = constructPassportPcdProveAndAddRequestUrl<typeof EdDSAPCDPackage>(
             argumentType: ArgumentTypeName.String
     },
         message: {
-            argumentType: ArgumentTypeName.StringArray,
-            value: ["0x342"]
+            argumentType: ArgumentTypeName.StringArray,,
+            value: ["0x32"]
         },
         privateKey: {
             argumentType: ArgumentTypeName.String,
-            value: "0x42"
+            userProvided: true
         }
     },
     { title: "EdDSA Signature Proof" }
@@ -111,13 +111,14 @@ Or add a previously generated serialized PCD with [`constructPassportPcdAddReque
 ```typescript
 import { constructPassportPcdAddRequestUrl, openPassportPopup } from "@pcd/passport-interface"
 
+// This code could be on your server.
 const pcd = await prove({
     id: {
         argumentType: ArgumentTypeName.String
     },
     message: {
-        argumentType: ArgumentTypeName.StringArray,
-        value: ["0x342"]
+        argumentType: ArgumentTypeName.StringArray,,
+        value: ["0x32"]
     },
     privateKey: {
         argumentType: ArgumentTypeName.String,
@@ -136,7 +137,7 @@ const url = constructPassportPcdAddRequestUrl(
 openPassportPopup("/popup", url)
 ```
 
-### Getting a PCD from the passport
+### Getting a PCD with the passport popup
 
 You can get a PCD from the passport that already exists in the user's local storage with [`getWithoutProvingUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.getWithoutProvingUrl.html).
 
@@ -170,14 +171,47 @@ const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
         },
         message: {
             argumentType: ArgumentTypeName.StringArray,
-            value: ["0x342"]
+            value: ["0x32"]
         },
         privateKey: {
             argumentType: ArgumentTypeName.String,
-            value: "0x324"
+            userProvided: true
         }
     }
 )
 
 openPassportPopup("/popup", url)
 ```
+
+### Interacting with the passport webapp directly without popup
+
+If you wish to add or get a PCD from the passport webapp without relying on a popup interface but instead managing the outcome of the request on your server, you can achieve this by specifying an alternative return URL. This return URL could be a designated endpoint on your server, responsible for processing the request and its subsequent actions.
+
+```typescript
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
+import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface"
+import { ArgumentTypeName } from "@pcd/pcd-types"
+  
+const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
+    "https://pcdpass.xyz",
+    "https://your-server.org/verify", // This endpoint will handle the request's results.
+    EdDSAPCDPackage.name,
+    {
+        id: {
+            argumentType: ArgumentTypeName.String
+        },
+        message: {
+            argumentType: ArgumentTypeName.StringArray,
+            value: ["0x32"]
+        },
+        privateKey: {
+            argumentType: ArgumentTypeName.String,
+            userProvided: true
+        }
+    }, { 
+        genericProveScreen: true
+    }
+); 
+```
+
+A real use case could be a Telegram bot that redirects users to the passport webapp to allow them to enter their private key to sign a message and create a EdDSA PCD. The return URL in this case will be an endpoint in the bot's server that adds the user to a Telegram group after verifying the PCD.
