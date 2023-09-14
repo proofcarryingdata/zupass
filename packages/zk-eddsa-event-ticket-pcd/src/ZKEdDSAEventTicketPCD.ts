@@ -50,7 +50,7 @@ export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
 let initializedPromise: Promise<void> | undefined;
 let babyJub: BabyJub;
 let eddsa: Eddsa;
-let initArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
+let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 
 /**
  * Specifies which fields of an EdDSATicket should be revealed in a proof.
@@ -91,7 +91,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
   // `validEventIds` is usually app-specified.  It is optional, and if included
   // the PCD proves that the ticket's event ID is in this list.  This is a list of
   // UUIDs with max length VALID_EVENT_IDS_MAX_LEN (100).
-  validEventIds?: StringArrayArgument;
+  validEventIds: StringArrayArgument;
 
   // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified
   fieldsToReveal: ObjectArgument<EdDSATicketFieldsToReveal>;
@@ -99,7 +99,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
 
   // provide externalNullifier field to request a nullifierHash
   // if you don't provide this field, no nullifierHash will be outputted
-  externalNullifier?: BigIntArgument;
+  externalNullifier: BigIntArgument;
 }
 
 /**
@@ -151,11 +151,11 @@ export class ZKEdDSAEventTicketPCD
  * Initialize ZKEdDSAEventTicketPCDPackage.
  */
 export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
-  initArgs = args;
+  savedInitArgs = args;
 }
 
-async function ensureInitialized() {
-  if (!initArgs) {
+async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
+  if (!savedInitArgs) {
     throw new Error(
       "Cannot initialize ZKEdDSAEventTicketPCDPackage: init has not been called yet"
     );
@@ -169,6 +169,7 @@ async function ensureInitialized() {
   }
 
   await initializedPromise;
+  return savedInitArgs;
 }
 
 async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
@@ -197,7 +198,6 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
   }
 
   if (
-    args.externalNullifier !== undefined &&
     args.externalNullifier.value !== undefined &&
     BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER
   ) {
@@ -291,7 +291,7 @@ function snarkInputForProof(
     ticketIsRevoked: ticketAsBigIntArray[7].toString(),
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
 
-    // Tickjet signature fields
+    // Ticket signature fields
     ticketSignerPubkeyAx: babyJub.F.toObject(
       fromHexString(pubKey[0])
     ).toString(),
@@ -379,10 +379,7 @@ function claimFromProofResult(
 export async function prove(
   args: ZKEdDSAEventTicketPCDArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
-  if (!initArgs) {
-    throw new Error("Cannot make proof: init has not been called yet");
-  }
-  await ensureInitialized();
+  const initArgs = await ensureInitialized();
 
   const { ticketPCD, identityPCD, fieldsToReveal, watermark } =
     await checkProveInputs(args);
@@ -391,8 +388,8 @@ export async function prove(
     ticketPCD,
     identityPCD,
     fieldsToReveal,
-    args.validEventIds?.value,
-    args.externalNullifier?.value,
+    args.validEventIds.value,
+    args.externalNullifier.value,
     watermark
   );
 
@@ -405,8 +402,8 @@ export async function prove(
   const claim = claimFromProofResult(
     ticketPCD,
     publicSignals,
-    args.validEventIds?.value,
-    args.externalNullifier?.value,
+    args.validEventIds.value,
+    args.externalNullifier.value,
     watermark
   );
 

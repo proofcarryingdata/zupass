@@ -35,13 +35,6 @@ const wasmFilePath = path.join(
   `../artifacts-unsafe/eddsaEventTicket_js/eddsaEventTicket.wasm`
 );
 
-let toArgs: (
-  ticketData: ITicketData,
-  fieldsToReveal: EdDSATicketFieldsToReveal,
-  withNullifier: boolean,
-  validEventIds?: string[]
-) => Promise<ZKEdDSAEventTicketPCDArgs>;
-
 const identity1 = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
@@ -58,17 +51,17 @@ const WATERMARK = BigInt(6);
 const EXTERNAL_NULLIFIER = BigInt(42);
 
 describe("snarkInputFromValidEventIds helper", function () {
-  it("should handle undefined input", async function () {
+  it("should handle undefined input", function () {
     expect(snarkInputForValidEventIds(undefined)).deep.equal(
       Array(VALID_EVENT_IDS_MAX_LEN).fill(BABY_JUB_NEGATIVE_ONE.toString())
     );
   });
-  it("should handle empty input", async function () {
+  it("should handle empty input", function () {
     expect(snarkInputForValidEventIds([])).deep.equal(
       Array(VALID_EVENT_IDS_MAX_LEN).fill(BABY_JUB_NEGATIVE_ONE.toString())
     );
   });
-  it("should handle short input", async function () {
+  it("should handle short input", function () {
     const expected = Array(VALID_EVENT_IDS_MAX_LEN).fill(
       BABY_JUB_NEGATIVE_ONE.toString()
     );
@@ -78,7 +71,7 @@ describe("snarkInputFromValidEventIds helper", function () {
     }
     expect(snarkInputForValidEventIds(input)).deep.equal(expected);
   });
-  it("should handle full input", async function () {
+  it("should handle full input", function () {
     const input: string[] = [];
     const expected: string[] = [];
     for (let i = 0; i < VALID_EVENT_IDS_MAX_LEN; i++) {
@@ -88,7 +81,7 @@ describe("snarkInputFromValidEventIds helper", function () {
     }
     expect(snarkInputForValidEventIds(input)).deep.equal(expected);
   });
-  it("should reject input if too large", async function () {
+  it("should reject input if too large", function () {
     const input: string[] = [];
     const expected: string[] = [];
     for (let i = 0; i < VALID_EVENT_IDS_MAX_LEN + 1; i++) {
@@ -140,16 +133,14 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealIsRevoked: true
   };
 
-  // validEventIds1 contains ticketData1.eventId
-  const validEventIds1: string[] = [
+  const validEventIdsContainingTicket: string[] = [
     uuid(),
     ticketData1.eventId,
     uuid(),
     uuid()
   ];
 
-  // validEventIds2 does not contain ticketData1.eventId
-  const validEventIds2: string[] = [uuid(), uuid(), uuid(), uuid()];
+  const validEventIdsNoTicket: string[] = [uuid(), uuid(), uuid(), uuid()];
 
   async function makeSerializedIdentityPCD(
     identity: Identity
@@ -161,6 +152,64 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     return await SemaphoreIdentityPCDPackage.serialize(identityPCD);
   }
 
+  async function toArgs(
+    ticketData: ITicketData,
+    fieldsToReveal: EdDSATicketFieldsToReveal,
+    withNullifier: boolean,
+    validEventIds?: string[]
+  ): Promise<ZKEdDSAEventTicketPCDArgs> {
+    const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: prvKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: undefined,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    const serializedTicketPCD =
+      await EdDSATicketPCDPackage.serialize(ticketPCD);
+
+    const serializedIdentityPCD = await makeSerializedIdentityPCD(identity1);
+
+    const ret: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        value: serializedTicketPCD,
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: ZKEdDSAEventTicketPCDTypeName
+      },
+      identity: {
+        value: serializedIdentityPCD,
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDTypeName
+      },
+      fieldsToReveal: {
+        value: fieldsToReveal,
+        argumentType: ArgumentTypeName.Object
+      },
+      validEventIds: {
+        value: validEventIds,
+        argumentType: ArgumentTypeName.StringArray
+      },
+      externalNullifier: {
+        value: withNullifier ? EXTERNAL_NULLIFIER.toString() : undefined,
+        argumentType: ArgumentTypeName.BigInt
+      },
+      watermark: {
+        value: WATERMARK.toString(),
+        argumentType: ArgumentTypeName.BigInt
+      }
+    };
+
+    return ret;
+  }
+
   this.beforeAll(async function () {
     await EdDSATicketPCDPackage.init?.({});
     if (!ZKEdDSAEventTicketPCDPackage.init) return;
@@ -168,67 +217,6 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       zkeyFilePath,
       wasmFilePath
     });
-
-    toArgs = async (
-      ticketData: ITicketData,
-      fieldsToReveal: EdDSATicketFieldsToReveal,
-      withNullifier: boolean,
-      validEventIds?: string[]
-    ) => {
-      const ticketPCD = await EdDSATicketPCDPackage.prove({
-        ticket: {
-          value: ticketData,
-          argumentType: ArgumentTypeName.Object
-        },
-        privateKey: {
-          value: prvKey,
-          argumentType: ArgumentTypeName.String
-        },
-        id: {
-          value: undefined,
-          argumentType: ArgumentTypeName.String
-        }
-      });
-
-      const serializedTicketPCD =
-        await EdDSATicketPCDPackage.serialize(ticketPCD);
-
-      const serializedIdentityPCD = await makeSerializedIdentityPCD(identity1);
-
-      const ret: ZKEdDSAEventTicketPCDArgs = {
-        ticket: {
-          value: serializedTicketPCD,
-          argumentType: ArgumentTypeName.PCD,
-          pcdType: ZKEdDSAEventTicketPCDTypeName
-        },
-        identity: {
-          value: serializedIdentityPCD,
-          argumentType: ArgumentTypeName.PCD,
-          pcdType: SemaphoreIdentityPCDTypeName
-        },
-        fieldsToReveal: {
-          value: fieldsToReveal,
-          argumentType: ArgumentTypeName.Object
-        },
-        validEventIds: {
-          value: validEventIds,
-          argumentType: ArgumentTypeName.StringArray
-        },
-        watermark: {
-          value: WATERMARK.toString(),
-          argumentType: ArgumentTypeName.BigInt
-        }
-      };
-
-      if (withNullifier) {
-        ret.externalNullifier = {
-          value: EXTERNAL_NULLIFIER.toString(),
-          argumentType: ArgumentTypeName.BigInt
-        };
-      }
-
-      return ret;
-    };
   });
 
   it("should be able to generate and verify a valid proof", async function () {
@@ -236,7 +224,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
-      validEventIds1
+      validEventIdsContainingTicket
     );
     pcd1 = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
@@ -248,7 +236,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(verificationRes).to.be.true;
   });
 
-  it("should include appropriate externalNullifier and nullifierHash if requested", async function () {
+  it("should include appropriate externalNullifier and nullifierHash if requested", function () {
     expect(pcd1.claim.externalNullifier).to.be.equal(
       EXTERNAL_NULLIFIER.toString()
     );
@@ -256,7 +244,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
   });
 
   it("should include validEventIds in claim", async function () {
-    expect(pcd1.claim.validEventIds).deep.equal(validEventIds1);
+    expect(pcd1.claim.validEventIds).deep.equal(validEventIdsContainingTicket);
   });
 
   it("should not show externalNullifier and nullifierHash if not requested", async function () {
@@ -264,7 +252,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       false /* withNullifier */,
-      validEventIds1
+      validEventIdsContainingTicket
     );
     const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
@@ -280,7 +268,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal2,
       true /* withNullifier */,
-      validEventIds1
+      validEventIdsContainingTicket
     );
     const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
@@ -309,7 +297,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
-      validEventIds2
+      validEventIdsNoTicket
     );
     pcdArgs.identity = {
       value: await makeSerializedIdentityPCD(identity2),
@@ -326,7 +314,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
-      validEventIds2
+      validEventIdsNoTicket
     );
     await assert.rejects(async () => {
       await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
@@ -353,7 +341,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
-      validEventIds1
+      validEventIdsContainingTicket
     );
     const invalidPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
@@ -370,7 +358,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
-      validEventIds1
+      validEventIdsContainingTicket
     );
     const invalidPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 

@@ -10,9 +10,10 @@ export function ZKEdDSAEventTicketCardBody({
   return (
     <Container>
       <p>
-        This PCD represents a response to a request for information about a
-        signed EdDSA ticket PCD that has been issued for a semaphore keypair
-        that the user possesses.
+        This PCD represents an EdDSA signed ticket issued to a user's semaphore
+        idenity, with proven claims about that ticket. Some or all of the fields
+        of the ticket can be hidden, while still proving the ticket is valid,
+        and corresponds to one of a list of valid events.
       </p>
 
       <Separator />
@@ -78,7 +79,7 @@ export function ZKEdDSAEventTicketCardBody({
       <Spacer h={8} />
 
       <FieldLabel>Nullifier Hash</FieldLabel>
-      <TextContainer>{pcd.claim.externalNullifier || "HIDDEN"}</TextContainer>
+      <TextContainer>{pcd.claim.nullifierHash || "HIDDEN"}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Ticket Signer</FieldLabel>

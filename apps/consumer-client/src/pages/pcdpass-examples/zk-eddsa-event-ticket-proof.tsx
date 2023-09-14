@@ -342,20 +342,17 @@ export function openZKEdDSAEventTicketPopup(
       value: fieldsToReveal,
       userProvided: false
     },
+    externalNullifier: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: externalNullifier,
+      userProvided: false
+    },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
       value: watermark.toString(),
       userProvided: false
     }
   };
-
-  if (externalNullifier) {
-    args.externalNullifier = {
-      argumentType: ArgumentTypeName.BigInt,
-      value: externalNullifier,
-      userProvided: false
-    };
-  }
 
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage

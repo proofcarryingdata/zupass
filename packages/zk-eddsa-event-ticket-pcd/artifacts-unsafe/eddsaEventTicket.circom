@@ -3,8 +3,10 @@ pragma circom 2.1.4;
 include "../../../node_modules/circomlib/circuits/poseidon.circom";
 include "../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
 
-// Helper template for revealed fields, set to -1 if not revealed.
-// The shouldRevealValue input is assumed (but not constrained) to be 0 or 1.  Should be constrained externally.
+// Helper template for revealed fields. out will be set to value or to -1 if
+// not revealed.
+// The shouldRevealValue input is assumed (but not constrained) to be 0 or 1.
+// Should be constrained externally.
 template ValueOrNegativeOne() {
     signal input value;
     signal input shouldRevealValue; // assumed to be 0 or 1
@@ -14,14 +16,23 @@ template ValueOrNegativeOne() {
     out <== value * shouldRevealValue + (-1) * (1 - shouldRevealValue);
 }
 
-// Claim being proved: Attendee (by Semaphore ID) has ticket to event (eventId) signed by signer (EdDSA pubkey)
-// where eventId is in a list of events (array of eventIds).  Additionally a nullifier is calculated, and a watermark is
-// included (unmodiied).
-// Configuration options can determine which of the ticket and nullifier fields are revealed publicly.
-// Configuration can enable or diable the event ID list checking, for cases where any event ID is acceptable.
+// Claim being proved: Attendee (by Semaphore ID) has ticket to event (indicated
+// by ticket's event ID) signed by signer (EdDSA pubkey). The ticket's event
+// ID is optionally constrained to be in a list of events (array of valid event
+// IDs of size nEvents).
+// Additionally a nullifier is calculated, and a watermark is included
+// (unmodified).
+// Configuration options can determine which of the ticket and nullifier fields
+// are revealed publicly.
+// Configuration can enable or disable the event ID list checking, for cases
+// where any event ID is acceptable. The full validEventIds list is checked,
+// but it can be filled in with illegal values (such as -1) to represent a
+// shorter list. (This assumes the ticket signer won't sign an event ID of -1.)
 template EdDSATicketToEventsPCD (nEvents) {
-    // Fields representing attendee's ticket, each of which can be confirably revealed or not in the proof.
-    // TODO: Consider a more extensible representation, such an array with known offsets and room for growth.
+    // Fields representing attendee's ticket, each of which can be configurably
+    // revealed or not in the proof.
+    // TODO: Consider a more extensible representation, such an array with known
+    // offsets and room for growth.
     signal input ticketId;
     signal input revealTicketId;
 
@@ -59,18 +70,21 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal input semaphoreIdentityNullifier;
     signal input semaphoreIdentityTrapdoor;
 
-    // Valid events ticket must correspond to.  Ignored if checkValidEventIds is 0.
-    // TODO: Replace with a Merkle proof?
+    // The ticket correspond to one of these valid events.
+    // Ignored if checkValidEventIds is 0.
+    // TODO: Consider replacing with a Merkle proof?
     signal input validEventIds[nEvents];
     signal input checkValidEventIds;
 
     // External nullifier, used to tie together nullifiers within a single category. 
     signal input externalNullifier;
 
-    // Whether to reveal the nullifier hash, which can be used to tie together different proofs from the same semaphore ID.
+    // Whether to reveal the nullifier hash, which can be used to tie together
+    // different proofs from the same semaphore ID.
     signal input revealNullifierHash;
 
-    // Watermark allows prover to tie a proof to a challenge.  It's unconstrained, but included in the proof.
+    // Watermark allows prover to tie a proof to a challenge.  It's
+    // unconstrained, but included in the proof.
     signal input watermark;
 
     // Verify all revealX values are 1 or 0
@@ -107,7 +121,8 @@ template EdDSATicketToEventsPCD (nEvents) {
         ticketMessageHash
     );
 
-    // Verify semaphore private identity matches the ID in the ticket by re-generating the public ID to compare.
+    // Verify semaphore private identity matches the ID in the ticket by
+    // re-generating the public ID to compare.
     signal semaSecret <== Poseidon(2)([
         semaphoreIdentityNullifier,
         semaphoreIdentityTrapdoor
@@ -119,8 +134,8 @@ template EdDSATicketToEventsPCD (nEvents) {
     checkValidEventIds * (1 - checkValidEventIds) === 0;
 
     // Check that the event ID (from the ticket) is one of the valid event IDs.
-    // This is a logical OR expressed in the fact that (ID - validID[i]) should be zero for some i, so the
-    // product of all terms should be zero.
+    // This is a logical OR expressed in the fact that (ID - validID[i]) should
+    // be zero for some i, so the product of all terms should be zero.
     signal oneofPartialProducts[nEvents+1];
     oneofPartialProducts[0] <== 1;
     for (var i = 0; i < nEvents; i++) {
