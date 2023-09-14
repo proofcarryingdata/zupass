@@ -145,7 +145,7 @@ export function AlreadyRegisteredScreen() {
           ) : (
             <>
               <CenterColumn w={280}>
-                <BigInput value={email} disabled={true} />
+                <BigInput value={email} disabled={true} readOnly />
                 <Spacer h={8} />
                 {/*
                  * If a user has a `salt` field, then that means they chose their own password

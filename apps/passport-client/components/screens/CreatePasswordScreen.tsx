@@ -98,7 +98,7 @@ export function CreatePasswordScreen() {
         <CenterColumn w={280}>
           <form onSubmit={onCreatePassword}>
             {/* For password manager autofill */}
-            <input hidden value={email} />
+            <input hidden readOnly value={email} />
             <SetPasswordInput
               value={password}
               setValue={setPassword}
