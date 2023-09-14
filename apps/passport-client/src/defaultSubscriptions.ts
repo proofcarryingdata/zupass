@@ -13,6 +13,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../src/appConfig";
+import { saveSubscriptions } from "./localstorage";
 
 const DEFAULT_FEED_URL = `${appConfig.passportServer}/feeds`;
 
@@ -55,5 +56,7 @@ export async function addDefaultSubscriptions(
       },
       await SemaphoreSignaturePCDPackage.serialize(signaturePCD)
     );
+
+    await saveSubscriptions(subscriptions);
   }
 }

@@ -187,7 +187,9 @@ async function loadInitialState(): Promise<AppState> {
   const userInvalid = loadUserInvalid();
   const subscriptions = await loadSubscriptions();
 
-  await addDefaultSubscriptions(identity, subscriptions);
+  if (self) {
+    await addDefaultSubscriptions(identity, subscriptions);
+  }
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
