@@ -48,7 +48,7 @@ For more detailed information about the package's functions and types, please re
 
 ### Using the passport popup
 
-You can use the `usePassportPopupSetup` React hook to set up necessary passport popup logic on a specific route (e.g. `/popup`) and communicate with the passport webapp.
+You can use the [`usePassportPopupSetup`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupSetup.html) React hook to set up necessary passport popup logic on a specific route (e.g. `/popup`) and communicate with the passport webapp.
 
 ```typescript
 import { usePassportPopupSetup } from "@pcd/passport-interface"
@@ -60,7 +60,7 @@ export default function Popup() {
 }
 ```
 
-Then the `usePassportPopupMessages` React hook can be used to process the results of your requests.
+Then the [`usePassportPopupMessages`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupMessages.html) React hook can be used to process the results of your requests.
 
 ```typescript
 import { usePassportPopupMessages } from "@pcd/passport-interface"
@@ -76,7 +76,7 @@ export default function App() {
 
 ### Adding a PCD to the passport
 
-You can generate a PCD and add it to the passport.
+You can generate a PCD and add it to the passport with [`constructPassportPcdProveAndAddRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdProveAndAddRequestUrl.html).
 
 ```typescript
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
@@ -84,7 +84,7 @@ import { constructPassportPcdProveAndAddRequestUrl, openPassportPopup } from "@p
 import { ArgumentTypeName } from "@pcd/pcd-types"
 
 const url = constructPassportPcdProveAndAddRequestUrl<typeof EdDSAPCDPackage>(
-    process.env.PCDPASS_URL, // e.g. https://zupass.org.
+    "https://pcdpass.xyz",
     window.location.origin + "/popup",
     EdDSAPCDPackage.name,
     {
@@ -106,13 +106,29 @@ const url = constructPassportPcdProveAndAddRequestUrl<typeof EdDSAPCDPackage>(
 openPassportPopup("/popup", url)
 ```
 
-Or add a previously generated serialized PCD.
+Or add a previously generated serialized PCD with [`constructPassportPcdAddRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdAddRequestUrl.html).
 
 ```typescript
 import { constructPassportPcdAddRequestUrl, openPassportPopup } from "@pcd/passport-interface"
 
+const pcd = await prove({
+    id: {
+        argumentType: ArgumentTypeName.String
+    },
+    message: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: ["0x342"]
+    },
+    privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: "0x42"
+    }
+})
+
+const serializedPCD = await serialize(pcd)
+
 const url = constructPassportPcdAddRequestUrl(
-    process.env.PCDPASS_URL, // e.g. https://zupass.org.
+    "https://pcdpass.xyz",
     window.location.origin + "/popup",
     serializedPCD
 )
@@ -122,22 +138,22 @@ openPassportPopup("/popup", url)
 
 ### Getting a PCD from the passport
 
-You can get a PCD from the passport without any proof.
+You can get a PCD from the passport that already exists in the user's local storage with [`getWithoutProvingUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.getWithoutProvingUrl.html).
 
 ```typescript
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
 import { getWithoutProvingUrl, openPassportPopup } from "@pcd/passport-interface"
 
 const url = getWithoutProvingUrl(
-  process.env.PCDPASS_URL, // e.g. https://zupass.org.
-  window.location.origin + "/popup", // The popup route.
-  EdDSAPCDPackage.name // Name of PCD type.
+  "https://pcdpass.xyz",
+  window.location.origin + "/popup",
+  EdDSAPCDPackage.name
 )
 
 openPassportPopup("/popup", url)
 ```
 
-Or proving it.
+Or proving it with [`constructPassportPcdGetRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdGetRequestUrl.html).
 
 ```typescript
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
@@ -145,7 +161,7 @@ import { constructPassportPcdGetRequestUrl, openPassportPopup } from "@pcd/passp
 import { ArgumentTypeName } from "@pcd/pcd-types"
 
 const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
-    process.env.PCDPASS_URL as string,
+    "https://pcdpass.xyz",
     window.location.origin + "/popup",
     EdDSAPCDPackage.name,
     {
