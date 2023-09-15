@@ -536,20 +536,23 @@ describe("devconnect functionality", function () {
     const eventConfigID = organizer.events[0].id;
     const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
 
+    const checkInDate = new Date();
+
     // Simulate Pretix returning tickets as being checked in
     server.use(
       rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
-        const skip = (req.params.event as string) !== eventID;
-        const orders = skip
-          ? org.ordersByEventID.get(eventID)
-          : org.ordersByEventID.get(eventID)?.map((order) => {
+        const returnUnmodified = (req.params.event as string) !== eventID;
+        const originalOrders = org.ordersByEventID.get(eventID) as DevconnectPretixOrder[];
+        const orders: DevconnectPretixOrder[] = returnUnmodified
+          ? originalOrders
+          : originalOrders.map((order) => {
               return {
                 ...order,
                 positions: order.positions.map((position) => {
                   return {
                     ...position,
                     checkins: [
-                      { type: "entry", datetime: new Date().toISOString() }
+                      { type: "entry", datetime: checkInDate.toISOString() }
                     ]
                   };
                 })
@@ -584,7 +587,8 @@ describe("devconnect functionality", function () {
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicketWithCheckin) =>
-          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER
+          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER &&
+          ticket.pretix_checkin_timestamp?.getTime() === checkInDate.getTime()
       ).length
     );
   });
