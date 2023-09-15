@@ -129,7 +129,15 @@ function compileHtml() {
 
   const html = template({
     title: IS_ZUZALU ? "Zuzalu Passport" : "PCDpass",
-    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css"
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
+    grayBgPaths: [
+      "", // home
+      "get-without-proving",
+      "halo",
+      "add",
+      "prove",
+      "scan"
+    ].join("|")
   });
 
   fs.writeFileSync(path.join("public", "index.html"), html);
