@@ -82,6 +82,7 @@ export type Action =
       storage: SyncedEncryptedStorage;
       encryptionKey: string;
     }
+  | { type: "set-encryption-key"; encryptionKey: string }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
@@ -124,6 +125,10 @@ export async function dispatch(
     case "set-modal":
       return update({
         modal: action.modal
+      });
+    case "set-encryption-key":
+      return update({
+        encryptionKey: action.encryptionKey
       });
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);

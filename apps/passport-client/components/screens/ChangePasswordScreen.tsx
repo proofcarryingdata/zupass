@@ -66,9 +66,10 @@ export function ChangePasswordScreen() {
       type: "set-modal",
       modal: "changed-password"
     });
-    // update({
-    //   encryptionKey
-    // });
+    dispatch({
+      type: "set-encryption-key",
+      encryptionKey: newEncryptionKey
+    });
   };
 
   return (
