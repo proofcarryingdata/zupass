@@ -138,18 +138,15 @@ describe("EdDSA partial ticket should work", function () {
           value: fieldsToReveal,
           argumentType: ArgumentTypeName.Object
         },
+        externalNullifier: {
+          value: withNullifier ? EXTERNAL_NULLIFIER.toString() : undefined,
+          argumentType: ArgumentTypeName.BigInt
+        },
         watermark: {
           value: WATERMARK.toString(),
           argumentType: ArgumentTypeName.BigInt
         }
       };
-
-      if (withNullifier) {
-        ret.externalNullifier = {
-          value: EXTERNAL_NULLIFIER.toString(),
-          argumentType: ArgumentTypeName.BigInt
-        };
-      }
 
       return ret;
     };

@@ -78,7 +78,7 @@ export interface ZKEdDSATicketPCDArgs {
 
   // provide externalNullifier field to request a nullifierHash
   // if you don't provide this field, no nullifierHash will be outputted
-  externalNullifier?: BigIntArgument;
+  externalNullifier: BigIntArgument;
 }
 
 export interface ZKEdDSATicketPCDClaim {
@@ -164,7 +164,6 @@ export async function prove(
   }
 
   if (
-    args.externalNullifier !== undefined &&
     args.externalNullifier.value !== undefined &&
     BigInt(args.externalNullifier.value) === STATIC_SIGNATURE_PCD_NULLIFIER
   ) {
@@ -210,8 +209,8 @@ export async function prove(
     isRevoked: ticketAsBigIntArray[7].toString(),
     revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
     externalNullifier:
-      args.externalNullifier?.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
-    revealNullifierHash: args.externalNullifier ? "1" : "0",
+      args.externalNullifier.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
+    revealNullifierHash: args.externalNullifier.value ? "1" : "0",
     Ax: babyJub.F.toObject(fromHexString(pubKey[0])).toString(),
     Ay: babyJub.F.toObject(fromHexString(pubKey[1])).toString(),
     R8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
@@ -260,7 +259,7 @@ export async function prove(
     signer: pubKey
   };
 
-  if (args.externalNullifier) {
+  if (args.externalNullifier.value) {
     claim.nullifierHash = publicSignals[8];
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }

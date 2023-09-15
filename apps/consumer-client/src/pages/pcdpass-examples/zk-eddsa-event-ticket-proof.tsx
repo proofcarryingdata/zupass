@@ -20,8 +20,7 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../constants";
 
 /**
- * Example page which shows how to use a Zuzalu-specific prove screen to
- * request a Semaphore Group Membership PCD as a third party developer.
+ * Example page for proving ZKEdDSAEventTicketPCD.
  */
 export default function Page() {
   const watermark = generateSnarkMessageHash(
@@ -277,7 +276,7 @@ export default function Page() {
                     : "HIDDEN"
                 }`}</p>
                 <p>{`Is Revoked?: ${
-                  // isConsumed can be true, false, or undefined
+                  // isRevoked can be true, false, or undefined
                   // undefined means it is not revealed in this PCD
                   pcd.claim.partialTicket.isRevoked !== undefined
                     ? pcd.claim.partialTicket.isRevoked
@@ -302,7 +301,7 @@ export default function Page() {
 }
 
 /**
- * Opens a passport popup to generate a Zuzalu membership proof.
+ * Opens a passport popup to prove a prove a ZKEdDSATicketPCD.
  *
  * @param urlToPassportWebsite URL of passport website
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
