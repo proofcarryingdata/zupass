@@ -12,6 +12,8 @@ import {
   usePassportPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
+import { EzklDisplayPCDPackage } from "@pcd/ezkl-display-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -58,6 +60,16 @@ export default function Page() {
         </li>
       </ul>
       <ExampleContainer>
+        <button onClick={addEzklDisplayProofPCD}>
+          prove and add an ezkl group display proof
+        </button>
+        <br />
+        <br />
+        <button onClick={addEzklSecretProofPCD}>
+          prove and add an ezkl secret proof
+        </button>
+        <br />
+        <br />
         <button onClick={addGroupMembershipProofPCD}>
           prove and add a group membership proof
         </button>
@@ -256,6 +268,51 @@ function AddEthGroupPCDButton() {
       add a new Ethereum Group Membership to the passport
     </button>
   );
+}
+
+async function addEzklDisplayProofPCD() {
+  const url = constructPassportPcdProveAndAddRequestUrl<
+    typeof EzklDisplayPCDPackage
+  >(
+    ZUPASS_URL,
+    window.location.origin + "/popup",
+    EzklDisplayPCDPackage.name,
+    {
+      secretPCD: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EzklSecretPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      }
+    },
+    {
+      title: "EZKL Secret Proof"
+    }
+  );
+
+  sendPassportRequest(url);
+}
+
+async function addEzklSecretProofPCD() {
+  const url = constructPassportPcdProveAndAddRequestUrl<
+    typeof EzklSecretPCDPackage
+  >(
+    ZUPASS_URL,
+    window.location.origin + "/popup",
+    EzklSecretPCDPackage.name,
+    {
+      secret: {
+        argumentType: ArgumentTypeName.String,
+        value: undefined,
+        userProvided: true
+      }
+    },
+    {
+      title: "EZKL Secret Proof"
+    }
+  );
+
+  sendPassportRequest(url);
 }
 
 async function addGroupMembershipProofPCD() {

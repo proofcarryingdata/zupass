@@ -19,6 +19,9 @@ import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
+import { EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
+import { EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
+import { EzklDisplayPCDPackage } from "@pcd/ezkl-display-pcd";
 
 /**
  * Responsible for server-side proving that can optionally be used by clients.
@@ -51,6 +54,9 @@ export class ProvingService {
     RSATicketPCDPackage,
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
+    EzklSecretPCDPackage,
+    EzklGroupPCDPackage,
+    EzklDisplayPCDPackage,
     RSAImagePCDPackage
   ];
 

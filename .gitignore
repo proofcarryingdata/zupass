@@ -42,3 +42,4 @@ logfile
 
 # build
 *.tsbuildinfo
+dist

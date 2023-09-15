@@ -33,7 +33,10 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
+    "@ezkljs/engine": "1.18.0",
     "@types/react": "^18.0.22",
+    "react-qr-code": "^2.0.12",
+    "react-spinners": "^0.13.8",
     "turbo": "^1.8.5"
   },
   "resolutions": {
