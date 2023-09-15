@@ -153,9 +153,11 @@ export function StringArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -212,9 +214,11 @@ export function NumberArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -274,12 +278,14 @@ export function BigIntArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
-          <input
+          <Input
             value={arg.value ?? ""}
             onChange={onChange}
             disabled={!arg.userProvided}
@@ -320,9 +326,11 @@ export function BooleanArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -389,9 +397,11 @@ export function ObjectArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <textarea
@@ -482,14 +492,16 @@ export function PCDArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
-          <select value={value?.id} onChange={onChange}>
-            <option key="none" value={"none"}>
-              select
+          <Select value={value?.id} onChange={onChange}>
+            <option key="none" value="none" disabled>
+              Please select a {argName}
             </option>
             {relevantPCDs.map((pcd) => {
               const pcdPackage = pcdCollection.getPackage(pcd.type);
@@ -499,7 +511,7 @@ export function PCDArgInput<T extends PCDPackage>({
                 </option>
               );
             })}
-          </select>
+          </Select>
         </InputContainer>
       </Row>
     </ArgContainer>
@@ -525,7 +537,7 @@ const ArgName = styled.div`
   padding: 10px 10px 0px 10px;
   display: flex;
   justify-content: flex-start;
-  align-items: center;
+  align-items: baseline;
 `;
 
 const ArgContainer = styled.div`
@@ -540,13 +552,14 @@ const ArgContainer = styled.div`
 `;
 
 const ArgsContainer = styled.div`
+  width: 100%;
   border-radius: 16px;
   color: black;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   color: var(--bg-dark-primary);
   background-color: white;
   border: 1px solid var(--accent-lite);
@@ -570,4 +583,15 @@ const ArgTypeNameContainer = styled.span`
 const ErrorContainer = styled.div`
   padding: 0px 10px 0px 10px;
   color: var(--danger);
+`;
+
+const Select = styled.select`
+  width: 100%;
+  height: 32px;
+  border-radius: 4px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  height: 32px;
 `;
