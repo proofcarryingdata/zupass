@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { requestLoginCode } from "../../src/api/user";
+import { fetchSaltFromServer, requestLoginCode } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -55,20 +55,22 @@ function SendEmailVerification({ email }: { email: string }) {
       if (devToken === undefined) {
         setEmailSent(true);
       } else {
-        dispatch({ type: "login", email, token: devToken });
+        dispatch({ type: "verify-token", email, token: devToken });
       }
     };
 
     requestLoginCode(email, identity.commitment.toString())
       .then(handleResult)
-      .catch((e) => {
+      .catch(async (e) => {
         const message = e.message as string;
         if (message.includes("already registered")) {
+          const res = await fetchSaltFromServer(email);
+          const { salt } = await res.json();
           window.location.href = `#/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
-          )}`;
+          )}&salt=${encodeURIComponent(salt)}`;
         } else {
           err(dispatch, "Email failed", message);
         }
@@ -77,12 +79,17 @@ function SendEmailVerification({ email }: { email: string }) {
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
-  const verify = useCallback(async () => {
-    const token = inRef.current?.value || "";
-    setVerifyingCode(true);
-    await dispatch({ type: "login", email, token });
-    setVerifyingCode(false);
-  }, [dispatch, email]);
+  const verify = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (verifyingCode) return;
+      const token = inRef.current?.value || "";
+      setVerifyingCode(true);
+      await dispatch({ type: "verify-token", email, token });
+      setVerifyingCode(false);
+    },
+    [dispatch, email, verifyingCode]
+  );
 
   return (
     <AppContainer bg="primary">
@@ -98,26 +105,29 @@ function SendEmailVerification({ email }: { email: string }) {
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
         <Spacer h={24} />
-        <CenterColumn w={280}>
-          {emailSent && (
-            <>
-              <BigInput
-                disabled={verifyingCode}
-                ref={inRef}
-                placeholder="code from email"
-              />
-              <Spacer h={8} />
-            </>
-          )}
-          {verifyingCode && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
-          {!verifyingCode && emailSent && (
-            <Button onClick={verify}>Verify</Button>
-          )}
-        </CenterColumn>
+        <form onSubmit={verify}>
+          <CenterColumn w={280}>
+            {emailSent && (
+              <>
+                <BigInput
+                  disabled={verifyingCode}
+                  ref={inRef}
+                  autoFocus
+                  placeholder="code from email"
+                />
+                <Spacer h={8} />
+              </>
+            )}
+            {verifyingCode && (
+              <div>
+                <RippleLoader />
+              </div>
+            )}
+            {!verifyingCode && emailSent && (
+              <Button type="submit">Verify</Button>
+            )}
+          </CenterColumn>
+        </form>
         {!verifyingCode && emailSent && (
           <>
             <Spacer h={48} />

@@ -1,11 +1,7 @@
-import {
-  EncryptedPacket,
-  getHash,
-  passportDecrypt
-} from "@pcd/passport-crypto";
-import React, { useCallback, useState } from "react";
-import { downloadEncryptedStorage } from "../../src/api/endToEndEncryptionApi";
-import { useDispatch } from "../../src/appHooks";
+import { SyncedEncryptedStorage } from "@pcd/passport-interface";
+import { useCallback, useEffect, useState } from "react";
+import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
+import { useDispatch, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -28,6 +24,13 @@ export function SyncExistingScreen() {
   const dispatch = useDispatch();
   const [syncKey, setSyncKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const self = useSelf();
+
+  useEffect(() => {
+    if (self) {
+      window.location.href = "#/";
+    }
+  }, [self]);
 
   const onSyncClick = useCallback(() => {
     if (syncKey === "") {
@@ -35,22 +38,17 @@ export function SyncExistingScreen() {
         type: "error",
         error: {
           title: "Missing Password",
-          message: "You must enter a Master Password.",
+          message: "You must enter a password.",
           dismissToCurrentPage: true
         }
       });
       return;
     }
     const load = async () => {
-      let storage: EncryptedPacket;
+      let storage: SyncedEncryptedStorage;
       try {
-        console.log("downloading e2ee storage...");
         setIsLoading(true);
-        const blobHash = await getHash(syncKey);
-        storage = await downloadEncryptedStorage(blobHash);
-        if (!storage) {
-          throw new Error("no e2ee for this Master Password found");
-        }
+        storage = await downloadAndDecryptStorage(syncKey);
       } catch (e: unknown) {
         console.error(e);
         dispatch({
@@ -58,7 +56,7 @@ export function SyncExistingScreen() {
           error: {
             title: "Failed to Log In",
             message:
-              "Couldn't login with this Master Password. If you've lost access to your Master Password" +
+              "Couldn't login with this Sync Key. If you've lost access to your Sync Key" +
               " you can reset your account from the homepage of this website.",
             dismissToCurrentPage: true
           }
@@ -67,13 +65,9 @@ export function SyncExistingScreen() {
         return;
       }
 
-      console.log("downloaded encrypted storage");
-      const decrypted = await passportDecrypt(storage, syncKey);
-      console.log("decrypted encrypted storage");
-
       dispatch({
         type: "load-from-sync",
-        storage: JSON.parse(decrypted),
+        storage,
         encryptionKey: syncKey
       });
 
@@ -108,11 +102,11 @@ export function SyncExistingScreen() {
       >
         <Spacer h={64} />
         <TextCenter>
-          <H2>LOGIN WITH MASTER PASSWORD</H2>
+          <H2>LOGIN WITH SYNC KEY</H2>
           <Spacer h={32} />
           <TextCenter>
             If you've already registered, you can sync with your other device
-            here using your Master Password. You can find your Master Password
+            here using your Sync Key. You can find your Sync Key
             on your existing device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
@@ -120,7 +114,7 @@ export function SyncExistingScreen() {
             <BigInput
               disabled={isLoading}
               type="text"
-              placeholder="Master Password"
+              placeholder="Sync Key"
               value={syncKey}
               onChange={useCallback(
                 (e: React.ChangeEvent<HTMLInputElement>) => {

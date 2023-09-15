@@ -3,7 +3,9 @@ import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
+import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
+import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
@@ -16,16 +18,18 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
+import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
+import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -33,8 +37,10 @@ import {
   loadIdentity,
   loadPCDs,
   loadSelf,
+  loadSubscriptions,
   loadUserInvalid,
-  saveIdentity
+  saveIdentity,
+  saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
@@ -130,6 +136,9 @@ function RouterImpl() {
             path="already-registered"
             element={<AlreadyRegisteredScreen />}
           />
+          {!appConfig.isZuzalu && (
+            <Route path="create-password" element={<CreatePasswordScreen />} />
+          )}
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
@@ -143,7 +152,7 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          <Route path="sync-existing" element={<SyncExistingScreen />} />
+          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
           <Route
             path="verify"
             element={
@@ -155,6 +164,8 @@ function RouterImpl() {
             }
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
+          <Route path="subscriptions" element={<SubscriptionsScreen />} />
+          <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -174,13 +185,25 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
+  const subscriptions = await loadSubscriptions();
+
+  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
+
+  if (self) {
+    await addDefaultSubscriptions(identity, subscriptions);
+  }
 
   let modal = "" as AppState["modal"];
 
   if (userInvalid) {
     modal = "invalid-participant";
-  } else if (self != null && !localStorage["savedSyncKey"]) {
-    console.log("Asking existing user to save their Master Password...");
+  } else if (
+    // If on Zupass legacy login, ask user to save their Sync Key
+    appConfig.isZuzalu &&
+    self != null &&
+    !localStorage["savedSyncKey"]
+  ) {
+    console.log("Asking existing user to save their Sync Key...");
     modal = "save-sync";
   }
 
@@ -190,7 +213,8 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    userInvalid: userInvalid
+    userInvalid: userInvalid,
+    subscriptions
   };
 }
 

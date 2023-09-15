@@ -1,5 +1,6 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+import { appConfig } from "../../src/appConfig";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BackgroundGlow, CenterColumn } from "../core";
@@ -12,10 +13,15 @@ export function LoginInterstitialScreen() {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   useEffect(() => {
-    if (loadedIssuedPCDs) {
+    if (loadedIssuedPCDs || appConfig.isZuzalu) {
       window.location.href = "#/";
     }
   }, [loadedIssuedPCDs]);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
+  }, []);
 
   return (
     <>

@@ -24,10 +24,15 @@ function AppHeaderImpl() {
   return (
     <AppHeaderWrap>
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <img src={icons.infoAccent} width={34} height={34} />
+        <img draggable="false" src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <img src={icons.settingsAccent} width={34} height={34} />
+        <img
+          draggable="false"
+          src={icons.settingsAccent}
+          width={34}
+          height={34}
+        />
       </CircleButton>
     </AppHeaderWrap>
   );

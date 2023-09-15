@@ -21,10 +21,15 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
+import {
+  babyJubIsNegativeOne,
+  decStringToBigIntToUuid,
+  fromHexString
+} from "@pcd/util";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="./util/declarations/circomlibjs.d.ts" />
+/// <reference path="../../util/src/declarations/circomlibjs.d.ts" />
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="./util/declarations/snarkjs.d.ts" />
+/// <reference path="../../util/src/declarations/snarkjs.d.ts" />
 import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
 import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
@@ -33,11 +38,6 @@ import { v4 as uuid } from "uuid";
 import vkey from "../artifacts-unsafe/verification_key.json";
 
 import { ZKEdDSATicketCardBody } from "./CardBody";
-import {
-  decStringToBigIntToUuid,
-  fromHexString,
-  isNegativeOne
-} from "./util/utils";
 
 /**
  * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
@@ -239,28 +239,28 @@ export async function prove(
   );
 
   const partialTicket: Partial<ITicketData> = {};
-  if (!isNegativeOne(publicSignals[0])) {
+  if (!babyJubIsNegativeOne(publicSignals[0])) {
     partialTicket.ticketId = decStringToBigIntToUuid(publicSignals[0]);
   }
-  if (!isNegativeOne(publicSignals[1])) {
+  if (!babyJubIsNegativeOne(publicSignals[1])) {
     partialTicket.eventId = decStringToBigIntToUuid(publicSignals[1]);
   }
-  if (!isNegativeOne(publicSignals[2])) {
+  if (!babyJubIsNegativeOne(publicSignals[2])) {
     partialTicket.productId = decStringToBigIntToUuid(publicSignals[2]);
   }
-  if (!isNegativeOne(publicSignals[3])) {
+  if (!babyJubIsNegativeOne(publicSignals[3])) {
     partialTicket.timestampConsumed = parseInt(publicSignals[3]);
   }
-  if (!isNegativeOne(publicSignals[4])) {
+  if (!babyJubIsNegativeOne(publicSignals[4])) {
     partialTicket.timestampSigned = parseInt(publicSignals[4]);
   }
-  if (!isNegativeOne(publicSignals[5])) {
+  if (!babyJubIsNegativeOne(publicSignals[5])) {
     partialTicket.attendeeSemaphoreId = publicSignals[5];
   }
-  if (!isNegativeOne(publicSignals[6])) {
+  if (!babyJubIsNegativeOne(publicSignals[6])) {
     partialTicket.isConsumed = publicSignals[6] !== "0";
   }
-  if (!isNegativeOne(publicSignals[7])) {
+  if (!babyJubIsNegativeOne(publicSignals[7])) {
     partialTicket.isRevoked = publicSignals[7] !== "0";
   }
 

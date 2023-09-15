@@ -1,8 +1,8 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInRequest,
-  ISSUANCE_STRING,
-  IssuedPCDsRequest
+  FeedRequest,
+  ISSUANCE_STRING
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -64,10 +64,12 @@ export async function requestServerEdDSAPublicKey(
 export async function requestIssuedPCDs(
   application: PCDpass,
   identity: Identity,
-  signedMessage: string
+  signedMessage: string,
+  feedId: string
 ): Promise<Response> {
-  const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
+  const request: FeedRequest = {
+    feedId,
+    pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {
           argumentType: ArgumentTypeName.PCD,
@@ -90,7 +92,7 @@ export async function requestIssuedPCDs(
 
     chai
       .request(expressContext.app)
-      .post("/issue")
+      .post("/feeds")
       .send(request)
       .then(async (r) => {
         try {

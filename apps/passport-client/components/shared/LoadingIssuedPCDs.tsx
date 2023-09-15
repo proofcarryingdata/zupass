@@ -25,6 +25,7 @@ export function LoadingIssuedPCDs() {
 }
 
 const Container = styled.div`
+  user-select: none;
   margin: 12px 9px;
   box-sizing: border-box;
   display: flex;

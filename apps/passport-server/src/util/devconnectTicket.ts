@@ -8,11 +8,11 @@ export function pretixTicketsDifferent(
   oldTicket: DevconnectPretixTicket,
   newTicket: DevconnectPretixTicket
 ): boolean {
-  if (oldTicket.is_deleted !== newTicket.is_deleted) {
+  if (oldTicket.full_name !== newTicket.full_name) {
     return true;
   }
 
-  if (oldTicket.full_name !== newTicket.full_name) {
+  if (oldTicket.is_deleted !== newTicket.is_deleted) {
     return true;
   }
 
@@ -21,6 +21,10 @@ export function pretixTicketsDifferent(
   }
 
   if (oldTicket.is_consumed !== newTicket.is_consumed) {
+    return true;
+  }
+
+  if (oldTicket.email !== newTicket.email) {
     return true;
   }
 

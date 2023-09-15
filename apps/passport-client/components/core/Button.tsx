@@ -26,6 +26,7 @@ export function Button({
 }
 
 const buttonStyle = `
+  user-select: none;
   word-break: break-word;
   width: 100%;
   padding: 12px;
@@ -91,9 +92,18 @@ export const CircleButton = styled.button<{
   margin: 0;
   padding: ${(p) => p.padding}px;
   background: transparent;
+  user-select: none;
+
+  img {
+    -webkit-touch-callout: none;
+    user-select: none;
+    user-drag: none;
+  }
+
   &:hover {
     background: rgba(var(--white-rgb), 0.05);
   }
+
   &:active {
     background: rgba(var(--white-rgb), 0.1);
   }

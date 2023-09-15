@@ -62,19 +62,22 @@ export class DevconnectPretixSyncService {
   }
 
   public async trySync(): Promise<void> {
-    try {
-      logger("[DEVCONNECT PRETIX] (Re)loading Pretix Config");
-      await this.setupOrganizers();
+    return traced(NAME, "trySync", async (span) => {
+      try {
+        logger("[DEVCONNECT PRETIX] (Re)loading Pretix Config");
+        await this.setupOrganizers();
 
-      logger("[DEVCONNECT PRETIX] Sync start");
-      await this.sync();
-      await this.semaphoreService.reload();
-      this._hasCompletedSyncSinceStarting = true;
-      logger("[DEVCONNECT PRETIX] Sync successful");
-    } catch (e) {
-      this.rollbarService?.reportError(e);
-      logger("[DEVCONNECT PRETIX] Sync failed", e);
-    }
+        logger("[DEVCONNECT PRETIX] Sync start");
+        await this.sync();
+        await this.semaphoreService.reload();
+        this._hasCompletedSyncSinceStarting = true;
+        logger("[DEVCONNECT PRETIX] Sync successful");
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger("[DEVCONNECT PRETIX] Sync failed", e);
+        setError(e, span);
+      }
+    });
   }
 
   public stop(): void {
@@ -131,7 +134,6 @@ export class DevconnectPretixSyncService {
     organizer: OrganizerSync
   ): Promise<void> {
     return traced(NAME, "syncSingleOrganizer", async (span) => {
-      span?.setAttribute("organizers_count", this.organizers.size);
       try {
         return await organizer.run();
       } catch (e) {
@@ -205,6 +207,11 @@ export async function startDevconnectPretixSyncService(
     return null;
   }
 
+  if (process.env.PRETIX_SYNC_DISABLED) {
+    logger("[DEVCONNECT PRETIX] not starting because PRETIX_SYNC_DISABLED");
+    return null;
+  }
+
   const pretixSyncService = new DevconnectPretixSyncService(
     context,
     devconnectPretixAPIFactory,
@@ -213,5 +220,6 @@ export async function startDevconnectPretixSyncService(
   );
 
   pretixSyncService.startSyncLoop();
+
   return pretixSyncService;
 }

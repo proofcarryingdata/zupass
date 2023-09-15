@@ -56,9 +56,25 @@ export class DevconnectPretixDataMocker {
     this.mockData = this.newMockData();
   }
 
+  public backup(): IMockDevconnectPretixData {
+    return structuredClone(this.mockData);
+  }
+
+  public restore(data: IMockDevconnectPretixData): void {
+    this.mockData = data;
+  }
+
   public get(): IMockDevconnectPretixData {
     logger("[MOCK]", JSON.stringify(this.mockData, null, 2));
     return this.mockData;
+  }
+
+  public getOrgByUrl(orgUrl: string): IOrganizer {
+    const org = this.get().organizersByOrgUrl.get(orgUrl);
+    if (!org) {
+      throw new Error(`Could not find organizer for ${orgUrl}`);
+    }
+    return org;
   }
 
   public updateOrder(
@@ -75,20 +91,6 @@ export class DevconnectPretixDataMocker {
       throw new Error(`couldn't find order ${code}`);
     }
     update(order);
-  }
-
-  public addOrder(
-    orgUrl: string,
-    eventID: string,
-    orderEmail: string,
-    itemsAndEmails: [number, string | null][]
-  ): DevconnectPretixOrder {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
-    if (!org) throw new Error(`missing org ${orgUrl}`);
-    const newOrder = this.newPretixOrder(orderEmail, itemsAndEmails);
-    const eventOrders = org.ordersByEventID.get(eventID) ?? [];
-    eventOrders.push(newOrder);
-    return newOrder;
   }
 
   public removeOrder(orgUrl: string, eventID: string, code: string): void {

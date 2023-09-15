@@ -15,6 +15,7 @@ import {
 import {
   DevconnectPretixTicket,
   DevconnectPretixTicketDB,
+  PretixEventInfo,
   PretixItemInfo
 } from "../../database/models";
 import {
@@ -37,6 +38,7 @@ import {
 } from "../../database/queries/pretixItemInfo";
 import { pretixTicketsDifferent } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
+import { normalizeEmail } from "../../util/util";
 import { RollbarService } from "../rollbarService";
 import { setError, traced } from "../telemetryService";
 
@@ -120,11 +122,11 @@ export class OrganizerSync {
         try {
           fetchedData = await this.fetchData();
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to fetch", {
             cause: errorCause("fetching", this.organizer.id, e)
           });
@@ -133,11 +135,11 @@ export class OrganizerSync {
         try {
           this.validate(fetchedData);
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to validate", {
             cause: errorCause("validating", this.organizer.id, e)
           });
@@ -146,11 +148,11 @@ export class OrganizerSync {
         try {
           await this.save(fetchedData);
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Data failed to save", {
             cause: errorCause("saving", this.organizer.id, e)
           });
@@ -159,11 +161,11 @@ export class OrganizerSync {
         try {
           await this.pushCheckins();
         } catch (e) {
+          setError(e, span);
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
           );
           this.rollbarService?.reportError(e);
-
           throw new Error("Check-in sync failed", {
             cause: errorCause("pushingCheckins", this.organizer.id, e)
           });
@@ -615,7 +617,7 @@ export class OrganizerSync {
           (existing) => !newActiveItemsByItemID.has(existing.item_id)
         );
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}]  Deleting ${itemsToRemove.length} item infos`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${itemsToRemove.length} item infos`
         );
         for (const item of itemsToRemove) {
           logger(
@@ -673,6 +675,7 @@ export class OrganizerSync {
         );
 
         const ticketsFromPretix = this.ordersToDevconnectTickets(
+          eventInfo,
           pretixOrders,
           updatedItemsInfo
         );
@@ -830,6 +833,7 @@ export class OrganizerSync {
    * subevent events they have in their order.
    */
   private ordersToDevconnectTickets(
+    eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
     itemsInfo: PretixItemInfo[]
   ): DevconnectPretixTicket[] {
@@ -858,7 +862,7 @@ export class OrganizerSync {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
             logger(
-              `[DEVCONNECT PRETIX] Encountered order position without attendee email, defaulting to order email`,
+              `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
               JSON.stringify({
                 orderCode: order.code,
                 positionID: positionid,
@@ -866,9 +870,28 @@ export class OrganizerSync {
               })
             );
           }
-          const email = (attendee_email || order.email).toLowerCase();
-          const pretix_checkin_timestamp =
+          const email = normalizeEmail(attendee_email || order.email);
+          const pretix_checkin_timestamp_string =
             checkins.length > 0 ? checkins[0].datetime : null;
+
+          let pretix_checkin_timestamp: Date | null = null;
+
+          if (pretix_checkin_timestamp_string != null) {
+            try {
+              const parsedDate = Date.parse(
+                pretix_checkin_timestamp_string ?? ""
+              );
+              if (!isNaN(parsedDate)) {
+                pretix_checkin_timestamp = new Date(parsedDate);
+              }
+            } catch (e) {
+              logger(
+                "[DEVCONNECT PRETIX] couldn't parse date",
+                pretix_checkin_timestamp_string,
+                e
+              );
+            }
+          }
 
           tickets.push({
             email,

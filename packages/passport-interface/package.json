@@ -20,9 +20,10 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/eddsa-ticket-pcd": "0.1.1",
+    "@pcd/pcd-collection": "0.6.2",
     "@pcd/passport-crypto": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
-    "@pcd/eddsa-ticket-pcd": "0.1.1",
     "@pcd/rsa-ticket-pcd": "0.1.2",
     "@pcd/semaphore-group-pcd": "0.6.2",
     "@pcd/semaphore-identity-pcd": "0.6.2",
@@ -31,6 +32,7 @@
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",
+    "@pcd/emitter": "0.0.3",
     "react": "^18.2.0"
   },
   "devDependencies": {

@@ -23,7 +23,7 @@ export async function fetchEncryptedStorage(
 }
 
 /**
- * Replaces the encrypted data stored at a particular Master Password.
+ * Replaces the encrypted data stored at a particular encryption key
  */
 export async function insertEncryptedStorage(
   dbPool: Pool,

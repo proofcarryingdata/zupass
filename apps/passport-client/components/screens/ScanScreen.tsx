@@ -49,7 +49,7 @@ function ViewFinder() {
   return (
     <ScanOverlayWrap>
       <CircleButton diameter={20} padding={16} onClick={onClose}>
-        <img src={icons.closeWhite} width={20} height={20} />
+        <img draggable="false" src={icons.closeWhite} width={20} height={20} />
       </CircleButton>
       <Guidebox>
         <Corner top left />

@@ -11,6 +11,7 @@ import { logger } from "./util/logger";
 
 import process from "node:process";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
+import { trapSigTerm } from "./util/terminate";
 import { getCommitHash } from "./util/util";
 
 process.on("unhandledRejection", (reason) => {
@@ -49,12 +50,16 @@ export async function startApplication(
     `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
   );
 
-  return {
+  const pcdpass: PCDpass = {
     context,
     services,
     apis,
     expressContext: expressServer
   };
+
+  trapSigTerm(pcdpass);
+
+  return pcdpass;
 }
 
 export async function stopApplication(app?: PCDpass): Promise<void> {

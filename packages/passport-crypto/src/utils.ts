@@ -6,9 +6,8 @@ import {
   from_string,
   to_base64,
   to_hex,
-  to_string,
-} from "libsodium-wrappers";
-
+  to_string
+} from "libsodium-wrappers-sumo";
 /**
  * Returns built in crypto if available, otherwise polyfill
  */

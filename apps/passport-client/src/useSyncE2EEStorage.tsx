@@ -4,23 +4,16 @@ import {
   passportEncrypt
 } from "@pcd/passport-crypto";
 import {
-  ISSUANCE_STRING,
-  IssuedPCDsRequest,
-  IssuedPCDsResponse,
-  isSyncedEncryptedStorageV2,
   SyncedEncryptedStorage,
-  SyncedEncryptedStorageV2
+  SyncedEncryptedStorageV2,
+  isSyncedEncryptedStorageV2
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useContext, useEffect, useState } from "react";
 import {
   downloadEncryptedStorage,
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
-import { requestIssuedPCDs } from "./api/issuedPCDs";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
@@ -30,7 +23,6 @@ import {
   savePCDs
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { AppState } from "./state";
 import { useOnStateChange } from "./subscribe";
 
 /**
@@ -40,6 +32,10 @@ import { useOnStateChange } from "./subscribe";
 export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
+  if (pcds.size() === 0) {
+    console.error("[SYNC] skipping upload, no pcds in localStorage");
+    return;
+  }
   const encryptionKey = await loadEncryptionKey();
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({
@@ -96,38 +92,6 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
     console.log("[SYNC] uploaded storage is corrupted - ignoring it");
     return null;
   }
-}
-
-export async function loadIssuedPCDs(
-  state: AppState
-): Promise<IssuedPCDsResponse | undefined> {
-  const request: IssuedPCDsRequest = {
-    userProof: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: state.identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    )
-  };
-
-  const issuedPcdsResponse = await requestIssuedPCDs(request);
-
-  if (!issuedPcdsResponse) {
-    console.log("[ISSUED PCDS] unable to get issued pcds");
-    return undefined;
-  }
-
-  return issuedPcdsResponse;
 }
 
 export function useSyncE2EEStorage() {

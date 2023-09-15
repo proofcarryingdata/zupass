@@ -1,10 +1,12 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -101,6 +103,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
     ZKEdDSATicketPCDPackage,
     EzklSecretPCDPackage,
     EzklGroupPCDPackage,
-    EzklDisplayPCDPackage
+    EzklDisplayPCDPackage,
+    RSAImagePCDPackage,
+    EmailPCDPackage
   ];
 }

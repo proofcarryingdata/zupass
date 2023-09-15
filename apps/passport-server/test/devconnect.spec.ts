@@ -1,4 +1,4 @@
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { EDdSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -6,9 +6,16 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
+  FeedResponse,
   ISSUANCE_STRING,
-  IssuedPCDsResponse
+  PCDPassFeedIds
 } from "@pcd/passport-interface";
+import {
+  AppendToFolderAction,
+  PCDActionType,
+  ReplaceInFolderAction,
+  isReplaceInFolderAction
+} from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -60,10 +67,12 @@ import { sleep } from "../src/util/util";
 import {
   requestCheckIn,
   requestIssuedPCDs,
+  requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
 } from "./issuance/issuance";
 import {
   DevconnectPretixDataMocker,
+  IMockDevconnectPretixData,
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
@@ -87,9 +96,15 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
   let server: SetupServer;
+  let backupData: IMockDevconnectPretixData;
+
+  this.beforeEach(async () => {
+    backupData = mocker.backup();
+  });
 
   this.afterEach(async () => {
     server.resetHandlers();
+    mocker.restore(backupData);
   });
 
   this.beforeAll(async () => {
@@ -131,7 +146,8 @@ describe("devconnect functionality", function () {
       mocker.get().organizer1.eventC.slug
     );
 
-    server = getDevconnectMockPretixAPIServer(mocker.get());
+    const orgUrls = mocker.get().organizersByOrgUrl.keys();
+    server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
@@ -291,6 +307,129 @@ describe("devconnect functionality", function () {
     }
   );
 
+  step(
+    "updating a position's email address causes the ticket to change ownership",
+    async function () {
+      const order = mocker
+        .get()
+        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug);
+      const orderCode = order ? order[0].code : undefined;
+
+      if (!orderCode) {
+        throw new Error("expected to be able to find order");
+      }
+
+      const updatedEmail = "abcdefg.com";
+      let oldEmail: string | null = "";
+
+      mocker.updateOrder(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        orderCode,
+        (order) => {
+          oldEmail = order.positions[0].attendee_email;
+          order.positions[0].attendee_email = updatedEmail;
+        }
+      );
+
+      await devconnectPretixSyncService.trySync();
+
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
+        application.context.dbPool
+      );
+
+      expect(tickets).to.have.length(14);
+
+      const ticketsWithEmailEventAndItems = tickets.map((o) => ({
+        email: o.email,
+        itemInfoID: o.devconnect_pretix_items_info_id
+      }));
+
+      // Get item info IDs for event A
+      const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+      if (!eventAItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
+      const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
+        await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
+
+      // Get item info IDs for event B
+      const eventBItemInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      if (!eventBItemInfo) {
+        throw new Error("expected to be able to fetch corresponding item info");
+      }
+
+      expect(ticketsWithEmailEventAndItems).to.have.deep.members([
+        {
+          email: updatedEmail,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_3,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_4,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_2,
+          itemInfoID: item2EventAInfoID
+        },
+        {
+          email: mocker.get().organizer1.EMAIL_1,
+          itemInfoID: item1EventAInfoID
+        }
+      ]);
+
+      // restore the email of that position back to what it was prior to this test case
+      mocker.updateOrder(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        orderCode,
+        (order) => {
+          order.positions[0].attendee_email = oldEmail;
+        }
+      );
+    }
+  );
+
   step("removing an order causes soft deletion of ticket", async function () {
     const ordersForEventA =
       mocker
@@ -397,20 +536,23 @@ describe("devconnect functionality", function () {
     const eventConfigID = organizer.events[0].id;
     const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
 
+    const checkInDate = new Date();
+
     // Simulate Pretix returning tickets as being checked in
     server.use(
       rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
-        const skip = (req.params.event as string) !== eventID;
-        const orders = skip
-          ? org.ordersByEventID.get(eventID)
-          : org.ordersByEventID.get(eventID)?.map((order) => {
+        const returnUnmodified = (req.params.event as string) !== eventID;
+        const originalOrders = org.ordersByEventID.get(eventID) as DevconnectPretixOrder[];
+        const orders: DevconnectPretixOrder[] = returnUnmodified
+          ? originalOrders
+          : originalOrders.map((order) => {
               return {
                 ...order,
                 positions: order.positions.map((position) => {
                   return {
                     ...position,
                     checkins: [
-                      { type: "entry", datetime: new Date().toISOString() }
+                      { type: "entry", datetime: checkInDate.toISOString() }
                     ]
                   };
                 })
@@ -445,7 +587,8 @@ describe("devconnect functionality", function () {
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicketWithCheckin) =>
-          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER
+          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER &&
+          ticket.pretix_checkin_timestamp?.getTime() === checkInDate.getTime()
       ).length
     );
   });
@@ -773,17 +916,35 @@ describe("devconnect functionality", function () {
   );
 
   let identity: Identity;
-  let publicKey: NodeRSA;
+  let publicKeyRSA: NodeRSA;
+  let publicKeyEdDSA: EDdSAPublicKey;
 
   step(
-    "anyone should be able to request the server's public key",
+    "anyone should be able to request the server's RSA public key",
     async function () {
       const publicKeyResponse = await requestServerRSAPublicKey(application);
       expect(publicKeyResponse.status).to.eq(200);
-      publicKey = new NodeRSA(publicKeyResponse.text, "public");
-      expect(publicKey.getKeySize()).to.eq(2048);
-      expect(publicKey.isPublic(true)).to.eq(true);
-      expect(publicKey.isPrivate()).to.eq(false); // just to be safe
+      publicKeyRSA = new NodeRSA(publicKeyResponse.text, "public");
+      expect(publicKeyRSA.getKeySize()).to.eq(2048);
+      expect(publicKeyRSA.isPublic(true)).to.eq(true);
+      expect(publicKeyRSA.isPrivate()).to.eq(false); // just to be safe
+    }
+  );
+
+  step(
+    "anyone should be able to request the server's EdDSA public key",
+    async function () {
+      const publicKeyResponse = await requestServerEdDSAPublicKey(application);
+      expect(publicKeyResponse.status).to.eq(200);
+      publicKeyEdDSA = JSON.parse(publicKeyResponse.text);
+      const [xValue, yValue] = publicKeyEdDSA;
+      // Check lengths - should be 32 bytes in hex
+      expect(xValue.length).to.eq(64);
+      expect(yValue.length).to.eq(64);
+      // Just to be safe, check against a regex
+      const regex32ByteHexString = /^[0-9A-Fa-f]{64}$/;
+      expect(regex32ByteHexString.test(xValue)).to.eq(true);
+      expect(regex32ByteHexString.test(yValue)).to.eq(true);
     }
   );
 
@@ -811,24 +972,21 @@ describe("devconnect functionality", function () {
       const response = await requestIssuedPCDs(
         application,
         identity,
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
       );
-      const responseBody = response.body as IssuedPCDsResponse;
+      const responseBody = response.body as FeedResponse;
+
       expect(responseBody.actions.length).to.eq(3);
+      const action = responseBody.actions[2] as AppendToFolderAction;
 
-      const devconnectAction = responseBody.actions[2];
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.folder).to.eq("Devconnect/Event A");
 
-      // the name of this event is left over from a previous test
-      expect(devconnectAction.folder).to.eq("Devconnect/Won't sync to this");
+      expect(Array.isArray(action.pcds)).to.eq(true);
+      expect(action.pcds.length).to.eq(6);
 
-      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-      // originally there were 6 orders in the mock data
-      // but one was deleted in an earlier test
-      // since we don't fetch tickets with is_deleted = true
-      // there will only be 5 PCDs
-      expect(devconnectAction.pcds.length).to.eq(5);
-
-      const ticketPCD = devconnectAction.pcds[0];
+      const ticketPCD = action.pcds[0];
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
@@ -845,17 +1003,19 @@ describe("devconnect functionality", function () {
     const expressResponse1 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
     const expressResponse2 = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
-    const response1 = expressResponse1.body as IssuedPCDsResponse;
-    const response2 = expressResponse2.body as IssuedPCDsResponse;
-    const action1 = response1.actions[0];
-    const action2 = response2.actions[0];
+    const response1 = expressResponse1.body as FeedResponse;
+    const response2 = expressResponse2.body as FeedResponse;
+    const action1 = response1.actions[0] as AppendToFolderAction;
+    const action2 = response2.actions[0] as AppendToFolderAction;
 
     const pcds1 = await Promise.all(
       action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
@@ -896,12 +1056,14 @@ describe("devconnect functionality", function () {
     const response = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
-    const responseBody = response.body as IssuedPCDsResponse;
+    const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2];
 
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+    expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
     expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
     expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
@@ -938,12 +1100,13 @@ describe("devconnect functionality", function () {
     const response = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
-    const responseBody = response.body as IssuedPCDsResponse;
+    const responseBody = response.body as FeedResponse;
     expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2];
-    expect(devconnectAction.folder).to.eq("Devconnect/New name");
+    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+    expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
     expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
     const ticketPCD = devconnectAction.pcds[0];
@@ -983,13 +1146,13 @@ describe("devconnect functionality", function () {
     const issueResponse = await requestIssuedPCDs(
       application,
       identity,
-      ISSUANCE_STRING
+      ISSUANCE_STRING,
+      PCDPassFeedIds.Devconnect
     );
-    const issueResponseBody = issueResponse.body as IssuedPCDsResponse;
-    expect(issueResponseBody.actions.length).to.eq(3);
-    const devconnectAction = issueResponseBody.actions[2];
-    const serializedTicket = devconnectAction
-      .pcds[1] as SerializedPCD<EdDSATicketPCD>;
+    const issueResponseBody = issueResponse.body as FeedResponse;
+    const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+
+    const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
     const checkinResponse = await requestCheckIn(
@@ -1096,13 +1259,18 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         identity,
-        "asdf"
+        "asdf",
+        PCDPassFeedIds.Devconnect
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
+
+      const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
+
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 
@@ -1112,13 +1280,18 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestIssuedPCDs(
         application,
         new Identity(),
-        ISSUANCE_STRING
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
       );
-      const response = expressResponse.body as IssuedPCDsResponse;
+
+      const response = expressResponse.body as FeedResponse;
       expect(response.actions).to.deep.eq([
-        { folder: "SBC SRW", pcds: [] },
-        { folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
+        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
       ]);
+
+      const action = response.actions[0] as ReplaceInFolderAction;
+      expect(action.pcds).to.deep.eq([]);
     }
   );
 

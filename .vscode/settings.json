@@ -19,5 +19,6 @@
     "editor.codeActionsOnSave": {
       "source.organizeImports": false
     }
-  }
+  },
+  "editor.tabSize": 2
 }

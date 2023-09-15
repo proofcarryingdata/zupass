@@ -1,9 +1,10 @@
 import { DateRange, User, ZuzaluUserRole } from "@pcd/passport-interface";
+import Avatar from "boring-avatars";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useSelf } from "../../src/appHooks";
-import { getVisitorStatus, VisitorStatus } from "../../src/user";
-import { H3, H4, InfoLine, Spacer, TextCenter } from "../core";
+import { VisitorStatus, getVisitorStatus } from "../../src/user";
+import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { IdentityQR } from "./IdentityQR";
 
 export function MainIdentityCard({
@@ -34,7 +35,13 @@ export function MainIdentityCard({
         <H3 col="var(--primary-dark)">{actualUser.name}</H3>
         {appConfig.isZuzalu && <InfoLine>{actualUser.email}</InfoLine>}
         {!appConfig.isZuzalu && (
-          <H4 col="var(--bg-dark-primary)">{actualUser.email}</H4>
+          <Avatar
+            size={300}
+            variant="bauhaus"
+            name={actualUser.uuid}
+            square={false}
+            colors={["#FFAD08", "#EDD75A", "#73B06F", "#0C8F8F", "#405059"]}
+          />
         )}
         <VisitorDateSection user={actualUser} />
       </TextCenter>

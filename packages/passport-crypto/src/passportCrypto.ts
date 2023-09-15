@@ -32,19 +32,35 @@ export class PCDCrypto {
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 
+  public generateSalt(
+    length: number = this.sodium.crypto_pwhash_SALTBYTES
+  ): HexString {
+    if (length < this.sodium.crypto_pwhash_SALTBYTES) {
+      throw Error(
+        `Salt must be at least ${this.sodium.crypto_pwhash_SALTBYTES}`
+      );
+    }
+    const buffer = this.sodium.randombytes_buf(length);
+    return utils.arrayBufferToHexString(buffer);
+  }
+
   public argon2(
     password: Utf8String,
     salt: HexString,
-    iterations: number,
-    bytes: number,
     length: number
   ): HexString {
     const result = this.sodium.crypto_pwhash(
       length,
       utils.stringToArrayBuffer(password),
       utils.hexStringToArrayBuffer(salt),
-      iterations,
-      bytes,
+      // `oplimit` represents the maximum amount of computations to perform
+      // for generating a key. `crypto_pwhash_OPSLIMIT_INTERACTIVE` is recommended
+      // for intereactive, online applications such as PCDPass.
+      // Source: https://libsodium.gitbook.io/doc/password_hashing/default_phf
+      this.sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
+      // `memlimit` represents the maximum amount of RAM in bytes thet function
+      // will use. It is required to use the same values for `opslimit` and `memlimit`.
+      this.sodium.crypto_pwhash_MEMLIMIT_INTERACTIVE,
       this.sodium.crypto_pwhash_ALG_DEFAULT,
       "hex"
     );

@@ -1,5 +1,4 @@
-import { IssuedPCDsRequest, IssuedPCDsResponse } from "@pcd/passport-interface";
-import { appConfig } from "../appConfig";
+import { FeedRequest, FeedResponse } from "@pcd/passport-interface";
 
 /**
  * Given the information the server knows about the user, it is able to
@@ -7,19 +6,20 @@ import { appConfig } from "../appConfig";
  * that the server wants to 'issue' to the user.
  */
 export async function requestIssuedPCDs(
-  request: IssuedPCDsRequest
-): Promise<IssuedPCDsResponse | undefined> {
+  providerUrl: string,
+  request: FeedRequest
+): Promise<FeedResponse | undefined> {
   try {
-    const url = `${appConfig.passportServer}/issue`;
+    const url = providerUrl;
     const response = await fetch(url, {
       method: "POST",
       body: JSON.stringify(request),
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
-      },
+        Accept: "application/json"
+      }
     });
-    const issuedPCDResponse = (await response.json()) as IssuedPCDsResponse;
+    const issuedPCDResponse = (await response.json()) as FeedResponse;
     return issuedPCDResponse;
   } catch (e) {
     return undefined;

@@ -11,6 +11,7 @@ html {
   --accent-lite: #ffe5a4;
   --danger: #a95940;
   --danger-lite: #b36851;
+  --danger-bright: #fc9575;
   --danger-rgb: 169, 89, 64;
   --white: #ffffff;
   --white-rgb: 255, 255, 255;
@@ -142,4 +143,10 @@ th {
 form {
   margin: 0;
   padding: 0;
+}
+
+img {
+  -webkit-touch-callout: none;
+  user-select: none;
+  user-drag: none;
 }

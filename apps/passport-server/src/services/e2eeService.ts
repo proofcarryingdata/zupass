@@ -41,7 +41,7 @@ export class E2EEService {
 
       if (!storageModel) {
         logger(
-          `can't load e2ee: never saved Master Password ${request.blobKey}`
+          `can't load e2ee: never saved encryption key ${request.blobKey}`
         );
         res.sendStatus(404);
         return;

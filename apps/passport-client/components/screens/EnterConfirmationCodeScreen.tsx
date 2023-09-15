@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import {
   BackgroundGlow,
@@ -36,12 +36,17 @@ export function EnterConfirmationCodeScreen() {
       return;
     }
     setVerifyingCode(true);
-    await dispatch({ type: "login", email, token });
+    await dispatch({ type: "verify-token", email, token });
     setVerifyingCode(false);
   }, [dispatch, email, input]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
+  }, []);
+
+  // scroll to top when we navigate to this page
+  useLayoutEffect(() => {
+    document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
   return (
@@ -80,7 +85,7 @@ export function EnterConfirmationCodeScreen() {
             ) : (
               <>
                 <Spacer h={8} />
-                <Button onClick={onCreateClick}>Login</Button>
+                <Button onClick={onCreateClick}>Continue</Button>
                 <Spacer h={8} />
                 <Button onClick={onCancelClick}>Cancel</Button>
               </>

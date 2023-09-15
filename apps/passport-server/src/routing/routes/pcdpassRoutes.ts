@@ -6,12 +6,24 @@ import { decodeString, normalizeEmail } from "../../util/util";
 export function initPCDpassRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService, rollbarService }: GlobalServices
+  { userService, rollbarService, emailTokenService }: GlobalServices
 ): void {
   logger("[INIT] initializing PCDpass routes");
 
   app.get("/pcdpass/", (req: Request, res: Response) => {
     res.sendStatus(200);
+  });
+
+  app.get("/pcdpass/salt", async (req: Request, res: Response) => {
+    try {
+      const email = normalizeEmail(decodeString(req.query.email, "email"));
+      const salt = await userService.getSaltByEmail(email);
+      res.send({ salt: salt ?? "" }); // null becomes "null" in JSON, so switch to '' for empty
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
   });
 
   // Check that email is on the list. Send email with the login code, allowing
@@ -29,13 +41,43 @@ export function initPCDpassRoutes(
     }
   });
 
+  // Verify the token associated with the email address
+  // @returns { verified: boolean, message?: string }
+  app.post("/pcdpass/verify-token", async (req: Request, res: Response) => {
+    try {
+      const token = decodeString(req.query.token, "token");
+      const email = normalizeEmail(decodeString(req.query.email, "email"));
+      if (await emailTokenService.checkTokenCorrect(email, token)) {
+        res.send({ verified: true });
+      } else {
+        res.send({
+          verified: false,
+          message:
+            "Wrong token. If you got more than one email, use the latest one."
+        });
+      }
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
   // Check the token (sent to user's email), add a new user.
   app.get("/pcdpass/new-participant", async (req: Request, res: Response) => {
     try {
       const token = decodeString(req.query.token, "token");
       const email = normalizeEmail(decodeString(req.query.email, "email"));
       const commitment = decodeString(req.query.commitment, "commitment");
-      await userService.handleNewPCDpassUser(token, email, commitment, res);
+      const salt = decodeString(req.query.salt, "salt");
+
+      await userService.handleNewPCDpassUser(
+        token,
+        email,
+        commitment,
+        salt,
+        res
+      );
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);
