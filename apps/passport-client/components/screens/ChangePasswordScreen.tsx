@@ -1,23 +1,23 @@
+import { PCDCrypto } from "@pcd/passport-crypto";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useSelf } from "../../src/appHooks";
-import {
-  BackgroundGlow,
-  BigInput,
-  CenterColumn,
-  H1,
-  HR,
-  Spacer,
-  TextCenter
-} from "../core";
+import { attemptDownloadStorage } from "../../src/api/endToEndEncryptionApi";
+import { fetchSaltFromServer } from "../../src/api/user";
+import { useDispatch, useSelf } from "../../src/appHooks";
+import { saveEncryptionKey } from "../../src/localstorage";
+import { uploadStorage } from "../../src/useSyncE2EEStorage";
+import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
-import { NewPasswordForm } from "../shared/NewPasswordForm";
+import { NewPasswordForm, PasswordInput } from "../shared/NewPasswordForm";
 
 export function ChangePasswordScreen() {
   const self = useSelf();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (self == null) {
@@ -26,49 +26,78 @@ export function ChangePasswordScreen() {
     }
   }, [self, navigate]);
 
-  const [password, setPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [revealPassword, setRevealPassword] = useState(false);
+
+  const onChangePassword = async () => {
+    if (loading) return;
+    setLoading(true);
+    const res = await fetchSaltFromServer(self.email);
+    const { salt } = await res.json();
+
+    const crypto = await PCDCrypto.newInstance();
+    try {
+      const currentEncryptionKey = await crypto.argon2(
+        currentPassword,
+        salt,
+        32
+      );
+      // FIXME: We actually need to delete these routes
+      await attemptDownloadStorage(currentEncryptionKey);
+    } catch (e) {
+      setLoading(false);
+      dispatch({
+        type: "error",
+        error: {
+          title: "Password incorrect",
+          message: "Please check your password and try again",
+          dismissToCurrentPage: true
+        }
+      });
+      return;
+    }
+    const newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
+    await saveEncryptionKey(newEncryptionKey);
+    await uploadStorage();
+    window.location.hash = "/#";
+    // update({
+    //   encryptionKey
+    // });
+  };
 
   return (
-    <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        <Spacer h={64} />
-        <Header />
-        <Spacer h={24} />
+    <AppContainer bg="gray">
+      <Spacer h={64} />
+      <Header />
+      <Spacer h={24} />
 
-        <CenterColumn w={280}>
-          <BigInput
-            placeholder="Current password"
-            autoFocus
-            value={password}
-            type="password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Spacer h={8} />
-          <NewPasswordForm
-            passwordInputPlaceholder="New password"
-            email={self.email}
-            submitButtonText="Change"
-            password={password}
-            confirmPassword={confirmPassword}
-            setPassword={setPassword}
-            setConfirmPassword={setConfirmPassword}
-            onSuccess={() => {
-              // TODO
-            }}
-          />
-        </CenterColumn>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-        <CenterColumn w={280}>
-          <LinkButton to={"/"}>Cancel</LinkButton>
-        </CenterColumn>
-      </BackgroundGlow>
+      <CenterColumn w={280}>
+        <PasswordInput
+          placeholder="Current password"
+          autoFocus
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          value={currentPassword}
+          setValue={setCurrentPassword}
+        />
+        <Spacer h={8} />
+        <NewPasswordForm
+          passwordInputPlaceholder="New password"
+          email={self.email}
+          submitButtonText="Confirm"
+          password={newPassword}
+          confirmPassword={confirmPassword}
+          setPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          onSuccess={onChangePassword}
+        />
+      </CenterColumn>
+      <Spacer h={8} />
+      <CenterColumn w={280}>
+        <LinkButton to={"/"}>Cancel</LinkButton>
+      </CenterColumn>
       <Spacer h={64} />
     </AppContainer>
   );
@@ -77,11 +106,10 @@ export function ChangePasswordScreen() {
 function Header() {
   return (
     <TextCenter>
-      <H1>PCDPASS</H1>
+      <H2>Change Password</H2>
       <Spacer h={24} />
       <Description>
-        Choose a secure, unique password. This password will be used to generate
-        your key to secure your data.
+        Make sure that your new password is secure, unique, and memorable.
       </Description>
     </TextCenter>
   );

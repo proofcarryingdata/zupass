@@ -17,7 +17,7 @@ interface SetPasswordInputProps {
   autoFocus?: boolean;
 }
 
-function SetPasswordInput({
+export function PasswordInput({
   value,
   setValue,
   revealPassword,
@@ -117,7 +117,7 @@ export function NewPasswordForm({
     <form onSubmit={checkPasswordAndSubmit}>
       {/* For password manager autofill */}
       <input hidden readOnly value={email} />
-      <SetPasswordInput
+      <PasswordInput
         value={password}
         setValue={(value) => {
           setErrorMessage("");
@@ -129,7 +129,7 @@ export function NewPasswordForm({
         setRevealPassword={setRevealPassword}
       />
       <Spacer h={8} />
-      <SetPasswordInput
+      <PasswordInput
         value={confirmPassword}
         setValue={(value) => {
           setErrorMessage("");

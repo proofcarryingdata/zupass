@@ -4,7 +4,7 @@ import { icons } from "../icons";
 import { Button } from "./Button";
 import { BigInput } from "./Input";
 
-export { Button, BigInput, Spacer };
+export { BigInput, Button, Spacer };
 
 export const H1 = styled.h1<{ col?: string }>`
   color: ${(p) => p.col || "var(--accent-dark)"};
