@@ -17,6 +17,7 @@ import { NewPasswordForm } from "../shared/NewPasswordForm";
 
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();
+  const [revealPassword, setRevealPassword] = useState(false);
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
@@ -71,6 +72,8 @@ export function CreatePasswordScreen() {
             confirmPassword={confirmPassword}
             setPassword={setPassword}
             setConfirmPassword={setConfirmPassword}
+            revealPassword={revealPassword}
+            setRevealPassword={setRevealPassword}
             submitButtonText="Continue"
             onSuccess={() =>
               dispatch({

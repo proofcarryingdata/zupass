@@ -86,6 +86,8 @@ export function ChangePasswordScreen() {
         <NewPasswordForm
           passwordInputPlaceholder="New password"
           email={self.email}
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"
           password={newPassword}
           confirmPassword={confirmPassword}

@@ -71,9 +71,12 @@ interface NewPasswordForm {
   setPassword: Dispatch<SetStateAction<string>>;
   confirmPassword: string;
   setConfirmPassword: Dispatch<SetStateAction<string>>;
+  revealPassword: boolean;
+  setRevealPassword: Dispatch<SetStateAction<boolean>>;
   onSuccess: () => void;
   submitButtonText: string;
   passwordInputPlaceholder?: string; // Override placeholder on the first input
+  autoFocus?: boolean;
 }
 
 export function NewPasswordForm({
@@ -82,11 +85,13 @@ export function NewPasswordForm({
   setPassword,
   confirmPassword,
   setConfirmPassword,
+  revealPassword,
+  setRevealPassword,
   onSuccess,
   submitButtonText,
-  passwordInputPlaceholder
+  passwordInputPlaceholder,
+  autoFocus
 }: NewPasswordForm) {
-  const [revealPassword, setRevealPassword] = useState(false);
   const [passwordError, setErrorMessage] = useState("");
 
   const checkPasswordAndSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -124,7 +129,7 @@ export function NewPasswordForm({
           setPassword(value);
         }}
         placeholder={passwordInputPlaceholder || "Password"}
-        autoFocus
+        autoFocus={autoFocus}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
       />
