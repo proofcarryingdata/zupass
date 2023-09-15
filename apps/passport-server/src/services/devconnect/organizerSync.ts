@@ -871,8 +871,27 @@ export class OrganizerSync {
             );
           }
           const email = normalizeEmail(attendee_email || order.email);
-          const pretix_checkin_timestamp =
+          const pretix_checkin_timestamp_string =
             checkins.length > 0 ? checkins[0].datetime : null;
+
+          let pretix_checkin_timestamp: Date | null = null;
+
+          if (pretix_checkin_timestamp_string != null) {
+            try {
+              const parsedDate = Date.parse(
+                pretix_checkin_timestamp_string ?? ""
+              );
+              if (!isNaN(parsedDate)) {
+                pretix_checkin_timestamp = new Date(parsedDate);
+              }
+            } catch (e) {
+              logger(
+                "[DEVCONNECT PRETIX] couldn't parse date",
+                pretix_checkin_timestamp_string,
+                e
+              );
+            }
+          }
 
           tickets.push({
             email,

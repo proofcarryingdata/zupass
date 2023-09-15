@@ -385,7 +385,7 @@ export interface DevconnectPretixCheckinList {
 
 // This records when an attendee was checked in
 export interface DevconnectPretixCheckin {
-  datetime: Date;
+  datetime: string;
   type: string;
 }
 
