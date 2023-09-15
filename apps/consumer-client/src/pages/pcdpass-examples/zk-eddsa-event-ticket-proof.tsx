@@ -14,11 +14,10 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import path from "path";
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PCDPASS_URL } from "../../constants";
+import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../constants";
 
 /**
  * Example page which shows how to use a Zuzalu-specific prove screen to
@@ -425,10 +424,11 @@ async function verifyProof(
   // need to do this anymore
   // in general i am of the opinion that verification shouldn't require you
   // to call init...
-  const fullPath = path.join(__dirname, "../../public");
   await ZKEdDSAEventTicketPCDPackage.init?.({
-    wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
-    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
+    wasmFilePath:
+      PCDPASS_SERVER_URL + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
+    zkeyFilePath:
+      PCDPASS_SERVER_URL + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
   });
 
   const { verify } = ZKEdDSAEventTicketPCDPackage;
