@@ -7,7 +7,7 @@ export const ZUPASS_URL = IS_PROD
   : "http://localhost:3000/";
 
 export const PCDPASS_URL = IS_PROD
-  ? "https://zupass.org/"
+  ? "https://pcdpass.xyz/"
   : "http://localhost:3000/";
 
 export const ZUPASS_SERVER_URL = IS_PROD
