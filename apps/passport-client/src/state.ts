@@ -20,7 +20,13 @@ export interface AppState {
 
   // View state
   pendingAction?: PendingAction;
-  modal: "info" | "settings" | "save-sync" | "invalid-participant" | "";
+  modal:
+    | "info"
+    | "settings"
+    | "save-sync"
+    | "invalid-participant"
+    | "changed-password"
+    | "";
 
   // User metadata.
   self?: User;

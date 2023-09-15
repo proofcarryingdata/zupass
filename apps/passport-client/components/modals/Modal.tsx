@@ -6,6 +6,7 @@ import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
+import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { SaveSyncModal } from "./SaveSyncModal";
@@ -48,7 +49,9 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
 }
 
 function isModalDismissable(modal: AppState["modal"]) {
-  return !["save-sync", "invalid-participant"].includes(modal);
+  return !["save-sync", "invalid-participant", "changed-password"].includes(
+    modal
+  );
 }
 
 function getModalBody(modal: AppState["modal"]) {
@@ -61,6 +64,8 @@ function getModalBody(modal: AppState["modal"]) {
       return <SaveSyncModal />;
     case "invalid-participant":
       return <InvalidUserModal />;
+    case "changed-password":
+      return <ChangedPasswordModal />;
     case "":
       return null;
     default:

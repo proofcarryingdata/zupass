@@ -10,6 +10,10 @@ export function SettingsModal() {
   const dispatch = useDispatch();
   const syncKey = useSyncKey();
 
+  const close = useCallback(() => {
+    dispatch({ type: "set-modal", modal: "" });
+  }, [dispatch]);
+
   const copySyncKey = useCallback(async () => {
     // Use the window clipboard API to copy the key
     await window.navigator.clipboard.writeText(syncKey);
@@ -46,7 +50,9 @@ export function SettingsModal() {
           </Button>
         )}
         {!appConfig.isZuzalu && (
-          <LinkButton to="/change-password">Change Password</LinkButton>
+          <LinkButton to="/change-password" onClick={close}>
+            Change Password
+          </LinkButton>
         )}
         <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">

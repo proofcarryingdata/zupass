@@ -9,6 +9,7 @@ import { saveEncryptionKey } from "../../src/localstorage";
 import { uploadStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
+import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm, PasswordInput } from "../shared/NewPasswordForm";
 
@@ -61,47 +62,53 @@ export function ChangePasswordScreen() {
     const newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
     await saveEncryptionKey(newEncryptionKey);
     await uploadStorage();
-    window.location.hash = "/#";
+    dispatch({
+      type: "set-modal",
+      modal: "changed-password"
+    });
     // update({
     //   encryptionKey
     // });
   };
 
   return (
-    <AppContainer bg="gray">
-      <Spacer h={64} />
-      <Header />
-      <Spacer h={24} />
+    <>
+      <MaybeModal />
+      <AppContainer bg="gray">
+        <Spacer h={64} />
+        <Header />
+        <Spacer h={24} />
 
-      <CenterColumn w={280}>
-        <PasswordInput
-          placeholder="Current password"
-          autoFocus
-          revealPassword={revealPassword}
-          setRevealPassword={setRevealPassword}
-          value={currentPassword}
-          setValue={setCurrentPassword}
-        />
+        <CenterColumn w={280}>
+          <PasswordInput
+            placeholder="Current password"
+            autoFocus
+            revealPassword={revealPassword}
+            setRevealPassword={setRevealPassword}
+            value={currentPassword}
+            setValue={setCurrentPassword}
+          />
+          <Spacer h={8} />
+          <NewPasswordForm
+            passwordInputPlaceholder="New password"
+            email={self.email}
+            revealPassword={revealPassword}
+            setRevealPassword={setRevealPassword}
+            submitButtonText="Confirm"
+            password={newPassword}
+            confirmPassword={confirmPassword}
+            setPassword={setNewPassword}
+            setConfirmPassword={setConfirmPassword}
+            onSuccess={onChangePassword}
+          />
+        </CenterColumn>
         <Spacer h={8} />
-        <NewPasswordForm
-          passwordInputPlaceholder="New password"
-          email={self.email}
-          revealPassword={revealPassword}
-          setRevealPassword={setRevealPassword}
-          submitButtonText="Confirm"
-          password={newPassword}
-          confirmPassword={confirmPassword}
-          setPassword={setNewPassword}
-          setConfirmPassword={setConfirmPassword}
-          onSuccess={onChangePassword}
-        />
-      </CenterColumn>
-      <Spacer h={8} />
-      <CenterColumn w={280}>
-        <LinkButton to={"/"}>Cancel</LinkButton>
-      </CenterColumn>
-      <Spacer h={64} />
-    </AppContainer>
+        <CenterColumn w={280}>
+          <LinkButton to={"/"}>Cancel</LinkButton>
+        </CenterColumn>
+        <Spacer h={64} />
+      </AppContainer>
+    </>
   );
 }
 
