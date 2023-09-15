@@ -44,11 +44,23 @@ yarn add @pcd/passport-interface
 
 The communication between users and passport webapp is mostly via a popup, which redirects to the webapp according to the URL and its search parameters in the same popup. Once the webapp generates the requested content, the popup automatically closes, and the resulting content can be accessed through a React hook.
 
+```mermaid
+sequenceDiagram
+    User app->>User app: constructURL(PCD)
+    User app->>Popup route: openPopupRoute(URL)
+    Popup route->>Passport popup: redirectToPassportWebapp(URL)
+    Passport popup->>Passport popup: getPCD(PCD)
+    Passport popup->>Popup route: redirectToPopupRoute(PCD)
+    Popup route-->>User app: return <<PCD>>
+```
+
+Below, it will be shown how the functions of this package can be used in such a flow.
+
 For more detailed information about the package's functions and types, please refer to the [documentation site](https://docs.pcd.team/modules/_pcd_passport_interface.html).
 
 ### Using the passport popup
 
-You can use the [`usePassportPopupSetup`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupSetup.html) React hook to set up necessary passport popup logic on a specific route (e.g. `/popup`) and communicate with the passport webapp.
+You can use the [`usePassportPopupSetup`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupSetup.html) React hook to set up necessary passport popup logic on a specific route (e.g. `/popup`) and communicate with the passport webapp. Basically, it redirects the user to the webapp passport or initial page based on the search parameters of the URL, leveraging cross-origin communication between windows.
 
 ```typescript
 import { usePassportPopupSetup } from "@pcd/passport-interface"
@@ -60,7 +72,7 @@ export default function Popup() {
 }
 ```
 
-Then the [`usePassportPopupMessages`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupMessages.html) React hook can be used to process the results of your requests.
+Then the [`usePassportPopupMessages`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupMessages.html) React hook can be used to process the results of the requests. It listens for incoming [messages](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) from the other browsing context (i.e. the popup) and store them in a state variable.
 
 ```typescript
 import { usePassportPopupMessages } from "@pcd/passport-interface"
@@ -154,7 +166,7 @@ const url = getWithoutProvingUrl(
 openPassportPopup("/popup", url)
 ```
 
-Or proving it with [`constructPassportPcdGetRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdGetRequestUrl.html).
+Or you can prove a claim and get its PCD with [`constructPassportPcdGetRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdGetRequestUrl.html).
 
 ```typescript
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
