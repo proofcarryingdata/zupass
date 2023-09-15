@@ -67,7 +67,7 @@ export function usePassportPopupSetup() {
 
     // First, this page is window.open()-ed. Redirect to the Passport app.
     if (paramsProofUrl != null) {
-      window.location.href = decodeURIComponent(paramsProofUrl);
+      window.location.href = paramsProofUrl;
     } else if (finished) {
       // Later, the Passport redirects back with a result. Send it to our parent.
       if (paramsProof != null) {
