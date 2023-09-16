@@ -37,7 +37,6 @@ export function ChangePasswordScreen() {
     const res = await fetchSaltFromServer(self.email);
     const { salt } = await res.json();
 
-    let newEncryptionKey: string;
     const crypto = await PCDCrypto.newInstance();
     try {
       const currentEncryptionKey = await crypto.argon2(
@@ -45,7 +44,7 @@ export function ChangePasswordScreen() {
         salt,
         32
       );
-      newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
+      const newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
       const res = await updateStorage(currentEncryptionKey, newEncryptionKey);
       // Meaning password is incorrect, as old row is not found
       if (res.status === 401) {
