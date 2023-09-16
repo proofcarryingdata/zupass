@@ -48,17 +48,15 @@ export async function updateEncryptedStorage(
   newBlobKey: string,
   encryptedBlob: string
 ): Promise<void> {
+  await sqlQuery(dbPool, "BEGIN;");
+  await sqlQuery(dbPool, "DELETE FROM e2ee WHERE blob_key = $1;", [oldBlobKey]);
   await sqlQuery(
     dbPool,
-    `
-    BEGIN;
-    DELETE FROM e2ee WHERE blob_key = $1;
-    INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
-      ($2, $3) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $3;
-    COMMIT;
-    `,
-    [oldBlobKey, newBlobKey, encryptedBlob]
+    `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
+      ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1;`,
+    [newBlobKey, encryptedBlob]
   );
+  await sqlQuery(dbPool, "COMMIT;");
 }
 
 /**

@@ -46,30 +46,49 @@ export function ChangePasswordScreen() {
         32
       );
       newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
-      await updateStorage(currentEncryptionKey, newEncryptionKey);
+      const res = await updateStorage(currentEncryptionKey, newEncryptionKey);
+      // Meaning password is incorrect, as old row is not found
+      if (res.status === 401) {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Password incorrect",
+            message:
+              "Double-check your password. If you've lost access, please click 'Reset Account' below.",
+            dismissToCurrentPage: true
+          }
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+
+      await saveEncryptionKey(newEncryptionKey);
+      await uploadStorage();
+      dispatch({
+        type: "set-modal",
+        modal: "changed-password"
+      });
+      dispatch({
+        type: "set-encryption-key",
+        encryptionKey: newEncryptionKey
+      });
+      setLoading(false);
     } catch (e) {
       setLoading(false);
       dispatch({
         type: "error",
         error: {
-          title: "Password incorrect",
-          message: "Please check your password and try again",
+          title: "Error while changing password",
+          message: "Please refresh the page and try again",
           dismissToCurrentPage: true
         }
       });
       return;
     }
-
-    await saveEncryptionKey(newEncryptionKey);
-    await uploadStorage();
-    dispatch({
-      type: "set-modal",
-      modal: "changed-password"
-    });
-    dispatch({
-      type: "set-encryption-key",
-      encryptionKey: newEncryptionKey
-    });
   };
 
   return (

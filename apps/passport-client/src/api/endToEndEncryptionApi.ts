@@ -63,7 +63,7 @@ export async function updateEncryptedStorage(
   oldBlobKey: string,
   newBlobKey: string,
   encryptedStorage: EncryptedPacket
-): Promise<void> {
+): Promise<Response> {
   const request: UpdateE2EERequest = {
     oldBlobKey,
     newBlobKey,
@@ -71,7 +71,7 @@ export async function updateEncryptedStorage(
   };
 
   const url = `${appConfig.passportServer}/sync/update`;
-  await fetch(url, {
+  return fetch(url, {
     method: "POST",
     body: JSON.stringify(request),
     headers: {

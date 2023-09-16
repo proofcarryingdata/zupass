@@ -89,6 +89,16 @@ export class E2EEService {
     try {
       logger(`[E2EE] Updating ${request.oldBlobKey} to ${request.newBlobKey}`);
 
+      // Ensure that old blob key is correct by checking if the row exists
+      const oldRow = await fetchEncryptedStorage(
+        this.context.dbPool,
+        request.oldBlobKey
+      );
+      if (!oldRow) {
+        res.sendStatus(401);
+        return;
+      }
+
       await updateEncryptedStorage(
         this.context.dbPool,
         request.oldBlobKey,
