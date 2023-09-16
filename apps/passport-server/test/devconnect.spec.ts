@@ -215,7 +215,7 @@ describe("devconnect functionality", function () {
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
-    application.services.pretixSyncService?.stop();
+    application.services.devconnectPretixSyncService?.stop();
   });
 
   step(
@@ -542,7 +542,9 @@ describe("devconnect functionality", function () {
     server.use(
       rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
         const returnUnmodified = (req.params.event as string) !== eventID;
-        const originalOrders = org.ordersByEventID.get(eventID) as DevconnectPretixOrder[];
+        const originalOrders = org.ordersByEventID.get(
+          eventID
+        ) as DevconnectPretixOrder[];
         const orders: DevconnectPretixOrder[] = returnUnmodified
           ? originalOrders
           : originalOrders.map((order) => {
@@ -587,7 +589,8 @@ describe("devconnect functionality", function () {
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicketWithCheckin) =>
-          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER &&
+          ticket.is_consumed === true &&
+          ticket.checker === PRETIX_CHECKER &&
           ticket.pretix_checkin_timestamp?.getTime() === checkInDate.getTime()
       ).length
     );
