@@ -10,8 +10,6 @@ import {
 import JSONBig from "json-bigint";
 import { EzklDisplayCardBody } from "./CardBody";
 
-import { EzklGroupPCD, EzklGroupPCDPackage } from "@pcd/ezkl-group-pcd";
-
 import { EzklSecretPCD, EzklSecretPCDPackage } from "@pcd/ezkl-secret-pcd";
 
 // import { prove as ezklProve, verify as ezklVerify } from "@ezkljs/engine";
