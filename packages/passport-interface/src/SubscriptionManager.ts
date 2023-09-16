@@ -55,25 +55,26 @@ export class FeedSubscriptionManager {
   }
 
   public async pollSubscriptions(): Promise<SubscriptionActions[]> {
-    const responses: SubscriptionActions[] = [];
+    const results = await Promise.all(
+      this.activeSubscriptions.map(async (subscription) => {
+        try {
+          return {
+            actions: (
+              await this.api.pollFeed(subscription.providerUrl, {
+                feedId: subscription.feed.id,
+                pcd: subscription.credential
+              })
+            ).actions,
+            subscription
+          };
+        } catch (e) {
+          console.log(`failed to poll subscription`, e);
+          return null;
+        }
+      })
+    );
 
-    for (const subscription of this.activeSubscriptions) {
-      try {
-        responses.push({
-          actions: (
-            await this.api.pollFeed(subscription.providerUrl, {
-              feedId: subscription.feed.id,
-              pcd: subscription.credential
-            })
-          ).actions,
-          subscription
-        });
-      } catch (e) {
-        console.log(`failed to poll subscription`, e);
-      }
-    }
-
-    return responses;
+    return results.filter((item): item is SubscriptionActions => !!item);
   }
 
   public getSubscriptionsByProvider(): Map<string, Subscription[]> {
