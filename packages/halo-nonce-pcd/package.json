@@ -33,8 +33,6 @@
     "@pcd/pcd-types": "0.6.3",
     "@pcd/tsconfig": "*",
     "@types/elliptic": "^6.4.14",
-    "@types/expect": "^24.3.0",
-    "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",

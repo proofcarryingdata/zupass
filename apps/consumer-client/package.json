@@ -36,11 +36,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
     "@types/json-bigint": "^1.0.1",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.0.7",

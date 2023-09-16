@@ -37,7 +37,6 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
-    "@types/expect": "^24.3.0",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "@types/uuid": "^9.0.0",
