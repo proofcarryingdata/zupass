@@ -7,7 +7,7 @@ import {
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
-import { generateMessageHash } from "@pcd/util";
+import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
@@ -55,7 +55,7 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
   }
 
   // Hashes email and returns bigint representation of hash
-  const hashedEmail = generateMessageHash(args.emailAddress.value);
+  const hashedEmail = generateSnarkMessageHash(args.emailAddress.value);
 
   const eddsaPCD = await EdDSAPCDPackage.prove({
     message: {
@@ -82,7 +82,9 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
 }
 
 export async function verify(pcd: EmailPCD): Promise<boolean> {
-  const messageDerivedFromClaim = generateMessageHash(pcd.claim.emailAddress);
+  const messageDerivedFromClaim = generateSnarkMessageHash(
+    pcd.claim.emailAddress
+  );
 
   if (!_.isEqual([messageDerivedFromClaim], pcd.proof.eddsaPCD.claim.message)) {
     return false;

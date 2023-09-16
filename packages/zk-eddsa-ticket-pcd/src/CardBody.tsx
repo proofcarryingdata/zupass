@@ -70,7 +70,7 @@ export function ZKEdDSATicketCardBody({ pcd }: { pcd: ZKEdDSATicketPCD }) {
       <Spacer h={8} />
 
       <FieldLabel>Nullifier Hash</FieldLabel>
-      <TextContainer>{pcd.claim.externalNullifier || "HIDDEN"}</TextContainer>
+      <TextContainer>{pcd.claim.nullifierHash || "HIDDEN"}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Ticket Signer</FieldLabel>

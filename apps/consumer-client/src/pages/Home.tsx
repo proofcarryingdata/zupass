@@ -72,9 +72,14 @@ function Page() {
             </Link>
           </li>
           <li>
+            <Link to="/pcdpass-examples/zk-eddsa-event-ticket-proof">
+              ZKEdDSA Event Ticket Proof
+            </Link> (supports Event ID list)
+          </li>
+          <li>
             <Link to="/pcdpass-examples/zkeddsa-proof">
               ZKEdDSA Ticket Proof
-            </Link>
+            </Link> (no Event ID list)
           </li>
         </ol>
       </div>

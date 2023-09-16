@@ -150,6 +150,11 @@ export class TelegramService {
               value: fieldsToReveal,
               userProvided: false
             },
+            externalNullifier: {
+              argumentType: ArgumentTypeName.BigInt,
+              value: undefined,
+              userProvided: false
+            },
             watermark: {
               argumentType: ArgumentTypeName.BigInt,
               value: userId.toString(),

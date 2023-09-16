@@ -4,20 +4,20 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
+import { generateSnarkMessageHash } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import {
   FullProof,
-  generateProof,
   Proof,
-  verifyProof,
+  generateProof,
+  verifyProof
 } from "@semaphore-protocol/proof";
-import { sha256 } from "js-sha256";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { SemaphoreIdentityCardBody } from "./CardBody";
@@ -27,20 +27,9 @@ import { SemaphoreIdentityCardBody } from "./CardBody";
  * so that they cannot be reused by malicious actors across different
  * applications.
  */
-export const STATIC_SIGNATURE_PCD_NULLIFIER = generateMessageHash(
+export const STATIC_SIGNATURE_PCD_NULLIFIER = generateSnarkMessageHash(
   "hardcoded-nullifier"
 );
-
-/**
- * Hashes a message to be signed with sha256 and fits it into a baby jub jub field element.
- * @param signal The initial message.
- * @returns The outputted hash, fed in as a signal to the Semaphore proof.
- */
-export function generateMessageHash(signal: string): bigint {
-  // right shift to fit into a field element, which is 254 bits long
-  // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> BigInt(8);
-}
 
 export const SemaphoreSignaturePCDTypeName = "semaphore-signature-pcd";
 
@@ -136,7 +125,7 @@ export async function prove(
   group.addMember(identityPCD.claim.identity.commitment);
 
   // Get Keccak256 hashed version of message for input into Semaphore
-  const signal = generateMessageHash(args.signedMessage.value);
+  const signal = generateSnarkMessageHash(args.signedMessage.value);
 
   // Set externalNullifier to be identity commitment to avoid nullifier
   // of other groups being exposed. This means that one must not use their
@@ -149,14 +138,14 @@ export async function prove(
     signal,
     {
       zkeyFilePath: initArgs.zkeyFilePath,
-      wasmFilePath: initArgs.wasmFilePath,
+      wasmFilePath: initArgs.wasmFilePath
     }
   );
 
   const claim: SemaphoreSignaturePCDClaim = {
     identityCommitment: identityPCD.claim.identity.commitment.toString(),
     signedMessage: args.signedMessage.value,
-    nullifierHash: fullProof.nullifierHash + "",
+    nullifierHash: fullProof.nullifierHash + ""
   };
 
   const proof: SemaphoreSignaturePCDProof = fullProof.proof;
@@ -175,7 +164,7 @@ export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
     merkleTreeRoot: group.root + "",
     nullifierHash: pcd.claim.nullifierHash,
     proof: pcd.proof,
-    signal: generateMessageHash(pcd.claim.signedMessage),
+    signal: generateSnarkMessageHash(pcd.claim.signedMessage)
   };
 
   // check if proof is valid
@@ -189,7 +178,7 @@ export async function serialize(
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
   return {
     type: SemaphoreSignaturePCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<SemaphoreSignaturePCD>;
 }
 
@@ -202,7 +191,7 @@ export async function deserialize(
 export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {
   return {
     header: "Semaphore Signature",
-    displayName: "semaphore-sig-" + pcd.id.substring(0, 4),
+    displayName: "semaphore-sig-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -224,5 +213,5 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };
