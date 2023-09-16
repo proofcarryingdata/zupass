@@ -42,20 +42,18 @@ export async function downloadEncryptedStorage(
   return res.encryptedStorage as EncryptedPacket;
 }
 
-export async function attemptDownloadStorage(syncKey: string) {
+export async function downloadAndDecryptStorage(
+  syncKey: string
+): Promise<SyncedEncryptedStorage> {
+  console.log("downloading e2ee storage...");
   const blobHash = await getHash(syncKey);
   const storage = await downloadEncryptedStorage(blobHash);
   if (!storage) {
     throw new Error("no e2ee for this syncKey found");
   }
-  return storage;
-}
-
-export async function downloadAndDecryptStorage(
-  syncKey: string
-): Promise<SyncedEncryptedStorage> {
-  const storage = await attemptDownloadStorage(syncKey);
+  console.log("downloaded encrypted storage");
   const decrypted = await passportDecrypt(storage, syncKey);
+  console.log("decrypted encrypted storage");
   return JSON.parse(decrypted);
 }
 
