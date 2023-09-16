@@ -7,11 +7,13 @@
     "apps/*": {
       "entry": ["src/main.{ts,tsx}", "pages/index.tsx", "test/*.ts"],
       "project": "**/*.{ts,tsx}"
-    },
+    }
   },
+  "ignore": ["**/*.d.ts", "**/dist"],
+  "ignoreWorkspaces": ["packages/artifacts"],
   "rules": {
     "binaries": "off",
-    "dependencies": "warn",
+    "dependencies": "error",
     "devDependencies": "warn",
     "files": "warn",
     "unlisted": "error",
