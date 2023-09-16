@@ -1,4 +1,8 @@
-import { LoadE2EERequest, SaveE2EERequest } from "@pcd/passport-interface";
+import {
+  LoadE2EERequest,
+  SaveE2EERequest,
+  UpdateE2EERequest
+} from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -9,6 +13,17 @@ export function initE2EERoutes(
   { rollbarService, e2eeService }: GlobalServices
 ): void {
   logger("[INIT] initializing e2ee routes");
+
+  app.post("/sync/update", async (req: Request, res: Response) => {
+    try {
+      const request = req.body as UpdateE2EERequest;
+      await e2eeService.handleUpdate(request, res);
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
 
   app.post("/sync/load/", async (req: Request, res: Response) => {
     try {

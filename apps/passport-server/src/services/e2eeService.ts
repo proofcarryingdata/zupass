@@ -1,12 +1,14 @@
 import {
   LoadE2EERequest,
   LoadE2EEResponse,
-  SaveE2EERequest
+  SaveE2EERequest,
+  UpdateE2EERequest
 } from "@pcd/passport-interface";
 import { Response } from "express";
 import {
   fetchEncryptedStorage,
-  insertEncryptedStorage
+  insertEncryptedStorage,
+  updateEncryptedStorage
 } from "../database/queries/e2ee";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -69,6 +71,28 @@ export class E2EEService {
       await insertEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
+        request.encryptedBlob
+      );
+
+      res.sendStatus(200);
+    } catch (e) {
+      logger(e);
+      this.rollbarService?.reportError(e);
+      res.sendStatus(500);
+    }
+  }
+
+  public async handleUpdate(
+    request: UpdateE2EERequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      logger(`[E2EE] Updating ${request.oldBlobKey} to ${request.newBlobKey}`);
+
+      await updateEncryptedStorage(
+        this.context.dbPool,
+        request.oldBlobKey,
+        request.newBlobKey,
         request.encryptedBlob
       );
 

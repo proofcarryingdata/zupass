@@ -2,11 +2,10 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { attemptDownloadStorage } from "../../src/api/endToEndEncryptionApi";
 import { fetchSaltFromServer } from "../../src/api/user";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { saveEncryptionKey } from "../../src/localstorage";
-import { uploadStorage } from "../../src/useSyncE2EEStorage";
+import { updateStorage, uploadStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { MaybeModal } from "../modals/Modal";
@@ -38,6 +37,7 @@ export function ChangePasswordScreen() {
     const res = await fetchSaltFromServer(self.email);
     const { salt } = await res.json();
 
+    let newEncryptionKey: string;
     const crypto = await PCDCrypto.newInstance();
     try {
       const currentEncryptionKey = await crypto.argon2(
@@ -45,8 +45,8 @@ export function ChangePasswordScreen() {
         salt,
         32
       );
-      // FIXME: We actually need to delete these routes
-      await attemptDownloadStorage(currentEncryptionKey);
+      newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
+      await updateStorage(currentEncryptionKey, newEncryptionKey);
     } catch (e) {
       setLoading(false);
       dispatch({
@@ -59,7 +59,7 @@ export function ChangePasswordScreen() {
       });
       return;
     }
-    const newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
+
     await saveEncryptionKey(newEncryptionKey);
     await uploadStorage();
     dispatch({

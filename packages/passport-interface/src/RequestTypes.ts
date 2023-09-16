@@ -83,6 +83,23 @@ export interface LoadE2EEResponse {
   encryptedStorage: EncryptedPacket;
 }
 
+export interface UpdateE2EERequest {
+  /**
+   * The original hashed encryption key to be deleted.
+   */
+  oldBlobKey: string;
+  /**
+   * The new hashed encryption key to be added.
+   */
+  newBlobKey: string;
+  /**
+   * The encrypted and stringified version of {@link EncryptedStorage} to save
+   */
+  encryptedBlob: string;
+}
+
+export interface UpdateE2EEResponse {}
+
 /**
  * The string the client must sign with the user's semaphore identity
  * in order to be able to request the PCDs that the server wants to

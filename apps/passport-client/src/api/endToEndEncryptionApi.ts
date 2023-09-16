@@ -7,7 +7,8 @@ import {
   LoadE2EERequest,
   LoadE2EEResponse,
   SaveE2EERequest,
-  SyncedEncryptedStorage
+  SyncedEncryptedStorage,
+  UpdateE2EERequest
 } from "@pcd/passport-interface";
 import { appConfig } from "../appConfig";
 
@@ -56,6 +57,28 @@ export async function downloadAndDecryptStorage(
   const storage = await attemptDownloadStorage(syncKey);
   const decrypted = await passportDecrypt(storage, syncKey);
   return JSON.parse(decrypted);
+}
+
+export async function updateEncryptedStorage(
+  oldBlobKey: string,
+  newBlobKey: string,
+  encryptedStorage: EncryptedPacket
+): Promise<void> {
+  const request: UpdateE2EERequest = {
+    oldBlobKey,
+    newBlobKey,
+    encryptedBlob: JSON.stringify(encryptedStorage)
+  };
+
+  const url = `${appConfig.passportServer}/sync/update`;
+  await fetch(url, {
+    method: "POST",
+    body: JSON.stringify(request),
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    }
+  });
 }
 
 export async function uploadEncryptedStorage(

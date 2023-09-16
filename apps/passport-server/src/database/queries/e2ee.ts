@@ -39,6 +39,29 @@ export async function insertEncryptedStorage(
 }
 
 /**
+ * Transactionally deletes row at at the old blob key, and then
+ * upserts the encrypted data stored at the new blob key
+ */
+export async function updateEncryptedStorage(
+  dbPool: Pool,
+  oldBlobKey: string,
+  newBlobKey: string,
+  encryptedBlob: string
+): Promise<void> {
+  await sqlQuery(
+    dbPool,
+    `
+    BEGIN;
+    DELETE FROM e2ee WHERE blob_key = $1;
+    INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
+      ($2, $3) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $3;
+    COMMIT;
+    `,
+    [oldBlobKey, newBlobKey, encryptedBlob]
+  );
+}
+
+/**
  * Fetches the amount of end to end encrypted storage saved in this database.
  */
 export async function fetchE2EEStorageCount(dbPool: Pool): Promise<number> {

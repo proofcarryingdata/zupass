@@ -12,6 +12,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect, useState } from "react";
 import {
   downloadEncryptedStorage,
+  updateEncryptedStorage,
   uploadEncryptedStorage
 } from "./api/endToEndEncryptionApi";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
@@ -24,6 +25,32 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
+
+export async function updateStorage(
+  oldEncryptionKey: string,
+  newEncryptionKey: string
+) {
+  const user = loadSelf();
+  const pcds = await loadPCDs();
+  if (pcds.size() === 0) {
+    console.error("[SYNC] skipping upload, no pcds in localStorage");
+    return;
+  }
+
+  const encryptedStorage = await passportEncrypt(
+    JSON.stringify({
+      pcds: await pcds.serializeCollection(),
+      self: user,
+      _storage_version: "v2"
+    } satisfies SyncedEncryptedStorageV2),
+    newEncryptionKey
+  );
+
+  const oldBlobKey = await getHash(oldEncryptionKey);
+  const newBlobKey = await getHash(newEncryptionKey);
+
+  return updateEncryptedStorage(oldBlobKey, newBlobKey, encryptedStorage);
+}
 
 /**
  * Uploads the state of this passport which is contained in localstorage
