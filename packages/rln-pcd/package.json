@@ -39,7 +39,8 @@
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "json-bigint": "^1.0.0",
-    "rlnjs": "^2.0.8"
+    "rlnjs": "^2.0.8",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

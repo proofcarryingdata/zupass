@@ -11,6 +11,8 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/passport-crypto": "0.6.2",
+    "@pcd/passport-ui": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
@@ -19,6 +21,7 @@
     "@types/jest": "^29.5.0",
     "@types/json-bigint": "^1.0.1",
     "json-bigint": "^1.0.0",
+    "styled-components": "^5.3.9",
     "typescript": "^4.5.2",
     "uuid": "^9.0.0"
   },

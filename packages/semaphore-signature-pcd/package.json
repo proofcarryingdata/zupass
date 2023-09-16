@@ -24,6 +24,7 @@
     "@pcd/passport-ui": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
     "@pcd/semaphore-identity-pcd": "0.6.2",
+    "@pcd/util": "0.0.1",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",

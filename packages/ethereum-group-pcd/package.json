@@ -45,7 +45,8 @@
     "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
     "react": "^18.2.0",
-    "styled-components": "^5.3.9"
+    "styled-components": "^5.3.9",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.6.2",
