@@ -7,11 +7,9 @@ import {
   useSemaphoreGroupProof
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import {
-  generateMessageHash,
-  SemaphoreGroupPCDPackage
-} from "@pcd/semaphore-group-pcd";
+import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { generateSnarkMessageHash } from "@pcd/util";
 import { useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -149,7 +147,7 @@ function requestMembershipProof(
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: true,
-        value: generateMessageHash(originalSiteName).toString(),
+        value: generateSnarkMessageHash(originalSiteName).toString(),
         description:
           "You can choose a nullifier to prevent this signed message from being used across domains."
       },

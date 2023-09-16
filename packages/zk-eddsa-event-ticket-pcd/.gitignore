@@ -1,0 +1,12 @@
+*.js
+*.ts.map
+dist
+!.eslintrc.js
+artifacts-unsafe
+!artifacts-unsafe/eddsaEventTicket.wasm
+!artifacts-unsafe/eddsaEventTicket.circom
+!artifacts-unsafe/eddsaEventTicket.zkey
+!artifacts-unsafe/eddsaEventTicket_js
+!artifacts-unsafe/generate_artifacts.sh
+!artifacts-unsafe/verification_key.json
+!artifacts-unsafe/README.md

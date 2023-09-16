@@ -6,6 +6,7 @@ artifacts-unsafe
 !artifacts-unsafe/eddsaTicket.wasm
 !artifacts-unsafe/eddsaTicket.circom
 !artifacts-unsafe/eddsaTicket.zkey
+!artifacts-unsafe/eddsaTicket_js
 !artifacts-unsafe/generate_artifacts.sh
 !artifacts-unsafe/verification_key.json
 !artifacts-unsafe/README.md

@@ -1,7 +1,9 @@
+import { sha256 } from "js-sha256";
+
 /**
  * Encoding of -1 in a Baby Jubjub field element (as p-1).
  */
-export const babyJubNegativeOne = BigInt(
+export const BABY_JUB_NEGATIVE_ONE = BigInt(
   "21888242871839275222246405745257275088548364400416034343698204186575808495616"
 );
 
@@ -13,5 +15,18 @@ export const babyJubNegativeOne = BigInt(
  */
 export function babyJubIsNegativeOne(value: string): boolean {
   const bigintValue = BigInt(value);
-  return bigintValue === babyJubNegativeOne || bigintValue === BigInt(-1);
+  return bigintValue === BABY_JUB_NEGATIVE_ONE || bigintValue === BigInt(-1);
+}
+/**
+ * Hashes a message to be signed with sha256 and truncates to fit into a
+ * baby jub jub field element.  The result includes the top 248 bits of
+ * the 256 bit hash.
+ *
+ * @param signal The initial message.
+ * @returns The outputted hash, fed in as a signal to the Semaphore proof.
+ */
+export function generateSnarkMessageHash(signal: string): bigint {
+  // right shift to fit into a field element, which is 254 bits long
+  // shift by 8 ensures we have a 253 bit element
+  return BigInt("0x" + sha256(signal)) >> BigInt(8);
 }

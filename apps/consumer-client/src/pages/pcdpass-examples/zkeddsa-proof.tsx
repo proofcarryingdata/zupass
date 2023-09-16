@@ -7,9 +7,9 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { generateSnarkMessageHash } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
-  generateMessageHash,
   ZKEdDSATicketPCD,
   ZKEdDSATicketPCDArgs,
   ZKEdDSATicketPCDPackage
@@ -20,14 +20,14 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../constants";
 
 /**
- * Example page which shows how to use a Zuzalu-specific prove screen to
- * request a Semaphore Group Membership PCD as a third party developer.
+ * Example page for proving ZKEdDSATicketPCD.
  */
 export default function Page() {
-  const watermark = generateMessageHash(
+  const watermark = generateSnarkMessageHash(
     "consumer-client zk-eddsa-ticket-pcd challenge"
   );
-  const externalNullifier = generateMessageHash("consumer-client").toString();
+  const externalNullifier =
+    generateSnarkMessageHash("consumer-client").toString();
 
   const [revealTicketId, setRevealTicketId] = useState(false);
   const [revealEventId, setRevealEventId] = useState(true);
@@ -254,7 +254,7 @@ export default function Page() {
                     : "HIDDEN"
                 }`}</p>
                 <p>{`Is Revoked?: ${
-                  // isConsumed can be true, false, or undefined
+                  // isRevoked can be true, false, or undefined
                   // undefined means it is not revealed in this PCD
                   pcd.claim.partialTicket.isRevoked !== undefined
                     ? pcd.claim.partialTicket.isRevoked
@@ -279,7 +279,7 @@ export default function Page() {
 }
 
 /**
- * Opens a passport popup to generate a Zuzalu membership proof.
+ * Opens a passport popup to prove a ZKEdDSATicketPCD.
  *
  * @param urlToPassportWebsite URL of passport website
  * @param popupUrl Route where the usePassportPopupSetup hook is being served from
@@ -312,20 +312,17 @@ export function openZKEdDSATicketPopup(
       value: fieldsToReveal,
       userProvided: false
     },
+    externalNullifier: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: externalNullifier,
+      userProvided: false
+    },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
       value: watermark.toString(),
       userProvided: false
     }
   };
-
-  if (externalNullifier) {
-    args.externalNullifier = {
-      argumentType: ArgumentTypeName.BigInt,
-      value: externalNullifier,
-      userProvided: false
-    };
-  }
 
   const proofUrl = constructPassportPcdGetRequestUrl<
     typeof ZKEdDSATicketPCDPackage

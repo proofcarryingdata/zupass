@@ -15,6 +15,7 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { logger } from "../util/logger";
@@ -197,6 +198,14 @@ export async function startProvingService(
 
   await RSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
   await EdDSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
+
+  await ZKEdDSAEventTicketPCDPackage.init?.({
+    wasmFilePath:
+      fullPath +
+      "/zk-eddsa-event-ticket-artifacts-unsafe/eddsaEventTicket.wasm",
+    zkeyFilePath:
+      fullPath + "/zk-eddsa-event-ticket-artifacts-unsafe/eddsaEventTicket.zkey"
+  });
 
   await ZKEdDSATicketPCDPackage.init?.({
     wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
