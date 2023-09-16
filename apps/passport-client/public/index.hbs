@@ -6,9 +6,9 @@
     <link rel="stylesheet" href="{{cssPath}}" />
     <script>
       // set background color based on path upon initial paint
-      document.getElementsByTagName("html")[0].setAttribute( "class",
-      window.location.hash.match( /^#\/({{grayBgPaths}})(\?.+)?$/ ) ? "bg-gray"
-      : "bg-primary" );
+      document.getElementsByTagName("html")[0].setAttribute("class",
+      !window.location.hash || window.location.hash.match(/^#\/({{grayBgPaths}})(\?.+)?$/
+      ) ? "bg-gray" : "bg-primary");
     </script>
     <script defer src="/js/index.js"></script>
   </head>
