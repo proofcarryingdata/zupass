@@ -3,7 +3,7 @@
   "include": ["**/*.ts", "**/*.d.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "module": "es2022",
+    "module": "CommonJS",
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",
