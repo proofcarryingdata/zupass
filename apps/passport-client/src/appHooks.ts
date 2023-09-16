@@ -5,6 +5,7 @@ import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { appConfig } from "./appConfig";
 import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState, PendingAction } from "./state";
 import { useSelector } from "./subscribe";
@@ -89,7 +90,7 @@ export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
 
-  return isDownloaded && loadedIssued;
+  return isDownloaded && (appConfig.isZuzalu || loadedIssued);
 }
 
 export function useIsLoggedIn(): boolean {
