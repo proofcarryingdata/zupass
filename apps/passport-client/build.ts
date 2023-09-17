@@ -108,13 +108,13 @@ async function run(command: string) {
       const ctx = await context(passportAppOpts);
       await ctx.watch();
 
-      const { host } = await ctx.serve({
+      const { host, port } = await ctx.serve({
         servedir: "public",
         port: 3000,
         host: "0.0.0.0"
       });
 
-      console.log(`Serving passport client on ${host}`);
+      console.log(`Serving passport client on ${host}:${port}`);
       break;
     default:
       throw new Error(`Unknown command ${command}`);
