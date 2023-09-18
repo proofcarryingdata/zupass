@@ -1,6 +1,6 @@
 # Dev Instructions for Testing ZKMS Bot
 
-*Doing this steps in order is more likely to result in success*
+_Doing this steps in order is more likely to result in success_
 
 ### 1. Set up a Telegram Bot
 
@@ -30,8 +30,8 @@
 - Make a new private group chat in the Telegram app (ex: `test chat`).
 - Go to the chat with your bot (ex: https://t.me/zulearn_bot)
 - Go to `Info`, then click `Add to group or channel`. Add the bot to `test chat`
-- Now, in `test chat`, type `/setup`. Copy the Id that is logged (ex: `-1001916377435`)
-- TODO: Command line to update the DB with this value
+- Now, in `test chat`, type `/link`. You should get a message confirming that the test event was linked to the TG chat.
+- You can double check by using a GUI like Postico to view the `telegram_bot_events` table.
 
 ### 5. Putting it All Together
 
@@ -41,4 +41,9 @@
 - You should be returned to the Telegram app and presented with the `Send ZKP` option.
 - Click `Send ZKP`, then you will be redirected to `test_chat`
 
+### 6. Testing the Web App Integration
 
+- passport-server over ngrok
+- build passport-client with the ngrok URL
+- Deploy passport-client to netlify
+- Put persistent netlify link in web app menu for TG bot

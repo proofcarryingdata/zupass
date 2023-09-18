@@ -19,3 +19,21 @@ on conflict do nothing;`,
   );
   return result.rowCount;
 }
+
+export async function insertTelegramEvent(
+  client: Pool,
+  ticketEventId: string,
+  telegramChatId: number,
+  anonChatId?: number
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `\
+insert into telegram_bot_events (ticket_event_id, telegram_chat_id, anon_chat_id)
+values ($1, $2, $3)
+on conflict do nothing;`,
+    [ticketEventId, telegramChatId, anonChatId]
+  );
+  return result.rowCount;
+}
+
