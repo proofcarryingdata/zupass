@@ -11,10 +11,14 @@ import {
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
+import { fetchPretixEventInfoByName } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
+import {
+  insertTelegramEvent,
+  insertTelegramVerification
+} from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { sleep } from "../util/util";
@@ -216,6 +220,58 @@ export class TelegramService {
       }
 
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
+    });
+
+    // The  "link" command is a dev utility for associating the channel Id with a given event.
+    this.bot.command("link", async (ctx) => {
+      if (ctx.chat?.type === "private") {
+        await ctx.reply(
+          "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+        );
+        return;
+      }
+
+      const admins = await ctx.getChatAdministrators();
+      const isAdmin = admins.some(
+        (admin) => admin.user.id === this.bot.botInfo.id
+      );
+      if (!isAdmin) {
+        await ctx.reply(
+          "Please add me as an admin to the telegram channel associated with your event."
+        );
+        return;
+      }
+      const channelId = ctx.chat.id;
+      // Must match the hard coded argument in event:dev command in package.json
+      const TEST_EVENT_NAME = "localTest";
+
+      try {
+        const eventInfo = await fetchPretixEventInfoByName(
+          this.context.dbPool,
+          TEST_EVENT_NAME
+        );
+
+        if (eventInfo?.pretix_events_config_id) {
+          await insertTelegramEvent(
+            this.context.dbPool,
+            eventInfo.pretix_events_config_id,
+            channelId
+          );
+          logger(
+            `[TELEGRAM] linked event ${TEST_EVENT_NAME} to group ${ctx.chat.title}`
+          );
+          await ctx.reply(
+            `Linked ${ctx.chat.title} (id: ${channelId}) with event ${TEST_EVENT_NAME}`
+          );
+        }
+        if (!eventInfo)
+          throw new Error(`Failed to fetch event ${TEST_EVENT_NAME}`);
+      } catch (error) {
+        logger(`[ERROR] ${error}`);
+        await ctx.reply(
+          `Failed to link group to event ${TEST_EVENT_NAME}. Check server logs`
+        );
+      }
     });
   }
 
