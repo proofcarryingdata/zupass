@@ -101,9 +101,7 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <Header />
-          <PHeavy>
-            {emailSent ? "Check your email for a six-digit code." : <>&nbsp;</>}
-          </PHeavy>
+          <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
         <Spacer h={24} />
         <form onSubmit={verify}>
@@ -151,7 +149,7 @@ function Header() {
     return (
       <>
         <H1>PCDPASS</H1>
-        <Spacer h={48} />
+        <Spacer h={24} />
       </>
     );
   } else {
