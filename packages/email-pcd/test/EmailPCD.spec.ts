@@ -20,6 +20,10 @@ describe("EdDSA attested email should work", function () {
         value: emailAddress,
         argumentType: ArgumentTypeName.String
       },
+      semaphoreId: {
+        value: "12345",
+        argumentType: ArgumentTypeName.String
+      },
       privateKey: {
         value: prvKey,
         argumentType: ArgumentTypeName.String
