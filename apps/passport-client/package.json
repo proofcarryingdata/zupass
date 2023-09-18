@@ -11,7 +11,7 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf node_modules public/js public/artifacts public/index.html public/service-worker.js public/favicon.ico",
     "download:artifacts": "ts-node scripts/download-artifacts.ts",
-    "postinstall": "yarn download:artifacts"
+    "postinstall": "pcd-artifacts download"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.1",
@@ -57,6 +57,7 @@
     "@babel/core": "^7.0.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@pcd/artifacts": "0.0.1",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/email-validator": "^1.0.6",
