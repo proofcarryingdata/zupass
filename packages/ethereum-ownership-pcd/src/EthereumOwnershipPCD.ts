@@ -176,7 +176,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     // signed by the claimed ethereum address
     if (
       ethers.utils.getAddress(recoveredAddress) !==
-      ethers.utils.getAddress(pcd.claim.ethereumAddress)
+      ethers.utils.getAddress(pcd.claim.ethereumAddress.toLowerCase())
     ) {
       return false;
     }
