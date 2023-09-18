@@ -39,7 +39,6 @@ import {
 import { pretixTicketsDifferent } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
-import { RollbarService } from "../rollbarService";
 import { setError, traced } from "../telemetryService";
 
 const NAME = "OrganizerSync";
@@ -59,25 +58,21 @@ interface EventDataFromPretix {
   event: DevconnectPretixEventConfig;
 }
 
-type SyncPhase = "fetching" | "validating" | "saving" | "pushingCheckins";
+export class SyncFailureError extends Error {
+  public readonly phase: SyncPhase;
+  public readonly organizerId: string;
 
-export interface SyncErrorCause {
-  phase: SyncPhase;
-  error: Error;
-  organizerId: string;
-}
-
-function errorCause(
-  phase: SyncPhase,
-  organizerId: string,
-  originalError: any
-): SyncErrorCause {
-  if (originalError instanceof Error) {
-    return { phase, error: originalError, organizerId };
-  } else {
-    throw new Error(`originalError is not an error`);
+  public constructor(
+    message: string,
+    options: ErrorOptions & { phase: SyncPhase; organizerId: string }
+  ) {
+    super(message, options);
+    this.phase = options.phase;
+    this.organizerId = options.organizerId;
   }
 }
+
+type SyncPhase = "fetching" | "validating" | "saving" | "pushingCheckins";
 
 /**
  * For the purposes of sync, organizers are isolated from each other.
@@ -87,7 +82,6 @@ function errorCause(
 export class OrganizerSync {
   private organizer: DevconnectPretixOrganizerConfig;
   private pretixAPI: IDevconnectPretixAPI;
-  private rollbarService: RollbarService | null;
   private db: Pool;
   private _isRunning: boolean;
 
@@ -98,19 +92,17 @@ export class OrganizerSync {
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
     pretixAPI: IDevconnectPretixAPI,
-    rollbarService: RollbarService | null,
     db: Pool
   ) {
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
-    this.rollbarService = rollbarService;
     this.db = db;
     this._isRunning = false;
   }
 
   // Conduct a single sync run
   public async run(): Promise<void> {
-    return traced("OrganizerSync", "run", async (span) => {
+    return traced("OrganizerSync", "run", async (span): Promise<void> => {
       span?.setAttribute("org_url", this.organizer.orgURL);
       span?.setAttribute("events_count", this.organizer.events.length);
       span?.setAttribute("org_id", this.organizer.id);
@@ -126,9 +118,11 @@ export class OrganizerSync {
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when fetching data for ${this.organizer.id}: ${e}`
           );
-          this.rollbarService?.reportError(e);
-          throw new Error("Data failed to fetch", {
-            cause: errorCause("fetching", this.organizer.id, e)
+
+          throw new SyncFailureError("Data failed to fetch", {
+            cause: e,
+            phase: "fetching",
+            organizerId: this.organizer.id
           });
         }
 
@@ -139,9 +133,11 @@ export class OrganizerSync {
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${e}`
           );
-          this.rollbarService?.reportError(e);
-          throw new Error("Data failed to validate", {
-            cause: errorCause("validating", this.organizer.id, e)
+
+          throw new SyncFailureError("Data failed to validate", {
+            cause: e,
+            phase: "validating",
+            organizerId: this.organizer.id
           });
         }
 
@@ -152,9 +148,11 @@ export class OrganizerSync {
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when saving data for ${this.organizer.id}: ${e}`
           );
-          this.rollbarService?.reportError(e);
-          throw new Error("Data failed to save", {
-            cause: errorCause("saving", this.organizer.id, e)
+
+          throw new SyncFailureError("Data failed to save", {
+            cause: e,
+            phase: "saving",
+            organizerId: this.organizer.id
           });
         }
 
@@ -165,9 +163,11 @@ export class OrganizerSync {
           logger(
             `[DEVCONNECT PRETIX]: Encountered error when pushing checkins for ${this.organizer.id}: ${e}`
           );
-          this.rollbarService?.reportError(e);
-          throw new Error("Check-in sync failed", {
-            cause: errorCause("pushingCheckins", this.organizer.id, e)
+
+          throw new SyncFailureError("Check-in sync failed", {
+            cause: e,
+            phase: "pushingCheckins",
+            organizerId: this.organizer.id
           });
         }
       } finally {
@@ -351,7 +351,7 @@ export class OrganizerSync {
           `[DEVCONNECT PRETIX]: Encountered error when validating fetched data for ${this.organizer.id}: ${error}`
         );
       }
-      throw new Error(errors.join("\n"), { cause: errors });
+      throw new Error(errors.join("\n"));
     }
   }
 
@@ -409,32 +409,18 @@ export class OrganizerSync {
         span?.setAttribute("event_slug", eventInfo.slug);
         span?.setAttribute("event_name", eventInfo.name.en);
 
-        if (
-          !(await this.syncEventInfos(
-            organizer,
-            event,
-            eventInfo,
-            checkinLists[0].id.toString()
-          ))
-        ) {
-          throw new Error(
-            `[DEVCONNECT PRETIX] Aborting sync due to error in updating event info`
-          );
-        }
-
-        if (!(await this.syncItemInfos(organizer, event, items))) {
-          throw new Error(
-            `[DEVCONNECT PRETIX] Aborting sync due to error in updating item info`
-          );
-        }
-
-        if (!(await this.syncTickets(organizer, event, tickets))) {
-          throw new Error(`[DEVCONNECT PRETIX] Error updating tickets`);
-        }
+        await this.syncEventInfos(
+          organizer,
+          event,
+          eventInfo,
+          checkinLists[0].id.toString()
+        );
+        await this.syncItemInfos(organizer, event, items);
+        await this.syncTickets(organizer, event, tickets);
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
         setError(e, span);
-        this.rollbarService?.reportError(e);
+        throw e;
       }
     });
   }
@@ -448,7 +434,7 @@ export class OrganizerSync {
     event: DevconnectPretixEventConfig,
     eventInfo: DevconnectPretixEvent,
     checkinListId: string
-  ): Promise<boolean> {
+  ): Promise<void> {
     return traced(NAME, "syncEventInfos", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
       span?.setAttribute("event_slug", event.eventID);
@@ -486,12 +472,9 @@ export class OrganizerSync {
           `[DEVCONNECT PRETIX] Error while syncing event for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
-        this.rollbarService?.reportError(e);
         setError(e, span);
-        return false;
+        throw e;
       }
-
-      return true;
     });
   }
 
@@ -503,7 +486,7 @@ export class OrganizerSync {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
     itemsFromAPI: DevconnectPretixItem[]
-  ): Promise<boolean> {
+  ): Promise<void> {
     return traced(NAME, "syncItemInfos", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
       span?.setAttribute("event_slug", event.eventID);
@@ -633,12 +616,9 @@ export class OrganizerSync {
           `[DEVCONNECT PRETIX] Error while syncing items for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
-        this.rollbarService?.reportError(e);
         setError(e, span);
-        return false;
+        throw e;
       }
-
-      return true;
     });
   }
 
@@ -650,7 +630,7 @@ export class OrganizerSync {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
     pretixOrders: DevconnectPretixOrder[]
-  ): Promise<boolean> {
+  ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
       span?.setAttribute("event_slug", event.eventID);
@@ -816,11 +796,9 @@ export class OrganizerSync {
           `[DEVCONNECT PRETIX] error while syncing for ${orgURL} and ${eventID}, skipping update`,
           { error: e }
         );
-        this.rollbarService?.reportError(e);
         setError(e, span);
-        return false;
+        throw e;
       }
-      return true;
     });
   }
 
