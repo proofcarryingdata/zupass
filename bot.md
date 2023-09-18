@@ -2,6 +2,11 @@
 
 _Doing this steps in order is more likely to result in success_
 
+### 0. Prerequisites
+
+- Install [Telegram Desktop](https://desktop.telegram.org/)
+- In the Telegram app, [Enable Web View Debug](https://core.telegram.org/bots/webapps#debug-mode-for-mini-apps)
+
 ### 1. Set up a Telegram Bot
 
 - Run `cp apps/passport-server/.env.local.example apps/passport-server/.env`
@@ -66,3 +71,10 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
    PASSPORT_SERVER_URL="https://dev.local:3002"
    PASSPORT_CLIENT_URL="https://dev.local:3000"
    ```
+
+### Troubleshooting
+
+- When restarting your database, make sure to run `localdb:restart` not `yarn localdb:init && yarn localdb:up`.
+  - If you do accidentally run `init`, you will clear all local data. This is ok, but it causes some problems because your local PCDPass ticket still exists in localStorage in the Telegram Web View of PCDPass, but doesn't exist in the database.
+  - To rectify this situation, you should clear localStorage on Telegram PCDPass by right-clicking the on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
+  - Then, you just have to login again (email: dev@gmail.com, pw: devconnect)

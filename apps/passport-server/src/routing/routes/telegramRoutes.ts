@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { htmlContent } from "../../util/telegramWebApp";
 import { decodeString } from "../../util/util";
 
 export function initTelegramRoutes(
@@ -51,7 +52,10 @@ export function initTelegramRoutes(
         logger(
           `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
         );
-        res.redirect(await telegramService.getBotURL());
+        // TODO: Think about when we want to redirect back to web view or t.me link
+        // res.redirect(await telegramService.getBotURL());
+        res.setHeader("Content-Type", "text/html");
+        res.send(htmlContent);
       } catch (e) {
         logger("[TELEGRAM] failed to verify", e);
         rollbarService?.reportError(e);
