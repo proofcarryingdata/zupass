@@ -978,7 +978,7 @@ describe("devconnect functionality", function () {
       const responseBody = response.body as FeedResponse;
 
       expect(responseBody.actions.length).to.eq(3);
-      const action = responseBody.actions[2] as AppendToFolderAction;
+      const action = responseBody.actions[2] as ReplaceInFolderAction;
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(action.folder).to.eq("Devconnect/Event A");
@@ -990,11 +990,13 @@ describe("devconnect functionality", function () {
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-      const deserializedEmailPCD = await EdDSATicketPCDPackage.deserialize(
+      const deserializedTicketPCD = await EdDSATicketPCDPackage.deserialize(
         ticketPCD.pcd
       );
 
-      const verified = await EdDSATicketPCDPackage.verify(deserializedEmailPCD);
+      const verified = await EdDSATicketPCDPackage.verify(
+        deserializedTicketPCD
+      );
       expect(verified).to.eq(true);
     }
   );

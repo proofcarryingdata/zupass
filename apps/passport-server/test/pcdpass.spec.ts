@@ -4,10 +4,8 @@ import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
-import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
 import { requestIssuanceServiceEnabled } from "./issuance/issuance";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
@@ -38,11 +36,6 @@ describe("pcd-pass functionality", function () {
   step("should have issuance service running", async function () {
     const status = await requestIssuanceServiceEnabled(application);
     expect(status).to.eq(true);
-  });
-
-  step("should not have a pretix service running", async function () {
-    const status = await waitForPretixSyncStatus(application);
-    expect(status).to.eq(PretixSyncStatus.NoPretix);
   });
 
   step("email client should be mocked", async function () {

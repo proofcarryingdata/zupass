@@ -9,9 +9,9 @@ export function initStatusRoutes(
   { dbPool }: ApplicationContext,
   {
     semaphoreService,
-    pretixSyncService,
+    zuzaluPretixSyncService,
     rollbarService,
-    devconnectPretixSyncService,
+    devconnectPretixSyncService
   }: GlobalServices
 ): void {
   logger("[INIT] initializing status routes");
@@ -19,9 +19,9 @@ export function initStatusRoutes(
 
   app.get("/pretix/status", async (req: Request, res: Response) => {
     try {
-      if (pretixSyncService) {
+      if (zuzaluPretixSyncService) {
         res.send(
-          pretixSyncService.hasCompletedSyncSinceStarting
+          zuzaluPretixSyncService.hasCompletedSyncSinceStarting
             ? PretixSyncStatus.Synced
             : PretixSyncStatus.NotSynced
         );
@@ -59,13 +59,13 @@ export function initStatusRoutes(
       const db_pool = {
         total: dbPool.totalCount,
         idle: dbPool.idleCount,
-        waiting: dbPool.waitingCount,
+        waiting: dbPool.waitingCount
       };
       const semaphore = {
         n_participants:
           semaphoreService.groupParticipants().group.members.length,
         n_residents: semaphoreService.groupResidents().group.members.length,
-        n_visitors: semaphoreService.groupVisitors().group.members.length,
+        n_visitors: semaphoreService.groupVisitors().group.members.length
       };
       const time = new Date().toISOString();
 
@@ -86,14 +86,14 @@ export function initStatusRoutes(
       const db_pool = {
         total: dbPool.totalCount,
         idle: dbPool.idleCount,
-        waiting: dbPool.waitingCount,
+        waiting: dbPool.waitingCount
       };
 
       const semaphore = {
         n_participants:
           semaphoreService.groupParticipants().group.members.length,
         n_residents: semaphoreService.groupResidents().group.members.length,
-        n_visitors: semaphoreService.groupVisitors().group.members.length,
+        n_visitors: semaphoreService.groupVisitors().group.members.length
       };
       const time = new Date().toISOString();
 
