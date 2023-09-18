@@ -1,19 +1,21 @@
 # Dev Instructions for Testing ZKMS Bot
 
-### Set up a Telegram Bot
+*Doing this steps in order is more likely to result in success*
+
+### 1. Set up a Telegram Bot
 
 - Run `cp apps/passport-server/.env.local.example apps/passport-server/.env`
 - Obtain a Telegram Bot [Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
 - Paste the token in `apps/passport-server/.env` for the `TELEGRAM_BOT_TOKEN` value
 
-### Start The Passport client and server
+### 2. Start the Passport Client and Server
 
 - `yarn`
 - `yarn build`
 - `yarn localdb:init && yarn localdb:up`
 - `yarn dev:bot`
 
-### Setting up a Test Event
+### 3. Setting up a Test Event
 
 - `yarn workspace passport-server ticketed-event:dev`
 
@@ -23,7 +25,7 @@
 
 - email: dev@gmail.com, pw: devconnect
 
-### Testing the PCD Join / Auth flow in Telegram
+### 4. PCD Join / Auth flow in Telegram
 
 - Make a new private group chat in the Telegram app (ex: `test chat`).
 - Go to the chat with your bot (ex: https://t.me/zulearn_bot)
@@ -31,7 +33,7 @@
 - Now, in `test chat`, type `/setup`. Copy the Id that is logged (ex: `-1001916377435`)
 - TODO: Command line to update the DB with this value
 
-### Putting it all together
+### 5. Putting it All Together
 
 - In the Telegram app, go to the chat with your bot and type `/start`
 - Click `Generate ZKP`
