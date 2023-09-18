@@ -203,10 +203,8 @@ export async function startProvingService(
 
   await ZKEdDSAEventTicketPCDPackage.init?.({
     wasmFilePath:
-      fullPath +
-      "/zk-eddsa-event-ticket-artifacts-unsafe/eddsaEventTicket.wasm",
-    zkeyFilePath:
-      fullPath + "/zk-eddsa-event-ticket-artifacts-unsafe/eddsaEventTicket.zkey"
+      fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
+    zkeyFilePath: fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"
   });
 
   await ZKEdDSATicketPCDPackage.init?.({
