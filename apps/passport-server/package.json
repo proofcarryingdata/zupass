@@ -36,6 +36,8 @@
     "@pcd/zk-eddsa-ticket-pcd": "0.1.0",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
+    "@semaphore-protocol/proof": "^3.11.0",
+    "@sendgrid/mail": "^7.7.0",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
     "cors": "^2.8.5",
@@ -60,6 +62,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@grammyjs/menu": "^1.2.1",
     "@pcd/artifacts": "0.1.0",
     "@pcd/eslint-config-custom": "0.7.0",
     "@pcd/tsconfig": "0.7.0",
