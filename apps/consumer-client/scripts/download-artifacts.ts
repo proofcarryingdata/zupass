@@ -1,7 +1,7 @@
 import download from "download";
 
 const artifactsURL = "https://artifacts.pcdpass.xyz";
-const packageNames = ["zk-eddsa-ticket-pcd"];
+const packageNames = ["zk-eddsa-ticket-pcd", "zk-eddsa-event-ticket-pcd"];
 
 packageNames.map((packageName) => {
   download(

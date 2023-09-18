@@ -27,14 +27,8 @@ import {
   snarkInputForValidEventIds
 } from "../src";
 
-const zkeyFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaEventTicket.zkey`
-);
-const wasmFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaEventTicket_js/eddsaEventTicket.wasm`
-);
+const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
+const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
 const identity1 = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'

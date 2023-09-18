@@ -18,7 +18,7 @@
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules artifacts"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.1",
