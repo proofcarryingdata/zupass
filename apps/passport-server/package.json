@@ -10,7 +10,9 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules public/artifacts",
+    "download:artifacts": "ts-node scripts/download-artifacts.ts",
+    "postinstall": "yarn download:artifacts"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",

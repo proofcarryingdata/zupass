@@ -16,6 +16,9 @@ build
 # docs
 docs
 
+# Artifacts
+ptau
+
 # misc
 .DS_Store
 *.pem

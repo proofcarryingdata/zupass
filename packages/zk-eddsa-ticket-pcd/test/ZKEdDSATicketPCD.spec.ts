@@ -21,14 +21,8 @@ import {
   ZKEdDSATicketPCDTypeName
 } from "../src";
 
-const zkeyFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaTicket.zkey`
-);
-const wasmFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaTicket_js/eddsaTicket.wasm`
-);
+const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
+const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
 let toArgs: (
   ticketData: ITicketData,
@@ -113,15 +107,17 @@ describe("EdDSA partial ticket should work", function () {
         }
       });
 
-      const serializedTicketPCD =
-        await EdDSATicketPCDPackage.serialize(ticketPCD);
+      const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(
+        ticketPCD
+      );
 
       const identityPCD = await SemaphoreIdentityPCDPackage.prove({
         identity
       });
 
-      const serializedIdentityPCD =
-        await SemaphoreIdentityPCDPackage.serialize(identityPCD);
+      const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
+        identityPCD
+      );
 
       const ret: ZKEdDSATicketPCDArgs = {
         ticket: {
@@ -230,8 +226,9 @@ describe("EdDSA partial ticket should work", function () {
     const deserialized = await ZKEdDSATicketPCDPackage.deserialize(
       serialized.pcd
     );
-    const deserializedValid =
-      await ZKEdDSATicketPCDPackage.verify(deserialized);
+    const deserializedValid = await ZKEdDSATicketPCDPackage.verify(
+      deserialized
+    );
     expect(deserializedValid).to.eq(true);
     expect(pcd1).to.deep.eq(deserialized);
   });

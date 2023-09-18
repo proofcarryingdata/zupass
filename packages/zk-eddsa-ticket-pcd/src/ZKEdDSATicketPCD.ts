@@ -35,7 +35,7 @@ import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts-unsafe/verification_key.json";
+import vkey from "../artifacts/circuit.json";
 
 import {} from "@pcd/util";
 import { ZKEdDSATicketCardBody } from "./CardBody";
@@ -176,8 +176,9 @@ export async function prove(
     );
   }
 
-  const deserializedTicket =
-    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
+  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+    serializedTicketPCD
+  );
 
   const ticketAsBigIntArray = ticketDataToBigInts(
     deserializedTicket.claim.ticket

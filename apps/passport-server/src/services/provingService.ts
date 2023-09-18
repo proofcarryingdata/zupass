@@ -210,8 +210,8 @@ export async function startProvingService(
   });
 
   await ZKEdDSATicketPCDPackage.init?.({
-    wasmFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
-    zkeyFilePath: fullPath + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
+    wasmFilePath: fullPath + "/artifacts/zk-eddsa-ticket-pcd/circuit.wasm",
+    zkeyFilePath: fullPath + "/artifacts/zk-eddsa-ticket-pcd/circuit.zkey"
   });
 
   const provingService = new ProvingService(rollbarService);
