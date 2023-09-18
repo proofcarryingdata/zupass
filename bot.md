@@ -41,6 +41,28 @@ _Doing this steps in order is more likely to result in success_
 - You should be returned to the Telegram app and presented with the `Send ZKP` option.
 - Click `Send ZKP`, then you will be redirected to `test_chat`
 
-### 6. Testing the Web App Integration
+### 6. (optional) Hot Reloading for TG Development
 
-- TODO: Explain getting cert set up + .env vars
+This is a one-time setup for serving https locally. You need it for Telegram, because Telegram hates http and localhost. At the end, you will be able to access 127.0.0.1 (aka localhost) from a fake domain, `dev.local` (this is important for https)
+
+1. Install mkcert - [https://github.com/FiloSottile/mkcert](https://github.com/FiloSottile/mkcert)
+2. `mkcert -install`
+3. From root of repo: `mkdir apps/certificates && cd apps/certificates && mkcert dev.local`
+4. `sudo vi /etc/hosts` and add a line, `127.0.0.1 dev.local localhost`
+5. In `passport-client/.env` and `passport-server/.env`
+
+   ```python
+   # passport-client
+   IS_LOCAL_HTTPS=true
+   PASSPORT_SERVER_URL="https://dev.local:3002"
+
+   ```
+
+   ```python
+   # passport-server
+
+   # ... a bunch of other stuff
+   IS_LOCAL_HTTPS=true
+   PASSPORT_SERVER_URL="https://dev.local:3002"
+   PASSPORT_CLIENT_URL="https://dev.local:3000"
+   ```
