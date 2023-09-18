@@ -43,7 +43,4 @@ _Doing this steps in order is more likely to result in success_
 
 ### 6. Testing the Web App Integration
 
-- passport-server over ngrok
-- build passport-client with the ngrok URL
-- Deploy passport-client to netlify
-- Put persistent netlify link in web app menu for TG bot
+- TODO: Explain getting cert set up + .env vars

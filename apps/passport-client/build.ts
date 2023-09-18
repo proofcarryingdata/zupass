@@ -2,8 +2,10 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
+import express from "express";
 import fs from "fs";
 import Handlebars from "handlebars";
+import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 
@@ -108,13 +110,29 @@ async function run(command: string) {
       const ctx = await context(passportAppOpts);
       await ctx.watch();
 
-      const { host, port } = await ctx.serve({
-        servedir: "public",
-        port: 3000,
-        host: "0.0.0.0"
-      });
+      // eslint-disable-next-line turbo/no-undeclared-env-vars
+      if (process.env.IS_LOCAL_HTTPS) {
+        console.log(`Serving local HTTPS...`);
+        const app = express();
+        app.use(express.static("public"));
 
-      console.log(`Serving passport client on ${host}:${port}`);
+        const httpsOptions = {
+          key: fs.readFileSync("../certificates/dev.local-key.pem"),
+          cert: fs.readFileSync("../certificates/dev.local.pem")
+        };
+
+        https.createServer(httpsOptions, app).listen(3000, () => {
+          console.log(`Serving passport client on https://dev.local:3000`);
+        });
+      } else {
+        const { host, port } = await ctx.serve({
+          servedir: "public",
+          port: 3000,
+          host: "0.0.0.0"
+        });
+        console.log(`Serving passport client on ${host}:${port}`);
+      }
+
       break;
     default:
       throw new Error(`Unknown command ${command}`);

@@ -25,6 +25,7 @@
     "@pcd/pcd-collection": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
     "@pcd/rln-pcd": "0.5.2",
+    "@pcd/rsa-image-pcd": "0.0.1",
     "@pcd/rsa-pcd": "0.1.2",
     "@pcd/rsa-ticket-pcd": "0.1.2",
     "@pcd/semaphore-group-pcd": "0.6.2",
@@ -33,7 +34,6 @@
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",
-    "@pcd/rsa-image-pcd": "0.0.1",
     "@sendgrid/mail": "^7.7.0",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
@@ -58,6 +58,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
+    "@grammyjs/menu": "^1.2.1",
     "@pcd/artifacts": "0.0.1",
     "@pcd/eslint-config-custom": "0.6.2",
     "@pcd/tsconfig": "0.6.2",

@@ -1,3 +1,4 @@
+import { Menu } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -39,6 +40,7 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
+  private proveMenuRegistered: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -48,6 +50,7 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
+    this.proveMenuRegistered = false;
 
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
@@ -56,6 +59,9 @@ export class TelegramService {
     this.bot.api.setMyShortDescription(
       "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
     );
+
+    const menu = new Menu("pcdpass-menu"); // should this be a class member?
+    this.bot.use(menu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -182,13 +188,15 @@ export class TelegramService {
               "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
           });
 
+          if (!this.proveMenuRegistered) {
+            menu.webApp("Generate ZKP 🚀", proofUrl);
+            this.proveMenuRegistered = true;
+          }
+
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
             {
-              reply_markup: new InlineKeyboard().url(
-                "Generate ZKP 🚀",
-                proofUrl
-              )
+              reply_markup: menu
             }
           );
         }
@@ -331,7 +339,10 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+    if (
+      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+    ) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
@@ -375,7 +386,10 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+    if (
+      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+    ) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
