@@ -21,6 +21,7 @@ import {
   VALID_EVENT_IDS_MAX_LEN,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
+  ZKEdDSAEventTicketPCDClaim,
   ZKEdDSAEventTicketPCDPackage,
   ZKEdDSAEventTicketPCDTypeName,
   snarkInputForValidEventIds
@@ -129,6 +130,28 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
   const fieldsToReveal2: EdDSATicketFieldsToReveal = {
     revealEventId: true,
     revealProductId: true,
+    revealIsConsumed: true,
+    revealIsRevoked: true
+  };
+
+  const fieldsToRevealNone: EdDSATicketFieldsToReveal = {
+    revealTicketId: false,
+    revealEventId: false,
+    revealProductId: false,
+    revealTimestampConsumed: false,
+    revealTimestampSigned: false,
+    revealAttendeeSemaphoreId: false,
+    revealIsConsumed: false,
+    revealIsRevoked: false
+  };
+
+  const fieldsToRevealAll: EdDSATicketFieldsToReveal = {
+    revealTicketId: true,
+    revealEventId: true,
+    revealProductId: true,
+    revealTimestampConsumed: true,
+    revealTimestampSigned: true,
+    revealAttendeeSemaphoreId: true,
     revealIsConsumed: true,
     revealIsRevoked: true
   };
@@ -292,33 +315,88 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(verificationRes).to.be.true;
   });
 
-  it("should not prove if identity is not in ticket", async function () {
-    const pcdArgs = await toArgs(
-      ticketData1,
-      fieldsToReveal1,
-      true /* withNullifier */,
-      validEventIdsNoTicket
+  async function testProveBadArgs(
+    validArgs: ZKEdDSAEventTicketPCDArgs,
+    mutateArgs: (args: ZKEdDSAEventTicketPCDArgs) => Promise<void>
+  ): Promise<void> {
+    // Clone validArgs to mutate them into invalidArgs while keeping originals.
+    const invalidArgs: ZKEdDSAEventTicketPCDArgs = JSON.parse(
+      JSON.stringify(validArgs)
     );
-    pcdArgs.identity = {
-      value: await makeSerializedIdentityPCD(identity2),
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDTypeName
-    };
+    await mutateArgs(invalidArgs);
     await assert.rejects(async () => {
-      await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+      await ZKEdDSAEventTicketPCDPackage.prove(invalidArgs);
     });
-  });
+  }
 
-  it("should not prove if ticket is not in validEventIds", async function () {
-    const pcdArgs = await toArgs(
+  async function testProveBadTicketArgs(
+    validArgs: ZKEdDSAEventTicketPCDArgs,
+    mutateTicket: (ticket: ITicketData) => Promise<void>
+  ): Promise<void> {
+    await testProveBadArgs(
+      validArgs,
+      async (args: ZKEdDSAEventTicketPCDArgs) => {
+        if (!args.ticket.value?.pcd) {
+          throw new Error("bad test data?");
+        }
+        const ticketPCD = await EdDSATicketPCDPackage.deserialize(
+          args.ticket.value.pcd
+        );
+        mutateTicket(ticketPCD.claim.ticket);
+        args.ticket.value = await EdDSATicketPCDPackage.serialize(ticketPCD);
+      }
+    );
+  }
+
+  it("should not prove with incorrect args", async function () {
+    const validArgs = await toArgs(
       ticketData1,
       fieldsToReveal1,
       true /* withNullifier */,
       validEventIdsNoTicket
     );
-    await assert.rejects(async () => {
-      await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+
+    const otherIdentityPCD = await makeSerializedIdentityPCD(identity2);
+
+    // Ticket args set to incorrect values one at a time.
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.ticketId = uuid();
     });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.eventId = uuid();
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.productId = uuid();
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.timestampConsumed = 123;
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.timestampSigned = 123;
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.attendeeSemaphoreId = "123";
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.isConsumed = !ticket.isConsumed;
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.isRevoked = !ticket.isRevoked;
+    });
+
+    // Non-ticket arguments set to incorrect values.
+    await testProveBadArgs(
+      validArgs,
+      async (args: ZKEdDSAEventTicketPCDArgs) => {
+        args.identity.value = otherIdentityPCD;
+      }
+    );
+    await testProveBadArgs(
+      validArgs,
+      async (args: ZKEdDSAEventTicketPCDArgs) => {
+        args.validEventIds.value = validEventIdsNoTicket;
+      }
+    );
   });
 
   it("should not prove if validEventIds is too large", async function () {
@@ -336,37 +414,118 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     });
   });
 
-  it("should not verify a proof with invalid partialTicket fields", async function () {
-    const pcdArgs = await toArgs(
-      ticketData1,
-      fieldsToReveal1,
-      true /* withNullifier */,
-      validEventIdsContainingTicket
+  async function testVerifyBadClaim(
+    validPCD: ZKEdDSAEventTicketPCD,
+    mutateClaim: (claim: ZKEdDSAEventTicketPCDClaim) => void
+  ): Promise<void> {
+    // Clone the valid PCD so we can mutate it to be invalid.
+    const invalidPCD: ZKEdDSAEventTicketPCD = JSON.parse(
+      JSON.stringify(validPCD)
     );
-    const invalidPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
-
-    // set ticketId to be some random uuid
-    invalidPCD.claim.partialTicket.ticketId = uuid();
+    mutateClaim(invalidPCD.claim);
 
     const verificationRes =
       await ZKEdDSAEventTicketPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
+  }
+
+  it("should not verify a proof with incorrect partialTicket claims", async function () {
+    const pcdArgs = await toArgs(
+      ticketData1,
+      fieldsToRevealAll,
+      true /* withNullifier */,
+      validEventIdsContainingTicket
+    );
+    const validPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.ticketId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.eventId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.productId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.timestampConsumed = 123;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.timestampSigned = 123;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeSemaphoreId = "123";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.isConsumed = !claim.partialTicket.isConsumed;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.isRevoked = !claim.partialTicket.isRevoked;
+    });
   });
 
-  it("should not verify a proof with invalid watermark", async function () {
+  it("should not verify a proof with incorrectly revealed partialTicket claims", async function () {
     const pcdArgs = await toArgs(
       ticketData1,
-      fieldsToReveal1,
+      fieldsToRevealNone,
       true /* withNullifier */,
       validEventIdsContainingTicket
     );
-    const invalidPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+    const validPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
-    invalidPCD.claim.watermark = "111";
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.ticketId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.eventId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.productId = uuid();
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.timestampConsumed = 123;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.timestampSigned = 123;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeSemaphoreId = "123";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.isConsumed = false;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.isRevoked = false;
+    });
+  });
 
-    const verificationRes =
-      await ZKEdDSAEventTicketPCDPackage.verify(invalidPCD);
-    expect(verificationRes).to.be.false;
+  it("should not verify a proof with incorrect non-ticket claims", async function () {
+    const pcdArgs = await toArgs(
+      ticketData1,
+      fieldsToRevealNone,
+      true /* withNullifier */,
+      validEventIdsContainingTicket
+    );
+    const validPCD = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.watermark = "111";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.signer[0] = "123";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.signer[1] = "123";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.validEventIds = validEventIdsNoTicket;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.externalNullifier = "123";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.nullifierHash = "123";
+    });
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {

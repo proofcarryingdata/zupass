@@ -52,7 +52,9 @@ export class ProvingService {
     RSATicketPCDPackage,
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
-    RSAImagePCDPackage
+    RSAImagePCDPackage,
+    ZKEdDSAEventTicketPCDPackage,
+    ZKEdDSATicketPCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {

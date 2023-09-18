@@ -18,7 +18,6 @@ rm eddsaEventTicket.zkey
 rm verification_key.json
 rm -rf ../../../apps/passport-client/public/zk-eddsa-event-ticket-artifacts-unsafe
 rm -rf ../../../apps/passport-server/public/zk-eddsa-event-ticket-artifacts-unsafe
-rm -rf ../../../apps/consumer-client/public/zk-eddsa-event-ticket-artifacts-unsafe
 
 circom eddsaEventTicket.circom --r1cs --wasm
 snarkjs groth16 setup eddsaEventTicket.r1cs powersOfTau28_hez_final_13.ptau eddsaEventTicket_0000.zkey
@@ -35,8 +34,3 @@ mkdir ../../../apps/passport-server/public/zk-eddsa-event-ticket-artifacts-unsaf
 cp eddsaEventTicket.zkey ../../../apps/passport-server/public/zk-eddsa-event-ticket-artifacts-unsafe
 cp verification_key.json ../../../apps/passport-server/public/zk-eddsa-event-ticket-artifacts-unsafe
 cp eddsaEventTicket_js/eddsaEventTicket.wasm ../../../apps/passport-server/public/zk-eddsa-event-ticket-artifacts-unsafe
-
-mkdir ../../../apps/consumer-client/public/zk-eddsa-event-ticket-artifacts-unsafe
-cp eddsaEventTicket.zkey ../../../apps/consumer-client/public/zk-eddsa-event-ticket-artifacts-unsafe
-cp verification_key.json ../../../apps/consumer-client/public/zk-eddsa-event-ticket-artifacts-unsafe
-cp eddsaEventTicket_js/eddsaEventTicket.wasm ../../../apps/consumer-client/public/zk-eddsa-event-ticket-artifacts-unsafe

@@ -163,4 +163,4 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);
 }
 
-component main { public [ ticketSignerPubkeyAx, ticketSignerPubkeyAy, validEventIds, checkValidEventIds, externalNullifier, watermark ] } = EdDSATicketToEventsPCD(100);
+component main { public [ ticketSignerPubkeyAx, ticketSignerPubkeyAy, validEventIds, checkValidEventIds, externalNullifier, watermark ] } = EdDSATicketToEventsPCD(20);

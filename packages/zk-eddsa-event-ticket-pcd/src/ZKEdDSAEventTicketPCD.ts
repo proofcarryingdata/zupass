@@ -47,7 +47,7 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
 
 export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
 
-let initializedPromise: Promise<void> | undefined;
+let depsInitializedPromise: Promise<void> | undefined;
 let babyJub: BabyJub;
 let eddsa: Eddsa;
 let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
@@ -78,7 +78,7 @@ export interface ZKEdDSAEventTicketPCDInitArgs {
 /**
  * Max supported size of validEventIds field in ZKEdDSAEventTicketPCDArgs.
  */
-export const VALID_EVENT_IDS_MAX_LEN = 100;
+export const VALID_EVENT_IDS_MAX_LEN = 20;
 
 /**
  * Arguments to request a new proof.
@@ -154,6 +154,17 @@ export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
   savedInitArgs = args;
 }
 
+async function ensureDepsInitialized(): Promise<void> {
+  if (!depsInitializedPromise) {
+    depsInitializedPromise = (async () => {
+      babyJub = await buildBabyjub();
+      eddsa = await buildEddsa();
+    })();
+  }
+
+  await depsInitializedPromise;
+}
+
 async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
   if (!savedInitArgs) {
     throw new Error(
@@ -161,14 +172,7 @@ async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
     );
   }
 
-  if (!initializedPromise) {
-    initializedPromise = (async () => {
-      babyJub = await buildBabyjub();
-      eddsa = await buildEddsa();
-    })();
-  }
-
-  await initializedPromise;
+  await ensureDepsInitialized();
   return savedInitArgs;
 }
 
@@ -470,7 +474,13 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
  * Verify the claims and proof of a ZKEdDSAEventTicketPCD.
  */
 export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
-  await ensureInitialized();
+  // verify() requires dependencies but not artifacts (verification key
+  // is available in code as vkey imported above), so doesn't require
+  // full package initialization.
+  // TODO: after eddsa keys are represented in normal form and not montgomery
+  // form, we can remove this call too, since it's only needed for the
+  // use of babyJub in publicSignalsFromClaim().
+  await ensureDepsInitialized();
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof);
