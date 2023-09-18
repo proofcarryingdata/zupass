@@ -101,8 +101,9 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <Header />
-          <RippleLoader />
-          <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
+          <PHeavy>
+            {emailSent ? "Check your email for a six-digit code." : <>&nbsp;</>}
+          </PHeavy>
         </TextCenter>
         <Spacer h={24} />
         <form onSubmit={verify}>
