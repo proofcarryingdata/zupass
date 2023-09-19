@@ -100,6 +100,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 }
 
 const ErrorContainer = styled.div`
+  width: 100%;
   padding: 16px;
   background-color: white;
   color: var(--danger);
