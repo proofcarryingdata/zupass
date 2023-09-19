@@ -27,6 +27,7 @@ import {
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
+  numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
@@ -64,6 +65,7 @@ export interface EdDSATicketFieldsToReveal {
   revealAttendeeSemaphoreId?: boolean;
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
+  revealTicketCategory?: boolean;
 }
 
 /**
@@ -290,6 +292,8 @@ function snarkInputForProof(
     revealTicketIsConsumed: fieldsToReveal.revealIsConsumed ? "1" : "0",
     ticketIsRevoked: ticketAsBigIntArray[7].toString(),
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
+    ticketCategory: ticketAsBigIntArray[8].toString(),
+    revealTicketCateogry: fieldsToReveal.revealTicketCategory ? "1" : "0",
 
     // Ticket signature fields
     ticketSignerPubkeyAx: babyJub.F.toObject(
@@ -353,6 +357,9 @@ function claimFromProofResult(
   }
   if (!babyJubIsNegativeOne(publicSignals[7])) {
     partialTicket.isRevoked = publicSignals[7] !== "0";
+  }
+  if (!babyJubIsNegativeOne(publicSignals[8])) {
+    partialTicket.ticketCategory = parseInt(publicSignals[8]);
   }
 
   const claim: ZKEdDSAEventTicketPCDClaim = {
@@ -444,6 +451,11 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
   );
   ret.push(
     t.isRevoked === undefined ? negOne : booleanToBigInt(t.isRevoked).toString()
+  );
+  ret.push(
+    t.ticketCategory === undefined
+      ? negOne
+      : numberToBigInt(t.ticketCategory).toString()
   );
   ret.push(claim.nullifierHash || negOne);
 

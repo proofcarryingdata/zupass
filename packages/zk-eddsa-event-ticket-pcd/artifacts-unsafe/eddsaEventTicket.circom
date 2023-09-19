@@ -57,6 +57,9 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal input ticketIsRevoked;
     signal input revealTicketIsRevoked;
 
+    signal input ticketCategory;
+    signal input revealTicketCategory;
+
     // Signer of ticket: EdDSA public key
     signal input ticketSignerPubkeyAx;
     signal input ticketSignerPubkeyAy;
@@ -97,9 +100,10 @@ template EdDSATicketToEventsPCD (nEvents) {
     revealTicketIsConsumed * (1 - revealTicketIsConsumed) === 0;
     revealTicketIsRevoked * (1 - revealTicketIsRevoked) === 0;
     revealNullifierHash * (1 - revealNullifierHash) === 0;
+    revealTicketCategory * (1 - revealTicketCategory) === 0;
 
     // Calculate "message" representing the ticket, which is a hash of the fields.
-    signal ticketMessageHash <== Poseidon(8)([
+    signal ticketMessageHash <== Poseidon(9)([
         ticketId,
         ticketEventId,
         ticketProductId,
@@ -107,7 +111,8 @@ template EdDSATicketToEventsPCD (nEvents) {
         ticketTimestampSigned,
         ticketAttendeeSemaphoreId,
         ticketIsConsumed,
-        ticketIsRevoked
+        ticketIsRevoked,
+        ticketCategory
     ]);
 
     // Verify ticket signature
@@ -158,6 +163,7 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal output revealedAttendeeSemaphoreId <== ValueOrNegativeOne()(ticketAttendeeSemaphoreId, revealTicketAttendeeSemaphoreId);
     signal output revealedIsConsumed <== ValueOrNegativeOne()(ticketIsConsumed, revealTicketIsConsumed);
     signal output revealedIsRevoked <== ValueOrNegativeOne()(ticketIsRevoked, revealTicketIsRevoked);
+    signal output revealedTicketCategory <== ValueOrNegativeOne()(ticketCategory, revealTicketCategory);
 
     // Revealed nullifier gets either the value or -1 based on configuration.
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);

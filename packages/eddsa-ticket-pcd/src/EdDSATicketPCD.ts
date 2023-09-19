@@ -17,9 +17,9 @@ import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 
 export enum TicketCategory {
-  ZuConnect = "ZuConnect",
-  Devconnect = "Devconnect",
-  PcdWorkingGroup = "PCD Working Group"
+  ZuConnect = 0,
+  Devconnect = 1,
+  PcdWorkingGroup = 2
 }
 
 export interface ITicketData {
