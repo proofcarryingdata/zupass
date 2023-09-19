@@ -1,0 +1,35 @@
+{
+  "name": "@pcd/artifacts",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "A command line utility designed to facilitate PCD artifact downloads.",
+  "license": "MIT",
+  "bin": {
+    "pcd-artifacts": "src/index.js"
+  },
+  "files": [
+    "./src/*",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.16"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint **/*.js",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "download": "^8.0.0",
+    "log-symbols": "^5.1.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "*",
+    "eslint": "^7.32.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

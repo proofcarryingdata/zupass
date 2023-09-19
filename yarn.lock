@@ -3140,22 +3140,6 @@
   dependencies:
     "@types/ms" "*"
 
-"@types/decompress@*":
-  version "4.2.4"
-  resolved "https://registry.yarnpkg.com/@types/decompress/-/decompress-4.2.4.tgz#dd2715d3ac1f566d03e6e302d1a26ffab59f8c5c"
-  integrity sha512-/C8kTMRTNiNuWGl5nEyKbPiMv6HA+0RbEXzFhFBEzASM6+oa4tJro9b8nj7eRlOFfuLdzUU+DS/GPDlvvzMOhA==
-  dependencies:
-    "@types/node" "*"
-
-"@types/download@^8.0.2":
-  version "8.0.2"
-  resolved "https://registry.yarnpkg.com/@types/download/-/download-8.0.2.tgz#2ef0a8b19caec152b51a2efe2e99a6795dcf1ec2"
-  integrity sha512-z1Jbba+2mUP3LuQ6EaH9xsVElphj7eY7UMCnIQ5Jw6L4ZZOC3oizFo7MbyjUx8DRMupsZvEZZfXnTmLEPQFzQg==
-  dependencies:
-    "@types/decompress" "*"
-    "@types/got" "^9"
-    "@types/node" "*"
-
 "@types/elliptic@^6.4.14":
   version "6.4.14"
   resolved "https://registry.yarnpkg.com/@types/elliptic/-/elliptic-6.4.14.tgz#7bbaad60567a588c1f08b10893453e6b9b4de48e"
@@ -3213,15 +3197,6 @@
   integrity sha512-eaMAbZS0EfKvaP5PUZ/Cdf5uJBO2t6T3RdvQTKuMqUwGhNpCnPAsKWEMyV+mCeCQG3UiHrtgdzni8X6DmhxRaQ==
   dependencies:
     generic-pool "*"
-
-"@types/got@^9":
-  version "9.6.12"
-  resolved "https://registry.yarnpkg.com/@types/got/-/got-9.6.12.tgz#fd42a6e1f5f64cd6bb422279b08c30bb5a15a56f"
-  integrity sha512-X4pj/HGHbXVLqTpKjA2ahI4rV/nNBc9mGO2I/0CgAra+F2dKgMXnENv2SRpemScBzBAI4vMelIVYViQxlSE6xA==
-  dependencies:
-    "@types/node" "*"
-    "@types/tough-cookie" "*"
-    form-data "^2.5.0"
 
 "@types/graceful-fs@^4.1.3":
   version "4.1.6"

@@ -10,8 +10,7 @@
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf node_modules public/js public/artifacts public/index.html public/service-worker.js public/favicon.ico",
-    "download:artifacts": "ts-node scripts/download-artifacts.ts",
-    "postinstall": "pcd-artifacts download"
+    "artifacts:download": "pcd-artifacts download -o public"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.1",

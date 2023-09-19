@@ -21,7 +21,10 @@
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
-    "clean:root": "rm -rf node_modules"
+    "clean:root": "rm -rf node_modules",
+    "artifacts:generate": "bash scripts/generate-artifacts.sh",
+    "artifacts:download": "turbo run artifacts:download",
+    "postinstall": "yarn artifacts:download"
   },
   "devDependencies": {
     "prettier": "^3.0.0",
