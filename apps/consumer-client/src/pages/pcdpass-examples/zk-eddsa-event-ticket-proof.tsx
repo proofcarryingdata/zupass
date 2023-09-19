@@ -17,7 +17,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PCDPASS_SERVER_URL, PCDPASS_URL } from "../../constants";
+import { PCDPASS_URL } from "../../constants";
 
 /**
  * Example page for proving ZKEdDSAEventTicketPCD.
@@ -125,7 +125,7 @@ export default function Page() {
           Request PCDpass Event Ticket Proof
         </button>
         <br />
-        Valid event ids, comma separated:
+        Valid event ids, comma separated (or empty for no validation):
         <textarea
           cols={45}
           rows={12}
@@ -409,27 +409,6 @@ async function verifyProof(
   watermark: bigint,
   externalNullifier?: string
 ): Promise<boolean> {
-  // TODO: after eddsa keys are represented in normal form and not montgomery
-  // form, we can remove the call to Package initialization logic and also
-  // remove the package artifacts in the ../../public directory (for now)
-
-  // ordinarily, we wouldn't need to init the package to call verify
-  // however, because converting the claim into public signals for verification
-  // requires us to convert the signing key from montgomery form, we need
-  // to use methods on circomlibjs.babyJub.F. and to do this, we need to
-  // build babyJub, which happens in init
-
-  // once we've made it so that keys are no longer in montgomery form, we won't
-  // need to do this anymore
-  // in general i am of the opinion that verification shouldn't require you
-  // to call init...
-  await ZKEdDSAEventTicketPCDPackage.init?.({
-    wasmFilePath:
-      PCDPASS_SERVER_URL + "/zkeddsa-artifacts-unsafe/eddsaTicket.wasm",
-    zkeyFilePath:
-      PCDPASS_SERVER_URL + "/zkeddsa-artifacts-unsafe/eddsaTicket.zkey"
-  });
-
   const { verify } = ZKEdDSAEventTicketPCDPackage;
   const verified = await verify(pcd);
   if (!verified) return false;

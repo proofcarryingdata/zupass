@@ -46,7 +46,7 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
 
 export const ZKEdDSATicketPCDTypeName = "zk-eddsa-ticket-pcd";
 
-let initializedPromise: Promise<void> | undefined;
+let depsInitializedPromise: Promise<void> | undefined;
 let babyJub: BabyJub;
 let eddsa: Eddsa;
 let initArgs: ZKEdDSATicketPCDInitArgs | undefined = undefined;
@@ -120,19 +120,23 @@ export async function init(args: ZKEdDSATicketPCDInitArgs) {
   initArgs = args;
 }
 
-async function ensureInitialized() {
-  if (!initArgs) {
-    throw new Error("missing init args");
-  }
-
-  if (!initializedPromise) {
-    initializedPromise = (async () => {
+async function ensureDepsInitialized(): Promise<void> {
+  if (!depsInitializedPromise) {
+    depsInitializedPromise = (async () => {
       babyJub = await buildBabyjub();
       eddsa = await buildEddsa();
     })();
   }
 
-  await initializedPromise;
+  await depsInitializedPromise;
+}
+
+async function ensureInitialized() {
+  if (!initArgs) {
+    throw new Error("missing init args");
+  }
+
+  await ensureDepsInitialized();
 }
 
 export async function prove(
@@ -315,7 +319,13 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
 }
 
 export async function verify(pcd: ZKEdDSATicketPCD): Promise<boolean> {
-  await ensureInitialized();
+  // verify() requires dependencies but not artifacts (verification key
+  // is available in code as vkey imported above), so doesn't require
+  // full package initialization.
+  // TODO: after eddsa keys are represented in normal form and not montgomery
+  // form, we can remove this call too, since it's only needed for the
+  // use of babyJub in publicSignalsFromClaim().
+  await ensureDepsInitialized();
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof);
