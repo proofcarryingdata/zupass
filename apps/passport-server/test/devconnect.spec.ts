@@ -215,7 +215,7 @@ describe("devconnect functionality", function () {
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
-    application.services.pretixSyncService?.stop();
+    application.services.devconnectPretixSyncService?.stop();
   });
 
   step(
