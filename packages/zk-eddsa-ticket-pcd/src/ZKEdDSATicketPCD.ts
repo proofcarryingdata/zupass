@@ -25,6 +25,7 @@ import {
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
+  numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
@@ -60,6 +61,7 @@ export interface EdDSATicketFieldsToReveal {
   revealAttendeeSemaphoreId?: boolean;
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
+  revealTicketCategory?: boolean;
 }
 
 export interface ZKEdDSATicketPCDInitArgs {
@@ -208,6 +210,8 @@ export async function prove(
     revealIsConsumed: dataRequestObj.revealIsConsumed ? "1" : "0",
     isRevoked: ticketAsBigIntArray[7].toString(),
     revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
+    ticketCategory: ticketAsBigIntArray[8].toString(),
+    revealTicketCateogry: dataRequestObj.revealTicketCategory ? "1" : "0",
     externalNullifier:
       args.externalNullifier.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: args.externalNullifier.value ? "1" : "0",
@@ -251,6 +255,9 @@ export async function prove(
   }
   if (!babyJubIsNegativeOne(publicSignals[7])) {
     partialTicket.isRevoked = publicSignals[7] !== "0";
+  }
+  if (!babyJubIsNegativeOne(publicSignals[8])) {
+    partialTicket.ticketCategory = parseInt(publicSignals[8]);
   }
 
   const claim: ZKEdDSATicketPCDClaim = {
@@ -297,6 +304,11 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
   );
   ret.push(
     t.isRevoked === undefined ? negOne : booleanToBigInt(t.isRevoked).toString()
+  );
+  ret.push(
+    t.ticketCategory === undefined
+      ? negOne
+      : numberToBigInt(t.ticketCategory).toString()
   );
   ret.push(claim.nullifierHash || negOne);
 

@@ -38,6 +38,9 @@ template PartialTicket () {
     signal input isRevoked;
     signal input revealIsRevoked;
 
+    signal input ticketCategory;
+    signal input revealTicketCategory;
+
     // external nullifier
     signal input externalNullifier;
 
@@ -71,9 +74,10 @@ template PartialTicket () {
     revealIsConsumed * (1 - revealIsConsumed) === 0;
     revealIsRevoked * (1 - revealIsRevoked) === 0;
     revealNullifierHash * (1 - revealNullifierHash) === 0;
+    revealTicketCategory * (1 - revealTicketCategory) === 0;
 
     // calculate message
-    signal messageHash <== Poseidon(8)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked]);
+    signal messageHash <== Poseidon(9)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked, ticketCategory]);
 
     // verify signature
     EdDSAPoseidonVerifier()(1, Ax, Ay, S, R8x, R8y, messageHash);
@@ -95,6 +99,7 @@ template PartialTicket () {
     signal output revealedAttendeeSemaphoreId <== ValueOrNegativeOne()(attendeeSemaphoreId, revealAttendeeSemaphoreId);
     signal output revealedIsConsumed <== ValueOrNegativeOne()(isConsumed, revealIsConsumed);
     signal output revealedIsRevoked <== ValueOrNegativeOne()(isRevoked, revealIsRevoked);
+    signal output revealedTicketCategory <== ValueOrNegativeOne()(ticketCategory, revealTicketCategory);
 
     // calculate revealed nullifier
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);
