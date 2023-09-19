@@ -230,7 +230,7 @@ export class TelegramService {
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
     });
 
-    // The  "link" command is a dev utility for associating the channel Id with a given event.
+    // The  link" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("link", async (ctx) => {
       if (ctx.chat?.type === "private") {
         await ctx.reply(
