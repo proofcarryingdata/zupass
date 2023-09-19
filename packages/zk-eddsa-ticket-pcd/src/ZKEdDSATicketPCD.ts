@@ -176,9 +176,8 @@ export async function prove(
     );
   }
 
-  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-    serializedTicketPCD
-  );
+  const deserializedTicket =
+    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
 
   const ticketAsBigIntArray = ticketDataToBigInts(
     deserializedTicket.claim.ticket
