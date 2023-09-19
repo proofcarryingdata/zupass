@@ -52,9 +52,9 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.proveMenuRegistered = false;
-    this.IS_LOCAL_SERVER = 
-    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
+    this.IS_LOCAL_SERVER =
+      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
 
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
@@ -240,8 +240,10 @@ export class TelegramService {
           this.context.dbPool,
           TEST_EVENT_NAME
         );
+        if (!eventInfo)
+          throw new Error(`Failed to fetch event ${TEST_EVENT_NAME}`);
 
-        if (eventInfo?.pretix_events_config_id) {
+        if (eventInfo.pretix_events_config_id) {
           await insertTelegramEvent(
             this.context.dbPool,
             eventInfo.pretix_events_config_id,
@@ -254,8 +256,6 @@ export class TelegramService {
             `Linked ${ctx.chat.title} (id: ${channelId}) with event ${TEST_EVENT_NAME}`
           );
         }
-        if (!eventInfo)
-          throw new Error(`Failed to fetch event ${TEST_EVENT_NAME}`);
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(
