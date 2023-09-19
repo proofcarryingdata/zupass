@@ -1,4 +1,8 @@
-import { EdDSATicketPCDPackage, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCDPackage,
+  ITicketData,
+  TicketCategory
+} from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -118,7 +122,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     timestampSigned: 1693028498280,
     attendeeSemaphoreId: identity1.getCommitment().toString(),
     isConsumed: false,
-    isRevoked: false
+    isRevoked: false,
+    ticketCategory: TicketCategory.Devconnect
   };
 
   const fieldsToReveal1: EdDSATicketFieldsToReveal = {

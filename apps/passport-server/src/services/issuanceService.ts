@@ -3,6 +3,7 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
+  TicketCategory,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
@@ -624,7 +625,8 @@ export class IssuanceService {
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: t.is_consumed,
-      isRevoked: t.is_deleted
+      isRevoked: t.is_deleted,
+      ticketCategory: TicketCategory.Devconnect
     } satisfies ITicketData;
   }
 

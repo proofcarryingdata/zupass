@@ -16,6 +16,12 @@ import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
 export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 
+export enum TicketCategory {
+  ZuConnect = "ZuConnect",
+  Devconnect = "Devconnect",
+  PcdWorkingGroup = "PCD Working Group"
+}
+
 export interface ITicketData {
   // the fields below are not signed and are used for display purposes
 
@@ -35,6 +41,7 @@ export interface ITicketData {
   attendeeSemaphoreId: string; // stringified big int
   isConsumed: boolean;
   isRevoked: boolean;
+  ticketCategory: TicketCategory; // TODO: Add field in circuit for ZKEdDSAEventTickePCD and ZKE
 }
 
 export interface EdDSATicketPCDInitArgs {

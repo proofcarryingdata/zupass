@@ -1,4 +1,8 @@
-import { EdDSATicketPCDPackage, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCDPackage,
+  ITicketData,
+  TicketCategory
+} from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCDPackage,
@@ -70,7 +74,8 @@ describe("EdDSA partial ticket should work", function () {
     timestampSigned: 1693028498280,
     attendeeSemaphoreId: identity.getCommitment().toString(),
     isConsumed: false,
-    isRevoked: false
+    isRevoked: false,
+    ticketCategory: TicketCategory.Devconnect
   };
 
   const fieldsToReveal1: EdDSATicketFieldsToReveal = {

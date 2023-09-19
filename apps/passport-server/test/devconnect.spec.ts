@@ -2,7 +2,8 @@ import { EDdSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData
+  ITicketData,
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
   CheckInResponse,
@@ -542,7 +543,9 @@ describe("devconnect functionality", function () {
     server.use(
       rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
         const returnUnmodified = (req.params.event as string) !== eventID;
-        const originalOrders = org.ordersByEventID.get(eventID) as DevconnectPretixOrder[];
+        const originalOrders = org.ordersByEventID.get(
+          eventID
+        ) as DevconnectPretixOrder[];
         const orders: DevconnectPretixOrder[] = returnUnmodified
           ? originalOrders
           : originalOrders.map((order) => {
@@ -587,7 +590,8 @@ describe("devconnect functionality", function () {
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicketWithCheckin) =>
-          ticket.is_consumed === true && ticket.checker === PRETIX_CHECKER &&
+          ticket.is_consumed === true &&
+          ticket.checker === PRETIX_CHECKER &&
           ticket.pretix_checkin_timestamp?.getTime() === checkInDate.getTime()
       ).length
     );
@@ -1205,7 +1209,8 @@ describe("devconnect functionality", function () {
         timestampSigned: Date.now(),
         attendeeSemaphoreId: "12345",
         isConsumed: false,
-        isRevoked: false
+        isRevoked: false,
+        ticketCategory: TicketCategory.Devconnect
       };
 
       ticket = await EdDSATicketPCDPackage.prove({
