@@ -55,26 +55,26 @@ export class FeedSubscriptionManager {
   }
 
   public async pollSubscriptions(): Promise<SubscriptionActions[]> {
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       this.activeSubscriptions.map(async (subscription) => {
-        try {
-          return {
-            actions: (
-              await this.api.pollFeed(subscription.providerUrl, {
-                feedId: subscription.feed.id,
-                pcd: subscription.credential
-              })
-            ).actions,
-            subscription
-          };
-        } catch (e) {
-          console.log(`failed to poll subscription`, e);
-          return null;
-        }
+        const { actions } = await this.api.pollFeed(subscription.providerUrl, {
+          feedId: subscription.feed.id,
+          pcd: subscription.credential
+        });
+
+        return { actions, subscription };
       })
     );
 
-    return results.filter((item): item is SubscriptionActions => !!item);
+    return results
+      .filter((res): res is PromiseFulfilledResult<SubscriptionActions> => {
+        if (res.status === "rejected") {
+          console.error("error polling feed", res.reason);
+          return false;
+        }
+        return true;
+      })
+      .map((res) => res.value);
   }
 
   public getSubscriptionsByProvider(): Map<string, Subscription[]> {
