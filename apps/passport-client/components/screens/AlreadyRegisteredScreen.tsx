@@ -16,7 +16,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
-  H2,
+  H1,
   HR,
   Spacer,
   TextCenter
@@ -140,7 +140,7 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>LOGIN</H2>
+            <H1>PCDPASS</H1>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>
