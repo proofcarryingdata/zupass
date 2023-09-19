@@ -36,6 +36,10 @@ const TICKETING_PUBKEY_PROD = [
   "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09"
 ];
 
+const IS_LOCAL_SERVER =
+  process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+  process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
+
 export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
@@ -339,10 +343,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (
-      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
-    ) {
+    if (IS_LOCAL_SERVER) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
@@ -386,10 +387,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (
-      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
-    ) {
+    if (IS_LOCAL_SERVER) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
