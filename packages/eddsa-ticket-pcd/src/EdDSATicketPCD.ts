@@ -41,7 +41,7 @@ export interface ITicketData {
   attendeeSemaphoreId: string; // stringified big int
   isConsumed: boolean;
   isRevoked: boolean;
-  ticketCategory: TicketCategory; // TODO: Add field in circuit for ZKEdDSAEventTickePCD and ZKE
+  ticketCategory: TicketCategory;
 }
 
 export interface EdDSATicketPCDInitArgs {
