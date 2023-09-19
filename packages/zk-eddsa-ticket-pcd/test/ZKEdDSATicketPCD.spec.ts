@@ -90,6 +90,14 @@ describe("EdDSA partial ticket should work", function () {
     revealIsRevoked: true
   };
 
+  const fieldsToReveal3: EdDSATicketFieldsToReveal = {
+    revealEventId: false,
+    revealAttendeeSemaphoreId: true,
+    revealTicketCategory: true,
+    revealTimestampConsumed: true,
+    revealTimestampSigned: true
+  };
+
   this.beforeAll(async function () {
     await EdDSATicketPCDPackage.init?.({});
     if (!ZKEdDSATicketPCDPackage.init) return;
@@ -194,6 +202,34 @@ describe("EdDSA partial ticket should work", function () {
     const claim = pcd.claim;
     expect(claim.partialTicket.isConsumed).to.be.equal(ticketData1.isConsumed);
     expect(claim.partialTicket.isRevoked).to.be.equal(ticketData1.isRevoked);
+
+    const verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd);
+    expect(verificationRes).to.be.true;
+  });
+
+  it("should reveal semaphore ID, ticketCategory, and timestamps if requested, and no more", async function () {
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal3, true);
+    const pcd = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
+
+    const claim = pcd.claim;
+    expect(claim.partialTicket.attendeeSemaphoreId).to.be.equal(
+      ticketData1.attendeeSemaphoreId
+    );
+    expect(claim.partialTicket.ticketCategory).to.be.equal(
+      ticketData1.ticketCategory
+    );
+    expect(claim.partialTicket.timestampConsumed).to.be.equal(
+      ticketData1.timestampConsumed
+    );
+    expect(claim.partialTicket.timestampSigned).to.be.equal(
+      ticketData1.timestampSigned
+    );
+
+    expect(pcd.claim.partialTicket.ticketId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.eventId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.productId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.isConsumed).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.isRevoked).to.be.equal(undefined);
 
     const verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;

@@ -267,7 +267,7 @@ export async function prove(
   };
 
   if (args.externalNullifier.value) {
-    claim.nullifierHash = publicSignals[8];
+    claim.nullifierHash = publicSignals[9];
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 

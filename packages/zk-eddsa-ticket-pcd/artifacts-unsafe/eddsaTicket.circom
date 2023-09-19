@@ -73,8 +73,8 @@ template PartialTicket () {
     revealAttendeeSemaphoreId * (1 - revealAttendeeSemaphoreId) === 0;
     revealIsConsumed * (1 - revealIsConsumed) === 0;
     revealIsRevoked * (1 - revealIsRevoked) === 0;
-    revealNullifierHash * (1 - revealNullifierHash) === 0;
     revealTicketCategory * (1 - revealTicketCategory) === 0;
+    revealNullifierHash * (1 - revealNullifierHash) === 0;
 
     // calculate message
     signal messageHash <== Poseidon(9)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked, ticketCategory]);

@@ -373,7 +373,7 @@ function claimFromProofResult(
   }
 
   if (externalNullifer !== undefined) {
-    claim.nullifierHash = publicSignals[8];
+    claim.nullifierHash = publicSignals[9];
     claim.externalNullifier = externalNullifer;
   }
 
