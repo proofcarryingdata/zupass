@@ -74,7 +74,7 @@ export async function startServer(
           .createServer(httpsOptions, app)
           .listen(port, () => {
             logger(
-              `[INIT] Local HTTPS server listening on https://dev.local:3002`
+              `[INIT] Local HTTPS server listening on https://dev.local:${port}`
             );
             sendEvent(context, EventName.SERVER_START);
             resolve({ server, app });
