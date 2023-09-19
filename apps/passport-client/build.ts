@@ -110,7 +110,8 @@ async function run(command: string) {
       const ctx = await context(passportAppOpts);
       await ctx.watch();
 
-      // eslint-disable-next-line turbo/no-undeclared-env-vars
+      const port = 3000;
+
       if (process.env.IS_LOCAL_HTTPS) {
         console.log(`Serving local HTTPS...`);
         const app = express();
@@ -121,13 +122,13 @@ async function run(command: string) {
           cert: fs.readFileSync("../certificates/dev.local.pem")
         };
 
-        https.createServer(httpsOptions, app).listen(3000, () => {
-          console.log(`Serving passport client on https://dev.local:3000`);
+        https.createServer(httpsOptions, app).listen(port, () => {
+          console.log(`Serving passport client on https://dev.local:${port}`);
         });
       } else {
-        const { host, port } = await ctx.serve({
+        const { host } = await ctx.serve({
           servedir: "public",
-          port: 3000,
+          port,
           host: "0.0.0.0"
         });
         console.log(`Serving passport client on ${host}:${port}`);
