@@ -36,15 +36,12 @@ const TICKETING_PUBKEY_PROD = [
   "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09"
 ];
 
-const IS_LOCAL_SERVER =
-  process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-  process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
-
 export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
   private proveMenuRegistered: boolean;
+  private IS_LOCAL_SERVER: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -55,6 +52,9 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.proveMenuRegistered = false;
+    this.IS_LOCAL_SERVER = 
+    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
 
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
@@ -210,30 +210,6 @@ export class TelegramService {
       }
     });
 
-    // The "setup" command helps prospective event organizer to collect necessary information.
-    // Currently, this just prints the ID of the channel.
-    this.bot.command("setup", async (ctx) => {
-      if (ctx.chat?.type === "private") {
-        await ctx.reply(
-          "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
-        );
-        return;
-      }
-
-      const admins = await ctx.getChatAdministrators();
-      const isAdmin = admins.some(
-        (admin) => admin.user.id === this.bot.botInfo.id
-      );
-      if (!isAdmin) {
-        await ctx.reply(
-          "Please add me as an admin to the telegram channel associated with your event."
-        );
-        return;
-      }
-
-      await ctx.reply("Your telegram channel id is " + ctx.chat.id);
-    });
-
     // The  link" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("link", async (ctx) => {
       if (ctx.chat?.type === "private") {
@@ -256,6 +232,8 @@ export class TelegramService {
       const channelId = ctx.chat.id;
       // Must match the hard coded argument in event:dev command in package.json
       const TEST_EVENT_NAME = "localTest";
+
+      await ctx.reply("Your telegram channel id is " + ctx.chat.id);
 
       try {
         const eventInfo = await fetchPretixEventInfoByName(
@@ -343,7 +321,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (IS_LOCAL_SERVER) {
+    if (this.IS_LOCAL_SERVER) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
@@ -387,7 +365,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (IS_LOCAL_SERVER) {
+    if (this.IS_LOCAL_SERVER) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
