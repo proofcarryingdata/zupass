@@ -73,6 +73,9 @@ export class DevconnectPretixSyncService {
         this._hasCompletedSyncSinceStarting = true;
         logger("[DEVCONNECT PRETIX] Sync successful");
       } catch (e) {
+        // This should not happen merely as a result of sync failing.
+        // If we're getting an exception here, something failed in the
+        // orchestration of the sync jobs.
         this.rollbarService?.reportError(e);
         logger("[DEVCONNECT PRETIX] Sync failed", e);
         setError(e, span);
@@ -117,7 +120,6 @@ export class DevconnectPretixSyncService {
       const org = new OrganizerSync(
         config,
         await this.pretixAPIFactory(),
-        this.rollbarService,
         this.db
       );
       this.organizers.set(id, org);
@@ -135,14 +137,16 @@ export class DevconnectPretixSyncService {
   ): Promise<void> {
     return traced(NAME, "syncSingleOrganizer", async (span) => {
       try {
-        return await organizer.run();
+        await organizer.run();
       } catch (e) {
         logger(
           `[DEVCONNECT PRETIX] Error encounted when synchronizing organizer ${id}`,
           e
         );
         setError(e, span);
-        this.rollbarService?.reportError(e);
+        this.rollbarService?.reportError(
+          new Error("Devconnect Pretix Sync failed", { cause: e })
+        );
       }
     });
   }
