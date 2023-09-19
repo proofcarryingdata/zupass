@@ -211,7 +211,7 @@ export async function prove(
     isRevoked: ticketAsBigIntArray[7].toString(),
     revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
-    revealTicketCateogry: dataRequestObj.revealTicketCategory ? "1" : "0",
+    revealTicketCategory: dataRequestObj.revealTicketCategory ? "1" : "0",
     externalNullifier:
       args.externalNullifier.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: args.externalNullifier.value ? "1" : "0",

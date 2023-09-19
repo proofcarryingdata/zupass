@@ -293,7 +293,7 @@ function snarkInputForProof(
     ticketIsRevoked: ticketAsBigIntArray[7].toString(),
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
-    revealTicketCateogry: fieldsToReveal.revealTicketCategory ? "1" : "0",
+    revealTicketCategory: fieldsToReveal.revealTicketCategory ? "1" : "0",
 
     // Ticket signature fields
     ticketSignerPubkeyAx: babyJub.F.toObject(
