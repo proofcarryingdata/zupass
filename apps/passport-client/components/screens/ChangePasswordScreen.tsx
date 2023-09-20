@@ -21,7 +21,6 @@ export function ChangePasswordScreen() {
 
   useEffect(() => {
     if (self == null) {
-      console.log("Not logged in, redirecting to login screen");
       navigate("/login", { replace: true });
     }
   }, [self, navigate]);
