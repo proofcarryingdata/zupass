@@ -59,7 +59,7 @@ import {
 import {
   OrganizerSync,
   PRETIX_CHECKER,
-  SyncErrorCause
+  SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
@@ -216,7 +216,7 @@ describe("devconnect functionality", function () {
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
-    application.services.pretixSyncService?.stop();
+    application.services.devconnectPretixSyncService?.stop();
   });
 
   step(
@@ -575,7 +575,6 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.services.rollbarService,
       application.context.dbPool
     );
 
@@ -615,7 +614,6 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.services.rollbarService,
       application.context.dbPool
     );
 
@@ -699,7 +697,6 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.services.rollbarService,
         application.context.dbPool
       );
 
@@ -1386,7 +1383,6 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 3 }),
-      application.services.rollbarService,
       application.context.dbPool
     );
 
@@ -1423,7 +1419,6 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.services.rollbarService,
       application.context.dbPool
     );
 
@@ -1474,22 +1469,19 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.services.rollbarService,
         application.context.dbPool
       );
 
-      let cause: SyncErrorCause | null = null;
-      let error = null;
+      let error: SyncFailureError | null = null;
 
       try {
         await os.run();
       } catch (e) {
-        error = e;
-        cause = (e as Error).cause as SyncErrorCause;
+        error = e as SyncFailureError;
       }
 
-      expect(error).to.be.an("Error");
-      expect(cause?.phase).to.eq("fetching");
+      expect(error instanceof SyncFailureError).to.be.true;
+      expect(error?.phase).to.eq("fetching");
     }
   );
 
@@ -1526,22 +1518,19 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.services.rollbarService,
         application.context.dbPool
       );
 
-      let error = null;
-      let cause: SyncErrorCause | null = null;
+      let error: SyncFailureError | null = null;
 
       try {
         await os.run();
       } catch (e) {
-        error = e;
-        cause = (e as Error).cause as SyncErrorCause;
+        error = e as SyncFailureError;
       }
 
-      expect(error).to.be.an("Error");
-      expect(cause?.phase).to.eq("validating");
+      expect(error instanceof SyncFailureError).to.be.true;
+      expect(error?.phase).to.eq("validating");
     }
   );
 
@@ -1578,22 +1567,19 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.services.rollbarService,
         application.context.dbPool
       );
 
-      let error = null;
-      let cause: SyncErrorCause | null = null;
+      let error: SyncFailureError | null = null;
 
       try {
         await os.run();
       } catch (e) {
-        error = e;
-        cause = (e as Error).cause as SyncErrorCause;
+        error = e as SyncFailureError;
       }
 
-      expect(error).to.be.an("Error");
-      expect(cause?.phase).to.eq("validating");
+      expect(error instanceof SyncFailureError).to.be.true;
+      expect(error?.phase).to.eq("validating");
     }
   );
 

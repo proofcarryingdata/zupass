@@ -717,6 +717,10 @@ export class IssuanceService {
             emailAddress: {
               value: email,
               argumentType: ArgumentTypeName.String
+            },
+            semaphoreId: {
+              value: commitmentRow.commitment,
+              argumentType: ArgumentTypeName.String
             }
           })
         ];

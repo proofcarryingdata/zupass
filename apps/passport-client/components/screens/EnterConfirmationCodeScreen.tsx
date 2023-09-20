@@ -5,7 +5,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
-  H2,
+  H1,
   Spacer,
   TextCenter
 } from "../core";
@@ -60,7 +60,7 @@ export function EnterConfirmationCodeScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>ENTER CONFIRMATION CODE</H2>
+            <H1>PCDPASS</H1>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>

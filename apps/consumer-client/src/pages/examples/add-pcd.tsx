@@ -37,6 +37,8 @@ import { sendPassportRequest } from "../../util";
  * PCDs into the passport.
  */
 export default function Page() {
+  const [signedMessage, setSignedMessage] = useState("1");
+
   return (
     <div>
       <HomeLink />
@@ -63,7 +65,17 @@ export default function Page() {
         </button>
         <br />
         <br />
-        <button onClick={addSignatureProofPCD}>
+        Message to sign:{" "}
+        <textarea
+          cols={40}
+          rows={1}
+          value={signedMessage}
+          onChange={(e) => {
+            setSignedMessage(e.target.value);
+          }}
+        />
+        <br />
+        <button onClick={() => addSignatureProofPCD(signedMessage)}>
           prove and add a signature proof
         </button>
         <br />
@@ -337,7 +349,7 @@ async function addEdDSAPCD() {
   sendPassportRequest(proofUrl);
 }
 
-async function addSignatureProofPCD() {
+async function addSignatureProofPCD(messageToSign: string) {
   const proofUrl = constructPassportPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -353,7 +365,7 @@ async function addSignatureProofPCD() {
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: "1",
+        value: messageToSign,
         userProvided: false
       }
     },
