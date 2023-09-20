@@ -18,7 +18,7 @@ program
   )
   .option(
     "-p, --ptau-power <power>",
-    "Path to the directory where the output will be written [default: .]."
+    "Power of two of the maximum number of constraints that the ceremony can accept."
   )
   .option(
     "-o, --output <output>",

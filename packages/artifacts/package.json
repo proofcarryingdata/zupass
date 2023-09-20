@@ -2,7 +2,7 @@
   "name": "@pcd/artifacts",
   "type": "module",
   "version": "0.0.1",
-  "description": "A command line utility designed to facilitate PCD artifact downloads.",
+  "description": "A command line utility designed to manage PCD artifacts.",
   "license": "MIT",
   "bin": {
     "pcd-artifacts": "src/index.js"
