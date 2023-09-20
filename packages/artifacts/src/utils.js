@@ -1,8 +1,11 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { exec } from "child_process";
 import Conf from "conf";
 import download from "download";
 import inquirer from "inquirer";
-import { R2_API_URL, ARTIFACT_FILES, pkg } from "./config.js";
+import logSymbols from "log-symbols";
+import { promisify } from "util";
+import { ARTIFACT_FILES, pkg, R2_API_URL } from "./config.js";
 
 export const fsConf = new Conf({ projectName: pkg.name });
 
@@ -55,4 +58,16 @@ export async function getS3ClientInstance() {
     region: "auto",
     endpoint: R2_API_URL
   });
+}
+
+export async function executeCommand(command) {
+  const { stdout, stderr } = await promisify(exec)(command);
+
+  if (stdout) {
+    console.log(stdout);
+  }
+
+  if (stderr) {
+    console.error(stderr);
+  }
 }

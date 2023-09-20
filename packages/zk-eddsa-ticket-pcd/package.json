@@ -19,7 +19,9 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules artifacts",
-    "artifacts:download": "pcd-artifacts download zk-eddsa-ticket-pcd"
+    "artifacts:download": "pcd-artifacts download zk-eddsa-ticket-pcd",
+    "artifacts:generate": "pcd-artifacts generate",
+    "artifacts:upload": "pcd-artifacts upload zk-eddsa-ticket-pcd"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.1.1",

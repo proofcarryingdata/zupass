@@ -9858,6 +9858,11 @@ js-levenshtein@^1.1.6:
   resolved "https://registry.yarnpkg.com/js-levenshtein/-/js-levenshtein-1.1.6.tgz#c6cee58eb3550372df8deb85fad5ce66ce01d59d"
   integrity sha512-X2BB11YZtrRqY4EnQcLX5Rh373zbK4alC1FW7D7MBhL2gtcC17cTnr6DmfHZeS0s2rTHjUTMMHfG7gO8SSdw+g==
 
+js-logger@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/js-logger/-/js-logger-1.6.1.tgz#8f09671b515e4a6f31dced8fdb8923432e2c60af"
+  integrity sha512-yTgMCPXVjhmg28CuUH8CKjU+cIKL/G+zTu4Fn4lQxs8mRFH/03QTNvEFngcxfg/gRDiQAOoyCKmMTOm9ayOzXA==
+
 js-sha256@^0.10.1:
   version "0.10.1"
   resolved "https://registry.yarnpkg.com/js-sha256/-/js-sha256-0.10.1.tgz#b40104ba1368e823fdd5f41b66b104b15a0da60d"

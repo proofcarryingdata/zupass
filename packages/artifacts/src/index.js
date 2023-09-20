@@ -3,6 +3,7 @@
 import { program } from "commander";
 import logSymbols from "log-symbols";
 import "./commands/download.js";
+import "./commands/generate.js";
 import "./commands/listPackages.js";
 import "./commands/upload.js";
 import { pkg } from "./config.js";
