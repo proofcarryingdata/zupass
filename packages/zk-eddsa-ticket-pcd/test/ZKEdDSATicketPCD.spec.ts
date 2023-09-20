@@ -98,7 +98,8 @@ describe("EdDSA partial ticket should work", function () {
     revealAttendeeSemaphoreId: true,
     revealTicketCategory: true,
     revealTimestampConsumed: true,
-    revealTimestampSigned: true
+    revealTimestampSigned: true,
+    revealReservedSignedField2: true
   };
 
   this.beforeAll(async function () {
@@ -210,7 +211,7 @@ describe("EdDSA partial ticket should work", function () {
     expect(verificationRes).to.be.true;
   });
 
-  it("should reveal semaphore ID, ticketCategory, and timestamps if requested, and no more", async function () {
+  it("should reveal semaphore ID, ticketCategory, timestamps, and reserved fields if requested, and no more", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsToReveal3, true);
     const pcd = await ZKEdDSATicketPCDPackage.prove(pcdArgs);
 
@@ -227,12 +228,15 @@ describe("EdDSA partial ticket should work", function () {
     expect(claim.partialTicket.timestampSigned).to.be.equal(
       ticketData1.timestampSigned
     );
+    expect(claim.partialTicket.reservedSignedField2).to.be.equal(2);
 
     expect(pcd.claim.partialTicket.ticketId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.eventId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.productId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isConsumed).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isRevoked).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.reservedSignedField1).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.reservedSignedField3).to.be.equal(undefined);
 
     const verificationRes = await ZKEdDSATicketPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;

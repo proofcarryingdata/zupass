@@ -46,9 +46,9 @@ export interface ITicketData {
   // is for them to convert into meaningful fields in the future. We are reserving them now
   // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
   // and we would only need to change the TypeScript.
-  reservedSignedField1: number;
-  reservedSignedField2: number;
-  reservedSignedField3: number;
+  reservedSignedField1?: number;
+  reservedSignedField2?: number;
+  reservedSignedField3?: number;
 }
 
 export interface EdDSATicketPCDInitArgs {

@@ -35,9 +35,9 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     booleanToBigInt(data.isConsumed),
     booleanToBigInt(data.isRevoked),
     numberToBigInt(data.ticketCategory),
-    numberToBigInt(data.reservedSignedField1),
-    numberToBigInt(data.reservedSignedField2),
-    numberToBigInt(data.reservedSignedField3)
+    numberToBigInt(data.reservedSignedField1 ?? 0),
+    numberToBigInt(data.reservedSignedField2 ?? 0),
+    numberToBigInt(data.reservedSignedField3 ?? 0)
   ];
 }
 
