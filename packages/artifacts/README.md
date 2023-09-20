@@ -93,6 +93,8 @@ Each time you update the circuits, remember to upload the new artifacts.
 
 PCD packages using Circom circuits and needing zero-knowledge artifacts to generate and verify proofs can make a dummy ceremony with the following command: `pcd-artifacts generate`. You can also specify the ptau power and the output directory. The command is supposed to be executed from the package directory, as it automatically detects the `circuits` folder which must contain an `index.circom` file as the entry point. The files will be saved in the `./artifacts` folder by default.
 
+If you don't have Circom installed, please see the [official documentation](https://docs.circom.io/getting-started/installation) and install a version > `2.0.0`.
+
 ```
 Usage: pcd-artifacts generate [options]
 
