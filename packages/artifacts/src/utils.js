@@ -3,7 +3,6 @@ import { exec } from "child_process";
 import Conf from "conf";
 import download from "download";
 import inquirer from "inquirer";
-import logSymbols from "log-symbols";
 import { promisify } from "util";
 import { ARTIFACT_FILES, pkg, R2_API_URL } from "./config.js";
 
