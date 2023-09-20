@@ -43,7 +43,6 @@
     "@babel/core": "^7.0.0",
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/artifacts": "0.0.1",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/react": "^18.2.6",
