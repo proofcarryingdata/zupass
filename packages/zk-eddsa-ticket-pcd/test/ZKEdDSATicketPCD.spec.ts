@@ -4,10 +4,6 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/circomlibjs.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/snarkjs.d.ts" />
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
