@@ -3082,6 +3082,11 @@
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.3.6.tgz#7b489e8baf393d5dd1266fb203ddd4ea941259e6"
   integrity sha512-VOVRLM1mBxIRxydiViqPcKn6MIxZytrbMpd6RJLIWKxUNr3zux8no0Oc7kJx0WAPIitgZ0gkrDS+btlqQpubpw==
 
+"@types/circomlibjs@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.1.tgz#f25748b7cf391fda065fe7456b4f7425f7087b62"
+  integrity sha512-1B44LKMFJ5ul1IXWULfr8VsI/M5YxOT1IZFGLGlR4lkE3nvhUoQ+4Ex/XcDNhQNuCqB2bPaNmXScA5rqgz3tsw==
+
 "@types/connect@*":
   version "3.4.36"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.36.tgz#e511558c15a39cb29bd5357eebb57bd1459cd1ab"
@@ -3637,6 +3642,11 @@
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@types/shimmer/-/shimmer-1.0.2.tgz#93eb2c243c351f3f17d5c580c7467ae5d686b65f"
   integrity sha512-dKkr1bTxbEsFlh2ARpKzcaAmsYixqt9UyCdoEZk8rHyE4iQYcDCyvSjDSf7JUWJHlJiTtbIoQjxKh6ViywqDAg==
+
+"@types/snarkjs@^0.7.1":
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.1.tgz#f19957c3d98c590b344a9c67636d49e5a1d66ddd"
+  integrity sha512-V7OBbC8GSUax/VKT0qSrFlckhj3jqi6hUs+EKnxkMWjWKzKWipib5LR61hhfLDePx7AMoK8fKfnPUTExv+iNMQ==
 
 "@types/stack-utils@^2.0.0":
   version "2.0.1"
