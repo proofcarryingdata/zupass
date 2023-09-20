@@ -14,6 +14,9 @@ export type SerializedTicket = [
   bigint,
   bigint,
   bigint,
+  bigint,
+  bigint,
+  bigint,
   bigint
 ];
 
@@ -31,7 +34,10 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     semaphoreIdToBigInt(data.attendeeSemaphoreId),
     booleanToBigInt(data.isConsumed),
     booleanToBigInt(data.isRevoked),
-    numberToBigInt(data.ticketCategory)
+    numberToBigInt(data.ticketCategory),
+    numberToBigInt(data.reservedSignedField1),
+    numberToBigInt(data.reservedSignedField2),
+    numberToBigInt(data.reservedSignedField3)
   ];
 }
 

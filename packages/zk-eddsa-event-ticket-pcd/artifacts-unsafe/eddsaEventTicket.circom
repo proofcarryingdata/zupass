@@ -60,6 +60,15 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal input ticketCategory;
     signal input revealTicketCategory;
 
+    signal input reservedSignedField1;
+    signal input revealReservedSignedField1;
+
+    signal input reservedSignedField2;
+    signal input revealReservedSignedField2;
+
+    signal input reservedSignedField3;
+    signal input revealReservedSignedField3;
+
     // Signer of ticket: EdDSA public key
     signal input ticketSignerPubkeyAx;
     signal input ticketSignerPubkeyAy;
@@ -101,9 +110,12 @@ template EdDSATicketToEventsPCD (nEvents) {
     revealTicketIsRevoked * (1 - revealTicketIsRevoked) === 0;
     revealNullifierHash * (1 - revealNullifierHash) === 0;
     revealTicketCategory * (1 - revealTicketCategory) === 0;
+    revealReservedSignedField1 * (1 - revealReservedSignedField1) === 0;
+    revealReservedSignedField2 * (1 - revealReservedSignedField2) === 0;
+    revealReservedSignedField3 * (1 - revealReservedSignedField3) === 0;
 
     // Calculate "message" representing the ticket, which is a hash of the fields.
-    signal ticketMessageHash <== Poseidon(9)([
+    signal ticketMessageHash <== Poseidon(12)([
         ticketId,
         ticketEventId,
         ticketProductId,
@@ -112,7 +124,10 @@ template EdDSATicketToEventsPCD (nEvents) {
         ticketAttendeeSemaphoreId,
         ticketIsConsumed,
         ticketIsRevoked,
-        ticketCategory
+        ticketCategory,
+        reservedSignedField1,
+        reservedSignedField2,
+        reservedSignedField3
     ]);
 
     // Verify ticket signature
@@ -164,6 +179,9 @@ template EdDSATicketToEventsPCD (nEvents) {
     signal output revealedIsConsumed <== ValueOrNegativeOne()(ticketIsConsumed, revealTicketIsConsumed);
     signal output revealedIsRevoked <== ValueOrNegativeOne()(ticketIsRevoked, revealTicketIsRevoked);
     signal output revealedTicketCategory <== ValueOrNegativeOne()(ticketCategory, revealTicketCategory);
+    signal output revealedReservedSignedInput1 <== ValueOrNegativeOne()(reservedSignedField1, revealReservedSignedField1);
+    signal output revealedReservedSignedInput2 <== ValueOrNegativeOne()(reservedSignedField2, revealReservedSignedField2);
+    signal output revealedReservedSignedInput3 <== ValueOrNegativeOne()(reservedSignedField3, revealReservedSignedField3);
 
     // Revealed nullifier gets either the value or -1 based on configuration.
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);

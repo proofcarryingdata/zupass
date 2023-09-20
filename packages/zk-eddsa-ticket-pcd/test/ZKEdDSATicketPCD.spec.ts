@@ -75,7 +75,10 @@ describe("EdDSA partial ticket should work", function () {
     attendeeSemaphoreId: identity.getCommitment().toString(),
     isConsumed: false,
     isRevoked: false,
-    ticketCategory: TicketCategory.Devconnect
+    ticketCategory: TicketCategory.Devconnect,
+    reservedSignedField1: 1,
+    reservedSignedField2: 2,
+    reservedSignedField3: 3
   };
 
   const fieldsToReveal1: EdDSATicketFieldsToReveal = {

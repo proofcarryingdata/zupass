@@ -62,6 +62,9 @@ export interface EdDSATicketFieldsToReveal {
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
   revealTicketCategory?: boolean;
+  revealReservedSignedField1?: boolean;
+  revealReservedSignedField2?: boolean;
+  revealReservedSignedField3?: boolean;
 }
 
 export interface ZKEdDSATicketPCDInitArgs {
@@ -212,6 +215,18 @@ export async function prove(
     revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
     revealTicketCategory: dataRequestObj.revealTicketCategory ? "1" : "0",
+    reservedSignedField1: ticketAsBigIntArray[9].toString(),
+    revealReservedSignedField1: dataRequestObj.revealReservedSignedField1
+      ? "1"
+      : "0",
+    reservedSignedField2: ticketAsBigIntArray[10].toString(),
+    revealReservedSignedField2: dataRequestObj.revealReservedSignedField2
+      ? "1"
+      : "0",
+    reservedSignedField3: ticketAsBigIntArray[11].toString(),
+    revealReservedSignedField3: dataRequestObj.revealReservedSignedField3
+      ? "1"
+      : "0",
     externalNullifier:
       args.externalNullifier.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: args.externalNullifier.value ? "1" : "0",
@@ -259,6 +274,15 @@ export async function prove(
   if (!babyJubIsNegativeOne(publicSignals[8])) {
     partialTicket.ticketCategory = parseInt(publicSignals[8]);
   }
+  if (!babyJubIsNegativeOne(publicSignals[9])) {
+    partialTicket.reservedSignedField1 = parseInt(publicSignals[9]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[10])) {
+    partialTicket.reservedSignedField2 = parseInt(publicSignals[10]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[11])) {
+    partialTicket.reservedSignedField3 = parseInt(publicSignals[11]);
+  }
 
   const claim: ZKEdDSATicketPCDClaim = {
     partialTicket,
@@ -267,7 +291,7 @@ export async function prove(
   };
 
   if (args.externalNullifier.value) {
-    claim.nullifierHash = publicSignals[9];
+    claim.nullifierHash = publicSignals[12];
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
@@ -309,6 +333,21 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
     t.ticketCategory === undefined
       ? negOne
       : numberToBigInt(t.ticketCategory).toString()
+  );
+  ret.push(
+    t.reservedSignedField1 === undefined
+      ? negOne
+      : numberToBigInt(t.reservedSignedField1).toString()
+  );
+  ret.push(
+    t.reservedSignedField2 === undefined
+      ? negOne
+      : numberToBigInt(t.reservedSignedField2).toString()
+  );
+  ret.push(
+    t.reservedSignedField3 === undefined
+      ? negOne
+      : numberToBigInt(t.reservedSignedField3).toString()
   );
   ret.push(claim.nullifierHash || negOne);
 
