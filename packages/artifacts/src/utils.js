@@ -17,6 +17,17 @@ export async function downloadArtifacts(r2BucketUrl, packageName, outputPath) {
   }
 }
 
+export async function confirm(message) {
+  const { confirmation } = await inquirer.prompt({
+    name: "confirmation",
+    type: "confirm",
+    message,
+    default: true
+  });
+
+  return confirmation;
+}
+
 export async function getAccessKeyIdFromUser() {
   const { accessKeyId } = await inquirer.prompt({
     name: "accessKeyId",

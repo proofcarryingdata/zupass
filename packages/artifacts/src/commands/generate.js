@@ -7,7 +7,7 @@ import { tmpdir } from "os";
 import { zKey } from "snarkjs";
 import { pkg } from "../config.js";
 import Spinner from "../spinner.js";
-import { executeCommand } from "../utils.js";
+import { executeCommand, confirm } from "../utils.js";
 
 logger.useDefaults();
 
@@ -52,15 +52,30 @@ program
       } catch (error) {
         spinner.stop();
 
-        console.info(`A${logSymbols.error}`, `${error}`);
+        console.info(`${logSymbols.error}`, `${error}`);
 
         process.exit(1);
       }
     }
 
     try {
-      // Remove old artifacts.
-      await executeCommand(`rm -fr ${outputPath}`);
+      if (existsSync(outputPath)) {
+        if (
+          await confirm(
+            `An '${outputPath}' directory already exists. Do you want to remove it?`
+          )
+        ) {
+          // Remove old artifacts.
+          await executeCommand(`rm -fr ${outputPath}`);
+        } else {
+          console.info(
+            `${logSymbols.info}`,
+            "You need to remove the old directory if you want to generate new artifacts"
+          );
+
+          process.exit(0);
+        }
+      }
 
       // Create the artifacts folder.
       await executeCommand(`mkdir ${outputPath}`);
