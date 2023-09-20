@@ -10,7 +10,8 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules public/artifacts",
+    "artifacts:download": "pcd-artifacts download -o public"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
+    "@pcd/artifacts": "0.0.1",
     "@pcd/eslint-config-custom": "0.6.2",
     "@pcd/tsconfig": "0.6.2",
     "@types/chai": "^4.3.5",

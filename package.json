@@ -21,7 +21,9 @@
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
-    "clean:root": "rm -rf node_modules"
+    "clean:root": "rm -rf node_modules",
+    "artifacts:download": "turbo run artifacts:download",
+    "postinstall": "yarn artifacts:download"
   },
   "devDependencies": {
     "@types/circomlibjs": "^0.1.1",
