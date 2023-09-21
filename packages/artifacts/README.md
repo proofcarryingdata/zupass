@@ -102,7 +102,7 @@ Generate zero-knowledge unsafe artifacts with a dummy trusted-setup (only for te
 
 Options:
   -p, --ptau-power <power>  Power of two of the maximum number of constraints that the ceremony can accept.
-  -o, --output <output>     Path to the directory where the output will be written [default: .].
+  -o, --output <output>     Path to the directory where the output will be written [default: artifacts].
   -h, --help                display help for command
 ```
 
@@ -136,6 +136,6 @@ Arguments:
   pcd-package            Supported PCD package.
 
 Options:
-  -o, --output <output>  Path to the directory where the output will be written [default: .].
+  -o, --output <output>  Path to the directory where the output will be written [default: artifacts].
   -h, --help             display help for command
 ```

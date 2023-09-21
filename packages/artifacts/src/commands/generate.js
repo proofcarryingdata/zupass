@@ -22,15 +22,9 @@ program
   )
   .option(
     "-o, --output <output>",
-    "Path to the directory where the output will be written [default: .]."
+    "Path to the directory where the output will be written [default: artifacts]."
   )
-  .action(async ({ ptauPower = 13, output: outputPath }) => {
-    if (!outputPath) {
-      outputPath = ".";
-    }
-
-    outputPath += "/artifacts";
-
+  .action(async ({ ptauPower = 13, output: outputPath = "artifacts" }) => {
     const ptauFilePath = `${tmpdir()}/${
       pkg.name
     }/powersOfTau28_hez_final_${ptauPower}.ptau`;
@@ -62,7 +56,7 @@ program
       if (existsSync(outputPath)) {
         if (
           await confirm(
-            `An '${outputPath}' directory already exists. Do you want to remove it?`
+            `The '${outputPath}' directory already exists. Do you want to remove it?`
           )
         ) {
           // Remove old artifacts.
