@@ -40,7 +40,8 @@ import _ from "lodash";
 import NodeRSA from "node-rsa";
 import {
   CommitmentRow,
-  DevconnectPretixTicketDBWithEmailAndItem
+  DevconnectPretixTicketDBWithEmailAndItem,
+  ZuzaluUserRole
 } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
@@ -49,12 +50,20 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
+
+// Since Zuzalu did not have event or product UUIDs at the time, we can
+// allocate some constant ones now.
+export const ZUZALU_RESIDENT_EVENT_ID = "5ba4cd9e-893c-4a4a-b15b-cf36ceda1938";
+export const ZUZALU_VISITOR_EVENT_ID = "53b518ed-e427-4a23-bf36-a6e1e2764256";
+export const ZUZALU_ORGANIZER_EVENT_ID = "10016d35-40df-4033-a171-7d661ebaccaa";
+export const ZUZALU_PRODUCT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -234,6 +243,50 @@ export class IssuanceService {
             } as AppendToFolderPermission,
             {
               folder: "Email",
+              type: PCDPermissionType.ReplaceInFolder
+            } as ReplaceInFolderPermission
+          ]
+        }
+      },
+      {
+        handleRequest: async (
+          req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
+        ): Promise<FeedResponse> => {
+          const pcds = await this.issueZuzaluTicketPCDs(
+            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+          );
+          const actions: PCDAction[] = [];
+
+          // Clear out the folder
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "Zuzalu",
+            pcds: []
+          } as ReplaceInFolderAction);
+
+          actions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: "Zuzalu",
+            pcds: await Promise.all(
+              pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+            )
+          } as ReplaceInFolderAction);
+
+          return { actions };
+        },
+        feed: {
+          id: PCDPassFeedIds.Zuzalu_1,
+          name: "Zuzalu tickets",
+          description: "Your Zuzalu Tickets",
+          inputPCDType: EdDSATicketPCD.name,
+          partialArgs: undefined,
+          permissions: [
+            {
+              folder: "Zuzalu",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission,
+            {
+              folder: "Zuzalu",
               type: PCDPermissionType.ReplaceInFolder
             } as ReplaceInFolderPermission
           ]
@@ -724,6 +777,61 @@ export class IssuanceService {
         ];
       }
     );
+  }
+
+  private async issueZuzaluTicketPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EdDSATicketPCD[]> {
+    return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
+      const commitmentRow = await this.checkUserExists(credential);
+      const email = commitmentRow?.email;
+      if (commitmentRow) {
+        span?.setAttribute(
+          "commitment",
+          commitmentRow?.commitment?.toString() ?? ""
+        );
+      }
+      if (email) {
+        span?.setAttribute("email", email);
+      }
+
+      if (commitmentRow == null || email == null) {
+        return [];
+      }
+
+      const user = await fetchLoggedInZuzaluUser(this.context.dbPool, {
+        uuid: commitmentRow.uuid
+      });
+
+      const tickets = [];
+
+      if (user) {
+        tickets.push(
+          await this.getOrGenerateTicket({
+            attendeeSemaphoreId: user.commitment,
+            eventName: "Zuzalu",
+            checkerEmail: undefined,
+            ticketId: user.uuid,
+            ticketName: user.role.toString(),
+            attendeeName: user.name,
+            attendeeEmail: user.email,
+            eventId:
+              user.role === ZuzaluUserRole.Visitor
+                ? ZUZALU_VISITOR_EVENT_ID
+                : user.role === ZuzaluUserRole.Organizer
+                ? ZUZALU_ORGANIZER_EVENT_ID
+                : ZUZALU_RESIDENT_EVENT_ID,
+            productId: ZUZALU_PRODUCT_ID,
+            timestampSigned: Date.now(),
+            timestampConsumed: 0,
+            isConsumed: false,
+            isRevoked: false
+          })
+        );
+      }
+
+      return tickets;
+    });
   }
 }
 

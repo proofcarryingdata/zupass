@@ -1,14 +1,14 @@
 import chai from "chai";
 import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
-import { IPretixAPI } from "../../src/apis/pretixAPI";
+import { IZuzaluPretixAPI } from "../../src/apis/pretixAPI";
 import { DevconnectPretixAPIFactory } from "../../src/services/devconnectPretixSyncService";
 import { APIs } from "../../src/types";
 import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
 
 export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let emailAPI: IEmailAPI | null;
-  let pretixAPI: IPretixAPI | null;
+  let pretixAPI: IZuzaluPretixAPI | null;
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
 
   if (apiOverrides?.emailAPI) {
@@ -25,8 +25,8 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     chai.spy.on(emailAPI, "send");
   }
 
-  if (apiOverrides?.pretixAPI) {
-    pretixAPI = apiOverrides.pretixAPI;
+  if (apiOverrides?.zuzaluPretixAPI) {
+    pretixAPI = apiOverrides.zuzaluPretixAPI;
   } else {
     pretixAPI = newMockZuzaluPretixAPI();
   }
@@ -39,7 +39,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
 
   return {
     emailAPI,
-    pretixAPI,
+    zuzaluPretixAPI: pretixAPI,
     devconnectPretixAPIFactory
   };
 }

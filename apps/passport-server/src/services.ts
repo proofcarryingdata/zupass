@@ -31,11 +31,11 @@ export async function startServices(
   );
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
-  const pretixSyncService = startPretixSyncService(
+  const zuzaluPretixSyncService = startPretixSyncService(
     context,
     rollbarService,
     semaphoreService,
-    apis.pretixAPI
+    apis.zuzaluPretixAPI
   );
   const devconnectPretixSyncService = await startDevconnectPretixSyncService(
     context,
@@ -68,7 +68,7 @@ export async function startServices(
     emailTokenService,
     rollbarService,
     provingService,
-    pretixSyncService,
+    zuzaluPretixSyncService,
     devconnectPretixSyncService,
     metricsService,
     issuanceService,
@@ -82,7 +82,7 @@ export async function startServices(
 export async function stopServices(services: GlobalServices): Promise<void> {
   services.provingService.stop();
   services.semaphoreService.stop();
-  services.pretixSyncService?.stop();
+  services.zuzaluPretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
   services.persistentCacheService.stop();

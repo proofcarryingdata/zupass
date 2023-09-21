@@ -1,17 +1,17 @@
 import {
-  getPretixConfig,
-  IPretixAPI,
-  PretixOrder,
-  PretixSubevent,
+  IZuzaluPretixAPI,
+  ZuzaluPretixOrder,
+  ZuzaluPretixSubevent,
+  getZuzaluPretixConfig
 } from "../../src/apis/pretixAPI";
 import { logger } from "../../src/util/logger";
 import {
   IMockPretixData,
-  ZuzaluPretixDataMocker,
+  ZuzaluPretixDataMocker
 } from "./zuzaluPretixDataMocker";
 
-export function newMockZuzaluPretixAPI(): IPretixAPI | null {
-  const config = getPretixConfig();
+export function newMockZuzaluPretixAPI(): IZuzaluPretixAPI | null {
+  const config = getZuzaluPretixConfig();
 
   if (!config) {
     return null;
@@ -29,12 +29,12 @@ export function getMockPretixAPI(
     throwOnFetchOrders?: boolean;
     throwOnFetchSubevents?: boolean;
   }
-): IPretixAPI {
+): IZuzaluPretixAPI {
   logger("[MOCK] instantiating mock zuzalu pretix api");
 
   return {
     config: mockData.config,
-    fetchOrders: async (eventID: string): Promise<PretixOrder[]> => {
+    fetchOrders: async (eventID: string): Promise<ZuzaluPretixOrder[]> => {
       const result = mockData.ordersByEventId.get(eventID) ?? [];
       if (options?.throwOnFetchOrders) {
         throw new Error(`[MOCK] throwing for 'fetchOrders'`);
@@ -45,7 +45,9 @@ export function getMockPretixAPI(
       );
       return result;
     },
-    fetchSubevents: async (parentId: string): Promise<PretixSubevent[]> => {
+    fetchSubevents: async (
+      parentId: string
+    ): Promise<ZuzaluPretixSubevent[]> => {
       const result = mockData.subEventsByParentEventId.get(parentId) ?? [];
       if (options?.throwOnFetchSubevents) {
         throw new Error(`[MOCK] throwing for 'fetchSubevents'`);
@@ -55,6 +57,6 @@ export function getMockPretixAPI(
         JSON.stringify(result, null, 2)
       );
       return result;
-    },
+    }
   };
 }
