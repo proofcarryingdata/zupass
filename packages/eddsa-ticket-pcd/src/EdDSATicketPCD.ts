@@ -42,13 +42,6 @@ export interface ITicketData {
   isConsumed: boolean;
   isRevoked: boolean;
   ticketCategory: TicketCategory;
-  // These fields currently do not have any preset semantic meaning, although the intention
-  // is for them to convert into meaningful fields in the future. We are reserving them now
-  // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
-  // and we would only need to change the TypeScript.
-  reservedSignedField1?: number;
-  reservedSignedField2?: number;
-  reservedSignedField3?: number;
 }
 
 export interface EdDSATicketPCDInitArgs {
