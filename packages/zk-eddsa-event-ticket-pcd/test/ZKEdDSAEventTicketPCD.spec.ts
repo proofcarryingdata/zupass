@@ -9,10 +9,6 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/circomlibjs.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/snarkjs.d.ts" />
 import { BABY_JUB_NEGATIVE_ONE, uuidToBigInt } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
@@ -31,14 +27,8 @@ import {
   snarkInputForValidEventIds
 } from "../src";
 
-const zkeyFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaEventTicket.zkey`
-);
-const wasmFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaEventTicket_js/eddsaEventTicket.wasm`
-);
+const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
+const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
 const identity1 = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -210,8 +200,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       }
     });
 
-    const serializedTicketPCD =
-      await EdDSATicketPCDPackage.serialize(ticketPCD);
+    const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(
+      ticketPCD
+    );
 
     const serializedIdentityPCD = await makeSerializedIdentityPCD(identity1);
 
@@ -466,8 +457,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     );
     mutateClaim(invalidPCD.claim);
 
-    const verificationRes =
-      await ZKEdDSAEventTicketPCDPackage.verify(invalidPCD);
+    const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(
+      invalidPCD
+    );
     expect(verificationRes).to.be.false;
   }
 
@@ -581,8 +573,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     const deserialized = await ZKEdDSAEventTicketPCDPackage.deserialize(
       serialized.pcd
     );
-    const deserializedValid =
-      await ZKEdDSAEventTicketPCDPackage.verify(deserialized);
+    const deserializedValid = await ZKEdDSAEventTicketPCDPackage.verify(
+      deserialized
+    );
     expect(deserializedValid).to.eq(true);
     expect(pcd1).to.deep.eq(deserialized);
   });

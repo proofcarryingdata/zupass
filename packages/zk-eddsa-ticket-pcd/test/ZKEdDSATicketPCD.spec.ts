@@ -8,10 +8,6 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/circomlibjs.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/snarkjs.d.ts" />
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -25,14 +21,8 @@ import {
   ZKEdDSATicketPCDTypeName
 } from "../src";
 
-const zkeyFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaTicket.zkey`
-);
-const wasmFilePath = path.join(
-  __dirname,
-  `../artifacts-unsafe/eddsaTicket_js/eddsaTicket.wasm`
-);
+const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
+const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
 let toArgs: (
   ticketData: ITicketData,

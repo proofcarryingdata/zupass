@@ -1,4 +1,4 @@
-import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -30,15 +30,11 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../util/src/declarations/circomlibjs.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../util/src/declarations/snarkjs.d.ts" />
 import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { groth16 } from "snarkjs";
+import { groth16, Groth16Proof } from "snarkjs";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts-unsafe/verification_key.json";
+import vkey from "../artifacts/circuit.json";
 
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
@@ -119,29 +115,17 @@ export interface ZKEdDSAEventTicketPCDClaim {
 }
 
 /**
- * Proof part of a ZKEdDSAEventTicketPCD is a snarkjs proof.
- */
-export interface ZKEdDSAEventTicketPCDProof {
-  // TODO: Can this be imported from somewhere?
-  pi_a: [string, string, string];
-  pi_b: [[string, string], [string, string], [string, string]];
-  pi_c: [string, string, string];
-  protocol: string;
-  curve: string;
-}
-
-/**
  * ZKEdDSAEventTicketPCD PCD type representation.
  */
 export class ZKEdDSAEventTicketPCD
-  implements PCD<ZKEdDSAEventTicketPCDClaim, ZKEdDSAEventTicketPCDProof>
+  implements PCD<ZKEdDSAEventTicketPCDClaim, Groth16Proof>
 {
   type = ZKEdDSAEventTicketPCDTypeName;
 
   public constructor(
     readonly id: string,
     readonly claim: ZKEdDSAEventTicketPCDClaim,
-    readonly proof: ZKEdDSAEventTicketPCDProof
+    readonly proof: Groth16Proof
   ) {
     this.id = id;
     this.claim = claim;
@@ -263,7 +247,7 @@ function snarkInputForProof(
   validEventIdsInput: string[] | undefined,
   externalNullifer: string | undefined,
   watermark: bigint
-): Record<string, string | string[]> {
+): Record<string, `${number}` | `${number}`[]> {
   const ticketAsBigIntArray = ticketDataToBigInts(ticketPCD.claim.ticket);
   const pubKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
   const rawSig = eddsa.unpackSignature(
@@ -338,7 +322,7 @@ function snarkInputForProof(
       externalNullifer || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: externalNullifer ? "1" : "0",
     watermark: watermark.toString()
-  };
+  } as Record<string, `${number}` | `${number}`[]>;
 }
 
 function claimFromProofResult(
@@ -429,11 +413,7 @@ export async function prove(
     watermark
   );
 
-  return new ZKEdDSAEventTicketPCD(
-    uuid(),
-    claim,
-    proof as ZKEdDSAEventTicketPCDProof
-  );
+  return new ZKEdDSAEventTicketPCD(uuid(), claim, proof);
 }
 
 function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
@@ -555,7 +535,7 @@ export function getDisplayOptions(pcd: ZKEdDSAEventTicketPCD): DisplayOptions {
  */
 export const ZKEdDSAEventTicketPCDPackage: PCDPackage<
   ZKEdDSAEventTicketPCDClaim,
-  ZKEdDSAEventTicketPCDProof,
+  Groth16Proof,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDInitArgs
 > = {

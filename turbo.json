@@ -28,6 +28,10 @@
     "typecheck": {
       "outputs": [],
       "cache": false
+    },
+    "artifacts:download": {
+      "outputs": [],
+      "cache": false
     }
   },
   "globalEnv": [

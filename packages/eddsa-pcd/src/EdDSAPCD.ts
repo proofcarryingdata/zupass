@@ -6,9 +6,7 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="./util/declarations/circomlibjs.d.ts" />
-import { buildEddsa, buildPoseidon, Eddsa, PoseidonFn } from "circomlibjs";
+import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
@@ -62,7 +60,7 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
 
 let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;
-let poseidon: PoseidonFn;
+let poseidon: Poseidon;
 
 async function ensureInitialized() {
   if (!initializedPromise) {
@@ -116,7 +114,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   await ensureInitialized();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
-  const pubKey = pcd.claim.publicKey.map(fromHexString);
+  const pubKey = pcd.claim.publicKey.map(fromHexString) as unknown as Point;
   const hashedMessage = poseidon(pcd.claim.message);
 
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
@@ -178,11 +176,10 @@ export const EdDSAPCDPackage: PCDPackage<
 
 export async function getEdDSAPublicKey(
   privateKey: string
-): Promise<[string, string]> {
+): Promise<EDdSAPublicKey> {
   await ensureInitialized();
 
-  return eddsa.prv2pub(fromHexString(privateKey)).map(toHexString) as [
-    string,
-    string
-  ];
+  return eddsa
+    .prv2pub(fromHexString(privateKey))
+    .map(toHexString) as EDdSAPublicKey;
 }

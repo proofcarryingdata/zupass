@@ -1,4 +1,4 @@
-import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -28,17 +28,12 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../util/src/declarations/circomlibjs.d.ts" />
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../../util/src/declarations/snarkjs.d.ts" />
 import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { groth16 } from "snarkjs";
+import { groth16, Groth16Proof } from "snarkjs";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts-unsafe/verification_key.json";
+import vkey from "../artifacts/circuit.json";
 
-import {} from "@pcd/util";
 import { ZKEdDSATicketCardBody } from "./CardBody";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
@@ -93,24 +88,15 @@ export interface ZKEdDSATicketPCDClaim {
   nullifierHash?: string;
 }
 
-// snarkjs proof
-export interface ZKEdDSATicketPCDProof {
-  pi_a: [string, string, string];
-  pi_b: [[string, string], [string, string], [string, string]];
-  pi_c: [string, string, string];
-  protocol: string;
-  curve: string;
-}
-
 export class ZKEdDSATicketPCD
-  implements PCD<ZKEdDSATicketPCDClaim, ZKEdDSATicketPCDProof>
+  implements PCD<ZKEdDSATicketPCDClaim, Groth16Proof>
 {
   type = ZKEdDSATicketPCDTypeName;
 
   public constructor(
     readonly id: string,
     readonly claim: ZKEdDSATicketPCDClaim,
-    readonly proof: ZKEdDSATicketPCDProof
+    readonly proof: Groth16Proof
   ) {
     this.id = id;
     this.claim = claim;
@@ -238,7 +224,7 @@ export async function prove(
     identityNullifier: identityPCD.claim.identity.getNullifier().toString(),
     identityTrapdoor: identityPCD.claim.identity.getTrapdoor().toString(),
     watermark: BigInt(args.watermark.value).toString()
-  };
+  } as Record<string, `${number}`>;
 
   const { proof, publicSignals } = await groth16.fullProve(
     snarkInput,
@@ -286,7 +272,7 @@ export async function prove(
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
-  return new ZKEdDSATicketPCD(uuid(), claim, proof as ZKEdDSATicketPCDProof);
+  return new ZKEdDSATicketPCD(uuid(), claim, proof);
 }
 
 function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
@@ -386,7 +372,7 @@ export function getDisplayOptions(pcd: ZKEdDSATicketPCD): DisplayOptions {
  */
 export const ZKEdDSATicketPCDPackage: PCDPackage<
   ZKEdDSATicketPCDClaim,
-  ZKEdDSATicketPCDProof,
+  Groth16Proof,
   ZKEdDSATicketPCDArgs,
   ZKEdDSATicketPCDInitArgs
 > = {

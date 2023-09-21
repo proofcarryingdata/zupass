@@ -1,7 +1,4 @@
 import "mocha";
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../src/util/declarations/circomlibjs.d.ts" />
-
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src";

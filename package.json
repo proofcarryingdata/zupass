@@ -21,9 +21,13 @@
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
-    "clean:root": "rm -rf node_modules"
+    "clean:root": "rm -rf node_modules",
+    "artifacts:download": "turbo run artifacts:download",
+    "postinstall": "yarn artifacts:download"
   },
   "devDependencies": {
+    "@types/circomlibjs": "^0.1.1",
+    "@types/snarkjs": "^0.7.1",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
     "typedoc": "^0.25.1"
