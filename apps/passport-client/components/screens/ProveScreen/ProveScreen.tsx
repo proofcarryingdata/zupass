@@ -64,7 +64,7 @@ export function ProveScreen() {
 
   if (!syncSettled) {
     return (
-      <AppContainer bg="gray">
+      <AppContainer>
         <SyncingPCDs />
       </AppContainer>
     );
@@ -72,7 +72,7 @@ export function ProveScreen() {
 
   if (screen == null) {
     // Need AppContainer to display error
-    return <AppContainer bg="gray" />;
+    return <AppContainer />;
   }
 
   return screen;
@@ -109,7 +109,7 @@ function getScreen(request: PCDGetRequest) {
   return (
     <>
       <MaybeModal fullScreen={true} />
-      <AppContainer bg="gray">
+      <AppContainer>
         <Spacer h={24} />
         <H2>{title.toUpperCase()}</H2>
         <Spacer h={24} />

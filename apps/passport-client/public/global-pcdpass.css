@@ -18,13 +18,19 @@ html {
   --black: #000000;
   --black-rgb: 0, 0, 0;
 
-  background: var(--bg-dark-primary);
   color: var(--white);
   font:
     16px PlexSans,
     system-ui,
     sans-serif;
   line-height: 1.5;
+}
+
+html.bg-gray {
+  background-color: var(--bg-dark-gray);
+}
+html.bg-primary {
+  background-color: var(--bg-dark-primary);
 }
 
 a,

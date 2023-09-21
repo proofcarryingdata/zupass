@@ -44,7 +44,7 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   }
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer>
       <Spacer h={24} />
       <AppHeader />
       <Spacer h={24} />
