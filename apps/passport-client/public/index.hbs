@@ -1,28 +1,31 @@
 <html>
-  <head>
-    <title>{{title}}</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, user-scalable=no" />
-    <link rel="stylesheet" href="{{cssPath}}" />
-    <script>
-      // set background color based on path upon initial paint
-      document.getElementsByTagName("html")[0].setAttribute("class",
+
+<head>
+  <title>{{title}}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <link rel="stylesheet" href="{{cssPath}}" />
+  <script>
+    // Set background color based on path upon initial paint
+    //
+    // We have two background colors, primary and gray, in our app depending on the route
+    // However, if we rely on the AppContainer component to set the background color,
+    // we will see a flash of the primary background color before the gray background color
+    // is set. This is because the AppContainer component is not rendered until after the
+    // initial paint. To avoid this, we use this eagerly evaludated JS blob to set the
+    // background color here based on the path before the initial paint.
+    document.getElementsByTagName("html")[0].setAttribute("class",
       !window.location.hash || window.location.hash.match(/^#\/({{grayBgPaths}})(\?.+)?$/
       ) ? "bg-gray" : "bg-primary");
-    </script>
-    <script defer src="/js/index.js"></script>
-  </head>
-  <body>
-    <div id="root" />
-    <script
-      async
-      defer
-      src="https://scripts.simpleanalyticscdn.com/latest.js"
-    ></script>
-    <noscript><img
-        src="https://queue.simpleanalyticscdn.com/noscript.gif"
-        alt=""
-        referrerpolicy="no-referrer-when-downgrade"
-      /></noscript>
-  </body>
+  </script>
+  <script defer src="/js/index.js"></script>
+</head>
+
+<body>
+  <div id="root" />
+  <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  <noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt=""
+      referrerpolicy="no-referrer-when-downgrade" /></noscript>
+</body>
+
 </html>

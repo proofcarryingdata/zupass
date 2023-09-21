@@ -79,7 +79,10 @@ class App extends React.Component<object, AppState> {
         {hasStack && (
           <HashRouter>
             <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
+              <Route
+                path="*"
+                element={<AppContainer overrideBackgroundColor="gray" />}
+              />
             </Routes>
           </HashRouter>
         )}
@@ -152,7 +155,9 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && <Route path="sync-existing" element={<SyncExistingScreen />} />}
+          {appConfig.isZuzalu && (
+            <Route path="sync-existing" element={<SyncExistingScreen />} />
+          )}
           <Route
             path="verify"
             element={

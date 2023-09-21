@@ -128,7 +128,7 @@ export function HomeScreenImpl() {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer>
         <Spacer h={24} />
         <AppHeader />
         <Spacer h={24} />
