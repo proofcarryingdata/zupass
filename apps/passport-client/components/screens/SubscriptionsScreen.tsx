@@ -16,7 +16,7 @@ export function SubscriptionsScreen() {
   }, []);
 
   return (
-    <AppContainer>
+    <AppContainer bg="gray">
       <MaybeModal />
       <SubscriptionNavigation to="/"></SubscriptionNavigation>
       <Container>

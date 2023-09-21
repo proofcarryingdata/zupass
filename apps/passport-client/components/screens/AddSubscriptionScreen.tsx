@@ -6,9 +6,9 @@ import {
   Subscription
 } from "@pcd/passport-interface";
 import {
+  PCDPermission,
   isAppendToFolderPermission,
-  isReplaceInFolderPermission,
-  PCDPermission
+  isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import {
   ArgumentTypeName,
@@ -82,7 +82,7 @@ export function AddSubscriptionScreen() {
   const alreadyFetched = fetchedProviderUrl === providerUrl;
 
   return (
-    <AppContainer>
+    <AppContainer bg="gray">
       <SubscriptionNavigation to="/subscriptions"></SubscriptionNavigation>
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
