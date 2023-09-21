@@ -124,10 +124,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     attendeeSemaphoreId: identity1.getCommitment().toString(),
     isConsumed: false,
     isRevoked: false,
-    ticketCategory: TicketCategory.Devconnect,
-    reservedSignedField1: 1,
-    reservedSignedField2: 2,
-    reservedSignedField3: 3
+    ticketCategory: TicketCategory.Devconnect
   };
 
   const fieldsToReveal1: EdDSATicketFieldsToReveal = {
@@ -147,8 +144,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealAttendeeSemaphoreId: true,
     revealTicketCategory: true,
     revealTimestampConsumed: true,
-    revealTimestampSigned: true,
-    revealReservedSignedField2: true
+    revealTimestampSigned: true
   };
 
   const fieldsToRevealNone: EdDSATicketFieldsToReveal = {
@@ -171,10 +167,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealAttendeeSemaphoreId: true,
     revealIsConsumed: true,
     revealIsRevoked: true,
-    revealTicketCategory: true,
-    revealReservedSignedField1: true,
-    revealReservedSignedField2: true,
-    revealReservedSignedField3: true
+    revealTicketCategory: true
   };
 
   const validEventIdsContainingTicket: string[] = [
@@ -324,7 +317,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(verificationRes).to.be.true;
   });
 
-  it("should reveal semaphore ID, ticketCategory, timestamps, and reserved fields if requested, and no more", async function () {
+  it("should reveal semaphore ID, ticketCategory, and timestamps if requested, and no more", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsToReveal3, true);
     const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
 
@@ -341,15 +334,12 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(claim.partialTicket.timestampSigned).to.be.equal(
       ticketData1.timestampSigned
     );
-    expect(claim.partialTicket.reservedSignedField2).to.be.equal(2);
 
     expect(pcd.claim.partialTicket.ticketId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.eventId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.productId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isConsumed).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isRevoked).to.be.equal(undefined);
-    expect(pcd.claim.partialTicket.reservedSignedField1).to.be.equal(undefined);
-    expect(pcd.claim.partialTicket.reservedSignedField3).to.be.equal(undefined);
 
     const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
@@ -517,15 +507,6 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
     });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField1 = 123;
-    });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField2 = 456;
-    });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField2 = 789;
-    });
   });
 
   it("should not verify a proof with incorrectly revealed partialTicket claims", async function () {
@@ -563,15 +544,6 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
-    });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField1 = 123;
-    });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField2 = 456;
-    });
-    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.reservedSignedField2 = 789;
     });
   });
 

@@ -66,9 +66,6 @@ export interface EdDSATicketFieldsToReveal {
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
   revealTicketCategory?: boolean;
-  revealReservedSignedField1?: boolean;
-  revealReservedSignedField2?: boolean;
-  revealReservedSignedField3?: boolean;
 }
 
 /**
@@ -301,18 +298,17 @@ function snarkInputForProof(
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
     revealTicketCategory: fieldsToReveal.revealTicketCategory ? "1" : "0",
-    reservedSignedField1: ticketAsBigIntArray[9].toString(),
-    revealReservedSignedField1: fieldsToReveal.revealReservedSignedField1
-      ? "1"
-      : "0",
-    reservedSignedField2: ticketAsBigIntArray[10].toString(),
-    revealReservedSignedField2: fieldsToReveal.revealReservedSignedField2
-      ? "1"
-      : "0",
-    reservedSignedField3: ticketAsBigIntArray[11].toString(),
-    revealReservedSignedField3: fieldsToReveal.revealReservedSignedField3
-      ? "1"
-      : "0",
+    reservedSignedField1: "0",
+    // These fields currently do not have any preset semantic meaning, although the intention
+    // is for them to convert into meaningful fields in the future. We are reserving them now
+    // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
+    // and we would only need to change the TypeScript. For now, we will treat the inputs as
+    // 0 in terms of signatures.
+    revealReservedSignedField1: "0",
+    reservedSignedField2: "0",
+    revealReservedSignedField2: "0",
+    reservedSignedField3: "0",
+    revealReservedSignedField3: "0",
 
     // Ticket signature fields
     ticketSignerPubkeyAx: babyJub.F.toObject(
@@ -379,15 +375,6 @@ function claimFromProofResult(
   }
   if (!babyJubIsNegativeOne(publicSignals[8])) {
     partialTicket.ticketCategory = parseInt(publicSignals[8]);
-  }
-  if (!babyJubIsNegativeOne(publicSignals[9])) {
-    partialTicket.reservedSignedField1 = parseInt(publicSignals[9]);
-  }
-  if (!babyJubIsNegativeOne(publicSignals[10])) {
-    partialTicket.reservedSignedField2 = parseInt(publicSignals[10]);
-  }
-  if (!babyJubIsNegativeOne(publicSignals[11])) {
-    partialTicket.reservedSignedField3 = parseInt(publicSignals[11]);
   }
 
   const claim: ZKEdDSAEventTicketPCDClaim = {
@@ -485,21 +472,8 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
       ? negOne
       : numberToBigInt(t.ticketCategory).toString()
   );
-  ret.push(
-    t.reservedSignedField1 === undefined
-      ? negOne
-      : numberToBigInt(t.reservedSignedField1).toString()
-  );
-  ret.push(
-    t.reservedSignedField2 === undefined
-      ? negOne
-      : numberToBigInt(t.reservedSignedField2).toString()
-  );
-  ret.push(
-    t.reservedSignedField3 === undefined
-      ? negOne
-      : numberToBigInt(t.reservedSignedField3).toString()
-  );
+  // Placeholder for reserved fields
+  ret.push(negOne, negOne, negOne);
   ret.push(claim.nullifierHash || negOne);
 
   // Public inputs appear in public signals in declaration order
