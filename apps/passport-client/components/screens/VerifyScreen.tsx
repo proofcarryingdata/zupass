@@ -80,7 +80,7 @@ export function VerifyScreen() {
   }["" + verifyResult?.valid];
 
   return (
-    <AppContainer overrideBackgroundColor={bg}>
+    <AppContainer bg={bg}>
       <BackgroundGlow y={96} {...{ from, to }}>
         <Spacer h={48} />
         <TextCenter>

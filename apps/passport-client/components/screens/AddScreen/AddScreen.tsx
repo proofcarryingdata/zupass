@@ -56,7 +56,7 @@ export function AddScreen() {
 
   if (screen == null) {
     // Need AppContainer to display error
-    return <AppContainer />;
+    return <AppContainer bg="gray" />;
   }
   return screen;
 }

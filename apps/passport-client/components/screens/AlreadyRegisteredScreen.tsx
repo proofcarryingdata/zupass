@@ -151,7 +151,7 @@ export function AlreadyRegisteredScreen() {
   return (
     <>
       <MaybeModal />
-      <AppContainer>
+      <AppContainer bg="primary">
         <BackgroundGlow
           y={224}
           from="var(--bg-lite-primary)"

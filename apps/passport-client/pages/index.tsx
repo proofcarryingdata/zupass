@@ -78,10 +78,7 @@ class App extends React.Component<object, AppState> {
         {hasStack && (
           <HashRouter>
             <Routes>
-              <Route
-                path="*"
-                element={<AppContainer overrideBackgroundColor="gray" />}
-              />
+              <Route path="*" element={<AppContainer bg="gray" />} />
             </Routes>
           </HashRouter>
         )}

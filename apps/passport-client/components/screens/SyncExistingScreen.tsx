@@ -80,7 +80,7 @@ export function SyncExistingScreen() {
   }, []);
 
   return (
-    <AppContainer>
+    <AppContainer bg="primary">
       <BackgroundGlow
         y={224}
         from="var(--bg-lite-primary)"
@@ -92,8 +92,8 @@ export function SyncExistingScreen() {
           <Spacer h={32} />
           <TextCenter>
             If you've already registered, you can sync with your other device
-            here using your Sync Key. You can find your Sync Key on your
-            existing device by clicking on the settings icon.
+            here using your Sync Key. You can find your Sync Key
+            on your existing device by clicking on the settings icon.
           </TextCenter>
           <Spacer h={32} />
           <CenterColumn w={280}>

@@ -95,7 +95,7 @@ export function GetWithoutProvingScreen() {
   }
 
   return (
-    <AppContainer>
+    <AppContainer bg="gray">
       <MaybeModal fullScreen />
       <Container>
         <Spacer h={16} />
