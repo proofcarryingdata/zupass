@@ -40,7 +40,6 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
-  private proveMenuRegistered: boolean;
   private IS_LOCAL_SERVER: boolean;
 
   public constructor(
@@ -51,7 +50,6 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
-    this.proveMenuRegistered = false;
     this.IS_LOCAL_SERVER =
       process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
       process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
@@ -64,7 +62,7 @@ export class TelegramService {
       "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
     );
 
-    const menu = new Menu("pcdpass-menu"); // should this be a class member?
+    const menu = new Menu("pcdpass-menu");
     this.bot.use(menu);
 
     // Users gain access to gated chats by requesting to join. The bot
@@ -192,10 +190,7 @@ export class TelegramService {
               "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
           });
 
-          if (!this.proveMenuRegistered) {
-            menu.webApp("Generate ZKP 🚀", proofUrl);
-            this.proveMenuRegistered = true;
-          }
+          menu.webApp("Generate ZKP 🚀", proofUrl);
 
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",

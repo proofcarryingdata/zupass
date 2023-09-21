@@ -1,4 +1,4 @@
-export const htmlContent = `
+export const closeWebviewHtml = `
     <!DOCTYPE html>
     <html>
     <head>
