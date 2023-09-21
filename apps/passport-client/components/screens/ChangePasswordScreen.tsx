@@ -19,7 +19,7 @@ export function ChangePasswordScreen() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (self == null || !self.salt) {
+    if (self == null) {
       navigate("/login", { replace: true });
     }
   }, [self, navigate]);
@@ -31,6 +31,16 @@ export function ChangePasswordScreen() {
 
   const onChangePassword = async () => {
     if (loading) return;
+    if (!self.salt) {
+      dispatch({
+        type: "error",
+        error: {
+          title: "Please retry",
+          message: "Salt not set"
+        }
+      });
+      return;
+    }
     setLoading(true);
 
     const crypto = await PCDCrypto.newInstance();
@@ -73,8 +83,9 @@ export function ChangePasswordScreen() {
         modal: "changed-password"
       });
       dispatch({
-        type: "set-encryption-key",
-        encryptionKey: newEncryptionKey
+        type: "change-password",
+        newEncryptionKey,
+        newSalt
       });
       setLoading(false);
     } catch (e) {

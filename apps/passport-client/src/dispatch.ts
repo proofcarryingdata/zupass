@@ -82,7 +82,7 @@ export type Action =
       storage: SyncedEncryptedStorage;
       encryptionKey: string;
     }
-  | { type: "set-encryption-key"; encryptionKey: string }
+  | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" };
@@ -126,10 +126,13 @@ export async function dispatch(
       return update({
         modal: action.modal
       });
-    case "set-encryption-key":
-      return update({
-        encryptionKey: action.encryptionKey
-      });
+    case "change-password":
+      return changePassword(
+        action.newEncryptionKey,
+        action.newSalt,
+        state,
+        update
+      );
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
@@ -329,7 +332,7 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
-  } else if (self.salt !== state.self.salt) {
+  } else if (state.self && self.salt !== state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     userMismatched = true;
@@ -431,6 +434,20 @@ async function loadFromSync(
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
   window.location.hash = "#/login-interstitial";
+}
+
+async function changePassword(
+  newEncryptionKey: string,
+  newSalt: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  const newSelf = { ...state.self, salt: newSalt };
+  saveSelf(newSelf);
+  return update({
+    encryptionKey: newEncryptionKey,
+    self: newSelf
+  });
 }
 
 function userInvalid(update: ZuUpdate) {
