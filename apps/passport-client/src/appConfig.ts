@@ -29,7 +29,9 @@ export const appConfig: AppConfig = {
     "halo",
     "add",
     "prove",
-    "scan"
+    "scan",
+    "add-subscription",
+    "subscriptions"
   ]
 };
 
