@@ -20,7 +20,7 @@ export async function requestPasswordSalt(
       } satisfies SaltRequest).toString()}`
     ),
     async (resText) => ({
-      value: JSON.parse(resText) as SaltResponseValue,
+      value: resText,
       success: true
     })
   );

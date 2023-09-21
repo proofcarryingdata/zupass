@@ -38,7 +38,7 @@ export function initPCDpassRoutes(
   app.get("/pcdpass/salt", async (req: Request, res: Response) => {
     const email = normalizeEmail(checkQueryParam(req, "email"));
     const salt = await userService.getSaltByEmail(email);
-    res.json(salt satisfies SaltResponseValue);
+    res.send(salt satisfies SaltResponseValue);
   });
 
   /**
