@@ -6,12 +6,15 @@ _Doing this steps in order is more likely to result in success_
 
 - Install [Telegram Desktop](https://desktop.telegram.org/)
 - In the Telegram app, [Enable Web View Debug](https://core.telegram.org/bots/webapps#debug-mode-for-mini-apps)
+- Obtain a Telegram Bot [Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
+- Get a Pretix API token from a member of the 0xPARC PCD team.
 
-### 1. Set up a Telegram Bot
+### 1. Set up .env
 
 - Run `cp apps/passport-server/.env.local.example apps/passport-server/.env`
-- Obtain a Telegram Bot [Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
-- Paste the token in `apps/passport-server/.env` for the `TELEGRAM_BOT_TOKEN` value
+- Paste the Telegram Bot Token in `apps/passport-server/.env` for the `TELEGRAM_BOT_TOKEN` value
+- Paste the Pretix Token in `apps/passport-server/.env` for the `PRETIX_TOKEN` value
+- Confirm that the current value for `PRETIX_ORG_URL` is correct. (Most likely will be `https://pretix.eu/api/v1/organizers/pcd-0xparc`)
 
 ### 2. Start the Passport Client and Server
 
@@ -20,15 +23,12 @@ _Doing this steps in order is more likely to result in success_
 - `yarn localdb:init && yarn localdb:up`
 - `yarn dev:bot`
 
-### 3. Setting up a Test Event
+### 3. Sync the Dev Tickets
 
-- `yarn workspace passport-server ticketed-event:dev`
-
-- Go to [http://localhost:3000](http://localhost:3000)
-- Make a new PCDPass account with that email. The account MUST have the email: `dev@gmail.com`.
-- Refresh the site. You should see two folders with `Devconnect` and `Email` and inside `Devconnect` is a folder with the name of your event. Then `Devconnect/localTest` should have a QR Code ticket.
-
-- email: dev@gmail.com, pw: devconnect
+- `cd apps/passport-server && yarn scratch new-dev-event`
+  - _Note: You can call `yarn scratch new-dev-event <eventId> <activeItemIds>` to make a custom event_
+- Copy the output from the `scratch` script (ex: `/link ProgCrypto (Internal Test)`)
+- You will paste the output in the following step.
 
 ### 4. PCD Join / Auth flow in Telegram
 
@@ -42,7 +42,12 @@ _Doing this steps in order is more likely to result in success_
 
 - In the Telegram app, go to the chat with your bot and type `/start`
 - Click `Generate ZKP`
-- Follow the link to PCDPass (http://localhost:3000) and hit `Prove` when your ticket appears
+- Follow the link to PCDPass within Telegram (http://localhost:3000) and hit `Prove` when your ticket appears
+- If this is your first time, you will need to make a new PCDPass account:
+
+  - Make a new PCDPass account with an email you **know** has a ticket for the event in question (`ivan@0xparc.org` should work).
+  - _Note: This account will only exist locally on your device_
+
 - You should be returned to the Telegram app and presented with the `Send ZKP` option.
 - Click `Send ZKP`, then you will be redirected to `test_chat`
 

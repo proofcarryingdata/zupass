@@ -5,9 +5,7 @@ import yargs from "yargs";
 
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { getDB } from "../src/database/postgresPool";
-import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
-import { insertPretixEventsInfo } from "../src/database/queries/pretixEventInfo";
-import { insertPretixItemsInfo } from "../src/database/queries/pretixItemInfo";
+import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
@@ -24,7 +22,7 @@ yargs
     "Fetch all events and items from pretix",
     (yargs) => {},
     async function (argv) {
-      const orgUrl: string = process.env.ORG_URL!;
+      const orgUrl: string = process.env.PRETIX_ORG_URL!;
       const token: string = process.env.PRETIX_TOKEN!;
 
       if (!orgUrl || !token) {
@@ -50,105 +48,61 @@ yargs
     }
   )
   .command(
-    "new-dev-event [name]",
+    "new-dev-event [eventId] [activeItemIds]",
     "Create a new event for development",
     (yargs) =>
-      yargs.positional("name", {
-        type: "string",
-        default: "Zero Nexus: Exploring the Frontiers of Zero-Knowledge",
-        describe: "the name of the event"
-      }),
+      yargs
+        .positional("eventId", {
+          type: "string",
+          default: "progcrypto",
+          describe: "the id of the event (ex: progcrypto)"
+        })
+        .positional("activeItemIds", {
+          type: "string",
+          default: "369803,369805,369804,374045,374043",
+          describe:
+            "Comma separated list of active item ids ex: 369803,369805,374045"
+        }),
     async function (argv) {
+      if (!process.env.PRETIX_ORG_URL)
+        throw new Error(`Need PRETIX_ORG_URL .env value to sync dev tickets`);
+      if (!process.env.PRETIX_TOKEN)
+        throw new Error(`Need PRETIX_TOKEN .env value to sync dev tickets`);
+
+      logger(
+        `Creating event with id: ${argv.eventId} and active items: ${argv.activeItemIds}`
+      );
+
       const db = await getDB();
+
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,
-        "http://localhost",
-        "pretix_dummy_token_1234"
+        process.env.PRETIX_ORG_URL,
+        process.env.PRETIX_TOKEN
       );
       logger(`organizerConfigId: ${organizerConfigId}`);
+
       const eventConfigId = await insertPretixEventConfig(
         db,
         organizerConfigId,
-        ["1"],
+        argv.activeItemIds.split(","),
         [],
-        "dummy_pretix_event_id_123"
+        argv.eventId
       );
       logger(`eventConfigId: ${eventConfigId}`);
-      const pretixEventId = await insertPretixEventsInfo(
-        db,
-        argv.name as string,
-        eventConfigId,
-        "0"
-      );
-      logger(`pretixEventId: ${pretixEventId}`);
-      const pretixItemId = await insertPretixItemsInfo(
-        db,
-        "1",
-        pretixEventId,
-        "Ticket"
-      );
-      logger(`pretixItemId: ${pretixItemId}`);
-    }
-  )
-  .command(
-    "new-dev-ticket <email> <name> [event-item]",
-    "Create a new ticket for development",
-    (yargs) =>
-      yargs
-        .positional("email", {
-          type: "string",
-          demandOption: true,
-          describe: "the email of the ticket holder"
-        })
-        .positional("name", {
-          type: "string",
-          demandOption: true,
-          describe: "the name of the ticket holder"
-        })
-        .positional("eventItem", {
-          type: "string",
-          describe:
-            "the event item id of the ticket. if missing, first item in db will be used"
-        }),
-    async function (argv) {
-      const db = await getDB();
-      const pretixItemId = await new Promise<string>(
-        async (resolve, reject) => {
-          if (argv.eventItem) {
-            const result = await db.query(
-              `select id from devconnect_pretix_items_info where item_id = $1`,
-              [argv.eventItem]
-            );
-            if (result.rowCount) {
-              resolve(result.rows[0].id);
-            } else {
-              reject(new Error(`item id ${argv.eventItem} not found`));
-            }
-          }
 
-          const result = await db.query(
-            `select id from devconnect_pretix_items_info limit 1`
-          );
-          if (result.rowCount) {
-            resolve(result.rows[0].id);
-          } else {
-            reject(new Error(`no items found`));
-          }
-        }
-      );
-
-      insertDevconnectPretixTicket(db, {
-        checker: "dummy_checker",
-        email: argv.email as string,
-        full_name: argv.name as string,
-        devconnect_pretix_items_info_id: pretixItemId,
-        pcdpass_checkin_timestamp: null,
-        is_consumed: false,
-        is_deleted: false,
-        position_id: "0",
-        pretix_checkin_timestamp: null,
-        secret: ""
-      });
+      const eventInfo = await fetchPretixEventInfo(db, eventConfigId);
+      if (!eventInfo)
+        logger(
+          `The event for eventConfigId ${eventConfigId} has not been found yet. Make sure the passport-server is running and has synced the latest Pretix info`
+        );
+      else {
+        logger(
+          `You have successfully added ${eventInfo.event_name} to your local DB.\nTo link this event with Telegram, create a new private group, add your bot to the channel, then type:`
+        );
+        logger(`\/link ${eventInfo.event_name}`);
+      }
+      await db.end();
     }
   )
   .help().argv;
