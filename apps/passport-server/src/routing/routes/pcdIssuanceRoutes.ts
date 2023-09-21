@@ -14,6 +14,7 @@ import express, { Request, Response } from "express";
 import { IssuanceService } from "../../services/issuanceService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
 export function initPCDIssuanceRoutes(
@@ -97,6 +98,15 @@ export function initPCDIssuanceRoutes(
    *
    * @todo - this should probably live in a different service.
    */
+  app.get("/feeds/:feedId", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const feedId = checkUrlParam(req, "feedId");
+    if (!issuanceService.hasFeedWithId(feedId)) {
+      throw new PCDHTTPError(404);
+    }
+    res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
+  });
+
   app.post("/issue/check-ticket", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleCheckTicketRequest(

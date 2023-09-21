@@ -14,12 +14,8 @@ program
     "-a, --artifacts <artifacts-path>",
     "Path to the directory containing the artifacts [default: artifacts]."
   )
-  .action(async (packageName, { artifacts: artifactsPath }) => {
+  .action(async (packageName, { artifacts: artifactsPath = "artifacts" }) => {
     const client = await getS3ClientInstance();
-
-    if (!artifactsPath) {
-      artifactsPath = "artifacts";
-    }
 
     if (!packageName) {
       console.info(
@@ -39,7 +35,7 @@ program
       process.exit(1);
     }
 
-    if (!existsSync(`${artifactsPath}`)) {
+    if (!existsSync(artifactsPath)) {
       console.info(
         `${logSymbols.error}`,
         `Error: The '${artifactsPath}' folder does not exist`

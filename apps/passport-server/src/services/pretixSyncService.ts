@@ -1,6 +1,10 @@
 import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
-import { IPretixAPI, PretixOrder, PretixSubevent } from "../apis/pretixAPI";
+import {
+  IZuzaluPretixAPI,
+  ZuzaluPretixOrder,
+  ZuzaluPretixSubevent
+} from "../apis/pretixAPI";
 import { ZuzaluPretixTicket } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
@@ -21,8 +25,8 @@ const SERVICE_NAME_FOR_TRACING = "Pretix";
 /**
  * Responsible for syncing users from Pretix into an internal representation.
  */
-export class PretixSyncService {
-  private pretixAPI: IPretixAPI;
+export class ZuzaluPretixSyncService {
+  private pretixAPI: IZuzaluPretixAPI;
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
   private context: ApplicationContext;
@@ -35,7 +39,7 @@ export class PretixSyncService {
 
   public constructor(
     context: ApplicationContext,
-    pretixAPI: IPretixAPI,
+    pretixAPI: IZuzaluPretixAPI,
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
@@ -46,7 +50,7 @@ export class PretixSyncService {
     this._hasCompletedSyncSinceStarting = false;
   }
 
-  public replaceApi(newAPI: IPretixAPI): void {
+  public replaceApi(newAPI: IZuzaluPretixAPI): void {
     const wasRunning = !!this.timeout;
 
     if (wasRunning) {
@@ -297,8 +301,8 @@ export class PretixSyncService {
    * subevent events they have in their order.
    */
   private ordersToZuzaluTickets(
-    orders: PretixOrder[],
-    visitorSubEvents: PretixSubevent[],
+    orders: ZuzaluPretixOrder[],
+    visitorSubEvents: ZuzaluPretixSubevent[],
     role: ZuzaluUserRole
   ): ZuzaluPretixTicket[] {
     const tickets: ZuzaluPretixTicket[] = orders
@@ -376,8 +380,8 @@ export function startPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
-  pretixAPI: IPretixAPI | null
-): PretixSyncService | null {
+  pretixAPI: IZuzaluPretixAPI | null
+): ZuzaluPretixSyncService | null {
   if (!pretixAPI) {
     logger("[PRETIX] can't start sync service - no api instantiated");
     return null;
@@ -388,7 +392,7 @@ export function startPretixSyncService(
     return null;
   }
 
-  const pretixSyncService = new PretixSyncService(
+  const pretixSyncService = new ZuzaluPretixSyncService(
     context,
     pretixAPI,
     rollbarService,

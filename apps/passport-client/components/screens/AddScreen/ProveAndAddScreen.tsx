@@ -64,7 +64,7 @@ export function ProveAndAddScreen({
   }
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer>
       <MaybeModal fullScreen />
       <Container>
         <Spacer h={24} />

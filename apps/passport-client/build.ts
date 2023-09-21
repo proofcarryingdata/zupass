@@ -6,6 +6,7 @@ import fs from "fs";
 import Handlebars from "handlebars";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
+import { appConfig } from "./src/appConfig";
 
 dotenv.config();
 
@@ -129,7 +130,8 @@ function compileHtml() {
 
   const html = template({
     title: IS_ZUZALU ? "Zuzalu Passport" : "PCDpass",
-    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css"
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
+    grayBgPaths: appConfig.grayBackgroundRoutes.join("|")
   });
 
   fs.writeFileSync(path.join("public", "index.html"), html);

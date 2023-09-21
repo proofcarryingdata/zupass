@@ -171,6 +171,7 @@ export class SemaphoreService {
       if (this.isZuzalu) {
         await this.reloadZuzaluGroups();
       } else {
+        await this.reloadZuzaluGroups();
         await this.reloadGenericGroup();
       }
 

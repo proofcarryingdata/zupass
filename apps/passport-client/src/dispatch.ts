@@ -83,7 +83,8 @@ export type Action =
     }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
-  | { type: "sync" };
+  | { type: "sync" }
+  | { type: "resolve-subscription-error"; subscriptionId: string };
 
 export type StateContextState = {
   getState: GetState;
@@ -132,6 +133,8 @@ export async function dispatch(
       return userInvalid(update);
     case "sync":
       return sync(state, update);
+    case "resolve-subscription-error":
+      return resolveSubscriptionError(state, update, action.subscriptionId);
     default:
       console.error("Unknown action type", action);
   }
@@ -537,5 +540,16 @@ async function sync(state: AppState, update: ZuUpdate) {
   update({
     uploadingUploadId: undefined,
     uploadedUploadId: uploadId
+  });
+}
+
+async function resolveSubscriptionError(
+  _state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string
+) {
+  update({
+    resolvingSubscriptionId: subscriptionId,
+    modal: "resolve-subscription-error"
   });
 }

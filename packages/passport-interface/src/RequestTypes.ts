@@ -147,7 +147,13 @@ export type ListFeedsRequest = unknown;
  * Response to {@link ListFeedsRequest}.
  */
 export interface ListFeedsResponseValue {
+  providerUrl: string;
+  providerName: string;
   feeds: Feed[];
+}
+
+export interface ListSingleFeedRequest {
+  feedId: string;
 }
 
 /**

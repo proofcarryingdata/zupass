@@ -144,7 +144,7 @@ function TicketError({
   }
 
   return (
-    <AppContainer bg={"primary"}>
+    <AppContainer>
       <Container>
         {showTicket && <TicketInfoSection ticketData={ticketData} />}
         <ErrorContainer>{errorContent}</ErrorContainer>
@@ -191,7 +191,7 @@ function UserReadyForCheckin({
   ticket: EdDSATicketPCD;
 }) {
   return (
-    <AppContainer bg={"primary"}>
+    <AppContainer>
       <Container>
         <TicketInfoSection ticketData={ticketData} />
         <CheckInSection ticket={ticket} />

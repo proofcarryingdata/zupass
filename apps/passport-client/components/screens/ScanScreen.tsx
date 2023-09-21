@@ -11,7 +11,7 @@ import { AppContainer } from "../shared/AppContainer";
 export function ScanScreen() {
   const nav = useNavigate();
   return (
-    <AppContainer bg="gray">
+    <AppContainer>
       <QrReader
         onResult={(result, error) => {
           if (result != null) {

@@ -4,9 +4,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
-import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
@@ -40,11 +38,6 @@ describe("pcd-pass functionality", function () {
     );
     expect(issuanceServiceEnabledResult.error).to.eq(undefined);
     expect(issuanceServiceEnabledResult.value).to.eq(true);
-  });
-
-  step("should not have a zuzalu pretix service running", async function () {
-    const status = await waitForPretixSyncStatus(application, true);
-    expect(status).to.eq(PretixSyncStatus.NoPretix);
   });
 
   step("email client should be mocked", async function () {

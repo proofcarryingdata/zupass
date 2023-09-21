@@ -1,6 +1,7 @@
 import {
   ListFeedsRequest,
   ListFeedsResponseValue,
+  ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue
 } from "./RequestTypes";
@@ -13,9 +14,25 @@ export interface HostedFeed {
 
 export class FeedHost {
   private readonly hostedFeed: HostedFeed[];
+  private readonly providerUrl: string;
+  private readonly providerName: string;
 
-  public constructor(feeds: HostedFeed[]) {
+  public constructor(
+    feeds: HostedFeed[],
+    providerUrl: string,
+    providerName: string
+  ) {
     this.hostedFeed = feeds;
+    this.providerUrl = providerUrl;
+    this.providerName = providerName;
+  }
+
+  public getProviderUrl(): string {
+    return this.providerUrl;
+  }
+
+  public getProviderName(): string {
+    return this.providerName;
   }
 
   public async handleFeedRequest(
@@ -34,7 +51,25 @@ export class FeedHost {
     _request: ListFeedsRequest
   ): Promise<ListFeedsResponseValue> {
     return {
+      providerName: this.providerName,
+      providerUrl: this.providerUrl,
       feeds: this.hostedFeed.map((f) => f.feed)
+    };
+  }
+
+  public hasFeedWithId(feedId: string): boolean {
+    return this.hostedFeed.filter((f) => f.feed.id === feedId).length > 0;
+  }
+
+  public async handleListSingleFeedRequest(
+    _request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponseValue> {
+    return {
+      providerUrl: this.providerUrl,
+      providerName: this.providerName,
+      feeds: this.hostedFeed
+        .filter((f) => f.feed.id === _request.feedId)
+        .map((f) => f.feed)
     };
   }
 }

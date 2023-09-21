@@ -11,7 +11,7 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
     "clean": "rm -rf node_modules public/artifacts",
-    "artifacts:download": "pcd-artifacts download -o public"
+    "artifacts:download": "pcd-artifacts download -o public/artifacts"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",

@@ -16,9 +16,11 @@ import {
   ISSUANCE_STRING,
   ListFeedsRequest,
   ListFeedsResponseValue,
+  ListSingleFeedRequest,
   PCDPassFeedIds,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  ZuzaluUserRole
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -34,7 +36,8 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
+  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
@@ -50,6 +53,7 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -57,6 +61,13 @@ import { timeBasedId } from "../util/timeBasedId";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
+
+// Since Zuzalu did not have event or product UUIDs at the time, we can
+// allocate some constant ones now.
+export const ZUZALU_RESIDENT_EVENT_ID = "5ba4cd9e-893c-4a4a-b15b-cf36ceda1938";
+export const ZUZALU_VISITOR_EVENT_ID = "53b518ed-e427-4a23-bf36-a6e1e2764256";
+export const ZUZALU_ORGANIZER_EVENT_ID = "10016d35-40df-4033-a171-7d661ebaccaa";
+export const ZUZALU_PRODUCT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -82,167 +93,219 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
+    const FEED_PROVIDER_NAME = "PCDPass";
 
-    this.feedHost = new FeedHost([
-      {
-        handleRequest: async (
-          req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<PollFeedResponseValue> => {
-          const pcds = await this.issueDevconnectPretixTicketPCDs(
-            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-          );
-          const ticketsByEvent = _.groupBy(
-            pcds,
-            (pcd) => pcd.claim.ticket.eventName
-          );
+    this.feedHost = new FeedHost(
+      [
+        {
+          handleRequest: async (
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
+            const pcds = await this.issueDevconnectPretixTicketPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const ticketsByEvent = _.groupBy(
+              pcds,
+              (pcd) => pcd.claim.ticket.eventName
+            );
 
-          const devconnectTickets = Object.entries(ticketsByEvent).filter(
-            ([eventName]) => eventName !== "SBC SRW"
-          );
+            const devconnectTickets = Object.entries(ticketsByEvent).filter(
+              ([eventName]) => eventName !== "SBC SRW"
+            );
 
-          const srwTickets = Object.entries(ticketsByEvent).filter(
-            ([eventName]) => eventName === "SBC SRW"
-          );
+            const srwTickets = Object.entries(ticketsByEvent).filter(
+              ([eventName]) => eventName === "SBC SRW"
+            );
 
-          const actions = [];
+            const actions = [];
 
-          // clear out old pcds if they were there
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "SBC SRW",
-            pcds: []
-          });
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Devconnect",
-            pcds: []
-          });
-
-          actions.push(
-            ...(await Promise.all(
-              devconnectTickets.map(async ([eventName, tickets]) => ({
-                type: PCDActionType.ReplaceInFolder,
-                folder: joinPath("Devconnect", eventName),
-                pcds: await Promise.all(
-                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              }))
-            ))
-          );
-
-          actions.push(
-            ...(await Promise.all(
-              srwTickets.map(async ([_, tickets]) => ({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "SBC SRW",
-                pcds: await Promise.all(
-                  tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              }))
-            ))
-          );
-
-          return { actions };
-        },
-        feed: {
-          id: PCDPassFeedIds.Devconnect,
-          name: "Devconnect Tickets",
-          description: "Get your Devconnect tickets here!",
-          inputPCDType: EdDSATicketPCDPackage.name,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Devconnect",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "Devconnect",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission,
-            {
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
               folder: "SBC SRW",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "SBC SRW",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission
-          ]
-        }
-      },
-      {
-        handleRequest: async (
-          _req: PollFeedRequest
-        ): Promise<PollFeedResponseValue> => {
-          return {
-            actions: [
+              pcds: []
+            });
+
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Devconnect",
+              pcds: []
+            });
+
+            actions.push(
+              ...(await Promise.all(
+                devconnectTickets.map(async ([eventName, tickets]) => ({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: joinPath("Devconnect", eventName),
+                  pcds: await Promise.all(
+                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                }))
+              ))
+            );
+
+            actions.push(
+              ...(await Promise.all(
+                srwTickets.map(async ([_, tickets]) => ({
+                  type: PCDActionType.ReplaceInFolder,
+                  folder: "SBC SRW",
+                  pcds: await Promise.all(
+                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                  )
+                }))
+              ))
+            );
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Devconnect,
+            name: "Devconnect Tickets",
+            description: "Get your Devconnect tickets here!",
+            inputPCDType: EdDSATicketPCDPackage.name,
+            partialArgs: undefined,
+            permissions: [
               {
-                pcds: await this.issueFrogPCDs(),
+                folder: "Devconnect",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Devconnect",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission,
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (
+            _req: PollFeedRequest
+          ): Promise<PollFeedResponseValue> => {
+            return {
+              actions: [
+                {
+                  pcds: await this.issueFrogPCDs(),
+                  folder: "Frogs",
+                  type: PCDActionType.AppendToFolder
+                } as AppendToFolderAction
+              ]
+            };
+          },
+          feed: {
+            id: PCDPassFeedIds.Frogs,
+            name: "Frogs",
+            description: "Get your Frogs here!",
+            inputPCDType: undefined,
+            partialArgs: undefined,
+            permissions: [
+              {
                 folder: "Frogs",
-                type: PCDActionType.AppendToFolder
-              } as AppendToFolderAction
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
+            const pcds = await this.issueEmailPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const actions: PCDAction[] = [];
+
+            // Clear out the folder
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Email",
+              pcds: []
+            } as ReplaceInFolderAction);
+
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Email",
+              pcds: await Promise.all(
+                pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+              )
+            } as ReplaceInFolderAction);
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Email,
+            name: "PCDPass Verified Emails",
+            description: "Emails verified by PCDPass",
+            inputPCDType: EmailPCDPackage.name,
+            partialArgs: undefined,
+            permissions: [
+              {
+                folder: "Email",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Email",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
+            ],
+            credentialType: SemaphoreSignaturePCDTypeName
+          }
+        },
+        {
+          handleRequest: async (
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
+            const pcds = await this.issueZuzaluTicketPCDs(
+              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+            const actions: PCDAction[] = [];
+
+            // Clear out the folder
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Zuzalu",
+              pcds: []
+            } as ReplaceInFolderAction);
+
+            actions.push({
+              type: PCDActionType.ReplaceInFolder,
+              folder: "Zuzalu",
+              pcds: await Promise.all(
+                pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+              )
+            } as ReplaceInFolderAction);
+
+            return { actions };
+          },
+          feed: {
+            id: PCDPassFeedIds.Zuzalu_1,
+            name: "Zuzalu tickets",
+            description: "Your Zuzalu Tickets",
+            inputPCDType: EdDSATicketPCD.name,
+            partialArgs: undefined,
+            permissions: [
+              {
+                folder: "Zuzalu",
+                type: PCDPermissionType.AppendToFolder
+              } as AppendToFolderPermission,
+              {
+                folder: "Zuzalu",
+                type: PCDPermissionType.ReplaceInFolder
+              } as ReplaceInFolderPermission
             ]
-          };
-        },
-        feed: {
-          id: PCDPassFeedIds.Frogs,
-          name: "Frogs",
-          description: "Get your Frogs here!",
-          inputPCDType: undefined,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Frogs",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission
-          ]
+          }
         }
-      },
-      {
-        handleRequest: async (
-          req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
-        ): Promise<PollFeedResponseValue> => {
-          const pcds = await this.issueEmailPCDs(
-            req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-          );
-          const actions: PCDAction[] = [];
-
-          // Clear out the folder
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Email",
-            pcds: []
-          } as ReplaceInFolderAction);
-
-          actions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: "Email",
-            pcds: await Promise.all(
-              pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
-            )
-          } as ReplaceInFolderAction);
-
-          return { actions };
-        },
-        feed: {
-          id: PCDPassFeedIds.Email,
-          name: "Attested emails",
-          description: "Your attested emails",
-          inputPCDType: EmailPCDPackage.name,
-          partialArgs: undefined,
-          permissions: [
-            {
-              folder: "Email",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission,
-            {
-              folder: "Email",
-              type: PCDPermissionType.ReplaceInFolder
-            } as ReplaceInFolderPermission
-          ]
-        }
-      }
-    ]);
+      ],
+      `${process.env.PASSPORT_SERVER_URL}/feeds`,
+      FEED_PROVIDER_NAME
+    );
   }
 
   public async handleListFeedsRequest(
@@ -251,10 +314,20 @@ export class IssuanceService {
     return this.feedHost.handleListFeedsRequest(request);
   }
 
+  public async handleListSingleFeedRequest(
+    request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponseValue> {
+    return this.feedHost.handleListSingleFeedRequest(request);
+  }
+
   public async handleFeedRequest(
     request: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return this.feedHost.handleFeedRequest(request);
+  }
+
+  public hasFeedWithId(feedId: string): boolean {
+    return this.feedHost.hasFeedWithId(feedId);
   }
 
   public getRSAPublicKey(): string {
@@ -741,6 +814,61 @@ export class IssuanceService {
         ];
       }
     );
+  }
+
+  private async issueZuzaluTicketPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EdDSATicketPCD[]> {
+    return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
+      const commitmentRow = await this.checkUserExists(credential);
+      const email = commitmentRow?.email;
+      if (commitmentRow) {
+        span?.setAttribute(
+          "commitment",
+          commitmentRow?.commitment?.toString() ?? ""
+        );
+      }
+      if (email) {
+        span?.setAttribute("email", email);
+      }
+
+      if (commitmentRow == null || email == null) {
+        return [];
+      }
+
+      const user = await fetchLoggedInZuzaluUser(this.context.dbPool, {
+        uuid: commitmentRow.uuid
+      });
+
+      const tickets = [];
+
+      if (user) {
+        tickets.push(
+          await this.getOrGenerateTicket({
+            attendeeSemaphoreId: user.commitment,
+            eventName: "Zuzalu",
+            checkerEmail: undefined,
+            ticketId: user.uuid,
+            ticketName: user.role.toString(),
+            attendeeName: user.name,
+            attendeeEmail: user.email,
+            eventId:
+              user.role === ZuzaluUserRole.Visitor
+                ? ZUZALU_VISITOR_EVENT_ID
+                : user.role === ZuzaluUserRole.Organizer
+                ? ZUZALU_ORGANIZER_EVENT_ID
+                : ZUZALU_RESIDENT_EVENT_ID,
+            productId: ZUZALU_PRODUCT_ID,
+            timestampSigned: Date.now(),
+            timestampConsumed: 0,
+            isConsumed: false,
+            isRevoked: false
+          })
+        );
+      }
+
+      return tickets;
+    });
   }
 }
 

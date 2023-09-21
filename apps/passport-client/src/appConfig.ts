@@ -12,6 +12,8 @@ interface AppConfig {
   rollbarToken: string | undefined;
   // the environment to which the client uploads errors in rollbar
   rollbarEnvName: string | undefined;
+  // path without leading slash for routes that use gray background color
+  grayBackgroundRoutes: string[];
 }
 
 export const appConfig: AppConfig = {
@@ -20,7 +22,17 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: 1000 * 60 * 60 * 4,
   isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
   rollbarToken: process.env.ROLLBAR_TOKEN,
-  rollbarEnvName: process.env.ROLLBAR_ENV_NAME
+  rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
+  grayBackgroundRoutes: [
+    "", // home
+    "get-without-proving",
+    "halo",
+    "add",
+    "prove",
+    "scan",
+    "add-subscription",
+    "subscriptions"
+  ]
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

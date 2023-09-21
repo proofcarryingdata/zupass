@@ -2,7 +2,7 @@ import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getPretixAPI, PretixAPI } from "./apis/pretixAPI";
+import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/pretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
@@ -87,15 +87,13 @@ async function getOverridenApis(
     }
   }
 
-  let pretixAPI: PretixAPI | null = null;
+  let zuzaluPretixAPI: ZuzaluPretixAPI | null = null;
 
-  if (context.isZuzalu) {
-    if (apiOverrides?.pretixAPI) {
-      logger("[INIT] overriding pretix api");
-      pretixAPI = apiOverrides.pretixAPI;
-    } else {
-      pretixAPI = getPretixAPI();
-    }
+  if (apiOverrides?.zuzaluPretixAPI) {
+    logger("[INIT] overriding pretix api");
+    zuzaluPretixAPI = apiOverrides.zuzaluPretixAPI;
+  } else {
+    zuzaluPretixAPI = getZuzaluPretixAPI();
   }
 
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null = null;
@@ -109,7 +107,7 @@ async function getOverridenApis(
 
   return {
     emailAPI,
-    pretixAPI,
+    zuzaluPretixAPI,
     devconnectPretixAPIFactory
   };
 }

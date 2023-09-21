@@ -7,10 +7,10 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
-import { getPretixConfig } from "../src/apis/pretixAPI";
+import { getZuzaluPretixConfig } from "../src/apis/pretixAPI";
 import { stopApplication } from "../src/application";
 import { LoggedInZuzaluUser } from "../src/database/models";
-import { PretixSyncService } from "../src/services/pretixSyncService";
+import { ZuzaluPretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
 import {
@@ -39,12 +39,12 @@ describe("zupass functionality", function () {
   let updatedToOrganizerUser: LoggedInZuzaluUser;
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
-  let pretixService: PretixSyncService;
+  let pretixService: ZuzaluPretixSyncService;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
 
-    const pretixConfig = getPretixConfig();
+    const pretixConfig = getZuzaluPretixConfig();
 
     if (!pretixConfig) {
       throw new Error(
@@ -54,13 +54,13 @@ describe("zupass functionality", function () {
 
     pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
     const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
-    application = await startTestingApp({ pretixAPI });
+    application = await startTestingApp({ zuzaluPretixAPI: pretixAPI });
 
-    if (!application.services.pretixSyncService) {
+    if (!application.services.zuzaluPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
     }
 
-    pretixService = application.services.pretixSyncService;
+    pretixService = application.services.zuzaluPretixSyncService;
   });
 
   this.afterAll(async () => {
@@ -79,7 +79,7 @@ describe("zupass functionality", function () {
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
-    application.services.pretixSyncService?.stop();
+    application.services.zuzaluPretixSyncService?.stop();
   });
 
   step("should NOT have issuance service running", async function () {
@@ -407,7 +407,7 @@ describe("zupass functionality", function () {
       const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
         throwOnFetchOrders: true
       });
-      const pretixSyncService = application.services.pretixSyncService;
+      const pretixSyncService = application.services.zuzaluPretixSyncService;
 
       if (!pretixSyncService) {
         throw new Error("expected there to be a pretix sync service running");
@@ -449,7 +449,7 @@ describe("zupass functionality", function () {
       const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
         throwOnFetchSubevents: true
       });
-      const pretixSyncService = application.services.pretixSyncService;
+      const pretixSyncService = application.services.zuzaluPretixSyncService;
 
       if (!pretixSyncService) {
         throw new Error("expected there to be a pretix sync service running");
@@ -495,7 +495,7 @@ describe("zupass functionality", function () {
       if (!newAPI) {
         throw new Error("couldn't instantiate a new pretix api");
       }
-      application.services.pretixSyncService?.replaceApi(newAPI);
+      application.services.zuzaluPretixSyncService?.replaceApi(newAPI);
       const syncStatus = await waitForPretixSyncStatus(application, true);
       expect(syncStatus).to.eq(PretixSyncStatus.Synced);
 

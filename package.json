@@ -22,7 +22,7 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
-    "artifacts:download": "turbo run artifacts:download",
+    "artifacts:download": "turbo run artifacts:download -- -nc",
     "postinstall": "yarn artifacts:download"
   },
   "devDependencies": {

@@ -48,6 +48,13 @@ const buttonStyle = `
 
 const BtnBase = styled.button<{ size?: "large" | "small" }>`
   ${buttonStyle}
+  ${({ disabled }) =>
+    disabled === true
+      ? css`
+          cursor: not-allowed;
+          opacity: 0.5;
+        `
+      : css``}
 
   ${({ size }: { size?: "large" | "small" }) =>
     size === undefined || size === "large"

@@ -9,7 +9,7 @@ export function initStatusRoutes(
   { dbPool }: ApplicationContext,
   {
     semaphoreService,
-    pretixSyncService,
+    zuzaluPretixSyncService,
     devconnectPretixSyncService
   }: GlobalServices
 ): void {
@@ -24,9 +24,9 @@ export function initStatusRoutes(
    * directly from the service itself in tests? This seems a bit roundabout.
    */
   app.get("/pretix/status", async (req: Request, res: Response) => {
-    if (pretixSyncService) {
+    if (zuzaluPretixSyncService) {
       res.send(
-        pretixSyncService.hasCompletedSyncSinceStarting
+        zuzaluPretixSyncService.hasCompletedSyncSinceStarting
           ? PretixSyncStatus.Synced
           : PretixSyncStatus.NotSynced
       );
