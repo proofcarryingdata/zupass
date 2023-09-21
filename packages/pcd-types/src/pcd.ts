@@ -208,6 +208,7 @@ export enum ArgumentTypeName {
   Object = "Object",
   StringArray = "StringArray",
   PCD = "PCD",
+  ToggleList = "ToggleList",
   Unknown = "Unknown"
 }
 
@@ -264,4 +265,35 @@ export type PCDArgument<T extends PCD = PCD> = Argument<
 };
 export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
   return arg.argumentType === ArgumentTypeName.PCD;
+}
+
+export type ToggleList = Record<string, boolean>;
+export type ToogleListArgument<T extends ToggleList> = Argument<
+  ArgumentTypeName.ToggleList,
+  T
+>;
+export function isToggleListArgument(
+  arg: Argument<any, unknown>
+): arg is ToogleListArgument<ToggleList> {
+  return (
+    arg.argumentType === ArgumentTypeName.ToggleList &&
+    arg.value !== undefined &&
+    arg.value !== null &&
+    typeof arg.value === "object" &&
+    Object.values(arg.value).every((v) => typeof v === "boolean")
+  );
+}
+
+export type RevealList = Record<`reveal${string}`, boolean>;
+export type RevealListArgument<T extends RevealList> = Argument<
+  ArgumentTypeName.ToggleList,
+  T
+>;
+export function isRevealListArgument(
+  arg: ToogleListArgument<ToggleList>
+): arg is RevealListArgument<RevealList> {
+  return (
+    arg.value !== undefined &&
+    Object.keys(arg.value).every((k) => k.startsWith("reveal"))
+  );
 }
