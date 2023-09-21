@@ -8,7 +8,7 @@ export function MissingScreen() {
   const loc = useLocation();
 
   return (
-    <AppContainer overrideBackgroundColor="gray">
+    <AppContainer bg="gray">
       <CenterColumn w={290}>
         <TextCenter>
           <Spacer h={64} />

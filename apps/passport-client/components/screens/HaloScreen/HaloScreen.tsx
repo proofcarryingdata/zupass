@@ -27,7 +27,7 @@ export function HaloScreen() {
 
   if (!syncSettled) {
     return (
-      <AppContainer>
+      <AppContainer bg="gray">
         <SyncingPCDs />
       </AppContainer>
     );
@@ -35,7 +35,7 @@ export function HaloScreen() {
 
   if (screen == null) {
     // Need AppContainer to display error
-    return <AppContainer />;
+    return <AppContainer bg="gray" />;
   }
 
   return screen;
