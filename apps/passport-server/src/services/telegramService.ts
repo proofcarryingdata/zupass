@@ -226,7 +226,7 @@ export class TelegramService {
       }
       const channelId = ctx.chat.id;
       // Must match the hard coded argument in event:dev command in package.json
-      const TEST_EVENT_NAME = "localTest";
+      const TEST_EVENT_NAME = "ProgCrypto (Internal Test)";
 
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
 
