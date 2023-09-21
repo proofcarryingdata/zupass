@@ -24,7 +24,7 @@
     "clean:root": "rm -rf node_modules",
     "artifacts:download": "turbo run artifacts:download -- -nc",
     "postinstall": "yarn artifacts:download",
-    "knip": "npx -y knip --no-gitignore"
+    "knip": "knip --no-gitignore"
   },
   "devDependencies": {
     "@types/circomlibjs": "^0.1.1",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@changesets/cli": "^2.26.0",
     "@types/react": "^18.0.22",
+    "knip": "^2.25.2",
     "turbo": "^1.8.5"
   },
   "resolutions": {
