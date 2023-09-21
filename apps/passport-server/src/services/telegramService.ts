@@ -205,7 +205,7 @@ export class TelegramService {
       }
     });
 
-    // The  link" command is a dev utility for associating the channel Id with a given event.
+    // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("link", async (ctx) => {
       if (ctx.chat?.type === "private") {
         await ctx.reply(
@@ -224,9 +224,9 @@ export class TelegramService {
         );
         return;
       }
+
       const channelId = ctx.chat.id;
-      // Must match the hard coded argument in event:dev command in package.json
-      const TEST_EVENT_NAME = "ProgCrypto (Internal Test)";
+      const TEST_EVENT_NAME = ctx.match || "ProgCrypto (Internal Test)";
 
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
 
@@ -238,19 +238,17 @@ export class TelegramService {
         if (!eventInfo)
           throw new Error(`Failed to fetch event ${TEST_EVENT_NAME}`);
 
-        if (eventInfo.pretix_events_config_id) {
-          await insertTelegramEvent(
-            this.context.dbPool,
-            eventInfo.pretix_events_config_id,
-            channelId
-          );
-          logger(
-            `[TELEGRAM] linked event ${TEST_EVENT_NAME} to group ${ctx.chat.title}`
-          );
-          await ctx.reply(
-            `Linked ${ctx.chat.title} (id: ${channelId}) with event ${TEST_EVENT_NAME}`
-          );
-        }
+        await insertTelegramEvent(
+          this.context.dbPool,
+          eventInfo.pretix_events_config_id,
+          channelId
+        );
+        logger(
+          `[TELEGRAM] linked event ${TEST_EVENT_NAME} to group ${ctx.chat.title}`
+        );
+        await ctx.reply(
+          `Linked ${ctx.chat.title} (id: ${channelId}) with event ${TEST_EVENT_NAME}`
+        );
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(
