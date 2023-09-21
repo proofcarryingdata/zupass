@@ -107,8 +107,12 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   } catch (e) {
     console.error("error fetching", url, e);
 
-    // should I do 1 more extra try/catch around this?
-    return await opts.onError(getErrorMessage(e), undefined);
+    try {
+      return await opts.onError(getErrorMessage(e), undefined);
+    } catch (e) {
+      console.error("[FETCH] error executing `opts.onError`", e);
+      throw e;
+    }
   }
 }
 
