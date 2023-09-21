@@ -2,6 +2,7 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { fetchSaltFromServer } from "../../src/api/user";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { saveEncryptionKey } from "../../src/localstorage";
 import { updateStorage, uploadStorage } from "../../src/useSyncE2EEStorage";
@@ -31,23 +32,14 @@ export function ChangePasswordScreen() {
 
   const onChangePassword = async () => {
     if (loading) return;
-    if (!self.salt) {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Please retry",
-          message: "Salt not set"
-        }
-      });
-      return;
-    }
-    setLoading(true);
+    const res = await fetchSaltFromServer(self.email);
+    const { salt } = await res.json();
 
     const crypto = await PCDCrypto.newInstance();
     try {
       const currentEncryptionKey = await crypto.argon2(
         currentPassword,
-        self.salt,
+        salt,
         32
       );
       const newSalt = await crypto.generateSalt();
