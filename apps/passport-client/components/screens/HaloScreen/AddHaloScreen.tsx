@@ -94,12 +94,12 @@ export function AddHaloScreen({
   let content: ReactNode;
 
   if (invalidPCD) {
-    return <AppContainer />;
+    return <AppContainer bg="gray" />;
   } else if (!pcd) {
     return <SyncingPCDs />;
   } else if (!loggedIn) {
     return (
-      <AppContainer>
+      <AppContainer bg="gray">
         <MaybeModal fullScreen />
         <Container>
           <Spacer h={16} />
@@ -135,7 +135,7 @@ export function AddHaloScreen({
   }
 
   return (
-    <AppContainer>
+    <AppContainer bg="gray">
       <MaybeModal fullScreen />
       <Container>
         <Spacer h={16} />

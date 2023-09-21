@@ -106,7 +106,7 @@ export function LoginScreen() {
   }, [self]);
 
   return (
-    <AppContainer>
+    <AppContainer bg="primary">
       <BackgroundGlow
         y={224}
         from="var(--bg-lite-primary)"

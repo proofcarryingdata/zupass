@@ -90,7 +90,7 @@ export function CreatePasswordScreen() {
   };
 
   return (
-    <AppContainer>
+    <AppContainer bg="primary">
       <BackgroundGlow
         y={224}
         from="var(--bg-lite-primary)"

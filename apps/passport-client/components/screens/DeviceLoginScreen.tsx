@@ -26,7 +26,7 @@ export function DeviceLoginScreen() {
   }, []);
 
   return (
-    <AppContainer>
+    <AppContainer bg="primary">
       <Container>
         <Spacer h={64} />
         <TextCenter>
