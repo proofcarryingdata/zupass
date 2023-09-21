@@ -1,4 +1,5 @@
 import { program } from "commander";
+import { existsSync } from "fs";
 import logSymbols from "log-symbols";
 import { PCD_PACKAGES, R2_BUCKET_URL } from "../config.js";
 import Spinner from "../spinner.js";
@@ -10,56 +11,63 @@ program
   .argument("[pcd-package]", "Supported PCD package.")
   .option(
     "-o, --output <output>",
-    "Path to the directory where the output will be written [default: .]."
+    "Path to the directory where the output will be written [default: artifacts]."
   )
-  .action(async (packageName, { output: outputPath }) => {
-    if (!outputPath) {
-      outputPath = ".";
-    }
-
-    const spinner = new Spinner(`Downloading artifacts...`);
-
-    spinner.start();
-
-    try {
-      if (packageName) {
-        if (!PCD_PACKAGES.includes(packageName)) {
-          spinner.stop();
-
-          console.info(
-            `${logSymbols.error}`,
-            `Error: package '${packageName}' is not supported`
-          );
-
-          process.exit(1);
-        }
-
-        await downloadArtifacts(
-          R2_BUCKET_URL,
-          packageName,
-          `${outputPath}/artifacts`
+  .option(
+    "-nc, --no-clobber",
+    "Prevent this command from overwriting existing files if they already exist."
+  )
+  .action(
+    async (packageName, { output: outputPath = "artifacts", clobber }) => {
+      if (!clobber && existsSync(outputPath)) {
+        console.info(
+          `${logSymbols.info}`,
+          `The '${outputPath}' directory already exists, artifacts may already have been downloaded`
         );
-      } else {
-        for await (const packageName of PCD_PACKAGES) {
-          await downloadArtifacts(
-            R2_BUCKET_URL,
-            packageName,
-            `${outputPath}/artifacts/${packageName}`
-          );
-        }
+
+        process.exit(0);
       }
 
-      spinner.stop();
+      const spinner = new Spinner(`Downloading artifacts...`);
 
-      console.info(
-        `${logSymbols.success}`,
-        `Artifacts have been downloaded on '${outputPath}/artifacts'`
-      );
-    } catch (error) {
-      spinner.stop();
+      spinner.start();
 
-      console.info(`${logSymbols.error}`, `${error}`);
+      try {
+        if (packageName) {
+          if (!PCD_PACKAGES.includes(packageName)) {
+            spinner.stop();
 
-      process.exit(1);
+            console.info(
+              `${logSymbols.error}`,
+              `Error: package '${packageName}' is not supported`
+            );
+
+            process.exit(1);
+          }
+
+          await downloadArtifacts(R2_BUCKET_URL, packageName, outputPath);
+        } else {
+          for await (const packageName of PCD_PACKAGES) {
+            await downloadArtifacts(
+              R2_BUCKET_URL,
+              packageName,
+              `${outputPath}/${packageName}`
+            );
+          }
+        }
+
+        spinner.stop();
+
+        console.info(
+          `${logSymbols.success}`,
+          `Artifacts have been downloaded on '${outputPath}'`
+        );
+      } catch (error) {
+        spinner.stop();
+
+        console.info(`${logSymbols.error}`, `${error}`);
+
+        process.exit(1);
+      }
     }
-  });
+  );
