@@ -7,6 +7,7 @@ import {
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { decodeString } from "../../util/util";
 
 export function initPCDIssuanceRoutes(
   app: express.Application,
@@ -68,6 +69,27 @@ export function initPCDIssuanceRoutes(
 
       const request = req.body as ListFeedsRequest;
       res.json(await issuanceService.handleListFeedsRequest(request));
+    } catch (e) {
+      rollbarService?.reportError(e);
+      logger(e);
+      res.sendStatus(500);
+    }
+  });
+
+  app.get("/feeds/:feedId", async (req: Request, res: Response) => {
+    try {
+      if (!issuanceService) {
+        throw new Error("issuance service not instantiated");
+      }
+      const feedId = decodeString(req.params.feedId, "feedId");
+
+      if (issuanceService.hasFeedWithId(feedId)) {
+        const request = { feedId };
+        res.json(await issuanceService.handleListSingleFeedRequest(request));
+      } else {
+        res.status(404).send("not found");
+        return;
+      }
     } catch (e) {
       rollbarService?.reportError(e);
       logger(e);

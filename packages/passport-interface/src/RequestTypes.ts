@@ -146,7 +146,13 @@ export type CheckInResponse = CheckTicketResponse;
 
 export interface ListFeedsRequest {}
 
+export interface ListSingleFeedRequest {
+  feedId: string;
+}
+
 export interface ListFeedsResponse {
+  providerUrl: string;
+  providerName: string;
   feeds: Feed[];
 }
 

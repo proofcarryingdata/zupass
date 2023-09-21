@@ -1,15 +1,20 @@
 import { expect } from "chai";
-import { Feed, FeedSubscriptionManager } from "../src/SubscriptionManager";
+import {
+  Feed,
+  FeedSubscriptionManager,
+  SubscriptionErrorType
+} from "../src/SubscriptionManager";
 import { MockFeedApi } from "./MockFeedApi";
 
 describe("Subscription Manager", async function () {
   const mockFeedApi = new MockFeedApi();
+  const PROVIDER_NAME = "Mock Provider";
 
   it("keeping track of providers should work", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
-    manager.addProvider(providerUrl);
+    manager.addProvider(providerUrl, PROVIDER_NAME);
     expect(manager.getProviders().length).to.eq(1);
     expect(manager.getProviders().map((p) => p.providerUrl)).to.deep.eq([
       providerUrl
@@ -22,7 +27,7 @@ describe("Subscription Manager", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
-    manager.addProvider(providerUrl);
+    manager.addProvider(providerUrl, PROVIDER_NAME);
 
     const feed: Feed = {
       description: "description",
@@ -33,10 +38,10 @@ describe("Subscription Manager", async function () {
       partialArgs: undefined
     };
 
-    manager.subscribe(providerUrl, feed, undefined);
+    const sub = manager.subscribe(providerUrl, feed, undefined);
 
     expect(manager.getActiveSubscriptions().length).to.eq(1);
-    const sub = manager.getSubscription(providerUrl, feed.id);
+    expect(manager.getSubscription(sub.id)).to.deep.eq(sub);
 
     expect(sub?.credential).to.eq(undefined);
     expect(sub?.providerUrl).to.eq(providerUrl);
@@ -52,7 +57,7 @@ describe("Subscription Manager", async function () {
     const subs = manager.getSubscriptionsForProvider(providerUrl);
     expect(subs).to.deep.eq([sub]);
 
-    manager.unsubscribe(providerUrl, feed.id);
+    manager.unsubscribe(sub.id);
     expect(manager.getActiveSubscriptions().length).to.eq(0);
     expect(manager.getProviders().length).to.eq(0);
   });
@@ -61,7 +66,7 @@ describe("Subscription Manager", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);
 
     const providerUrl = "test url";
-    manager.addProvider(providerUrl);
+    manager.addProvider(providerUrl, PROVIDER_NAME);
 
     const feed: Feed = {
       description: "description",
@@ -101,19 +106,36 @@ describe("Subscription Manager", async function () {
 
   it("listing feeds over network should work", async () => {
     const manager = new FeedSubscriptionManager(mockFeedApi);
-    const firstProviderUrl = mockFeedApi.getProviders()[0];
-    const feeds = await manager.listFeeds(firstProviderUrl);
-    expect(feeds.length).to.eq(1);
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
+    expect(feeds.length).to.eq(2);
   });
 
   it("polling feeds over network should work", async () => {
     const manager = new FeedSubscriptionManager(mockFeedApi);
-    const firstProviderUrl = mockFeedApi.getProviders()[0];
-    const feeds = await manager.listFeeds(firstProviderUrl);
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
     const firstFeed = feeds[0];
 
     manager.subscribe(firstProviderUrl, firstFeed);
     const actions = await manager.pollSubscriptions();
     expect(actions.length).to.eq(1);
+  });
+
+  it("feeds should record permission errors during polling", async () => {
+    const manager = new FeedSubscriptionManager(mockFeedApi);
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
+    const badFeed = feeds[1];
+
+    const { id } = manager.subscribe(firstProviderUrl, badFeed);
+    const actions = await manager.pollSubscriptions();
+    expect(actions.length).to.eq(1);
+    const error = manager.getError(id);
+    expect(error).to.deep.contain({
+      type: SubscriptionErrorType.PermissionError
+    });
   });
 });
