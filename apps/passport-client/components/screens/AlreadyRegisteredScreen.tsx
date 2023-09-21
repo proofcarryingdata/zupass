@@ -40,11 +40,17 @@ export function AlreadyRegisteredScreen() {
   const [password, setPassword] = useState("");
 
   const handleConfirmationEmailResult = useCallback(
-    (result: ConfirmEmailResult) => {
+    async (result: ConfirmEmailResult) => {
       if (!result.success) {
         err(dispatch, "Email failed", result.error);
+        setLoading(false);
       } else if (result.value?.devToken != null) {
-        dispatch({ type: "verify-token", email, token: result.value.devToken });
+        await dispatch({
+          type: "verify-token",
+          email,
+          token: result.value.devToken
+        });
+        setLoading(false);
       } else {
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
@@ -68,7 +74,6 @@ export function AlreadyRegisteredScreen() {
       identityCommitment,
       true
     );
-    setLoading(false);
     handleConfirmationEmailResult(emailConfirmationResult);
   }, [email, identityCommitment, handleConfirmationEmailResult]);
 
