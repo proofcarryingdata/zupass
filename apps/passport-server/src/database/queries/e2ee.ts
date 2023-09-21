@@ -39,13 +39,16 @@ export async function insertEncryptedStorage(
 }
 
 /**
- * Transactionally deletes row at at the old blob key, and then
- * upserts the encrypted data stored at the new blob key
+ * Transactionally deletes row at at the old blob key,
+ * upserts the encrypted data stored at the new blob key,
+ * and then updates the user's salt.
  */
 export async function updateEncryptedStorage(
   dbPool: Pool,
   oldBlobKey: string,
   newBlobKey: string,
+  uuid: string,
+  newSalt: string,
   encryptedBlob: string
 ): Promise<void> {
   await sqlQuery(dbPool, "BEGIN;");
@@ -55,6 +58,13 @@ export async function updateEncryptedStorage(
     `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
       ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1;`,
     [newBlobKey, encryptedBlob]
+  );
+  await sqlQuery(
+    dbPool,
+    `UPDATE commitments
+    SET salt = $2
+    WHERE uuid = $1;`,
+    [uuid, newSalt]
   );
   await sqlQuery(dbPool, "COMMIT;");
 }

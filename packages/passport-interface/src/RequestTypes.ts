@@ -93,6 +93,14 @@ export interface UpdateE2EERequest {
    */
   newBlobKey: string;
   /**
+   * UUID of the user making the request;
+   */
+  uuid: string;
+  /**
+   * The salt used in generating the new blob key.
+   */
+  newSalt: string;
+  /**
    * The encrypted and stringified version of {@link EncryptedStorage} to save
    */
   encryptedBlob: string;

@@ -13,6 +13,7 @@ import {
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
+import { UserService } from "./userService";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
@@ -21,12 +22,15 @@ import { RollbarService } from "./rollbarService";
 export class E2EEService {
   private context: ApplicationContext;
   private rollbarService: RollbarService | null;
+  private userService: UserService;
 
   public constructor(
     context: ApplicationContext,
+    userService: UserService,
     rollbarService: RollbarService | null
   ) {
     this.context = context;
+    this.userService = userService;
     this.rollbarService = rollbarService;
   }
 
@@ -87,7 +91,18 @@ export class E2EEService {
     res: Response
   ): Promise<void> {
     try {
-      logger(`[E2EE] Updating ${request.oldBlobKey} to ${request.newBlobKey}`);
+      logger(
+        `[E2EE] Updating ${request.oldBlobKey} to ${request.newBlobKey} for ${request.uuid}`
+      );
+
+      if (
+        !request.newBlobKey ||
+        !request.oldBlobKey ||
+        !request.newSalt ||
+        !request.uuid
+      ) {
+        throw new Error("Missing request fields");
+      }
 
       // Ensure that old blob key is correct by checking if the row exists
       const oldRow = await fetchEncryptedStorage(
@@ -99,10 +114,18 @@ export class E2EEService {
         return;
       }
 
+      // Ensure that new salt is different from old salt
+      const oldSalt = await this.userService.getSaltByUUID(request.uuid);
+      if (oldSalt === request.newSalt) {
+        throw new Error("Updated salt must be different than previous salt");
+      }
+
       await updateEncryptedStorage(
         this.context.dbPool,
         request.oldBlobKey,
         request.newBlobKey,
+        request.uuid,
+        request.newSalt,
         request.encryptedBlob
       );
 
@@ -117,8 +140,9 @@ export class E2EEService {
 
 export function startE2EEService(
   context: ApplicationContext,
+  userService: UserService,
   rollbarService: RollbarService | null
 ): E2EEService {
-  const e2eeService = new E2EEService(context, rollbarService);
+  const e2eeService = new E2EEService(context, userService, rollbarService);
   return e2eeService;
 }

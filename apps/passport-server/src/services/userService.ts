@@ -70,6 +70,14 @@ export class UserService {
     return user.salt;
   }
 
+  public async getSaltByUUID(uuid: string): Promise<string | null> {
+    const user = await this.semaphoreService.getUserByUUID(uuid);
+    if (!user) {
+      throw Error("User does not exist");
+    }
+    return user.salt;
+  }
+
   public async handleSendZuzaluEmail(
     email: string,
     commitment: string,

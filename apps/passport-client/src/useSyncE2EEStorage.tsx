@@ -28,7 +28,8 @@ import { useOnStateChange } from "./subscribe";
 
 export async function updateStorage(
   oldEncryptionKey: string,
-  newEncryptionKey: string
+  newEncryptionKey: string,
+  newSalt: string
 ) {
   const user = loadSelf();
   const pcds = await loadPCDs();
@@ -49,7 +50,13 @@ export async function updateStorage(
   const oldBlobKey = await getHash(oldEncryptionKey);
   const newBlobKey = await getHash(newEncryptionKey);
 
-  return updateEncryptedStorage(oldBlobKey, newBlobKey, encryptedStorage);
+  return updateEncryptedStorage(
+    oldBlobKey,
+    newBlobKey,
+    user.uuid,
+    newSalt,
+    encryptedStorage
+  );
 }
 
 /**

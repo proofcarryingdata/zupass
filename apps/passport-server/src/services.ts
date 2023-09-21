@@ -50,7 +50,7 @@ export async function startServices(
     emailService,
     rollbarService
   );
-  const e2eeService = startE2EEService(context, rollbarService);
+  const e2eeService = startE2EEService(context, userService, rollbarService);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,

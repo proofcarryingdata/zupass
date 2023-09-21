@@ -2,7 +2,6 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { fetchSaltFromServer } from "../../src/api/user";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { saveEncryptionKey } from "../../src/localstorage";
 import { updateStorage, uploadStorage } from "../../src/useSyncE2EEStorage";
@@ -20,7 +19,7 @@ export function ChangePasswordScreen() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || !self.salt) {
       navigate("/login", { replace: true });
     }
   }, [self, navigate]);
@@ -33,18 +32,21 @@ export function ChangePasswordScreen() {
   const onChangePassword = async () => {
     if (loading) return;
     setLoading(true);
-    const res = await fetchSaltFromServer(self.email);
-    const { salt } = await res.json();
 
     const crypto = await PCDCrypto.newInstance();
     try {
       const currentEncryptionKey = await crypto.argon2(
         currentPassword,
-        salt,
+        self.salt,
         32
       );
-      const newEncryptionKey = await crypto.argon2(newPassword, salt, 32);
-      const res = await updateStorage(currentEncryptionKey, newEncryptionKey);
+      const newSalt = await crypto.generateSalt();
+      const newEncryptionKey = await crypto.argon2(newPassword, newSalt, 32);
+      const res = await updateStorage(
+        currentEncryptionKey,
+        newEncryptionKey,
+        newSalt
+      );
       // Meaning password is incorrect, as old row is not found
       if (res.status === 401) {
         dispatch({

@@ -60,12 +60,16 @@ export async function downloadAndDecryptStorage(
 export async function updateEncryptedStorage(
   oldBlobKey: string,
   newBlobKey: string,
+  uuid: string,
+  newSalt: string,
   encryptedStorage: EncryptedPacket
 ): Promise<Response> {
   const request: UpdateE2EERequest = {
     oldBlobKey,
     newBlobKey,
-    encryptedBlob: JSON.stringify(encryptedStorage)
+    newSalt,
+    encryptedBlob: JSON.stringify(encryptedStorage),
+    uuid
   };
 
   const url = `${appConfig.passportServer}/sync/update`;
