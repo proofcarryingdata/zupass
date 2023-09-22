@@ -80,8 +80,8 @@ export class FeedSubscriptionManager {
    * This "refreshes" a feed. Existing feed errors are cleared, and new
    * ones may be detected.
    *
-   * Returns an array of actions without trying to apply them. Attempted
-   * application may lead to more errors.
+   * Returns the successful responses. Failures will be recorded in
+   * `this.errors` for display to the user.
    */
   public async pollSubscriptions(): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
