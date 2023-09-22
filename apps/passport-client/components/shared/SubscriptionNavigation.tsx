@@ -2,12 +2,18 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { icons } from "../icons/index";
 
-export function SubscriptionNavigation({ to }: { to: string }) {
+export function SubscriptionNavigation({
+  to,
+  label
+}: {
+  to: string;
+  label: string;
+}) {
   return (
     <Navigation>
       <BackLink to={to}>
         <BackIcon src={icons.back} />
-        <span>Back</span>
+        <span>{label}</span>
       </BackLink>
     </Navigation>
   );
