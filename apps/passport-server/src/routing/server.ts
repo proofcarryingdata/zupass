@@ -64,7 +64,7 @@ export async function startServer(
         }
       );
 
-      if (process.env.IS_LOCAL_HTTPS) {
+      if (process.env.IS_LOCAL_HTTPS === "true") {
         const httpsOptions = {
           key: fs.readFileSync("../certificates/dev.local-key.pem"),
           cert: fs.readFileSync("../certificates/dev.local.pem")
