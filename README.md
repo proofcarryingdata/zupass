@@ -79,6 +79,9 @@ yarn
 # yarn localdb:restart
 yarn localdb:init && yarn localdb:up
 
+# builds the apps and packages located in the `/apps` and `/packages/` directories
+yarn build
+
 # starts all the applications contained in the `/apps` directory of the
 # repository. this includes the passport server and client, as well as
 # a server and client for an example application built on top of the
