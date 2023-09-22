@@ -1,3 +1,4 @@
+import { Menu } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -11,13 +12,17 @@ import {
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
+import { fetchPretixEventInfoByName } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
-import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
+import { fetchTelegramEventsByEventId } from "../database/queries/telegram/fetchTelegramEvent";
+import {
+  insertTelegramEvent,
+  insertTelegramVerification
+} from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { sleep } from "../util/util";
+import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const SRW_EVENT_ID_STAGING = "3fa6164c-4785-11ee-8178-763dbf30819c";
@@ -52,6 +57,9 @@ export class TelegramService {
     this.bot.api.setMyShortDescription(
       "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
     );
+
+    const menu = new Menu("pcdpass-menu");
+    this.bot.use(menu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -118,7 +126,7 @@ export class TelegramService {
     this.bot.command("start", async (ctx) => {
       try {
         // Only process the command if it comes as a private message.
-        if (ctx.message) {
+        if (ctx.message && ctx.chat.type === "private") {
           const userId = ctx.message.from.id;
 
           const fieldsToReveal: EdDSATicketFieldsToReveal = {
@@ -178,19 +186,78 @@ export class TelegramService {
               "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
           });
 
+          menu.webApp("Generate ZKP 🚀", proofUrl);
+
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
             {
-              reply_markup: new InlineKeyboard().url(
-                "Generate ZKP 🚀",
-                proofUrl
-              )
+              reply_markup: menu
             }
           );
         }
       } catch (e) {
         logger("[TELEGRAM] start error", e);
         this.rollbarService?.reportError(e);
+      }
+    });
+
+    // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
+    this.bot.command("link", async (ctx) => {
+      if (ctx.chat?.type === "private") {
+        await ctx.reply(
+          "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+        );
+        return;
+      }
+
+      const admins = await ctx.getChatAdministrators();
+      const isAdmin = admins.some(
+        (admin) => admin.user.id === this.bot.botInfo.id
+      );
+      if (!isAdmin) {
+        await ctx.reply(
+          "Please add me as an admin to the telegram channel associated with your event."
+        );
+        return;
+      }
+
+      const channelId = ctx.chat.id;
+      // TODO: Add menu of possible events
+      const eventName = ctx.match;
+      if (!eventName) {
+        await ctx.reply(
+          `Correct usage of this command is: /link <event_name>. Try: /link ProgCrypto (Internal Test)`
+        );
+        return;
+      }
+
+      await ctx.reply("Your telegram channel id is " + ctx.chat.id);
+
+      // TODO: Remove fetchPretixEventInfoByName
+      // https://github.com/proofcarryingdata/zupass/issues/662
+      try {
+        const eventInfo = await fetchPretixEventInfoByName(
+          this.context.dbPool,
+          eventName
+        );
+        if (!eventInfo) throw new Error(`Failed to fetch event ${eventName}`);
+
+        await insertTelegramEvent(
+          this.context.dbPool,
+          eventInfo.pretix_events_config_id,
+          channelId
+        );
+        logger(
+          `[TELEGRAM] linked event ${eventName} to group ${ctx.chat.title}`
+        );
+        await ctx.reply(
+          `Linked ${ctx.chat.title} (id: ${channelId}) with event ${eventName}`
+        );
+      } catch (error) {
+        logger(`[ERROR] ${error}`);
+        await ctx.reply(
+          `Failed to link group to event ${eventName}. Check server logs`
+        );
       }
     });
   }
@@ -251,14 +318,13 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+    if (isLocalServer()) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_STAGING;
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
+      // TODO: Replace with better logic to fetch the correct PUBKEY and eventId for an arbitrary event
+      eventIdMatch = true;
+      signerMatch = true;
     } else {
       eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
       signerMatch =
@@ -295,7 +361,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (process.env.PASSPORT_SERVER_URL === "http://localhost:3002") {
+    if (isLocalServer()) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
@@ -395,13 +461,17 @@ export class TelegramService {
     // Find the event which matches the PCD
     // For this to work, the `telegram_bot_events` table must be populated.
 
-    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
-    if (!event) {
+    const events = await fetchTelegramEventsByEventId(
+      this.context.dbPool,
+      eventId
+    );
+    if (!events || events.length === 0) {
       throw new Error(
         `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
       );
     }
 
+    const event = events[0];
     // The event is linked to a chat. Make sure we can access it.
     const chatId = event.telegram_chat_id;
     const chat = await this.bot.api.getChat(chatId);
@@ -461,8 +531,11 @@ export class TelegramService {
       );
     }
 
-    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
-    if (!event) {
+    const events = await fetchTelegramEventsByEventId(
+      this.context.dbPool,
+      eventId
+    );
+    if (!events || events.length === 0) {
       throw new Error(
         `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
       );
@@ -472,6 +545,7 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
+    const event = events[0];
     if (event.anon_chat_id == null) {
       throw new Error(`this group doesn't have an anon channel`);
     }
