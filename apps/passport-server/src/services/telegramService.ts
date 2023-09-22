@@ -233,6 +233,8 @@ export class TelegramService {
 
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
 
+      // TODO: Remove fetchPretixEventInfoByName
+      // https://github.com/proofcarryingdata/zupass/issues/662
       try {
         const eventInfo = await fetchPretixEventInfoByName(
           this.context.dbPool,
