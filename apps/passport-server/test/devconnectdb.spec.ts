@@ -38,13 +38,13 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 
-interface ITestOrganizer {
+export interface ITestOrganizer {
   dbId: string;
   token: string;
   organizerUrl: string;
 }
 
-interface ITestEvent {
+export interface ITestEvent {
   dbEventConfigId: string;
   dbEventInfoId: string;
   dbOrganizerId: string;
