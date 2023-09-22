@@ -77,3 +77,12 @@ export async function getCommitHash(): Promise<string> {
 
   return "unknown commit hash";
 }
+
+export function isLocalServer(): boolean {
+  // eslint-disable-next-line no-console
+  console.log(`.env loaded?`, process.env.PASSPORT_SERVER_URL);
+  return (
+    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+  );
+}

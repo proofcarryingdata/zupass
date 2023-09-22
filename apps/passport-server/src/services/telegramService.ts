@@ -22,7 +22,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { sleep } from "../util/util";
+import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const SRW_EVENT_ID_STAGING = "3fa6164c-4785-11ee-8178-763dbf30819c";
@@ -40,7 +40,6 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
-  private IS_LOCAL_SERVER: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -50,9 +49,6 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
-    this.IS_LOCAL_SERVER =
-      process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-      process.env.PASSPORT_SERVER_URL === "https://dev.local:3002";
 
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
@@ -226,17 +222,22 @@ export class TelegramService {
       }
 
       const channelId = ctx.chat.id;
-      const TEST_EVENT_NAME = ctx.match || "ProgCrypto (Internal Test)";
+      const eventName = ctx.match;
+      if (!eventName) {
+        await ctx.reply(
+          `Correct usage of this command is: /link <event_name>. Try: /link ProgCrypto (Internal Test)`
+        );
+        return;
+      }
 
       await ctx.reply("Your telegram channel id is " + ctx.chat.id);
 
       try {
         const eventInfo = await fetchPretixEventInfoByName(
           this.context.dbPool,
-          TEST_EVENT_NAME
+          eventName
         );
-        if (!eventInfo)
-          throw new Error(`Failed to fetch event ${TEST_EVENT_NAME}`);
+        if (!eventInfo) throw new Error(`Failed to fetch event ${eventName}`);
 
         await insertTelegramEvent(
           this.context.dbPool,
@@ -244,15 +245,15 @@ export class TelegramService {
           channelId
         );
         logger(
-          `[TELEGRAM] linked event ${TEST_EVENT_NAME} to group ${ctx.chat.title}`
+          `[TELEGRAM] linked event ${eventName} to group ${ctx.chat.title}`
         );
         await ctx.reply(
-          `Linked ${ctx.chat.title} (id: ${channelId}) with event ${TEST_EVENT_NAME}`
+          `Linked ${ctx.chat.title} (id: ${channelId}) with event ${eventName}`
         );
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(
-          `Failed to link group to event ${TEST_EVENT_NAME}. Check server logs`
+          `Failed to link group to event ${eventName}. Check server logs`
         );
       }
     });
@@ -314,7 +315,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (this.IS_LOCAL_SERVER) {
+    if (isLocalServer()) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
@@ -358,7 +359,7 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
-    if (this.IS_LOCAL_SERVER) {
+    if (isLocalServer()) {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
