@@ -39,12 +39,12 @@
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "json-bigint": "^1.0.0",
-    "rlnjs": "^2.0.8"
+    "rlnjs": "^2.0.8",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
-    "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "concurrently": "^8.2.0",

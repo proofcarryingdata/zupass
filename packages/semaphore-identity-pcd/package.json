@@ -22,9 +22,7 @@
   "dependencies": {
     "@pcd/passport-ui": "0.6.2",
     "@pcd/pcd-types": "0.6.3",
-    "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
-    "@semaphore-protocol/proof": "^3.11.0",
     "json-bigint": "^1.0.0",
     "react": "^18.2.0",
     "styled-components": "^5.3.9",
@@ -33,7 +31,6 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
-    "@types/expect": "^24.3.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",

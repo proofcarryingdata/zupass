@@ -3,10 +3,10 @@ run-name: Build and Test
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - main
+      - main
 jobs:
   Build-and-Test:
     runs-on: ubuntu-latest

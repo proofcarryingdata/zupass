@@ -23,7 +23,8 @@
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
     "artifacts:download": "turbo run artifacts:download -- -nc",
-    "postinstall": "yarn artifacts:download"
+    "postinstall": "yarn artifacts:download",
+    "knip": "knip --no-gitignore"
   },
   "devDependencies": {
     "@types/circomlibjs": "^0.1.1",

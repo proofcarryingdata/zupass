@@ -22,7 +22,9 @@
   "dependencies": {
     "@pcd/emitter": "0.0.3",
     "@pcd/pcd-types": "0.6.3",
+    "@pcd/semaphore-identity-pcd": "0.6.2",
     "chai": "^4.3.7",
+    "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
