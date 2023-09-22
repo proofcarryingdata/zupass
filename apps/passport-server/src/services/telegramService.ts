@@ -323,6 +323,7 @@ export class TelegramService {
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
       // TODO: Replace with better logic to fetch the correct eventId for an arbitrary event
+      // https://github.com/proofcarryingdata/zupass/issues/667
       eventIdMatch = true;
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
