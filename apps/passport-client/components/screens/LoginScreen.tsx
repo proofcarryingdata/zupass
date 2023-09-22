@@ -8,7 +8,12 @@ import {
 import styled from "styled-components";
 import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import {
+  useDispatch,
+  usePostLoginRedirectTarget,
+  useQuery,
+  useSelf
+} from "../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingGetWithoutProvingRequestKey,
@@ -36,7 +41,9 @@ import { AppContainer } from "../shared/AppContainer";
 export function LoginScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
-  const redirectedFromAction = query?.get("redirectedFromAction") === "true";
+  const postLoginRedirectTarget = usePostLoginRedirectTarget();
+  const redirectedFromAction =
+    query?.get("redirectedFromAction") === "true" || postLoginRedirectTarget;
 
   const pendingGetWithoutProvingRequest = query?.get(
     pendingGetWithoutProvingRequestKey

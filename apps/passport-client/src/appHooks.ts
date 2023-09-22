@@ -105,6 +105,10 @@ export function useResolvingSubscriptionId(): string | undefined {
   return useSelector<string | undefined>((s) => s.resolvingSubscriptionId);
 }
 
+export function usePostLoginRedirectTarget(): string | undefined {
+  return useSelector<string | undefined>((s) => s.postLoginRedirectTarget);
+}
+
 export function useQuery(): URLSearchParams | undefined {
   const location = useLocation();
   try {

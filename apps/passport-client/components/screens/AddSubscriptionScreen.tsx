@@ -26,6 +26,7 @@ import {
   useIdentity,
   usePCDCollection,
   useQuery,
+  useSelf,
   useSubscriptions
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
@@ -50,6 +51,19 @@ export function AddSubscriptionScreen() {
   );
   const [fetchError, setFetchError] = useState<string | undefined>();
   const { value: subs } = useSubscriptions();
+  const self = useSelf();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (self == null) {
+      dispatch({
+        type: "go-to-login-and-redirect",
+        target: url
+          ? `#/add-subscription?url=${encodeURIComponent(url)}`
+          : "#/add-subscription"
+      });
+    }
+  }, [self, dispatch, url]);
 
   const onFetchFeedsClick = useCallback(() => {
     if (fetching) {
@@ -83,7 +97,10 @@ export function AddSubscriptionScreen() {
 
   return (
     <AppContainer bg="gray">
-      <SubscriptionNavigation to="/subscriptions"></SubscriptionNavigation>
+      <SubscriptionNavigation
+        label={"Subscriptions"}
+        to="/subscriptions"
+      ></SubscriptionNavigation>
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>
