@@ -31,7 +31,7 @@ function initCryptoAPI() {
  * @param numberOfBytes Number of bytes of the random value.
  * @returns Random value.
  */
-export function getRandomValues(numberOfBytes = 32): Uint8Array {
+export function getRandomValues(numberOfBytes: number): Uint8Array {
   initCryptoAPI();
 
   return crypto!.getRandomValues(new Uint8Array(numberOfBytes));
