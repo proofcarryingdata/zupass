@@ -18,9 +18,11 @@ import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import {
   clearAllPendingRequests,
   getPendingAddRequest,
+  getPendingAddSubscriptionPageRequest,
   getPendingGetWithoutProvingRequest,
   getPendingHaloRequest,
-  getPendingProofRequest
+  getPendingProofRequest,
+  getPendingViewSubscriptionsPageRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
@@ -68,6 +70,17 @@ export function HomeScreenImpl() {
       const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
       clearAllPendingRequests();
       navigate(`/get-without-proving?request=${encReq}`, { replace: true });
+    } else if (getPendingViewSubscriptionsPageRequest() != null) {
+      console.log("Redirecting to view subscription screen");
+      clearAllPendingRequests();
+      navigate(`/subscriptions`, { replace: true });
+    } else if (getPendingAddSubscriptionPageRequest() != null) {
+      console.log("Redirecting to add subscription screen");
+      const encReq = encodeURIComponent(
+        JSON.parse(getPendingAddSubscriptionPageRequest())
+      );
+      clearAllPendingRequests();
+      navigate(`/add-subscription?url=${encReq}`, { replace: true });
     }
   });
 

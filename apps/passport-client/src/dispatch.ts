@@ -87,9 +87,7 @@ export type Action =
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
-  | { type: "resolve-subscription-error"; subscriptionId: string }
-  | { type: "go-to-login-and-redirect"; target: string }
-  | { type: "post-login-redirect" };
+  | { type: "resolve-subscription-error"; subscriptionId: string };
 
 export type StateContextState = {
   getState: GetState;
@@ -140,10 +138,6 @@ export async function dispatch(
       return sync(state, update);
     case "resolve-subscription-error":
       return resolveSubscriptionError(state, update, action.subscriptionId);
-    case "go-to-login-and-redirect":
-      return goToLoginAndRedirect(state, update, action.target);
-    case "post-login-redirect":
-      return postLoginRedirect(state, update);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -556,26 +550,4 @@ async function resolveSubscriptionError(
     resolvingSubscriptionId: subscriptionId,
     modal: "resolve-subscription-error"
   });
-}
-
-function goToLoginAndRedirect(
-  state: AppState,
-  update: ZuUpdate,
-  target: string
-) {
-  console.log("requesting login redirect");
-  update({
-    postLoginRedirectTarget: target
-  });
-
-  window.location.hash = "#/login";
-}
-
-function postLoginRedirect(state: AppState, update: ZuUpdate) {
-  if (state.postLoginRedirectTarget) {
-    window.location.hash = state.postLoginRedirectTarget;
-    update({ postLoginRedirectTarget: undefined });
-  } else {
-    window.location.hash = "#/";
-  }
 }

@@ -8,19 +8,18 @@ import {
 import styled from "styled-components";
 import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
-import {
-  useDispatch,
-  usePostLoginRedirectTarget,
-  useQuery,
-  useSelf
-} from "../../src/appHooks";
+import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
   pendingAddRequestKey,
+  pendingAddSubscriptionRequestKey,
   pendingGetWithoutProvingRequestKey,
   pendingProofRequestKey,
+  pendingViewSubscriptionsRequestKey,
   setPendingAddRequest,
+  setPendingAddSubscriptionRequest,
   setPendingGetWithoutProvingRequest,
-  setPendingProofRequest
+  setPendingProofRequest,
+  setPendingViewSubscriptionsRequest
 } from "../../src/sessionStorage";
 import { validateEmail } from "../../src/util";
 import {
@@ -41,15 +40,19 @@ import { AppContainer } from "../shared/AppContainer";
 export function LoginScreen() {
   const dispatch = useDispatch();
   const query = useQuery();
-  const postLoginRedirectTarget = usePostLoginRedirectTarget();
-  const redirectedFromAction =
-    query?.get("redirectedFromAction") === "true" || postLoginRedirectTarget;
+  const redirectedFromAction = query?.get("redirectedFromAction") === "true";
 
   const pendingGetWithoutProvingRequest = query?.get(
     pendingGetWithoutProvingRequestKey
   );
   const pendingAddRequest = query?.get(pendingAddRequestKey);
   const pendingProveRequest = query?.get(pendingProofRequestKey);
+  const pendingViewSubscriptionsRequest = query?.get(
+    pendingViewSubscriptionsRequestKey
+  );
+  const pendingAddSubscriptionRequest = query?.get(
+    pendingAddSubscriptionRequestKey
+  );
 
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
@@ -63,12 +66,24 @@ export function LoginScreen() {
     } else if (pendingProveRequest != null) {
       setPendingProofRequest(pendingProveRequest);
       pendingRequestForLogging = pendingProofRequestKey;
+    } else if (pendingViewSubscriptionsRequest != null) {
+      setPendingViewSubscriptionsRequest(pendingViewSubscriptionsRequest);
+      pendingRequestForLogging = pendingViewSubscriptionsRequestKey;
+    } else if (pendingAddSubscriptionRequest != null) {
+      setPendingAddSubscriptionRequest(pendingAddSubscriptionRequest);
+      pendingRequestForLogging = pendingAddSubscriptionRequestKey;
     }
 
     if (pendingRequestForLogging != null) {
       logToServer("login-with-pending", { pending: pendingRequestForLogging });
     }
-  }, [pendingGetWithoutProvingRequest, pendingAddRequest, pendingProveRequest]);
+  }, [
+    pendingGetWithoutProvingRequest,
+    pendingAddRequest,
+    pendingProveRequest,
+    pendingViewSubscriptionsRequest,
+    pendingAddSubscriptionRequest
+  ]);
 
   const self = useSelf();
   const [email, setEmail] = useState("");

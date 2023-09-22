@@ -37,9 +37,6 @@ export interface AppState {
   // If set, show the error resolution screen for this subscription
   resolvingSubscriptionId: string;
 
-  // Where to go after login
-  postLoginRedirectTarget?: string;
-
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;
 

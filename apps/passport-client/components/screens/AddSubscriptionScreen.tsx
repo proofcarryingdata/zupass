@@ -30,6 +30,11 @@ import {
   useSubscriptions
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
+import {
+  clearAllPendingRequests,
+  pendingAddSubscriptionRequestKey,
+  setPendingAddSubscriptionRequest
+} from "../../src/sessionStorage";
 import { BigInput, Button, H2, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { Spinner } from "../shared/Spinner";
@@ -39,8 +44,10 @@ const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds";
 
 export function AddSubscriptionScreen() {
   const query = useQuery();
-  const url = query?.get("url");
-  const [providerUrl, setProviderUrl] = useState(url ?? DEFAULT_FEEDS_URL);
+  const url = query?.get("url") ?? "";
+  const [providerUrl, setProviderUrl] = useState(
+    url.length > 0 ? url : DEFAULT_FEEDS_URL
+  );
   const [infos, setInfos] = useState<Feed[] | undefined>();
   const [fetching, setFetching] = useState(false);
   const [fetchedProviderUrl, setFetchedProviderUrl] = useState<string | null>(
@@ -56,12 +63,12 @@ export function AddSubscriptionScreen() {
 
   useEffect(() => {
     if (self == null) {
-      dispatch({
-        type: "go-to-login-and-redirect",
-        target: url
-          ? `#/add-subscription?url=${encodeURIComponent(url)}`
-          : "#/add-subscription"
-      });
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify(url ?? "");
+      setPendingAddSubscriptionRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
   }, [self, dispatch, url]);
 

@@ -1,7 +1,12 @@
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
 import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
+import { useSelf, useSubscriptions } from "../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  pendingViewSubscriptionsRequestKey,
+  setPendingViewSubscriptionsRequest
+} from "../../src/sessionStorage";
 import { Button, H2, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -11,16 +16,17 @@ import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 export function SubscriptionsScreen() {
   const { value: subs } = useSubscriptions();
   const self = useSelf();
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (self == null) {
-      dispatch({
-        type: "go-to-login-and-redirect",
-        target: `#/subscriptions`
-      });
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify("");
+      setPendingViewSubscriptionsRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
-  }, [self, dispatch]);
+  }, [self]);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";

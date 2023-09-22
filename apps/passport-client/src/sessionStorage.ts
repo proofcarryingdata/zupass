@@ -3,6 +3,8 @@ export function clearAllPendingRequests(): void {
   clearPendingGetWithoutProvingRequest();
   clearPendingAddRequest();
   clearPendingProofRequest();
+  clearPendingViewSubscriptionsRequest();
+  clearPendingAddSubscriptionRequest();
 }
 
 export const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
@@ -62,5 +64,35 @@ export function clearPendingProofRequest(): void {
 
 export function getPendingProofRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingProofRequestKey);
+  return value == null ? undefined : value;
+}
+
+export const pendingViewSubscriptionsRequestKey = "pendingViewSubscriptions";
+
+export function setPendingViewSubscriptionsRequest(request: string): void {
+  sessionStorage.setItem(pendingViewSubscriptionsRequestKey, request);
+}
+
+export function clearPendingViewSubscriptionsRequest(): void {
+  sessionStorage.removeItem(pendingViewSubscriptionsRequestKey);
+}
+
+export function getPendingViewSubscriptionsPageRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingViewSubscriptionsRequestKey);
+  return value == null ? undefined : value;
+}
+
+export const pendingAddSubscriptionRequestKey = "pendingAddSubscription";
+
+export function setPendingAddSubscriptionRequest(request: string): void {
+  sessionStorage.setItem(pendingAddSubscriptionRequestKey, request);
+}
+
+export function clearPendingAddSubscriptionRequest(): void {
+  sessionStorage.removeItem(pendingAddSubscriptionRequestKey);
+}
+
+export function getPendingAddSubscriptionPageRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingAddSubscriptionRequestKey);
   return value == null ? undefined : value;
 }
