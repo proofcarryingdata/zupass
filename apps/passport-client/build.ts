@@ -112,7 +112,7 @@ async function run(command: string) {
 
       const port = 3000;
 
-      if (process.env.IS_LOCAL_HTTPS) {
+      if (process.env.IS_LOCAL_HTTPS === "true") {
         console.log(`Serving local HTTPS...`);
         const app = express();
         app.use(express.static("public"));

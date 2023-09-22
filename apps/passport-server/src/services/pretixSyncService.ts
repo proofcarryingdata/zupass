@@ -387,7 +387,7 @@ export function startPretixSyncService(
     return null;
   }
 
-  if (process.env.PRETIX_SYNC_DISABLED) {
+  if (process.env.PRETIX_SYNC_DISABLED === "true") {
     logger("[PRETIX] not starting because PRETIX_SYNC_DISABLED");
     return null;
   }
