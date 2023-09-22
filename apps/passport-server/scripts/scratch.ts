@@ -48,10 +48,15 @@ yargs
     }
   )
   .command(
-    "new-dev-event [orgUrl] [eventId] [activeItemIds]",
+    "new-dev-event [token] [orgUrl] [eventId] [activeItemIds]",
     "Create a new event for development",
     (yargs) =>
       yargs
+        .positional("token", {
+          type: "string",
+          describe:
+            "Pretix auth token (see https://docs.pretix.eu/en/latest/api/tokenauth.html)"
+        })
         .positional("orgUrl", {
           type: "string",
           default: "https://pretix.eu/api/v1/organizers/pcd-0xparc",
@@ -70,9 +75,6 @@ yargs
             "Comma separated list of active item ids ex: 369803,369805,374045"
         }),
     async function (argv) {
-      if (!process.env.PRETIX_TOKEN)
-        throw new Error(`Need PRETIX_TOKEN .env value to sync dev tickets`);
-
       logger(
         `Creating event with org: ${argv.orgUrl} id: ${argv.eventId} and active items: ${argv.activeItemIds}`
       );
@@ -82,7 +84,7 @@ yargs
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,
         argv.orgUrl,
-        process.env.PRETIX_TOKEN
+        argv.token
       );
       logger(`organizerConfigId: ${organizerConfigId}`);
 

@@ -9,12 +9,15 @@ _Doing this steps in order is more likely to result in success_
 - Obtain a Telegram Bot [Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
 - Get a Pretix API token from a member of the 0xPARC PCD team.
 
-### 1. Set up .env
+### 1. Set up environment
 
-- Run `cp apps/passport-server/.env.local.example apps/passport-server/.env`
-- Paste the Telegram Bot Token in `apps/passport-server/.env` for the `TELEGRAM_BOT_TOKEN` value
-- Paste the Pretix Token in `apps/passport-server/.env` for the `PRETIX_TOKEN` value
-- Confirm that the current value for `PRETIX_ORG_URL` is correct. (Most likely will be `https://pretix.eu/api/v1/organizers/pcd-0xparc`)
+- If you haven't set up the repository before, copy over the example environment file in `passport-server`.
+
+```sh
+cp apps/passport-server/.env.local.example apps/passport-server/.env
+```
+
+- In the environment file `apps/passport-server/.env`, fill in the `TELEGRAM_BOT_TOKEN` with the Telegram token you obtained in the prerequisites section.
 
 ### 2. Start the Passport Client and Server
 
@@ -27,8 +30,8 @@ _Doing this steps in order is more likely to result in success_
 
 ### 3. Sync the Dev Tickets
 
-- `cd apps/passport-server && yarn scratch new-dev-event`
-  - _Note: You can call `yarn scratch new-dev-event <eventId> <activeItemIds>` to make a custom event_
+- `cd apps/passport-server && yarn scratch new-dev-event <token>`
+  - _Note: You can call `yarn scratch new-dev-event <token> <orgUrl> <eventId> <activeItemIds>` to pull from a specific event_
 - Copy the output from the `scratch` script (ex: `/link ProgCrypto (Internal Test)`)
 - You will paste the output in the following step.
 

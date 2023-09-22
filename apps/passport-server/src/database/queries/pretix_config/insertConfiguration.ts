@@ -46,7 +46,7 @@ export async function insertPretixEventConfig(
     db,
     `insert into pretix_events_config(pretix_organizers_config_id, active_item_ids, event_id, superuser_item_ids) ` +
       `values ($1, $2, $3, $4) ` +
-      `on conflict (event_id) do update set pretix_organizers_config_id = $1, active_item_ids = $2, superuser_item_ids = $4 ` +
+      `on conflict (event_id, pretix_organizers_config_id) do update set pretix_organizers_config_id = $1, active_item_ids = $2, superuser_item_ids = $4 ` +
       `returning id`,
     [
       organizerConfigId,
