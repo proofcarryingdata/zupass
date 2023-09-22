@@ -23,7 +23,7 @@ import {
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 
-describe.only("telegram bot functionality", function () {
+describe("telegram bot functionality", function () {
   this.timeout(15_000);
 
   let db: Pool;
