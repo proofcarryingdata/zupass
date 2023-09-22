@@ -57,7 +57,6 @@
     "@pcd/artifacts": "0.1.0",
     "@pcd/eslint-config-custom": "*",
     "@types/email-validator": "^1.0.6",
-    "@types/expect": "^24.3.0",
     "@types/express": "^4.17.17",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.2.6",
