@@ -1,5 +1,5 @@
-import { getRandomValues } from "@pcd/util";
+import { getRandomValues, toHexString } from "@pcd/util";
 
 export function newEdDSAPrivateKey(): string {
-  return Buffer.from(getRandomValues()).toString("hex");
+  return toHexString(getRandomValues(32));
 }
