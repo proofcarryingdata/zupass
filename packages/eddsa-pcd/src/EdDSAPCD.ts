@@ -97,9 +97,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const prvKey = fromHexString(args.privateKey.value);
 
   const hashedMessage = poseidon(message);
-  const publicKey: EDdSAPublicKey = eddsa
-    .prv2pub(prvKey)
-    .map(toHexString) as EDdSAPublicKey;
+  const publicKey = await getEdDSAPublicKey(prvKey);
   const signature = toHexString(
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
@@ -111,7 +109,10 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   await ensureInitialized();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
-  const pubKey = pcd.claim.publicKey.map(fromHexString) as unknown as Point;
+  const pubKey = pcd.claim.publicKey.map((p) =>
+    (eddsa as any).F.fromObject(p)
+  ) as Point;
+
   const hashedMessage = poseidon(pcd.claim.message);
 
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
@@ -178,11 +179,15 @@ export const EdDSAPCDPackage: PCDPackage<
 };
 
 export async function getEdDSAPublicKey(
-  privateKey: string
+  privateKey: string | Uint8Array
 ): Promise<EDdSAPublicKey> {
   await ensureInitialized();
 
+  if (typeof privateKey === "string") {
+    privateKey = fromHexString(privateKey);
+  }
+
   return eddsa
-    .prv2pub(fromHexString(privateKey))
-    .map(toHexString) as EDdSAPublicKey;
+    .prv2pub(privateKey)
+    .map((p) => (eddsa as any).F.toObject(p).toString(16)) as EDdSAPublicKey;
 }
