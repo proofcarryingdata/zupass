@@ -1,0 +1,29 @@
+{
+  "workspaces": {
+    "packages/*": {
+      "entry": ["src/index.ts", "test/*.ts"],
+      "project": "**/*.{ts,tsx}"
+    },
+    "apps/*": {
+      "entry": ["src/main.{ts,tsx}", "pages/index.tsx", "test/*.ts"],
+      "project": "**/*.{ts,tsx}"
+    }
+  },
+  "ignore": ["**/*.d.ts", "**/dist"],
+  "ignoreWorkspaces": ["packages/artifacts"],
+  "rules": {
+    "binaries": "off",
+    "dependencies": "error",
+    "devDependencies": "warn",
+    "files": "warn",
+    "unlisted": "error",
+    "exports": "warn",
+    "enumMembers": "warn",
+    "classMembers": "warn",
+    "exports": "warn",
+    "nsExports": "warn",
+    "types": "warn",
+    "nsTypes": "warn",
+    "duplicates": "error"
+  }
+}

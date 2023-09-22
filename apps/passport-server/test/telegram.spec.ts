@@ -2,13 +2,30 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
 import { getDB } from "../src/database/postgresPool";
+import {
+  getAllOrganizers,
+  insertPretixEventConfig,
+  insertPretixOrganizerConfig
+} from "../src/database/queries/pretix_config/insertConfiguration";
 import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
-import { insertTelegramVerification } from "../src/database/queries/telegram/insertTelegramConversation";
+import {
+  fetchTelegramEvent,
+  fetchTelegramEventsByChatId,
+  fetchTelegramEventsByEventId
+} from "../src/database/queries/telegram/fetchTelegramEvent";
+import {
+  insertTelegramEvent,
+  insertTelegramVerification
+} from "../src/database/queries/telegram/insertTelegramConversation";
+import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 
 describe("telegram bot functionality", function () {
+  this.timeout(15_000);
+
   let db: Pool;
 
   this.beforeAll(async () => {
@@ -26,6 +43,75 @@ describe("telegram bot functionality", function () {
 
   const dummyUserId = 12345;
   const dummyChatId = 54321;
+  const dummyChatId_1 = 654321;
+  const anonChannelID = 420;
+  const anonChannelID_1 = 421;
+
+  const testOrganizers: ITestOrganizer[] = [
+    {
+      dbId: "",
+      token: uuid(),
+      organizerUrl: "https://www.example.com/0xparc-organizer"
+    }
+  ];
+
+  const testEvents: ITestEvent[] = [
+    {
+      dbEventConfigId: "",
+      dbEventInfoId: "",
+      dbOrganizerId: "",
+      eventId: "progcrypto",
+      eventName: "ProgCrypto",
+      _organizerIdx: 0
+    },
+    {
+      dbEventConfigId: "",
+      dbEventInfoId: "",
+      dbOrganizerId: "",
+      eventId: "aw",
+      eventName: "AW",
+      _organizerIdx: 0
+    }
+  ];
+
+  step("should be able to insert organizer configs", async function () {
+    for (const organizer of testOrganizers) {
+      const id = await insertPretixOrganizerConfig(
+        db,
+        organizer.organizerUrl,
+        organizer.token
+      );
+      organizer.dbId = id;
+      expect(typeof id).to.eq("string");
+    }
+    const allOrganizers = await getAllOrganizers(db);
+    expect(allOrganizers.length).to.eq(testOrganizers.length);
+  });
+
+  step(
+    "should be able to insert corresponding event_config",
+    async function () {
+      for (let i = 0; i < testEvents.length; i++) {
+        const event = testEvents[i];
+        const organizer = testOrganizers[event._organizerIdx];
+
+        const items: string[] = [];
+        const superItems: string[] = [];
+        const eventConfigId = await insertPretixEventConfig(
+          db,
+          organizer.dbId,
+          items,
+          superItems,
+          event.eventId
+        );
+
+        event.dbEventConfigId = eventConfigId;
+        event.dbOrganizerId = organizer.dbId;
+
+        expect(typeof event.dbEventConfigId).to.eq("string");
+      }
+    }
+  );
 
   step("should be able to record a verified user", async function () {
     // Insert a dummy Telegram user and chat as verified
@@ -43,4 +129,105 @@ describe("telegram bot functionality", function () {
     expect(await fetchTelegramVerificationStatus(db, dummyUserId, dummyChatId))
       .to.be.false;
   });
+
+  step(
+    "should NOT be able to make multiple entries with same event and channel",
+    async function () {
+      const eventConfigId = testEvents[0].dbEventConfigId;
+      await insertTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId_1,
+        anonChannelID
+      );
+      await insertTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId_1,
+        anonChannelID
+      );
+      const insertedEventsByChatId = await fetchTelegramEventsByChatId(
+        db,
+        dummyChatId_1
+      );
+      const insertedEventsByEventId = await fetchTelegramEventsByEventId(
+        db,
+        eventConfigId
+      );
+      expect(insertedEventsByChatId?.length).to.eq(1);
+      expect(insertedEventsByEventId?.length).to.eq(1);
+    }
+  );
+
+  step("should be able to link an event and tg chat", async function () {
+    const eventConfigId = testEvents[0].dbEventConfigId;
+    await insertTelegramEvent(db, eventConfigId, dummyChatId, anonChannelID);
+    const insertedEvent = await fetchTelegramEvent(
+      db,
+      eventConfigId,
+      dummyChatId
+    );
+    expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+    // Note: Grammy allows chatIds to be numbers or strings
+    expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
+  });
+
+  step(
+    "should be able to connect a chat to a new ticketed event",
+    async function () {
+      const eventConfigId = testEvents[1].dbEventConfigId;
+
+      await insertTelegramEvent(db, eventConfigId, dummyChatId, anonChannelID);
+      const insertedEvent = await fetchTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId
+      );
+      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
+      expect(insertedEvent?.anon_chat_id).to.eq(anonChannelID.toString());
+    }
+  );
+
+  step(
+    "should be able to connect a ticketed event to a new chat",
+    async function () {
+      const eventConfigId = testEvents[0].dbEventConfigId;
+      await insertTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId_1,
+        anonChannelID
+      );
+      const insertedEvent = await fetchTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId_1
+      );
+      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId_1.toString());
+      expect(insertedEvent?.anon_chat_id).to.eq(anonChannelID.toString());
+    }
+  );
+
+  step(
+    "should be able to update a chat to a new anon channel",
+    async function () {
+      const eventConfigId = testEvents[0].dbEventConfigId;
+      await insertTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId,
+        anonChannelID_1
+      );
+      const insertedEvent = await fetchTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId
+      );
+      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
+      expect(insertedEvent?.anon_chat_id).to.eq(anonChannelID_1.toString());
+    }
+  );
 });

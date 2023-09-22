@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { closeWebviewHtml } from "../../util/telegramWebApp";
 import { checkQueryParam, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -50,14 +51,44 @@ export function initTelegramRoutes(
     }
 
     try {
-      await telegramService.handleVerification(
-        proof,
-        parseInt(telegram_user_id)
-      );
-      logger(
-        `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
-      );
-      res.redirect(await telegramService.getBotURL());
+      const { proof } = req.query;
+      const telegram_user_id = checkUrlParam(req, "id");
+      if (!proof || typeof proof !== "string") {
+        throw new Error("proof field needs to be a string and be non-empty");
+      }
+
+      if (
+        !telegram_user_id ||
+        typeof telegram_user_id !== "string" ||
+        !/^-?\d+$/.test(telegram_user_id)
+      ) {
+        throw new Error(
+          "telegram_user_id field needs to be a numeric string and be non-empty"
+        );
+      }
+
+      logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
+
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
+      try {
+        await telegramService.handleVerification(
+          proof,
+          parseInt(telegram_user_id)
+        );
+        logger(
+          `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
+        );
+        res.setHeader("Content-Type", "text/html");
+        res.send(closeWebviewHtml);
+      } catch (e) {
+        logger("[TELEGRAM] failed to verify", e);
+        rollbarService?.reportError(e);
+        res.set("Content-Type", "text/html");
+        res.sendFile(path.resolve("resources/telegram/error.html"));
+        res.sendStatus(500);
+      }
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);

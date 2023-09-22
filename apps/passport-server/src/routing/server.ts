@@ -1,13 +1,14 @@
 import cors from "cors";
 import express, { Application, NextFunction } from "express";
+import * as fs from "fs";
 import * as http from "http";
+import * as https from "https";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices, PCDpass } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
-import { respondWithError } from "./pcdHttpError";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -34,8 +35,6 @@ export async function startHttpServer(
     if (isNaN(port)) {
       throw new Error("couldn't start http server, missing port");
     }
-
-    const localEndpoint = `http://localhost:${port}`;
 
     const app = express();
 
@@ -66,25 +65,40 @@ export async function startHttpServer(
         res: express.Response,
         _next: NextFunction
       ) => {
-        respondWithError(err, res);
+        logger(`[ERROR] ${req.method} ${req.url}`);
+        logger(err.stack);
         globalServices.rollbarService?.reportError(err);
-        logger(`[HTTP ERROR] ${req.method} ${req.url}`, err);
+        res.status(500).send(err.message);
       }
     );
 
-    const server = app.listen(port, () => {
-      logger(`[INIT] Passport Server server listening on ${localEndpoint}`);
-      sendEvent(context, EventName.SERVER_START);
-      resolve({
-        server,
-        app,
-        localEndpoint
-      });
-    });
+    if (process.env.IS_LOCAL_HTTPS === "true") {
+      const localEndpoint = `https://dev.local:${port}`;
+      const httpsOptions = {
+        key: fs.readFileSync("../certificates/dev.local-key.pem"),
+        cert: fs.readFileSync("../certificates/dev.local.pem")
+      };
 
-    server.on("error", (e: Error) => {
-      reject(e);
-    });
+      const server = https.createServer(httpsOptions, app).listen(port, () => {
+        logger(`[INIT] Local HTTPS server listening on ${localEndpoint}`);
+        sendEvent(context, EventName.SERVER_START);
+        resolve({ server, app, localEndpoint });
+      });
+
+      server.on("error", (e: Error) => {
+        reject(e);
+      });
+    } else {
+      const localEndpoint = `http://localhost:${port}`;
+      const server = app.listen(port, () => {
+        logger(`[INIT] HTTP server listening on port ${port}`);
+        sendEvent(context, EventName.SERVER_START);
+        resolve({ server, app, localEndpoint });
+      });
+      server.on("error", (e: Error) => {
+        reject(e);
+      });
+    }
   });
 }
 

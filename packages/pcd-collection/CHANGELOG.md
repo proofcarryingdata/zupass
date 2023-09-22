@@ -1,5 +1,18 @@
 # @pcd/pcd-types
 
+## 0.7.0
+
+### Minor Changes
+
+- bundle of package upgrades
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.1.0
+  - @pcd/pcd-types@0.7.0
+  - @pcd/semaphore-identity-pcd@0.7.0
+
 ## 0.6.2
 
 ### Patch Changes

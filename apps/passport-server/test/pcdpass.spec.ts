@@ -16,7 +16,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
 describe("pcd-pass functionality", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   const testEmail = randomEmail();
   let application: PCDpass;

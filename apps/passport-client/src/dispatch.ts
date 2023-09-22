@@ -29,9 +29,11 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -136,7 +138,8 @@ export async function dispatch(
     case "resolve-subscription-error":
       return resolveSubscriptionError(state, update, action.subscriptionId);
     default:
-      console.error("Unknown action type", action);
+      // We can ensure that we never get here using the type system
+      assertUnreachable(action);
   }
 }
 
@@ -299,7 +302,11 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   await addDefaultSubscriptions(identity, state.subscriptions);
 
-  window.location.hash = "#/login-interstitial";
+  if (hasPendingRequest()) {
+    window.location.hash = "#/login-interstitial";
+  } else {
+    window.location.hash = "#/";
+  }
 
   // Save to local storage.
   setSelf(user, state, update);
@@ -422,7 +429,11 @@ async function loadFromSync(
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
-  window.location.hash = "#/login-interstitial";
+  if (hasPendingRequest()) {
+    window.location.hash = "#/login-interstitial";
+  } else {
+    window.location.hash = "#/";
+  }
 }
 
 function userInvalid(update: ZuUpdate) {
