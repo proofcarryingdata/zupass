@@ -322,9 +322,11 @@ export class TelegramService {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      // TODO: Replace with better logic to fetch the correct PUBKEY and eventId for an arbitrary event
+      // TODO: Replace with better logic to fetch the correct eventId for an arbitrary event
       eventIdMatch = true;
-      signerMatch = true;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
     } else {
       eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
       signerMatch =
