@@ -22,8 +22,8 @@ yargs
     "Fetch all events and items from pretix",
     (yargs) => {},
     async function (argv) {
-      const orgUrl: string = process.env.PRETIX_ORG_URL!;
-      const token: string = process.env.PRETIX_TOKEN!;
+      const orgUrl: string = process.env.SCRATCH_PRETIX_ORG_URL!;
+      const token: string = process.env.SCRATCH_PRETIX_TOKEN!;
 
       if (!orgUrl || !token) {
         throw new Error(`missing orgUrl or pretix token`);
