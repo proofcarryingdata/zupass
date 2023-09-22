@@ -1,6 +1,6 @@
-# @pcd/email-pcd
+# @pcd/rsa-image-pcd
 
-## 0.2.0
+## 0.1.0
 
 ### Minor Changes
 
@@ -9,10 +9,5 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/eddsa-pcd@0.2.0
   - @pcd/pcd-types@0.7.0
-  - @pcd/util@0.1.0
-
-## 0.1.0
-
-### Patch Changes
+  - @pcd/rsa-pcd@0.2.0

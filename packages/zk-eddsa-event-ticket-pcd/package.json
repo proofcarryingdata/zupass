@@ -1,6 +1,6 @@
 {
   "name": "@pcd/zk-eddsa-event-ticket-pcd",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -24,13 +24,13 @@
     "artifacts:upload": "pcd-artifacts upload zk-eddsa-event-ticket-pcd"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.1.1",
-    "@pcd/eddsa-ticket-pcd": "0.1.1",
-    "@pcd/passport-ui": "0.6.2",
-    "@pcd/pcd-types": "^0.6.3",
-    "@pcd/semaphore-identity-pcd": "0.6.2",
-    "@pcd/semaphore-signature-pcd": "0.6.2",
-    "@pcd/util": "0.0.1",
+    "@pcd/eddsa-pcd": "0.2.0",
+    "@pcd/eddsa-ticket-pcd": "0.2.0",
+    "@pcd/passport-ui": "0.7.0",
+    "@pcd/pcd-types": "^0.7.0",
+    "@pcd/semaphore-identity-pcd": "0.7.0",
+    "@pcd/semaphore-signature-pcd": "0.7.0",
+    "@pcd/util": "0.1.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
@@ -39,7 +39,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/artifacts": "0.0.1",
+    "@pcd/artifacts": "0.1.0",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/json-bigint": "^1.0.1",

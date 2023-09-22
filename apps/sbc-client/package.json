@@ -1,6 +1,6 @@
 {
   "name": "sbc-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev -p 4000",
@@ -10,7 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/passport-interface": "^0.6.1",
+    "@pcd/passport-interface": "^0.7.0",
     "@types/node": "20.4.10",
     "@types/react": "18.2.20",
     "@types/react-dom": "18.2.7",
