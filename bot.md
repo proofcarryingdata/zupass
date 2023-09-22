@@ -58,7 +58,8 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
 1. Install mkcert - [https://github.com/FiloSottile/mkcert](https://github.com/FiloSottile/mkcert)
 2. `mkcert -install`
 3. Now, run the follow commands from the repo root to generate a new certificate
-```bash
+
+````bash
 mkdir apps/certificates && cd apps/certificates && mkcert dev.local
 4. `sudo vi /etc/hosts` and add a line, `127.0.0.1 dev.local localhost`
 5. In `passport-client/.env` and `passport-server/.env`
@@ -68,16 +69,16 @@ mkdir apps/certificates && cd apps/certificates && mkcert dev.local
    IS_LOCAL_HTTPS=true
    PASSPORT_SERVER_URL="https://dev.local:3002"
 
-   ```
+````
 
-   ```python
-   # passport-server
+```python
+# passport-server
 
-   # ... a bunch of other stuff
-   IS_LOCAL_HTTPS=true
-   PASSPORT_SERVER_URL="https://dev.local:3002"
-   PASSPORT_CLIENT_URL="https://dev.local:3000"
-   ```
+# ... a bunch of other stuff
+IS_LOCAL_HTTPS=true
+PASSPORT_SERVER_URL="https://dev.local:3002"
+PASSPORT_CLIENT_URL="https://dev.local:3000"
+```
 
 ### Troubleshooting
 
@@ -85,6 +86,4 @@ mkdir apps/certificates && cd apps/certificates && mkcert dev.local
 
   - If you do accidentally run `init`, you will clear all local data. This is ok, but it causes some problems because your local PCDPass ticket still exists in localStorage in the Telegram Web View of PCDPass, but doesn't exist in the database.
   - To rectify this situation, you should clear localStorage on Telegram PCDPass by right-clicking the on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
-  - Then, you just have to login again (email: dev@gmail.com, pw: devconnect)
-
-- @cha0sg0d don't forget to handle `/verify` in next pr.
+  - Then, you just have to login again with an account that has a ticket

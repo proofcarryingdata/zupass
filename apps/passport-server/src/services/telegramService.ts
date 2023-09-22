@@ -222,6 +222,7 @@ export class TelegramService {
       }
 
       const channelId = ctx.chat.id;
+      // TODO: Add menu of possible events
       const eventName = ctx.match;
       if (!eventName) {
         await ctx.reply(
