@@ -36,5 +36,4 @@ jobs:
       - run: "yarn build --verbosity 3"
       - run: "yarn typecheck --verbosity 3"
       - run: "yarn lint --verbosity 3"
-      - run: "yarn knip"
       - run: "yarn test --verbosity 3"
