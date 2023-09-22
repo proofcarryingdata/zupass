@@ -7,6 +7,17 @@ export function clearAllPendingRequests(): void {
   clearPendingAddSubscriptionRequest();
 }
 
+export function hasPendingRequest(): boolean {
+  return !!(
+    getPendingGetWithoutProvingRequest() ||
+    getPendingAddRequest() ||
+    getPendingHaloRequest() ||
+    getPendingProofRequest() ||
+    getPendingViewSubscriptionsPageRequest() ||
+    getPendingAddSubscriptionPageRequest()
+  );
+}
+
 export const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
 
 export function setPendingGetWithoutProvingRequest(request: string): void {

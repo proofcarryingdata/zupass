@@ -31,6 +31,7 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
@@ -300,7 +301,11 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   await addDefaultSubscriptions(identity, state.subscriptions);
 
-  window.location.hash = "#/login-interstitial";
+  if (hasPendingRequest()) {
+    window.location.hash = "#/login-interstitial";
+  } else {
+    window.location.hash = "#/";
+  }
 
   // Save to local storage.
   setSelf(user, state, update);
@@ -425,7 +430,11 @@ async function loadFromSync(
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
-  window.location.hash = "#/login-interstitial";
+  if (hasPendingRequest()) {
+    window.location.hash = "#/login-interstitial";
+  } else {
+    window.location.hash = "#/";
+  }
 }
 
 function userInvalid(update: ZuUpdate) {
