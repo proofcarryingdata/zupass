@@ -11,13 +11,7 @@ _Doing this steps in order is more likely to result in success_
 
 ### 1. Set up environment
 
-- If you haven't set up the repository before, copy over the example environment file in `passport-server`.
-
-```sh
-cp apps/passport-server/.env.local.example apps/passport-server/.env
-```
-
-- In the environment file `apps/passport-server/.env`, fill in the `TELEGRAM_BOT_TOKEN` with the Telegram token you obtained in the prerequisites section.
+In the environment file `apps/passport-server/.env`, fill in the `TELEGRAM_BOT_TOKEN` with the Telegram token you obtained in the prerequisites section. If this file does not exist, follow the instructions in the [README](README.md#environment-variables).
 
 ### 2. Start the Passport Client and Server
 
