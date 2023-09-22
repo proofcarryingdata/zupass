@@ -467,7 +467,7 @@ export class TelegramService {
       this.context.dbPool,
       eventId
     );
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new Error(
         `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
       );
@@ -537,7 +537,7 @@ export class TelegramService {
       this.context.dbPool,
       eventId
     );
-    if (!events || events.length === 0) {
+    if (events.length === 0) {
       throw new Error(
         `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
       );

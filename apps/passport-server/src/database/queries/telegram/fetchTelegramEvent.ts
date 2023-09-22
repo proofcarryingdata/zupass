@@ -8,7 +8,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchTelegramEventsByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent[] | null> {
+): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -24,7 +24,7 @@ export async function fetchTelegramEventsByEventId(
 export async function fetchTelegramEventsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramEvent[] | null> {
+): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -51,5 +51,5 @@ export async function fetchTelegramEvent(
     [ticketEventId, telegramChatId]
   );
 
-  return result.rows[0] || null;
+  return result.rows[0] ?? null;
 }
