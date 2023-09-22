@@ -1,8 +1,8 @@
 import {
-  openSignedZuzaluUUIDPopup,
-  useFetchUser,
-  usePassportPopupMessages,
-  useSemaphoreSignatureProof
+    openSignedZuzaluUUIDPopup,
+    useFetchUser,
+    usePassportPopupMessages,
+    useSemaphoreSignatureProof
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";

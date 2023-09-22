@@ -1,8 +1,6 @@
 import cors from "cors";
 import express, { Application, NextFunction } from "express";
-import * as fs from "fs";
 import * as http from "http";
-import * as https from "https";
 import morgan from "morgan";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices } from "../types";
@@ -64,35 +62,15 @@ export async function startServer(
         }
       );
 
-      if (process.env.IS_LOCAL_HTTPS) {
-        const httpsOptions = {
-          key: fs.readFileSync("../certificates/dev.local-key.pem"),
-          cert: fs.readFileSync("../certificates/dev.local.pem")
-        };
+      const server = app.listen(port, () => {
+        logger(`[INIT] HTTP server listening on port ${port}`);
+        sendEvent(context, EventName.SERVER_START);
+        resolve({ server, app });
+      });
 
-        const server = https
-          .createServer(httpsOptions, app)
-          .listen(port, () => {
-            logger(
-              `[INIT] Local HTTPS server listening on https://dev.local:${port}`
-            );
-            sendEvent(context, EventName.SERVER_START);
-            resolve({ server, app });
-          });
-
-        server.on("error", (e: Error) => {
-          reject(e);
-        });
-      } else {
-        const server = app.listen(port, () => {
-          logger(`[INIT] HTTP server listening on port ${port}`);
-          sendEvent(context, EventName.SERVER_START);
-          resolve({ server, app });
-        });
-        server.on("error", (e: Error) => {
-          reject(e);
-        });
-      }
+      server.on("error", (e: Error) => {
+        reject(e);
+      });
     }
   );
 }

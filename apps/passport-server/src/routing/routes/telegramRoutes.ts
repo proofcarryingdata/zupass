@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { closeWebviewHtml } from "../../util/telegramWebApp";
 import { decodeString } from "../../util/util";
 
 export function initTelegramRoutes(
@@ -52,8 +51,7 @@ export function initTelegramRoutes(
         logger(
           `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
         );
-        res.setHeader("Content-Type", "text/html");
-        res.send(closeWebviewHtml);
+        res.redirect(await telegramService.getBotURL());
       } catch (e) {
         logger("[TELEGRAM] failed to verify", e);
         rollbarService?.reportError(e);
