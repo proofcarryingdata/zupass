@@ -57,7 +57,9 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
 
 1. Install mkcert - [https://github.com/FiloSottile/mkcert](https://github.com/FiloSottile/mkcert)
 2. `mkcert -install`
-3. From root of repo: `mkdir apps/certificates && cd apps/certificates && mkcert dev.local`
+3. Now, run the follow commands from the repo root to generate a new certificate
+```bash
+mkdir apps/certificates && cd apps/certificates && mkcert dev.local
 4. `sudo vi /etc/hosts` and add a line, `127.0.0.1 dev.local localhost`
 5. In `passport-client/.env` and `passport-server/.env`
 
