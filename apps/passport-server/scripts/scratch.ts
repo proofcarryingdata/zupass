@@ -54,6 +54,7 @@ yargs
       yargs
         .positional("token", {
           type: "string",
+          demandOption: true,
           describe:
             "Pretix auth token (see https://docs.pretix.eu/en/latest/api/tokenauth.html)"
         })
