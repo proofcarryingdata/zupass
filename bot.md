@@ -18,10 +18,12 @@ _Doing this steps in order is more likely to result in success_
 
 ### 2. Start the Passport Client and Server
 
-- `yarn`
-- `yarn build`
-- `yarn localdb:init && yarn localdb:up`
-- `yarn dev:bot`
+```bash
+  yarn
+  yarn build
+  yarn localdb:init && yarn localdb:up
+  yarn dev:bot
+```
 
 ### 3. Sync the Dev Tickets
 
@@ -56,29 +58,42 @@ _Doing this steps in order is more likely to result in success_
 This is a one-time setup for serving https locally. You need it for Telegram, because Telegram hates http and localhost. At the end, you will be able to access 127.0.0.1 (aka localhost) from a fake domain, `dev.local` (this is important for https)
 
 1. Install mkcert - [https://github.com/FiloSottile/mkcert](https://github.com/FiloSottile/mkcert)
-2. `mkcert -install`
+2. After installing, create a new local Certificate Authority (CA)
+
+   ```bash
+   mkcert -install
+   ```
+
 3. Now, run the follow commands from the repo root to generate a new certificate
 
-````bash
-mkdir apps/certificates && cd apps/certificates && mkcert dev.local
-4. `sudo vi /etc/hosts` and add a line, `127.0.0.1 dev.local localhost`
+   ```bash
+   mkdir apps/certificates && cd apps/certificates && mkcert dev.local
+   ```
+
+4. Add the local domain to the hosts file.
+
+   ```bash
+   sudo vi /etc/hosts
+   # and add a line in /etc/hosts,
+   127.0.0.1 dev.local localhost
+   ```
+
 5. In `passport-client/.env` and `passport-server/.env`
 
    ```python
    # passport-client
    IS_LOCAL_HTTPS=true
    PASSPORT_SERVER_URL="https://dev.local:3002"
+   ```
 
-````
+   ```python
+   # passport-server
 
-```python
-# passport-server
-
-# ... a bunch of other stuff
-IS_LOCAL_HTTPS=true
-PASSPORT_SERVER_URL="https://dev.local:3002"
-PASSPORT_CLIENT_URL="https://dev.local:3000"
-```
+   # ... a bunch of other stuff
+   IS_LOCAL_HTTPS=true
+   PASSPORT_SERVER_URL="https://dev.local:3002"
+   PASSPORT_CLIENT_URL="https://dev.local:3000"
+   ```
 
 ### Troubleshooting
 
