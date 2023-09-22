@@ -15,15 +15,6 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  getPendingAddRequest,
-  getPendingAddSubscriptionPageRequest,
-  getPendingGetWithoutProvingRequest,
-  getPendingHaloRequest,
-  getPendingProofRequest,
-  getPendingViewSubscriptionsPageRequest
-} from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -51,36 +42,6 @@ export function HomeScreenImpl() {
     if (self == null) {
       console.log("Redirecting to login screen");
       navigate("/login", { replace: true });
-    } else if (getPendingProofRequest() != null) {
-      console.log("Redirecting to prove screen");
-      const encReq = encodeURIComponent(getPendingProofRequest());
-      clearAllPendingRequests();
-      navigate("/prove?request=" + encReq, { replace: true });
-    } else if (getPendingAddRequest() != null) {
-      console.log("Redirecting to add screen");
-      const encReq = encodeURIComponent(getPendingAddRequest());
-      clearAllPendingRequests();
-      navigate("/add?request=" + encReq, { replace: true });
-    } else if (getPendingHaloRequest() != null) {
-      console.log("Redirecting to halo screen");
-      clearAllPendingRequests();
-      navigate(`/halo${getPendingHaloRequest()}`, { replace: true });
-    } else if (getPendingGetWithoutProvingRequest() != null) {
-      console.log("Redirecting to get without proving screen");
-      const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
-      clearAllPendingRequests();
-      navigate(`/get-without-proving?request=${encReq}`, { replace: true });
-    } else if (getPendingViewSubscriptionsPageRequest() != null) {
-      console.log("Redirecting to view subscription screen");
-      clearAllPendingRequests();
-      navigate(`/subscriptions`, { replace: true });
-    } else if (getPendingAddSubscriptionPageRequest() != null) {
-      console.log("Redirecting to add subscription screen");
-      const encReq = encodeURIComponent(
-        JSON.parse(getPendingAddSubscriptionPageRequest())
-      );
-      clearAllPendingRequests();
-      navigate(`/add-subscription?url=${encReq}`, { replace: true });
     }
   });
 
