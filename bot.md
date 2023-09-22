@@ -22,7 +22,7 @@ _Doing this steps in order is more likely to result in success_
   yarn
   yarn build
   yarn localdb:init && yarn localdb:up
-  yarn dev:bot
+  yarn passport:dev
 ```
 
 ### 3. Sync the Dev Tickets
