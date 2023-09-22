@@ -15,7 +15,7 @@ import sha256 from "js-sha256";
 import { fetchPretixEventInfoByName } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
-import { fetchTelegramEvent } from "../database/queries/telegram/fetchTelegramEvent";
+import { fetchTelegramEventsByEventId } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
   insertTelegramVerification
@@ -458,13 +458,17 @@ export class TelegramService {
     // Find the event which matches the PCD
     // For this to work, the `telegram_bot_events` table must be populated.
 
-    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
-    if (!event) {
+    const events = await fetchTelegramEventsByEventId(
+      this.context.dbPool,
+      eventId
+    );
+    if (!events || events.length === 0) {
       throw new Error(
         `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
       );
     }
 
+    const event = events[0];
     // The event is linked to a chat. Make sure we can access it.
     const chatId = event.telegram_chat_id;
     const chat = await this.bot.api.getChat(chatId);
@@ -524,8 +528,11 @@ export class TelegramService {
       );
     }
 
-    const event = await fetchTelegramEvent(this.context.dbPool, eventId);
-    if (!event) {
+    const events = await fetchTelegramEventsByEventId(
+      this.context.dbPool,
+      eventId
+    );
+    if (!events || events.length === 0) {
       throw new Error(
         `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
       );
@@ -535,6 +542,7 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
+    const event = events[0];
     if (event.anon_chat_id == null) {
       throw new Error(`this group doesn't have an anon channel`);
     }
