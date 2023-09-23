@@ -1,6 +1,9 @@
 "use client";
 
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import sha256 from "js-sha256";
 import { useCallback, useState } from "react";
 
@@ -15,41 +18,49 @@ function requestProof(message: string) {
 
   const args = {
     ticket: {
-      argumentType: "PCD",
-      pcdType: "eddsa-ticket-pcd",
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
       userProvided: true
     },
     identity: {
-      argumentType: "PCD",
-      pcdType: "semaphore-identity-pcd",
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDPackage.name,
       value: undefined,
       userProvided: true
     },
     fieldsToReveal: {
-      argumentType: "Object",
+      argumentType: ArgumentTypeName.Object,
       value: {
         revealEventId: true
       },
       userProvided: false
     },
+    externalNullifier: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: undefined,
+      userProvided: false
+    },
     watermark: {
-      argumentType: "String",
+      argumentType: ArgumentTypeName.BigInt,
       value: watermark,
       userProvided: false
     }
   };
 
+  let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
+  const returnUrl = `${
+    process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
+  }/telegram/message?message=${encodeURIComponent(message)}`;
+
   const proofUrl = constructPassportPcdGetRequestUrl(
-    "https://pcdpass.xyz",
-    `https://api.pcdpass.xyz/telegram/message?message=${encodeURIComponent(
-      message
-    )}`,
+    passportOrigin,
+    returnUrl,
     "zk-eddsa-event-ticket-pcd",
     args,
     {
       genericProveScreen: true,
-      title: "ZK-EdDSA Event Ticket Request",
+      title: "ZK-EdDSA Ticket Request",
       description:
         "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
     }
@@ -69,7 +80,7 @@ export default function SubmitMessagePage() {
     <div className="w-screen h-screen flex items-center justify-center bg-gray-200">
       <div className="flex flex-col bg-white shadow-md rounded px-8 py-8 gap-6">
         <h1 className="text-gray-700 text-xl font-bold">
-          Please type your anonymous question below
+          Please type MY your anonymous question below
         </h1>
         <input
           value={message}
