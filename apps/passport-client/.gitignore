@@ -1,7 +1,6 @@
 
 # Esbuild generated output
 public/js
-public/artifacts
 .env
 public/service-worker.js
 public/index.html
