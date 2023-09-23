@@ -10,7 +10,7 @@ import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
 import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
-import { Button, H1, Spacer } from "../../core";
+import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
 
@@ -71,36 +71,28 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     }
   }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage, rollbar]);
 
-  const pageTitle = options?.title ?? "Prove " + pcdType;
-
   return (
-    <>
-      <H1>🔑 &nbsp; {pageTitle}</H1>
-      {options?.description && (
-        <>
-          <Spacer h={16} />
-          <p>{options.description}</p>
-        </>
-      )}
+    <Container>
+      {options?.description && <Description>{options.description}</Description>}
 
-      <Spacer h={24} />
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
       <PCDArgs args={args} setArgs={setArgs} pcdCollection={pcds} />
-      <Spacer h={16} />
-      {error && (
-        <>
-          <ErrorContainer>{error}</ErrorContainer>
-          <Spacer h={16} />
-        </>
-      )}
+
+      {error && <ErrorContainer>{error}</ErrorContainer>}
+
       {proving ? (
         <RippleLoader />
       ) : (
         <Button onClick={onProveClick}>Prove</Button>
       )}
-    </>
+    </Container>
   );
 }
+
+const Description = styled.div`
+  font-size: 14px;
+  color: rgba(var(--white-rgb), 0.8);
+`;
 
 const ErrorContainer = styled.div`
   width: 100%;
@@ -109,4 +101,13 @@ const ErrorContainer = styled.div`
   color: var(--danger);
   border-radius: 16px;
   border: 1px solid var(--danger);
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 16px 8px;
+  gap: 16px;
+  width: 100%;
 `;

@@ -5,6 +5,12 @@ import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";
+import inputCheck from "./input-check.svg";
+import inputNumber from "./input-number.svg";
+import inputObject from "./input-object.svg";
+import inputPcd from "./input-pcd.svg";
+import inputQuestion from "./input-question.svg";
+import inputText from "./input-text.svg";
 import logo from "./logo.svg";
 import qrCenterLoading from "./qr-center-loading.svg";
 import qrCenter from "./qr-center.svg";
@@ -23,6 +29,12 @@ export const icons = {
   closeWhite,
   infoAccent,
   infoPrimary,
+  inputCheck,
+  inputNumber,
+  inputObject,
+  inputPcd,
+  inputQuestion,
+  inputText,
   logo,
   qrCenterLoading,
   qrCenter,

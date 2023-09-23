@@ -7,7 +7,7 @@ import { icons } from "../icons";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 
-function AppHeaderImpl() {
+function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
   const dispatch = useDispatch();
 
   const setModal = useCallback(
@@ -26,6 +26,7 @@ function AppHeaderImpl() {
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
         <img draggable="false" src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
+      {children}
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <img
           draggable="false"
@@ -43,4 +44,6 @@ const AppHeaderWrap = styled.div`
   padding: 0;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  gap: 16px;
 `;
