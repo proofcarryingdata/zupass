@@ -80,7 +80,7 @@ export default function SubmitMessagePage() {
     <div className="w-screen h-screen flex items-center justify-center bg-gray-200">
       <div className="flex flex-col bg-white shadow-md rounded px-8 py-8 gap-6">
         <h1 className="text-gray-700 text-xl font-bold">
-          Please type MY your anonymous question below
+          Please type your anonymous question below
         </h1>
         <input
           value={message}
