@@ -15,6 +15,9 @@ export type SerializedTicket = [
   bigint,
   bigint,
   bigint,
+  // These three fields are currently not typed or being used, but are kept
+  // as reserved fields that are hardcoded to zero and included in the preimage
+  // of the hashed signature.
   bigint,
   bigint,
   bigint
