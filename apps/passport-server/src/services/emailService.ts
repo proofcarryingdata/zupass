@@ -119,10 +119,9 @@ export class EmailService {
       try {
         this.emailAPI.send(msg);
       } catch (e) {
-        throw (
-          (new PCDHTTPError(500, `Email send error, failed to email ${to}`),
-          { cause: e })
-        );
+        throw new PCDHTTPError(500, `Email send error, failed to email ${to}`, {
+          cause: e
+        });
       }
     });
   }
