@@ -19,7 +19,8 @@ export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 export enum TicketCategory {
   ZuConnect = 0,
   Devconnect = 1,
-  PcdWorkingGroup = 2
+  PcdWorkingGroup = 2,
+  Zuzalu = 3
 }
 
 export interface ITicketData {

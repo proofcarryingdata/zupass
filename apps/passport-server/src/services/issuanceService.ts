@@ -864,7 +864,8 @@ export class IssuanceService {
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
-            isRevoked: false
+            isRevoked: false,
+            ticketCategory: TicketCategory.Zuzalu
           })
         );
       }
