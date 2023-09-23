@@ -4,7 +4,6 @@ import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { closeWebviewHtml } from "../../util/telegramWebApp";
 import { checkQueryParam, checkUrlParam } from "../params";
-import { PCDHTTPError } from "../pcdHttpError";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -23,33 +22,6 @@ export function initTelegramRoutes(
    * Telegram.
    */
   app.get("/telegram/verify/:id", async (req: Request, res: Response) => {
-    const telegram_user_id = checkUrlParam(req, "id");
-    const proof = checkQueryParam(req, "proof");
-
-    if (!proof || typeof proof !== "string") {
-      throw new PCDHTTPError(
-        400,
-        "[TELEGRAM] proof field needs to be a string and be non-empty"
-      );
-    }
-
-    if (
-      !telegram_user_id ||
-      typeof telegram_user_id !== "string" ||
-      !/^-?\d+$/.test(telegram_user_id)
-    ) {
-      throw new PCDHTTPError(
-        400,
-        "telegram_user_id field needs to be a numeric string and be non-empty"
-      );
-    }
-
-    logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
-
-    if (!telegramService) {
-      throw new PCDHTTPError(503, "Telegram service not initialized");
-    }
-
     try {
       const { proof } = req.query;
       const telegram_user_id = checkUrlParam(req, "id");
