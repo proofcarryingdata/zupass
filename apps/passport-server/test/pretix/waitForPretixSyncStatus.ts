@@ -1,25 +1,24 @@
-import chai from "chai";
+import { requestPretixSyncStatus } from "@pcd/passport-interface";
 import { PretixSyncStatus } from "../../src/services/types";
 import { PCDpass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
 export async function waitForPretixSyncStatus(
-  application: PCDpass
+  application: PCDpass,
+  isZuzalu: boolean
 ): Promise<PretixSyncStatus> {
-  const { expressContext } = application;
-
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const r = await chai
-      .request(expressContext.app)
-      .get("/pretix/status")
-      .send();
+    const pretixSyncStatusResult = await requestPretixSyncStatus(
+      application.expressContext.localEndpoint,
+      isZuzalu
+    );
 
     if (
-      r.text === PretixSyncStatus.NoPretix ||
-      r.text === PretixSyncStatus.Synced
+      pretixSyncStatusResult.value === PretixSyncStatus.NoPretix ||
+      pretixSyncStatusResult.value === PretixSyncStatus.Synced
     ) {
-      return r.text as PretixSyncStatus;
+      return pretixSyncStatusResult.value as PretixSyncStatus;
     }
 
     await sleep(500);

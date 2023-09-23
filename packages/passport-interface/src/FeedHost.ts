@@ -1,15 +1,15 @@
 import {
-  FeedRequest,
-  FeedResponse,
   ListFeedsRequest,
-  ListFeedsResponse,
-  ListSingleFeedRequest
+  ListFeedsResponseValue,
+  ListSingleFeedRequest,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "./RequestTypes";
 import { Feed } from "./SubscriptionManager";
 
 export interface HostedFeed {
   feed: Feed;
-  handleRequest(request: FeedRequest): Promise<FeedResponse>;
+  handleRequest(request: PollFeedRequest): Promise<PollFeedResponseValue>;
 }
 
 export class FeedHost {
@@ -35,18 +35,21 @@ export class FeedHost {
     return this.providerName;
   }
 
-  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
+  public async handleFeedRequest(
+    request: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
     const feed = this.hostedFeed.find((f) => f.feed.id === request.feedId);
     if (!feed) {
       throw new Error(`couldn't find feed with id ${request.feedId}`);
     }
+
     const response = await feed.handleRequest(request);
     return response;
   }
 
   public async handleListFeedsRequest(
     _request: ListFeedsRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return {
       providerName: this.providerName,
       providerUrl: this.providerUrl,
@@ -60,7 +63,7 @@ export class FeedHost {
 
   public async handleListSingleFeedRequest(
     _request: ListSingleFeedRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return {
       providerUrl: this.providerUrl,
       providerName: this.providerName,

@@ -24,11 +24,7 @@ export async function startServices(
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
-  const emailService = startEmailService(
-    context,
-    rollbarService,
-    apis.emailAPI
-  );
+  const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
   const zuzaluPretixSyncService = startPretixSyncService(
@@ -47,10 +43,9 @@ export async function startServices(
     context,
     semaphoreService,
     emailTokenService,
-    emailService,
-    rollbarService
+    emailService
   );
-  const e2eeService = startE2EEService(context, rollbarService);
+  const e2eeService = startE2EEService(context);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,

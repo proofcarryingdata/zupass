@@ -45,7 +45,7 @@ export default function Page() {
   }, [signatureProofValid, signatureProof]);
 
   // Once we have the UUID, fetch the user data from Passport.
-  const { user } = useFetchUser(ZUPASS_SERVER_URL, signedMessage?.uuid);
+  const { user } = useFetchUser(ZUPASS_SERVER_URL, true, signedMessage?.uuid);
 
   return (
     <>

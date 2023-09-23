@@ -1,3 +1,4 @@
+import { requestLogToServer } from "@pcd/passport-interface";
 import {
   ChangeEvent,
   FormEvent,
@@ -6,7 +7,6 @@ import {
   useState
 } from "react";
 import styled from "styled-components";
-import { logToServer } from "../../src/api/logApi";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import {
@@ -75,7 +75,9 @@ export function LoginScreen() {
     }
 
     if (pendingRequestForLogging != null) {
-      logToServer("login-with-pending", { pending: pendingRequestForLogging });
+      requestLogToServer(appConfig.passportServer, "login-with-pending", {
+        pending: pendingRequestForLogging
+      });
     }
   }, [
     pendingGetWithoutProvingRequest,

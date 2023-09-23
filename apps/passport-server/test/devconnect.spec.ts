@@ -5,22 +5,26 @@ import {
   ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  CheckInResponse,
-  FeedResponse,
+  checkinTicket,
   ISSUANCE_STRING,
-  PCDPassFeedIds
+  PCDPassFeedIds,
+  pollFeed,
+  PollFeedResponseValue,
+  requestServerEdDSAPublicKey,
+  requestServerRSAPublicKey
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
+  isReplaceInFolderAction,
   PCDActionType,
-  ReplaceInFolderAction,
-  isReplaceInFolderAction
+  ReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
+import { step } from "mocha-steps";
 import { rest } from "msw";
 import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
@@ -64,19 +68,14 @@ import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyn
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
 import { sleep } from "../src/util/util";
-import {
-  requestCheckIn,
-  requestIssuedPCDs,
-  requestServerEdDSAPublicKey,
-  requestServerRSAPublicKey
-} from "./issuance/issuance";
+
 import {
   DevconnectPretixDataMocker,
   IMockDevconnectPretixData,
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
-import { waitForDevconnectPretixSyncStatus } from "./pretix/waitForDevconnectPretixSyncStatus";
+import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDpass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
@@ -210,8 +209,7 @@ describe("devconnect functionality", function () {
   });
 
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus =
-      await waitForDevconnectPretixSyncStatus(application);
+    const pretixSyncStatus = await waitForPretixSyncStatus(application, false);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -922,9 +920,15 @@ describe("devconnect functionality", function () {
   step(
     "anyone should be able to request the server's RSA public key",
     async function () {
-      const publicKeyResponse = await requestServerRSAPublicKey(application);
-      expect(publicKeyResponse.status).to.eq(200);
-      publicKeyRSA = new NodeRSA(publicKeyResponse.text, "public");
+      const publicKeyResponse = await requestServerRSAPublicKey(
+        application.expressContext.localEndpoint
+      );
+      if (!publicKeyResponse.value) {
+        throw new Error(
+          "exected to be able to download the server's public key"
+        );
+      }
+      publicKeyRSA = new NodeRSA(publicKeyResponse.value, "public");
       expect(publicKeyRSA.getKeySize()).to.eq(2048);
       expect(publicKeyRSA.isPublic(true)).to.eq(true);
       expect(publicKeyRSA.isPrivate()).to.eq(false); // just to be safe
@@ -934,9 +938,17 @@ describe("devconnect functionality", function () {
   step(
     "anyone should be able to request the server's EdDSA public key",
     async function () {
-      const publicKeyResponse = await requestServerEdDSAPublicKey(application);
-      expect(publicKeyResponse.status).to.eq(200);
-      publicKeyEdDSA = JSON.parse(publicKeyResponse.text);
+      const publicKeyResult = await requestServerEdDSAPublicKey(
+        application.expressContext.localEndpoint
+      );
+
+      expect(publicKeyResult.success).to.eq(true);
+      expect(publicKeyResult.error).to.eq(undefined);
+      if (!publicKeyResult.success) {
+        throw new Error("expected to be able to get eddsa public key");
+      }
+
+      publicKeyEdDSA = publicKeyResult.value;
       const [xValue, yValue] = publicKeyEdDSA;
       // Check lengths - should be 32 bytes in hex
       expect(xValue.length).to.eq(64);
@@ -969,16 +981,19 @@ describe("devconnect functionality", function () {
   step(
     "user should be able to be issued some PCDs from the server",
     async function () {
-      const response = await requestIssuedPCDs(
-        application,
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
         PCDPassFeedIds.Devconnect
       );
-      const responseBody = response.body as FeedResponse;
 
-      expect(responseBody.actions.length).to.eq(3);
-      const action = responseBody.actions[2] as ReplaceInFolderAction;
+      if (response.error) {
+        throw new Error("expected to be able to get a feed response");
+      }
+
+      expect(response.value?.actions?.length).to.eq(3);
+      const action = response.value?.actions?.[2] as ReplaceInFolderAction;
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(action.folder).to.eq("Devconnect/Event A");
@@ -1002,20 +1017,20 @@ describe("devconnect functionality", function () {
   );
 
   step("issued pcds should have stable ids", async function () {
-    const expressResponse1 = await requestIssuedPCDs(
-      application,
+    const expressResponse1 = await pollFeed(
+      application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
       PCDPassFeedIds.Devconnect
     );
-    const expressResponse2 = await requestIssuedPCDs(
-      application,
+    const expressResponse2 = await pollFeed(
+      application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
       PCDPassFeedIds.Devconnect
     );
-    const response1 = expressResponse1.body as FeedResponse;
-    const response2 = expressResponse2.body as FeedResponse;
+    const response1 = expressResponse1.value as PollFeedResponseValue;
+    const response2 = expressResponse2.value as PollFeedResponseValue;
     const action1 = response1.actions[0] as AppendToFolderAction;
     const action2 = response2.actions[0] as AppendToFolderAction;
 
@@ -1055,13 +1070,13 @@ describe("devconnect functionality", function () {
     );
 
     await devconnectPretixSyncService.trySync();
-    const response = await requestIssuedPCDs(
-      application,
+    const response = await pollFeed(
+      application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
       PCDPassFeedIds.Devconnect
     );
-    const responseBody = response.body as FeedResponse;
+    const responseBody = response.value as PollFeedResponseValue;
     expect(responseBody.actions.length).to.eq(3);
 
     const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
@@ -1099,13 +1114,13 @@ describe("devconnect functionality", function () {
 
     await devconnectPretixSyncService.trySync();
 
-    const response = await requestIssuedPCDs(
-      application,
+    const response = await pollFeed(
+      application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
       PCDPassFeedIds.Devconnect
     );
-    const responseBody = response.body as FeedResponse;
+    const responseBody = response.value as PollFeedResponseValue;
     expect(responseBody.actions.length).to.eq(3);
     const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
     expect(devconnectAction.folder).to.eq("Devconnect/Event A");
@@ -1145,45 +1160,40 @@ describe("devconnect functionality", function () {
 
   let ticket: EdDSATicketPCD;
   step("should be able to check in with a valid ticket", async function () {
-    const issueResponse = await requestIssuedPCDs(
-      application,
+    const issueResponse = await pollFeed(
+      application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
       PCDPassFeedIds.Devconnect
     );
-    const issueResponseBody = issueResponse.body as FeedResponse;
+    const issueResponseBody = issueResponse.value as PollFeedResponseValue;
     const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
 
     const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
     ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
-    const checkinResponse = await requestCheckIn(
-      application,
+    const checkinResult = await checkinTicket(
+      application.expressContext.localEndpoint,
       ticket,
       checkerIdentity
     );
-    const checkinResponseBody = checkinResponse.body as CheckInResponse;
 
-    expect(checkinResponse.status).to.eq(200);
-    expect((checkinResponseBody as any)["error"]).to.eq(undefined);
-    expect(checkinResponseBody.success).to.eq(true);
+    expect(checkinResult.success).to.eq(true);
+    expect(checkinResult.value).to.eq(undefined);
+    expect(checkinResult.error).to.eq(undefined);
   });
 
   step(
     "should not be able to check in with a ticket that has already been used to check in",
     async function () {
-      const checkinResponse = await requestCheckIn(
-        application,
+      const checkinResult = await checkinTicket(
+        application.expressContext.localEndpoint,
         ticket,
         checkerIdentity
       );
-      const checkinResponseBody = checkinResponse.body as CheckInResponse;
 
-      expect(checkinResponse.status).to.eq(200);
-      expect(checkinResponseBody.success).to.eq(false);
-      if (!checkinResponseBody.success) {
-        expect(checkinResponseBody.error.name).to.eq("AlreadyCheckedIn");
-      }
+      expect(checkinResult.value).to.eq(undefined);
+      expect(checkinResult?.error?.name).to.eq("AlreadyCheckedIn");
     }
   );
 
@@ -1225,17 +1235,14 @@ describe("devconnect functionality", function () {
         }
       });
 
-      const checkinResponse = await requestCheckIn(
-        application,
+      const checkinResult = await checkinTicket(
+        application.expressContext.localEndpoint,
         ticket,
         checkerIdentity
       );
-      const responseBody = checkinResponse.body as CheckInResponse;
-      expect(checkinResponse.status).to.eq(200);
-      expect(responseBody.success).to.eq(false);
-      if (!responseBody.success) {
-        expect(responseBody.error.name).to.eq("InvalidSignature");
-      }
+
+      expect(checkinResult.value).to.eq(undefined);
+      expect(checkinResult?.error?.name).to.eq("InvalidSignature");
     }
   );
 
@@ -1258,14 +1265,14 @@ describe("devconnect functionality", function () {
   step(
     "shouldn't be able to issue pcds for the incorrect 'issuance string'",
     async function () {
-      const expressResponse = await requestIssuedPCDs(
-        application,
+      const expressResponse = await pollFeed(
+        application.expressContext.localEndpoint,
         identity,
         "asdf",
         PCDPassFeedIds.Devconnect
       );
 
-      const response = expressResponse.body as FeedResponse;
+      const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([
         { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
         { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
@@ -1279,14 +1286,14 @@ describe("devconnect functionality", function () {
   step(
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
-      const expressResponse = await requestIssuedPCDs(
-        application,
+      const expressResponse = await pollFeed(
+        application.expressContext.localEndpoint,
         new Identity(),
         ISSUANCE_STRING,
         PCDPassFeedIds.Devconnect
       );
 
-      const response = expressResponse.body as FeedResponse;
+      const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([
         { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
         { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }

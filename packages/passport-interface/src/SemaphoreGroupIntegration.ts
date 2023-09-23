@@ -7,7 +7,8 @@ import {
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
@@ -82,25 +83,23 @@ export function useSemaphoreGroupProof(
   onVerified: (valid: boolean) => void,
   externalNullifier?: string
 ) {
-  const [error, setError] = useState<Error | undefined>();
   const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
-
-  // Meanwhile, load the group so that we can verify against it
+  const [error, setError] = useState<string | undefined>();
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
-  useEffect(() => {
-    (async () => {
-      if (!semaphoreGroupPCD) return;
 
-      try {
-        const res = await fetch(semaphoreGroupUrl);
-        const json = await res.text();
-        const group = JSON.parse(json) as SerializedSemaphoreGroup;
-        setGroup(group);
-      } catch (e) {
-        setError(e as Error);
-      }
-    })();
+  const loadSemaphoreGroup = useCallback(async () => {
+    if (!semaphoreGroupPCD) return;
+    const groupResult = await requestSemaphoreGroup(semaphoreGroupUrl);
+    if (groupResult.success) {
+      setGroup(groupResult.value);
+    } else {
+      setError(groupResult.error);
+    }
   }, [semaphoreGroupPCD, semaphoreGroupUrl]);
+
+  useEffect(() => {
+    loadSemaphoreGroup();
+  }, [loadSemaphoreGroup]);
 
   useEffect(() => {
     if (semaphoreGroupPCD && semaphoreGroup) {

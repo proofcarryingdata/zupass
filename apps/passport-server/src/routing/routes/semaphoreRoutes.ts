@@ -1,101 +1,115 @@
-import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreValidRootResponseValue } from "@pcd/passport-interface";
+import {
+  SerializedSemaphoreGroup,
+  serializeSemaphoreGroup
+} from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
-
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { decodeString } from "../../util/util";
+import { checkUrlParam } from "../params";
+import { PCDHTTPError } from "../pcdHttpError";
 
 export function initSemaphoreRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { semaphoreService, rollbarService }: GlobalServices
+  { semaphoreService }: GlobalServices
 ): void {
   logger("[INIT] initializing semaphore routes");
 
+  /**
+   * We maintain semaphore groups of our users. Whenever a new Semaphore
+   * identity is created on PCDpass/Zupass, we update the appropriate groups.
+   * This route lets callers determine whether the given group ever had the
+   * given root hash.
+   *
+   * @todo - should we turn this off for Devconnect/Zuconnect? could get expensive.
+   * @todo - should we have a max age and delete really old roots?
+   * @todo - write tests?
+   */
   app.get(
     "/semaphore/valid-historic/:id/:root",
     async (req: Request, res: Response) => {
-      try {
-        const id = decodeString(req.params.id, "id");
-        const root = decodeString(req.params.root, "root");
-        const historicGroupValid =
-          await semaphoreService.getHistoricSemaphoreGroupValid(id, root);
+      const groupId = checkUrlParam(req, "id");
+      const roothash = checkUrlParam(req, "root");
 
-        res.json({
-          valid: historicGroupValid,
-        });
-      } catch (e) {
-        logger(e);
-        rollbarService?.reportError(e);
-        res.sendStatus(500);
-      }
+      const historicGroupValid =
+        await semaphoreService.getHistoricSemaphoreGroupValid(
+          groupId,
+          roothash
+        );
+
+      const result = {
+        valid: historicGroupValid
+      };
+
+      res.json(result satisfies SemaphoreValidRootResponseValue);
     }
   );
 
+  /**
+   * Gets an old semaphore group by id and root hash from the database.
+   *
+   * Returns a 404 if it can't find the group.
+   *
+   * @todo - turn off?
+   * @todo - write tests?
+   */
   app.get(
     "/semaphore/historic/:id/:root",
     async (req: Request, res: Response) => {
-      try {
-        const id = decodeString(req.params.id, "id");
-        const root = decodeString(req.params.root, "root");
-        const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
-          id,
-          root
-        );
+      const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
+        checkUrlParam(req, "id"),
+        checkUrlParam(req, "root")
+      );
 
-        if (historicGroup === undefined) {
-          res.status(404);
-          res.send("not found");
-          return;
-        }
-
-        res.json(JSON.parse(historicGroup.serializedGroup));
-      } catch (e) {
-        logger(e);
-        rollbarService?.reportError(e);
-        res.sendStatus(500);
+      if (historicGroup == null) {
+        throw new PCDHTTPError(404, "Semaphore group not found");
       }
+
+      const result = JSON.parse(historicGroup.serializedGroup);
+
+      res.json(result satisfies SerializedSemaphoreGroup);
     }
   );
 
+  /**
+   * Gets the latest root hash for the given semaphore group.
+   *
+   * If no group exists for the given id, returns a 404.
+   *
+   * @todo - turn off?
+   * @todo - write tests?
+   */
   app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
-    try {
-      const id = decodeString(req.params.id, "id");
-      const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
-      const matchingGroup = latestGroups.find(
-        (g) => g.groupId.toString() === id
-      );
+    const id = checkUrlParam(req, "id");
+    const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
+    const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
 
-      if (matchingGroup === undefined) {
-        res.status(404).send("not found");
-        return;
-      }
-
-      res.json(matchingGroup.rootHash);
-    } catch (e) {
-      logger(e);
-      rollbarService?.reportError(e);
-      res.sendStatus(500);
+    if (matchingGroup == null) {
+      throw new PCDHTTPError(404, "Semaphore group not found");
     }
+
+    res.json(matchingGroup.rootHash satisfies string);
   });
 
-  // Fetch a semaphore group.
+  /**
+   * Gets the latest Semaphore group for a given semaphore group id.
+   *
+   * If no group exists for the given id, returns a 404.
+   *
+   * @todo - turn off?
+   * @todo - write tests?
+   */
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
-    try {
-      const semaphoreId = decodeString(req.params.id, "id");
-      const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
+    const semaphoreId = checkUrlParam(req, "id");
+    const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
 
-      if (namedGroup == null) {
-        res.sendStatus(404);
-        res.json(`Missing semaphore group ${semaphoreId}`);
-        return;
-      }
-
-      res.json(serializeSemaphoreGroup(namedGroup.group, namedGroup.name));
-    } catch (e) {
-      logger(e);
-      rollbarService?.reportError(e);
-      res.sendStatus(500);
+    if (namedGroup == null) {
+      throw new PCDHTTPError(404, "Semaphore group not found");
     }
+
+    const result = serializeSemaphoreGroup(namedGroup.group, namedGroup.name);
+
+    res.json(result satisfies SerializedSemaphoreGroup);
   });
 }

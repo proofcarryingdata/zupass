@@ -20,6 +20,13 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/rsa-ticket-pcd": "0.1.2",
+    "@pcd/webauthn-pcd": "0.6.2",
+    "@semaphore-protocol/group": "^3.11.0",
+    "@semaphore-protocol/proof": "^3.11.0",
+    "react": "^18.2.0",
+    "url-join": "4.0.1",
+    "uuid": "^9.0.0",
     "@pcd/eddsa-ticket-pcd": "0.2.0",
     "@pcd/pcd-collection": "0.7.0",
     "@pcd/passport-crypto": "0.7.0",
@@ -30,15 +37,14 @@
     "@pcd/util": "0.1.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@pcd/emitter": "0.1.0",
-    "uuid": "^9.0.0",
-    "js-sha256": "^0.9.0",
-    "react": "^18.2.0"
+    "js-sha256": "^0.9.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
+    "@types/url-join": "4.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
     "eslint": "^7.32.0",

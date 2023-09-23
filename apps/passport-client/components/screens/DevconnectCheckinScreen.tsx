@@ -5,20 +5,17 @@ import {
   ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  CheckInResponse,
-  CheckTicketResponse,
-  ISSUANCE_STRING,
+  checkinTicket,
+  CheckTicketResult,
+  requestCheckTicket,
   TicketError
 } from "@pcd/passport-interface";
 import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
+import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
-import { requestCheckIn, requestCheckTicket } from "../../src/api/checkinApi";
+import { appConfig } from "../../src/appConfig";
 import { useIdentity } from "../../src/appHooks";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
@@ -31,8 +28,7 @@ import {
 
 export function DevconnectCheckinScreen() {
   const { ticket, error: decodeError } = useDecodedTicket();
-
-  const { loading: checkingTicket, response: checkTicketResponse } =
+  const { loading: checkingTicket, result: checkTicketResult } =
     useCheckTicket(ticket);
 
   const ticketData = getEdDSATicketData(ticket);
@@ -51,14 +47,11 @@ export function DevconnectCheckinScreen() {
       </div>
     );
   } else {
-    if (checkTicketResponse.success === true) {
+    if (checkTicketResult.success) {
       content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
     } else {
       content = (
-        <TicketError
-          ticketData={ticketData}
-          error={checkTicketResponse.error}
-        />
+        <TicketError ticketData={ticketData} error={checkTicketResult.error} />
       );
     }
   }
@@ -209,66 +202,72 @@ function UserReadyForCheckin({
 
 function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
   loading: boolean;
-  response: CheckTicketResponse;
+  result: CheckTicketResult;
 } {
-  const [loading, setLoading] = useState(true);
-  const [response, setResponse] = useState<CheckTicketResponse | undefined>();
+  const [inProgress, setInProgress] = useState(true);
+  const [result, setResult] = useState<CheckTicketResult | undefined>();
+
+  const checkTicket = useCallback(
+    async (ticket: EdDSATicketPCD | undefined) => {
+      if (!ticket) {
+        return;
+      } else {
+        console.log("checking", ticket);
+      }
+
+      const checkTicketResult = await requestCheckTicket(
+        appConfig.passportServer,
+        {
+          ticket: await EdDSATicketPCDPackage.serialize(ticket)
+        }
+      );
+      setInProgress(false);
+      setResult(checkTicketResult);
+    },
+    []
+  );
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (!ticket) {
-          setResponse({ success: false, error: { name: "InvalidTicket" } });
-          setLoading(false);
-          return;
-        }
-        setLoading(true);
-        const checkResponse = await requestCheckTicket({
-          ticket: await EdDSATicketPCDPackage.serialize(ticket)
-        });
-        setResponse(checkResponse);
-        setLoading(false);
-      } catch (e) {
-        console.log(e);
-        setLoading(false);
-        setResponse({ success: false, error: { name: "ServerError" } });
-      }
-    })();
-  }, [ticket]);
+    checkTicket(ticket);
+  }, [checkTicket, ticket]);
 
-  return { loading, response };
+  return { loading: inProgress, result };
 }
 
 function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
-  const [checkingIn, setCheckingIn] = useState(false);
+  const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const identity = useIdentity();
 
-  const onCheckInClick = useCallback(() => {
-    if (checkingIn) {
+  const onCheckInClick = useCallback(async () => {
+    if (inProgress) {
       return;
     }
-    setCheckingIn(true);
-    checkinTicket(identity, ticket)
-      .then((response) => {
-        setCheckedIn(response.success);
-        setFinishedCheckinAttempt(true);
-        setCheckingIn(false);
-      })
-      .catch(() => {
-        console.log("failed to verify");
-        setFinishedCheckinAttempt(true);
-        setCheckingIn(false);
-      });
-  }, [checkingIn, identity, ticket]);
+
+    setInProgress(true);
+    const checkinResult = await checkinTicket(
+      appConfig.passportServer,
+      ticket,
+      identity
+    );
+    setInProgress(false);
+
+    if (!checkinResult.success) {
+      // todo: display error better
+      setFinishedCheckinAttempt(true);
+    } else {
+      setCheckedIn(true);
+      setFinishedCheckinAttempt(true);
+    }
+  }, [inProgress, identity, ticket]);
 
   return (
     <CheckinSectionContainer>
-      {!checkingIn && !finishedCheckinAttempt && (
+      {!inProgress && !finishedCheckinAttempt && (
         <Button onClick={onCheckInClick}>Check In</Button>
       )}
-      {checkingIn && <RippleLoader />}
+      {inProgress && <RippleLoader />}
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
@@ -319,20 +318,21 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
 
 function useDecodedTicket(): {
   ticket: EdDSATicketPCD | undefined;
-  error: Error | undefined;
+  error: string;
 } {
   const location = useLocation();
   const [ticket, setDecodedPCD] = useState<EdDSATicketPCD | undefined>();
-  const [error, setError] = useState<Error>();
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     (async () => {
       try {
         const pcd = await decodePCD(location);
         setDecodedPCD(pcd);
+        console.log("decoded ticket", pcd);
       } catch (e) {
         console.log(e);
-        setError(e);
+        setError(getErrorMessage(e));
       }
     })();
   }, [location, setDecodedPCD]);
@@ -362,37 +362,6 @@ async function decodePCD(
   }
 
   return undefined;
-}
-
-async function checkinTicket(
-  checkerIdentity: Identity,
-  ticket: EdDSATicketPCD
-): Promise<CheckInResponse> {
-  try {
-    const response = await requestCheckIn({
-      ticket: await EdDSATicketPCDPackage.serialize(ticket),
-      checkerProof: await SemaphoreSignaturePCDPackage.serialize(
-        await SemaphoreSignaturePCDPackage.prove({
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            value: await SemaphoreIdentityPCDPackage.serialize(
-              await SemaphoreIdentityPCDPackage.prove({
-                identity: checkerIdentity
-              })
-            )
-          },
-          signedMessage: {
-            argumentType: ArgumentTypeName.String,
-            value: ISSUANCE_STRING
-          }
-        })
-      )
-    });
-    return response;
-  } catch (e) {
-    console.log("failed to check in", e);
-    return { success: false, error: { name: "ServerError" } };
-  }
 }
 
 const TicketInfoContainer = styled.div`

@@ -3,7 +3,7 @@ import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { closeWebviewHtml } from "../../util/telegramWebApp";
-import { decodeString } from "../../util/util";
+import { checkQueryParam, checkUrlParam } from "../params";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -24,7 +24,7 @@ export function initTelegramRoutes(
   app.get("/telegram/verify/:id", async (req: Request, res: Response) => {
     try {
       const { proof } = req.query;
-      const telegram_user_id = decodeString(req.params.id, "id");
+      const telegram_user_id = checkUrlParam(req, "id");
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
       }
@@ -64,8 +64,8 @@ export function initTelegramRoutes(
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
-      res.sendStatus(500);
-      res.sendFile(path.resolve("resources/telegram/error.html"));
+      res.set("Content-Type", "text/html");
+      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
 
@@ -82,7 +82,8 @@ export function initTelegramRoutes(
    */
   app.get("/telegram/message", async (req, res) => {
     try {
-      const { proof, message } = req.query;
+      const proof = checkQueryParam(req, "proof");
+      const message = checkQueryParam(req, "message");
 
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
@@ -104,14 +105,12 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to send anonymous message", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.sendFile(path.resolve("resources/telegram/error.html"));
-        res.sendStatus(500);
+        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to send anonymous message", e);
       rollbarService?.reportError(e);
-      res.sendStatus(500);
-      res.sendFile(path.resolve("resources/telegram/error.html"));
+      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
 }

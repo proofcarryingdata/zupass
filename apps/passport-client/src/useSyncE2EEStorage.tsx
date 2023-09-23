@@ -1,19 +1,13 @@
+import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
-  getHash,
-  passportDecrypt,
-  passportEncrypt
-} from "@pcd/passport-crypto";
-import {
-  SyncedEncryptedStorage,
-  SyncedEncryptedStorageV2,
-  isSyncedEncryptedStorageV2
+  isSyncedEncryptedStorageV2,
+  requestDownloadAndDecryptStorage,
+  requestUploadEncryptedStorage,
+  SyncedEncryptedStorageV2
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect, useState } from "react";
-import {
-  downloadEncryptedStorage,
-  uploadEncryptedStorage
-} from "./api/endToEndEncryptionApi";
+import { appConfig } from "./appConfig";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
@@ -32,11 +26,15 @@ import { useOnStateChange } from "./subscribe";
 export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
+
   if (pcds.size() === 0) {
     console.error("[SYNC] skipping upload, no pcds in localStorage");
     return;
   }
+
   const encryptionKey = await loadEncryptionKey();
+  const blobKey = await getHash(encryptionKey);
+
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({
       pcds: await pcds.serializeCollection(),
@@ -46,14 +44,17 @@ export async function uploadStorage(): Promise<void> {
     encryptionKey
   );
 
-  const blobKey = await getHash(encryptionKey);
-  return uploadEncryptedStorage(blobKey, encryptedStorage)
-    .then(() => {
-      console.log("[SYNC] uploaded e2ee storage");
-    })
-    .catch((e) => {
-      console.log("[SYNC] failed to upload e2ee storage", e);
-    });
+  const uploadResult = await requestUploadEncryptedStorage(
+    appConfig.passportServer,
+    blobKey,
+    encryptedStorage
+  );
+
+  if (uploadResult.success) {
+    console.log("[SYNC] uploaded e2ee storage");
+  } else {
+    console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
+  }
 }
 
 /**
@@ -62,34 +63,35 @@ export async function uploadStorage(): Promise<void> {
  */
 export async function downloadStorage(): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
-  const encryptionKey = await loadEncryptionKey();
-  const blobHash = await getHash(encryptionKey);
-  const storage = await downloadEncryptedStorage(blobHash);
 
-  if (storage == null) {
+  const encryptionKey = await loadEncryptionKey();
+  const storageResult = await requestDownloadAndDecryptStorage(
+    appConfig.passportServer,
+    encryptionKey
+  );
+
+  if (!storageResult.success) {
+    console.error("[SYNC] error downloading e2ee storage", storageResult.error);
     return null;
   }
 
-  const decrypted = await passportDecrypt(storage, encryptionKey);
-
   try {
-    const decryptedPacket = JSON.parse(decrypted) as SyncedEncryptedStorage;
     let pcds: PCDCollection;
 
-    if (isSyncedEncryptedStorageV2(decryptedPacket)) {
+    if (isSyncedEncryptedStorageV2(storageResult.value)) {
       pcds = await PCDCollection.deserialize(
         await getPackages(),
-        decryptedPacket.pcds
+        storageResult.value.pcds
       );
     } else {
       pcds = new PCDCollection(await getPackages());
-      await pcds.deserializeAllAndAdd(decryptedPacket.pcds);
+      await pcds.deserializeAllAndAdd(storageResult.value.pcds);
     }
 
     await savePCDs(pcds);
     return pcds;
   } catch (e) {
-    console.log("[SYNC] uploaded storage is corrupted - ignoring it");
+    console.error("[SYNC] uploaded storage is corrupted - ignoring it", e);
     return null;
   }
 }

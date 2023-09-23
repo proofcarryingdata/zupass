@@ -1,11 +1,11 @@
-import { DateRange } from "@pcd/passport-interface";
+import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import {
   IZuzaluPretixAPI,
   ZuzaluPretixOrder,
   ZuzaluPretixSubevent
 } from "../apis/pretixAPI";
-import { ZuzaluPretixTicket, ZuzaluUserRole } from "../database/models";
+import { ZuzaluPretixTicket } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
