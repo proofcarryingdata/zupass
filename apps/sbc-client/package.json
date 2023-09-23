@@ -3,8 +3,8 @@
   "version": "0.1.1",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 4000",
-    "build": "exit 0",
+    "dev": "NODE_ENV=development nodemon dev.ts",
+    "build": "next build && tsc --project tsconfig.server.json",
     "export": "next export",
     "start": "next start -p 4000",
     "lint": "next lint"
@@ -25,6 +25,8 @@
   },
   "devDependencies": {
     "eslint": "8.47.0",
-    "eslint-config-next": "13.4.13"
+    "eslint-config-next": "13.4.13",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1"
   }
 }

@@ -73,6 +73,7 @@ export class TelegramService {
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu("events");
+    const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
@@ -100,6 +101,7 @@ export class TelegramService {
 
     this.bot.use(eventsMenu);
     this.bot.use(pcdPassMenu);
+    this.bot.use(anonSendMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -262,6 +264,21 @@ export class TelegramService {
       `,
         { parse_mode: "HTML" }
       );
+    });
+
+    this.bot.command("anonsend", async (ctx) => {
+      if (ctx.chat?.type !== "private") {
+        await ctx.reply(
+          "To maintain privacy, please message within a private chat."
+        );
+        return;
+      }
+      const zktgUrl = "https://dev.local:4000/";
+
+      anonSendMenu.webApp("Send anonymous message", zktgUrl);
+      await ctx.reply("Click below to anonymously send a message.", {
+        reply_markup: anonSendMenu
+      });
     });
   }
 
