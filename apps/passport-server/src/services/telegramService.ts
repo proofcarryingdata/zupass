@@ -283,7 +283,7 @@ export class TelegramService {
     });
 
     this.bot.command("incognito", async (ctx) => {
-      if (ctx.chat?.type !== "supergroup" && ctx.message?.is_topic_message) {
+      if (ctx.chat?.type !== "supergroup") {
         await ctx.reply(
           "This command only works in a group with Topics enabled."
         );
