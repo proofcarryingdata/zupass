@@ -156,18 +156,22 @@ describe("Ethereum ownership PCD", function () {
         value: serializedIdentity
       }
     });
-
+    const finalCharacter = pcd.claim.ethereumAddress.substring(pcd.claim.ethereumAddress.length - 1);
+    const replacementCharacter = finalCharacter === "0" ? "1" : "0";
     const mangledAddress =
       pcd.claim.ethereumAddress.substring(
         0,
         pcd.claim.ethereumAddress.length - 1
-      ) + "0";
+      ) + replacementCharacter;
+
+    console.log(mangledAddress);
+    console.log(pcd.claim.ethereumAddress);
 
     pcd.claim.ethereumAddress = mangledAddress;
 
     assert(
       !(await EthereumOwnershipPCDPackage.verify(pcd)),
-      `Ethereum ownership PCD should have failed to verify but passed: ${EthereumOwnershipPCDPackage.serialize(
+      `Ethereum ownership PCD should have failed to verify but passed: ${await EthereumOwnershipPCDPackage.serialize(
         pcd
       )}`
     );
