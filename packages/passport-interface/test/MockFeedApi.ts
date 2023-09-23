@@ -21,23 +21,24 @@ export class MockFeedApi implements IFeedApi {
     this.feedHosts = new Map<string, FeedHost>([
       [
         "http://localhost:3000/feed",
-        new FeedHost([
-          {
-            feed: {
-              description:
-                "returns a new semaphore identity each time it's invoked",
-              id: "1",
-              name: "identity drip",
-              permissions: [
-                {
-                  folder: "TEST",
-                  type: PCDPermissionType.ReplaceInFolder
-                } as PCDPermission
-              ],
-              inputPCDType: undefined,
-              partialArgs: undefined
-            },
-            
+        new FeedHost(
+          [
+            {
+              feed: {
+                description:
+                  "returns a new semaphore identity each time it's invoked",
+                id: "1",
+                name: "identity drip",
+                permissions: [
+                  {
+                    folder: "TEST",
+                    type: PCDPermissionType.ReplaceInFolder
+                  } as PCDPermission
+                ],
+                inputPCDType: undefined,
+                partialArgs: undefined
+              },
+
               handleRequest: async (_req: PollFeedRequest) => {
                 return {
                   actions: [
