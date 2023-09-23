@@ -30,10 +30,10 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
   ...zuzaluTestingEnv,
   IS_ZUZALU: "false",
-  PRETIX_ORG_URL: undefined,
-  PRETIX_TOKEN: undefined,
-  PRETIX_VISITOR_EVENT_ID: undefined,
-  PRETIX_ZU_EVENT_ID: undefined,
+  PRETIX_ORG_URL: "pretix_org_url",
+  PRETIX_TOKEN: "pretix_token",
+  PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
+  PRETIX_ZU_EVENT_ID: "zu_event_id",
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),

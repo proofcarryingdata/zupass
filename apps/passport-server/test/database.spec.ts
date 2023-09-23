@@ -1,9 +1,10 @@
+import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
-import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
+import { ZuzaluPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   CacheEntry,

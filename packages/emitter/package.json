@@ -1,6 +1,6 @@
 {
   "name": "@pcd/emitter",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "license": "MIT",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -27,7 +27,6 @@
     "@pcd/tsconfig": "*",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
-    "@types/uuid": "^9.0.2",
     "chai-spies": "^1.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",

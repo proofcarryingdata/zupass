@@ -4,9 +4,9 @@ import {
   hashProveRequest,
   PendingPCD,
   PendingPCDStatus,
-  ProveRequest,
-  StatusResponse,
-  SupportedPCDsResponse
+  ProofStatusResponseValue,
+  ServerProofRequest,
+  SupportedPCDsResponseValue
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RLNPCDPackage } from "@pcd/rln-pcd";
@@ -18,6 +18,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 
@@ -26,18 +27,19 @@ import { RollbarService } from "./rollbarService";
  */
 export class ProvingService {
   private rollbarService: RollbarService | null;
+
   /**
    * In-memory queue of ProveRequests that requested server-side proving.
    */
-  private queue: Array<ProveRequest> = [];
+  private queue: Array<ServerProofRequest> = [];
 
   /**
    * Stores the current StatusResponse of a specific hashed request, which will
    * also include the a full SerialziedPCD if status === COMPLETE
    */
-  private pendingPCDResponse: Map<string, StatusResponse> = new Map<
+  private pendingPCDResponse: Map<string, ProofStatusResponseValue> = new Map<
     string,
-    StatusResponse
+    ProofStatusResponseValue
   >();
 
   /**
@@ -75,7 +77,9 @@ export class ProvingService {
     return matching;
   }
 
-  public async enqueueProofRequest(request: ProveRequest): Promise<PendingPCD> {
+  public async enqueueProofRequest(
+    request: ServerProofRequest
+  ): Promise<PendingPCD> {
     const hash = hashProveRequest(request);
 
     // don't add identical proof requests to queue to prevent accidental or
@@ -102,7 +106,7 @@ export class ProvingService {
 
     const requestResponse = this.pendingPCDResponse.get(hash);
     if (requestResponse === undefined) {
-      throw new Error("PCD status not defined");
+      throw new PCDHTTPError(500, "PCD status not defined");
     }
 
     const pending: PendingPCD = {
@@ -114,7 +118,7 @@ export class ProvingService {
     return pending;
   }
 
-  public getPendingPCDStatus(hash: string): StatusResponse {
+  public getPendingPCDStatus(hash: string): ProofStatusResponseValue {
     const response = this.pendingPCDResponse.get(hash);
     if (response !== undefined) return response;
     return {
@@ -128,16 +132,13 @@ export class ProvingService {
    * Performs proof of current ProveRequest, and then checks if there are any other
    * proofs in the queue waiting to start.
    */
-  private async serverProve(proveRequest: ProveRequest): Promise<void> {
+  private async serverProve(proveRequest: ServerProofRequest): Promise<void> {
     const currentHash = hashProveRequest(proveRequest);
 
     try {
       const pcdPackage = this.getPackage(proveRequest.pcdType);
       const pcd = await pcdPackage.prove(proveRequest.args);
       const serializedPCD = await pcdPackage.serialize(pcd);
-
-      // artificial lengthen to test multiple incoming requests
-      // await sleep(5000);
 
       logger(`finished PCD request ${currentHash}`, serializedPCD);
       this.pendingPCDResponse.set(currentHash, {
@@ -176,7 +177,7 @@ export class ProvingService {
     }
   }
 
-  public getSupportedPCDTypes(): SupportedPCDsResponse {
+  public getSupportedPCDTypes(): SupportedPCDsResponseValue {
     return {
       names: this.packages.map((p) => p.name)
     };

@@ -1,25 +1,52 @@
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { useSubscriptions } from "../../src/appHooks";
-import { Button, H1, Spacer } from "../core";
+import { useSelf, useSubscriptions } from "../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  pendingViewSubscriptionsRequestKey,
+  setPendingViewSubscriptionsRequest
+} from "../../src/sessionStorage";
+import { Button, H2, Spacer } from "../core";
+import { MaybeModal } from "../modals/Modal";
+import { AppContainer } from "../shared/AppContainer";
+import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
   const { value: subs } = useSubscriptions();
+  const self = useSelf();
+
+  useEffect(() => {
+    if (self == null) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify("");
+      setPendingViewSubscriptionsRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
+    }
+  }, [self]);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";
   }, []);
 
   return (
-    <Container>
-      <H1>Your Subscriptions</H1>
-      <Spacer h={32} />
-      <Button onClick={onAddNewClicked}>Add a new subscription</Button>
-      <Spacer h={16} />
-      <SubscriptionTree subscriptions={subs} />
-    </Container>
+    <AppContainer bg="gray">
+      <MaybeModal />
+      <SubscriptionNavigation label={"Home"} to="/"></SubscriptionNavigation>
+      <Container>
+        <H2>Your Subscriptions</H2>
+        <Spacer h={32} />
+        <Button onClick={onAddNewClicked}>Add a new subscription</Button>
+        <Spacer h={16} />
+        {subs.getActiveSubscriptions().length === 0 && (
+          <div>You have no subscriptions.</div>
+        )}
+        <SubscriptionTree subscriptions={subs} />
+      </Container>
+    </AppContainer>
   );
 }
 
@@ -28,9 +55,9 @@ function SubscriptionTree({
 }: {
   subscriptions: FeedSubscriptionManager;
 }) {
-  const byProvider = useMemo(() => {
-    return Array.from(subscriptions.getSubscriptionsByProvider().entries());
-  }, [subscriptions]);
+  const byProvider = Array.from(
+    subscriptions.getSubscriptionsByProvider().entries()
+  );
 
   return (
     <div>
@@ -55,31 +82,39 @@ function SingleProvider({
   providerUrl: string;
   subscriptionsList: Subscription[];
 }) {
+  const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
     <ProviderContainer>
-      {providerUrl}
-      <Spacer h={16} />
+      <ProviderHeader>
+        Subscriptions provided by <ProviderName>{providerUrl}</ProviderName>
+      </ProviderHeader>
+      <Spacer h={8} />
       {subscriptionsList.map((s) => (
-        <>
-          <Spacer h={8} />
+        <React.Fragment key={s.id}>
+          <Spacer h={16} />
           <SubscriptionInfoRow
-            key={s.feed.id}
             providerUrl={providerUrl}
+            providerName={providerName}
             info={s.feed}
+            credential={s.credential}
             subscriptions={subscriptions}
+            showErrors={true}
           />
-        </>
+        </React.Fragment>
       ))}
     </ProviderContainer>
   );
 }
 
-const Container = styled.div`
-  padding: 64px;
+const ProviderHeader = styled.div``;
+
+const ProviderName = styled.span`
+  font-weight: bold;
 `;
 
-const ProviderContainer = styled.div`
-  border: 1px solid white;
-  border-radius: 12px;
-  padding: 16px;
+const Container = styled.div`
+  padding-bottom: 16px;
+  padding-top: 16px;
 `;
+
+const ProviderContainer = styled.div``;

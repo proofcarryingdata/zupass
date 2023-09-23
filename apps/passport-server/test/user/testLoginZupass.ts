@@ -1,7 +1,12 @@
-import { User } from "@pcd/passport-interface";
+import {
+  requestConfirmationEmail,
+  requestCreateNewUser,
+  requestUser,
+  toZupassUser,
+  User
+} from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
-import httpMocks from "node-mocks-http";
 import { PCDpass } from "../../src/types";
 
 export async function testLoginZupass(
@@ -22,65 +27,86 @@ export async function testLoginZupass(
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
-  const sendEmailResponse = httpMocks.createResponse();
-  await userService.handleSendZuzaluEmail(
+
+  const confirmationEmailResult = await requestConfirmationEmail(
+    application.expressContext.localEndpoint,
+    true,
     email,
     commitment,
-    force,
-    sendEmailResponse
+    force
   );
 
   if (expectEmailInvalid) {
-    expect(sendEmailResponse.statusCode).to.eq(500);
-    expect(sendEmailResponse._getData()).to.contain("is not a valid email");
+    expect(confirmationEmailResult.error).to.contain("is not a valid email");
+    expect(confirmationEmailResult.value).to.eq(undefined);
+    expect(confirmationEmailResult.success).to.eq(false);
     return undefined;
   } else if (expectDoesntHaveTicket) {
-    expect(sendEmailResponse.statusCode).to.eq(500);
-    expect(sendEmailResponse._getData()).to.contain("doesn't have a ticket");
+    expect(confirmationEmailResult.error).to.contain("doesn't have a ticket");
+    expect(confirmationEmailResult.value).to.eq(undefined);
+    expect(confirmationEmailResult.success).to.eq(false);
     return undefined;
   } else if (expectAlreadyRegistered && !force) {
-    expect(sendEmailResponse.statusCode).to.eq(500);
-    expect(sendEmailResponse._getData()).to.contain("already registered");
+    expect(confirmationEmailResult.error).to.contain("already registered");
+    expect(confirmationEmailResult.value).to.eq(undefined);
+    expect(confirmationEmailResult.success).to.eq(false);
     return undefined;
   } else {
-    expect(sendEmailResponse.statusCode).to.eq(200);
+    expect(confirmationEmailResult.error).to.eq(undefined);
+    expect(confirmationEmailResult.success).to.eq(true);
   }
 
   let token: string;
 
   if (userService.bypassEmail) {
-    const sendEmailResponseJson = sendEmailResponse._getJSONData();
-    expect(sendEmailResponseJson).to.haveOwnProperty("token");
-    token = sendEmailResponseJson.token;
+    if (confirmationEmailResult.value?.devToken == null) {
+      throw new Error("expected a dev token in bypass email mode");
+    }
+    expect(confirmationEmailResult.error).to.eq(undefined);
+    token = confirmationEmailResult.value.devToken;
   } else {
-    token = (await emailTokenService.getTokenForEmail(email)) as string;
-    expect(token).to.not.eq(null);
+    expect(confirmationEmailResult.value).to.eq(undefined);
+    const tokenFromServer = await emailTokenService.getTokenForEmail(email);
+    if (tokenFromServer == null) {
+      throw new Error(
+        "expected to be able to get the token from internal server state"
+      );
+    }
+    token = tokenFromServer;
   }
 
-  const newUserResponse = httpMocks.createResponse();
-  await userService.handleNewZuzaluUser(
-    token,
+  const newUserResult = await requestCreateNewUser(
+    application.expressContext.localEndpoint,
+    true,
     email,
+    token,
     commitment,
-    newUserResponse
+    ""
   );
 
-  const newUserResponseJson = newUserResponse._getJSONData() as User;
+  if (!newUserResult.value) {
+    throw new Error("expected to get a user");
+  }
 
-  expect(newUserResponseJson).to.haveOwnProperty("uuid");
-  expect(newUserResponseJson).to.haveOwnProperty("commitment");
-  expect(newUserResponseJson).to.haveOwnProperty("email");
-  expect(newUserResponseJson.commitment).to.eq(commitment);
-  expect(newUserResponseJson.email).to.eq(email);
+  expect(newUserResult.value).to.haveOwnProperty("uuid");
+  expect(newUserResult.value).to.haveOwnProperty("commitment");
+  expect(newUserResult.value).to.haveOwnProperty("email");
+  expect(newUserResult.success).to.eq(true);
+  expect(newUserResult.value.commitment).to.eq(commitment);
+  expect(newUserResult.value.email).to.eq(email);
 
-  const getUserResponse = httpMocks.createResponse();
-  await userService.handleGetPCDpassUser(
-    newUserResponseJson.uuid,
-    getUserResponse
+  const getUserResponse = await requestUser(
+    application.expressContext.localEndpoint,
+    true,
+    newUserResult.value.uuid
   );
-  const getUserResponseJson = getUserResponse._getJSONData();
 
-  expect(getUserResponseJson).to.deep.eq(newUserResponseJson);
+  if (!getUserResponse.value) {
+    throw new Error("expected to get a user");
+  }
 
-  return getUserResponseJson;
+  expect(getUserResponse.value).to.deep.eq(newUserResult.value);
+  expect(getUserResponse.success).to.eq(true);
+
+  return toZupassUser(newUserResult.value);
 }

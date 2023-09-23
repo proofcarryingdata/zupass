@@ -1,6 +1,6 @@
-import { SyncedEncryptedStorage } from "@pcd/passport-interface";
+import { requestDownloadAndDecryptStorage } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
+import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import {
   BackgroundGlow,
@@ -22,7 +22,7 @@ import { AppContainer } from "../shared/AppContainer";
  */
 export function SyncExistingScreen() {
   const dispatch = useDispatch();
-  const [syncKey, setSyncKey] = useState("");
+  const [encryptionKey, setEncryptionKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const self = useSelf();
 
@@ -33,7 +33,7 @@ export function SyncExistingScreen() {
   }, [self]);
 
   const onSyncClick = useCallback(() => {
-    if (syncKey === "") {
+    if (encryptionKey === "") {
       dispatch({
         type: "error",
         error: {
@@ -45,13 +45,15 @@ export function SyncExistingScreen() {
       return;
     }
     const load = async () => {
-      let storage: SyncedEncryptedStorage;
-      try {
-        setIsLoading(true);
-        storage = await downloadAndDecryptStorage(syncKey);
-      } catch (e: unknown) {
-        console.error(e);
-        dispatch({
+      setIsLoading(true);
+      const storageResult = await requestDownloadAndDecryptStorage(
+        appConfig.passportServer,
+        encryptionKey
+      );
+      setIsLoading(false);
+
+      if (!storageResult.success) {
+        return dispatch({
           type: "error",
           error: {
             title: "Failed to Log In",
@@ -61,33 +63,17 @@ export function SyncExistingScreen() {
             dismissToCurrentPage: true
           }
         });
-        setIsLoading(false);
-        return;
       }
 
       dispatch({
         type: "load-from-sync",
-        storage,
-        encryptionKey: syncKey
+        storage: storageResult.value,
+        encryptionKey
       });
-
-      setIsLoading(false);
     };
 
-    load().catch((e) => {
-      const { message, stack } = e;
-      console.error(e);
-      dispatch({
-        type: "error",
-        error: {
-          title: "Failed to Log In",
-          message,
-          stack,
-          dismissToCurrentPage: true
-        }
-      });
-    });
-  }, [syncKey, dispatch]);
+    load();
+  }, [encryptionKey, dispatch]);
 
   const onClose = useCallback(() => {
     window.location.hash = "#/";
@@ -115,10 +101,10 @@ export function SyncExistingScreen() {
               disabled={isLoading}
               type="text"
               placeholder="Sync Key"
-              value={syncKey}
+              value={encryptionKey}
               onChange={useCallback(
                 (e: React.ChangeEvent<HTMLInputElement>) => {
-                  setSyncKey(e.target.value);
+                  setEncryptionKey(e.target.value);
                 },
                 []
               )}

@@ -1,90 +1,64 @@
 import {
-  LoadE2EERequest,
-  LoadE2EEResponse,
-  SaveE2EERequest
+  EncryptedStorageResultValue,
+  UploadEncryptedStorageRequest,
+  UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
 import { Response } from "express";
 import {
   fetchEncryptedStorage,
   insertEncryptedStorage
 } from "../database/queries/e2ee";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
  * backups of users' PCDs.
  */
 export class E2EEService {
-  private context: ApplicationContext;
-  private rollbarService: RollbarService | null;
+  private readonly context: ApplicationContext;
 
-  public constructor(
-    context: ApplicationContext,
-    rollbarService: RollbarService | null
-  ) {
+  public constructor(context: ApplicationContext) {
     this.context = context;
-    this.rollbarService = rollbarService;
   }
 
-  public async handleLoad(
-    request: LoadE2EERequest,
-    res: Response
-  ): Promise<void> {
-    try {
-      logger(`[E2EE] Loading ${request.blobKey}`);
-      const storageModel = await fetchEncryptedStorage(
-        this.context.dbPool,
-        request.blobKey
+  public async handleLoad(blobKey: string, res: Response): Promise<void> {
+    logger(`[E2EE] Loading ${blobKey}`);
+
+    const storageModel = await fetchEncryptedStorage(
+      this.context.dbPool,
+      blobKey
+    );
+
+    if (!storageModel) {
+      throw new PCDHTTPError(
+        404,
+        `can't load e2ee: never saved encryption key ${blobKey}`
       );
-
-      if (!storageModel) {
-        logger(
-          `can't load e2ee: never saved encryption key ${request.blobKey}`
-        );
-        res.sendStatus(404);
-        return;
-      }
-
-      const result: LoadE2EEResponse = {
-        encryptedStorage: JSON.parse(storageModel.encrypted_blob)
-      };
-
-      res.json(result);
-    } catch (e) {
-      logger(e);
-      this.rollbarService?.reportError(e);
-      res.sendStatus(500);
     }
+
+    const result = JSON.parse(storageModel.encrypted_blob);
+
+    res.json(result satisfies EncryptedStorageResultValue);
   }
 
   public async handleSave(
-    request: SaveE2EERequest,
+    request: UploadEncryptedStorageRequest,
     res: Response
   ): Promise<void> {
-    try {
-      logger(`[E2EE] Saving ${request.blobKey}`);
+    logger(`[E2EE] Saving ${request.blobKey}`);
 
-      await insertEncryptedStorage(
-        this.context.dbPool,
-        request.blobKey,
-        request.encryptedBlob
-      );
+    await insertEncryptedStorage(
+      this.context.dbPool,
+      request.blobKey,
+      request.encryptedBlob
+    );
 
-      res.sendStatus(200);
-    } catch (e) {
-      logger(e);
-      this.rollbarService?.reportError(e);
-      res.sendStatus(500);
-    }
+    res.json(undefined satisfies UploadEncryptedStorageResponseValue);
   }
 }
 
-export function startE2EEService(
-  context: ApplicationContext,
-  rollbarService: RollbarService | null
-): E2EEService {
-  const e2eeService = new E2EEService(context, rollbarService);
-  return e2eeService;
+export function startE2EEService(context: ApplicationContext): E2EEService {
+  return new E2EEService(context);
 }

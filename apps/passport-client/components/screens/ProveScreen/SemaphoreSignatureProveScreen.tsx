@@ -1,7 +1,7 @@
 import {
   PCDGetRequest,
   ProveOptions,
-  ProveRequest,
+  requestProveOnServer,
   SignInMessagePayload
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -14,7 +14,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { appConfig } from "../../../src/appConfig";
 import { useIdentity, useSelf } from "../../../src/appHooks";
 import {
   safeRedirect,
@@ -33,38 +33,45 @@ export function SemaphoreSignatureProveScreen({
   const self = useSelf();
   const identity = useIdentity();
   const [proving, setProving] = useState(false);
+  const [_error, setError] = useState<string | undefined>();
+
   const onProve = useCallback(async () => {
-    try {
-      setProving(true);
+    setProving(true);
 
-      // Give the UI has a chance to update to the 'loading' state before the
-      // potentially blocking proving operation kicks off
-      await nextFrame();
+    // Give the UI has a chance to update to the 'loading' state before the
+    // potentially blocking proving operation kicks off
+    await nextFrame();
 
-      const modifiedArgs = cloneDeep(req.args);
-      const args = await fillArgs(
-        identity,
-        self.uuid,
-        modifiedArgs,
-        req.returnUrl,
-        req.options
-      );
+    const args = await fillArgs(
+      identity,
+      self.uuid,
+      cloneDeep(req.args),
+      req.returnUrl,
+      req.options
+    );
 
-      if (req.options?.proveOnServer === true) {
-        const serverReq: ProveRequest = {
+    if (req.options?.proveOnServer === true) {
+      const pendingPCDResult = await requestProveOnServer(
+        appConfig.passportServer,
+        {
           pcdType: SemaphoreSignaturePCDPackage.name,
           args: args
-        };
-        const pendingPCD = await requestPendingPCD(serverReq);
-        safeRedirectPending(req.returnUrl, pendingPCD);
+        }
+      );
+
+      setProving(false);
+
+      if (pendingPCDResult.success) {
+        safeRedirectPending(req.returnUrl, pendingPCDResult.value);
       } else {
-        const { prove, serialize } = SemaphoreSignaturePCDPackage;
-        const pcd = await prove(args);
-        const serializedPCD = await serialize(pcd);
-        safeRedirect(req.returnUrl, serializedPCD);
+        setError(pendingPCDResult.error);
       }
-    } catch (e) {
-      console.log(e);
+    } else {
+      const { prove, serialize } = SemaphoreSignaturePCDPackage;
+      const pcd = await prove(args);
+      const serializedPCD = await serialize(pcd);
+      setProving(false);
+      safeRedirect(req.returnUrl, serializedPCD);
     }
   }, [identity, req.args, req.options, req.returnUrl, self.uuid]);
 

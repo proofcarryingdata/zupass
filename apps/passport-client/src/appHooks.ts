@@ -101,6 +101,10 @@ export function useUploadedId(): string | undefined {
   return useSelector<string | undefined>((s) => s.uploadedUploadId, []);
 }
 
+export function useResolvingSubscriptionId(): string | undefined {
+  return useSelector<string | undefined>((s) => s.resolvingSubscriptionId);
+}
+
 export function useQuery(): URLSearchParams | undefined {
   const location = useLocation();
   try {

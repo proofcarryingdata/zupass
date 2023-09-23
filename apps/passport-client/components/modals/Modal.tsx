@@ -8,6 +8,7 @@ import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
@@ -61,6 +62,8 @@ function getModalBody(modal: AppState["modal"]) {
       return <SaveSyncModal />;
     case "invalid-participant":
       return <InvalidUserModal />;
+    case "resolve-subscription-error":
+      return <ResolveSubscriptionErrorModal />;
     case "":
       return null;
     default:

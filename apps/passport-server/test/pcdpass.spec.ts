@@ -1,13 +1,10 @@
-import { User } from "@pcd/passport-interface";
+import { requestIssuanceServiceEnabled, User } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
-import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
-import { requestIssuanceServiceEnabled } from "./issuance/issuance";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
@@ -19,7 +16,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
 describe("pcd-pass functionality", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   const testEmail = randomEmail();
   let application: PCDpass;
@@ -36,13 +33,11 @@ describe("pcd-pass functionality", function () {
   });
 
   step("should have issuance service running", async function () {
-    const status = await requestIssuanceServiceEnabled(application);
-    expect(status).to.eq(true);
-  });
-
-  step("should not have a pretix service running", async function () {
-    const status = await waitForPretixSyncStatus(application);
-    expect(status).to.eq(PretixSyncStatus.NoPretix);
+    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
+      application.expressContext.localEndpoint
+    );
+    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
+    expect(issuanceServiceEnabledResult.value).to.eq(true);
   });
 
   step("email client should be mocked", async function () {

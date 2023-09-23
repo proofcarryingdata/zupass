@@ -8,7 +8,16 @@ export function initHealthcheckRoutes(
 ): void {
   logger("[INIT] initializing health check routes");
 
+  /**
+   * Used by render.com to detect whether the backend is ready,
+   * so that it can kill the other instance during a deploy (which
+   * enables zero-downtime deploys).
+   *
+   * render.com also uses this as a health check to detect wither
+   * the backend has gone down in order to be able to restart it
+   * when necessary.
+   */
   app.get("/", async (req: Request, res: Response) => {
-    res.send("PCD Passport Server - OK!");
+    res.status(200).send("PCD Passport Server - OK!");
   });
 }

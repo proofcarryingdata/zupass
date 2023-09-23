@@ -1,5 +1,24 @@
 # consumer-client
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eddsa-pcd@0.2.0
+  - @pcd/eddsa-ticket-pcd@0.2.0
+  - @pcd/ethereum-group-pcd@0.1.0
+  - @pcd/ethereum-ownership-pcd@0.7.0
+  - @pcd/passport-interface@0.7.0
+  - @pcd/pcd-types@0.7.0
+  - @pcd/semaphore-group-pcd@0.7.0
+  - @pcd/semaphore-identity-pcd@0.7.0
+  - @pcd/semaphore-signature-pcd@0.7.0
+  - @pcd/util@0.1.0
+  - @pcd/webauthn-pcd@0.7.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.1.0
+  - @pcd/zk-eddsa-ticket-pcd@0.1.0
+
 ## 0.0.18
 
 Removed nextjs, replaced with single-page app architecture.
