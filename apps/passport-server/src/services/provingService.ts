@@ -16,7 +16,6 @@ import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { ZKEdDSATicketPCDPackage } from "@pcd/zk-eddsa-ticket-pcd";
 import path from "path";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { logger } from "../util/logger";
@@ -55,8 +54,7 @@ export class ProvingService {
     EdDSAPCDPackage,
     EdDSATicketPCDPackage,
     RSAImagePCDPackage,
-    ZKEdDSAEventTicketPCDPackage,
-    ZKEdDSATicketPCDPackage
+    ZKEdDSAEventTicketPCDPackage
   ];
 
   public constructor(rollbarService: RollbarService | null) {
@@ -206,11 +204,6 @@ export async function startProvingService(
     wasmFilePath:
       fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
     zkeyFilePath: fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"
-  });
-
-  await ZKEdDSATicketPCDPackage.init?.({
-    wasmFilePath: fullPath + "/artifacts/zk-eddsa-ticket-pcd/circuit.wasm",
-    zkeyFilePath: fullPath + "/artifacts/zk-eddsa-ticket-pcd/circuit.zkey"
   });
 
   const provingService = new ProvingService(rollbarService);

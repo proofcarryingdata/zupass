@@ -88,7 +88,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
 
   // `validEventIds` is usually app-specified.  It is optional, and if included
   // the PCD proves that the ticket's event ID is in this list.  This is a list of
-  // UUIDs with max length VALID_EVENT_IDS_MAX_LEN (100).
+  // UUIDs with max length VALID_EVENT_IDS_MAX_LEN (20).
   validEventIds: StringArrayArgument;
 
   // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified

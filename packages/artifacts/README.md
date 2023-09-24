@@ -19,10 +19,10 @@
     </a>
 </p>
 
-| An essential command line tool created to simplify the retrieval and storage of artifacts, primarily focusing on zero-knowledge. It is meant for use across various PCD components and packages and can also be used to run simulated zero-knowledge ceremonies for testing purposes. External developers can use it to download the artifacts to be used in PCD packages (e.g. .wasm and .zkey files).  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An essential command line tool created to simplify the retrieval and storage of artifacts, primarily focusing on zero-knowledge. It is meant for use across various PCD components and packages and can also be used to run simulated zero-knowledge ceremonies for testing purposes. External developers can use it to download the artifacts to be used in PCD packages (e.g. .wasm and .zkey files). |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
-Artifacts reside in an R2 Cloudflare instance and are publicly accessible using the following URL format: `https://artifacts.pcdpass.xyz/<package-name>/latest/<file-name>` (e.g. https://artifacts.pcdpass.xyz/zk-eddsa-ticket-pcd/latest/circuit.json). There are currently 3 files for each package: `circuit.wasm`, `circuit.zkey`, `circuit.json` (i.e. zk verification key).
+Artifacts reside in an R2 Cloudflare instance and are publicly accessible using the following URL format: `https://artifacts.pcdpass.xyz/<package-name>/latest/<file-name>` (e.g. https://artifacts.pcdpass.xyz/zk-eddsa-event-ticket-pcd/latest/circuit.json). There are currently 3 files for each package: `circuit.wasm`, `circuit.zkey`, `circuit.json` (i.e. zk verification key).
 
 ## 🛠 Install
 
@@ -59,14 +59,14 @@ Commands:
   help [command]                    display help for command
 ```
 
-The following is an example of how `@pcd/zk-eddsa-ticket-pcd` uses the CLI to handle artifacts in the `package.json` scripts:
+The following is an example of how `@pcd/zk-eddsa-event-ticket-pcd` uses the CLI to handle artifacts in the `package.json` scripts:
 
 ```json
 {
   "scripts": {
-    "artifacts:download": "pcd-artifacts download zk-eddsa-ticket-pcd",
+    "artifacts:download": "pcd-artifacts download zk-eddsa-event-ticket-pcd",
     "artifacts:generate": "pcd-artifacts generate",
-    "artifacts:upload": "pcd-artifacts upload zk-eddsa-ticket-pcd"
+    "artifacts:upload": "pcd-artifacts upload zk-eddsa-event-ticket-pcd"
   }
 }
 ```
