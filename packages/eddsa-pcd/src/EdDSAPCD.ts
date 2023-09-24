@@ -109,9 +109,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   await ensureInitialized();
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
-  const pubKey = pcd.claim.publicKey.map((p) =>
-    (eddsa as any).F.fromObject(p)
-  ) as Point;
+  const pubKey = pcd.claim.publicKey.map((p) => eddsa.F.fromObject(p)) as Point;
 
   const hashedMessage = poseidon(pcd.claim.message);
 
@@ -189,5 +187,5 @@ export async function getEdDSAPublicKey(
 
   return eddsa
     .prv2pub(privateKey)
-    .map((p) => (eddsa as any).F.toObject(p).toString(16)) as EDdSAPublicKey;
+    .map((p) => eddsa.F.toObject(p).toString(16)) as EDdSAPublicKey;
 }
