@@ -77,21 +77,27 @@ export default function SubmitMessagePage() {
   }, [message]);
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-gray-200">
-      <div className="flex flex-col bg-white shadow-md rounded px-8 py-8 gap-6">
-        <h1 className="text-gray-700 text-xl font-bold">
-          Please type your anonymous question below
-        </h1>
-        <input
+    <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
+      <span className="text-white font-bold my-4">zk-TG</span>
+      <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
+        <div className="flex rounded-md bg-[#037ee5] justify-between p-2">
+          <span className="font-semibold">PCD Working Group</span>
+          <span className="text-white opacity-80">Anonymous Chats</span>
+        </div>
+        <textarea
+          placeholder="Type your anonymous message here"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="rounded-md p-2 border-2 text-black"
+          className="border-2 text-2xl rounded-lg text-black resize-none p-2 h-[30vh]"
         />
+      </div>
+      <div className="mt-8 text-center flex flex-col w-full">
+        <span className="text-white pb-2">🔒 Anonymous posting</span>
         <button
           onClick={onClick}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4"
         >
-          Submit Question
+          Send to channel
         </button>
       </div>
     </div>
