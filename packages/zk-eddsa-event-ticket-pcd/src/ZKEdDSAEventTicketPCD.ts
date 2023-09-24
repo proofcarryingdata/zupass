@@ -30,9 +30,9 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
-import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
+import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { groth16, Groth16Proof } from "snarkjs";
+import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 
@@ -359,6 +359,25 @@ function claimFromProofResult(
   }
   if (!babyJubIsNegativeOne(publicSignals[8])) {
     partialTicket.ticketCategory = parseInt(publicSignals[8]);
+  }
+  // These three fields are currently not typed or being used, but are kept
+  // as reserved fields that are hardcoded to zero and included in the preimage
+  // of the hashed signature. As such, the flags for revealing these reserved
+  // signed fields should always be -1 until they are being typed and used.
+  if (!babyJubIsNegativeOne(publicSignals[9])) {
+    throw new Error(
+      "ZkEdDSAEventTicketPCD: reservedSignedField1 is not in use"
+    );
+  }
+  if (!babyJubIsNegativeOne(publicSignals[10])) {
+    throw new Error(
+      "ZkEdDSAEventTicketPCD: reservedSignedField2 is not in use"
+    );
+  }
+  if (!babyJubIsNegativeOne(publicSignals[11])) {
+    throw new Error(
+      "ZkEdDSAEventTicketPCD: reservedSignedField3 is not in use"
+    );
   }
 
   const claim: ZKEdDSAEventTicketPCDClaim = {
