@@ -24,7 +24,9 @@
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
     "artifacts:download": "turbo run artifacts:download -- -nc",
+    "artifacts:generate": "turbo run artifacts:generate -- --force",
     "postinstall": "yarn artifacts:download",
+    "postbuild": "yarn artifacts:generate",
     "knip": "knip --no-gitignore"
   },
   "devDependencies": {

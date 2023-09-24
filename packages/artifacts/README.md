@@ -19,8 +19,8 @@
     </a>
 </p>
 
-| An essential command line tool created to simplify the retrieval and storage of artifacts, primarily focusing on zero-knowledge. It is meant for use across various PCD components and packages and can also be used to run simulated zero-knowledge ceremonies for testing purposes. External developers can use it to download the artifacts to be used in PCD packages (e.g. .wasm and .zkey files).  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An essential command line tool created to simplify the retrieval and storage of artifacts, primarily focusing on zero-knowledge. It is meant for use across various PCD components and packages and can also be used to run simulated zero-knowledge ceremonies for testing purposes. External developers can use it to download the artifacts to be used in PCD packages (e.g. .wasm and .zkey files). |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 Artifacts reside in an R2 Cloudflare instance and are publicly accessible using the following URL format: `https://artifacts.pcdpass.xyz/<package-name>/latest/<file-name>` (e.g. https://artifacts.pcdpass.xyz/zk-eddsa-ticket-pcd/latest/circuit.json). There are currently 3 files for each package: `circuit.wasm`, `circuit.zkey`, `circuit.json` (i.e. zk verification key).
 
@@ -103,6 +103,7 @@ Generate zero-knowledge unsafe artifacts with a dummy trusted-setup (only for te
 Options:
   -p, --ptau-power <power>  Power of two of the maximum number of constraints that the ceremony can accept.
   -o, --output <output>     Path to the directory where the output will be written [default: artifacts].
+  -f, --force               If present, forcibly overwrites the old artifacts directory rather than asking for confirmation.
   -h, --help                display help for command
 ```
 

@@ -32,6 +32,10 @@
     "artifacts:download": {
       "outputs": [],
       "cache": false
+    },
+    "artifacts:generate": {
+      "outputs": [],
+      "cache": false
     }
   },
   "globalEnv": [
