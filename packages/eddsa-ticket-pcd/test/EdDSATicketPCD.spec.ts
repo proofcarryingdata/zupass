@@ -2,7 +2,12 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { EdDSATicketPCD, EdDSATicketPCDPackage, ITicketData } from "../src";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  ITicketData,
+  TicketCategory
+} from "../src";
 
 describe("EdDSA ticket should work", function () {
   this.timeout(1000 * 30);
@@ -34,7 +39,8 @@ describe("EdDSA ticket should work", function () {
       timestampSigned: Date.now(),
       attendeeSemaphoreId: "12345",
       isConsumed: false,
-      isRevoked: false
+      isRevoked: false,
+      ticketCategory: TicketCategory.Devconnect
     };
 
     ticket = await EdDSATicketPCDPackage.prove({

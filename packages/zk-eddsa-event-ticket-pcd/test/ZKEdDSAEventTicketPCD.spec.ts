@@ -1,4 +1,8 @@
-import { EdDSATicketPCDPackage, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCDPackage,
+  ITicketData,
+  TicketCategory
+} from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -109,7 +113,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     timestampSigned: 1693028498280,
     attendeeSemaphoreId: identity1.getCommitment().toString(),
     isConsumed: false,
-    isRevoked: false
+    isRevoked: false,
+    ticketCategory: TicketCategory.Devconnect
   };
 
   const fieldsToReveal1: EdDSATicketFieldsToReveal = {
@@ -124,6 +129,14 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealIsRevoked: true
   };
 
+  const fieldsToReveal3: EdDSATicketFieldsToReveal = {
+    revealEventId: false,
+    revealAttendeeSemaphoreId: true,
+    revealTicketCategory: true,
+    revealTimestampConsumed: true,
+    revealTimestampSigned: true
+  };
+
   const fieldsToRevealNone: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
     revealEventId: false,
@@ -132,7 +145,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealTimestampSigned: false,
     revealAttendeeSemaphoreId: false,
     revealIsConsumed: false,
-    revealIsRevoked: false
+    revealIsRevoked: false,
+    revealTicketCategory: false
   };
 
   const fieldsToRevealAll: EdDSATicketFieldsToReveal = {
@@ -143,7 +157,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealTimestampSigned: true,
     revealAttendeeSemaphoreId: true,
     revealIsConsumed: true,
-    revealIsRevoked: true
+    revealIsRevoked: true,
+    revealTicketCategory: true
   };
 
   const validEventIdsContainingTicket: string[] = [
@@ -186,9 +201,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       }
     });
 
-    const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(
-      ticketPCD
-    );
+    const serializedTicketPCD =
+      await EdDSATicketPCDPackage.serialize(ticketPCD);
 
     const serializedIdentityPCD = await makeSerializedIdentityPCD(identity1);
 
@@ -289,6 +303,34 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     const claim = pcd.claim;
     expect(claim.partialTicket.isConsumed).to.be.equal(ticketData1.isConsumed);
     expect(claim.partialTicket.isRevoked).to.be.equal(ticketData1.isRevoked);
+
+    const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
+    expect(verificationRes).to.be.true;
+  });
+
+  it("should reveal semaphore ID, ticketCategory, and timestamps if requested, and no more", async function () {
+    const pcdArgs = await toArgs(ticketData1, fieldsToReveal3, true);
+    const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+
+    const claim = pcd.claim;
+    expect(claim.partialTicket.attendeeSemaphoreId).to.be.equal(
+      ticketData1.attendeeSemaphoreId
+    );
+    expect(claim.partialTicket.ticketCategory).to.be.equal(
+      ticketData1.ticketCategory
+    );
+    expect(claim.partialTicket.timestampConsumed).to.be.equal(
+      ticketData1.timestampConsumed
+    );
+    expect(claim.partialTicket.timestampSigned).to.be.equal(
+      ticketData1.timestampSigned
+    );
+
+    expect(pcd.claim.partialTicket.ticketId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.eventId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.productId).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.isConsumed).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.isRevoked).to.be.equal(undefined);
 
     const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
@@ -415,9 +457,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     );
     mutateClaim(invalidPCD.claim);
 
-    const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(
-      invalidPCD
-    );
+    const verificationRes =
+      await ZKEdDSAEventTicketPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
   }
 
@@ -454,6 +495,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.isRevoked = !claim.partialTicket.isRevoked;
     });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
+    });
   });
 
   it("should not verify a proof with incorrectly revealed partialTicket claims", async function () {
@@ -488,6 +532,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.isRevoked = false;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
     });
   });
 
@@ -525,9 +572,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     const deserialized = await ZKEdDSAEventTicketPCDPackage.deserialize(
       serialized.pcd
     );
-    const deserializedValid = await ZKEdDSAEventTicketPCDPackage.verify(
-      deserialized
-    );
+    const deserializedValid =
+      await ZKEdDSAEventTicketPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(pcd1).to.deep.eq(deserialized);
   });

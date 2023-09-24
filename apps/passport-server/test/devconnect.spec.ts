@@ -2,7 +2,8 @@ import { EDdSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData
+  ITicketData,
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
   checkinTicket,
@@ -1217,7 +1218,8 @@ describe("devconnect functionality", function () {
         timestampSigned: Date.now(),
         attendeeSemaphoreId: "12345",
         isConsumed: false,
-        isRevoked: false
+        isRevoked: false,
+        ticketCategory: TicketCategory.Devconnect
       };
 
       ticket = await EdDSATicketPCDPackage.prove({
