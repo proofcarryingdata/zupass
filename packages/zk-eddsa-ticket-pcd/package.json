@@ -18,10 +18,8 @@
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
-    "clean": "rm -rf dist node_modules artifacts",
-    "artifacts:download": "pcd-artifacts download zk-eddsa-ticket-pcd",
-    "artifacts:generate": "pcd-artifacts generate",
-    "artifacts:upload": "pcd-artifacts upload zk-eddsa-ticket-pcd"
+    "clean": "rm -rf dist node_modules",
+    "artifacts:generate": "pcd-artifacts generate"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.2.0",
