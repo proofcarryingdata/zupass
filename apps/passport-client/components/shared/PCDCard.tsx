@@ -2,10 +2,9 @@ import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { usePCDCollection, useSelf } from "../../src/appHooks";
+import { usePCDCollection } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
-import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 
@@ -68,7 +67,6 @@ function HeaderContent({
   pcd: PCD;
   isMainIdentity: boolean;
 }) {
-  const self = useSelf();
   const pcdPackage = usePackage(pcd);
 
   const displayOptions = useMemo(() => {
@@ -78,24 +76,8 @@ function HeaderContent({
   }, [pcd, pcdPackage]);
 
   let header;
-  if (isMainIdentity && !appConfig.isZuzalu) {
-    header = "PCDPASS IDENTITY";
-  } else if (isMainIdentity) {
-    const visitorStatus = getVisitorStatus(self);
-
-    if (
-      visitorStatus.isVisitor &&
-      visitorStatus.status === VisitorStatus.Expired
-    ) {
-      header = "EXPIRED";
-    } else if (
-      visitorStatus.isVisitor &&
-      visitorStatus.status === VisitorStatus.Upcoming
-    ) {
-      header = "UPCOMING";
-    } else {
-      header = "VERIFIED ZUZALU PASSPORT";
-    }
+  if (isMainIdentity) {
+    header = "ZUPASS IDENTITY";
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
   }

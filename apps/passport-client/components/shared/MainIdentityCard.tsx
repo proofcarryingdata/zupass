@@ -1,9 +1,8 @@
 import { DateRange, User, ZuzaluUserRole } from "@pcd/passport-interface";
 import Avatar from "boring-avatars";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
 import { useSelf } from "../../src/appHooks";
-import { VisitorStatus, getVisitorStatus } from "../../src/user";
+import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
 import { IdentityQR } from "./IdentityQR";
 
@@ -33,31 +32,15 @@ export function MainIdentityCard({
       <Spacer h={24} />
       <TextCenter>
         <H3 col="var(--primary-dark)">{actualUser.name}</H3>
-        {appConfig.isZuzalu && <InfoLine>{actualUser.email}</InfoLine>}
-        {!appConfig.isZuzalu && (
-          <Avatar
-            size={300}
-            variant="bauhaus"
-            name={actualUser.uuid}
-            square={false}
-            colors={["#FFAD08", "#EDD75A", "#73B06F", "#0C8F8F", "#405059"]}
-          />
-        )}
+        <Avatar
+          size={300}
+          variant="bauhaus"
+          name={actualUser.uuid}
+          square={false}
+          colors={["#FFAD08", "#EDD75A", "#73B06F", "#0C8F8F", "#405059"]}
+        />
         <VisitorDateSection user={actualUser} />
       </TextCenter>
-      <Spacer h={24} />
-      {appConfig.isZuzalu && (
-        <Footer
-          role={actualUser.role}
-          notCurrent={
-            visitorStatus &&
-            visitorStatus.isVisitor &&
-            visitorStatus.status !== VisitorStatus.Current
-          }
-        >
-          ZUZALU {actualUser.role.toUpperCase()}
-        </Footer>
-      )}
     </CardBody>
   );
 }
