@@ -5,10 +5,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   EdDSATicketFieldsToReveal,
-  ZKEdDSATicketPCD,
-  ZKEdDSATicketPCDArgs,
-  ZKEdDSATicketPCDPackage
-} from "@pcd/zk-eddsa-ticket-pcd";
+  ZKEdDSAEventTicketPCD,
+  ZKEdDSAEventTicketPCDArgs,
+  ZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
@@ -140,7 +140,7 @@ export class TelegramService {
             revealIsRevoked: false
           };
 
-          const args: ZKEdDSATicketPCDArgs = {
+          const args: ZKEdDSAEventTicketPCDArgs = {
             ticket: {
               argumentType: ArgumentTypeName.PCD,
               pcdType: EdDSATicketPCDPackage.name,
@@ -163,6 +163,11 @@ export class TelegramService {
               value: undefined,
               userProvided: false
             },
+            validEventIds: {
+              argumentType: ArgumentTypeName.StringArray,
+              value: undefined,
+              userProvided: false
+            },
             watermark: {
               argumentType: ArgumentTypeName.BigInt,
               value: userId.toString(),
@@ -178,13 +183,19 @@ export class TelegramService {
           const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`;
 
           const proofUrl = constructPassportPcdGetRequestUrl<
-            typeof ZKEdDSATicketPCDPackage
-          >(passportOrigin, returnUrl, ZKEdDSATicketPCDPackage.name, args, {
-            genericProveScreen: true,
-            title: "ZK-EdDSA Ticket Request",
-            description:
-              "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
-          });
+            typeof ZKEdDSAEventTicketPCDPackage
+          >(
+            passportOrigin,
+            returnUrl,
+            ZKEdDSAEventTicketPCDPackage.name,
+            args,
+            {
+              genericProveScreen: true,
+              title: "ZK-EdDSA Ticket Request",
+              description:
+                "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
+            }
+          );
 
           menu.webApp("Generate ZKP 🚀", proofUrl);
 
@@ -303,11 +314,11 @@ export class TelegramService {
   private async verifyPCD(
     serializedZKEdDSATicket: string,
     telegramUserId: number
-  ): Promise<ZKEdDSATicketPCD | null> {
-    let pcd: ZKEdDSATicketPCD;
+  ): Promise<ZKEdDSAEventTicketPCD | null> {
+    let pcd: ZKEdDSAEventTicketPCD;
 
     try {
-      pcd = await ZKEdDSATicketPCDPackage.deserialize(
+      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
         JSON.parse(serializedZKEdDSATicket).pcd
       );
     } catch (e) {
@@ -336,7 +347,7 @@ export class TelegramService {
     }
 
     if (
-      (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
+      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
       pcd.claim.watermark === telegramUserId.toString() &&
       eventIdMatch &&
       signerMatch
@@ -347,13 +358,13 @@ export class TelegramService {
     }
   }
 
-  private async verifyZKEdDSATicketPCD(
+  private async verifyZKEdDSAEventTicketPCD(
     serializedZKEdDSATicket: string
-  ): Promise<ZKEdDSATicketPCD | null> {
-    let pcd: ZKEdDSATicketPCD;
+  ): Promise<ZKEdDSAEventTicketPCD | null> {
+    let pcd: ZKEdDSAEventTicketPCD;
 
     try {
-      pcd = await ZKEdDSATicketPCDPackage.deserialize(
+      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
         JSON.parse(serializedZKEdDSATicket).pcd
       );
     } catch (e) {
@@ -380,7 +391,7 @@ export class TelegramService {
     }
 
     if (
-      (await ZKEdDSATicketPCDPackage.verify(pcd)) &&
+      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
       eventIdMatch &&
       signerMatch
     ) {
@@ -502,7 +513,7 @@ export class TelegramService {
   ): Promise<void> {
     logger("[TELEGRAM] Verifying anonymous message");
 
-    const pcd = await this.verifyZKEdDSATicketPCD(serializedZKEdDSATicket);
+    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
 
     if (!pcd) {
       throw new Error("Could not verify PCD for anonymous message");

@@ -1,6 +1,6 @@
 {
   "name": "passport-client",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -33,7 +33,6 @@
     "@pcd/semaphore-signature-pcd": "0.7.0",
     "@pcd/webauthn-pcd": "0.7.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.1.0",
-    "@pcd/zk-eddsa-ticket-pcd": "0.1.0",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.11.0",
     "boring-avatars": "^1.10.1",
