@@ -5,7 +5,7 @@ import {
   ZuzaluPretixOrder,
   ZuzaluPretixPosition,
   ZuzaluPretixSubevent
-} from "../../src/apis/pretixAPI";
+} from "../../src/apis/zuzaluPretixAPI";
 import { logger } from "../../src/util/logger";
 import { randomEmail } from "../util/util";
 

@@ -4,7 +4,7 @@ import {
   IZuzaluPretixAPI,
   ZuzaluPretixOrder,
   ZuzaluPretixSubevent
-} from "../apis/pretixAPI";
+} from "../apis/zuzaluPretixAPI";
 import { ZuzaluPretixTicket } from "../database/models";
 import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
@@ -376,7 +376,7 @@ export class ZuzaluPretixSyncService {
 /**
  * Kick off a period sync from Pretix into Zupass.
  */
-export function startPretixSyncService(
+export function startZuzaluPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,

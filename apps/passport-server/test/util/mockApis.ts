@@ -1,7 +1,7 @@
 import chai from "chai";
 import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
-import { IZuzaluPretixAPI } from "../../src/apis/pretixAPI";
+import { IZuzaluPretixAPI } from "../../src/apis/zuzaluPretixAPI";
 import { DevconnectPretixAPIFactory } from "../../src/services/devconnectPretixSyncService";
 import { APIs } from "../../src/types";
 import { newMockZuzaluPretixAPI } from "../pretix/mockPretixApi";
