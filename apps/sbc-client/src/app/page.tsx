@@ -45,11 +45,11 @@ function requestProof(message: string) {
     `https://api.pcdpass.xyz/telegram/message?message=${encodeURIComponent(
       message
     )}`,
-    "zk-eddsa-ticket-pcd",
+    "zk-eddsa-event-ticket-pcd",
     args,
     {
       genericProveScreen: true,
-      title: "ZK-EdDSA Ticket Request",
+      title: "ZK-EdDSA Event Ticket Request",
       description:
         "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
     }

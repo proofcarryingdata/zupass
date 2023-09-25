@@ -1,5 +1,0 @@
-*.js
-*.ts.map
-dist
-artifacts
-!.eslintrc.js

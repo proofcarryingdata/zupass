@@ -13,6 +13,13 @@ export type SerializedTicket = [
   bigint,
   bigint,
   bigint,
+  bigint,
+  bigint,
+  // These three fields are currently not typed or being used, but are kept
+  // as reserved fields that are hardcoded to zero and included in the preimage
+  // of the hashed signature.
+  bigint,
+  bigint,
   bigint
 ];
 
@@ -29,7 +36,11 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     numberToBigInt(data.timestampSigned),
     semaphoreIdToBigInt(data.attendeeSemaphoreId),
     booleanToBigInt(data.isConsumed),
-    booleanToBigInt(data.isRevoked)
+    booleanToBigInt(data.isRevoked),
+    numberToBigInt(data.ticketCategory),
+    numberToBigInt(0),
+    numberToBigInt(0),
+    numberToBigInt(0)
   ];
 }
 

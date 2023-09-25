@@ -1,5 +1,9 @@
 # consumer-client
 
+## 0.0.20
+
+Removed deprecated @pcd/zk-eddsa-ticket-pcd.
+
 ## 0.0.19
 
 ### Patch Changes
