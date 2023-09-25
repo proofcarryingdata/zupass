@@ -334,8 +334,6 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  console.log({ state, self });
-
   if (state.self && self.salt !== state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
@@ -359,8 +357,6 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       newUUID: self.uuid
     });
   }
-
-  console.log({ hasChangedPassword, userMismatched });
 
   if (hasChangedPassword) {
     userHasChangedPassword(update);
