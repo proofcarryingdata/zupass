@@ -123,7 +123,7 @@ function getCard(result: VerifyResult) {
         <CardHeader col="var(--accent-lite)">
           VERIFIED ZUZALU PASSPORT
         </CardHeader>
-        <MainIdentityCard showQrCode={false} user={result.user} />
+        <MainIdentityCard user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
   );
