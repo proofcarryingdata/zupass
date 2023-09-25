@@ -28,8 +28,7 @@ import { logger } from "../util/logger";
 import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
-const SRW_EVENT_ID_STAGING = "3fa6164c-4785-11ee-8178-763dbf30819c";
-const SRW_EVENT_ID_PROD = "264b2536-479c-11ee-8153-de1f187f7393";
+// TODO: Add staging events
 const TICKETING_PUBKEY_STAGING = [
   "7cf4d97878d663502339c2baae74b12dcdd229279a9f6bfc83b167e808a32d26",
   "c5a04b56d0f2d6b1ec10aa1b17298e31b4a087bdabd4a75d9523779e7dca5a17"
@@ -38,6 +37,20 @@ const TICKETING_PUBKEY_PROD = [
   "a7da882cd090c14a62b70cf07010c1cabb373b17ebd2d120c9de039ceaedfa24",
   "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09"
 ];
+
+const ALLOWED_EVENT_IDS = [
+  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
+  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  {
+    eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
+    name: "ProgCrypto (Internal Test)"
+  }
+];
+
+const eventIdIsAllowed = (eventId?: string): boolean => {
+  if (!eventId) throw new Error(`No Event Id found for verification`);
+  return ALLOWED_EVENT_IDS.map((a) => a.eventId).includes(eventId);
+};
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -347,17 +360,15 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      // TODO: Replace with better logic to fetch the correct eventId for an arbitrary event
-      // https://github.com/proofcarryingdata/zupass/issues/667
-      eventIdMatch = true;
+      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
       signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
+        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else {
-      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
+      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
       signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
+        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     }
 
     if (
@@ -393,12 +404,12 @@ export class TelegramService {
       eventIdMatch = true;
       signerMatch = true;
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_STAGING;
+      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
     } else {
-      eventIdMatch = pcd.claim.partialTicket.eventId === SRW_EVENT_ID_PROD;
+      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
