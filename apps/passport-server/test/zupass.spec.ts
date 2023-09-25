@@ -7,11 +7,11 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { IEmailAPI } from "../src/apis/emailAPI";
-import { getZuzaluPretixConfig } from "../src/apis/pretixAPI";
+import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { LoggedInZuzaluUser } from "../src/database/models";
-import { ZuzaluPretixSyncService } from "../src/services/pretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
+import { ZuzaluPretixSyncService } from "../src/services/zuzaluPretixSyncService";
 import { PCDpass } from "../src/types";
 import {
   getMockPretixAPI,

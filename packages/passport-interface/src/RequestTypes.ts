@@ -114,7 +114,7 @@ export type ChangeBlobKeyResponseValue = undefined;
  * A {@link ChangeBlobKeyRequest} can fail for a number of reasons.
  */
 export type ChangeBlobKeyError = { detailedMessage?: string } & (
-  | { name: "PasswordIncorrect" }
+  | { name: "PasswordInvalid" }
   | { name: "ServerError" }
 );
 
