@@ -22,7 +22,6 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.414.0",
-    "circomlib": "^2.0.5",
     "commander": "^11.0.0",
     "conf": "^11.0.2",
     "download": "^8.0.0",

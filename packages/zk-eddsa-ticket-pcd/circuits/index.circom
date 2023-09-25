@@ -38,18 +38,6 @@ template PartialTicket () {
     signal input isRevoked;
     signal input revealIsRevoked;
 
-    signal input ticketCategory;
-    signal input revealTicketCategory;
-
-    signal input reservedSignedField1;
-    signal input revealReservedSignedField1;
-
-    signal input reservedSignedField2;
-    signal input revealReservedSignedField2;
-
-    signal input reservedSignedField3;
-    signal input revealReservedSignedField3;
-
     // external nullifier
     signal input externalNullifier;
 
@@ -82,14 +70,10 @@ template PartialTicket () {
     revealAttendeeSemaphoreId * (1 - revealAttendeeSemaphoreId) === 0;
     revealIsConsumed * (1 - revealIsConsumed) === 0;
     revealIsRevoked * (1 - revealIsRevoked) === 0;
-    revealTicketCategory * (1 - revealTicketCategory) === 0;
     revealNullifierHash * (1 - revealNullifierHash) === 0;
-    revealReservedSignedField1 * (1 - revealReservedSignedField1) === 0;
-    revealReservedSignedField2 * (1 - revealReservedSignedField2) === 0;
-    revealReservedSignedField3 * (1 - revealReservedSignedField3) === 0;
 
     // calculate message
-    signal messageHash <== Poseidon(12)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked, ticketCategory, reservedSignedField1, reservedSignedField2, reservedSignedField3]);
+    signal messageHash <== Poseidon(8)([ticketId, eventId, productId, timestampConsumed, timestampSigned, attendeeSemaphoreId, isConsumed, isRevoked]);
 
     // verify signature
     EdDSAPoseidonVerifier()(1, Ax, Ay, S, R8x, R8y, messageHash);
@@ -111,10 +95,6 @@ template PartialTicket () {
     signal output revealedAttendeeSemaphoreId <== ValueOrNegativeOne()(attendeeSemaphoreId, revealAttendeeSemaphoreId);
     signal output revealedIsConsumed <== ValueOrNegativeOne()(isConsumed, revealIsConsumed);
     signal output revealedIsRevoked <== ValueOrNegativeOne()(isRevoked, revealIsRevoked);
-    signal output revealedTicketCategory <== ValueOrNegativeOne()(ticketCategory, revealTicketCategory);
-    signal output revealedReservedSignedInput1 <== ValueOrNegativeOne()(reservedSignedField1, revealReservedSignedField1);
-    signal output revealedReservedSignedInput2 <== ValueOrNegativeOne()(reservedSignedField2, revealReservedSignedField2);
-    signal output revealedReservedSignedInput3 <== ValueOrNegativeOne()(reservedSignedField3, revealReservedSignedField3);
 
     // calculate revealed nullifier
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, revealNullifierHash);

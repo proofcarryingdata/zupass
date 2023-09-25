@@ -25,7 +25,6 @@ import {
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
-  numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
 import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
@@ -56,7 +55,6 @@ export interface EdDSATicketFieldsToReveal {
   revealAttendeeSemaphoreId?: boolean;
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
-  revealTicketCategory?: boolean;
 }
 
 export interface ZKEdDSATicketPCDInitArgs {
@@ -200,19 +198,6 @@ export async function prove(
     revealIsConsumed: dataRequestObj.revealIsConsumed ? "1" : "0",
     isRevoked: ticketAsBigIntArray[7].toString(),
     revealIsRevoked: dataRequestObj.revealIsRevoked ? "1" : "0",
-    ticketCategory: ticketAsBigIntArray[8].toString(),
-    revealTicketCategory: dataRequestObj.revealTicketCategory ? "1" : "0",
-    reservedSignedField1: "0",
-    // These fields currently do not have any preset semantic meaning, although the intention
-    // is for them to convert into meaningful fields in the future. We are reserving them now
-    // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
-    // and we would only need to change the TypeScript. For now, we will treat the inputs as
-    // 0 in terms of signatures.
-    revealReservedSignedField1: "0",
-    reservedSignedField2: "0",
-    revealReservedSignedField2: "0",
-    reservedSignedField3: "0",
-    revealReservedSignedField3: "0",
     externalNullifier:
       args.externalNullifier.value || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: args.externalNullifier.value ? "1" : "0",
@@ -257,9 +242,6 @@ export async function prove(
   if (!babyJubIsNegativeOne(publicSignals[7])) {
     partialTicket.isRevoked = publicSignals[7] !== "0";
   }
-  if (!babyJubIsNegativeOne(publicSignals[8])) {
-    partialTicket.ticketCategory = parseInt(publicSignals[8]);
-  }
 
   const claim: ZKEdDSATicketPCDClaim = {
     partialTicket,
@@ -268,7 +250,7 @@ export async function prove(
   };
 
   if (args.externalNullifier.value) {
-    claim.nullifierHash = publicSignals[12];
+    claim.nullifierHash = publicSignals[8];
     claim.externalNullifier = args.externalNullifier.value?.toString();
   }
 
@@ -306,13 +288,6 @@ function publicSignalsFromClaim(claim: ZKEdDSATicketPCDClaim): string[] {
   ret.push(
     t.isRevoked === undefined ? negOne : booleanToBigInt(t.isRevoked).toString()
   );
-  ret.push(
-    t.ticketCategory === undefined
-      ? negOne
-      : numberToBigInt(t.ticketCategory).toString()
-  );
-  // Placeholder for reserved fields
-  ret.push(negOne, negOne, negOne);
   ret.push(claim.nullifierHash || negOne);
 
   // for some reason the public inputs to the circuit

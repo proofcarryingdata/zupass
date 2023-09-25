@@ -2,9 +2,8 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  getEdDSATicketData,
+  ITicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +25,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
-  joinPath
+  ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -715,8 +714,7 @@ export class IssuanceService {
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: t.is_consumed,
-      isRevoked: t.is_deleted,
-      ticketCategory: TicketCategory.Devconnect
+      isRevoked: t.is_deleted
     } satisfies ITicketData;
   }
 
@@ -864,8 +862,7 @@ export class IssuanceService {
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
-            isRevoked: false,
-            ticketCategory: TicketCategory.Zuzalu
+            isRevoked: false
           })
         );
       }
