@@ -185,7 +185,11 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<SemaphoreSignaturePCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(
+    serialized
+  ) as SemaphoreSignaturePCD;
+
+  return new SemaphoreSignaturePCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {

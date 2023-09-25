@@ -143,7 +143,9 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
-  return JSON.parse(serialized, reviver);
+  const { id, claim, proof } = JSON.parse(serialized, reviver) as EdDSAPCD;
+
+  return new EdDSAPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {

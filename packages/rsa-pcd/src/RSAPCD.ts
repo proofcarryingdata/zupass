@@ -3,7 +3,7 @@ import {
   PCD,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
@@ -92,18 +92,20 @@ export async function verify(pcd: RSAPCD): Promise<boolean> {
 export async function serialize(pcd: RSAPCD): Promise<SerializedPCD<RSAPCD>> {
   return {
     type: RSAPCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<RSAPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<RSAPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized) as RSAPCD;
+
+  return new RSAPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: RSAPCD): DisplayOptions {
   return {
     header: "RSA Signature",
-    displayName: "rsa-sig-" + pcd.id.substring(0, 4),
+    displayName: "rsa-sig-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -122,5 +124,5 @@ export const RSAPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

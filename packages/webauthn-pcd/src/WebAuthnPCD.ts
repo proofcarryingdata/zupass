@@ -1,17 +1,17 @@
 import {
   arrayBufferToBase64,
-  base64ToArrayBuffer,
+  base64ToArrayBuffer
 } from "@pcd/passport-crypto/src/utils";
 import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { startAuthentication } from "@simplewebauthn/browser";
 import {
   generateAuthenticationOptions,
-  verifyAuthenticationResponse,
+  verifyAuthenticationResponse
 } from "@simplewebauthn/server";
 import {
   AuthenticationResponseJSON,
   AuthenticatorDevice,
-  AuthenticatorTransportFuture,
+  AuthenticatorTransportFuture
 } from "@simplewebauthn/typescript-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
@@ -80,9 +80,9 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
     allowCredentials: [
       {
         id: args.authenticator.credentialID,
-        type: "public-key",
-      },
-    ],
+        type: "public-key"
+      }
+    ]
   });
   const authenticationResponseJSON = await startAuthentication(
     authenticationOptions
@@ -96,9 +96,9 @@ export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
         args.authenticator.credentialPublicKey
       ),
       counter: args.authenticator.counter,
-      transports: args.authenticator.transports,
+      transports: args.authenticator.transports
     },
-    challenge: args.challenge,
+    challenge: args.challenge
   };
   const proof = authenticationResponseJSON;
   return new WebAuthnPCD(uuid(), claim, proof);
@@ -118,8 +118,8 @@ export async function verify(pcd: WebAuthnPCD): Promise<boolean> {
         pcd.claim.credentialDetails.credentialPublicKey
       ),
       counter: pcd.claim.credentialDetails.counter,
-      transports: pcd.claim.credentialDetails.transports,
-    },
+      transports: pcd.claim.credentialDetails.transports
+    }
   });
   return verified;
 }
@@ -129,18 +129,20 @@ export async function serialize(
 ): Promise<SerializedPCD<WebAuthnPCD>> {
   return {
     type: WebAuthnPCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<WebAuthnPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<WebAuthnPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized) as WebAuthnPCD;
+
+  return new WebAuthnPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: WebAuthnPCD): DisplayOptions {
   return {
     header: "WebAuthn Credential Signature",
-    displayName: "webauthn-" + pcd.id.substring(0, 4),
+    displayName: "webauthn-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -159,5 +161,5 @@ export const WebAuthnPCDPackage: PCDPackage<
   serialize,
   deserialize,
   renderCardBody: WebAuthnCardBody,
-  getDisplayOptions,
+  getDisplayOptions
 };

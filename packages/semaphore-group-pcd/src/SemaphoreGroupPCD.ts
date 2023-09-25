@@ -196,7 +196,9 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<SemaphoreGroupPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized) as SemaphoreGroupPCD;
+
+  return new SemaphoreGroupPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
