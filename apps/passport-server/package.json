@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -32,7 +32,6 @@
     "@pcd/semaphore-identity-pcd": "0.7.0",
     "@pcd/semaphore-signature-pcd": "0.7.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.1.0",
-    "@pcd/zk-eddsa-ticket-pcd": "0.1.0",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@types/lodash": "^4.14.191",
