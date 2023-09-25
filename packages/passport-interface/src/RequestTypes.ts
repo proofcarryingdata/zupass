@@ -93,7 +93,7 @@ export interface UpdateE2EERequest {
    */
   newBlobKey: string;
   /**
-   * UUID of the user making the request;
+   * UUID of the user making the request.
    */
   uuid: string;
   /**

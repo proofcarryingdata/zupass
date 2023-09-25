@@ -51,22 +51,28 @@ export async function updateEncryptedStorage(
   newSalt: string,
   encryptedBlob: string
 ): Promise<void> {
-  await sqlQuery(dbPool, "BEGIN;");
-  await sqlQuery(dbPool, "DELETE FROM e2ee WHERE blob_key = $1;", [oldBlobKey]);
-  await sqlQuery(
-    dbPool,
-    `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
-      ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1;`,
-    [newBlobKey, encryptedBlob]
-  );
-  await sqlQuery(
-    dbPool,
-    `UPDATE commitments
-    SET salt = $2
-    WHERE uuid = $1;`,
-    [uuid, newSalt]
-  );
-  await sqlQuery(dbPool, "COMMIT;");
+  // Based on recommended transaction flow, where queries are isolated to a particular client.
+  // https://node-postgres.com/features/transactions.
+  const txClient = await dbPool.connect();
+  try {
+    await txClient.query("BEGIN");
+    await txClient.query("DELETE FROM e2ee WHERE blob_key = $1", [oldBlobKey]);
+    await txClient.query(
+      `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
+      ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
+      [newBlobKey, encryptedBlob]
+    );
+    await txClient.query("UPDATE commitments SET salt = $2 WHERE uuid = $1", [
+      uuid,
+      newSalt
+    ]);
+    await txClient.query("COMMIT;");
+  } catch (e) {
+    await txClient.query("ROLLBACK");
+    throw e;
+  } finally {
+    txClient.release();
+  }
 }
 
 /**

@@ -14,7 +14,7 @@ export function initE2EERoutes(
 ): void {
   logger("[INIT] initializing e2ee routes");
 
-  app.post("/sync/update", async (req: Request, res: Response) => {
+  app.post("/sync/changeBlobKey", async (req: Request, res: Response) => {
     try {
       const request = req.body as UpdateE2EERequest;
       await e2eeService.handleUpdate(request, res);

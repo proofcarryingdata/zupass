@@ -72,7 +72,7 @@ export async function updateEncryptedStorage(
     uuid
   };
 
-  const url = `${appConfig.passportServer}/sync/update`;
+  const url = `${appConfig.passportServer}/sync/changeBlobKey`;
   return fetch(url, {
     method: "POST",
     body: JSON.stringify(request),
