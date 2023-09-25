@@ -66,7 +66,7 @@ export async function updateEncryptedStorage(
       uuid,
       newSalt
     ]);
-    await txClient.query("COMMIT;");
+    await txClient.query("COMMIT");
   } catch (e) {
     await txClient.query("ROLLBACK");
     throw e;
