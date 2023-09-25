@@ -848,7 +848,7 @@ export class IssuanceService {
         tickets.push(
           await this.getOrGenerateTicket({
             attendeeSemaphoreId: user.commitment,
-            eventName: "Zuzalu",
+            eventName: "Zuzalu (March - May 2023)",
             checkerEmail: undefined,
             ticketId: user.uuid,
             ticketName: user.role.toString(),
