@@ -1,8 +1,9 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
+import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { fetchSaltFromServer } from "../../src/api/user";
+import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { saveEncryptionKey } from "../../src/localstorage";
 import { updateStorage, uploadStorage } from "../../src/useSyncE2EEStorage";
@@ -32,14 +33,19 @@ export function ChangePasswordScreen() {
 
   const onChangePassword = async () => {
     if (loading) return;
-    const res = await fetchSaltFromServer(self.email);
-    const { salt } = await res.json();
-
-    const crypto = await PCDCrypto.newInstance();
     try {
+      const saltResult = await requestPasswordSalt(
+        appConfig.passportServer,
+        self.email
+      );
+      if (!saltResult.success) {
+        throw new Error("Error occurred while fetching salt from server");
+      }
+
+      const crypto = await PCDCrypto.newInstance();
       const currentEncryptionKey = await crypto.argon2(
         currentPassword,
-        salt,
+        saltResult.value,
         32
       );
       const newSalt = await crypto.generateSalt();
@@ -50,7 +56,7 @@ export function ChangePasswordScreen() {
         newSalt
       );
       // Meaning password is incorrect, as old row is not found
-      if (res.status === 401) {
+      if (!res.success && res.error.name === "PasswordInvalid") {
         dispatch({
           type: "error",
           error: {
@@ -64,8 +70,9 @@ export function ChangePasswordScreen() {
         return;
       }
 
-      if (!res.ok) {
-        throw new Error(`Request failed with status ${res.status}`);
+      // Handle
+      if (!res.success) {
+        throw new Error(`Request failed with message ${res.error}`);
       }
 
       await saveEncryptionKey(newEncryptionKey);

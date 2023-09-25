@@ -55,6 +55,13 @@ export function SettingsModal() {
           </LinkButton>
         )}
         <Spacer h={16} />
+        <LinkButton
+          to="/subscriptions"
+          onClick={() => dispatch({ type: "set-modal", modal: "" })}
+        >
+          Manage Subscriptions
+        </LinkButton>
+        <Spacer h={16} />
         <Button onClick={clearPassport} style="danger">
           Log Out
         </Button>

@@ -64,3 +64,19 @@ export async function softDeletePretixEventsInfo(
     [id]
   );
 }
+
+export async function fetchPretixEventInfoByName(
+  client: Pool,
+  eventName: string
+): Promise<PretixEventInfo | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+      select *
+      from devconnect_pretix_events_info
+      where event_name = $1`,
+    [eventName]
+  );
+
+  return result.rowCount ? result.rows[0] : null;
+}

@@ -3,7 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
-import { IPretixAPI } from "./apis/pretixAPI";
+import { IZuzaluPretixAPI } from "./apis/pretixAPI";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -14,7 +14,7 @@ import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
 import { MetricsService } from "./services/metricsService";
 import { PersistentCacheService } from "./services/persistentCacheService";
-import { PretixSyncService } from "./services/pretixSyncService";
+import { ZuzaluPretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
@@ -39,7 +39,7 @@ export interface GlobalServices {
   emailTokenService: EmailTokenService;
   rollbarService: RollbarService | null;
   provingService: ProvingService;
-  pretixSyncService: PretixSyncService | null;
+  zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
@@ -52,12 +52,16 @@ export interface PCDpass {
   context: ApplicationContext;
   services: GlobalServices;
   apis: APIs;
-  expressContext: { app: Application; server: http.Server };
+  expressContext: {
+    app: Application;
+    server: http.Server;
+    localEndpoint: string;
+  };
 }
 
 export interface APIs {
   emailAPI: IEmailAPI | null;
-  pretixAPI: IPretixAPI | null;
+  zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
 }
 

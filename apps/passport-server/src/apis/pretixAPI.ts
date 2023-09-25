@@ -5,23 +5,23 @@ import { instrumentedFetch } from "./fetch";
 
 const TRACE_SERVICE = "PretixAPI";
 
-export interface IPretixAPI {
-  config: PretixConfig;
-  fetchOrders(eventID: string): Promise<PretixOrder[]>;
-  fetchSubevents(eventID: string): Promise<PretixSubevent[]>;
+export interface IZuzaluPretixAPI {
+  config: ZuzaluPretixConfig;
+  fetchOrders(eventID: string): Promise<ZuzaluPretixOrder[]>;
+  fetchSubevents(eventID: string): Promise<ZuzaluPretixSubevent[]>;
 }
 
-export class PretixAPI implements IPretixAPI {
-  public config: PretixConfig;
+export class ZuzaluPretixAPI implements IZuzaluPretixAPI {
+  public config: ZuzaluPretixConfig;
 
-  public constructor(config: PretixConfig) {
+  public constructor(config: ZuzaluPretixConfig) {
     this.config = config;
   }
 
   // Fetch all orders for a given event.
-  public async fetchOrders(eventID: string): Promise<PretixOrder[]> {
+  public async fetchOrders(eventID: string): Promise<ZuzaluPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async () => {
-      const orders: PretixOrder[] = [];
+      const orders: ZuzaluPretixOrder[] = [];
 
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/orders/`;
@@ -45,9 +45,11 @@ export class PretixAPI implements IPretixAPI {
   }
 
   // Fetch all item types for a given event.
-  public async fetchSubevents(eventID: string): Promise<PretixSubevent[]> {
+  public async fetchSubevents(
+    eventID: string
+  ): Promise<ZuzaluPretixSubevent[]> {
     return traced(TRACE_SERVICE, "fetchSubevents", async () => {
-      const orders: PretixSubevent[] = [];
+      const orders: ZuzaluPretixSubevent[] = [];
 
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/subevents/`;
@@ -71,9 +73,9 @@ export class PretixAPI implements IPretixAPI {
   }
 }
 
-export function getPretixConfig(): PretixConfig | null {
+export function getZuzaluPretixConfig(): ZuzaluPretixConfig | null {
   // Make sure we can use the Pretix API.
-  let pretixConfig: PretixConfig;
+  let pretixConfig: ZuzaluPretixConfig;
   try {
     pretixConfig = {
       token: requireEnv("PRETIX_TOKEN"),
@@ -96,29 +98,29 @@ export function getPretixConfig(): PretixConfig | null {
   }
 }
 
-export function getPretixAPI(): IPretixAPI | null {
-  const config = getPretixConfig();
+export function getZuzaluPretixAPI(): IZuzaluPretixAPI | null {
+  const config = getZuzaluPretixConfig();
 
   if (config === null) {
     return null;
   }
 
-  const api = new PretixAPI(config);
+  const api = new ZuzaluPretixAPI(config);
   return api;
 }
 
 // A Pretix order. For our purposes, each order contains one ticket.
-export interface PretixOrder {
+export interface ZuzaluPretixOrder {
   code: string; // "Q0BHN"
   status: string; // "p"
   testmode: boolean;
   secret: string;
   email: string;
-  positions: PretixPosition[]; // should have exactly one
+  positions: ZuzaluPretixPosition[]; // should have exactly one
 }
 
 // Unclear why this is called a "position" rather than a ticket.
-export interface PretixPosition {
+export interface ZuzaluPretixPosition {
   id: number;
   order: string; // "Q0BHN"
   positionid: number;
@@ -130,13 +132,13 @@ export interface PretixPosition {
   secret: string;
 }
 
-export interface PretixSubevent {
+export interface ZuzaluPretixSubevent {
   id: number;
   date_from?: string | null;
   date_to?: string | null;
 }
 
-export interface PretixConfig {
+export interface ZuzaluPretixConfig {
   token: string;
   orgUrl: string;
   zuEventID: string;

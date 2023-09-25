@@ -1,14 +1,18 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  ConfirmEmailResult,
+  requestConfirmationEmail,
+  requestDownloadAndDecryptStorage,
+  requestLogToServer
+} from "@pcd/passport-interface";
+import {
   FormEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
   useState
 } from "react";
-import { downloadAndDecryptStorage } from "../../src/api/endToEndEncryptionApi";
-import { logToServer } from "../../src/api/logApi";
-import { requestLoginCode } from "../../src/api/user";
+import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { err } from "../../src/util";
 import {
@@ -16,7 +20,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
-  H2,
+  H1,
   HR,
   Spacer,
   TextCenter
@@ -28,50 +32,69 @@ import { AppContainer } from "../shared/AppContainer";
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
   const self = useSelf();
-  const [isLoading, setLoading] = useState(false);
-  const [password, setPassword] = useState("");
   const query = useQuery();
   const email = query?.get("email");
   const salt = query?.get("salt");
   const identityCommitment = query?.get("identityCommitment");
+  const [isLoading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
 
-  const onEmailSuccess = useCallback(
-    (devToken: string | undefined) => {
-      if (devToken === undefined) {
+  const handleConfirmationEmailResult = useCallback(
+    async (result: ConfirmEmailResult) => {
+      if (!result.success) {
+        err(dispatch, "Email failed", result.error);
+        setLoading(false);
+      } else if (result.value?.devToken != null) {
+        await dispatch({
+          type: "verify-token",
+          email,
+          token: result.value.devToken
+        });
+        setLoading(false);
+      } else {
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
         )}&identityCommitment=${encodeURIComponent(identityCommitment)}`;
-      } else {
-        dispatch({ type: "verify-token", email, token: devToken });
       }
     },
     [dispatch, email, identityCommitment]
   );
 
-  const onOverwriteClick = useCallback(() => {
-    setLoading(true);
-    logToServer("overwrite-account-click", { email, identityCommitment });
-    requestLoginCode(email, identityCommitment, true)
-      .then(onEmailSuccess)
-      .catch((e) => {
-        err(dispatch, "Email failed", e.message);
-        setLoading(false);
-      });
-  }, [dispatch, email, identityCommitment, onEmailSuccess]);
-
-  const onLoginWithMasterPasswordClick = useCallback(() => {
-    logToServer("login-with-master-password-click", {
+  const onOverwriteClick = useCallback(async () => {
+    requestLogToServer(appConfig.passportServer, "overwrite-account-click", {
       email,
       identityCommitment
     });
+
+    setLoading(true);
+    const emailConfirmationResult = await requestConfirmationEmail(
+      appConfig.passportServer,
+      appConfig.isZuzalu,
+      email,
+      identityCommitment,
+      true
+    );
+    handleConfirmationEmailResult(emailConfirmationResult);
+  }, [email, identityCommitment, handleConfirmationEmailResult]);
+
+  const onLoginWithMasterPasswordClick = useCallback(() => {
+    requestLogToServer(
+      appConfig.passportServer,
+      "login-with-master-password-click",
+      {
+        email,
+        identityCommitment
+      }
+    );
     window.location.href = "#/sync-existing";
   }, [email, identityCommitment]);
 
   const onSubmitPassword = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (!password) {
-        dispatch({
+
+      if (password == "" || password == null) {
+        return dispatch({
           type: "error",
           error: {
             title: "Missing password",
@@ -79,23 +102,19 @@ export function AlreadyRegisteredScreen() {
             dismissToCurrentPage: true
           }
         });
-        return;
       }
 
-      try {
-        setLoading(true);
+      setLoading(true);
+      const crypto = await PCDCrypto.newInstance();
+      const encryptionKey = await crypto.argon2(password, salt, 32);
+      const storageResult = await requestDownloadAndDecryptStorage(
+        appConfig.passportServer,
+        encryptionKey
+      );
+      setLoading(false);
 
-        const crypto = await PCDCrypto.newInstance();
-        const syncKey = await crypto.argon2(password, salt, 32);
-        const storage = await downloadAndDecryptStorage(syncKey);
-        dispatch({
-          type: "load-from-sync",
-          storage,
-          encryptionKey: syncKey
-        });
-        setLoading(false);
-      } catch (e) {
-        dispatch({
+      if (!storageResult.success) {
+        return dispatch({
           type: "error",
           error: {
             title: "Password incorrect",
@@ -104,8 +123,13 @@ export function AlreadyRegisteredScreen() {
             dismissToCurrentPage: true
           }
         });
-        setLoading(false);
       }
+
+      dispatch({
+        type: "load-from-sync",
+        storage: storageResult.value,
+        encryptionKey: encryptionKey
+      });
     },
     [dispatch, password, salt]
   );
@@ -140,7 +164,7 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>LOGIN</H2>
+            <H1>PCDPASS</H1>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>

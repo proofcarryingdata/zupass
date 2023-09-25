@@ -10,9 +10,10 @@ describe("feed actions", async function () {
 
   it("executing actions from a feed should work", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);
-    const firstProviderUrl = mockFeedApi.getProviders()[0];
-    const feeds = await manager.listFeeds(firstProviderUrl);
-    const firstFeed = feeds[0];
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const response = await manager.listFeeds(firstProviderUrl);
+    const firstFeed = response.feeds[0];
 
     manager.subscribe(firstProviderUrl, firstFeed);
     const actions = await manager.pollSubscriptions();

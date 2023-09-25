@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { requestVerifyToken } from "@pcd/passport-interface";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { verifyTokenServer } from "../../src/api/user";
+import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { validateEmail } from "../../src/util";
 import {
@@ -17,35 +18,43 @@ import { NewPasswordForm } from "../shared/NewPasswordForm";
 
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();
-  const [revealPassword, setRevealPassword] = useState(false);
+  const self = useSelf();
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
-
-  useEffect(() => {
-    async function checkIfShouldRedirect() {
-      try {
-        if (!email || !validateEmail(email) || !token) {
-          throw new Error("Invalid email or token, redirecting to login");
-        }
-        const { verified } = await verifyTokenServer(email, token).then((res) =>
-          res.json()
-        );
-        if (!verified) {
-          throw new Error("Token is incorrect, redirecting to login");
-        }
-      } catch (e) {
-        console.error(e);
-        window.location.hash = "#/login";
-        window.location.reload();
-      }
-    }
-    checkIfShouldRedirect();
-  }, [email, token]);
-
-  const self = useSelf();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [revealPassword, setRevealPassword] = useState(false);
+
+  const redirectToLoginPageWithError = useCallback((e: Error | string) => {
+    console.error(e);
+    window.location.hash = "#/login";
+    window.location.reload();
+  }, []);
+
+  const checkIfShouldRedirect = useCallback(async () => {
+    if (!email || !validateEmail(email) || !token) {
+      return redirectToLoginPageWithError(
+        "Invalid email or token, redirecting to login"
+      );
+    }
+
+    const verifyTokenResult = await requestVerifyToken(
+      appConfig.passportServer,
+      email,
+      token
+    );
+
+    if (!verifyTokenResult.success) {
+      return redirectToLoginPageWithError(
+        "Invalid email or token, redirecting to login"
+      );
+    }
+  }, [email, redirectToLoginPageWithError, token]);
+
+  useEffect(() => {
+    checkIfShouldRedirect();
+  }, [checkIfShouldRedirect]);
 
   useEffect(() => {
     // Redirect to home if already logged in

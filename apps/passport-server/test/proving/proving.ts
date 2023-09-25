@@ -1,106 +1,91 @@
 import {
   isSettledPendingPCDStatus,
-  PendingPCD,
-  ProveRequest,
-  StatusRequest,
-  StatusResponse
+  ProofStatusRequest,
+  ProveOnServerResult,
+  requestProveOnServer,
+  requestServerProofStatus,
+  ServerProofRequest,
+  ServerProofStatusResult
 } from "@pcd/passport-interface";
-import chai, { expect } from "chai";
-import { Response } from "superagent";
+import { expect } from "chai";
 import { PCDpass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
 export async function sendProveRequest(
   application: PCDpass,
-  proveRequest: ProveRequest,
-  handler: (r: Response) => Promise<void>
-): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const { expressContext } = application;
+  proveRequest: ServerProofRequest,
+  handler: (r: ProveOnServerResult) => Promise<void>
+): Promise<ProveOnServerResult> {
+  const res = await requestProveOnServer(
+    application.expressContext.localEndpoint,
+    proveRequest
+  );
 
-    chai
-      .request(expressContext.app)
-      .post("/pcds/prove")
-      .send(proveRequest)
-      .then(async (r) => {
-        try {
-          await handler(r);
-          resolve(r);
-        } catch (e) {
-          reject(e);
-        }
-      });
-  });
+  await handler(res);
+
+  return res;
 }
 
 export async function sendStatusRequest(
   application: PCDpass,
-  statusRequest: StatusRequest,
-  handler?: (r: Response) => Promise<void>
-): Promise<Response> {
-  return new Promise((resolve, reject) => {
-    const { expressContext } = application;
+  statusRequest: ProofStatusRequest,
+  handler?: (r: ServerProofStatusResult) => Promise<void>
+): Promise<ServerProofStatusResult> {
+  const proofStatusResult = await requestServerProofStatus(
+    application.expressContext.localEndpoint,
+    statusRequest
+  );
 
-    chai
-      .request(expressContext.app)
-      .post("/pcds/status")
-      .send(statusRequest)
-      .then(async (r) => {
-        try {
-          await (handler && handler(r));
-          resolve(r);
-        } catch (e) {
-          reject(e);
-        }
-      });
-  });
+  handler && (await handler(proofStatusResult));
+
+  return proofStatusResult;
 }
 
 export async function waitForSettledStatus(
   application: PCDpass,
-  statusRequest: StatusRequest,
-  handler?: (r: Response) => Promise<void>
-): Promise<Response> {
-  let response = await sendStatusRequest(application, statusRequest);
-  let responseBody = response.body as StatusResponse;
+  statusRequest: ProofStatusRequest,
+  handler?: (r: ServerProofStatusResult) => Promise<void>
+): Promise<ServerProofStatusResult> {
+  let statusResult = await sendStatusRequest(application, statusRequest);
 
-  while (!isSettledPendingPCDStatus(responseBody.status)) {
+  while (
+    statusResult.value?.status &&
+    !isSettledPendingPCDStatus(statusResult.value?.status)
+  ) {
     await sleep(500);
-    response = await sendStatusRequest(application, statusRequest);
-    responseBody = response.body as StatusResponse;
+    statusResult = await sendStatusRequest(application, statusRequest);
   }
 
-  await (handler && handler(response));
-  return response;
+  await (handler && handler(statusResult));
+  return statusResult;
 }
 
 export async function submitAndWaitForPendingPCD(
   application: PCDpass,
-  proveRequest: ProveRequest,
-  settledResponseHandler: (status: Response) => Promise<void>
+  proveRequest: ServerProofRequest,
+  settledResponseHandler: (status: ServerProofStatusResult) => Promise<void>
 ): Promise<void> {
-  const proveResponse = await sendProveRequest(
+  const proveResult = await sendProveRequest(
     application,
     proveRequest,
     async (r) => {
-      const response = r.body as PendingPCD;
-      expect(response).to.haveOwnProperty("pcdType");
-      expect(response).to.haveOwnProperty("hash");
-      expect(response).to.haveOwnProperty("status");
-      expect(r.statusCode).to.eq(200);
+      expect(r.value).to.haveOwnProperty("pcdType");
+      expect(r.value).to.haveOwnProperty("hash");
+      expect(r.value).to.haveOwnProperty("status");
+      expect(r.error).to.eq(undefined);
+      expect(r.success).to.eq(true);
     }
   );
 
-  const statusRequest: StatusRequest = {
-    hash: proveResponse.body.hash
-  };
+  if (!proveResult.value) {
+    throw new Error("expected to be able to get a proof result");
+  }
 
-  const settledStatusResponse = await waitForSettledStatus(
-    application,
-    statusRequest
-  );
+  const settledStatusResult = await waitForSettledStatus(application, {
+    hash: proveResult.value.hash
+  });
 
-  const settledResponseBody = settledStatusResponse.body as StatusResponse;
-  expect(settledResponseBody).to.haveOwnProperty("status");
-  await settledResponseHandler(settledStatusResponse);
+  expect(settledStatusResult.value).to.haveOwnProperty("status");
+  expect(settledStatusResult.success).to.eq(true);
+  await settledResponseHandler(settledStatusResult);
 }

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-group-pcd",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -21,14 +21,13 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.6.2",
-    "@pcd/pcd-types": "0.6.3",
-    "@pcd/semaphore-identity-pcd": "0.6.2",
-    "@pcd/semaphore-signature-pcd": "0.6.2",
+    "@pcd/passport-ui": "0.7.0",
+    "@pcd/pcd-types": "0.7.0",
+    "@pcd/semaphore-identity-pcd": "0.7.0",
+    "@pcd/semaphore-signature-pcd": "0.7.0",
     "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "@semaphore-protocol/proof": "^3.11.0",
-    "js-sha256": "^0.9.0",
     "json-bigint": "^1.0.0",
     "react": "18.2.0",
     "styled-components": "^5.3.9",
@@ -36,9 +35,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.6.2",
-    "@pcd/tsconfig": "0.6.2",
-    "@types/expect": "^24.3.0",
+    "@pcd/eslint-config-custom": "0.7.0",
+    "@pcd/tsconfig": "0.7.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "18.0.22",

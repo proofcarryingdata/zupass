@@ -7,7 +7,7 @@ import {
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
-import { generateMessageHash } from "@pcd/util";
+import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
@@ -18,14 +18,17 @@ export const EmailPCDTypeName = "email-pcd";
 export interface EmailPCDArgs {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
-  // ticket information that is encoded into this pcd
+  // the verified email address
   emailAddress: StringArgument;
+  // semaphore ID
+  semaphoreId: StringArgument;
   // A unique string identifying the PCD
   id: StringArgument;
 }
 
 export interface EmailPCDClaim {
   emailAddress: string;
+  semaphoreId: string; // stringified big int
 }
 
 export interface EmailPCDProof {
@@ -54,12 +57,16 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
     throw new Error("missing email value");
   }
 
+  if (!args.semaphoreId.value) {
+    throw new Error("missing semaphore id");
+  }
+
   // Hashes email and returns bigint representation of hash
-  const hashedEmail = generateMessageHash(args.emailAddress.value);
+  const hashedEmail = generateSnarkMessageHash(args.emailAddress.value);
 
   const eddsaPCD = await EdDSAPCDPackage.prove({
     message: {
-      value: [hashedEmail.toString()],
+      value: [hashedEmail.toString(), args.semaphoreId.value],
       argumentType: ArgumentTypeName.StringArray
     },
     privateKey: {
@@ -76,15 +83,25 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
 
   return new EmailPCD(
     id,
-    { emailAddress: args.emailAddress.value },
+    {
+      emailAddress: args.emailAddress.value,
+      semaphoreId: args.semaphoreId.value
+    },
     { eddsaPCD }
   );
 }
 
 export async function verify(pcd: EmailPCD): Promise<boolean> {
-  const messageDerivedFromClaim = generateMessageHash(pcd.claim.emailAddress);
+  const messageDerivedFromClaim = generateSnarkMessageHash(
+    pcd.claim.emailAddress
+  );
 
-  if (!_.isEqual([messageDerivedFromClaim], pcd.proof.eddsaPCD.claim.message)) {
+  if (
+    !_.isEqual(
+      [messageDerivedFromClaim, BigInt(pcd.claim.semaphoreId)],
+      pcd.proof.eddsaPCD.claim.message
+    )
+  ) {
     return false;
   }
 
@@ -108,7 +125,8 @@ export async function serialize(
     pcd: JSONBig().stringify({
       id: pcd.id,
       eddsaPCD: serializedEdDSAPCD,
-      emailAddress: pcd.claim.emailAddress
+      emailAddress: pcd.claim.emailAddress,
+      semaphoreId: pcd.claim.semaphoreId
     })
   } as SerializedPCD<EmailPCD>;
 }
@@ -120,7 +138,10 @@ export async function deserialize(serialized: string): Promise<EmailPCD> {
   );
   return new EmailPCD(
     deserializedWrapper.id,
-    { emailAddress: deserializedWrapper.emailAddress },
+    {
+      emailAddress: deserializedWrapper.emailAddress,
+      semaphoreId: deserializedWrapper.semaphoreId
+    },
     { eddsaPCD: deserializedEdDSAPCD }
   );
 }

@@ -1,3 +1,4 @@
+import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Pool } from "postgres-pool";
@@ -5,8 +6,7 @@ import {
   CommitmentRow,
   HistoricSemaphoreGroup,
   LoggedinPCDpassUser,
-  LoggedInZuzaluUser,
-  ZuzaluUserRole
+  LoggedInZuzaluUser
 } from "../database/models";
 import {
   fetchAllCommitments,
@@ -20,6 +20,7 @@ import {
   insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
 import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -59,7 +60,7 @@ export class SemaphoreService {
 
   public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
-    if (!ret) throw new Error("Missing group " + id);
+    if (!ret) throw new PCDHTTPError(404, "Missing group " + id);
     return ret;
   }
 
@@ -69,16 +70,17 @@ export class SemaphoreService {
   private pcdPassUsersByEmail = {} as Record<string, CommitmentRow>;
 
   /**
-   * Gets a user by unique identitifier. Only retrieves users that have logged in
-   * (which makes sense because only those users even have a uuid).
+   * If the service has not loaded all the users into memory yet, throws an error.
+   * Otherwise, if this is a Zuzalu server, returns the user, or `null` if the user does not exist.
+   * Otherwise, if this is a PCDpass server, returns the user, or `null` if the user does not exist.
    */
   public async getUserByUUID(
     uuid: string
   ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
-    // prevents client from thinking the user has been logged out
-    // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
-      throw new Error("Semaphore service not loaded");
+      // prevents client from thinking the user has been logged out
+      // if semaphore service hasn't been initialized yet
+      throw new PCDHTTPError(503, "Semaphore service not loaded");
     }
 
     if (this.isZuzalu) {
@@ -114,10 +116,10 @@ export class SemaphoreService {
   public async getUserByEmail(
     email: string
   ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
-    // prevents client from thinking the user has been logged out
-    // if semaphore service hasn't been initialized yet
     if (!this.loaded) {
-      throw new Error("Semaphore service not loaded");
+      // prevents client from thinking the user has been logged out
+      // if semaphore service hasn't been initialized yet
+      throw new PCDHTTPError(503, "Semaphore service not loaded");
     }
 
     if (this.isZuzalu) {
@@ -147,8 +149,8 @@ export class SemaphoreService {
   }
 
   public start(): void {
-    // Reload every minute
     this.interval = setInterval(() => {
+      // Reload every minute
       this.reload();
     }, 60 * 1000);
   }
@@ -169,6 +171,7 @@ export class SemaphoreService {
       if (this.isZuzalu) {
         await this.reloadZuzaluGroups();
       } else {
+        await this.reloadZuzaluGroups();
         await this.reloadGenericGroup();
       }
 

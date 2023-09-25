@@ -1,5 +1,5 @@
 import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
-import { parse as uuidParse } from "uuid";
+import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
@@ -13,26 +13,18 @@ export type SerializedTicket = [
   bigint,
   bigint,
   bigint,
+  bigint,
+  bigint,
+  // These three fields are currently not typed or being used, but are kept
+  // as reserved fields that are hardcoded to zero and included in the preimage
+  // of the hashed signature.
+  bigint,
+  bigint,
   bigint
 ];
 
-export function numberToBigInt(v: number): bigint {
-  return BigInt(v);
-}
-
-export function booleanToBigInt(v: boolean): bigint {
-  return BigInt(v ? 1 : 0);
-}
-
 export function semaphoreIdToBigInt(v: string): bigint {
   return BigInt(v);
-}
-
-export function uuidToBigInt(v: string): bigint {
-  // a uuid is just a particular representation of 16 bytes
-  const bytes = uuidParse(v);
-  const hex = "0x" + Buffer.from(bytes).toString("hex");
-  return BigInt(hex);
 }
 
 export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
@@ -44,7 +36,11 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     numberToBigInt(data.timestampSigned),
     semaphoreIdToBigInt(data.attendeeSemaphoreId),
     booleanToBigInt(data.isConsumed),
-    booleanToBigInt(data.isRevoked)
+    booleanToBigInt(data.isRevoked),
+    numberToBigInt(data.ticketCategory),
+    numberToBigInt(0),
+    numberToBigInt(0),
+    numberToBigInt(0)
   ];
 }
 

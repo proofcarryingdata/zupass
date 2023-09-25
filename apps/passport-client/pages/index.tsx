@@ -28,9 +28,9 @@ import { appConfig } from "../src/appConfig";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -51,7 +51,6 @@ class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
-    console.log("App.update", diff);
     this.setState(diff, () => {
       this.stateEmitter.emit(this.state);
     });
@@ -226,7 +225,8 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     userInvalid: userInvalid,
-    subscriptions
+    subscriptions,
+    resolvingSubscriptionId: undefined
   };
 }
 

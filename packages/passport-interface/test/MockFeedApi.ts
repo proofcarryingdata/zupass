@@ -4,57 +4,100 @@ import {
   PCDPermissionType
 } from "@pcd/pcd-collection";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { FeedHost, FeedRequest, FeedResponse, ListFeedsResponse } from "../src";
+import {
+  FeedHost,
+  ListFeedsResult,
+  PollFeedRequest,
+  PollFeedResult
+} from "../src";
 import { IFeedApi } from "../src/FeedAPI";
 
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
   public constructor() {
-    this.feedHosts = new Map([
+    this.feedHosts = new Map<string, FeedHost>([
       [
         "http://localhost:3000/feed",
-        new FeedHost([
-          {
-            feed: {
-              description:
-                "returns a new semaphore identity each time it's invoked",
-              id: "1",
-              name: "identity drip",
-              permissions: [
-                {
-                  folder: "TEST",
-                  type: PCDPermissionType.ReplaceInFolder
-                } as PCDPermission
-              ],
-              inputPCDType: undefined,
-              partialArgs: undefined
-            },
-            handleRequest: async (_req: FeedRequest) => {
-              return {
-                actions: [
+        new FeedHost(
+          [
+            {
+              feed: {
+                description:
+                  "returns a new semaphore identity each time it's invoked",
+                id: "1",
+                name: "identity drip",
+                permissions: [
                   {
-                    type: PCDActionType.ReplaceInFolder,
                     folder: "TEST",
-                    pcds: [
-                      await SemaphoreIdentityPCDPackage.serialize(
-                        await SemaphoreIdentityPCDPackage.prove({
-                          identity: new Identity()
-                        })
-                      )
-                    ]
-                  }
-                ]
-              };
+                    type: PCDPermissionType.ReplaceInFolder
+                  } as PCDPermission
+                ],
+                inputPCDType: undefined,
+                partialArgs: undefined
+              },
+
+              handleRequest: async (_req: PollFeedRequest) => {
+                return {
+                  actions: [
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: "TEST",
+                      pcds: [
+                        await SemaphoreIdentityPCDPackage.serialize(
+                          await SemaphoreIdentityPCDPackage.prove({
+                            identity: new Identity()
+                          })
+                        )
+                      ]
+                    }
+                  ]
+                };
+              }
+            },
+            {
+              feed: {
+                description: "returns actions that are not permitted",
+                id: "2",
+                name: "bad feed",
+                permissions: [
+                  {
+                    folder: "TEST",
+                    type: PCDPermissionType.ReplaceInFolder
+                  } as PCDPermission
+                ],
+                inputPCDType: undefined,
+                partialArgs: undefined
+              },
+              handleRequest: async (_req: PollFeedRequest) => {
+                return {
+                  actions: [
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: "NOT TEST",
+                      pcds: [
+                        await SemaphoreIdentityPCDPackage.serialize(
+                          await SemaphoreIdentityPCDPackage.prove({
+                            identity: new Identity()
+                          })
+                        )
+                      ]
+                    }
+                  ]
+                };
+              }
             }
-          }
-        ])
+          ],
+          "http://localhost:3000/feed",
+          "Mock Provider"
+        )
       ]
     ]);
   }
 
-  public getProviders(): string[] {
+  public getProviderUrls(): string[] {
     return Array.from(this.feedHosts.keys());
   }
 
@@ -70,14 +113,29 @@ export class MockFeedApi implements IFeedApi {
 
   public async pollFeed(
     providerUrl: string,
-    request: FeedRequest
-  ): Promise<FeedResponse> {
+    request: PollFeedRequest
+  ): Promise<PollFeedResult> {
     const host = this.getFeedHost(providerUrl);
-    return host.handleFeedRequest(request);
+
+    try {
+      return {
+        value: await host.handleFeedRequest(request),
+        success: true
+      };
+    } catch (e) {
+      return { error: getErrorMessage(e), success: false };
+    }
   }
 
-  public async listFeeds(providerUrl: string): Promise<ListFeedsResponse> {
+  public async listFeeds(providerUrl: string): Promise<ListFeedsResult> {
     const host = this.getFeedHost(providerUrl);
-    return host.handleListFeedsRequest({});
+    try {
+      return {
+        value: await host.handleListFeedsRequest({}),
+        success: true
+      };
+    } catch (e) {
+      return { error: getErrorMessage(e), success: false };
+    }
   }
 }

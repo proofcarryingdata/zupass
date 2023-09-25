@@ -1,6 +1,10 @@
+import {
+  ConfirmEmailResult,
+  requestConfirmationEmail,
+  requestPasswordSalt
+} from "@pcd/passport-interface";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { fetchSaltFromServer, requestLoginCode } from "../../src/api/user";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -47,35 +51,53 @@ function SendEmailVerification({ email }: { email: string }) {
   const [emailSent, setEmailSent] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
 
-  useEffect(() => {
-    if (triedSendingEmail) return;
-    setTriedSendingEmail(true);
+  const handleConfirmationEmailResult = useCallback(
+    async (result: ConfirmEmailResult) => {
+      if (!result.success) {
+        if (!result.error.includes("already registered")) {
+          return err(dispatch, "Email failed", result.error);
+        }
 
-    const handleResult = (devToken: string | undefined) => {
-      if (devToken === undefined) {
-        setEmailSent(true);
-      } else {
-        dispatch({ type: "verify-token", email, token: devToken });
-      }
-    };
+        const saltResult = await requestPasswordSalt(
+          appConfig.passportServer,
+          email
+        );
 
-    requestLoginCode(email, identity.commitment.toString())
-      .then(handleResult)
-      .catch(async (e) => {
-        const message = e.message as string;
-        if (message.includes("already registered")) {
-          const res = await fetchSaltFromServer(email);
-          const { salt } = await res.json();
+        if (saltResult.success) {
           window.location.href = `#/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
-          )}&salt=${encodeURIComponent(salt)}`;
+          )}&salt=${encodeURIComponent(saltResult.value)}`;
         } else {
-          err(dispatch, "Email failed", message);
+          err(dispatch, "Email failed", saltResult.error);
         }
-      });
-  }, [setEmailSent, dispatch, identity, triedSendingEmail, email]);
+      } else if (result.value?.devToken != null) {
+        dispatch({ type: "verify-token", email, token: result.value.devToken });
+      } else {
+        setEmailSent(true);
+      }
+    },
+    [dispatch, email, identity.commitment]
+  );
+
+  const doRequestConfirmationEmail = useCallback(async () => {
+    const confirmationEmailResult = await requestConfirmationEmail(
+      appConfig.passportServer,
+      appConfig.isZuzalu,
+      email,
+      identity.commitment.toString(),
+      false
+    );
+
+    handleConfirmationEmailResult(confirmationEmailResult);
+  }, [email, handleConfirmationEmailResult, identity.commitment]);
+
+  useEffect(() => {
+    if (triedSendingEmail) return;
+    setTriedSendingEmail(true);
+    doRequestConfirmationEmail();
+  }, [triedSendingEmail, doRequestConfirmationEmail]);
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
@@ -101,7 +123,6 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <Header />
-          <RippleLoader />
           <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
         </TextCenter>
         <Spacer h={24} />
@@ -150,7 +171,7 @@ function Header() {
     return (
       <>
         <H1>PCDPASS</H1>
-        <Spacer h={48} />
+        <Spacer h={24} />
       </>
     );
   } else {

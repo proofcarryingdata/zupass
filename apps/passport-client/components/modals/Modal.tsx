@@ -9,6 +9,7 @@ import { icons } from "../icons";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
 
@@ -66,6 +67,8 @@ function getModalBody(modal: AppState["modal"]) {
       return <InvalidUserModal />;
     case "changed-password":
       return <ChangedPasswordModal />;
+    case "resolve-subscription-error":
+      return <ResolveSubscriptionErrorModal />;
     case "":
       return null;
     default:

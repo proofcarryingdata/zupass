@@ -1,5 +1,16 @@
 # @pcd/input-test-pcd
 
+## 0.7.0
+
+### Minor Changes
+
+- bundle of package upgrades
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.7.0
+
 ## 0.6.2
 
 ### Patch Changes

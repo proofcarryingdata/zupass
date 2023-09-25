@@ -21,6 +21,35 @@ export type MatchingActionPermission =
   | { permission: ReplaceInFolderPermission; action: ReplaceInFolderAction }
   | { permission: AppendToFolderPermission; action: AppendToFolderAction };
 
+type AddPCDOptions = { upsert?: boolean };
+
+export function matchActionToPermission(
+  action: PCDAction,
+  permissions: PCDPermission[]
+): MatchingActionPermission | null {
+  for (const permission of permissions) {
+    if (
+      isAppendToFolderAction(action) &&
+      isAppendToFolderPermission(permission) &&
+      (action.folder === permission.folder ||
+        isFolderAncestor(action.folder, permission.folder))
+    ) {
+      return { action, permission };
+    }
+
+    if (
+      isReplaceInFolderAction(action) &&
+      isReplaceInFolderPermission(permission) &&
+      (action.folder === permission.folder ||
+        isFolderAncestor(action.folder, permission.folder))
+    ) {
+      return { action, permission };
+    }
+  }
+
+  return null;
+}
+
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -61,38 +90,11 @@ export class PCDCollection {
     this.recalculateAndEmitHash();
   }
 
-  private matchActionToPermission(
-    action: PCDAction,
-    permissions: PCDPermission[]
-  ): MatchingActionPermission | null {
-    for (const permission of permissions) {
-      if (
-        isAppendToFolderAction(action) &&
-        isAppendToFolderPermission(permission) &&
-        (action.folder === permission.folder ||
-          isFolderAncestor(action.folder, permission.folder))
-      ) {
-        return { action, permission };
-      }
-
-      if (
-        isReplaceInFolderAction(action) &&
-        isReplaceInFolderPermission(permission) &&
-        (action.folder === permission.folder ||
-          isFolderAncestor(action.folder, permission.folder))
-      ) {
-        return { action, permission };
-      }
-    }
-
-    return null;
-  }
-
   public async tryExec(
     action: PCDAction,
     permissions: PCDPermission[]
   ): Promise<boolean> {
-    const match = this.matchActionToPermission(action, permissions);
+    const match = matchActionToPermission(action, permissions);
 
     if (!match) {
       return false;
@@ -138,7 +140,6 @@ export class PCDCollection {
           throw new Error(`pcd with ${pcd.id} already exists`);
         }
       }
-      console.log(`adding pcds ${action.pcds} to folder ${action.folder}`);
 
       this.addAll(pcds);
       this.bulkSetFolder(
@@ -172,7 +173,6 @@ export class PCDCollection {
         }
       }
 
-      console.log(`adding pcds ${action.pcds} to folder ${action.folder}`);
       this.addAll(pcds, { upsert: true });
       this.bulkSetFolder(
         pcds.map((pcd) => pcd.id),
@@ -315,11 +315,11 @@ export class PCDCollection {
     await this.deserializeAllAndAdd([serialized], options);
   }
 
-  public add(pcd: PCD, options?: { upsert?: boolean }) {
+  public add(pcd: PCD, options?: AddPCDOptions) {
     this.addAll([pcd], options);
   }
 
-  public addAll(pcds: PCD[], options?: { upsert?: boolean }) {
+  public addAll(pcds: PCD[], options?: AddPCDOptions) {
     const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
     const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
 
@@ -332,6 +332,7 @@ export class PCDCollection {
     }
 
     this.pcds = Array.from(currentMap.values());
+
     this.recalculateAndEmitHash();
   }
 

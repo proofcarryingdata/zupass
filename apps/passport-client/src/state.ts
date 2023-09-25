@@ -26,6 +26,7 @@ export interface AppState {
     | "save-sync"
     | "invalid-participant"
     | "changed-password"
+    | "resolve-subscription-error"
     | "";
 
   // User metadata.
@@ -33,6 +34,9 @@ export interface AppState {
 
   // If set, shows an error popover.
   error?: AppError;
+
+  // If set, show the error resolution screen for this subscription
+  resolvingSubscriptionId: string;
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;

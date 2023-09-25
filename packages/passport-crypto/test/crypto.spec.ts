@@ -14,14 +14,13 @@ describe("Passport encryption", function () {
     const pcdCrypto = await PCDCrypto.newInstance();
     const encryptionKey = pcdCrypto.generateRandomKey(256);
     const sourcePCDs = [{ id: 1 }];
-    const encrypted = await passportEncrypt(
-      JSON.stringify({
-        pcds: sourcePCDs,
-        self: testUser
-      }),
-      encryptionKey
-    );
+    const plaintext = JSON.stringify({
+      pcds: sourcePCDs,
+      self: testUser
+    });
+    const encrypted = await passportEncrypt(plaintext, encryptionKey);
     const decrypted = await passportDecrypt(encrypted, encryptionKey);
+    assert.equal(decrypted, plaintext);
     const parsed = JSON.parse(decrypted);
     const destinationPCDs = parsed.pcds as Array<{ id: number }>;
     assert.equal(destinationPCDs.length, 1);

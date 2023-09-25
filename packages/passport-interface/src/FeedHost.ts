@@ -1,37 +1,75 @@
 import {
-  FeedRequest,
-  FeedResponse,
   ListFeedsRequest,
-  ListFeedsResponse
+  ListFeedsResponseValue,
+  ListSingleFeedRequest,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "./RequestTypes";
 import { Feed } from "./SubscriptionManager";
 
 export interface HostedFeed {
   feed: Feed;
-  handleRequest(request: FeedRequest): Promise<FeedResponse>;
+  handleRequest(request: PollFeedRequest): Promise<PollFeedResponseValue>;
 }
 
 export class FeedHost {
   private readonly hostedFeed: HostedFeed[];
+  private readonly providerUrl: string;
+  private readonly providerName: string;
 
-  public constructor(feeds: HostedFeed[]) {
+  public constructor(
+    feeds: HostedFeed[],
+    providerUrl: string,
+    providerName: string
+  ) {
     this.hostedFeed = feeds;
+    this.providerUrl = providerUrl;
+    this.providerName = providerName;
   }
 
-  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
+  public getProviderUrl(): string {
+    return this.providerUrl;
+  }
+
+  public getProviderName(): string {
+    return this.providerName;
+  }
+
+  public async handleFeedRequest(
+    request: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
     const feed = this.hostedFeed.find((f) => f.feed.id === request.feedId);
     if (!feed) {
       throw new Error(`couldn't find feed with id ${request.feedId}`);
     }
+
     const response = await feed.handleRequest(request);
     return response;
   }
 
   public async handleListFeedsRequest(
     _request: ListFeedsRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return {
+      providerName: this.providerName,
+      providerUrl: this.providerUrl,
       feeds: this.hostedFeed.map((f) => f.feed)
+    };
+  }
+
+  public hasFeedWithId(feedId: string): boolean {
+    return this.hostedFeed.filter((f) => f.feed.id === feedId).length > 0;
+  }
+
+  public async handleListSingleFeedRequest(
+    _request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponseValue> {
+    return {
+      providerUrl: this.providerUrl,
+      providerName: this.providerName,
+      feeds: this.hostedFeed
+        .filter((f) => f.feed.id === _request.feedId)
+        .map((f) => f.feed)
     };
   }
 }

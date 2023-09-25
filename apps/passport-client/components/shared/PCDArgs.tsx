@@ -21,6 +21,8 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
+type ArgSetter = (argName: string, value: any) => void;
+
 /**
  * Given an {@link Argument}, renders a UI that displays its value.
  * If the user must supply this value, allows the user to input it.
@@ -34,10 +36,23 @@ export function PCDArgs<T extends PCDPackage>({
   pcdCollection
 }: {
   args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   pcdCollection: PCDCollection;
 }) {
   const entries = Object.entries(args);
+
+  const setArg = React.useCallback(
+    (argName: string, value: any) => {
+      setArgs((args) => ({
+        ...args,
+        [argName]: {
+          ...args[argName],
+          value
+        }
+      }));
+    },
+    [setArgs]
+  );
 
   return (
     <ArgsContainer>
@@ -47,102 +62,60 @@ export function PCDArgs<T extends PCDPackage>({
           key={i}
           argName={key}
           arg={value as any}
-          args={args}
-          setArgs={setArgs}
+          setArg={setArg}
         />
       ))}
     </ArgsContainer>
   );
 }
 
-export function ArgInput<T extends PCDPackage>({
+export function ArgInput({
   arg,
   argName,
-  args,
-  setArgs,
+  setArg,
   pcdCollection
 }: {
   arg: Argument<any, any>;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
   pcdCollection: PCDCollection;
 }) {
   if (isStringArgument(arg)) {
-    return (
-      <StringArgInput
-        args={args}
-        arg={arg}
-        argName={argName}
-        setArgs={setArgs}
-      />
-    );
+    return <StringArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isNumberArgument(arg)) {
-    return (
-      <NumberArgInput
-        args={args}
-        arg={arg}
-        argName={argName}
-        setArgs={setArgs}
-      />
-    );
+    return <NumberArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isBigIntArgument(arg)) {
-    return (
-      <BigIntArgInput
-        args={args}
-        arg={arg}
-        argName={argName}
-        setArgs={setArgs}
-      />
-    );
+    return <BigIntArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isBooleanArgument(arg)) {
-    return (
-      <BooleanArgInput
-        args={args}
-        arg={arg}
-        argName={argName}
-        setArgs={setArgs}
-      />
-    );
+    return <BooleanArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isObjectArgument(arg)) {
-    return (
-      <ObjectArgInput
-        args={args}
-        arg={arg}
-        argName={argName}
-        setArgs={setArgs}
-      />
-    );
+    return <ObjectArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isPCDArgument(arg)) {
     return (
       <PCDArgInput
-        args={args}
         arg={arg}
         argName={argName}
-        setArgs={setArgs}
+        setArg={setArg}
         pcdCollection={pcdCollection}
       />
     );
   }
 }
 
-export function StringArgInput<T extends PCDPackage>({
+export function StringArgInput({
   arg,
   argName,
-  args,
-  setArgs
+  setArg
 }: {
   arg: StringArgument;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
 }) {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      args[argName].value = e.target.value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+      setArg(argName, e.target.value);
     },
-    [args, setArgs, argName]
+    [argName, setArg]
   );
 
   return (
@@ -153,9 +126,11 @@ export function StringArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -169,16 +144,14 @@ export function StringArgInput<T extends PCDPackage>({
   );
 }
 
-export function NumberArgInput<T extends PCDPackage>({
+export function NumberArgInput({
   arg,
   argName,
-  args,
-  setArgs
+  setArg
 }: {
   arg: NumberArgument;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
 }) {
   const [valid, setValid] = useState(true);
   const validator = useCallback((arg: string): boolean => {
@@ -194,14 +167,13 @@ export function NumberArgInput<T extends PCDPackage>({
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (validator(e.target.value)) {
-        args[argName].value = e.target.value;
-        setArgs(JSON.parse(JSON.stringify(args)));
+        setArg(argName, e.target.value);
         setValid(true);
       } else {
         setValid(false);
       }
     },
-    [args, setArgs, argName, validator]
+    [setArg, argName, validator]
   );
 
   return (
@@ -212,9 +184,11 @@ export function NumberArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -231,16 +205,14 @@ export function NumberArgInput<T extends PCDPackage>({
   );
 }
 
-export function BigIntArgInput<T extends PCDPackage>({
+export function BigIntArgInput({
   arg,
   argName,
-  args,
-  setArgs
+  setArg
 }: {
   arg: BigIntArgument;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
 }) {
   const [valid, setValid] = useState(true);
   const validator = useCallback((arg: string): boolean => {
@@ -255,15 +227,13 @@ export function BigIntArgInput<T extends PCDPackage>({
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (validator(e.target.value)) {
-        args[argName].value = e.target.value;
-        setArgs(JSON.parse(JSON.stringify(args)));
-        console.log("changing argument");
+        setArg(argName, e.target.value);
         setValid(true);
       } else {
         setValid(false);
       }
     },
-    [args, setArgs, argName, validator]
+    [setArg, argName, validator]
   );
 
   return (
@@ -274,12 +244,14 @@ export function BigIntArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
-          <input
+          <Input
             value={arg.value ?? ""}
             onChange={onChange}
             disabled={!arg.userProvided}
@@ -293,23 +265,20 @@ export function BigIntArgInput<T extends PCDPackage>({
   );
 }
 
-export function BooleanArgInput<T extends PCDPackage>({
+export function BooleanArgInput({
   arg,
   argName,
-  args,
-  setArgs
+  setArg
 }: {
   arg: BooleanArgument;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
 }) {
   const onChange = useCallback(
-    (_e: React.ChangeEvent<HTMLInputElement>) => {
-      args[argName].value = !args[argName].value;
-      setArgs(JSON.parse(JSON.stringify(args)));
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setArg(argName, e.target.checked);
     },
-    [args, setArgs, argName]
+    [setArg, argName]
   );
 
   return (
@@ -320,9 +289,11 @@ export function BooleanArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <input
@@ -337,16 +308,14 @@ export function BooleanArgInput<T extends PCDPackage>({
   );
 }
 
-export function ObjectArgInput<T extends PCDPackage>({
+export function ObjectArgInput({
   arg,
   argName,
-  args,
-  setArgs
+  setArg
 }: {
   arg: ObjectArgument<any>;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
 }) {
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
   const [loaded, setLoaded] = useState(false);
@@ -366,8 +335,7 @@ export function ObjectArgInput<T extends PCDPackage>({
         .then((obj) => {
           setLoading(false);
           setLoaded(true);
-          args[argName].value = obj;
-          setArgs(JSON.parse(JSON.stringify(args)));
+          setArg(argName, obj);
         })
         .catch((_e) => {
           setLoading(false);
@@ -375,7 +343,7 @@ export function ObjectArgInput<T extends PCDPackage>({
           console.log(`failed to load ${arg.remoteUrl}`);
         });
     }
-  }, [arg.remoteUrl, argName, args, load, setArgs, loaded]);
+  }, [arg.remoteUrl, argName, load, setArg, loaded]);
 
   const onChange = useCallback((_e: React.ChangeEvent<HTMLTextAreaElement>) => {
     // TODO: parse JSON object, validate it
@@ -389,9 +357,11 @@ export function ObjectArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
           <textarea
@@ -409,17 +379,15 @@ export function ObjectArgInput<T extends PCDPackage>({
   );
 }
 
-export function PCDArgInput<T extends PCDPackage>({
+export function PCDArgInput({
   arg,
   argName,
-  args,
-  setArgs,
+  setArg,
   pcdCollection
 }: {
   arg: PCDArgument;
   argName: string;
-  args: ArgsOf<T>;
-  setArgs: (args: ArgsOf<T>) => void;
+  setArg: ArgSetter;
   pcdCollection: PCDCollection;
 }) {
   const relevantPCDs = pcdCollection.getAll().filter((pcd) => {
@@ -433,16 +401,10 @@ export function PCDArgInput<T extends PCDPackage>({
   const setPCDById = useCallback(
     async (id: string) => {
       const pcd = pcdCollection.getById(id);
-      if (pcd) {
-        const serialized = await pcdCollection.serialize(pcd);
-        args[argName].value = serialized;
-        setArgs(JSON.parse(JSON.stringify(args)));
-      } else {
-        args[argName].value = undefined;
-        setArgs(JSON.parse(JSON.stringify(args)));
-      }
+      const value = pcd ? await pcdCollection.serialize(pcd) : undefined;
+      setArg(argName, value);
     },
-    [argName, args, pcdCollection, setArgs]
+    [argName, pcdCollection, setArg]
   );
 
   const onChange = useCallback(
@@ -482,14 +444,16 @@ export function PCDArgInput<T extends PCDPackage>({
           <ArgTypeLabel argType={arg.argumentType} />
         </ArgName>
       </Row>
-      <Row>
-        <Description>{arg.description}</Description>
-      </Row>
+      {arg.description && (
+        <Row>
+          <Description>{arg.description}</Description>
+        </Row>
+      )}
       <Row>
         <InputContainer>
-          <select value={value?.id} onChange={onChange}>
-            <option key="none" value={"none"}>
-              select
+          <Select value={value?.id} onChange={onChange}>
+            <option key="none" value="none" disabled>
+              Please select a {argName}
             </option>
             {relevantPCDs.map((pcd) => {
               const pcdPackage = pcdCollection.getPackage(pcd.type);
@@ -499,7 +463,7 @@ export function PCDArgInput<T extends PCDPackage>({
                 </option>
               );
             })}
-          </select>
+          </Select>
         </InputContainer>
       </Row>
     </ArgContainer>
@@ -525,7 +489,7 @@ const ArgName = styled.div`
   padding: 10px 10px 0px 10px;
   display: flex;
   justify-content: flex-start;
-  align-items: center;
+  align-items: baseline;
 `;
 
 const ArgContainer = styled.div`
@@ -540,13 +504,14 @@ const ArgContainer = styled.div`
 `;
 
 const ArgsContainer = styled.div`
+  width: 100%;
   border-radius: 16px;
   color: black;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
   color: var(--bg-dark-primary);
   background-color: white;
   border: 1px solid var(--accent-lite);
@@ -570,4 +535,15 @@ const ArgTypeNameContainer = styled.span`
 const ErrorContainer = styled.div`
   padding: 0px 10px 0px 10px;
   color: var(--danger);
+`;
+
+const Select = styled.select`
+  width: 100%;
+  height: 32px;
+  border-radius: 4px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  height: 32px;
 `;

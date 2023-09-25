@@ -1,13 +1,14 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   deserializeSemaphoreGroup,
-  generateMessageHash,
   SemaphoreGroupPCD,
   SemaphoreGroupPCDPackage,
-  SerializedSemaphoreGroup,
+  SerializedSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { useEffect, useState } from "react";
+import { generateSnarkMessageHash } from "@pcd/util";
+import { useCallback, useEffect, useState } from "react";
+import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup";
 import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
 import { openPassportPopup } from "./PassportPopup";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
@@ -41,28 +42,29 @@ export function openGroupMembershipPopup(
         argumentType: ArgumentTypeName.BigInt,
         userProvided: false,
         value:
-          externalNullifier ?? generateMessageHash(originalSiteName).toString(),
+          externalNullifier ??
+          generateSnarkMessageHash(originalSiteName).toString()
       },
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: urlToSemaphoreGroup,
+        remoteUrl: urlToSemaphoreGroup
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
-        userProvided: true,
+        userProvided: true
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
         userProvided: false,
-        value: signal ?? "1",
-      },
+        value: signal ?? "1"
+      }
     },
     {
       title: "Zuzalu Anon Auth",
-      description: originalSiteName,
+      description: originalSiteName
     }
   );
 
@@ -81,30 +83,29 @@ export function useSemaphoreGroupProof(
   onVerified: (valid: boolean) => void,
   externalNullifier?: string
 ) {
-  const [error, setError] = useState<Error | undefined>();
   const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
-
-  // Meanwhile, load the group so that we can verify against it
+  const [error, setError] = useState<string | undefined>();
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();
-  useEffect(() => {
-    (async () => {
-      if (!semaphoreGroupPCD) return;
 
-      try {
-        const res = await fetch(semaphoreGroupUrl);
-        const json = await res.text();
-        const group = JSON.parse(json) as SerializedSemaphoreGroup;
-        setGroup(group);
-      } catch (e) {
-        setError(e as Error);
-      }
-    })();
+  const loadSemaphoreGroup = useCallback(async () => {
+    if (!semaphoreGroupPCD) return;
+    const groupResult = await requestSemaphoreGroup(semaphoreGroupUrl);
+    if (groupResult.success) {
+      setGroup(groupResult.value);
+    } else {
+      setError(groupResult.error);
+    }
   }, [semaphoreGroupPCD, semaphoreGroupUrl]);
+
+  useEffect(() => {
+    loadSemaphoreGroup();
+  }, [loadSemaphoreGroup]);
 
   useEffect(() => {
     if (semaphoreGroupPCD && semaphoreGroup) {
       const proofExternalNullifier =
-        externalNullifier ?? generateMessageHash(originalSiteName).toString();
+        externalNullifier ??
+        generateSnarkMessageHash(originalSiteName).toString();
 
       verifyProof(
         semaphoreGroupPCD,
@@ -117,13 +118,13 @@ export function useSemaphoreGroupProof(
     semaphoreGroup,
     externalNullifier,
     originalSiteName,
-    onVerified,
+    onVerified
   ]);
 
   return {
     proof: semaphoreGroupPCD,
     group: semaphoreGroup,
-    error,
+    error
   };
 }
 

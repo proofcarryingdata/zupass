@@ -1,9 +1,10 @@
+import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
-import { ZuzaluPretixTicket, ZuzaluUserRole } from "../src/database/models";
+import { ZuzaluPretixTicket } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   CacheEntry,
@@ -203,6 +204,9 @@ describe("database reads and writes", function () {
 
   step("e2ee should work", async function () {
     const key = "key";
+    const initialStorage = await fetchEncryptedStorage(db, key);
+    expect(initialStorage).to.be.undefined;
+
     const value = "value";
     await insertEncryptedStorage(db, key, value);
     const insertedStorage = await fetchEncryptedStorage(db, key);
@@ -221,6 +225,17 @@ describe("database reads and writes", function () {
     }
     expect(updatedStorage.blob_key).to.eq(key);
     expect(updatedStorage.encrypted_blob).to.eq(updatedValue);
+
+    // Storing an empty string is valid, and not treated as deletion.
+    const emptyValue = "";
+    expect(updatedValue).to.not.eq(emptyValue);
+    await insertEncryptedStorage(db, key, emptyValue);
+    const emptyStorage = await fetchEncryptedStorage(db, key);
+    if (!emptyStorage) {
+      throw new Error("expected to be able to fetch updated e2ee blog");
+    }
+    expect(emptyStorage.blob_key).to.eq(key);
+    expect(emptyStorage.encrypted_blob).to.eq(emptyValue);
   });
 
   step("pcdpass user representation should work", async function () {

@@ -1,9 +1,8 @@
 import { readFile } from "fs/promises";
 import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
-import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 /**
@@ -11,16 +10,13 @@ import { traced } from "./telemetryService";
  */
 export class EmailService {
   private context: ApplicationContext;
-  private rollbarService: RollbarService | null;
   private emailAPI: IEmailAPI | null;
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService | null,
     emailClient: IEmailAPI | null
   ) {
     this.context = context;
-    this.rollbarService = rollbarService;
     this.emailAPI = emailClient;
   }
 
@@ -91,15 +87,14 @@ export class EmailService {
         ...(await this.composePretixEmail(name, token))
       };
 
+      if (!this.emailAPI) {
+        throw new PCDHTTPError(503, "[EMAIL] no email client");
+      }
+
       try {
-        if (!this.emailAPI) {
-          throw new Error("[EMAIL] no email client");
-        }
         await this.emailAPI.send(msg);
       } catch (e) {
-        logger(e);
-        this.rollbarService?.reportError(e);
-        throw new Error(`Email send error, failed to email ${to}`, {
+        throw new PCDHTTPError(500, `Email send error, failed to email ${to}`, {
           cause: e
         });
       }
@@ -117,18 +112,16 @@ export class EmailService {
         ...(await this.composeGenericEmail(token))
       };
 
-      try {
-        if (!this.emailAPI) {
-          throw new Error("[EMAIL] no email client");
-        }
+      if (!this.emailAPI) {
+        throw new PCDHTTPError(503, "[EMAIL] no email client");
+      }
 
+      try {
         this.emailAPI.send(msg);
       } catch (e) {
-        logger(e);
-        this.rollbarService?.reportError(e);
-        throw (
-          (new Error(`Email send error, failed to email ${to}`), { cause: e })
-        );
+        throw new PCDHTTPError(500, `Email send error, failed to email ${to}`, {
+          cause: e
+        });
       }
     });
   }
@@ -136,9 +129,7 @@ export class EmailService {
 
 export function startEmailService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null,
   emailClient: IEmailAPI | null
 ): EmailService {
-  const emailService = new EmailService(context, rollbarService, emailClient);
-  return emailService;
+  return new EmailService(context, emailClient);
 }
