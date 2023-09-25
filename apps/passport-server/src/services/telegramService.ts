@@ -436,7 +436,7 @@ export class TelegramService {
     const { watermark } = pcd.claim;
 
     if (!watermark) {
-      throw new Error("Anonymous message PCD did not contain watermark");
+      throw new Error("Verification PCD did not contain watermark");
     }
 
     if (telegramUserId.toString() !== watermark.toString()) {
