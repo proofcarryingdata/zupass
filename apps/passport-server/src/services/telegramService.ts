@@ -3,6 +3,7 @@ import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 
 import { Menu } from "@grammyjs/menu";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -331,9 +332,20 @@ export class TelegramService {
     // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
     let eventIdMatch = false;
+
+    if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
+      throw new Error(`Missing server eddsa private key .env value`);
+
+    // This Pubkey value should work for staging + prod as well, but needs to be tested
+    const TICKETING_PUBKEY = await getEdDSAPublicKey(
+      process.env.SERVER_EDDSA_PRIVATE_KEY
+    );
+
     if (isLocalServer()) {
       eventIdMatch = true;
-      signerMatch = true;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
       // TODO: Replace with better logic to fetch the correct eventId for an arbitrary event
       // https://github.com/proofcarryingdata/zupass/issues/667
