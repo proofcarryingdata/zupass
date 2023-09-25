@@ -2,9 +2,9 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  getEdDSATicketData,
   ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
-  joinPath
+  ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -880,11 +880,6 @@ export function startIssuanceService(
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null
 ): IssuanceService | null {
-  if (context.isZuzalu) {
-    logger("[INIT] not starting issuance service for zuzalu");
-    return null;
-  }
-
   const rsaKey = loadRSAPrivateKey();
   const eddsaKey = loadEdDSAPrivateKey();
 
