@@ -28,16 +28,6 @@ import { logger } from "../util/logger";
 import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
-// TODO: Add staging events
-const TICKETING_PUBKEY_STAGING = [
-  "7cf4d97878d663502339c2baae74b12dcdd229279a9f6bfc83b167e808a32d26",
-  "c5a04b56d0f2d6b1ec10aa1b17298e31b4a087bdabd4a75d9523779e7dca5a17"
-];
-const TICKETING_PUBKEY_PROD = [
-  "a7da882cd090c14a62b70cf07010c1cabb373b17ebd2d120c9de039ceaedfa24",
-  "509e44aa56e97a34e9a54534ef79d484d801757720d18ed872e93dd9de126b09"
-];
-
 const ALLOWED_EVENT_IDS = [
   { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
   { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
@@ -327,9 +317,8 @@ export class TelegramService {
     return `https://t.me/${username}`;
   }
 
-  private async verifyPCD(
-    serializedZKEdDSATicket: string,
-    telegramUserId: number
+  private async verifyZKEdDSAEventTicketPCD(
+    serializedZKEdDSATicket: string
   ): Promise<ZKEdDSAEventTicketPCD | null> {
     let pcd: ZKEdDSAEventTicketPCD;
 
@@ -369,50 +358,6 @@ export class TelegramService {
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    }
-
-    if (
-      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
-      pcd.claim.watermark === telegramUserId.toString() &&
-      eventIdMatch &&
-      signerMatch
-    ) {
-      return pcd;
-    } else {
-      return null;
-    }
-  }
-
-  private async verifyZKEdDSAEventTicketPCD(
-    serializedZKEdDSATicket: string
-  ): Promise<ZKEdDSAEventTicketPCD | null> {
-    let pcd: ZKEdDSAEventTicketPCD;
-
-    try {
-      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-        JSON.parse(serializedZKEdDSATicket).pcd
-      );
-    } catch (e) {
-      throw new Error(`Deserialization error, ${e}`);
-    }
-
-    // this is very bad but i am very tired
-    // hardcoded eventIDs and signing keys for SRW
-    let signerMatch = false;
-    let eventIdMatch = false;
-    if (isLocalServer()) {
-      eventIdMatch = true;
-      signerMatch = true;
-    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY_STAGING[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY_STAGING[1];
-    } else {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY_PROD[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY_PROD[1];
     }
 
     if (
@@ -483,11 +428,23 @@ export class TelegramService {
     telegramUserId: number
   ): Promise<void> {
     // Verify PCD
-    const pcd = await this.verifyPCD(serializedZKEdDSATicket, telegramUserId);
+    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
 
     if (!pcd) {
       throw new Error(`Could not verify PCD for ${telegramUserId}`);
     }
+    const { watermark } = pcd.claim;
+
+    if (!watermark) {
+      throw new Error("Anonymous message PCD did not contain watermark");
+    }
+
+    if (telegramUserId.toString() !== watermark.toString()) {
+      throw new Error(
+        `Telegram User id ${telegramUserId} does not match given watermark ${watermark}`
+      );
+    }
+
     const { eventId } = pcd.claim.partialTicket;
     if (!eventId) {
       throw new Error(
