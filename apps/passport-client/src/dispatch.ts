@@ -26,6 +26,7 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
+  saveUserHasNewPassword,
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -331,8 +332,19 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 // Runs periodically, whenever we poll new participant info.
 async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
+  let hasChangedPassword = false;
 
-  if (BigInt(self.commitment) !== state.identity.commitment) {
+  console.log({ state, self });
+
+  if (state.self && self.salt !== state.self.salt) {
+    // If the password has been changed on a different device, the salts will mismatch
+    console.log("User salt mismatch");
+    hasChangedPassword = true;
+    requestLogToServer(appConfig.passportServer, "invalid-user", {
+      oldSalt: state.self.salt,
+      newSalt: self.salt
+    });
+  } else if (BigInt(self.commitment) !== state.identity.commitment) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
     requestLogToServer(appConfig.passportServer, "invalid-user", {
@@ -346,15 +358,13 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
-  } else if (state.self && self.salt !== state.self.salt) {
-    // If the password has been changed on a different device, the salts will mismatch
-    // FIXME: Fix this
-    console.log("User salt mismatch");
-    userMismatched = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
-      oldSalt: state.self.salt,
-      newSalt: self.salt
-    });
+  }
+
+  console.log({ hasChangedPassword, userMismatched });
+
+  if (hasChangedPassword) {
+    userHasChangedPassword(update);
+    return;
   }
 
   if (userMismatched) {
@@ -472,6 +482,14 @@ function userInvalid(update: ZuUpdate) {
   update({
     userInvalid: true,
     modal: "invalid-participant"
+  });
+}
+
+function userHasChangedPassword(update: ZuUpdate) {
+  saveUserHasNewPassword(true);
+  update({
+    userHasChangedPassword: true,
+    modal: "another-device-changed-password"
   });
 }
 

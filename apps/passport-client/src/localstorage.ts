@@ -73,6 +73,14 @@ export function saveUserInvalid(userInvalid: boolean) {
   window.localStorage["participantInvalid"] = userInvalid;
 }
 
+export function saveUserHasNewPassword(userHasNewPassword: boolean) {
+  window.localStorage["userHasNewPassword"] = userHasNewPassword;
+}
+
 export function loadUserInvalid(): boolean {
   return JSON.parse(window.localStorage["participantInvalid"] ?? "false");
+}
+
+export function loadUserHasNewPassword(): boolean {
+  return JSON.parse(window.localStorage["userHasNewPassword"] ?? "false");
 }
