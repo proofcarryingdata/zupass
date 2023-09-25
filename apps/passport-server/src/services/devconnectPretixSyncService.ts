@@ -199,11 +199,6 @@ export async function startDevconnectPretixSyncService(
   semaphoreService: SemaphoreService,
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null
 ): Promise<DevconnectPretixSyncService | null> {
-  if (context.isZuzalu) {
-    logger("[DEVCONNECT PRETIX] Not starting service because IS_ZUZALU=true");
-    return null;
-  }
-
   if (!devconnectPretixAPIFactory) {
     logger(
       "[DEVCONNECT PRETIX] Can't start sync service - no api factory instantiated"
