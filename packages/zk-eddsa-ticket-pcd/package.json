@@ -19,7 +19,7 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules",
-    "artifacts:generate": "pcd-artifacts generate"
+    "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-ticket-pcd"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.2.0",
