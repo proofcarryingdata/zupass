@@ -2,6 +2,12 @@ import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { EdDSAPCD } from "./EdDSAPCD";
 
+/**
+ * Define the interface to send an {@link EdDSAPCD} claim through the passport.
+ * 
+ * @function EdDSACardBody
+ * @returns
+ */
 export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (
     <Container>
