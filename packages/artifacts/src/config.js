@@ -14,7 +14,4 @@ export const R2_API_URL =
 export const ARTIFACT_FILES = ["circuit.json", "circuit.zkey", "circuit.wasm"];
 
 // Add new zk PCD packages here:
-export const PCD_PACKAGES = [
-  "zk-eddsa-ticket-pcd",
-  "zk-eddsa-event-ticket-pcd"
-];
+export const PCD_PACKAGES = ["zk-eddsa-event-ticket-pcd"];

@@ -10,7 +10,6 @@ import Home from "./pages/Home";
 import PCDPassGroupProof from "./pages/pcdpass-examples/group-proof";
 import PCDPassSignatureProof from "./pages/pcdpass-examples/signature-proof";
 import PCDPassZkEDdSAEventTicketProof from "./pages/pcdpass-examples/zk-eddsa-event-ticket-proof";
-import PCDPassZkEDdSAProof from "./pages/pcdpass-examples/zkeddsa-proof";
 import PassportPopupRedirect from "./pages/popup";
 import ZuzaluGroupProof from "./pages/zuzalu-examples/group-proof";
 import ZuzaluSignIn from "./pages/zuzalu-examples/sign-in";
@@ -35,7 +34,6 @@ const router = createHashRouter([
     path: "pcdpass-examples/zk-eddsa-event-ticket-proof",
     element: <PCDPassZkEDdSAEventTicketProof />
   },
-  { path: "pcdpass-examples/zkeddsa-proof", element: <PCDPassZkEDdSAProof /> },
 
   { path: "zuzalu-examples/group-proof", element: <ZuzaluGroupProof /> },
   { path: "zuzalu-examples/sign-in", element: <ZuzaluSignIn /> },
