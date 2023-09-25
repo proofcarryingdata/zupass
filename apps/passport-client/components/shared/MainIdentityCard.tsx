@@ -2,33 +2,14 @@ import { DateRange, User, ZuzaluUserRole } from "@pcd/passport-interface";
 import Avatar from "boring-avatars";
 import styled from "styled-components";
 import { useSelf } from "../../src/appHooks";
-import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { H3, InfoLine, Spacer, TextCenter } from "../core";
-import { IdentityQR } from "./IdentityQR";
 
-export function MainIdentityCard({
-  showQrCode,
-  user
-}: {
-  showQrCode?: boolean;
-  user?: User;
-}) {
+export function MainIdentityCard({ user }: { user?: User }) {
   const self = useSelf();
   const actualUser = user ?? self;
-  const visitorStatus = getVisitorStatus(actualUser);
 
   return (
     <CardBody>
-      {showQrCode &&
-        !(
-          visitorStatus.isVisitor &&
-          visitorStatus.status !== VisitorStatus.Current
-        ) && (
-          <>
-            <Spacer h={32} />
-            <IdentityQR />
-          </>
-        )}
       <Spacer h={24} />
       <TextCenter>
         <H3 col="var(--primary-dark)">{actualUser.name}</H3>

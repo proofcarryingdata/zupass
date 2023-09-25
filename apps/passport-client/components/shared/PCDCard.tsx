@@ -1,7 +1,6 @@
 import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
 import { usePCDCollection } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
@@ -135,7 +134,7 @@ function CardBody({
   const pcdCollection = usePCDCollection();
 
   if (isMainIdentity) {
-    return <MainIdentityCard showQrCode={appConfig.isZuzalu} />;
+    return <MainIdentityCard />;
   }
 
   if (pcdCollection.hasPackage(pcd.type)) {
