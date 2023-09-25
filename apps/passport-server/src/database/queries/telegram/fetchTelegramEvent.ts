@@ -5,10 +5,10 @@ import { sqlQuery } from "../../sqlQuery";
 /**
  * Fetch the list of Telegram conversations from the database.
  */
-export async function fetchTelegramEventsByEventId(
+export async function fetchTelegramEventByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent[]> {
+): Promise<TelegramEvent> {
   const result = await sqlQuery(
     client,
     `\
@@ -18,7 +18,7 @@ export async function fetchTelegramEventsByEventId(
     [eventId]
   );
 
-  return result.rows;
+  return result.rows[0] ?? null;
 }
 
 export async function fetchTelegramEventsByChatId(

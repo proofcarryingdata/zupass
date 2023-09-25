@@ -13,8 +13,7 @@ import { deleteTelegramVerification } from "../src/database/queries/telegram/del
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
 import {
   fetchTelegramEvent,
-  fetchTelegramEventsByChatId,
-  fetchTelegramEventsByEventId
+  fetchTelegramEventByEventId
 } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
@@ -131,31 +130,31 @@ describe("telegram bot functionality", function () {
   });
 
   step(
-    "should NOT be able to make multiple entries with same event and channel",
+    "should be able to update the chat a ticket refers to",
     async function () {
       const eventConfigId = testEvents[0].dbEventConfigId;
-      await insertTelegramEvent(
-        db,
-        eventConfigId,
-        dummyChatId_1,
-        anonChannelID
-      );
-      await insertTelegramEvent(
-        db,
-        eventConfigId,
-        dummyChatId_1,
-        anonChannelID
-      );
-      const insertedEventsByChatId = await fetchTelegramEventsByChatId(
-        db,
-        dummyChatId_1
-      );
-      const insertedEventsByEventId = await fetchTelegramEventsByEventId(
+      await insertTelegramEvent(db, eventConfigId, dummyChatId, anonChannelID);
+      let insertedEventsByEventId = await fetchTelegramEventByEventId(
         db,
         eventConfigId
       );
-      expect(insertedEventsByChatId?.length).to.eq(1);
-      expect(insertedEventsByEventId?.length).to.eq(1);
+      expect(insertedEventsByEventId?.telegram_chat_id).to.eq(
+        dummyChatId.toString()
+      );
+
+      await insertTelegramEvent(
+        db,
+        eventConfigId,
+        dummyChatId_1,
+        anonChannelID
+      );
+      insertedEventsByEventId = await fetchTelegramEventByEventId(
+        db,
+        eventConfigId
+      );
+      expect(insertedEventsByEventId?.telegram_chat_id).to.eq(
+        dummyChatId_1.toString()
+      );
     }
   );
 
