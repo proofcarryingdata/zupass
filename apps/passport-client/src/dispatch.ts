@@ -22,6 +22,7 @@ import { appConfig } from "./appConfig";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  loadSelf,
   saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
@@ -334,7 +335,14 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  if (state.self && self.salt !== state.self.salt) {
+  // Load the most up-to-date salt stored in localStorage,
+  // since the salt stored in redux will only be updated
+  // with loadInitialState on refresh. Use the salt in AppState
+  // only as a fallback if it happens that the
+  const selfFromLocalStorage = loadSelf();
+  const currentSalt = selfFromLocalStorage?.salt ?? state.self.salt;
+
+  if (currentSalt && self.salt !== currentSalt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
@@ -342,7 +350,7 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       appConfig.passportServer,
       "another-device-changed-password",
       {
-        oldSalt: state.self.salt,
+        oldSalt: currentSalt,
         newSalt: self.salt,
         email: self.email
       }
