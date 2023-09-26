@@ -10,7 +10,8 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-import { Eddsa, Point, Poseidon, buildEddsa, buildPoseidon } from "circomlibjs";
+import { fromHexString, toHexString } from "@pcd/util";
+import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
