@@ -9,6 +9,7 @@ import { ApplicationContext, GlobalServices, PCDpass } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
+import { respondWithError } from "./pcdHttpError";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -68,7 +69,7 @@ export async function startHttpServer(
         logger(`[ERROR] ${req.method} ${req.url}`);
         logger(err.stack);
         globalServices.rollbarService?.reportError(err);
-        res.status(500).send(err.message);
+        respondWithError(err, res);
       }
     );
 
