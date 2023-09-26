@@ -300,7 +300,7 @@ export class UserService {
       : configuredRateLimitDurationMs;
     const rateLimitQuantity = isNaN(configuredAccountResetQuantity)
       ? defaultRateLimitQuantity
-      : configuredAccountResetQuantity; // max 4 resets (not including 1st time account creation) in 24 hours
+      : configuredAccountResetQuantity;
 
     const parsedTimestamps: number[] = user.account_reset_timestamps.map((t) =>
       new Date(t).getTime()
