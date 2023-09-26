@@ -107,7 +107,7 @@ export interface CommitmentRow {
   commitment: string;
   email: string;
   salt: string | null;
-  accountresettimestamps: string[];
+  account_reset_timestamps: string[];
 }
 
 export interface EncryptedStorageModel {

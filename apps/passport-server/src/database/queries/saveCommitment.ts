@@ -10,7 +10,7 @@ export async function updateCommitmentResetList(
   await sqlQuery(
     client,
     `
-update commitements
+update commitments
 set account_reset_timestamps = $1
 where email = $2`,
     [resetTimestamps, email]

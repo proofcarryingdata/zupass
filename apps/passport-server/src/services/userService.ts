@@ -290,7 +290,7 @@ export class UserService {
     logger(
       `[PCDPASS*********************] reset timestamps`,
       existingUser,
-      existingUser?.accountresettimestamps
+      existingUser?.account_reset_timestamps
     );
 
     function checkTimestamps(timestampList: string[]): {
@@ -317,10 +317,10 @@ export class UserService {
     }
 
     if (existingUser) {
-      logger("[PCDPASS **************]", "NOT CHECKING TIMESTAMPS");
+      logger("[PCDPASS **************]", "CHECKING TIMESTAMPS");
 
       const { filteredTimestamps, passesRateLimit } = checkTimestamps(
-        existingUser.accountresettimestamps
+        existingUser.account_reset_timestamps
       );
 
       if (passesRateLimit) {
@@ -329,6 +329,12 @@ export class UserService {
           existingUser.email,
           filteredTimestamps
         );
+      } else {
+        throw new PCDHTTPError(
+          429,
+          "You've exceeded the maximum number of account resets." +
+            " Please contact passport@0xparc.org for further assistance."
+        );
       }
 
       logger("[PCDPASS **************]", filteredTimestamps, passesRateLimit);
@@ -336,7 +342,7 @@ export class UserService {
       logger("[PCDPASS **************]", "NOT CHECKING TIMESTAMPS");
     }
 
-    logger(`[PCDPASS] Saving new commitment: ${commitment}`);
+    logger(`[PCDPASS] Saving commitment: ${commitment}`);
     await insertCommitment(this.context.dbPool, { email, commitment, salt });
 
     // Reload Merkle trees
