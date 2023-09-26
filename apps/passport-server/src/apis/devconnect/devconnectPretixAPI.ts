@@ -386,7 +386,7 @@ export interface DevconnectPretixCheckinList {
 // This records when an attendee was checked in
 export interface DevconnectPretixCheckin {
   datetime: string;
-  type: string;
+  type: "entry" | "exit";
 }
 
 // Unclear why this is called a "position" rather than a ticket.
