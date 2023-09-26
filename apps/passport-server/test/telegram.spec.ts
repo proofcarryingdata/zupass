@@ -11,10 +11,7 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
-import {
-  fetchTelegramEvent,
-  fetchTelegramEventByEventId
-} from "../src/database/queries/telegram/fetchTelegramEvent";
+import { fetchTelegramEventByEventId } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
   insertTelegramVerification
@@ -161,11 +158,7 @@ describe("telegram bot functionality", function () {
   step("should be able to link an event and tg chat", async function () {
     const eventConfigId = testEvents[0].dbEventConfigId;
     await insertTelegramEvent(db, eventConfigId, dummyChatId, anonChannelID);
-    const insertedEvent = await fetchTelegramEvent(
-      db,
-      eventConfigId,
-      dummyChatId
-    );
+    const insertedEvent = await fetchTelegramEventByEventId(db, eventConfigId);
     expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
     // Note: Grammy allows chatIds to be numbers or strings
     expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
@@ -177,10 +170,9 @@ describe("telegram bot functionality", function () {
       const eventConfigId = testEvents[1].dbEventConfigId;
 
       await insertTelegramEvent(db, eventConfigId, dummyChatId, anonChannelID);
-      const insertedEvent = await fetchTelegramEvent(
+      const insertedEvent = await fetchTelegramEventByEventId(
         db,
-        eventConfigId,
-        dummyChatId
+        eventConfigId
       );
       expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
       expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
@@ -198,10 +190,9 @@ describe("telegram bot functionality", function () {
         dummyChatId_1,
         anonChannelID
       );
-      const insertedEvent = await fetchTelegramEvent(
+      const insertedEvent = await fetchTelegramEventByEventId(
         db,
-        eventConfigId,
-        dummyChatId_1
+        eventConfigId
       );
       expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
       expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId_1.toString());
@@ -219,10 +210,9 @@ describe("telegram bot functionality", function () {
         dummyChatId,
         anonChannelID_1
       );
-      const insertedEvent = await fetchTelegramEvent(
+      const insertedEvent = await fetchTelegramEventByEventId(
         db,
-        eventConfigId,
-        dummyChatId
+        eventConfigId
       );
       expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
       expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
