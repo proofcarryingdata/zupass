@@ -371,6 +371,21 @@ export class TelegramService {
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
+
+    this.bot.command("help", async (ctx) => {
+      await ctx.reply(
+        `<b>Help</b>
+    
+        <b>Users</b>
+        <b>/start</b> - join a group with a ZK proof of a ticket
+    
+        <b>Admins</b>
+        <b>/link</b> - Link this group with a ticketed event
+        <b>/unlink</b> - Unlink this group with a ticketed event
+      `,
+        { parse_mode: "HTML" }
+      );
+    });
   }
 
   private async loadEvents(db: Pool): Promise<void> {
