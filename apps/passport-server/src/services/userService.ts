@@ -273,8 +273,22 @@ export class UserService {
     user: CommitmentRow
   ): Promise<void> {
     const now = Date.now();
-    const rateLimitDurationMs = 1000 * 60 * 60 * 24; // 24 hours
-    const rateLimitCount = 4; // max 4 resets (not including 1st time account creation) in 24 hours
+    const configuredRateLimitDurationMs = parseInt(
+      process.env.ACCOUNT_RESET_LIMIT_DURATION_MS ?? "",
+      10
+    );
+    const configuredAccountResetQuantity = parseInt(
+      process.env.ACCOUNT_RESET_LIMIT_QUANTITY ?? "",
+      10
+    );
+    const defaultRateLimitDurationMs = 1000 * 60 * 60 * 24; // default 24 hours
+    const defaultRateLimitQuantity = 5; // default max 5 resets (not including 1st time account creation) in 24 hours
+    const rateLimitDurationMs = isNaN(configuredRateLimitDurationMs)
+      ? defaultRateLimitDurationMs
+      : configuredRateLimitDurationMs;
+    const rateLimitQuantity = isNaN(configuredAccountResetQuantity)
+      ? defaultRateLimitQuantity
+      : configuredAccountResetQuantity; // max 4 resets (not including 1st time account creation) in 24 hours
 
     const parsedTimestamps: number[] = user.account_reset_timestamps.map((t) =>
       new Date(t).getTime()
@@ -286,7 +300,7 @@ export class UserService {
       (t) => t > maxAgeTimestamp
     );
     const newEntryExceedsRateLimit =
-      resetsNewerThanMaxAge.length > rateLimitCount;
+      resetsNewerThanMaxAge.length > rateLimitQuantity;
 
     if (newEntryExceedsRateLimit) {
       await updateCommitmentResetList(
