@@ -31,9 +31,9 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {

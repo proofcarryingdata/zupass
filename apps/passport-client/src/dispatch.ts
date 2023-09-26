@@ -1,13 +1,17 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   applyActions,
+  Feed,
+  FeedSubscriptionManager,
   isSyncedEncryptedStorageV2,
+  isSyncedEncryptedStorageV3,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
+import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -29,6 +33,7 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
+  saveSubscriptions,
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -85,7 +90,14 @@ export type Action =
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
-  | { type: "resolve-subscription-error"; subscriptionId: string };
+  | { type: "resolve-subscription-error"; subscriptionId: string }
+  | {
+      type: "add-subscription";
+      providerUrl: string;
+      feed: Feed;
+      credential: SerializedPCD;
+    }
+  | { type: "remove-subscription"; subscriptionId: string };
 
 export type StateContextState = {
   getState: GetState;
@@ -143,6 +155,16 @@ export async function dispatch(
       return sync(state, update);
     case "resolve-subscription-error":
       return resolveSubscriptionError(state, update, action.subscriptionId);
+    case "add-subscription":
+      return addSubscription(
+        state,
+        update,
+        action.providerUrl,
+        action.feed,
+        action.credential
+      );
+    case "remove-subscription":
+      return removeSubscription(state, update, action.subscriptionId);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -375,8 +397,15 @@ async function loadFromSync(
   update: ZuUpdate
 ) {
   let pcds: PCDCollection;
+  let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV2(storage)) {
+  if (isSyncedEncryptedStorageV3(storage)) {
+    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      storage.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV2(storage)) {
     pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
   } else {
     pcds = await new PCDCollection(await getPackages());
@@ -399,6 +428,10 @@ async function loadFromSync(
   ) {
     console.log("Asking existing user to set a password");
     modal = "upgrade-account-modal";
+  }
+
+  if (subscriptions) {
+    await saveSubscriptions(subscriptions);
   }
 
   await savePCDs(pcds);
@@ -467,6 +500,13 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
   });
 }
 
+async function makeUploadId(
+  pcds: PCDCollection,
+  subscriptions: FeedSubscriptionManager
+): Promise<string> {
+  return `${await pcds.getHash()}-${await subscriptions.getHash()}`;
+}
+
 /**
  * This sync function can be called any amount of times, and it will
  * function properly. It does the following:
@@ -486,20 +526,44 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
+  // If we haven't downloaded from storage, do that first
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     console.log("[SYNC] sync action: download");
     update({
       downloadingPCDs: true
     });
 
-    const pcds = await downloadStorage();
+    /**
+     * Get both PCDs and subscriptions
+     * Subscriptions might be null even if we got PCDs, if we were
+     * downloading from a pre-v3 version of encrypted storage
+     * {@link SyncedEncryptedStorageV3}
+     * */
+    const { pcds, subscriptions } = await downloadStorage();
+
+    if (subscriptions) {
+      addDefaultSubscriptions(state.identity, subscriptions);
+    }
 
     if (pcds != null) {
       update({
         downloadedPCDs: true,
         downloadingPCDs: false,
         pcds: pcds,
-        uploadedUploadId: await pcds.getHash()
+        // If we got subscriptions, add them and generate an upload ID.
+        // The upload ID is a combination of hashes of the states of the PCDs
+        // and subscriptions.
+        // If later subscription-polling doesn't change the PCD set, we can
+        // avoid having to do an upload.
+        // If we didn't get subscriptions, it's because we downloaded from a
+        // pre-v3 version of encrypted storage and therefore we definitely
+        // want to do an upload.
+        ...(subscriptions !== null
+          ? {
+              uploadedUploadId: await makeUploadId(pcds, subscriptions),
+              subscriptions
+            }
+          : {})
       });
     } else {
       console.log(`[SYNC] skipping download`);
@@ -548,8 +612,11 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
-  const uploadId = await state.pcds.getHash();
+  // Generate an upload ID from the state of PCDs and subscriptions
+  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
 
+  // If it matches what we downloaded or uploaded already, there's nothing
+  // to do
   if (
     state.uploadedUploadId === uploadId ||
     state.uploadingUploadId === uploadId
@@ -577,5 +644,31 @@ async function resolveSubscriptionError(
   update({
     resolvingSubscriptionId: subscriptionId,
     modal: "resolve-subscription-error"
+  });
+}
+
+async function addSubscription(
+  state: AppState,
+  update: ZuUpdate,
+  providerUrl: string,
+  feed: Feed,
+  credential: SerializedPCD
+) {
+  state.subscriptions.subscribe(providerUrl, feed, credential);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions
+  });
+}
+
+async function removeSubscription(
+  state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string
+) {
+  state.subscriptions.unsubscribe(subscriptionId);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions
   });
 }
