@@ -1,23 +1,35 @@
-import {
-  requestIssuanceServiceEnabled,
-  User,
-  ZuzaluUserRole
-} from "@pcd/passport-interface";
+import { User, ZuzaluUserRole } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import { SetupServer } from "msw/lib/node";
+import { Pool } from "postgres-pool";
+import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { LoggedInZuzaluUser } from "../src/database/models";
+import { getDB } from "../src/database/postgresPool";
+import {
+  insertPretixEventConfig,
+  insertPretixOrganizerConfig
+} from "../src/database/queries/pretix_config/insertConfiguration";
+import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { ZuzaluPretixSyncService } from "../src/services/zuzaluPretixSyncService";
 import { PCDpass } from "../src/types";
+import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
+import { expectIssuanceServiceToBeRunning } from "./pretix/issuance";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import {
   getMockPretixAPI,
   newMockZuzaluPretixAPI
 } from "./pretix/mockPretixApi";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import {
+  expectDevconnectPretixToHaveSynced,
+  expectZuzaluPretixToHaveSynced,
+  waitForPretixSyncStatus
+} from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
   expectCurrentSemaphoreToBe,
@@ -36,31 +48,83 @@ describe("zupass functionality", function () {
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
   let pretixService: ZuzaluPretixSyncService;
+  let devconnectPretixSyncService: DevconnectPretixSyncService;
+  let mocker: DevconnectPretixDataMocker;
+  let db: Pool;
+  let server: SetupServer;
 
   let residentUser: User | undefined;
   let visitorUser: User | undefined;
   let organizerUser: User | undefined;
   let updatedToOrganizerUser: LoggedInZuzaluUser;
 
+  let organizerConfigId: string;
+  let eventAConfigId: string;
+  let eventBConfigId: string;
+  let eventCConfigId: string;
+
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
+    db = await getDB();
 
     const pretixConfig = getZuzaluPretixConfig();
-
     if (!pretixConfig) {
       throw new Error(
         "expected to be able to get a pretix config for zuzalu tests"
       );
     }
-
     pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
-    const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
-    application = await startTestingApp({ zuzaluPretixAPI: pretixAPI });
+
+    mocker = new DevconnectPretixDataMocker();
+    organizerConfigId = await insertPretixOrganizerConfig(
+      db,
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.token
+    );
+    eventAConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [
+        mocker.get().organizer1.eventAItem1.id + "",
+        mocker.get().organizer1.eventAItem2.id + ""
+      ],
+      [mocker.get().organizer1.eventAItem2.id + ""],
+      mocker.get().organizer1.eventA.slug
+    );
+    eventBConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      mocker.get().organizer1.eventB.slug
+    );
+    eventCConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [],
+      [],
+      mocker.get().organizer1.eventC.slug
+    );
+
+    const orgUrls = mocker.get().organizersByOrgUrl.keys();
+
+    server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
+    server.listen({ onUnhandledRequest: "bypass" });
+
+    application = await startTestingApp({
+      devconnectPretixAPIFactory: async () =>
+        new DevconnectPretixAPI({ requestsPerInterval: 10_000 }),
+      zuzaluPretixAPI: getMockPretixAPI(pretixMocker.getMockData())
+    });
 
     if (!application.services.zuzaluPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
     }
-
+    if (!application.services.devconnectPretixSyncService) {
+      throw new Error("expected there to be a pretix sync service");
+    }
+    devconnectPretixSyncService =
+      application.services.devconnectPretixSyncService;
     pretixService = application.services.zuzaluPretixSyncService;
   });
 
@@ -75,21 +139,16 @@ describe("zupass functionality", function () {
     emailAPI = application.apis.emailAPI;
   });
 
-  step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
-    expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
-    // stop interval that polls the api so we have more granular control over
-    // testing the sync functionality
-    application.services.zuzaluPretixSyncService?.stop();
+  step("zuzalu pretix should sync to completion", async function () {
+    await expectZuzaluPretixToHaveSynced(application);
+  });
+
+  step("devconnect pretix should sync to completion", async function () {
+    await expectDevconnectPretixToHaveSynced(application);
   });
 
   step("should have issuance service running", async function () {
-    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
-      application.expressContext.localEndpoint
-    );
-    expect(issuanceServiceEnabledResult.value).to.eq(true);
-    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
-    expect(issuanceServiceEnabledResult.success).to.eq(true);
+    await expectIssuanceServiceToBeRunning(application);
   });
 
   step(

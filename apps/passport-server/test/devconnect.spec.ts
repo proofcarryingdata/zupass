@@ -11,7 +11,6 @@ import {
   PCDPassFeedIds,
   pollFeed,
   PollFeedResponseValue,
-  requestIssuanceServiceEnabled,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
 } from "@pcd/passport-interface";
@@ -76,6 +75,7 @@ import {
   IMockDevconnectPretixData,
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
+import { expectIssuanceServiceToBeRunning } from "./pretix/issuance";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import {
@@ -93,22 +93,23 @@ import { testUserSync } from "./user/testUserSync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
+// @todo: merge this with zupass.spec.ts, and delete this file, after completely deprecating pcdpass
 describe("devconnect functionality", function () {
   this.timeout(30_000);
 
   let application: PCDpass;
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
-
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let db: Pool;
+  let server: SetupServer;
+  let backupData: IMockDevconnectPretixData;
+  let emailAPI: IEmailAPI;
+
   let organizerConfigId: string;
   let eventAConfigId: string;
   let eventBConfigId: string;
   let eventCConfigId: string;
-  let server: SetupServer;
-  let backupData: IMockDevconnectPretixData;
-  let emailAPI: IEmailAPI;
 
   this.beforeEach(async () => {
     backupData = mocker.backup();
@@ -1083,11 +1084,7 @@ describe("devconnect functionality", function () {
   });
 
   step("should have issuance service running", async function () {
-    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
-      application.expressContext.localEndpoint
-    );
-    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
-    expect(issuanceServiceEnabledResult.value).to.eq(true);
+    await expectIssuanceServiceToBeRunning(application);
   });
 
   step(
