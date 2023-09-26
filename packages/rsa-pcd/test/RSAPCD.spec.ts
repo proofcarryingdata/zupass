@@ -6,11 +6,7 @@ import { v4 as uuid } from "uuid";
 import { RSAPCD, RSAPCDPackage } from "../src";
 
 async function copyPcd(pcd: RSAPCD): Promise<RSAPCD> {
-  return await RSAPCDPackage.deserialize(
-    await (
-      await RSAPCDPackage.serialize(pcd)
-    ).pcd
-  );
+  return RSAPCDPackage.deserialize((await RSAPCDPackage.serialize(pcd)).pcd);
 }
 
 describe("RSA signature PCD should work", function () {
@@ -25,16 +21,16 @@ describe("RSA signature PCD should work", function () {
     pcd = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: exportedKey,
+        value: exportedKey
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: message,
+        value: message
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: undefined,
-      },
+        value: undefined
+      }
     });
 
     expect(await copyPcd(pcd)).to.deep.eq(pcd);
@@ -47,16 +43,16 @@ describe("RSA signature PCD should work", function () {
     pcd = await RSAPCDPackage.prove({
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: exportedKey,
+        value: exportedKey
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: message,
+        value: message
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: customId,
-      },
+        value: customId
+      }
     });
 
     expect(pcd.id).to.eq(customId);

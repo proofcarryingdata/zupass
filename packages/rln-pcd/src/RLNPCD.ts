@@ -9,18 +9,19 @@ import {
   PCDArgument,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import {
   deserializeSemaphoreGroup,
-  SerializedSemaphoreGroup,
+  SerializedSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 
 import verificationKeyJSON from "../artifacts/16.json";
+import { requireDefinedParameter } from "@pcd/util";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
 
@@ -87,11 +88,11 @@ export class RLNPCD implements PCD<RLNPCDClaim, RLNPCDProof> {
       rlnIdentifier: rlnFullProof.rlnIdentifier,
       yShare: BigInt(publicSignals.yShare),
       merkleRoot: BigInt(publicSignals.merkleRoot),
-      internalNullifier: BigInt(publicSignals.internalNullifier),
+      internalNullifier: BigInt(publicSignals.internalNullifier)
     };
     const proof: RLNPCDProof = {
       proof: rlnFullProof.snarkProof.proof,
-      externalNullifier: BigInt(publicSignals.externalNullifier),
+      externalNullifier: BigInt(publicSignals.externalNullifier)
     };
     return new RLNPCD(uuid(), claim, proof);
   }
@@ -105,11 +106,11 @@ export class RLNPCD implements PCD<RLNPCDClaim, RLNPCDProof> {
           merkleRoot: this.claim.merkleRoot,
           internalNullifier: this.claim.internalNullifier,
           signalHash: this.claim.x,
-          externalNullifier: this.proof.externalNullifier,
-        },
+          externalNullifier: this.proof.externalNullifier
+        }
       },
       epoch: this.claim.epoch,
-      rlnIdentifier: this.claim.rlnIdentifier,
+      rlnIdentifier: this.claim.rlnIdentifier
     };
   }
 }
@@ -206,15 +207,20 @@ function getRLNInstance(rlnIdentifier: bigint, identity?: Identity) {
 export async function serialize(pcd: RLNPCD): Promise<SerializedPCD<RLNPCD>> {
   return {
     type: RLNPCDTypeName,
-    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd),
+    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd)
   } as SerializedPCD<RLNPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<RLNPCD> {
-  const parsed = JSONBig({ useNativeBigInt: true }).parse(serialized);
-  const proof = parsed.proof;
-  const claim = parsed.claim;
-  return new RLNPCD(parsed.id, claim, proof);
+  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
+    serialized
+  );
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new RLNPCD(id, claim, proof);
 }
 
 /**
@@ -232,5 +238,5 @@ export const RLNPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

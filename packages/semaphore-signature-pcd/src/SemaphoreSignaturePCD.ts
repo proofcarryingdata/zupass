@@ -10,7 +10,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
-import { generateSnarkMessageHash } from "@pcd/util";
+import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import {
   FullProof,
@@ -185,7 +185,13 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<SemaphoreSignaturePCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new SemaphoreSignaturePCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: SemaphoreSignaturePCD): DisplayOptions {

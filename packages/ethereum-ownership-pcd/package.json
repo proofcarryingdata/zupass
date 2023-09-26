@@ -37,6 +37,7 @@
     "@pcd/pcd-types": "0.7.0",
     "@pcd/semaphore-identity-pcd": "0.7.0",
     "@pcd/semaphore-signature-pcd": "0.7.0",
+    "@pcd/util": "0.1.0",
     "@semaphore-protocol/identity": "^3.11.0",
     "ethers": "^5.7.2",
     "json-bigint": "^1.0.0",
