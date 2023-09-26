@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { Response } from "express";
 import {
+  CommitmentRow,
   LoggedinPCDpassUser,
   LoggedInZuzaluUser,
   ZuzaluUser
@@ -168,6 +169,11 @@ export class UserService {
       throw new PCDHTTPError(403, `Email mismatch.`);
     }
 
+    const existingUser = await fetchCommitment(this.context.dbPool, email);
+    if (existingUser) {
+      this.checkAndIncrementAccountRateLimit(existingUser);
+    }
+
     // Save commitment to DB.
     logger(`[ZUID] Saving new commitment: ${commitment}`);
     const uuid = await insertCommitment(this.context.dbPool, {
@@ -263,6 +269,40 @@ export class UserService {
     res.sendStatus(200);
   }
 
+  private async checkAndIncrementAccountRateLimit(
+    user: CommitmentRow
+  ): Promise<void> {
+    const now = Date.now();
+    const rateLimitDurationMs = 1000 * 60 * 60 * 24; // 24 hours
+    const rateLimitCount = 4; // max 4 resets (not including 1st time account creation) in 24 hours
+
+    const parsedTimestamps: number[] = user.account_reset_timestamps.map((t) =>
+      new Date(t).getTime()
+    );
+    parsedTimestamps.push(now);
+
+    const maxAgeTimestamp = now - rateLimitDurationMs;
+    const resetsNewerThanMaxAge = parsedTimestamps.filter(
+      (t) => t > maxAgeTimestamp
+    );
+    const newEntryExceedsRateLimit =
+      resetsNewerThanMaxAge.length > rateLimitCount;
+
+    if (newEntryExceedsRateLimit) {
+      await updateCommitmentResetList(
+        this.context.dbPool,
+        user.email,
+        resetsNewerThanMaxAge.map((t) => new Date(t).toISOString())
+      );
+    } else {
+      throw new PCDHTTPError(
+        429,
+        "You've exceeded the maximum number of account resets." +
+          " Please contact passport@0xparc.org for further assistance."
+      );
+    }
+  }
+
   public async handleNewPCDpassUser(
     token: string,
     email: string,
@@ -286,60 +326,8 @@ export class UserService {
     }
 
     const existingUser = await fetchCommitment(this.context.dbPool, email);
-
-    logger(
-      `[PCDPASS*********************] reset timestamps`,
-      existingUser,
-      existingUser?.account_reset_timestamps
-    );
-
-    function checkTimestamps(timestampList: string[]): {
-      filteredTimestamps: string[];
-      passesRateLimit: boolean;
-    } {
-      const now = Date.now();
-      const parsedTimestamps = timestampList.map((t) => new Date(t).getTime());
-      parsedTimestamps.push(now);
-
-      const maxAgeMilliseconds = 1000 * 60 * 60 * 24;
-      const maxAgeTimestamp = now - maxAgeMilliseconds;
-      const newerThanMaxAge = parsedTimestamps.filter(
-        (t) => t > maxAgeTimestamp
-      );
-      const rateLimit = 4;
-
-      return {
-        filteredTimestamps: newerThanMaxAge.map((t) =>
-          new Date(t).toISOString()
-        ),
-        passesRateLimit: newerThanMaxAge.length <= rateLimit
-      };
-    }
-
     if (existingUser) {
-      logger("[PCDPASS **************]", "CHECKING TIMESTAMPS");
-
-      const { filteredTimestamps, passesRateLimit } = checkTimestamps(
-        existingUser.account_reset_timestamps
-      );
-
-      if (passesRateLimit) {
-        await updateCommitmentResetList(
-          this.context.dbPool,
-          existingUser.email,
-          filteredTimestamps
-        );
-      } else {
-        throw new PCDHTTPError(
-          429,
-          "You've exceeded the maximum number of account resets." +
-            " Please contact passport@0xparc.org for further assistance."
-        );
-      }
-
-      logger("[PCDPASS **************]", filteredTimestamps, passesRateLimit);
-    } else {
-      logger("[PCDPASS **************]", "NOT CHECKING TIMESTAMPS");
+      this.checkAndIncrementAccountRateLimit(existingUser);
     }
 
     logger(`[PCDPASS] Saving commitment: ${commitment}`);
