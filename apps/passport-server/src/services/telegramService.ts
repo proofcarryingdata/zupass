@@ -14,15 +14,14 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-
-import { fetchPretixEventInfoByName } from "../database/queries/pretixEventInfo";
+import { fetchPretixEvents } from "../database/queries/pretix_config/fetchPretixConfiguration";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
-import { fetchTelegramEventByEventId } from "../database/queries/telegram/fetchTelegramEvent";
 import {
-  insertTelegramEvent,
-  insertTelegramVerification
-} from "../database/queries/telegram/insertTelegramConversation";
+  fetchTelegramEventByEventId,
+  fetchTelegramEventsByChatId
+} from "../database/queries/telegram/fetchTelegramEvent";
+import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { isLocalServer, sleep } from "../util/util";
@@ -241,35 +240,46 @@ export class TelegramService {
       const channelId = ctx.chat.id;
       // TODO: Add menu of possible events
       const eventName = ctx.match;
-      if (!eventName) {
+      // if (!eventName) {
+      //   await ctx.reply(
+      //     `Correct usage of this command is: /link <event_name>. Try: /link ProgCrypto (Internal Test)`
+      //   );
+      //   return;
+      // }
+
+      const linkedEvents = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        channelId
+      );
+      const isLinked = linkedEvents.length > 0;
+
+      const telegramEvents = await fetchPretixEvents(this.context.dbPool);
+      if (!telegramEvents) throw new Error(`No events to link with`);
+      logger(`[TELEGRAM] events`, telegramEvents);
+
+      if (isLinked) {
+        const cleanEvents = linkedEvents.map((e) => e.ticket_event_id).join();
         await ctx.reply(
-          `Correct usage of this command is: /link <event_name>. Try: /link ProgCrypto (Internal Test)`
+          `This chat is linked to the following events: ${cleanEvents}`
         );
-        return;
+      } else {
+        await ctx.reply(
+          `This chat is not linked to any events. Choose from the following options:`
+        );
+        // TODO: Menu
+        const cleanEvents = telegramEvents.map((e) => e.event_name).join();
+        await ctx.reply(cleanEvents);
       }
 
-      await ctx.reply("Your telegram channel id is " + ctx.chat.id);
+      await ctx.reply("Your telegram chat id is " + ctx.chat.id);
 
-      // TODO: Remove fetchPretixEventInfoByName
-      // https://github.com/proofcarryingdata/zupass/issues/662
       try {
-        const eventInfo = await fetchPretixEventInfoByName(
-          this.context.dbPool,
-          eventName
-        );
-        if (!eventInfo) throw new Error(`Failed to fetch event ${eventName}`);
-
-        await insertTelegramEvent(
-          this.context.dbPool,
-          eventInfo.pretix_events_config_id,
-          channelId
-        );
-        logger(
-          `[TELEGRAM] linked event ${eventName} to group ${ctx.chat.title}`
-        );
-        await ctx.reply(
-          `Linked ${ctx.chat.title} (id: ${channelId}) with event ${eventName}`
-        );
+        // logger(
+        //   `[TELEGRAM] linked event ${eventName} to group ${ctx.chat.title}`
+        // );
+        // await ctx.reply(
+        //   `Linked ${ctx.chat.title} (id: ${channelId}) with event ${eventName}`
+        // );
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(

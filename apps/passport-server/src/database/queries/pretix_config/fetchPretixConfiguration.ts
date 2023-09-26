@@ -41,3 +41,19 @@ export async function fetchEventConfiguration(
 
   return result.rows;
 }
+
+export async function fetchPretixEvents(
+  client: Pool
+): Promise<{ event_name: string; configEventD: string }[] | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select e.id as "configEventID", o.event_name
+    from pretix_events_config e
+    join devconnect_pretix_events_info o on e.id = o.pretix_events_config_id
+    `,
+    []
+  );
+
+  return result.rows;
+}
