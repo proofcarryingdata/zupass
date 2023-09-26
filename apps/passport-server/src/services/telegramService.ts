@@ -70,7 +70,8 @@ export class TelegramService {
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu("events");
-
+    // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
+    // This callback function is inline due to the context.dbPool not being defined when putting this logic in a member function
     eventsMenu.dynamic(async () => {
       const telegramEvents = await fetchPretixEvents(context.dbPool);
       const range = new MenuRange();
@@ -252,64 +253,55 @@ export class TelegramService {
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("link", async (ctx) => {
-      if (ctx.chat?.type === "private") {
-        await ctx.reply(
-          "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
-        );
-        return;
-      }
-
-      const admins = await ctx.getChatAdministrators();
-      const isAdmin = admins.some(
-        (admin) => admin.user.id === this.bot.botInfo.id
-      );
-      if (!isAdmin) {
-        await ctx.reply(
-          "Please add me as an admin to the telegram channel associated with your event."
-        );
-        return;
-      }
-
-      const channelId = ctx.chat.id;
-
-      const linkedEvents = (
-        await fetchTelegramEventsByChatId(this.context.dbPool, channelId)
-      ).map((l) => l.ticket_event_id);
-
-      const telegramEvents = await fetchPretixEvents(this.context.dbPool);
-
-      const isLinked = linkedEvents.length > 0;
-
-      if (isLinked) {
-        const cleanEvents = telegramEvents
-          .filter((e) => linkedEvents.includes(e.configEventID))
-          .map((e) => e.event_name)
-          .join();
-
-        await ctx.reply(
-          `This chat is linked to the following events: ${cleanEvents}`
-        );
-      } else {
-        await ctx.reply(`This chat is not linked to any events.`);
-        logger("[TELEGRAM] events", telegramEvents);
-
-        await ctx.reply("Choose from the following options", {
-          reply_markup: eventsMenu
-        });
-      }
-
       try {
-        // logger(
-        //   `[TELEGRAM] linked event ${eventName} to group ${ctx.chat.title}`
-        // );
-        // await ctx.reply(
-        //   `Linked ${ctx.chat.title} (id: ${channelId}) with event ${eventName}`
-        // );
+        if (ctx.chat?.type === "private") {
+          await ctx.reply(
+            "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+          );
+          return;
+        }
+
+        const admins = await ctx.getChatAdministrators();
+        const isAdmin = admins.some(
+          (admin) => admin.user.id === this.bot.botInfo.id
+        );
+        if (!isAdmin) {
+          await ctx.reply(
+            "Please add me as an admin to the telegram channel associated with your event."
+          );
+          return;
+        }
+
+        const channelId = ctx.chat.id;
+
+        const linkedEvents = (
+          await fetchTelegramEventsByChatId(this.context.dbPool, channelId)
+        ).map((l) => l.ticket_event_id);
+
+        const telegramEvents = await fetchPretixEvents(this.context.dbPool);
+
+        const isLinked = linkedEvents.length > 0;
+
+        if (isLinked) {
+          const cleanEvents = telegramEvents
+            .filter((e) => linkedEvents.includes(e.configEventID))
+            .map((e) => e.event_name)
+            .join();
+
+          await ctx.reply(
+            `This chat is linked to the following events: ${cleanEvents}`
+          );
+        } else {
+          await ctx.reply(`This chat is not linked to any events.`);
+          logger("[TELEGRAM] events", telegramEvents);
+
+          await ctx.reply("Choose from the following options", {
+            reply_markup: eventsMenu
+          });
+        }
       } catch (error) {
-        logger(`[ERROR] ${error}`);
-        // await ctx.reply(
-        //   `Failed to link group to event ${eventName}. Check server logs`
-        // );
+        await ctx.reply(`Error linking. Check server logs for details`);
+        logger(`[TELEGRAM] ERROR`, error);
       }
     });
   }
