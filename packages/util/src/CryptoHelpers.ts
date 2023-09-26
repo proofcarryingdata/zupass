@@ -11,7 +11,7 @@ let crypto: Crypto | undefined;
  * polyfills or code.
  * This code is compatible with Node.js < v18 too.
  */
-function initCryptoAPI() {
+function initCryptoAPI(): Crypto {
   if (!crypto) {
     if (isBrowser()) {
       crypto = globalThis.crypto;
@@ -24,6 +24,8 @@ function initCryptoAPI() {
       throw new Error("Crypto API is not defined");
     }
   }
+
+  return crypto;
 }
 
 /**
@@ -32,7 +34,7 @@ function initCryptoAPI() {
  * @returns Random value.
  */
 export function getRandomValues(numberOfBytes: number): Uint8Array {
-  initCryptoAPI();
+  const crypto = initCryptoAPI();
 
-  return crypto!.getRandomValues(new Uint8Array(numberOfBytes));
+  return crypto.getRandomValues(new Uint8Array(numberOfBytes));
 }
