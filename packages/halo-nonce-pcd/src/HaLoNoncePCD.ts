@@ -5,6 +5,7 @@ import {
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
+import { requireDefinedParameter } from "@pcd/util";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
@@ -155,6 +156,10 @@ export async function serialize(
 
 export async function deserialize(serialized: string): Promise<HaLoNoncePCD> {
   const { id, claim, proof } = JSON.parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
 
   return new HaLoNoncePCD(id, claim, proof);
 }

@@ -33,7 +33,8 @@ import {
   fromHexString,
   generateSnarkMessageHash,
   numberToBigInt,
-  uuidToBigInt
+  uuidToBigInt,
+  requireDefinedParameter
 } from "@pcd/util";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -528,10 +529,15 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<ZKEdDSAEventTicketPCD> {
-  const parsed = JSONBig({ useNativeBigInt: true }).parse(serialized);
-  const proof = parsed.proof;
-  const claim = parsed.claim;
-  return new ZKEdDSAEventTicketPCD(parsed.id, claim, proof);
+  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
+    serialized
+  );
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new ZKEdDSAEventTicketPCD(id, claim, proof);
 }
 
 /**

@@ -6,7 +6,7 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-import { fromHexString, toHexString } from "@pcd/util";
+import { fromHexString, toHexString, requireDefinedParameter } from "@pcd/util";
 import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
@@ -143,7 +143,11 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
-  const { id, claim, proof } = JSON.parse(serialized, reviver) as EdDSAPCD;
+  const { id, claim, proof } = JSON.parse(serialized, reviver);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
 
   return new EdDSAPCD(id, claim, proof);
 }

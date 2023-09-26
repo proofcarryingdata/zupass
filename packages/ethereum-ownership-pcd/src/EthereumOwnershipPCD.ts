@@ -16,6 +16,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
@@ -200,7 +201,13 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<EthereumOwnershipPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new EthereumOwnershipPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: EthereumOwnershipPCD): DisplayOptions {

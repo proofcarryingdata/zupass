@@ -5,6 +5,7 @@ import {
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
+import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
@@ -97,7 +98,11 @@ export async function serialize(pcd: RSAPCD): Promise<SerializedPCD<RSAPCD>> {
 }
 
 export async function deserialize(serialized: string): Promise<RSAPCD> {
-  const { id, claim, proof } = JSONBig().parse(serialized) as RSAPCD;
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
 
   return new RSAPCD(id, claim, proof);
 }

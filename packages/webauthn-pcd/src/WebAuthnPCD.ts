@@ -3,6 +3,7 @@ import {
   base64ToArrayBuffer
 } from "@pcd/passport-crypto/src/utils";
 import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { requireDefinedParameter } from "@pcd/util";
 import { startAuthentication } from "@simplewebauthn/browser";
 import {
   generateAuthenticationOptions,
@@ -134,7 +135,11 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<WebAuthnPCD> {
-  const { id, claim, proof } = JSONBig().parse(serialized) as WebAuthnPCD;
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
 
   return new WebAuthnPCD(id, claim, proof);
 }

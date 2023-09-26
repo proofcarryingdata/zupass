@@ -14,6 +14,7 @@
     "@pcd/passport-crypto": "0.7.0",
     "@pcd/passport-ui": "0.7.0",
     "@pcd/pcd-types": "0.7.0",
+    "@pcd/util": "0.1.0",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@simplewebauthn/typescript-types": "^7.0.0",
