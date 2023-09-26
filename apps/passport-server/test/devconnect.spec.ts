@@ -1173,6 +1173,62 @@ describe("devconnect functionality", function () {
     }
   );
 
+  step("account reset has a rate limit", async function () {
+    await sleep(4000);
+
+    // 1st reset
+    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+      force: true,
+      expectUserAlreadyLoggedIn: true,
+      expectEmailIncorrect: false
+    });
+
+    // 2nd reset
+    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+      force: true,
+      expectUserAlreadyLoggedIn: true,
+      expectEmailIncorrect: false
+    });
+
+    // 3rd reset
+    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+      force: true,
+      expectUserAlreadyLoggedIn: true,
+      expectEmailIncorrect: false
+    });
+
+    try {
+      await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+        force: true,
+        expectUserAlreadyLoggedIn: true,
+        expectEmailIncorrect: false
+      });
+      // should reject
+      expect.fail();
+    } catch (e) {
+      //
+    }
+
+    await sleep(4000); // see env.ts for where this number comes from
+
+    // 4th reset should succeed
+    const result = await testLoginPCDpass(
+      application,
+      mocker.get().organizer1.EMAIL_1,
+      {
+        force: true,
+        expectUserAlreadyLoggedIn: true,
+        expectEmailIncorrect: false
+      }
+    );
+
+    if (!result?.user) {
+      throw new Error("exected a user");
+    }
+
+    identity = result.identity;
+  });
+
   step(
     "semaphore service should now be aware of the new user" +
       " and their old commitment should have been removed",

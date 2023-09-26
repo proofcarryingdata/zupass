@@ -27,6 +27,7 @@ import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyn
 import { PretixSyncStatus } from "../src/services/types";
 import { ZuzaluPretixSyncService } from "../src/services/zuzaluPretixSyncService";
 import { PCDpass } from "../src/types";
+import { sleep } from "../src/util/util";
 import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
 import { expectIssuanceServiceToBeRunning } from "./pretix/issuance";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
@@ -217,6 +218,63 @@ describe("zupass functionality", function () {
     }
   );
 
+  step("account reset has a rate limit", async function () {
+    if (!residentUser) {
+      // this shouldn't happen as we've inserted a resident via mock data
+      throw new Error("couldn't find a resident to test with");
+    }
+
+    // 1st reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    // 2nd reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    // 3rd reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    try {
+      await testLoginZupass(application, residentUser.email, {
+        force: true,
+        expectAlreadyRegistered: true,
+        expectDoesntHaveTicket: false,
+        expectEmailInvalid: false
+      });
+      // should reject
+      expect.fail();
+    } catch (e) {
+      //
+    }
+
+    await sleep(4000); // see env.ts for where this number comes from
+
+    // 4th reset should succeed
+    const result = await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    residentUser = result?.user;
+    residentIdentity = result?.identity;
+  });
+
   step(
     "after logging in, user should be able to be issued some PCDs from the server",
     async function () {
@@ -336,7 +394,7 @@ describe("zupass functionality", function () {
       visitorUser = visitorResult?.user;
       visitorIdentity = visitorResult?.identity;
 
-      expect(emailAPI.send).to.have.been.called.exactly(2);
+      expect(emailAPI.send).to.have.been.called.exactly(7);
 
       const organizerResult = await testLoginZupass(
         application,
@@ -350,7 +408,7 @@ describe("zupass functionality", function () {
       );
       organizerUser = organizerResult?.user;
       organizerIdentity = organizerResult?.identity;
-      expect(emailAPI.send).to.have.been.called.exactly(3);
+      expect(emailAPI.send).to.have.been.called.exactly(8);
     }
   );
 
