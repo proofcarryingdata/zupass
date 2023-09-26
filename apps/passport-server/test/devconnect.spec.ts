@@ -1197,16 +1197,19 @@ describe("devconnect functionality", function () {
       expectEmailIncorrect: false
     });
 
+    let threw = false;
     try {
       await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
         force: true,
         expectUserAlreadyLoggedIn: true,
         expectEmailIncorrect: false
       });
-      // should reject
-      expect.fail("expected logging in to fail because of rate limit");
     } catch (e) {
-      //
+      threw = true;
+    } finally {
+      if (!threw) {
+        expect.fail("expected logging in to fail because of rate limit");
+      }
     }
 
     await sleep(4000); // see env.ts for where this number comes from

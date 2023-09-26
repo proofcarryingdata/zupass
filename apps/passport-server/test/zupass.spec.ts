@@ -248,6 +248,7 @@ describe("zupass functionality", function () {
       expectEmailInvalid: false
     });
 
+    let threw = false;
     try {
       await testLoginZupass(application, residentUser.email, {
         force: true,
@@ -255,10 +256,12 @@ describe("zupass functionality", function () {
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
-
-      expect.fail("expected logging in to fail because of rate limit");
     } catch (e) {
-      //
+      threw = true;
+    } finally {
+      if (!threw) {
+        expect.fail("expected logging in to fail because of rate limit");
+      }
     }
 
     await sleep(4000); // see env.ts for where this number comes from
