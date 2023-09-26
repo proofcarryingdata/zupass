@@ -1,13 +1,12 @@
-import { fetchUser, User } from "@pcd/passport-interface";
+import { requestUser, User } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch } from "../../src/appHooks";
+import { useDispatch, useQuery } from "../../src/appHooks";
 import { QRPayload } from "../../src/createQRProof";
 import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
@@ -39,22 +38,22 @@ type VerifyResult =
 
 // Shows whether a proof is valid. On success, shows the PCD claim visually.
 export function VerifyScreen() {
-  const location = useLocation();
   const dispatch = useDispatch();
+  const query = useQuery();
+  const encodedQRPayload = query.get("pcd");
+  const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
 
-  const params = new URLSearchParams(location.search);
-  const encodedQRPayload = params.get("pcd");
-  console.log(
-    `Verifying Zuzalu ID proof, ${encodedQRPayload.length}b gzip+base64`
-  );
-
-  const [result, setResult] = useState<VerifyResult>();
+  useEffect(() => {
+    console.log(
+      `Verifying Zuzalu ID proof, ${encodedQRPayload.length}b gzip+base64`
+    );
+  }, [encodedQRPayload.length]);
 
   useEffect(() => {
     deserializeAndVerify(encodedQRPayload)
       .then((res: VerifyResult) => {
         console.log("Verification result", res);
-        setResult(res);
+        setVerifyResult(res);
       })
       .catch((err: Error) => {
         console.error(err);
@@ -67,17 +66,18 @@ export function VerifyScreen() {
           }
         });
       });
-  }, [encodedQRPayload, setResult, dispatch]);
+  }, [encodedQRPayload, setVerifyResult, dispatch]);
 
-  const [from, to, bg]: [string, string, "primary" | "gray"] = result?.valid
-    ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
-    : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
+  const [from, to, bg]: [string, string, "primary" | "gray"] =
+    verifyResult?.valid
+      ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
+      : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
 
   const icon = {
     true: icons.verifyValid,
     false: icons.verifyInvalid,
     undefined: icons.verifyInProgress
-  }["" + result?.valid];
+  }["" + verifyResult?.valid];
 
   return (
     <AppContainer bg={bg}>
@@ -86,17 +86,21 @@ export function VerifyScreen() {
         <TextCenter>
           <img draggable="false" width="90" height="90" src={icon} />
           <Spacer h={24} />
-          {result == null && <H4>VERIFYING PROOF...</H4>}
-          {result?.valid && <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>}
-          {result?.valid === false && <H4>PROOF INVALID.</H4>}
+          {verifyResult == null && <H4>VERIFYING PROOF...</H4>}
+          {verifyResult?.valid && (
+            <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
+          )}
+          {verifyResult?.valid === false && <H4>PROOF INVALID.</H4>}
         </TextCenter>
         <Spacer h={48} />
         <Placeholder minH={160}>
-          {result?.valid === false && <TextCenter>{result.message}</TextCenter>}
-          {result && result.valid && getCard(result)}
+          {verifyResult?.valid === false && (
+            <TextCenter>{verifyResult.message}</TextCenter>
+          )}
+          {verifyResult && verifyResult.valid && getCard(verifyResult)}
         </Placeholder>
         <Spacer h={64} />
-        {result != null && (
+        {verifyResult != null && (
           <CenterColumn w={280}>
             <LinkButton to="/scan">Verify another</LinkButton>
             <Spacer h={8} />
@@ -147,11 +151,10 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
 
   // Verify identity proof
   const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
-
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const user = await fetchUser(appConfig.passportServer, uuid);
+  const userResult = await requestUser(appConfig.passportServer, true, uuid);
 
-  if (user == null) {
+  if (userResult.error?.userMissing) {
     return {
       valid: false,
       type: "identity-proof",
@@ -159,7 +162,18 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  if (user.commitment !== deserializedPCD.claim.identityCommitment) {
+  if (!userResult.success) {
+    console.log("error lodaing user", userResult.error);
+    return {
+      valid: false,
+      type: "identity-proof",
+      message: "Error loading user"
+    };
+  }
+
+  if (
+    userResult.value.commitment !== deserializedPCD.claim.identityCommitment
+  ) {
     return {
       valid: false,
       type: "identity-proof",
@@ -177,7 +191,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  const visitorStatus = getVisitorStatus(user);
+  const visitorStatus = getVisitorStatus(userResult.value);
 
   if (
     visitorStatus !== undefined &&
@@ -191,5 +205,5 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
     };
   }
 
-  return { valid: true, type: "identity-proof", user: user };
+  return { valid: true, type: "identity-proof", user: userResult.value };
 }

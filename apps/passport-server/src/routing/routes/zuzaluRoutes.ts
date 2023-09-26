@@ -1,58 +1,79 @@
+import {
+  ConfirmEmailRequest,
+  CreateNewUserRequest
+} from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { decodeString, normalizeEmail } from "../../util/util";
+import { normalizeEmail } from "../../util/util";
+import { checkBody, checkUrlParam } from "../params";
 
-/**
- * These routes are used by the passport client to login a new Zuzalu user.
- */
 export function initZuzaluRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService, rollbarService }: GlobalServices
+  { userService }: GlobalServices
 ): void {
   logger("[INIT] initializing zuzalu routes");
 
-  // Check that email is on the list. Send email with the login code, allowing
-  // them to create their passport.
+  /**
+   * To be deprecated soon!
+   *
+   * Lets Zuzalu ticket holders (as designated by the original
+   * Zuzalu Pretix instance) send themselves an email with a confirmation code
+   * which they can plug into the client to continue logging into Zupass.org.
+   *
+   * @todo - delete this.
+   * @todo - rate limit?
+   */
   app.post("/zuzalu/send-login-email", async (req: Request, res: Response) => {
-    try {
-      const email = normalizeEmail(decodeString(req.query.email, "email"));
-      const commitment = decodeString(req.query.commitment, "commitment");
-      const force = decodeString(req.query.force, "force") === "true";
+    const email = normalizeEmail(
+      checkBody<ConfirmEmailRequest, "email">(req, "email")
+    );
+    const commitment = checkBody<ConfirmEmailRequest, "commitment">(
+      req,
+      "commitment"
+    );
+    const force =
+      checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-      await userService.handleSendZuzaluEmail(email, commitment, force, res);
-    } catch (e) {
-      logger(e);
-      rollbarService?.reportError(e);
-      res.sendStatus(500);
-    }
+    await userService.handleSendZuzaluEmail(email, commitment, force, res);
   });
 
-  // Check the token (sent to user's email), add a new logged in zuzalu user.
-  app.get("/zuzalu/new-participant", async (req: Request, res: Response) => {
-    try {
-      const token = decodeString(req.query.token, "token");
-      const email = normalizeEmail(decodeString(req.query.email, "email"));
-      const commitment = decodeString(req.query.commitment, "commitment");
+  /**
+   * To be deprecated soon!
+   *
+   * Given a confirmation code, lets a user create/overwrite their user details
+   * on zupass.org.
+   *
+   * 403 on access control error.
+   *
+   * @todo - delete this.
+   * @todo - rate limit?
+   */
+  app.post("/zuzalu/new-participant", async (req: Request, res: Response) => {
+    const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+    const email = checkBody<CreateNewUserRequest, "email">(req, "email");
+    const commitment = checkBody<CreateNewUserRequest, "commitment">(
+      req,
+      "commitment"
+    );
 
-      await userService.handleNewZuzaluUser(token, email, commitment, res);
-    } catch (e) {
-      logger(e);
-      rollbarService?.reportError(e);
-      res.sendStatus(500);
-    }
+    await userService.handleNewZuzaluUser(token, email, commitment, res);
   });
 
-  // Fetch a specific zuzalu user, given their public semaphore commitment.
+  /**
+   * To be deprecated soon!
+   *
+   * Fetch a specific zuzalu user, given their public semaphore commitment.
+   *
+   * 404 if the user can't be found.
+   *
+   * 503 if we're not ready to respond yet.
+   *
+   * @todo - delete this.
+   * @todo - rate limit?
+   */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    try {
-      const uuid = req.params.uuid;
-      await userService.handleGetZuzaluUser(uuid, res);
-    } catch (e) {
-      logger(e);
-      rollbarService?.reportError(e);
-      res.sendStatus(500);
-    }
+    await userService.handleGetZuzaluUser(checkUrlParam(req, "uuid"), res);
   });
 }

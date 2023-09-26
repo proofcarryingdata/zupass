@@ -1,7 +1,12 @@
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { useSubscriptions } from "../../src/appHooks";
+import { useSelf, useSubscriptions } from "../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  pendingViewSubscriptionsRequestKey,
+  setPendingViewSubscriptionsRequest
+} from "../../src/sessionStorage";
 import { Button, H2, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -10,6 +15,18 @@ import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
   const { value: subs } = useSubscriptions();
+  const self = useSelf();
+
+  useEffect(() => {
+    if (self == null) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify("");
+      setPendingViewSubscriptionsRequest(stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
+    }
+  }, [self]);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";
@@ -18,7 +35,7 @@ export function SubscriptionsScreen() {
   return (
     <AppContainer bg="gray">
       <MaybeModal />
-      <SubscriptionNavigation to="/"></SubscriptionNavigation>
+      <SubscriptionNavigation label={"Home"} to="/"></SubscriptionNavigation>
       <Container>
         <H2>Your Subscriptions</H2>
         <Spacer h={32} />

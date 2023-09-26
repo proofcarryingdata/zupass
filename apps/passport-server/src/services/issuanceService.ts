@@ -3,23 +3,25 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
+  TicketCategory,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CheckInRequest,
-  CheckInResponse,
+  CheckTicketInRequest,
+  CheckTicketInResult,
   CheckTicketRequest,
-  CheckTicketResponse,
+  CheckTicketResult,
   FeedHost,
-  FeedRequest,
-  FeedResponse,
   ISSUANCE_STRING,
   ListFeedsRequest,
-  ListFeedsResponse,
+  ListFeedsResponseValue,
   ListSingleFeedRequest,
-  PCDPassFeedIds
+  PCDPassFeedIds,
+  PollFeedRequest,
+  PollFeedResponseValue,
+  ZuzaluUserRole
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -38,12 +40,12 @@ import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
+import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
 import {
   CommitmentRow,
-  DevconnectPretixTicketDBWithEmailAndItem,
-  ZuzaluUserRole
+  DevconnectPretixTicketDBWithEmailAndItem
 } from "../database/models";
 import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
@@ -53,6 +55,7 @@ import {
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
@@ -72,7 +75,6 @@ export class IssuanceService {
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
   private readonly feedHost: FeedHost;
-
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
@@ -92,15 +94,14 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-
     const FEED_PROVIDER_NAME = "PCDPass";
 
     this.feedHost = new FeedHost(
       [
         {
           handleRequest: async (
-            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-          ): Promise<FeedResponse> => {
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueDevconnectPretixTicketPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
             );
@@ -119,12 +120,12 @@ export class IssuanceService {
 
             const actions = [];
 
-            // clear out old pcds if they were there
             actions.push({
               type: PCDActionType.ReplaceInFolder,
               folder: "SBC SRW",
               pcds: []
             });
+
             actions.push({
               type: PCDActionType.ReplaceInFolder,
               folder: "Devconnect",
@@ -185,7 +186,9 @@ export class IssuanceService {
           }
         },
         {
-          handleRequest: async (_req: FeedRequest): Promise<FeedResponse> => {
+          handleRequest: async (
+            _req: PollFeedRequest
+          ): Promise<PollFeedResponseValue> => {
             return {
               actions: [
                 {
@@ -213,8 +216,8 @@ export class IssuanceService {
         },
         {
           handleRequest: async (
-            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-          ): Promise<FeedResponse> => {
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueEmailPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
             );
@@ -258,8 +261,8 @@ export class IssuanceService {
         },
         {
           handleRequest: async (
-            req: FeedRequest<typeof SemaphoreSignaturePCDPackage>
-          ): Promise<FeedResponse> => {
+            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+          ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueZuzaluTicketPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
             );
@@ -308,17 +311,19 @@ export class IssuanceService {
 
   public async handleListFeedsRequest(
     request: ListFeedsRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return this.feedHost.handleListFeedsRequest(request);
   }
 
   public async handleListSingleFeedRequest(
     request: ListSingleFeedRequest
-  ): Promise<ListFeedsResponse> {
+  ): Promise<ListFeedsResponseValue> {
     return this.feedHost.handleListSingleFeedRequest(request);
   }
 
-  public async handleFeedRequest(request: FeedRequest): Promise<FeedResponse> {
+  public async handleFeedRequest(
+    request: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
     return this.feedHost.handleFeedRequest(request);
   }
 
@@ -335,8 +340,8 @@ export class IssuanceService {
   }
 
   public async handleCheckInRequest(
-    request: CheckInRequest
-  ): Promise<CheckInResponse> {
+    request: CheckTicketInRequest
+  ): Promise<CheckTicketInResult> {
     try {
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
@@ -344,7 +349,7 @@ export class IssuanceService {
 
       const ticketValid = await this.checkTicket(ticketPCD);
 
-      if (!ticketValid.success) {
+      if (ticketValid.error != null) {
         return ticketValid;
       }
 
@@ -352,8 +357,8 @@ export class IssuanceService {
 
       if (!ticketData) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: { name: "InvalidTicket" },
+          success: false
         };
       }
 
@@ -361,8 +366,8 @@ export class IssuanceService {
 
       if (!checker) {
         return {
-          success: false,
-          error: { name: "NotSuperuser" }
+          error: { name: "NotSuperuser" },
+          success: false
         };
       }
 
@@ -377,7 +382,7 @@ export class IssuanceService {
       );
 
       if (!relevantSuperUserPermission) {
-        return { success: false, error: { name: "NotSuperuser" } };
+        return { error: { name: "NotSuperuser" }, success: false };
       }
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
@@ -388,23 +393,24 @@ export class IssuanceService {
 
       if (successfullyConsumed) {
         return {
+          value: undefined,
           success: true
         };
       }
 
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError" },
+        success: false
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
-      throw new Error("failed to check in", { cause: e });
+      throw new PCDHTTPError(500, "failed to check in", { cause: e });
     }
   }
 
   public async handleCheckTicketRequest(
     request: CheckTicketRequest
-  ): Promise<CheckTicketResponse> {
+  ): Promise<CheckTicketResult> {
     try {
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
@@ -412,29 +418,35 @@ export class IssuanceService {
       return this.checkTicket(ticketPCD);
     } catch (e) {
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError" },
+        success: false
       };
     }
   }
 
   public async checkTicket(
     ticketPCD: EdDSATicketPCD
-  ): Promise<CheckTicketResponse> {
+  ): Promise<CheckTicketResult> {
     try {
       const proofPublicKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
       if (!proofPublicKey) {
         return {
-          success: false,
-          error: { name: "InvalidSignature" }
+          error: {
+            name: "InvalidSignature",
+            detailedMessage: "Ticket malformed: missing public key."
+          },
+          success: false
         };
       }
 
       const serverPublicKey = await this.getEdDSAPublicKey();
       if (!_.isEqual(serverPublicKey, proofPublicKey)) {
         return {
-          success: false,
-          error: { name: "InvalidSignature" }
+          error: {
+            name: "InvalidSignature",
+            detailedMessage: "This ticket was not signed by PCDpass."
+          },
+          success: false
         };
       }
 
@@ -442,8 +454,11 @@ export class IssuanceService {
 
       if (!ticket || !ticket.ticketId) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: {
+            name: "InvalidTicket",
+            detailedMessage: "Ticket malformed: missing data."
+          },
+          success: false
         };
       }
 
@@ -454,38 +469,40 @@ export class IssuanceService {
 
       if (!ticketInDb) {
         return {
-          success: false,
-          error: { name: "InvalidTicket" }
+          error: {
+            name: "InvalidTicket",
+            detailedMessage: "Ticket does not exist on backend."
+          },
+          success: false
         };
       }
 
       if (ticketInDb.is_deleted) {
         return {
-          success: false,
-          error: { name: "TicketRevoked", revokedTimestamp: Date.now() }
+          error: { name: "TicketRevoked", revokedTimestamp: Date.now() },
+          success: false
         };
       }
 
       if (ticketInDb.is_consumed) {
         return {
-          success: false,
           error: {
             name: "AlreadyCheckedIn",
             checker: ticketInDb.checker ?? undefined,
             checkinTimestamp: (
               ticketInDb.pcdpass_checkin_timestamp ?? new Date()
             ).toISOString()
-          }
+          },
+          success: false
         };
       }
 
-      return { success: true };
+      return { value: undefined, success: true };
     } catch (e) {
       logger("Error when checking ticket", { error: e });
-
       return {
-        success: false,
-        error: { name: "ServerError" }
+        error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
+        success: false
       };
     }
   }
@@ -698,7 +715,8 @@ export class IssuanceService {
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: t.is_consumed,
-      isRevoked: t.is_deleted
+      isRevoked: t.is_deleted,
+      ticketCategory: TicketCategory.Devconnect
     } satisfies ITicketData;
   }
 
@@ -846,7 +864,8 @@ export class IssuanceService {
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
-            isRevoked: false
+            isRevoked: false,
+            ticketCategory: TicketCategory.Zuzalu
           })
         );
       }

@@ -42,3 +42,6 @@ logfile
 
 # build
 *.tsbuildinfo
+
+# vim
+*.swp

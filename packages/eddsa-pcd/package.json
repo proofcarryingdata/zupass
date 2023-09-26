@@ -1,6 +1,6 @@
 {
   "name": "@pcd/eddsa-pcd",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -20,9 +20,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.6.2",
-    "@pcd/util": "0.0.1",
-    "@pcd/pcd-types": "0.6.3",
+    "@pcd/passport-ui": "0.7.0",
+    "@pcd/pcd-types": "0.7.0",
+    "@pcd/util": "0.1.0",
     "chai": "^4.3.7",
     "circomlibjs": "^0.1.7",
     "js-sha256": "^0.9.0",

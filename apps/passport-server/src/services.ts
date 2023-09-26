@@ -6,13 +6,13 @@ import { startEmailTokenService } from "./services/emailTokenService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startMetricsService } from "./services/metricsService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
-import { startPretixSyncService } from "./services/pretixSyncService";
 import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
+import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
 
 export async function startServices(
@@ -24,14 +24,10 @@ export async function startServices(
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
-  const emailService = startEmailService(
-    context,
-    rollbarService,
-    apis.emailAPI
-  );
+  const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
-  const zuzaluPretixSyncService = startPretixSyncService(
+  const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,
     rollbarService,
     semaphoreService,
@@ -47,10 +43,9 @@ export async function startServices(
     context,
     semaphoreService,
     emailTokenService,
-    emailService,
-    rollbarService
+    emailService
   );
-  const e2eeService = startE2EEService(context, rollbarService);
+  const e2eeService = startE2EEService(context);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,

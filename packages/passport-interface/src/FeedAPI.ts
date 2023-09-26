@@ -1,31 +1,25 @@
 import { PCDPackage } from "@pcd/pcd-types";
-import { FeedRequest, FeedResponse, ListFeedsResponse } from "./RequestTypes";
+import { ListFeedsResult, requestListFeeds } from "./api/requestListFeeds";
+import { PollFeedResult, requestPollFeed } from "./api/requestPollFeed";
+import { PollFeedRequest } from "./RequestTypes";
 
 export interface IFeedApi {
-  pollFeed(providerUrl: string, request: FeedRequest): Promise<FeedResponse>;
-  listFeeds(providerUrl: string): Promise<ListFeedsResponse>;
+  pollFeed(
+    providerUrl: string,
+    request: PollFeedRequest
+  ): Promise<PollFeedResult>;
+  listFeeds(providerUrl: string): Promise<ListFeedsResult>;
 }
 
 export class NetworkFeedApi implements IFeedApi {
-  async pollFeed<T extends PCDPackage>(
+  public async pollFeed<T extends PCDPackage>(
     providerUrl: string,
-    request: FeedRequest<T>
-  ): Promise<FeedResponse> {
-    const result = await fetch(providerUrl, {
-      method: "POST",
-      body: JSON.stringify(request),
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      }
-    });
-    const parsed = (await result.json()) as FeedResponse;
-    return parsed;
+    request: PollFeedRequest<T>
+  ): Promise<PollFeedResult> {
+    return requestPollFeed(providerUrl, request);
   }
 
-  async listFeeds(providerUrl: string): Promise<ListFeedsResponse> {
-    const result = await fetch(providerUrl);
-    const parsed = (await result.json()) as ListFeedsResponse;
-    return parsed;
+  public async listFeeds(providerUrl: string): Promise<ListFeedsResult> {
+    return requestListFeeds(providerUrl);
   }
 }

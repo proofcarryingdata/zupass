@@ -1,6 +1,7 @@
 import { QueryResult } from "pg";
 import { Pool } from "postgres-pool";
 import { traced } from "../services/telemetryService";
+import { logger } from "../util/logger";
 
 /**
  * This function executes a sql query against the database, and traces
@@ -17,6 +18,12 @@ export function sqlQuery(
       return await client.query(query, args);
     } catch (e) {
       span?.setAttribute("error", e + "");
+
+      if ((e as any).code) {
+        span?.setAttribute("code", (e as any).code);
+      }
+
+      logger(`[ERROR] sql query\n`, `"${query}"\n`, e);
       throw e;
     }
   });

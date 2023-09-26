@@ -1,12 +1,12 @@
 import {
   PendingPCD,
   ProveOptions,
-  ProveRequest
+  requestProveOnServer
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
 import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
@@ -36,35 +36,38 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const rollbar = useAppRollbar();
   const pcds = usePCDCollection();
   const [args, setArgs] = useState(JSON.parse(JSON.stringify(initialArgs)));
-  const [error, setError] = useState<Error | undefined>();
+  const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
 
   const onProveClick = useCallback(async () => {
-    try {
-      setProving(true);
+    setProving(true);
 
-      // Give the UI has a chance to update to the 'loading' state before the
-      // potentially blocking proving operation kicks off
-      await nextFrame();
+    // Give the UI has a chance to update to the 'loading' state before the
+    // potentially blocking proving operation kicks off
+    await nextFrame();
 
-      if (options?.proveOnServer === true) {
-        const serverReq: ProveRequest = {
+    if (options?.proveOnServer === true) {
+      const pendingPCDResult = await requestProveOnServer(
+        appConfig.passportServer,
+        {
           pcdType: pcdType,
           args: args
-        };
-        const pendingPCD = await requestPendingPCD(serverReq);
-        onProve(undefined, undefined, pendingPCD);
-      } else {
-        const pcd = await pcdPackage.prove(args);
-        const serialized = await pcdPackage.serialize(pcd);
-        onProve(pcd as any, serialized, undefined);
-      }
-    } catch (e) {
-      console.log(e);
-      rollbar?.error(e);
-      setError(e);
+        }
+      );
       setProving(false);
+
+      if (!pendingPCDResult.success) {
+        rollbar?.error(pendingPCDResult.error);
+        setError(pendingPCDResult.error);
+        return;
+      }
+
+      onProve(undefined, undefined, pendingPCDResult.value);
+    } else {
+      const pcd = await pcdPackage.prove(args);
+      const serializedPCD = await pcdPackage.serialize(pcd);
+      onProve(pcd as any, serializedPCD, undefined);
     }
   }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage, rollbar]);
 
@@ -86,7 +89,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       <Spacer h={16} />
       {error && (
         <>
-          <ErrorContainer>{error.message}</ErrorContainer>
+          <ErrorContainer>{error}</ErrorContainer>
           <Spacer h={16} />
         </>
       )}

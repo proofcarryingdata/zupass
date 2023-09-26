@@ -36,23 +36,6 @@ export function normalizeEmail(email: string): string {
 }
 
 /**
- * Decodes a given string from an object `s` and optionally valides it.
- */
-export function decodeString(
-  s: any,
-  name: string,
-  predicate?: (s: string) => boolean
-): string {
-  if (s == null) {
-    throw new Error(`Missing ${name}`);
-  }
-  if (typeof s !== "string" || (predicate && !predicate(s))) {
-    throw new Error(`Invalid ${name}`);
-  }
-  return decodeURIComponent(s);
-}
-
-/**
  * Generate a random 6-digit random token for use as a token.
  */
 export function randomEmailToken(): string {
@@ -76,4 +59,11 @@ export async function getCommitHash(): Promise<string> {
   }
 
   return "unknown commit hash";
+}
+
+export function isLocalServer(): boolean {
+  return (
+    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+  );
 }

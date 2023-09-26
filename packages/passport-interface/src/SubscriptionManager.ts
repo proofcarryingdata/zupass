@@ -1,9 +1,9 @@
 import { Emitter } from "@pcd/emitter";
 import {
+  matchActionToPermission,
   PCDAction,
   PCDCollection,
-  PCDPermission,
-  matchActionToPermission
+  PCDPermission
 } from "@pcd/pcd-collection";
 import {
   ArgsOf,
@@ -15,7 +15,7 @@ import {
 import { isFulfilled } from "@pcd/util";
 import { v4 as uuid } from "uuid";
 import { IFeedApi } from "./FeedAPI";
-import { ListFeedsResponse } from "./RequestTypes";
+import { ListFeedsResponseValue } from "./RequestTypes";
 
 export const enum PCDPassFeedIds {
   Devconnect = "1",
@@ -72,16 +72,22 @@ export class FeedSubscriptionManager {
     this.errors = new Map();
   }
 
-  public async listFeeds(providerUrl: string): Promise<ListFeedsResponse> {
-    return this.api.listFeeds(providerUrl);
+  public async listFeeds(providerUrl: string): Promise<ListFeedsResponseValue> {
+    return this.api.listFeeds(providerUrl).then((r) => {
+      if (r.success) {
+        return r.value;
+      } else {
+        throw new Error(r.error);
+      }
+    });
   }
 
   /**
    * This "refreshes" a feed. Existing feed errors are cleared, and new
    * ones may be detected.
    *
-   * Returns an array of actions without trying to apply them. Attempted
-   * application may lead to more errors.
+   * Returns the successful responses. Failures will be recorded in
+   * `this.errors` for display to the user.
    */
   public async pollSubscriptions(): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
@@ -120,10 +126,16 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const { actions } = await this.api.pollFeed(subscription.providerUrl, {
+      const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
         pcd: subscription.credential
       });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      const { actions } = result.value;
 
       this.validateActions(subscription, actions);
 

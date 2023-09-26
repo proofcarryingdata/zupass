@@ -1,4 +1,8 @@
-import { PCDGetRequest, ProveRequest } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  requestProveOnServer,
+  requestSemaphoreGroup
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   SemaphoreGroupPCDArgs,
@@ -6,10 +10,11 @@ import {
   SerializedSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { requestPendingPCD } from "../../../src/api/requestPendingPCD";
+import { appConfig } from "../../../src/appConfig";
 import { useIdentity } from "../../../src/appHooks";
 import {
   safeRedirect,
@@ -32,15 +37,28 @@ export function SemaphoreGroupProveScreen({
 
   useEffect(() => {
     const fetchGroup = async () => {
-      const res = await fetch(req.args.group.remoteUrl);
-      const group = (await res.json()) as SerializedSemaphoreGroup;
-      console.log("Got semaphore group", group);
-      setGroup(group);
+      console.log("fetching semaphore group", req.args.group.remoteUrl);
+      const semaphoreGroupResult = await requestSemaphoreGroup(
+        req.args.group.remoteUrl
+      );
+
+      if (!semaphoreGroupResult.success) {
+        console.error(
+          "error fetching semaphore group",
+          semaphoreGroupResult.error
+        );
+        setError(semaphoreGroupResult.error);
+        return;
+      }
+
+      console.log("got semaphore group", semaphoreGroupResult.value);
+      setGroup(semaphoreGroupResult.value);
     };
-    fetchGroup().catch(console.error);
+
+    fetchGroup();
   }, [req.args.group.remoteUrl]);
 
-  const onProve = useCallback(async () => {
+  const onProveClick = useCallback(async () => {
     try {
       setProving(true);
 
@@ -51,12 +69,21 @@ export function SemaphoreGroupProveScreen({
       const args = await fillArgs(identity, group, req.args);
 
       if (req.options?.proveOnServer === true) {
-        const serverReq: ProveRequest = {
-          pcdType: SemaphoreGroupPCDPackage.name,
-          args: args
-        };
-        const pendingPCD = await requestPendingPCD(serverReq);
-        safeRedirectPending(req.returnUrl, pendingPCD);
+        const pendingPCDResult = await requestProveOnServer(
+          appConfig.passportServer,
+          {
+            pcdType: SemaphoreGroupPCDPackage.name,
+            args: args
+          }
+        );
+
+        if (!pendingPCDResult.success) {
+          throw new Error(
+            "Failed to get pending PCD " + pendingPCDResult.error
+          );
+        }
+
+        safeRedirectPending(req.returnUrl, pendingPCDResult.value);
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
@@ -64,13 +91,11 @@ export function SemaphoreGroupProveScreen({
         safeRedirect(req.returnUrl, serializedPCD);
       }
     } catch (e) {
-      if (
-        typeof e.message === "string" &&
-        e.message.indexOf("The identity is not part of the group") >= 0
-      ) {
+      const errorMessage = getErrorMessage(e);
+      if (errorMessage.indexOf("The identity is not part of the group") >= 0) {
         setError("You are not part of this group.");
-      } else if (typeof e.message === "string") {
-        setError(e.message);
+      } else {
+        setError(errorMessage);
       }
     }
   }, [identity, group, req.args, req.options?.proveOnServer, req.returnUrl]);
@@ -92,7 +117,7 @@ export function SemaphoreGroupProveScreen({
 
   if (!proving && error === undefined) {
     lines.push(
-      <Button disabled={isLoading} onClick={onProve}>
+      <Button disabled={isLoading} onClick={onProveClick}>
         {isLoading ? "Loading..." : "Prove"}
       </Button>
     );

@@ -1,8 +1,8 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  FeedResponse,
   ISSUANCE_STRING,
-  PCDPassFeedIds
+  PCDPassFeedIds,
+  pollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -10,14 +10,13 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import {
-  ZuzaluPretixOrder,
-  getZuzaluPretixConfig
-} from "../src/apis/pretixAPI";
+  getZuzaluPretixConfig,
+  ZuzaluPretixOrder
+} from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
 import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
-import { requestIssuedPCDs } from "./issuance/issuance";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
@@ -58,7 +57,7 @@ describe("zuzalu pcdpass functionality", function () {
   });
 
   step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application);
+    const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
     expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
     // stop interval that polls the api so we have more granular control over
     // testing the sync functionality
@@ -83,16 +82,19 @@ describe("zuzalu pcdpass functionality", function () {
   step(
     "user should be able to be issued Zuzalu ticket PCDs from the server",
     async function () {
-      const response = await requestIssuedPCDs(
-        application,
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
         PCDPassFeedIds.Zuzalu_1
       );
-      const responseBody = response.body as FeedResponse;
 
-      expect(responseBody.actions.length).to.eq(2);
-      const action = responseBody.actions[1] as ReplaceInFolderAction;
+      if (!response.success) {
+        throw new Error("expected to be able to poll the feed");
+      }
+
+      expect(response.value.actions.length).to.eq(2);
+      const action = response.value.actions[1] as ReplaceInFolderAction;
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(action.folder).to.eq("Zuzalu");

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { requestServerProofStatus } from "./api/requestServerProofStatus";
 import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
-import { StatusRequest, StatusResponse } from "./RequestTypes";
 
 /**
  * React hook that pings server on status of a PendingPCD. Returns a serialized
@@ -19,49 +19,41 @@ export function usePendingPCD(
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
 
-    const getStatus = () => {
+    const getProofStatus = async () => {
       if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
         const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
 
-        const request: StatusRequest = {
+        const proofStatusResult = await requestServerProofStatus(passportURL, {
           hash: pendingPCD.hash
-        };
+        });
 
-        fetch(`${passportURL}pcds/status`, {
-          method: "POST",
-          body: JSON.stringify(request),
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          }
-        })
-          .then((response) => response.json())
-          .then((data: StatusResponse) => {
-            setPendingPCDStatus(data.status);
-            if (
-              data.status === PendingPCDStatus.COMPLETE &&
-              data.serializedPCD !== undefined
-            ) {
-              setPCDStr(data.serializedPCD);
-              setPendingPCDError("");
-              clearInterval(interval);
-            } else if (
-              data.status === PendingPCDStatus.ERROR &&
-              data.error !== undefined
-            ) {
-              setPendingPCDError(data.error);
-              clearInterval(interval);
-            }
-          })
-          .catch((error) => {
-            setPendingPCDStatus(PendingPCDStatus.ERROR);
-            setPendingPCDError(error);
-            clearInterval(interval);
-          });
+        if (!proofStatusResult.success) {
+          setPendingPCDStatus(PendingPCDStatus.ERROR);
+          setPendingPCDError(proofStatusResult.error);
+          clearInterval(interval);
+          return;
+        }
+
+        setPendingPCDStatus(proofStatusResult.value.status);
+
+        if (
+          proofStatusResult.value.status === PendingPCDStatus.COMPLETE &&
+          proofStatusResult.value.serializedPCD !== undefined
+        ) {
+          setPCDStr(proofStatusResult.value.serializedPCD);
+          setPendingPCDError("");
+          clearInterval(interval);
+        } else if (
+          proofStatusResult.value.status === PendingPCDStatus.ERROR &&
+          proofStatusResult.value.error !== undefined
+        ) {
+          setPendingPCDError(proofStatusResult.value.error);
+          clearInterval(interval);
+        }
       }
     };
 
-    interval = setInterval(getStatus, 1000);
+    interval = setInterval(getProofStatus, 1000);
 
     return () => clearInterval(interval);
   }, [pendingPCDStr, passportURL]);

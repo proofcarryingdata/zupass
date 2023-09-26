@@ -15,6 +15,8 @@
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "dev:apps": "turbo run dev --parallel --filter=./apps/*",
+    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\"",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test --concurrency=1",
@@ -22,13 +24,12 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
-    "artifacts:download": "turbo run artifacts:download -- -nc",
-    "postinstall": "yarn artifacts:download",
     "knip": "knip --no-gitignore"
   },
   "devDependencies": {
     "@types/circomlibjs": "^0.1.1",
     "@types/snarkjs": "^0.7.1",
+    "concurrently": "^8.2.0",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
     "typedoc": "^0.25.1"

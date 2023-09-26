@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.7.0
+
+### Minor Changes
+
+- bundle of package upgrades
+
 ## 0.6.3
 
 ### Patch Changes

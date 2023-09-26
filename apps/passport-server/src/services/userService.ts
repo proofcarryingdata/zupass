@@ -1,6 +1,15 @@
-import { User, ZuzaluUserRole } from "@pcd/passport-interface";
+import {
+  ConfirmEmailResponseValue,
+  PCDpassUserJson,
+  ZupassUserJson,
+  ZuzaluUserRole
+} from "@pcd/passport-interface";
 import { Response } from "express";
-import { LoggedinPCDpassUser, ZuzaluUser } from "../database/models";
+import {
+  LoggedinPCDpassUser,
+  LoggedInZuzaluUser,
+  ZuzaluUser
+} from "../database/models";
 import { fetchCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectDeviceLoginTicket,
@@ -12,42 +21,35 @@ import {
   fetchZuzaluUser
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { validateEmail } from "../util/util";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 
 /**
  * Responsible for high-level user-facing functionality like logging in.
  */
 export class UserService {
-  private context: ApplicationContext;
-  private semaphoreService: SemaphoreService;
-  private emailTokenService: EmailTokenService;
-  private emailService: EmailService;
-  private rollbarService: RollbarService | null;
-  private _bypassEmail: boolean;
-
-  public get bypassEmail(): boolean {
-    return this._bypassEmail;
-  }
+  public readonly bypassEmail: boolean;
+  private readonly context: ApplicationContext;
+  private readonly semaphoreService: SemaphoreService;
+  private readonly emailTokenService: EmailTokenService;
+  private readonly emailService: EmailService;
 
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
-    emailService: EmailService,
-    rollbarService: RollbarService | null
+    emailService: EmailService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
     this.emailService = emailService;
-    this.rollbarService = rollbarService;
-    this._bypassEmail =
+    this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
   }
@@ -64,9 +66,11 @@ export class UserService {
 
   public async getSaltByEmail(email: string): Promise<string | null> {
     const user = await this.semaphoreService.getUserByEmail(email);
+
     if (!user) {
-      throw Error("User does not exist");
+      throw new PCDHTTPError(404, `user ${email} does not exist`);
     }
+
     return user.salt;
   }
 
@@ -77,22 +81,21 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(
-      `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
+      `[ZUID] send-login-email ${JSON.stringify({
+        email,
+        commitment,
+        force
+      })}`
     );
 
     if (!validateEmail(email)) {
-      const errMsg = `'${email}' is not a valid email`;
-      logger(errMsg);
-      res.status(500).send(errMsg);
-      return;
+      throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
-
-    const { dbPool } = this.context;
 
     const token = await this.emailTokenService.saveNewTokenForEmail(email);
 
-    if (this._bypassEmail) {
-      await insertZuzaluPretixTicket(dbPool, {
+    if (this.bypassEmail) {
+      await insertZuzaluPretixTicket(this.context.dbPool, {
         email: email,
         name: "Test User",
         order_id: "",
@@ -101,36 +104,34 @@ export class UserService {
       });
     }
 
-    const user = await fetchZuzaluUser(dbPool, email);
+    const user = await fetchZuzaluUser(this.context.dbPool, email);
 
     if (user == null) {
-      const errMsg = `${email} doesn't have a ticket.`;
-      logger(errMsg);
-      res.status(500).send(errMsg);
-      return;
-    } else if (user.commitment != null && !force) {
-      const errMsg = `${email} already registered.`;
-      logger("[ZUID]", errMsg);
-      res.status(500).send(errMsg);
-      return;
+      throw new PCDHTTPError(403, `${email} doesn't have a ticket.`);
     }
-    const stat = user.commitment == null ? "NEW" : "EXISTING";
+
+    if (user.commitment != null && !force) {
+      throw new PCDHTTPError(403, `${email} already registered.`);
+    }
+
     logger(
-      `Saved login token for ${stat} email=${email} commitment=${commitment}`
+      `Saved login token for ${
+        user.commitment == null ? "NEW" : "EXISTING"
+      } email=${email} commitment=${commitment}`
     );
 
-    // Send an email with the login token.
-    if (this._bypassEmail) {
+    if (this.bypassEmail) {
       logger("[DEV] Bypassing email, returning token");
-
-      res.json({ token });
-    } else {
-      const { name } = user;
-      logger(`[ZUID] Sending token=${token} to email=${email} name=${name}`);
-      await this.emailService.sendPretixEmail(email, name, token);
-
-      res.sendStatus(200);
+      res
+        .status(200)
+        .json({ devToken: token } satisfies ConfirmEmailResponseValue);
+      return;
     }
+
+    logger(`[ZUID] Sending token=${token} to email=${email} name=${user.name}`);
+    await this.emailService.sendPretixEmail(email, user.name, token);
+
+    res.sendStatus(200);
   }
 
   public async handleNewZuzaluUser(
@@ -139,7 +140,6 @@ export class UserService {
     commitment: string,
     res: Response
   ): Promise<void> {
-    const { dbPool } = this.context;
     logger(
       `[ZUID] new-user ${JSON.stringify({
         emailToken,
@@ -148,55 +148,66 @@ export class UserService {
       })}`
     );
 
-    try {
-      const user = await fetchZuzaluUser(dbPool, email);
+    const user = await fetchZuzaluUser(this.context.dbPool, email);
 
-      if (user == null) {
-        throw new Error(`Ticket for ${email} not found`);
-      } else if (
-        !(await this.emailTokenService.checkTokenCorrect(email, emailToken))
-      ) {
-        throw new Error(
-          `Wrong token. If you got more than one email, use the latest one.`
-        );
-      } else if (user.email !== email) {
-        throw new Error(`Email mismatch.`);
-      }
-
-      // Save commitment to DB.
-      logger(`[ZUID] Saving new commitment: ${commitment}`);
-      const uuid = await insertCommitment(dbPool, {
-        email,
-        commitment
-      });
-
-      // Reload Merkle trees
-      await this.semaphoreService.reload();
-      const newUser = await this.semaphoreService.getUserByUUID(uuid);
-      if (newUser == null) {
-        throw new Error(`${uuid} not found`);
-      } else if (newUser.commitment !== commitment) {
-        throw new Error(`Commitment mismatch`);
-      }
-
-      // Return user, including UUID, back to Passport
-      const zuzaluUser = newUser as User;
-      const jsonP = JSON.stringify(zuzaluUser);
-      logger(`[ZUID] Added new Zuzalu user: ${jsonP}`);
-
-      res.json(zuzaluUser);
-    } catch (e: any) {
-      logger(e);
-      this.rollbarService?.reportError(e);
-      res.status(500).send(e.message);
+    if (user == null) {
+      throw new PCDHTTPError(403, `${email} doesn't have a ticket`);
     }
+
+    if (!(await this.emailTokenService.checkTokenCorrect(email, emailToken))) {
+      throw new PCDHTTPError(
+        403,
+        `Wrong token. If you got more than one email, use the latest one.`
+      );
+    }
+
+    if (user.email !== email) {
+      throw new PCDHTTPError(403, `Email mismatch.`);
+    }
+
+    // Save commitment to DB.
+    logger(`[ZUID] Saving new commitment: ${commitment}`);
+    const uuid = await insertCommitment(this.context.dbPool, {
+      email,
+      commitment
+    });
+
+    // Reload Merkle trees
+    await this.semaphoreService.reload();
+
+    const newUser = (await this.semaphoreService.getUserByUUID(
+      uuid
+    )) as LoggedInZuzaluUser;
+
+    if (newUser == null) {
+      throw new PCDHTTPError(404, `user with id '${uuid}' not found`);
+    }
+
+    if (newUser.commitment !== commitment) {
+      throw new PCDHTTPError(403, `commitment mismatch`);
+    }
+
+    logger(`[ZUID] Added new Zuzalu user`, newUser);
+    res.status(200).json(newUser satisfies ZupassUserJson);
   }
 
+  /**
+   * If the service is not ready, returns a 500 server error.
+   * If the user does not exist, returns a 404.
+   * Otherwise returns the user.
+   */
   public async handleGetZuzaluUser(uuid: string, res: Response): Promise<void> {
     logger(`[ZUID] Fetching user ${uuid}`);
-    const user = await this.semaphoreService.getUserByUUID(uuid);
-    if (!user) res.status(404);
-    res.json(user || null);
+
+    const user = (await this.semaphoreService.getUserByUUID(
+      uuid
+    )) as LoggedInZuzaluUser;
+
+    if (!user) {
+      throw new PCDHTTPError(404, `no user with id '${uuid}' found`);
+    }
+
+    res.status(200).json(user satisfies ZupassUserJson);
   }
 
   public async handleSendPCDpassEmail(
@@ -206,21 +217,19 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(
-      `[ZUID] send-login-email ${JSON.stringify({ email, commitment, force })}`
+      `[PCDPASS] send-login-email ${JSON.stringify({
+        email,
+        commitment,
+        force
+      })}`
     );
 
-    const devBypassEmail =
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production";
-
     if (!validateEmail(email)) {
-      const errMsg = `'${email}' is not a valid email`;
-      logger(errMsg);
-      res.status(500).send(errMsg);
-      return;
+      throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
 
-    const token = await this.emailTokenService.saveNewTokenForEmail(email);
+    const newEmailToken =
+      await this.emailTokenService.saveNewTokenForEmail(email);
 
     const existingCommitment = await fetchCommitment(
       this.context.dbPool,
@@ -228,8 +237,7 @@ export class UserService {
     );
 
     if (existingCommitment != null && !force) {
-      res.status(500).send(`${email} already registered.`);
-      return;
+      throw new PCDHTTPError(403, `'${email}' already registered`);
     }
 
     logger(
@@ -238,15 +246,18 @@ export class UserService {
       } email=${email} commitment=${commitment}`
     );
 
-    // Send an email with the login token.
-    if (devBypassEmail) {
+    if (this.bypassEmail) {
       logger("[DEV] Bypassing email, returning token");
-      res.json({ token });
-    } else {
-      logger(`[ZUID] Sending token=${token} to email=${email}`);
-      await this.emailService.sendPCDpassEmail(email, token);
-      res.sendStatus(200);
+      res.status(200).json({
+        devToken: newEmailToken
+      } satisfies ConfirmEmailResponseValue);
+      return;
     }
+
+    logger(`[PCDPASS] Sending token=${newEmailToken} to email=${email}`);
+    await this.emailService.sendPCDpassEmail(email, newEmailToken);
+
+    res.sendStatus(200);
   }
 
   public async handleNewPCDpassUser(
@@ -257,64 +268,67 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(
-      `[ZUID] new-user ${JSON.stringify({
+      `[PCDPASS] new-user ${JSON.stringify({
         token,
         email,
         commitment
       })}`
     );
 
-    try {
-      if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
-        throw new Error(
-          `Wrong token. If you got more than one email, use the latest one.`
-        );
-      }
-
-      // Save commitment to DB.
-      logger(`[ZUID] Saving new commitment: ${commitment}`);
-      await insertCommitment(this.context.dbPool, { email, commitment, salt });
-
-      // Reload Merkle trees
-      await this.semaphoreService.reload();
-
-      // Return user, including UUID, back to Passport
-      const commitmentRow = await fetchCommitment(this.context.dbPool, email);
-
-      if (!commitmentRow) {
-        throw new Error("no user with that email exists");
-      }
-
-      const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-        this.context.dbPool,
-        commitmentRow.email
+    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+      throw new PCDHTTPError(
+        403,
+        `Wrong token. If you got more than one email, use the latest one.`
       );
-
-      const pcdpassUser: LoggedinPCDpassUser = {
-        ...commitmentRow,
-        superuserEventConfigIds: superuserPrivilages.map(
-          (s) => s.pretix_events_config_id
-        )
-      };
-
-      const jsonP = JSON.stringify(pcdpassUser);
-      logger(`[ZUID] logged in a zuzalu user: ${jsonP}`);
-      res.json(pcdpassUser);
-    } catch (e) {
-      logger(e);
-      this.rollbarService?.reportError(e);
-      res.sendStatus(500);
     }
+
+    logger(`[PCDPASS] Saving new commitment: ${commitment}`);
+    await insertCommitment(this.context.dbPool, { email, commitment, salt });
+
+    // Reload Merkle trees
+    await this.semaphoreService.reload();
+
+    const commitmentRow = await fetchCommitment(this.context.dbPool, email);
+    if (!commitmentRow) {
+      throw new PCDHTTPError(403, "no user with that email exists");
+    }
+
+    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+      this.context.dbPool,
+      commitmentRow.email
+    );
+
+    const pcdpassUser: LoggedinPCDpassUser = {
+      ...commitmentRow,
+      superuserEventConfigIds: superuserPrivilages.map(
+        (s) => s.pretix_events_config_id
+      )
+    };
+
+    logger(`[PCDPASS] logged in a PCDpass user`, pcdpassUser);
+    res.status(200).json(pcdpassUser satisfies PCDpassUserJson);
   }
 
+  /**
+   * If the service is not ready, returns a 500 server error.
+   * If the user does not exist, returns a 404.
+   * Otherwise returns the user.
+   */
   public async handleGetPCDpassUser(
     uuid: string,
     res: Response
   ): Promise<void> {
-    logger(`[ZUID] Fetching user ${uuid}`);
-    const user = await this.semaphoreService.getUserByUUID(uuid);
-    if (!user) res.status(404);
-    res.json(user || null);
+    logger(`[PCDPASS] Fetching user ${uuid}`);
+
+    const user = (await this.semaphoreService.getUserByUUID(
+      uuid
+    )) as LoggedinPCDpassUser;
+
+    if (!user) {
+      throw new PCDHTTPError(404, `no user with uuid '${uuid}'`);
+    }
+
+    res.status(200).json(user satisfies PCDpassUserJson);
   }
 
   public async handleNewDeviceLogin(
@@ -323,54 +337,42 @@ export class UserService {
     commitment: string,
     res: Response
   ): Promise<void> {
-    try {
-      const ticket = await fetchDevconnectDeviceLoginTicket(
-        this.context.dbPool,
-        email,
-        secret
+    const ticket = await fetchDevconnectDeviceLoginTicket(
+      this.context.dbPool,
+      email,
+      secret
+    );
+
+    if (!ticket) {
+      throw new PCDHTTPError(
+        403,
+        `Secret key is not valid, or no such device login exists.`
       );
-
-      if (!ticket) {
-        const err = `Secret key is not valid, or no such device login exists.`;
-        logger(err);
-        this.rollbarService?.reportError(err);
-        res.status(500).send(err);
-        return;
-      }
-
-      logger(`[ZUID] Saving new commitment: ${commitment}`);
-      await insertCommitment(this.context.dbPool, { email, commitment });
-
-      // Reload Merkle trees
-      await this.semaphoreService.reload();
-
-      // Return user, including UUID, back to Passport
-      const commitmentRow = await fetchCommitment(this.context.dbPool, email);
-
-      if (!commitmentRow) {
-        throw new Error("no user with that email exists");
-      }
-
-      const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-        this.context.dbPool,
-        commitmentRow.email
-      );
-
-      const pcdpassUser: LoggedinPCDpassUser = {
-        ...commitmentRow,
-        superuserEventConfigIds: superuserPrivilages.map(
-          (s) => s.pretix_events_config_id
-        )
-      };
-
-      const jsonP = JSON.stringify(pcdpassUser);
-      logger(`[ZUID] logged in a device login user: ${jsonP}`);
-      res.json(pcdpassUser);
-    } catch (e) {
-      logger(e);
-      this.rollbarService?.reportError(e);
-      res.sendStatus(500);
     }
+
+    logger(`[PCDPASS] Saving new commitment: ${commitment}`);
+    await insertCommitment(this.context.dbPool, { email, commitment });
+    await this.semaphoreService.reload();
+
+    const commitmentRow = await fetchCommitment(this.context.dbPool, email);
+    if (!commitmentRow) {
+      throw new PCDHTTPError(403, `no user with email '${email}' exists`);
+    }
+
+    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
+      this.context.dbPool,
+      commitmentRow.email
+    );
+
+    const pcdpassUser: LoggedinPCDpassUser = {
+      ...commitmentRow,
+      superuserEventConfigIds: superuserPrivilages.map(
+        (s) => s.pretix_events_config_id
+      )
+    };
+
+    logger(`[PCDPASS] logged in a device login user`, pcdpassUser);
+    res.status(200).json(pcdpassUser satisfies PCDpassUserJson);
   }
 }
 
@@ -378,15 +380,12 @@ export function startUserService(
   context: ApplicationContext,
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
-  emailService: EmailService,
-  rollbarService: RollbarService | null
+  emailService: EmailService
 ): UserService {
-  const userService = new UserService(
+  return new UserService(
     context,
     semaphoreService,
     emailTokenService,
-    emailService,
-    rollbarService
+    emailService
   );
-  return userService;
 }

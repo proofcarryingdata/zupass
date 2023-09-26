@@ -9,12 +9,12 @@ export interface User {
   email: string;
 
   /** PCDpass-specific user metadata */
-  superuserEventConfigIds?: number[];
+  superuserEventConfigIds?: string[];
 
   /** Zuzalu-specific user metadata */
   name?: string;
   role?: ZuzaluUserRole | undefined;
-  visitor_date_ranges?: DateRange[];
+  visitor_date_ranges?: DateRange[] | null;
 }
 
 export interface DateRange {
@@ -27,7 +27,7 @@ export interface FullDateRange {
   date_to: string;
 }
 
-export enum ZuzaluUserRole {
+export const enum ZuzaluUserRole {
   Visitor = "visitor",
   Resident = "resident",
   Organizer = "organizer"

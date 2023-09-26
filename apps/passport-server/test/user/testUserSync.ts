@@ -4,56 +4,50 @@ import {
   PCDCrypto
 } from "@pcd/passport-crypto";
 import {
-  LoadE2EERequest,
-  LoadE2EEResponse,
-  SaveE2EERequest
+  requestEncryptedStorage,
+  requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "chai-spies";
 import "mocha";
-import httpMocks from "node-mocks-http";
 import { PCDpass } from "../../src/types";
 
 export async function testUserSync(application: PCDpass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
-  const syncKey = await crypto.generateRandomKey();
-
-  const { e2eeService } = application.services;
-
-  const loadRequest: LoadE2EERequest = {
-    blobKey: syncKey
-  };
-
-  const firstLoadResponse = httpMocks.createResponse();
-  await e2eeService.handleLoad(loadRequest, firstLoadResponse);
-  expect(firstLoadResponse.statusCode).to.eq(404);
+  const encryptionKey = await crypto.generateRandomKey();
 
   const plaintextData = {
     test: "test",
     one: 1
   };
+
   const encryptedData = await passportEncrypt(
     JSON.stringify(plaintextData),
-    syncKey
+    encryptionKey
   );
 
-  const saveRequest: SaveE2EERequest = {
-    blobKey: syncKey,
-    encryptedBlob: JSON.stringify(encryptedData)
-  };
+  const uploadResult = await requestUploadEncryptedStorage(
+    application.expressContext.localEndpoint,
+    encryptionKey,
+    encryptedData
+  );
 
-  const saveResponse = httpMocks.createResponse();
-  await e2eeService.handleSave(saveRequest, saveResponse);
-  expect(saveResponse.statusCode).to.eq(200);
+  expect(uploadResult.error).to.eq(undefined);
+  expect(uploadResult.success).to.eq(true);
 
-  const secondLoadResponse = httpMocks.createResponse();
-  await e2eeService.handleLoad(loadRequest, secondLoadResponse);
-  const loadResponseJson =
-    secondLoadResponse._getJSONData() as LoadE2EEResponse;
-  expect(loadResponseJson).to.haveOwnProperty("encryptedStorage");
+  const secondLoadResult = await requestEncryptedStorage(
+    application.expressContext.localEndpoint,
+    encryptionKey
+  );
+
+  if (secondLoadResult.value == null) {
+    throw new Error("expected to be able to load e2ee");
+  }
+
   const decrypted: string = await passportDecrypt(
-    loadResponseJson.encryptedStorage,
-    syncKey
+    secondLoadResult.value,
+    encryptionKey
   );
+
   expect(JSON.parse(decrypted)).to.deep.eq(plaintextData);
 }

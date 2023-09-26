@@ -2,9 +2,9 @@ import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/pretixAPI";
+import { getZuzaluPretixAPI, ZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
-import { startServer } from "./routing/server";
+import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { APIs, ApplicationContext, PCDpass } from "./types";
 import { logger } from "./util/logger";
@@ -43,7 +43,7 @@ export async function startApplication(
 
   const apis = await getOverridenApis(context, apiOverrides);
   const services = await startServices(context, apis);
-  const expressServer = await startServer(context, services);
+  const expressServer = await startHttpServer(context, services);
 
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(
@@ -65,8 +65,8 @@ export async function startApplication(
 export async function stopApplication(app?: PCDpass): Promise<void> {
   if (!app) return;
   await stopServices(app.services);
+  await stopHttpServer(app);
   await app.context.dbPool.end();
-  app.expressContext.server.close();
 }
 
 async function getOverridenApis(
