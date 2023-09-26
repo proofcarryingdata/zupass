@@ -14,13 +14,13 @@ import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 import { Pool } from "postgres-pool";
-import { fetchPretixEvents } from "../database/queries/pretix_config/fetchPretixConfiguration";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
-  fetchTelegramEventByEventId,
-  fetchTelegramEventsByChatId
+  LinkedPretixTelegramEvent,
+  fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramEventByEventId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
@@ -37,6 +37,10 @@ const ALLOWED_EVENT_IDS = [
   {
     eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
     name: "ProgCrypto (Internal Test)"
+  },
+  {
+    eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
+    name: "AW (Internal Test)"
   }
 ];
 
@@ -50,12 +54,7 @@ export class TelegramService {
   private bot: Bot;
   private rollbarService: RollbarService | null;
   private proofUrl: string;
-  private events: {
-    isLinked: boolean;
-    telegramChatID: string | null;
-    event_name: string;
-    configEventID: string;
-  }[];
+  private events: LinkedPretixTelegramEvent[];
   private deleteEvents: boolean;
 
   public constructor(
@@ -89,8 +88,8 @@ export class TelegramService {
         range
           .text(
             {
-              text: `${event.event_name} (Linked ${
-                event.isLinked ? `✅` : `❌`
+              text: `${event.eventName} (Linked ${
+                event.telegramChatID ? `✅` : `❌`
               })`,
               payload: event.configEventID
             },
@@ -102,7 +101,7 @@ export class TelegramService {
                 if (this.deleteEvents) {
                   if (event?.telegramChatID !== ctx.chat.id.toString()) {
                     ctx.reply(
-                      `Chat is not linked with event ${event.event_name}`
+                      `Chat is not linked with event ${event.eventName}`
                     );
                   } else {
                     await deleteTelegramEvent(
@@ -111,13 +110,13 @@ export class TelegramService {
                     );
                     updatedOccured = true;
                     ctx.reply(
-                      `Unlinked ${event.event_name} with chat ${ctx.chat.id}`
+                      `Unlinked ${event.eventName} with chat ${ctx.chat.id}`
                     );
                   }
                 } else {
                   if (event?.telegramChatID === ctx.chat.id.toString()) {
                     ctx.reply(
-                      `Chat is already linked with event ${event.event_name}`
+                      `Chat is already linked with event ${event.eventName}`
                     );
                   } else {
                     await insertTelegramEvent(
@@ -127,12 +126,12 @@ export class TelegramService {
                     );
                     updatedOccured = true;
                     ctx.reply(
-                      `Linked ${event.event_name} with chat ${ctx.chat.id}`
+                      `Linked ${event.eventName} with chat ${ctx.chat.id}`
                     );
                   }
                 }
                 if (updatedOccured) {
-                  await this.loadCleanEvents(ctx.chat.id, context.dbPool);
+                  await this.loadEvents(context.dbPool);
                   ctx.menu.update();
                 }
               } else {
@@ -331,7 +330,7 @@ export class TelegramService {
           `Checking linked status of this chat... (id: ${channelId})`
         );
 
-        await this.loadCleanEvents(channelId, this.context.dbPool);
+        await this.loadEvents(this.context.dbPool);
         await ctx.reply("Link options", {
           reply_markup: eventsMenu
         });
@@ -362,8 +361,7 @@ export class TelegramService {
           return;
         }
 
-        const channelId = ctx.chat.id;
-        await this.loadCleanEvents(channelId, this.context.dbPool);
+        await this.loadEvents(this.context.dbPool);
         this.deleteEvents = true;
         await ctx.reply("Unlink options", {
           reply_markup: eventsMenu
@@ -375,25 +373,9 @@ export class TelegramService {
     });
   }
 
-  private async loadCleanEvents(channelId: number, db: Pool): Promise<void> {
-    const linkedEvents = await fetchTelegramEventsByChatId(
-      this.context.dbPool,
-      channelId
-    );
-
-    const telegramEvents = await fetchPretixEvents(db);
-
-    const cleanEvents = telegramEvents.map((e) => {
-      const isLinked = linkedEvents.find(
-        (l) => l.ticket_event_id === e.configEventID
-      );
-      return {
-        ...e,
-        isLinked: !!isLinked,
-        telegramChatID: isLinked ? isLinked.telegram_chat_id.toString() : null
-      };
-    });
-    this.events = cleanEvents;
+  private async loadEvents(db: Pool): Promise<void> {
+    const events = await fetchLinkedPretixAndTelegramEvents(db);
+    this.events = events;
   }
 
   /**

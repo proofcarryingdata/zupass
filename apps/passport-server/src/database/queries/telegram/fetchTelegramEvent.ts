@@ -36,3 +36,27 @@ export async function fetchTelegramEventsByChatId(
 
   return result.rows;
 }
+
+export interface LinkedPretixTelegramEvent {
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
+}
+export async function fetchLinkedPretixAndTelegramEvents(
+  client: Pool
+): Promise<LinkedPretixTelegramEvent[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT
+      tbe.telegram_chat_id AS "telegramChatID",
+      dpe.event_name AS "eventName",
+      dpe.pretix_events_config_id AS "configEventID" 
+    FROM pretix_events_config peo
+    LEFT JOIN devconnect_pretix_events_info dpe ON peo.id = dpe.pretix_events_config_id
+    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+    `
+  );
+
+  return result.rows;
+}
