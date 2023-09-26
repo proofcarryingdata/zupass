@@ -26,6 +26,7 @@ import {
   insertTelegramEvent,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
+import { insertTelegramNullifier } from "../database/queries/telegram/insertTelegramNullifier";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { isLocalServer, sleep } from "../util/util";
@@ -709,7 +710,7 @@ export class TelegramService {
 
     const {
       watermark,
-      partialTicket: { eventId }
+      partialTicket: { eventId, attendeeSemaphoreId }
     } = pcd.claim;
 
     if (!eventId) {
@@ -719,6 +720,14 @@ export class TelegramService {
     if (!watermark) {
       throw new Error("Anonymous message PCD did not contain watermark");
     }
+
+    if (!attendeeSemaphoreId) {
+      throw new Error(
+        "Anonymous message PCD did not contain attendeeSemaphoreId"
+      );
+    }
+
+    // check rate limit
 
     function getMessageWatermark(message: string): bigint {
       const hashed = sha256.sha256(message).substring(0, 16);
@@ -758,6 +767,19 @@ export class TelegramService {
       throw new Error(
         `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
       );
+    }
+
+    const canPost = await insertTelegramNullifier(
+      this.context.dbPool,
+      attendeeSemaphoreId,
+      eventId,
+      chat.id,
+      3 // TODO: don't hardcode this
+    );
+
+    // TODO: better ux
+    if (!canPost) {
+      throw new Error(`You have exceeded the daily limit of 3 messages.`);
     }
 
     await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, message);
