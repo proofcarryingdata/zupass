@@ -87,7 +87,7 @@ export class E2EEService {
     if (!oldRow) {
       res
         .status(401)
-        .json({ error: { name: "PasswordInvalid" }, success: false });
+        .json({ error: { name: "PasswordIncorrect" }, success: false });
       return;
     }
 
