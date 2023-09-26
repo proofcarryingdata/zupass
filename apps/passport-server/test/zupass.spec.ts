@@ -82,11 +82,11 @@ describe("zupass functionality", function () {
     application.services.zuzaluPretixSyncService?.stop();
   });
 
-  step("should NOT have issuance service running", async function () {
+  step("should have issuance service running", async function () {
     const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
       application.expressContext.localEndpoint
     );
-    expect(issuanceServiceEnabledResult.value).to.eq(false);
+    expect(issuanceServiceEnabledResult.value).to.eq(true);
     expect(issuanceServiceEnabledResult.error).to.eq(undefined);
     expect(issuanceServiceEnabledResult.success).to.eq(true);
   });
