@@ -3,10 +3,7 @@ import styled from "styled-components";
 import { EdDSAPCD } from "./EdDSAPCD";
 
 /**
- * Define the interface to send an {@link EdDSAPCD} claim through the passport.
- * 
- * @function EdDSACardBody
- * @returns
+ * The interface to send an {@link EdDSAPCD} claim through the passport.
  */
 export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (

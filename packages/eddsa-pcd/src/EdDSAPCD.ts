@@ -1,5 +1,5 @@
 /**
- * @file This file contains all the methods needed to manage an EdDSA PCD.
+ * @file This file contains the class and methods needed to work with an EdDSA PCD.
  */
 
 import {
@@ -11,31 +11,20 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, toHexString } from "@pcd/util";
-import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
+import { Eddsa, Point, Poseidon, buildEddsa, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
 /**
  * The representation of an EdDSA public key as a pair of points (hexadecimal strings)
  * on the elliptic curve.
- * 
- * @typedef {[string, string]} EDdSAPublicKey
  */
 export type EDdSAPublicKey = [string, string];
 
-/**
- * The globally-unique representation of the specific type of the PCD.
- * 
- * @constant
- */
+/** The globally-unique representation of the specific type of the PCD. */
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
-/**
- * This interface defines the arguments required to initialize a PCD.
- * 
- * @summary The arguments to initialize a PCD.
- * @interface
- */
+/** This interface defines the arguments required to initialize a PCD. */
 export interface EdDSAInitArgs {}
 
 /**
@@ -44,97 +33,74 @@ export interface EdDSAInitArgs {}
  * an array of messages using the correspondent private key.
  * 
  * @summary The arguments for an EdDSA PCD.
- * @interface
  */
 export interface EdDSAPCDArgs {
   /**
    * Any 32-bytes EdDSA private key (32-bytes hexadecimal string) for signing the message.
    * Use {@link newEdDSAPrivateKey} to generate a new one securely.
-   * 
-   * @type {StringArgument}
    */
   privateKey: StringArgument;
   
   /**
    * An array of contents to be signed with the private key. 
    * The message is represented as a string version of a set of BigInts signing object.
-   * 
-   * @type {StringArrayArgument}
    */
   message: StringArrayArgument;
  
   /**
    * The unique identifier of the PCD.
-   * 
-   * @type {StringArgument}
    */
   id: StringArgument;
 }
 
 /**
- * This interface defines the arguments to make an EdDSA PCD claim.
- * The claim contains a message signed with the private key corresponding to the given public key.
+ * This interface defines the EdDSA PCD claim. The claim contains a message signed 
+ * with the private key corresponding to the given public key.
  * 
- * @summary The arguments for an EdDSA PCD claim.
- * @interface
+ * @summary The EdDSA PCD claim.
  */
 export interface EdDSAPCDClaim {
   /**
    * An EdDSA public key corresponding to the EdDSA private key used 
    * for signing the message.
-   *
-   * @type {EDdSAPublicKey}
    */
   publicKey: EDdSAPublicKey;
   
-  /**
-   * An array of contents signed with the private key.
-   * 
-   * @type {Array<bigint>}
-   */
+  /** An array of signed contents (BigInts) with the corresponding private key. */
   message: Array<bigint>;
 }
 
 /**
- * This interface defines the arguments to make an EdDSA PCD proof.
- * The proof is the signature which proves that the private key corresponding to the
- * public key in the claim, has been successfully used to sign the message.
+ * This interface defines the EdDSA PCD proof. The proof is the signature which proves 
+ * that the private key corresponding to the public key in the claim, has been successfully 
+ * used to sign the message.
  * 
- * @summary The arguments for an EdDSA PCD proof.
- * @interface
+ * @summary The EdDSA PCD proof.
  */
 export interface EdDSAPCDProof {
   /**
-   * The EdDSA signature of the message.
-   * 
-   * @type {string}
+   * The EdDSA signature of the message as hexadecimal string.
    */
   signature: string;
 }
 
 /**
- * Create a new EdDSA PCD from an EdDSA PCD claim and proof.
+ * Create a new EdDSA PCD from an {@link EdDSAPCDClaim} and {@link EdDSAPCDProof}.
  * 
- * @class 
- * @classdesc This class represents an EdDSA PCD.
+ * @classdesc This class can be instantiated to create an EdDSA PCD.
  * @implements {PCD<EdDSAPCDClaim, EdDSAPCDProof>}
  */
 export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
-  /** @public */
-  type = EdDSAPCDTypeName;
+  public type = EdDSAPCDTypeName;
 
-  /** @public */
-  id: string;
-  /** @public */
-  claim: EdDSAPCDClaim;
-  /** @public */
-  proof: EdDSAPCDProof;
+  public id: string;
+  public claim: EdDSAPCDClaim;
+  public proof: EdDSAPCDProof;
 
   /**
-   * @public
-   * @param {string} id - the unique identifier of the PCD.
-   * @param {EdDSAPCDClaim} claim - the object containing the EdDSA PCD claim.
-   * @param {EdDSAPCDProof} proof - the object containing the EdDSA PCD proof.
+   * @param id - the unique identifier of the PCD.
+   * @param claim - the object containing the EdDSA PCD claim.
+   * @param proof - the object containing the EdDSA PCD proof.
    */
   public constructor(id: string, claim: EdDSAPCDClaim, proof: EdDSAPCDProof) {
     this.id = id;
@@ -156,29 +122,8 @@ let eddsa: Eddsa;
 let poseidon: Poseidon;
 
 /**
- * Convert an hexadecimal string to an array Buffer.
- * 
- * @function fromHexString
- * @param {string} hexString - the hexadecimal string to be converted. 
- * @returns {Buffer} the Buffer representation of the hexadecimal string. 
- */
-const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
-
-/**
- * Convert an array Buffer to an hexadecimal string.
- * 
- * @function toHexString
- * @param {string} bytes - the array Buffer to be converted. 
- * @returns {string} the hexadecimal string representation of the array Buffer. 
- */
-const toHexString = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
-
-/**
- * Initialize the {@link Eddsa} and {@link Poseidon} classes from external library
- * if and only if they have not been initialized.
- * 
- * @async
- * @function ensureInitialized
+ * Initialize the {@link Eddsa} and {@link Poseidon} classes from the external 
+ * library only if they have not already been initialized.
  */
 async function ensureInitialized() {
   if (!initializedPromise) {
@@ -193,12 +138,10 @@ async function ensureInitialized() {
 
 /**
  * Make a new {@link EdDSAPCD} by generating a {@link EdDSAPCDProof} 
- * and deriving a {@link EdDSAPCDClaim} from the given input arguments.
+ * and deriving a {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
  * 
- * @async
- * @function prove
- * @param {EdDSAPCDArgs} args - the set of arguments to make a new {@link EdDSAPCD}.
- * @returns {Promise<EdDSAPCD>} the {@link EdDSAPCD}.
+ * @param args - the set of arguments to make a new {@link EdDSAPCD}.
+ * @returns the {@link EdDSAPCD}.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   /** init & input sanity check */
@@ -241,12 +184,10 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 }
 
 /**
- * Verify if a given {@link EdDSAPCDClaim} corresponds 
- * to a given {@link EdDSAPCDProof}.
+ * Verify if a given {@link EdDSAPCDClaim} corresponds to a given {@link EdDSAPCDProof}.
  * 
- * @param {EdDSAPCD} pcd - the {@link EdDSAPCD} to be verified.
- * @returns {boolean} true if the {@link EdDSAPCDClaim} corresponds 
- * to the {@link EdDSAPCDProof}; otherwise false.
+ * @param pcd - the {@link EdDSAPCD} to be verified.
+ * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}; otherwise false.
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   /** init */
@@ -266,12 +207,11 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 }
 
 /**
- * Replace a {@link EdDSAPCDArgs} argument content converting in strings the bigint values.
+ * Replace the content of an {@link EdDSAPCDArgs} converting strings to BigInt values.
  *
- * @function replacer
- * @param {any} key - indicate the PCD arg to convert.
- * @param {any} value - indicate the value of the PCD arg to convert.
- * @returns {any} return the converted value as strings.
+ * @param key - indicate the PCD argument name to convert.
+ * @param value - indicate the PCD argument value to convert.
+ * @returns the converted value as strings.
  */
 function replacer(key: any, value: any): any {
   if (key === "message") {
@@ -282,12 +222,11 @@ function replacer(key: any, value: any): any {
 }
 
 /**
- * Replace a {@link EdDSAPCDArgs} argument content converting in bigints the string values.
+ * Replace the content of an {@link EdDSAPCDArgs} converting BigInt values to strings.
  * 
- * @function reviver
- * @param {any} key - indicate the PCD arg to convert.
- * @param {any} value - indicate the value of the PCD arg to convert.
- * @returns {any} return the converted values as bigints.
+ * @param key - indicate the PCD argument name to convert.
+ * @param value - indicate the PCD argument value to convert.
+ * @returns the converted value as BigInt values.
  */
 function reviver(key: any, value: any): any {
   if (key === "message") {
@@ -299,12 +238,9 @@ function reviver(key: any, value: any): any {
 
 /**
  * Serialize an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
- * This function use the {@link replacer} method under-the-hood.
  * 
- * @async
- * @function serialize
- * @param {EdDSAPCD} pcd - the EdDSA PCD to be serialized. 
- * @returns {Promise<SerializedPCD<EdDSAPCD>>} the serialized version of the EdDSA PCD.
+ * @param pcd - the EdDSA PCD to be serialized. 
+ * @returns the serialized version of the EdDSA PCD.
  */
 export async function serialize(
   pcd: EdDSAPCD
@@ -317,12 +253,9 @@ export async function serialize(
 
 /**
  * Deserialize a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
- * This function use the {@link reviver} method under-the-hood.
  * 
- * @async
- * @function deserialize
- * @param {string} serialized - the serialized PCD to deserialize. 
- * @returns {Promise<EdDSAPCD>} the deserialized version of the EdDSA PCD.
+ * @param serialized - the serialized PCD to deserialize. 
+ * @returns the deserialized version of the EdDSA PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
   return JSON.parse(serialized, reviver);
@@ -330,11 +263,10 @@ export async function deserialize(serialized: string): Promise<EdDSAPCD> {
 
 /**
  * Return the information on how the {@link EdDSAPCD} should be displayed 
- * to the user within the PCD Passport.
+ * to the user within the PCD passport.
  * 
- * @function getDisplayOptions
- * @param {EdDSAPCD} pcd - the EdDSA PCD from which to show the information. 
- * @returns {DisplayOptions} the information to display for an {@link EdDSAPCD}.
+ * @param pcd - the EdDSA PCD from which to show the information. 
+ * @returns the information to display for an {@link EdDSAPCD}.
  */
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
   return {
@@ -346,8 +278,6 @@ export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
 /** 
  * A PCD-conforming wrapper to sign (and prove) messages (signed) 
  * using an EdDSA key(pair).
- * 
- * @constant
  */
 export const EdDSAPCDPackage: PCDPackage<
   EdDSAPCDClaim,
@@ -364,7 +294,13 @@ export const EdDSAPCDPackage: PCDPackage<
   deserialize
 };
 
-/** @ignore */
+/**
+ * Return an {@link EDdSAPublicKey} extracted from the given 32-bytes 
+ * EdDSA private key as hexadecimal string.
+ * 
+ * @param privateKey - the 32-bytes EdDSA private key as hexadecimal string.
+ * @returns the extracted {@link EDdSAPublicKey} from the given private key.
+ */
 export async function getEdDSAPublicKey(
   privateKey: string
 ): Promise<EDdSAPublicKey> {
