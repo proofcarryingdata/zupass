@@ -1,4 +1,13 @@
-import { User, ZuzaluUserRole } from "@pcd/passport-interface";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import {
+  ISSUANCE_STRING,
+  PCDPassFeedIds,
+  pollFeed,
+  User,
+  ZuzaluUserRole
+} from "@pcd/passport-interface";
+import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -54,8 +63,11 @@ describe("zupass functionality", function () {
   let server: SetupServer;
 
   let residentUser: User | undefined;
+  let residentIdentity: Identity | undefined;
   let visitorUser: User | undefined;
+  let visitorIdentity: Identity | undefined;
   let organizerUser: User | undefined;
+  let organizerIdentity: Identity | undefined;
   let updatedToOrganizerUser: LoggedInZuzaluUser;
 
   let organizerConfigId: string;
@@ -186,13 +198,60 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await testLoginZupass(application, resident.email, {
+      const result = await testLoginZupass(application, resident.email, {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
+      residentUser = result?.user;
+      residentIdentity = result?.identity;
+
       expect(emailAPI.send).to.have.been.called.exactly(1);
+    }
+  );
+
+  step(
+    "after logging in, user should be able to be issued some PCDs from the server",
+    async function () {
+      if (!residentIdentity) {
+        throw new Error("expected to have a resident identity");
+      }
+
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
+        residentIdentity,
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Zuzalu_1
+      );
+
+      if (response.error) {
+        throw new Error("expected to be able to get a feed response");
+      }
+
+      console.log(JSON.stringify(response.value, null, 2));
+      expect(response.value?.actions?.length).to.eq(2);
+
+      const action = response.value?.actions?.[1] as ReplaceInFolderAction;
+
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.folder).to.eq("Zuzalu");
+
+      expect(Array.isArray(action.pcds)).to.eq(true);
+      expect(action.pcds.length).to.eq(1);
+
+      const ticketPCD = action.pcds[0];
+
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+
+      const deserializedTicketPCD = await EdDSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
+      );
+
+      const verified = await EdDSATicketPCDPackage.verify(
+        deserializedTicketPCD
+      );
+      expect(verified).to.eq(true);
     }
   );
 
@@ -263,20 +322,29 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await testLoginZupass(application, visitor.email, {
+      const visitorResult = await testLoginZupass(application, visitor.email, {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
+      visitorUser = visitorResult?.user;
+      visitorIdentity = visitorResult?.identity;
+
       expect(emailAPI.send).to.have.been.called.exactly(2);
 
-      organizerUser = await testLoginZupass(application, organizer.email, {
-        force: false,
-        expectAlreadyRegistered: false,
-        expectDoesntHaveTicket: false,
-        expectEmailInvalid: false
-      });
+      const organizerResult = await testLoginZupass(
+        application,
+        organizer.email,
+        {
+          force: false,
+          expectAlreadyRegistered: false,
+          expectDoesntHaveTicket: false,
+          expectEmailInvalid: false
+        }
+      );
+      organizerUser = organizerResult?.user;
+      organizerIdentity = organizerResult?.identity;
       expect(emailAPI.send).to.have.been.called.exactly(3);
     }
   );
@@ -333,12 +401,18 @@ describe("zupass functionality", function () {
         })
       ).to.eq(undefined);
 
-      residentUser = await testLoginZupass(application, resident.email, {
-        force: true,
-        expectAlreadyRegistered: true,
-        expectDoesntHaveTicket: false,
-        expectEmailInvalid: false
-      });
+      const residentResult = await testLoginZupass(
+        application,
+        resident.email,
+        {
+          force: true,
+          expectAlreadyRegistered: true,
+          expectDoesntHaveTicket: false,
+          expectEmailInvalid: false
+        }
+      );
+      residentUser = residentResult?.user;
+      residentIdentity = residentResult?.identity;
 
       if (!residentUser || !visitorUser || !organizerUser) {
         throw new Error("expected user");

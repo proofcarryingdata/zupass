@@ -23,7 +23,7 @@ export async function testLoginZupass(
     expectDoesntHaveTicket: boolean;
     expectEmailInvalid: boolean;
   }
-): Promise<User | undefined> {
+): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const commitment = identity.commitment.toString();
@@ -108,5 +108,5 @@ export async function testLoginZupass(
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
   expect(getUserResponse.success).to.eq(true);
 
-  return toZupassUser(newUserResult.value);
+  return { identity, user: toZupassUser(newUserResult.value) };
 }
