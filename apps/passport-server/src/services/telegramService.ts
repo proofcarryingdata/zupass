@@ -1,8 +1,4 @@
-import { Bot, InlineKeyboard } from "grammy";
-import { Chat, ChatFromGetChat } from "grammy/types";
-import sha256 from "js-sha256";
-
-import { Menu } from "@grammyjs/menu";
+import { Menu, MenuRange } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
@@ -14,6 +10,9 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { Bot, InlineKeyboard } from "grammy";
+import { Chat, ChatFromGetChat } from "grammy/types";
+import sha256 from "js-sha256";
 import { fetchPretixEvents } from "../database/queries/pretix_config/fetchPretixConfiguration";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
@@ -45,6 +44,8 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
+  private proofUrl: string;
+  private telegramEvents: { event_name: string; configEventD: string }[] | null;
 
   public constructor(
     context: ApplicationContext,
@@ -55,6 +56,9 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
 
+    this.proofUrl = "";
+    this.telegramEvents = [];
+
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
     );
@@ -64,7 +68,29 @@ export class TelegramService {
     );
 
     const menu = new Menu("pcdpass-menu");
-    this.bot.use(menu);
+    const eventsMenu = new Menu("dynamic");
+    this.bot.use(menu.text(`Hi`, (ctx) => ctx.reply(`Hi`)));
+    this.bot.use(eventsMenu);
+
+    // menu.dynamic(() => {
+    //   const range = new MenuRange();
+    //   range.webApp("Generate ZKP 🚀", this.proofUrl);
+    //   return range;
+    // });
+    eventsMenu.dynamic(() => {
+      const range = new MenuRange();
+      // if (!this.telegramEvents)
+      range.text(`No events found`, (ctx) =>
+        ctx.reply(`You clicked no events found`)
+      );
+      // for (const event of this.telegramEvents || []) {
+      //   range.text(event.event_name, (ctx) => {
+      //     ctx.reply(`You chose ${event.event_name}`);
+      //     logger(`[TELEGRAM] CLICK ${event.event_name}`);
+      //   });
+      // }
+      return range;
+    });
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -187,7 +213,7 @@ export class TelegramService {
           }
           const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`;
 
-          const proofUrl = constructPassportPcdGetRequestUrl<
+          this.proofUrl = constructPassportPcdGetRequestUrl<
             typeof ZKEdDSAEventTicketPCDPackage
           >(
             passportOrigin,
@@ -201,8 +227,6 @@ export class TelegramService {
                 "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
             }
           );
-
-          menu.webApp("Generate ZKP 🚀", proofUrl);
 
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
@@ -253,10 +277,6 @@ export class TelegramService {
       );
       const isLinked = linkedEvents.length > 0;
 
-      const telegramEvents = await fetchPretixEvents(this.context.dbPool);
-      if (!telegramEvents) throw new Error(`No events to link with`);
-      logger(`[TELEGRAM] events`, telegramEvents);
-
       if (isLinked) {
         const cleanEvents = linkedEvents.map((e) => e.ticket_event_id).join();
         await ctx.reply(
@@ -267,8 +287,11 @@ export class TelegramService {
           `This chat is not linked to any events. Choose from the following options:`
         );
         // TODO: Menu
-        const cleanEvents = telegramEvents.map((e) => e.event_name).join();
-        await ctx.reply(cleanEvents);
+        this.telegramEvents = await fetchPretixEvents(this.context.dbPool);
+
+        await ctx.reply("Choose from the following options", {
+          reply_markup: eventsMenu
+        });
       }
 
       await ctx.reply("Your telegram chat id is " + ctx.chat.id);
