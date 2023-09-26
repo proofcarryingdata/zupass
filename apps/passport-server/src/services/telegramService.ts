@@ -13,6 +13,7 @@ import {
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
+import { Pool } from "postgres-pool";
 import { fetchPretixEvents } from "../database/queries/pretix_config/fetchPretixConfiguration";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
@@ -48,6 +49,12 @@ export class TelegramService {
   private bot: Bot;
   private rollbarService: RollbarService | null;
   private proofUrl: string;
+  private events: {
+    isLinked: boolean;
+    telegramChatID: string | null;
+    event_name: string;
+    configEventID: string;
+  }[];
 
   public constructor(
     context: ApplicationContext,
@@ -58,6 +65,7 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.proofUrl = "";
+    this.events = [];
 
     this.bot.api.setMyDescription(
       "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
@@ -71,22 +79,44 @@ export class TelegramService {
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // This callback function is inline due to the context.dbPool not being defined when putting this logic in a member function
     eventsMenu.dynamic(async () => {
-      const telegramEvents = await fetchPretixEvents(context.dbPool);
+      logger(`[TELEGRAM] calling dynamic events menu...`);
+
       const range = new MenuRange();
-      for (const event of telegramEvents) {
-        range.text(
-          { text: event.event_name, payload: event.configEventID },
-          async (ctx) => {
-            if (ctx.chat && ctx.chat.id) {
-              await insertTelegramEvent(context.dbPool, ctx.match, ctx.chat.id);
-              ctx.reply(
-                `Linked ${event.event_name} with config ${ctx.match} and chat ${ctx.chat.id}`
-              );
-            } else {
-              ctx.reply(`Couldn't link chat with event`);
+      for (const event of this.events) {
+        range
+          .text(
+            {
+              text: `${event.event_name} (Linked ${
+                event.isLinked ? `✅` : `❌`
+              })`,
+              payload: event.configEventID
+            },
+            async (ctx) => {
+              if (ctx.chat && ctx.chat.id) {
+                logger(`[TELEGRAM]`, event, ctx.chat.id);
+                if (event?.telegramChatID === ctx.chat.id.toString()) {
+                  ctx.reply(
+                    `Chat is already linked with event ${event.event_name}`
+                  );
+                } else {
+                  await insertTelegramEvent(
+                    context.dbPool,
+                    ctx.match,
+                    ctx.chat.id
+                  );
+                  ctx.reply(
+                    `Linked ${event.event_name} with config ${ctx.match} and chat ${ctx.chat.id}`
+                  );
+                  await this.loadCleanEvents(ctx.chat.id, context.dbPool);
+                  ctx.reply(`Refreshing db...`);
+                  ctx.menu.update();
+                }
+              } else {
+                ctx.reply(`Couldn't link chat with event`);
+              }
             }
-          }
-        );
+          )
+          .row();
       }
       return range;
     });
@@ -272,39 +302,40 @@ export class TelegramService {
         }
 
         const channelId = ctx.chat.id;
-        await ctx.reply(`Checking linked status of this chat...`);
+        await ctx.reply(
+          `Checking linked status of this chat... (id: ${channelId})`
+        );
 
-        // TODO: Make this one query
-        const linkedEvents = (
-          await fetchTelegramEventsByChatId(this.context.dbPool, channelId)
-        ).map((l) => l.ticket_event_id);
-
-        const telegramEvents = await fetchPretixEvents(this.context.dbPool);
-
-        const isLinked = linkedEvents.length > 0;
-
-        if (isLinked) {
-          const cleanEvents = telegramEvents
-            .filter((e) => linkedEvents.includes(e.configEventID))
-            .map((e) => e.event_name)
-            .join();
-
-          await ctx.reply(
-            `This chat is linked to the following events: ${cleanEvents}`
-          );
-        } else {
-          await ctx.reply(`This chat is not linked to any events.`);
-          logger("[TELEGRAM] events", telegramEvents);
-
-          await ctx.reply("Choose from the following options", {
-            reply_markup: eventsMenu
-          });
-        }
+        await this.loadCleanEvents(channelId, this.context.dbPool);
+        await ctx.reply("Link options", {
+          reply_markup: eventsMenu
+        });
       } catch (error) {
         await ctx.reply(`Error linking. Check server logs for details`);
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
+  }
+
+  private async loadCleanEvents(channelId: number, db: Pool): Promise<void> {
+    const linkedEvents = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      channelId
+    );
+
+    const telegramEvents = await fetchPretixEvents(db);
+
+    const cleanEvents = telegramEvents.map((e) => {
+      const isLinked = linkedEvents.find(
+        (l) => l.ticket_event_id === e.configEventID
+      );
+      return {
+        ...e,
+        isLinked: !!isLinked,
+        telegramChatID: isLinked ? isLinked.telegram_chat_id.toString() : null
+      };
+    });
+    this.events = cleanEvents;
   }
 
   /**
