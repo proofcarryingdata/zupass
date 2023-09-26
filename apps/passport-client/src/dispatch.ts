@@ -236,8 +236,8 @@ async function login(
   update: ZuUpdate
 ) {
   const crypto = await PCDCrypto.newInstance();
-  const newSalt = await crypto.generateSalt();
-  const encryptionKey = await crypto.argon2(password, newSalt, 32);
+  const { salt: newSalt, key: encryptionKey } =
+    await crypto.generateSaltAndArgon2(password);
 
   await saveEncryptionKey(encryptionKey);
 
@@ -366,7 +366,7 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   }
 
   if (hasChangedPassword) {
-    userHasChangedPassword(update);
+    anotherDeviceChangedPassword(update);
     return;
   }
 
@@ -488,10 +488,10 @@ function userInvalid(update: ZuUpdate) {
   });
 }
 
-function userHasChangedPassword(update: ZuUpdate) {
+function anotherDeviceChangedPassword(update: ZuUpdate) {
   saveAnotherDeviceChangedPassword(true);
   update({
-    userHasChangedPassword: true,
+    anotherDeviceChangedPassword: true,
     modal: "another-device-changed-password"
   });
 }

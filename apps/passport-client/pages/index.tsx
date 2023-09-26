@@ -28,12 +28,13 @@ import { appConfig } from "../src/appConfig";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadAnotherDeviceChangedPassword,
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
@@ -196,6 +197,7 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = await loadEncryptionKey();
   const userInvalid = loadUserInvalid();
+  const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
@@ -225,6 +227,7 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     userInvalid: userInvalid,
+    anotherDeviceChangedPassword,
     subscriptions,
     resolvingSubscriptionId: undefined
   };

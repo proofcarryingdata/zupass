@@ -1,4 +1,5 @@
 import { Pool } from "postgres-pool";
+import { logger } from "../../util/logger";
 import { EncryptedStorageModel } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -43,6 +44,7 @@ export async function insertEncryptedStorage(
  * upserts the encrypted data stored at the new blob key,
  * and then updates the user's salt.
  */
+// TODO: Add retry logic for this query
 export async function updateEncryptedStorage(
   dbPool: Pool,
   oldBlobKey: string,
@@ -67,9 +69,13 @@ export async function updateEncryptedStorage(
       newSalt
     ]);
     await txClient.query("COMMIT");
-  } catch (e) {
-    await txClient.query("ROLLBACK");
-    throw e;
+  } catch (queryError) {
+    try {
+      await txClient.query("ROLLBACK");
+    } catch (rollbackError) {
+      logger(`Rollback for updateEncryptedStorage failed: ${rollbackError}`);
+    }
+    throw queryError;
   } finally {
     txClient.release();
   }

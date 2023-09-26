@@ -115,6 +115,8 @@ export type ChangeBlobKeyResponseValue = undefined;
  */
 export type ChangeBlobKeyError = { detailedMessage?: string } & (
   | { name: "PasswordIncorrect" }
+  | { name: "UserNotFound" }
+  | { name: "RequiresNewSalt" }
   | { name: "ServerError" }
 );
 

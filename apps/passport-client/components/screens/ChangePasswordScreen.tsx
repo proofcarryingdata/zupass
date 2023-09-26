@@ -33,6 +33,7 @@ export function ChangePasswordScreen() {
 
   const onChangePassword = useCallback(async () => {
     if (loading) return;
+    setLoading(true);
     try {
       const saltResult = await requestPasswordSalt(
         appConfig.passportServer,
@@ -45,11 +46,10 @@ export function ChangePasswordScreen() {
       const crypto = await PCDCrypto.newInstance();
       const currentEncryptionKey = await crypto.argon2(
         currentPassword,
-        saltResult.value,
-        32
+        saltResult.value
       );
-      const newSalt = await crypto.generateSalt();
-      const newEncryptionKey = await crypto.argon2(newPassword, newSalt, 32);
+      const { salt: newSalt, key: newEncryptionKey } =
+        await crypto.generateSaltAndArgon2(newPassword);
       const res = await updateBlobKeyForEncryptedStorage(
         currentEncryptionKey,
         newEncryptionKey,

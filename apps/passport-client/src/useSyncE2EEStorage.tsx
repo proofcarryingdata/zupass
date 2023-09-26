@@ -28,10 +28,6 @@ export async function updateBlobKeyForEncryptedStorage(
 ): Promise<ChangeBlobKeyResult> {
   const user = loadSelf();
   const pcds = await loadPCDs();
-  if (pcds.size() === 0) {
-    console.error("[SYNC] skipping upload, no pcds in localStorage");
-    return;
-  }
 
   const encryptedStorage = await passportEncrypt(
     JSON.stringify({
@@ -62,11 +58,6 @@ export async function updateBlobKeyForEncryptedStorage(
 export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
-
-  if (pcds.size() === 0) {
-    console.error("[SYNC] skipping upload, no pcds in localStorage");
-    return;
-  }
 
   const encryptionKey = await loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);

@@ -42,7 +42,7 @@ export interface AppState {
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;
   // If set, the user has had their password changed from a different device
-  userHasChangedPassword?: boolean;
+  anotherDeviceChangedPassword?: boolean;
 
   uploadedUploadId?: string;
   uploadingUploadId?: string;

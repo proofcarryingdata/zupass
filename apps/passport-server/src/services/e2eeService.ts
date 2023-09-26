@@ -97,12 +97,27 @@ export class E2EEService {
       request.uuid
     );
     if (!commitment) {
-      throw new Error(`User not found with UUID ${request.uuid}`);
+      res
+        .status(404)
+        .json({
+          error: {
+            name: "UserNotFound",
+            detailedMessage: "User with this uuid was not found",
+            success: false
+          }
+        });
+      return;
     }
 
     const { salt: oldSalt } = commitment;
     if (oldSalt === request.newSalt) {
-      throw new Error("Updated salt must be different than previous salt");
+      res.status(400).json({
+        error: {
+          name: "RequiresNewSalt",
+          detailedMessage: "Updated salt must be different than existing salt",
+          success: false
+        }
+      });
     }
 
     await updateEncryptedStorage(
