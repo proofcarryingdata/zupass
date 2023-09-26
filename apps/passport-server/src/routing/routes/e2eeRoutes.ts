@@ -16,7 +16,7 @@ export function initE2EERoutes(
 
   app.post("/sync/changeBlobKey", async (req: Request, res: Response) => {
     const request = req.body as ChangeBlobKeyRequest;
-    await e2eeService.handleUpdate(request, res);
+    await e2eeService.handleChangeBlobKey(request, res);
   });
 
   /**

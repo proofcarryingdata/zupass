@@ -25,10 +25,8 @@ export async function requestChangeBlobKey(
   return httpPost(
     urlJoin(passportServerUrl, `/sync/changeBlobKey`),
     {
-      onValue: async () =>
-        ({ value: undefined, success: true }) as ChangeBlobKeyResult,
-      onError: async (resText): Promise<ChangeBlobKeyResult> =>
-        JSON.parse(resText) as ChangeBlobKeyResult
+      onValue: async () => ({ value: undefined, success: true }),
+      onError: async (resText) => JSON.parse(resText)
     },
     {
       oldBlobKey,

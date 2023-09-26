@@ -61,7 +61,7 @@ export class E2EEService {
     res.json(undefined satisfies UploadEncryptedStorageResponseValue);
   }
 
-  public async handleUpdate(
+  public async handleChangeBlobKey(
     request: ChangeBlobKeyRequest,
     res: Response
   ): Promise<void> {
@@ -73,7 +73,8 @@ export class E2EEService {
       !request.newBlobKey ||
       !request.oldBlobKey ||
       !request.newSalt ||
-      !request.uuid
+      !request.uuid ||
+      !request.encryptedBlob
     ) {
       throw new Error("Missing request fields");
     }

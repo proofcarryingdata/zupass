@@ -1,12 +1,12 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { saveEncryptionKey } from "../../src/localstorage";
-import { updateStorage, uploadStorage } from "../../src/useSyncE2EEStorage";
+import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { MaybeModal } from "../modals/Modal";
@@ -31,7 +31,7 @@ export function ChangePasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
 
-  const onChangePassword = async () => {
+  const onChangePassword = useCallback(async () => {
     if (loading) return;
     try {
       const saltResult = await requestPasswordSalt(
@@ -50,13 +50,13 @@ export function ChangePasswordScreen() {
       );
       const newSalt = await crypto.generateSalt();
       const newEncryptionKey = await crypto.argon2(newPassword, newSalt, 32);
-      const res = await updateStorage(
+      const res = await updateBlobKeyForEncryptedStorage(
         currentEncryptionKey,
         newEncryptionKey,
         newSalt
       );
       // Meaning password is incorrect, as old row is not found
-      if (!res.success && res.error.name === "PasswordInvalid") {
+      if (!res.success && res.error.name === "PasswordIncorrect") {
         dispatch({
           type: "error",
           error: {
@@ -76,7 +76,6 @@ export function ChangePasswordScreen() {
       }
 
       await saveEncryptionKey(newEncryptionKey);
-      await uploadStorage();
       dispatch({
         type: "set-modal",
         modal: "changed-password"
@@ -99,7 +98,7 @@ export function ChangePasswordScreen() {
       });
       return;
     }
-  };
+  }, [currentPassword, newPassword, dispatch, loading, self.email]);
 
   return (
     <>

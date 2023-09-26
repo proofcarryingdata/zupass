@@ -21,7 +21,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 
-export async function updateStorage(
+export async function updateBlobKeyForEncryptedStorage(
   oldEncryptionKey: string,
   newEncryptionKey: string,
   newSalt: string

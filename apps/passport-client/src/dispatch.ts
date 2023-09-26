@@ -22,11 +22,11 @@ import { appConfig } from "./appConfig";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
   saveSelf,
-  saveUserHasNewPassword,
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -130,7 +130,7 @@ export async function dispatch(
         modal: action.modal
       });
     case "change-password":
-      return changePassword(
+      return saveNewEncryptionKey(
         action.newEncryptionKey,
         action.newSalt,
         state,
@@ -338,11 +338,18 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
-      oldSalt: state.self.salt,
-      newSalt: self.salt
-    });
-  } else if (BigInt(self.commitment) !== state.identity.commitment) {
+    requestLogToServer(
+      appConfig.passportServer,
+      "another-device-changed-password",
+      {
+        oldSalt: state.self.salt,
+        newSalt: self.salt,
+        email: self.email
+      }
+    );
+  } else if (
+    BigInt(self.commitment).toString() !== state.identity.commitment.toString()
+  ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
     requestLogToServer(appConfig.passportServer, "invalid-user", {
@@ -459,7 +466,7 @@ async function loadFromSync(
   }
 }
 
-async function changePassword(
+async function saveNewEncryptionKey(
   newEncryptionKey: string,
   newSalt: string,
   state: AppState,
@@ -482,7 +489,7 @@ function userInvalid(update: ZuUpdate) {
 }
 
 function userHasChangedPassword(update: ZuUpdate) {
-  saveUserHasNewPassword(true);
+  saveAnotherDeviceChangedPassword(true);
   update({
     userHasChangedPassword: true,
     modal: "another-device-changed-password"
