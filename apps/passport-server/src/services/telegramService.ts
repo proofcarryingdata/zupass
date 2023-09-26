@@ -283,16 +283,24 @@ export class TelegramService {
     });
 
     this.bot.command("incognito", async (ctx) => {
+      const messageThreadId = ctx.message?.message_thread_id;
+      if (!messageThreadId) {
+        logger("[TELEGRAM] message thread id not found");
+        return;
+      }
+
       if (ctx.chat?.type !== "supergroup") {
         await ctx.reply(
-          "This command only works in a group with Topics enabled."
+          "This command only works in a group with Topics enabled.",
+          { message_thread_id: messageThreadId }
         );
       }
       const admins = await ctx.getChatAdministrators();
       const isAdmin = admins.some((admin) => admin.user.id === ctx.from?.id);
       if (!isAdmin) {
         await ctx.reply(
-          "Must be an admin to convert a channel to Incognito mode."
+          "Must be an admin to convert a channel to Incognito mode.",
+          { message_thread_id: messageThreadId }
         );
         return;
       }
@@ -305,19 +313,15 @@ export class TelegramService {
         const hasLinked = telegramEvents.length > 0;
         if (!hasLinked) {
           await ctx.reply(
-            "This group is not linked to an event. Please use /link to link this group to an event."
+            "This group is not linked to an event. Please use /link to link this group to an event.",
+            { message_thread_id: messageThreadId }
           );
           return;
         } else if (telegramEvents.filter((e) => e.anon_chat_id).length > 0) {
           await ctx.reply(
-            `This group has already linked an anonymous channel.`
+            `This group has already linked an anonymous channel.`,
+            { message_thread_id: messageThreadId }
           );
-          return;
-        }
-
-        const messageThreadId = ctx.message?.message_thread_id;
-        if (!messageThreadId) {
-          logger("[TELEGRAM] message thread id not found");
           return;
         }
 
@@ -329,11 +333,14 @@ export class TelegramService {
         );
 
         await ctx.reply(
-          `Successfully linked anonymous channel. DM me with /anonsend to anonymously send a message.`
+          `Successfully linked anonymous channel. DM me with /anonsend to anonymously send a message.`,
+          { message_thread_id: messageThreadId }
         );
       } catch (error) {
         logger(`[ERROR] ${error}`);
-        await ctx.reply(`Failed to link anonymous chat. Check server logs`);
+        await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
+          message_thread_id: messageThreadId
+        });
       }
     });
   }

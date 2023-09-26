@@ -4,6 +4,10 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  ZKEdDSAEventTicketPCDArgs,
+  ZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
 import sha256 from "js-sha256";
 import { useCallback, useState } from "react";
 
@@ -16,7 +20,7 @@ function requestProof(message: string) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
 
-  const args = {
+  const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
@@ -41,6 +45,11 @@ function requestProof(message: string) {
       value: undefined,
       userProvided: false
     },
+    validEventIds: {
+      argumentType: ArgumentTypeName.StringArray,
+      value: undefined,
+      userProvided: false
+    },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
       value: watermark,
@@ -53,18 +62,14 @@ function requestProof(message: string) {
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
   }/telegram/message?message=${encodeURIComponent(message)}`;
 
-  const proofUrl = constructPassportPcdGetRequestUrl(
-    passportOrigin,
-    returnUrl,
-    "zk-eddsa-event-ticket-pcd",
-    args,
-    {
-      genericProveScreen: true,
-      title: "ZK-EdDSA Ticket Request",
-      description:
-        "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
-    }
-  );
+  const proofUrl = constructPassportPcdGetRequestUrl<
+    typeof ZKEdDSAEventTicketPCDPackage
+  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+    genericProveScreen: true,
+    title: "ZK-EdDSA Ticket Request",
+    description:
+      "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
+  });
 
   window.location.href = proofUrl;
 }
