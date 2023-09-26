@@ -86,4 +86,6 @@ export interface EnvironmentVariables {
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_PRIVATE_CHAT_ID?: string;
   PASSPORT_CLIENT_URL?: string;
+  ACCOUNT_RESET_LIMIT_QUANTITY?: string;
+  ACCOUNT_RESET_LIMIT_DURATION_MS?: string;
 }
