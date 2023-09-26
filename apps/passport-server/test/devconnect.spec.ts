@@ -39,7 +39,6 @@ import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
 } from "../src/apis/devconnect/organizer";
-import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
@@ -86,7 +85,6 @@ describe("devconnect functionality", function () {
   this.timeout(30_000);
 
   let application: PCDpass;
-  let _emailAPI: IEmailAPI;
   let mocker: DevconnectPretixDataMocker;
 
   let devconnectPretixSyncService: DevconnectPretixSyncService;
@@ -206,7 +204,6 @@ describe("devconnect functionality", function () {
     if (!application.apis.emailAPI) {
       throw new Error("email client should have been mocked");
     }
-    _emailAPI = application.apis.emailAPI;
   });
 
   step("devconnect pretix status should sync to completion", async function () {
