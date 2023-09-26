@@ -60,12 +60,10 @@ export class TelegramService {
     this.proofUrl = "";
 
     this.bot.api.setMyDescription(
-      "I'm the Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
+      "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
     );
 
-    this.bot.api.setMyShortDescription(
-      "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
-    );
+    this.bot.api.setMyShortDescription("ZK Auth Bot manages events using ZKPs");
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu("events");
