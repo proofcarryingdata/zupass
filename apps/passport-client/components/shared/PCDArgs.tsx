@@ -508,7 +508,19 @@ const Select = styled.select`
   border-radius: 4px;
   color: var(--white);
   background-color: var(--bg-lite-gray);
-  font: 14px PlexSans, system-ui, sans-serif;
+  padding: 0 24px 0 8px;
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23FFF'><polygon points='0,0 100,0 50,50'/></svg>")
+    no-repeat;
+  background-size: 12px;
+  background-position: calc(100% - 8px) 12px;
+  background-repeat: no-repeat;
 `;
 
 const Input = styled.input`
@@ -517,7 +529,10 @@ const Input = styled.input`
   background-color: var(--bg-lite-gray);
   border: 1px solid var(--bg-lite-gray);
   color: var(--white);
-  font: 14px PlexSans, system-ui, sans-serif;
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
 
   &:disabled {
     opacity: 0.5;
@@ -531,7 +546,10 @@ const TextareaInput = styled.textarea`
   border: 1px solid var(--bg-lite-gray);
   color: var(--white);
   resize: vertical;
-  font: 14px PlexSans, system-ui, sans-serif;
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
 
   &:disabled {
     opacity: 0.5;
