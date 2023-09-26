@@ -7,7 +7,7 @@ const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
-    "process.env.NODE_ENV": `'${process.env.NODE_ENV ?? "production"}'`
+    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
