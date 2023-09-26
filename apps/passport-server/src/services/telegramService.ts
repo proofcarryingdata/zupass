@@ -156,7 +156,7 @@ export class TelegramService {
               userProvided: true
             },
             fieldsToReveal: {
-              argumentType: ArgumentTypeName.Object,
+              argumentType: ArgumentTypeName.ToggleList,
               value: fieldsToReveal,
               userProvided: false
             },

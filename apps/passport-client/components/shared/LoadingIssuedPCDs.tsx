@@ -1,14 +1,9 @@
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { RippleLoader } from "../core/RippleLoader";
 
 export function LoadingIssuedPCDs() {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
-
-  if (appConfig.isZuzalu) {
-    return null;
-  }
 
   if (loadedIssuedPCDs) {
     return null;

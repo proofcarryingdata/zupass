@@ -31,8 +31,7 @@ import {
   H2,
   HR,
   Spacer,
-  TextCenter,
-  ZuLogo
+  TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
@@ -192,30 +191,13 @@ export function LoginScreen() {
 }
 
 function LoginHeader() {
-  if (appConfig.isZuzalu) {
-    return (
-      <TextCenter>
-        <H1>PASSPORT</H1>
-        <Spacer h={24} />
-        <ZuLogo />
-        <Spacer h={24} />
-        <H2>ZUZALU</H2>
-        <Spacer h={24} />
-        <Description>
-          This experimental passport uses zero-knowledge proofs to prove Zuzalu
-          citizenship without revealing who you are.
-        </Description>
-      </TextCenter>
-    );
-  }
-
   return (
     <TextCenter>
-      <H1>PCDPASS</H1>
+      <H1>ZUPASS</H1>
       <Spacer h={24} />
       <Description>
-        This experimental passport uses zero-knowledge proofs to prove aspects
-        of your identity to other websites.
+        This is an experimental personal cryptography manager, powered by
+        Zero-Knowledge.
       </Description>
     </TextCenter>
   );

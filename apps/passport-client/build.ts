@@ -147,7 +147,7 @@ function compileHtml() {
   const template = Handlebars.compile(indexHtmlTemplateSource);
 
   const html = template({
-    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDpass",
+    title: IS_ZUZALU ? "Zupass" : "PCDpass",
     cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css"
   });
 

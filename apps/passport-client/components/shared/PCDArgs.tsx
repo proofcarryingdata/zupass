@@ -16,16 +16,21 @@ import {
   isNumberArgument,
   isObjectArgument,
   isPCDArgument,
+  isRevealListArgument,
   isStringArgument,
+  isToggleListArgument,
   NumberArgument,
   ObjectArgument,
   PCD,
   PCDArgument,
   PCDPackage,
-  StringArgument
+  StringArgument,
+  ToggleList,
+  ToogleListArgument
 } from "@pcd/pcd-types";
 
 import { Caption } from "../core";
+import { Chip, ChipsContainer } from "../core/Chip";
 import { icons } from "../icons";
 
 type ArgSetter = (argName: string, value: any) => void;
@@ -95,6 +100,15 @@ export function ArgInput({
     return <BigIntArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isBooleanArgument(arg)) {
     return <BooleanArgInput arg={arg} argName={argName} setArg={setArg} />;
+  } else if (isToggleListArgument(arg)) {
+    return (
+      <ToggleListArgInput
+        arg={arg}
+        argName={argName}
+        setArg={setArg}
+        type={isRevealListArgument(arg) ? "reveal" : "default"}
+      />
+    );
   } else if (isObjectArgument(arg)) {
     return <ObjectArgInput arg={arg} argName={argName} setArg={setArg} />;
   } else if (isPCDArgument(arg)) {
@@ -313,6 +327,68 @@ export function ObjectArgInput({
   );
 }
 
+function ToggleListArgInput({
+  arg,
+  argName,
+  setArg,
+  type
+}: {
+  arg: ToogleListArgument<ToggleList>;
+  argName: string;
+  setArg: ArgSetter;
+  type: "default" | "reveal";
+}) {
+  const getLabel = useCallback(
+    (key: string) => {
+      switch (type) {
+        case "reveal":
+          return key.replace(/^reveal/, "");
+        default:
+          return key;
+      }
+    },
+    [type]
+  );
+  const getIcon = useCallback(
+    (value: boolean) => {
+      switch (type) {
+        case "reveal":
+          return (
+            <img
+              draggable="false"
+              src={value ? icons.eyeOpen : icons.eyeClosed}
+              width={18}
+              height={18}
+            />
+          );
+        default:
+          return undefined;
+      }
+    },
+    [type]
+  );
+
+  return (
+    <ArgContainer argName={argName} arg={arg}>
+      <ChipsContainer>
+        {Object.entries(arg.value).map(([key, value]) => (
+          <Chip
+            key={key}
+            label={getLabel(key)}
+            onClick={
+              arg.userProvided
+                ? () => setArg(argName, { ...arg.value, [key]: !value })
+                : undefined
+            }
+            checked={value}
+            icon={getIcon(value)}
+          />
+        ))}
+      </ChipsContainer>
+    </ArgContainer>
+  );
+}
+
 export function PCDArgInput({
   arg,
   argName,
@@ -444,6 +520,7 @@ const argTypeIcons: Record<ArgumentTypeName, string> = {
   Boolean: icons.checkmark,
   StringArray: icons.inputObject,
   Object: icons.inputObject,
+  ToggleList: icons.inputObject,
   PCD: icons.inputPcd,
   Unknown: icons.question
 };

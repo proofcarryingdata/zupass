@@ -336,7 +336,7 @@ export function openZKEdDSAEventTicketPopup(
       userProvided: false
     },
     fieldsToReveal: {
-      argumentType: ArgumentTypeName.Object,
+      argumentType: ArgumentTypeName.ToggleList,
       value: fieldsToReveal,
       userProvided: false
     },
