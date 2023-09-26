@@ -88,7 +88,9 @@ export class TelegramService {
         range
           .text(
             {
-              text: `${event.telegramChatID ? `✅` : `❌`} ${event.eventName}`,
+              text: `${event.telegramChatID ? `✅` : `❌`} ${
+                event.eventName
+              } id: ${event.telegramChatID}`,
               payload: event.configEventID
             },
             async (ctx) => {
