@@ -20,7 +20,10 @@ import {
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
+import {
+  insertTelegramEvent,
+  insertTelegramVerification
+} from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { isLocalServer, sleep } from "../util/util";
@@ -45,7 +48,6 @@ export class TelegramService {
   private bot: Bot;
   private rollbarService: RollbarService | null;
   private proofUrl: string;
-  private telegramEvents: { event_name: string; configEventD: string }[] | null;
 
   public constructor(
     context: ApplicationContext,
@@ -57,7 +59,6 @@ export class TelegramService {
     this.bot = bot;
 
     this.proofUrl = "";
-    this.telegramEvents = [];
 
     this.bot.api.setMyDescription(
       "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
@@ -67,28 +68,36 @@ export class TelegramService {
       "Research Workshop ZK Bot manages the Research Workshop Telegram group using ZKPs"
     );
 
-    const menu = new Menu("pcdpass-menu");
-    const eventsMenu = new Menu("dynamic");
-    this.bot.use(menu.text(`Hi`, (ctx) => ctx.reply(`Hi`)));
-    this.bot.use(eventsMenu);
+    const pcdPassMenu = new Menu("pcdpass");
+    const eventsMenu = new Menu("events");
 
-    // menu.dynamic(() => {
-    //   const range = new MenuRange();
-    //   range.webApp("Generate ZKP 🚀", this.proofUrl);
-    //   return range;
-    // });
-    eventsMenu.dynamic(() => {
+    eventsMenu.dynamic(async () => {
+      const telegramEvents = await fetchPretixEvents(context.dbPool);
       const range = new MenuRange();
-      // if (!this.telegramEvents)
-      range.text(`No events found`, (ctx) =>
-        ctx.reply(`You clicked no events found`)
-      );
-      // for (const event of this.telegramEvents || []) {
-      //   range.text(event.event_name, (ctx) => {
-      //     ctx.reply(`You chose ${event.event_name}`);
-      //     logger(`[TELEGRAM] CLICK ${event.event_name}`);
-      //   });
-      // }
+      for (const event of telegramEvents) {
+        range.text(
+          { text: event.event_name, payload: event.configEventID },
+          async (ctx) => {
+            if (ctx.chat && ctx.chat.id) {
+              await insertTelegramEvent(context.dbPool, ctx.match, ctx.chat.id);
+              ctx.reply(
+                `Linked ${event.event_name} with config ${ctx.match} and chat ${ctx.chat.id}`
+              );
+            } else {
+              ctx.reply(`Couldn't link chat with event`);
+            }
+          }
+        );
+      }
+      return range;
+    });
+
+    this.bot.use(eventsMenu);
+    this.bot.use(pcdPassMenu);
+
+    pcdPassMenu.dynamic(() => {
+      const range = new MenuRange();
+      range.webApp("Generate ZKP 🚀", this.proofUrl);
       return range;
     });
 
@@ -231,7 +240,7 @@ export class TelegramService {
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
             {
-              reply_markup: menu
+              reply_markup: pcdPassMenu
             }
           );
         }
@@ -262,39 +271,32 @@ export class TelegramService {
       }
 
       const channelId = ctx.chat.id;
-      // TODO: Add menu of possible events
-      const eventName = ctx.match;
-      // if (!eventName) {
-      //   await ctx.reply(
-      //     `Correct usage of this command is: /link <event_name>. Try: /link ProgCrypto (Internal Test)`
-      //   );
-      //   return;
-      // }
 
-      const linkedEvents = await fetchTelegramEventsByChatId(
-        this.context.dbPool,
-        channelId
-      );
+      const linkedEvents = (
+        await fetchTelegramEventsByChatId(this.context.dbPool, channelId)
+      ).map((l) => l.ticket_event_id);
+
+      const telegramEvents = await fetchPretixEvents(this.context.dbPool);
+
       const isLinked = linkedEvents.length > 0;
 
       if (isLinked) {
-        const cleanEvents = linkedEvents.map((e) => e.ticket_event_id).join();
+        const cleanEvents = telegramEvents
+          .filter((e) => linkedEvents.includes(e.configEventID))
+          .map((e) => e.event_name)
+          .join();
+
         await ctx.reply(
           `This chat is linked to the following events: ${cleanEvents}`
         );
       } else {
-        await ctx.reply(
-          `This chat is not linked to any events. Choose from the following options:`
-        );
-        // TODO: Menu
-        this.telegramEvents = await fetchPretixEvents(this.context.dbPool);
+        await ctx.reply(`This chat is not linked to any events.`);
+        logger("[TELEGRAM] events", telegramEvents);
 
         await ctx.reply("Choose from the following options", {
           reply_markup: eventsMenu
         });
       }
-
-      await ctx.reply("Your telegram chat id is " + ctx.chat.id);
 
       try {
         // logger(
@@ -305,9 +307,9 @@ export class TelegramService {
         // );
       } catch (error) {
         logger(`[ERROR] ${error}`);
-        await ctx.reply(
-          `Failed to link group to event ${eventName}. Check server logs`
-        );
+        // await ctx.reply(
+        //   `Failed to link group to event ${eventName}. Check server logs`
+        // );
       }
     });
   }
@@ -334,7 +336,12 @@ export class TelegramService {
     try {
       // This will not resolve while the bot remains running.
       await this.bot.start({
-        allowed_updates: ["chat_join_request", "chat_member", "message"],
+        allowed_updates: [
+          "chat_join_request",
+          "chat_member",
+          "message",
+          "callback_query"
+        ],
         onStart: (info) => {
           logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
         }

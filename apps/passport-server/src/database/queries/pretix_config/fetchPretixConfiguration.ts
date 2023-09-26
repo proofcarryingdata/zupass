@@ -44,7 +44,7 @@ export async function fetchEventConfiguration(
 
 export async function fetchPretixEvents(
   client: Pool
-): Promise<{ event_name: string; configEventD: string }[] | null> {
+): Promise<{ event_name: string; configEventID: string }[]> {
   const result = await sqlQuery(
     client,
     `\
