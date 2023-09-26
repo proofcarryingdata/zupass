@@ -67,7 +67,6 @@ import {
   SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
-import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
 import { sleep } from "../src/util/util";
 
@@ -77,7 +76,10 @@ import {
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import {
+  expectDevconnectPretixToHaveSynced,
+  expectZuzaluPretixToHaveSynced
+} from "./pretix/waitForPretixSyncStatus";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
@@ -217,12 +219,12 @@ describe("devconnect functionality", function () {
     expect(emailAPI.send).to.be.spy;
   });
 
+  step("zuzalu pretix should sync to completion", async function () {
+    await expectZuzaluPretixToHaveSynced(application);
+  });
+
   step("devconnect pretix status should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application, false);
-    expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
-    // stop interval that polls the api so we have more granular control over
-    // testing the sync functionality
-    application.services.devconnectPretixSyncService?.stop();
+    await expectDevconnectPretixToHaveSynced(application);
   });
 
   step(
