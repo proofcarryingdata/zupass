@@ -1,3 +1,9 @@
+import React, { useCallback, useEffect, useState } from "react";
+
+import _ from "lodash";
+import { Tooltip } from "react-tooltip";
+import styled from "styled-components";
+
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   ArgsOf,
@@ -18,10 +24,7 @@ import {
   PCDPackage,
   StringArgument
 } from "@pcd/pcd-types";
-import _ from "lodash";
-import React, { useCallback, useEffect, useState } from "react";
-import { Tooltip } from "react-tooltip";
-import styled from "styled-components";
+
 import { Caption } from "../core";
 import { icons } from "../icons";
 
@@ -243,13 +246,18 @@ export function BooleanArgInput({
   );
 
   return (
-    <ArgContainer argName={argName} arg={arg} end={
-      <input
-        type="checkbox"
-        checked={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />} />
+    <ArgContainer
+      argName={argName}
+      arg={arg}
+      end={
+        <input
+          type="checkbox"
+          checked={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      }
+    />
   );
 }
 
@@ -406,8 +414,19 @@ function ArgContainer({
       <ArgItem>
         <ArgName>
           <Caption>{_.startCase(argName)} </Caption>
-          {arg.description && <a data-tooltip-id={`arg-input-tooltip-${argName}`} data-tooltip-content={arg.description}>
-            <TooltipIcon src={icons.inputQuestion} width={14} height={14} draggable={false} /></a>}
+          {arg.description && (
+            <a
+              data-tooltip-id={`arg-input-tooltip-${argName}`}
+              data-tooltip-content={arg.description}
+            >
+              <TooltipIcon
+                src={icons.info}
+                width={14}
+                height={14}
+                draggable={false}
+              />
+            </a>
+          )}
           <TooltipContainer id={`arg-input-tooltip-${argName}`} />
         </ArgName>
         {children}
@@ -422,13 +441,12 @@ const argTypeIcons: Record<ArgumentTypeName, string> = {
   String: icons.inputText,
   Number: icons.inputNumber,
   BigInt: icons.inputNumber,
-  Boolean: icons.inputCheck,
+  Boolean: icons.checkmark,
   StringArray: icons.inputObject,
   Object: icons.inputObject,
   PCD: icons.inputPcd,
-  Unknown: icons.inputQuestion
+  Unknown: icons.question
 };
-
 
 const ArgName = styled.div`
   display: flex;
@@ -449,18 +467,18 @@ const ArgItemContainer = styled.div`
 const ArgItemIcon = styled.img`
   width: 18px;
   height: 18px;
-  filter: invert(1) opacity(0.5);
+  filter: opacity(0.8);
 `;
 
 const TooltipIcon = styled.img`
   width: 12px;
   height: 12px;
-  filter: invert(1) opacity(0.8);
+  filter: opacity(0.8);
 `;
 
 const TooltipContainer = styled(Tooltip)`
   max-width: min(calc(100vw - 32px), 420px);
-`
+`;
 
 const ArgItem = styled.div`
   display: flex;
@@ -490,10 +508,7 @@ const Select = styled.select`
   border-radius: 4px;
   color: var(--white);
   background-color: var(--bg-lite-gray);
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
+  font: 14px PlexSans, system-ui, sans-serif;
 `;
 
 const Input = styled.input`
@@ -502,10 +517,7 @@ const Input = styled.input`
   background-color: var(--bg-lite-gray);
   border: 1px solid var(--bg-lite-gray);
   color: var(--white);
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
+  font: 14px PlexSans, system-ui, sans-serif;
 
   &:disabled {
     opacity: 0.5;
@@ -519,10 +531,7 @@ const TextareaInput = styled.textarea`
   border: 1px solid var(--bg-lite-gray);
   color: var(--white);
   resize: vertical;
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
+  font: 14px PlexSans, system-ui, sans-serif;
 
   &:disabled {
     opacity: 0.5;
