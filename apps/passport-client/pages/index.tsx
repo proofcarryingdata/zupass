@@ -45,11 +45,8 @@ import {
   saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
+import { closeSaltBroadcast, setupSaltBroadcast } from "../src/saltBroadcoast";
 import { AppState, StateEmitter } from "../src/state";
-import {
-  closeSaltBroadcast,
-  setupSaltBroadcast
-} from "../src/useSaltBroadcast";
 import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {

@@ -30,10 +30,10 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { updateSaltStateOnOtherTabs } from "./saltBroadcoast";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
-import { updateSaltStateOnOtherTabs } from "./useSaltBroadcast";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
