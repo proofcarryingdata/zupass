@@ -235,7 +235,6 @@ describe("zupass functionality", function () {
         throw new Error("expected to be able to get a feed response");
       }
 
-      console.log(JSON.stringify(response.value, null, 2));
       expect(response.value?.actions?.length).to.eq(2);
 
       const action = response.value?.actions?.[1] as ReplaceInFolderAction;

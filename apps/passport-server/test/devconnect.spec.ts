@@ -945,7 +945,6 @@ describe("devconnect functionality", function () {
   let publicKeyRSA: NodeRSA;
   let publicKeyEdDSA: EDdSAPublicKey;
 
-  // todo: move out of devconnect test into a more general test
   step(
     "anyone should be able to request the server's RSA public key",
     async function () {
@@ -964,7 +963,6 @@ describe("devconnect functionality", function () {
     }
   );
 
-  // todo: move out of devconnect test into a more general test
   step(
     "anyone should be able to request the server's EdDSA public key",
     async function () {
