@@ -12,7 +12,7 @@ import { step } from "mocha-steps";
 import {
   getZuzaluPretixConfig,
   ZuzaluPretixOrder
-} from "../src/apis/pretixAPI";
+} from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
 import { PretixSyncStatus } from "../src/services/types";

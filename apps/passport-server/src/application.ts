@@ -2,7 +2,7 @@ import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/pretixAPI";
+import { getZuzaluPretixAPI, ZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";

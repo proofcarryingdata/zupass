@@ -1,9 +1,9 @@
 import {
+  getZuzaluPretixConfig,
   IZuzaluPretixAPI,
   ZuzaluPretixOrder,
-  ZuzaluPretixSubevent,
-  getZuzaluPretixConfig
-} from "../../src/apis/pretixAPI";
+  ZuzaluPretixSubevent
+} from "../../src/apis/zuzaluPretixAPI";
 import { logger } from "../../src/util/logger";
 import {
   IMockPretixData,

@@ -3,7 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
-import { IZuzaluPretixAPI } from "./apis/pretixAPI";
+import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -14,12 +14,12 @@ import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
 import { MetricsService } from "./services/metricsService";
 import { PersistentCacheService } from "./services/persistentCacheService";
-import { ZuzaluPretixSyncService } from "./services/pretixSyncService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
+import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
 export interface ApplicationContext {
   dbPool: Pool;
