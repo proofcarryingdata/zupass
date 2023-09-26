@@ -1,3 +1,3 @@
 alter table commitments 
-add column accountResetTimestamps timestamp[] 
+add column account_reset_timestamps timestamp[] 
 not null default array[]::timestamp[];

@@ -15,7 +15,10 @@ import {
   fetchDevconnectDeviceLoginTicket,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { insertCommitment } from "../database/queries/saveCommitment";
+import {
+  insertCommitment,
+  updateCommitmentResetList
+} from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser
@@ -290,18 +293,47 @@ export class UserService {
       existingUser?.accountresettimestamps
     );
 
-    if (existingUser) {
-      function checkTimestamps() {
-        const maxCount = 4;
-        const maxSpan = 1000 * 60 * 60 * 24;
-        const now = Date.now();
-        const maxAge = now - maxSpan;
+    function checkTimestamps(timestampList: string[]): {
+      filteredTimestamps: string[];
+      passesRateLimit: boolean;
+    } {
+      const now = Date.now();
+      const parsedTimestamps = timestampList.map((t) => new Date(t).getTime());
+      parsedTimestamps.push(now);
 
-        const parsedTimestamps = existingUser.accountresettimestamps.map(
-          (t) => new Date(t).getTime()
+      const maxAgeMilliseconds = 1000 * 60 * 60 * 24;
+      const maxAgeTimestamp = now - maxAgeMilliseconds;
+      const newerThanMaxAge = parsedTimestamps.filter(
+        (t) => t > maxAgeTimestamp
+      );
+      const rateLimit = 4;
+
+      return {
+        filteredTimestamps: newerThanMaxAge.map((t) =>
+          new Date(t).toISOString()
+        ),
+        passesRateLimit: newerThanMaxAge.length <= rateLimit
+      };
+    }
+
+    if (existingUser) {
+      logger("[PCDPASS **************]", "NOT CHECKING TIMESTAMPS");
+
+      const { filteredTimestamps, passesRateLimit } = checkTimestamps(
+        existingUser.accountresettimestamps
+      );
+
+      if (passesRateLimit) {
+        await updateCommitmentResetList(
+          this.context.dbPool,
+          existingUser.email,
+          filteredTimestamps
         );
-        const youngerThanMaxAge = parsedTimestamps.filter(t => t.)
       }
+
+      logger("[PCDPASS **************]", filteredTimestamps, passesRateLimit);
+    } else {
+      logger("[PCDPASS **************]", "NOT CHECKING TIMESTAMPS");
     }
 
     logger(`[PCDPASS] Saving new commitment: ${commitment}`);
