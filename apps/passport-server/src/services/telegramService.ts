@@ -88,9 +88,7 @@ export class TelegramService {
         range
           .text(
             {
-              text: `${event.eventName} (Linked ${
-                event.telegramChatID ? `✅` : `❌`
-              })`,
+              text: `${event.telegramChatID ? `✅` : `❌`} ${event.eventName}`,
               payload: event.configEventID
             },
             async (ctx) => {
