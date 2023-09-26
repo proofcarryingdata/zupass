@@ -279,6 +279,11 @@ export class UserService {
   private async checkAndIncrementAccountRateLimit(
     user: CommitmentRow
   ): Promise<void> {
+    if (process.env.ACCOUNT_RESET_RATE_LIMIT_DISABLED === "true") {
+      logger("[PCDPASS] account rate limit disabled");
+      return;
+    }
+
     const now = Date.now();
     const configuredRateLimitDurationMs = parseInt(
       process.env.ACCOUNT_RESET_LIMIT_DURATION_MS ?? "",
