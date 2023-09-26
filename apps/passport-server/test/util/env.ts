@@ -21,10 +21,12 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
   SUPPRESS_LOGGING: "true",
-  SERVER_RSA_PRIVATE_KEY_BASE64: undefined,
-  SERVER_EDDSA_PRIVATE_KEY: undefined,
-  PRETIX_SYNC_DISABLED: undefined,
-  PASSPORT_CLIENT_URL: "http://localhost:3000"
+  SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
+    new NodeRSA({ b: 2048 }).exportKey("private")
+  ).toString("base64"),
+  SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
+  PASSPORT_CLIENT_URL: "http://localhost:3000",
+  PRETIX_SYNC_DISABLED: undefined
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
@@ -33,11 +35,7 @@ export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_ORG_URL: "pretix_org_url",
   PRETIX_TOKEN: "pretix_token",
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
-  PRETIX_ZU_EVENT_ID: "zu_event_id",
-  SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
-    new NodeRSA({ b: 2048 }).exportKey("private")
-  ).toString("base64"),
-  SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey()
+  PRETIX_ZU_EVENT_ID: "zu_event_id"
 });
 
 export async function overrideEnvironment(
