@@ -57,6 +57,7 @@ describe("zupass functionality", function () {
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
   let pretixService: ZuzaluPretixSyncService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let mocker: DevconnectPretixDataMocker;
   let db: Pool;
@@ -65,14 +66,19 @@ describe("zupass functionality", function () {
   let residentUser: User | undefined;
   let residentIdentity: Identity | undefined;
   let visitorUser: User | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let visitorIdentity: Identity | undefined;
   let organizerUser: User | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let organizerIdentity: Identity | undefined;
   let updatedToOrganizerUser: LoggedInZuzaluUser;
 
   let organizerConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let eventAConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let eventBConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let eventCConfigId: string;
 
   this.beforeAll(async () => {
