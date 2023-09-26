@@ -4,7 +4,7 @@ import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
 import { safeRedirect } from "../../../src/passportRequest";
-import { Spacer } from "../../core";
+import { H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
@@ -68,7 +68,9 @@ export function ProveAndAddScreen({
       <MaybeModal fullScreen />
       <Container>
         <Spacer h={24} />
-        <AppHeader />
+        <AppHeader>
+          <H2>{request.options.title || `Add and Prove ${request.pcdType}`}</H2>
+        </AppHeader>
         <Spacer h={16} />
         {content}
       </Container>

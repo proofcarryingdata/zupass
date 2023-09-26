@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node build.ts dev",
     "build": "tsc --noEmit && ts-node build.ts build",
+    "build:staging": "NODE_ENV=staging yarn build",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "clean": "rm -rf node_modules public/js"
   },

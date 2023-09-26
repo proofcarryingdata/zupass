@@ -4,7 +4,7 @@ import { icons } from "../icons";
 import { Button } from "./Button";
 import { BigInput } from "./Input";
 
-export { Button, BigInput, Spacer };
+export { BigInput, Button, Spacer };
 
 export const H1 = styled.h1<{ col?: string }>`
   color: ${(p) => p.col || "var(--accent-dark)"};
@@ -39,6 +39,13 @@ export const H5 = styled.h5<{ col?: string }>`
   letter-spacing: 1px;
   font-size: 18px;
   font-weight: 400;
+`;
+
+export const Caption = styled.caption<{ col?: string }>`
+  color: ${(p) => p.col || "var(--white)"};
+  letter-spacing: 1px;
+  font-size: 14px;
+  font-weight: 500;
 `;
 
 export const InfoLine = styled.div`
