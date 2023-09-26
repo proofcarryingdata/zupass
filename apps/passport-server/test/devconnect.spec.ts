@@ -11,6 +11,7 @@ import {
   PCDPassFeedIds,
   pollFeed,
   PollFeedResponseValue,
+  requestIssuanceServiceEnabled,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
 } from "@pcd/passport-interface";
@@ -39,6 +40,7 @@ import {
   DevconnectPretixConfig,
   getDevconnectPretixConfig
 } from "../src/apis/devconnect/organizer";
+import { IEmailAPI } from "../src/apis/emailAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
@@ -76,8 +78,13 @@ import {
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import {
+  expectCurrentSemaphoreToBe,
+  testLatestHistoricSemaphoreGroups
+} from "./semaphore/checkSemaphore";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLoginPCDpass } from "./user/testLoginPCDPass";
+import { testUserSync } from "./user/testUserSync";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
@@ -95,6 +102,7 @@ describe("devconnect functionality", function () {
   let eventCConfigId: string;
   let server: SetupServer;
   let backupData: IMockDevconnectPretixData;
+  let emailAPI: IEmailAPI;
 
   this.beforeEach(async () => {
     backupData = mocker.backup();
@@ -204,6 +212,9 @@ describe("devconnect functionality", function () {
     if (!application.apis.emailAPI) {
       throw new Error("email client should have been mocked");
     }
+
+    emailAPI = application.apis.emailAPI;
+    expect(emailAPI.send).to.be.spy;
   });
 
   step("devconnect pretix status should sync to completion", async function () {
@@ -960,6 +971,19 @@ describe("devconnect functionality", function () {
     }
   );
 
+  step(
+    "should not be able to login with invalid email address",
+    async function () {
+      expect(
+        await testLoginPCDpass(application, "test", {
+          force: false,
+          expectUserAlreadyLoggedIn: false,
+          expectEmailIncorrect: true
+        })
+      ).to.eq(undefined);
+    }
+  );
+
   step("should be able to log in", async function () {
     const result = await testLoginPCDpass(
       application,
@@ -975,7 +999,77 @@ describe("devconnect functionality", function () {
       throw new Error("failed to log in");
     }
 
+    expect(emailAPI.send).to.have.been.called.exactly(1);
     identity = result.identity;
+  });
+
+  step("semaphore service should reflect correct state", async function () {
+    expectCurrentSemaphoreToBe(application, {
+      p: [],
+      r: [],
+      v: [],
+      o: [],
+      g: [identity.commitment.toString()]
+    });
+    await testLatestHistoricSemaphoreGroups(application);
+  });
+
+  step(
+    "should not be able to log in a 2nd time without force option",
+    async function () {
+      expect(
+        await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+          force: false,
+          expectUserAlreadyLoggedIn: true,
+          expectEmailIncorrect: false
+        })
+      ).to.eq(undefined);
+
+      const result = await testLoginPCDpass(
+        application,
+        mocker.get().organizer1.EMAIL_1,
+        {
+          force: true,
+          expectUserAlreadyLoggedIn: true,
+          expectEmailIncorrect: false
+        }
+      );
+
+      if (!result?.user) {
+        throw new Error("exected a user");
+      }
+
+      identity = result.identity;
+
+      expect(emailAPI.send).to.have.been.called.exactly(2);
+    }
+  );
+
+  step(
+    "semaphore service should now be aware of the new user" +
+      " and their old commitment should have been removed",
+    async function () {
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: [identity.commitment.toString()]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step("user should be able to sync end to end encryption", async function () {
+    await testUserSync(application);
+  });
+
+  step("should have issuance service running", async function () {
+    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
+      application.expressContext.localEndpoint
+    );
+    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
+    expect(issuanceServiceEnabledResult.value).to.eq(true);
   });
 
   step(
