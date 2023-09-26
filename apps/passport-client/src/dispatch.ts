@@ -22,7 +22,6 @@ import { appConfig } from "./appConfig";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
-  loadSelf,
   saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
@@ -34,6 +33,7 @@ import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
+import { updateSaltStateOnOtherTabs } from "./useSaltBroadcast";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
@@ -64,6 +64,10 @@ export type Action =
   | {
       type: "set-self";
       self: User;
+    }
+  | {
+      type: "set-salt";
+      salt: string;
     }
   | {
       type: "set-modal";
@@ -118,6 +122,8 @@ export async function dispatch(
       return genDeviceLoginPassport(state.identity, update);
     case "set-self":
       return setSelf(action.self, state, update);
+    case "set-salt":
+      return setSalt(action.salt, state, update);
     case "error":
       return update({ error: action.error });
     case "clear-error":
@@ -330,19 +336,22 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   }
 }
 
+// Sets the `salt` field of state.self
+function setSalt(salt: string, state: AppState, update: ZuUpdate) {
+  update({
+    self: {
+      ...state.self,
+      salt
+    }
+  });
+}
+
 // Runs periodically, whenever we poll new participant info.
 async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  // Load the most up-to-date salt stored in localStorage,
-  // since the salt stored in redux will only be updated
-  // with loadInitialState on refresh. Use the salt in AppState
-  // only as a fallback if it happens that the
-  const selfFromLocalStorage = loadSelf();
-  const currentSalt = selfFromLocalStorage?.salt ?? state.self.salt;
-
-  if (currentSalt && self.salt !== currentSalt) {
+  if (state.self && self.salt !== state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
@@ -350,7 +359,7 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       appConfig.passportServer,
       "another-device-changed-password",
       {
-        oldSalt: currentSalt,
+        oldSalt: state.self.salt,
         newSalt: self.salt,
         email: self.email
       }
@@ -482,6 +491,7 @@ async function saveNewEncryptionKey(
 ) {
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
+  updateSaltStateOnOtherTabs(newSalt);
   return update({
     encryptionKey: newEncryptionKey,
     self: newSelf

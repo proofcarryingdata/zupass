@@ -46,6 +46,10 @@ import {
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
+import {
+  closeSaltBroadcast,
+  setupSaltBroadcast
+} from "../src/useSaltBroadcast";
 import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
@@ -59,6 +63,10 @@ class App extends React.Component<object, AppState> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    setupSaltBroadcast(this.dispatch);
+  }
+  componentWillUnmount(): void {
+    closeSaltBroadcast();
   }
   stateContextState: StateContextState = {
     getState: () => this.state,
