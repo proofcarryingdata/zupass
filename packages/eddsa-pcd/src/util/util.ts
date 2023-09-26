@@ -1,5 +1,5 @@
-import * as ed from "noble-ed25519";
+import { getRandomValues, toHexString } from "@pcd/util";
 
 export function newEdDSAPrivateKey(): string {
-  return Buffer.from(ed.utils.randomPrivateKey()).toString("hex");
+  return toHexString(getRandomValues(32));
 }
