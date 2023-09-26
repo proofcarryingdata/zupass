@@ -62,6 +62,22 @@ const DEFAULT_FEEDS: Feed[] = [
       } as ReplaceInFolderPermission
     ],
     credentialType: SemaphoreSignaturePCDTypeName
+  },
+  {
+    id: PCDPassFeedIds.Zuzalu_1,
+    name: "Zuzalu",
+    description: "Zuzalu Tickets",
+    permissions: [
+      {
+        type: PCDPermissionType.AppendToFolder,
+        folder: "Zuzalu"
+      } as AppendToFolderPermission,
+      {
+        type: PCDPermissionType.ReplaceInFolder,
+        folder: "Zuzalu"
+      } as ReplaceInFolderPermission
+    ],
+    credentialType: SemaphoreSignaturePCDTypeName
   }
 ];
 

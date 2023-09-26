@@ -1,7 +1,6 @@
 import { Spacer } from "@pcd/passport-ui";
 import { useEffect, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { appConfig } from "../../src/appConfig";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import {
   clearAllPendingRequests,
@@ -20,11 +19,10 @@ import { AppContainer } from "../shared/AppContainer";
 export function LoginInterstitialScreen() {
   useSyncE2EEStorage();
   const navigate = useNavigate();
-
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   useEffect(() => {
-    if (loadedIssuedPCDs || appConfig.isZuzalu) {
+    if (loadedIssuedPCDs) {
       if (getPendingProofRequest() != null) {
         console.log("Redirecting to prove screen");
         const encReq = encodeURIComponent(getPendingProofRequest());
