@@ -33,13 +33,14 @@ describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDpass;
+  let emailAPI: IEmailAPI;
+  let pretixMocker: ZuzaluPretixDataMocker;
+  let pretixService: ZuzaluPretixSyncService;
+
   let residentUser: User | undefined;
   let visitorUser: User | undefined;
   let organizerUser: User | undefined;
   let updatedToOrganizerUser: LoggedInZuzaluUser;
-  let emailAPI: IEmailAPI;
-  let pretixMocker: ZuzaluPretixDataMocker;
-  let pretixService: ZuzaluPretixSyncService;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);

@@ -41,6 +41,7 @@ import {
   getDevconnectPretixConfig
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
+import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
@@ -76,10 +77,12 @@ import {
   IOrganizer
 } from "./pretix/devconnectPretixDataMocker";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
+import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import {
   expectDevconnectPretixToHaveSynced,
   expectZuzaluPretixToHaveSynced
 } from "./pretix/waitForPretixSyncStatus";
+import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
@@ -95,6 +98,7 @@ describe("devconnect functionality", function () {
 
   let application: PCDpass;
   let mocker: DevconnectPretixDataMocker;
+  let pretixMocker: ZuzaluPretixDataMocker;
 
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let db: Pool;
@@ -158,9 +162,21 @@ describe("devconnect functionality", function () {
     server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
     server.listen({ onUnhandledRequest: "bypass" });
 
+    const pretixConfig = getZuzaluPretixConfig();
+
+    if (!pretixConfig) {
+      throw new Error(
+        "expected to be able to get a pretix config for zuzalu tests"
+      );
+    }
+
+    pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
+    const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
+
     application = await startTestingApp({
       devconnectPretixAPIFactory: async () =>
-        new DevconnectPretixAPI({ requestsPerInterval: 10_000 })
+        new DevconnectPretixAPI({ requestsPerInterval: 10_000 }),
+      zuzaluPretixAPI: pretixAPI
     });
 
     if (!application.services.devconnectPretixSyncService) {
