@@ -282,6 +282,28 @@ export class UserService {
       );
     }
 
+    const existingUser = await fetchCommitment(this.context.dbPool, email);
+
+    logger(
+      `[PCDPASS*********************] reset timestamps`,
+      existingUser,
+      existingUser?.accountresettimestamps
+    );
+
+    if (existingUser) {
+      function checkTimestamps() {
+        const maxCount = 4;
+        const maxSpan = 1000 * 60 * 60 * 24;
+        const now = Date.now();
+        const maxAge = now - maxSpan;
+
+        const parsedTimestamps = existingUser.accountresettimestamps.map(
+          (t) => new Date(t).getTime()
+        );
+        const youngerThanMaxAge = parsedTimestamps.filter(t => t.)
+      }
+    }
+
     logger(`[PCDPASS] Saving new commitment: ${commitment}`);
     await insertCommitment(this.context.dbPool, { email, commitment, salt });
 
