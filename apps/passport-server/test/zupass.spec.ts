@@ -255,8 +255,8 @@ describe("zupass functionality", function () {
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
-      // should reject
-      expect.fail();
+
+      expect.fail("expected logging in to fail because of rate limit");
     } catch (e) {
       //
     }
