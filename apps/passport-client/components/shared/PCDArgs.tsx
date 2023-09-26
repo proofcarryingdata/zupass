@@ -1,3 +1,9 @@
+import React, { useCallback, useEffect, useState } from "react";
+
+import _ from "lodash";
+import { Tooltip } from "react-tooltip";
+import styled from "styled-components";
+
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   ArgsOf,
@@ -18,8 +24,9 @@ import {
   PCDPackage,
   StringArgument
 } from "@pcd/pcd-types";
-import React, { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
+
+import { Caption } from "../core";
+import { icons } from "../icons";
 
 type ArgSetter = (argName: string, value: any) => void;
 
@@ -119,27 +126,12 @@ export function StringArgInput({
   );
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <input
-            value={arg.value}
-            onChange={onChange}
-            disabled={!arg.userProvided}
-          />
-        </InputContainer>
-      </Row>
+    <ArgContainer argName={argName} arg={arg}>
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
     </ArgContainer>
   );
 }
@@ -177,30 +169,16 @@ export function NumberArgInput({
   );
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <input
-            value={arg.value}
-            onChange={onChange}
-            disabled={!arg.userProvided}
-          />
-        </InputContainer>
-      </Row>
-      <Row>
-        {!valid && <ErrorContainer>Error parsing your input</ErrorContainer>}
-      </Row>
+    <ArgContainer
+      argName={argName}
+      arg={arg}
+      error={valid ? undefined : "Please enter a number."}
+    >
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
     </ArgContainer>
   );
 }
@@ -237,30 +215,16 @@ export function BigIntArgInput({
   );
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <Input
-            value={arg.value ?? ""}
-            onChange={onChange}
-            disabled={!arg.userProvided}
-          />
-        </InputContainer>
-      </Row>
-      <Row>
-        {!valid && <ErrorContainer>Error parsing your input</ErrorContainer>}
-      </Row>
+    <ArgContainer
+      argName={argName}
+      arg={arg}
+      error={valid ? undefined : "Please enter a whole number."}
+    >
+      <Input
+        value={arg.value ?? ""}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
     </ArgContainer>
   );
 }
@@ -282,29 +246,18 @@ export function BooleanArgInput({
   );
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <input
-            type="checkbox"
-            checked={arg.value}
-            onChange={onChange}
-            disabled={!arg.userProvided}
-          />
-        </InputContainer>
-      </Row>
-    </ArgContainer>
+    <ArgContainer
+      argName={argName}
+      arg={arg}
+      end={
+        <input
+          type="checkbox"
+          checked={arg.value}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      }
+    />
   );
 }
 
@@ -350,31 +303,12 @@ export function ObjectArgInput({
   }, []);
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <textarea
-            style={{
-              width: "100%",
-              height: "4em"
-            }}
-            value={JSON.stringify(arg.value)}
-            onChange={onChange}
-            disabled={!arg.userProvided}
-          />
-        </InputContainer>
-      </Row>
+    <ArgContainer argName={argName} arg={arg}>
+      <TextareaInput
+        value={JSON.stringify(arg.value, null, 2)}
+        onChange={onChange}
+        disabled={!arg.userProvided}
+      />
     </ArgContainer>
   );
 }
@@ -437,103 +371,134 @@ export function PCDArgInput({
   }, [arg.value, pcdCollection]);
 
   return (
-    <ArgContainer>
-      <Row>
-        <ArgName>
-          {argName}
-          <ArgTypeLabel argType={arg.argumentType} />
-        </ArgName>
-      </Row>
-      {arg.description && (
-        <Row>
-          <Description>{arg.description}</Description>
-        </Row>
-      )}
-      <Row>
-        <InputContainer>
-          <Select value={value?.id} onChange={onChange}>
-            <option key="none" value="none" disabled>
-              Please select a {argName}
+    <ArgContainer argName={argName} arg={arg}>
+      <Select value={value?.id} onChange={onChange}>
+        <option key="none" value="none" disabled>
+          Please select a {argName}
+        </option>
+        {relevantPCDs.map((pcd) => {
+          const pcdPackage = pcdCollection.getPackage(pcd.type);
+          return (
+            <option key={pcd.id} value={pcd.id}>
+              {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
             </option>
-            {relevantPCDs.map((pcd) => {
-              const pcdPackage = pcdCollection.getPackage(pcd.type);
-              return (
-                <option key={pcd.id} value={pcd.id}>
-                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
-                </option>
-              );
-            })}
-          </Select>
-        </InputContainer>
-      </Row>
+          );
+        })}
+      </Select>
     </ArgContainer>
   );
 }
 
-const Row = styled.div`
-  width: 100%;
-`;
+function ArgContainer({
+  argName,
+  arg,
+  error,
+  children,
+  end
+}: {
+  argName: string;
+  arg: Argument<any, any>;
+  error?: string;
+  children?: React.ReactNode;
+  /* optional element place at the end */
+  end?: React.ReactNode;
+}) {
+  return (
+    <ArgItemContainer>
+      <ArgItemIcon
+        src={argTypeIcons[arg.argumentType]}
+        draggable={false}
+        aria-label={arg.argumentType}
+        title={arg.argumentType}
+      />
+      <ArgItem>
+        <ArgName>
+          <Caption>{_.startCase(argName)} </Caption>
+          {arg.description && (
+            <a
+              data-tooltip-id={`arg-input-tooltip-${argName}`}
+              data-tooltip-content={arg.description}
+            >
+              <TooltipIcon
+                src={icons.info}
+                width={14}
+                height={14}
+                draggable={false}
+              />
+            </a>
+          )}
+          <TooltipContainer id={`arg-input-tooltip-${argName}`} />
+        </ArgName>
+        {children}
+        <ErrorText>{error}</ErrorText>
+      </ArgItem>
+      {end}
+    </ArgItemContainer>
+  );
+}
 
-const Description = styled.div`
-  padding: 10px 10px 0px 10px;
-`;
-
-const InputContainer = styled.div`
-  padding: 10px;
-`;
+const argTypeIcons: Record<ArgumentTypeName, string> = {
+  String: icons.inputText,
+  Number: icons.inputNumber,
+  BigInt: icons.inputNumber,
+  Boolean: icons.checkmark,
+  StringArray: icons.inputObject,
+  Object: icons.inputObject,
+  PCD: icons.inputPcd,
+  Unknown: icons.question
+};
 
 const ArgName = styled.div`
-  padding: 2px 4px;
-  font-weight: bold;
-  width: 100%;
-  padding: 10px 10px 0px 10px;
   display: flex;
-  justify-content: flex-start;
-  align-items: baseline;
+  align-items: center;
+  gap: 4px;
 `;
 
-const ArgContainer = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  width: 100%;
+const ArgItemContainer = styled.div`
+  border-radius: 16px;
+  border: 1px solid var(--bg-lite-gray);
+  background-color: rgba(var(--white-rgb), 0.01);
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 16px;
+`;
+
+const ArgItemIcon = styled.img`
+  width: 18px;
+  height: 18px;
+  filter: opacity(0.8);
+`;
+
+const TooltipIcon = styled.img`
+  width: 12px;
+  height: 12px;
+  filter: opacity(0.8);
+`;
+
+const TooltipContainer = styled(Tooltip)`
+  max-width: min(calc(100vw - 32px), 420px);
+`;
+
+const ArgItem = styled.div`
   display: flex;
   justify-content: center;
   align-items: stretch;
   flex-direction: column;
-  overflow: hidden;
+  gap: 8px;
+  flex: 1;
 `;
 
 const ArgsContainer = styled.div`
   width: 100%;
-  border-radius: 16px;
-  color: black;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  align-items: stretch;
   flex-direction: column;
   gap: 8px;
-  color: var(--bg-dark-primary);
-  background-color: white;
-  border: 1px solid var(--accent-lite);
-  overflow: hidden;
-  padding: 16px 0px 16px 0px;
+  color: var(--white);
 `;
 
-export function ArgTypeLabel({ argType }: { argType: ArgumentTypeName }) {
-  return <ArgTypeNameContainer>{argType}</ArgTypeNameContainer>;
-}
-
-const ArgTypeNameContainer = styled.span`
-  padding: 0px 5px;
-  border-radius: 8px;
-  /* background-color: var(--accent-/lite); */
-  border: 1px solid black;
-  font-size: 0.8em;
-  margin-left: 0.5em;
-`;
-
-const ErrorContainer = styled.div`
-  padding: 0px 10px 0px 10px;
+const ErrorText = styled.div`
   color: var(--danger);
 `;
 
@@ -541,9 +506,52 @@ const Select = styled.select`
   width: 100%;
   height: 32px;
   border-radius: 4px;
+  color: var(--white);
+  background-color: var(--bg-lite-gray);
+  padding: 0 24px 0 8px;
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23FFF'><polygon points='0,0 100,0 50,50'/></svg>")
+    no-repeat;
+  background-size: 12px;
+  background-position: calc(100% - 8px) 12px;
+  background-repeat: no-repeat;
 `;
 
 const Input = styled.input`
   width: 100%;
   height: 32px;
+  background-color: var(--bg-lite-gray);
+  border: 1px solid var(--bg-lite-gray);
+  color: var(--white);
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
+
+  &:disabled {
+    opacity: 0.5;
+  }
+`;
+
+const TextareaInput = styled.textarea`
+  width: 100%;
+  height: 4em;
+  background-color: var(--bg-lite-gray);
+  border: 1px solid var(--bg-lite-gray);
+  color: var(--white);
+  resize: vertical;
+  font:
+    14px PlexSans,
+    system-ui,
+    sans-serif;
+
+  &:disabled {
+    opacity: 0.5;
+  }
 `;

@@ -44,6 +44,7 @@
     "react-dom": "^18.2.0",
     "react-qr-reader": "^3.0.0-beta-1",
     "react-router-dom": "^6.9.0",
+    "react-tooltip": "^5.21.4",
     "rollbar": "^2.26.1",
     "styled-components": "^5.3.6",
     "uuid": "^9.0.0",
