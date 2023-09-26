@@ -101,5 +101,5 @@ export function usePassportPopupSetup() {
  */
 export function openPassportPopup(popupUrl: string, proofUrl: string) {
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
-  window.open(url, "_blank", "width=480,height=800,top=100,popup");
+  window.open(url, "_blank", "width=450,height=600,top=100,popup");
 }
