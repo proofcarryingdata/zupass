@@ -6,19 +6,19 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  checkinTicket,
   ISSUANCE_STRING,
   PCDPassFeedIds,
-  pollFeed,
   PollFeedResponseValue,
+  checkinTicket,
+  pollFeed,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
-  isReplaceInFolderAction,
   PCDActionType,
-  ReplaceInFolderAction
+  ReplaceInFolderAction,
+  isReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
@@ -33,6 +33,7 @@ import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixAPI,
+  DevconnectPretixCheckin,
   DevconnectPretixOrder
 } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
@@ -70,6 +71,7 @@ import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyn
 import { PCDpass } from "../src/types";
 import { sleep } from "../src/util/util";
 
+import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
 import {
   DevconnectPretixDataMocker,
   IMockDevconnectPretixData,
@@ -562,7 +564,21 @@ describe("devconnect functionality", function () {
     const eventConfigID = organizer.events[0].id;
     const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
 
-    const checkInDate = new Date();
+    // Multiple check-in events, with the most recent being an entry
+    const checkins: DevconnectPretixCheckin[] = [
+      {
+        type: "entry",
+        datetime: new Date("September 1, 2023 06:00:00").toISOString()
+      },
+      {
+        type: "exit",
+        datetime: new Date("September 1, 2023 07:00:00").toISOString()
+      },
+      {
+        type: "entry",
+        datetime: new Date("September 1, 2023 08:00:00").toISOString()
+      }
+    ];
 
     // Simulate Pretix returning tickets as being checked in
     server.use(
@@ -579,9 +595,7 @@ describe("devconnect functionality", function () {
                 positions: order.positions.map((position) => {
                   return {
                     ...position,
-                    checkins: [
-                      { type: "entry", datetime: checkInDate.toISOString() }
-                    ]
+                    checkins
                   };
                 })
               };
@@ -610,20 +624,25 @@ describe("devconnect functionality", function () {
       eventConfigID
     );
 
+    const finalCheckInEvent = mostRecentCheckinEvent(checkins);
+    expect(finalCheckInEvent?.type).to.eq("entry");
+
     // All tickets for the event should be consumed
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicketWithCheckin) =>
           ticket.is_consumed === true &&
           ticket.checker === PRETIX_CHECKER &&
-          ticket.pretix_checkin_timestamp?.getTime() === checkInDate.getTime()
+          ticket.pretix_checkin_timestamp?.getTime() ===
+            Date.parse(finalCheckInEvent?.datetime as string)
       ).length
     );
   });
 
   /**
    * This covers the case where we have a ticket marked as consumed, but
-   * the check-in is cancelled in Pretix.
+   * the check-in was deleted in Pretix, meaning that there are no check-in
+   * records.
    */
   step("should be able to un-check-in a ticket via sync", async function () {
     const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
@@ -645,7 +664,6 @@ describe("devconnect functionality", function () {
     // Because we're not patching the data from Pretix, default responses
     // have no check-ins.
     // Syncing should reset our checked-in tickets to be un-checked-in.
-
     expect(await os.run()).to.not.throw;
 
     // In the previous test, we checked these tickets in
@@ -655,6 +673,99 @@ describe("devconnect functionality", function () {
     );
 
     // But now they are *not* consumed
+    expect(tickets.length).to.eq(
+      tickets.filter(
+        (ticket: DevconnectPretixTicket) => ticket.is_consumed === false
+      ).length
+    );
+  });
+
+  /**
+   * This covers the case where we have a ticket marked as consumed, but
+   * the check-in entry is superseded by a later "exit" checkin.
+   */
+  step("should correctly handle a checked-out ticket", async function () {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    if (!devconnectPretixAPIConfigFromDB) {
+      throw new Error("Could not load API configuration");
+    }
+
+    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+    const orgUrl = organizer.orgURL;
+
+    // Pick an event where we will add some check-in records
+    const eventID = organizer.events[0].eventID;
+    const eventConfigID = organizer.events[0].id;
+    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+
+    // Multiple check-in events, with the most recent being an exit
+    const checkins: DevconnectPretixCheckin[] = [
+      {
+        type: "entry",
+        datetime: new Date("September 1, 2023 06:00:00").toISOString()
+      },
+      {
+        type: "exit",
+        datetime: new Date("September 1, 2023 07:00:00").toISOString()
+      },
+      {
+        type: "entry",
+        datetime: new Date("September 1, 2023 08:00:00").toISOString()
+      },
+      {
+        type: "exit",
+        datetime: new Date("September 1, 2023 09:00:00").toISOString()
+      }
+    ];
+
+    // Simulate Pretix returning tickets with the above check-in records
+    server.use(
+      rest.get(orgUrl + `/events/:event/orders`, (req, res, ctx) => {
+        const returnUnmodified = (req.params.event as string) !== eventID;
+        const originalOrders = org.ordersByEventID.get(
+          eventID
+        ) as DevconnectPretixOrder[];
+        const orders: DevconnectPretixOrder[] = returnUnmodified
+          ? originalOrders
+          : originalOrders.map((order) => {
+              return {
+                ...order,
+                positions: order.positions.map((position) => {
+                  return {
+                    ...position,
+                    checkins
+                  };
+                })
+              };
+            });
+
+        return res(
+          ctx.json({
+            results: orders,
+            next: null
+          })
+        );
+      })
+    );
+
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.context.dbPool
+    );
+    expect(await os.run()).to.not.throw;
+
+    const tickets = await fetchDevconnectPretixTicketsByEvent(
+      db,
+      eventConfigID
+    );
+
+    // The final check-in event being an exist should mean that the
+    // ticket is not checked in
+    const finalCheckInEvent = mostRecentCheckinEvent(checkins);
+    expect(finalCheckInEvent?.type).to.eq("exit");
+
+    // None of the tickets should be consumed
     expect(tickets.length).to.eq(
       tickets.filter(
         (ticket: DevconnectPretixTicket) => ticket.is_consumed === false
@@ -1360,6 +1471,14 @@ describe("devconnect functionality", function () {
 
       expect(checkinResult.value).to.eq(undefined);
       expect(checkinResult?.error?.name).to.eq("InvalidSignature");
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has been revoked",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
     }
   );
 
