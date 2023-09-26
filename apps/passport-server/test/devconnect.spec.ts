@@ -915,6 +915,7 @@ describe("devconnect functionality", function () {
   let publicKeyRSA: NodeRSA;
   let publicKeyEdDSA: EDdSAPublicKey;
 
+  // todo: move out of devconnect test into a more general test
   step(
     "anyone should be able to request the server's RSA public key",
     async function () {
@@ -933,6 +934,7 @@ describe("devconnect functionality", function () {
     }
   );
 
+  // todo: move out of devconnect test into a more general test
   step(
     "anyone should be able to request the server's EdDSA public key",
     async function () {
@@ -1050,95 +1052,101 @@ describe("devconnect functionality", function () {
    * This test updates an event, runs a pretix sync, then fetches the
    * affected PCD to see if the new event name is reflected there.
    */
-  step("should see event updates reflected in PCDs", async function () {
-    const updatedName = "New name";
+  step(
+    "user should see event updates reflected in their issued PCDs",
+    async function () {
+      const updatedName = "New name";
 
-    mocker.updateEvent(
-      mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.eventA.slug,
-      (event) => {
-        event.name.en = updatedName;
-      }
-    );
+      mocker.updateEvent(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        (event) => {
+          event.name.en = updatedName;
+        }
+      );
 
-    mocker.setEventSettings(
-      mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.eventA.slug,
-      { attendee_emails_asked: true, attendee_emails_required: true }
-    );
+      mocker.setEventSettings(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        { attendee_emails_asked: true, attendee_emails_required: true }
+      );
 
-    await devconnectPretixSyncService.trySync();
-    const response = await pollFeed(
-      application.expressContext.localEndpoint,
-      identity,
-      ISSUANCE_STRING,
-      PCDPassFeedIds.Devconnect
-    );
-    const responseBody = response.value as PollFeedResponseValue;
-    expect(responseBody.actions.length).to.eq(3);
+      await devconnectPretixSyncService.trySync();
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
+        identity,
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
+      );
+      const responseBody = response.value as PollFeedResponseValue;
+      expect(responseBody.actions.length).to.eq(3);
 
-    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
-    expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
-    expect(devconnectAction.folder).to.eq("Devconnect/New name");
+      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
+      expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
-    expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-    const ticketPCD = devconnectAction.pcds[0];
-    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
+      const ticketPCD = devconnectAction.pcds[0];
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
-      ticketPCD.pcd
-    );
+      const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
+      );
 
-    const ticketData = deserializedPCD.claim.ticket;
+      const ticketData = deserializedPCD.claim.ticket;
 
-    expect(ticketData.eventName).to.eq(updatedName);
-  });
+      expect(ticketData.eventName).to.eq(updatedName);
+    }
+  );
 
   /**
    * This test updates a product, runs a pretix sync, then fetches the
    * affected PCD to see if the new product name is reflected there.
    */
-  step("should see product updates reflected in PCDs", async function () {
-    const updatedName = "New product name";
+  step(
+    "user should see product updates reflected in their issued PCDs",
+    async function () {
+      const updatedName = "New product name";
 
-    mocker.updateItem(
-      mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.eventA.slug,
-      mocker.get().organizer1.eventAItem1.id,
-      (item) => {
-        item.name.en = updatedName;
-      }
-    );
+      mocker.updateItem(
+        mocker.get().organizer1.orgUrl,
+        mocker.get().organizer1.eventA.slug,
+        mocker.get().organizer1.eventAItem1.id,
+        (item) => {
+          item.name.en = updatedName;
+        }
+      );
 
-    await devconnectPretixSyncService.trySync();
+      await devconnectPretixSyncService.trySync();
 
-    const response = await pollFeed(
-      application.expressContext.localEndpoint,
-      identity,
-      ISSUANCE_STRING,
-      PCDPassFeedIds.Devconnect
-    );
-    const responseBody = response.value as PollFeedResponseValue;
-    expect(responseBody.actions.length).to.eq(3);
-    const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
-    expect(devconnectAction.folder).to.eq("Devconnect/Event A");
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
+        identity,
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
+      );
+      const responseBody = response.value as PollFeedResponseValue;
+      expect(responseBody.actions.length).to.eq(3);
+      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
-    expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-    const ticketPCD = devconnectAction.pcds[0];
-    expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
+      const ticketPCD = devconnectAction.pcds[0];
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
-    const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
-      ticketPCD.pcd
-    );
+      const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
+      );
 
-    const ticketData = deserializedPCD.claim.ticket;
+      const ticketData = deserializedPCD.claim.ticket;
 
-    // "Ticket name" is equivalent to item/product name
-    expect(ticketData.ticketName).to.eq(updatedName);
-  });
+      // "Ticket name" is equivalent to item/product name
+      expect(ticketData.ticketName).to.eq(updatedName);
+    }
+  );
 
   let checkerIdentity: Identity;
-  step("should be able to log in", async function () {
+  step("event 'superuser' should be able to log in", async function () {
     const result = await testLoginPCDpass(
       application,
       mocker.get().organizer1.EMAIL_2,
@@ -1157,32 +1165,35 @@ describe("devconnect functionality", function () {
   });
 
   let ticket: EdDSATicketPCD;
-  step("should be able to check in with a valid ticket", async function () {
-    const issueResponse = await pollFeed(
-      application.expressContext.localEndpoint,
-      identity,
-      ISSUANCE_STRING,
-      PCDPassFeedIds.Devconnect
-    );
-    const issueResponseBody = issueResponse.value as PollFeedResponseValue;
-    const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+  step(
+    "event 'superuser' should be able to checkin a valid ticket",
+    async function () {
+      const issueResponse = await pollFeed(
+        application.expressContext.localEndpoint,
+        identity,
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Devconnect
+      );
+      const issueResponseBody = issueResponse.value as PollFeedResponseValue;
+      const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
 
-    const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
-    ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
+      const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
+      ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
-    const checkinResult = await checkinTicket(
-      application.expressContext.localEndpoint,
-      ticket,
-      checkerIdentity
-    );
+      const checkinResult = await checkinTicket(
+        application.expressContext.localEndpoint,
+        ticket,
+        checkerIdentity
+      );
 
-    expect(checkinResult.success).to.eq(true);
-    expect(checkinResult.value).to.eq(undefined);
-    expect(checkinResult.error).to.eq(undefined);
-  });
+      expect(checkinResult.success).to.eq(true);
+      expect(checkinResult.value).to.eq(undefined);
+      expect(checkinResult.error).to.eq(undefined);
+    }
+  );
 
   step(
-    "should not be able to check in with a ticket that has already been used to check in",
+    "a 'superuser' should not be able to check in a ticket that has already been used to check in",
     async function () {
       const checkinResult = await checkinTicket(
         application.expressContext.localEndpoint,
@@ -1196,7 +1207,7 @@ describe("devconnect functionality", function () {
   );
 
   step(
-    "should not able to check in with a ticket not signed by the server",
+    "a 'superuser' should not able to check in with a ticket not signed by the server",
     async function () {
       const prvKey = newEdDSAPrivateKey();
       const ticketData: ITicketData = {
@@ -1242,22 +1253,6 @@ describe("devconnect functionality", function () {
 
       expect(checkinResult.value).to.eq(undefined);
       expect(checkinResult?.error?.name).to.eq("InvalidSignature");
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has already been used to check in",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has been revoked",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
     }
   );
 
@@ -1586,6 +1581,22 @@ describe("devconnect functionality", function () {
 
       expect(error instanceof SyncFailureError).to.be.true;
       expect(error?.phase).to.eq("validating");
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has already been used to check in",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
+    }
+  );
+
+  step(
+    "should not be able to check in with a ticket that has been revoked",
+    async function () {
+      // TODO
+      expect(true).to.eq(true);
     }
   );
 
