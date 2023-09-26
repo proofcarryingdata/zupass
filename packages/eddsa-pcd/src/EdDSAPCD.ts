@@ -6,6 +6,7 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
+import { fromHexString, toHexString } from "@pcd/util";
 import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
@@ -72,10 +73,6 @@ async function ensureInitialized() {
 
   await initializedPromise;
 }
-
-const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
-
-const toHexString = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
 
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   await ensureInitialized();
