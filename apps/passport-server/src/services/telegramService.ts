@@ -57,11 +57,10 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
-
     this.proofUrl = "";
 
     this.bot.api.setMyDescription(
-      "I'm the Research Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
+      "I'm the Workshop ZK bot! I'm managing the Research Workshop Telegram group with ZKPs. Press START to get started!"
     );
 
     this.bot.api.setMyShortDescription(
@@ -70,6 +69,7 @@ export class TelegramService {
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu("events");
+
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // This callback function is inline due to the context.dbPool not being defined when putting this logic in a member function
     eventsMenu.dynamic(async () => {
@@ -93,14 +93,14 @@ export class TelegramService {
       return range;
     });
 
-    this.bot.use(eventsMenu);
-    this.bot.use(pcdPassMenu);
-
     pcdPassMenu.dynamic(() => {
       const range = new MenuRange();
       range.webApp("Generate ZKP 🚀", this.proofUrl);
       return range;
     });
+
+    this.bot.use(eventsMenu);
+    this.bot.use(pcdPassMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
