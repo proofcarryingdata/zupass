@@ -15,6 +15,7 @@ import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 import { Pool } from "postgres-pool";
 import { fetchPretixEvents } from "../database/queries/pretix_config/fetchPretixConfiguration";
+import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
@@ -55,6 +56,7 @@ export class TelegramService {
     event_name: string;
     configEventID: string;
   }[];
+  private deleteEvents: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -66,6 +68,7 @@ export class TelegramService {
     this.bot = bot;
     this.proofUrl = "";
     this.events = [];
+    this.deleteEvents = false;
 
     this.bot.api.setMyDescription(
       "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
@@ -93,22 +96,43 @@ export class TelegramService {
             },
             async (ctx) => {
               if (ctx.chat && ctx.chat.id) {
-                logger(`[TELEGRAM]`, event, ctx.chat.id);
-                if (event?.telegramChatID === ctx.chat.id.toString()) {
-                  ctx.reply(
-                    `Chat is already linked with event ${event.event_name}`
-                  );
+                // Uses Grammy payload property https://grammy.dev/plugins/menu#payloads
+                const eventIdFromPayload = ctx.match;
+                let updatedOccured = false;
+                if (this.deleteEvents) {
+                  if (event?.telegramChatID !== ctx.chat.id.toString()) {
+                    ctx.reply(
+                      `Chat is not linked with event ${event.event_name}`
+                    );
+                  } else {
+                    await deleteTelegramEvent(
+                      context.dbPool,
+                      eventIdFromPayload
+                    );
+                    updatedOccured = true;
+                    ctx.reply(
+                      `Unlinked ${event.event_name} with chat ${ctx.chat.id}`
+                    );
+                  }
                 } else {
-                  await insertTelegramEvent(
-                    context.dbPool,
-                    ctx.match,
-                    ctx.chat.id
-                  );
-                  ctx.reply(
-                    `Linked ${event.event_name} with config ${ctx.match} and chat ${ctx.chat.id}`
-                  );
+                  if (event?.telegramChatID === ctx.chat.id.toString()) {
+                    ctx.reply(
+                      `Chat is already linked with event ${event.event_name}`
+                    );
+                  } else {
+                    await insertTelegramEvent(
+                      context.dbPool,
+                      eventIdFromPayload,
+                      ctx.chat.id
+                    );
+                    updatedOccured = true;
+                    ctx.reply(
+                      `Linked ${event.event_name} with chat ${ctx.chat.id}`
+                    );
+                  }
+                }
+                if (updatedOccured) {
                   await this.loadCleanEvents(ctx.chat.id, context.dbPool);
-                  ctx.reply(`Refreshing db...`);
                   ctx.menu.update();
                 }
               } else {
@@ -302,6 +326,7 @@ export class TelegramService {
         }
 
         const channelId = ctx.chat.id;
+        this.deleteEvents = false;
         await ctx.reply(
           `Checking linked status of this chat... (id: ${channelId})`
         );
@@ -312,6 +337,39 @@ export class TelegramService {
         });
       } catch (error) {
         await ctx.reply(`Error linking. Check server logs for details`);
+        logger(`[TELEGRAM] ERROR`, error);
+      }
+    });
+
+    this.bot.command("unlink", async (ctx) => {
+      try {
+        await ctx.reply(`Checking you have permission to unlink...`);
+        if (ctx.chat?.type === "private") {
+          await ctx.reply(
+            "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+          );
+          return;
+        }
+
+        const admins = await ctx.getChatAdministrators();
+        const isAdmin = admins.some(
+          (admin) => admin.user.id === this.bot.botInfo.id
+        );
+        if (!isAdmin) {
+          await ctx.reply(
+            "Please add me as an admin to the telegram channel associated with your event."
+          );
+          return;
+        }
+
+        const channelId = ctx.chat.id;
+        await this.loadCleanEvents(channelId, this.context.dbPool);
+        this.deleteEvents = true;
+        await ctx.reply("Unlink options", {
+          reply_markup: eventsMenu
+        });
+      } catch (error) {
+        await ctx.reply(`Error Unlinking. Check server logs for details`);
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
