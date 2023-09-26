@@ -269,6 +269,13 @@ export class UserService {
     res.sendStatus(200);
   }
 
+  /**
+   * Checks whether allowing a user to reset their account one more time
+   * would cause them to exceed the account reset rate limit. If it does,
+   * throws an error. If it doesn't, saves this account reset timestamp
+   * to the database and proceeds. Can only be called on users that have
+   * already created an account.
+   */
   private async checkAndIncrementAccountRateLimit(
     user: CommitmentRow
   ): Promise<void> {
