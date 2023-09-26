@@ -252,6 +252,7 @@ export class TelegramService {
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("link", async (ctx) => {
       try {
+        await ctx.reply(`Checking you have permission to link...`);
         if (ctx.chat?.type === "private") {
           await ctx.reply(
             "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
@@ -271,7 +272,9 @@ export class TelegramService {
         }
 
         const channelId = ctx.chat.id;
+        await ctx.reply(`Checking linked status of this chat...`);
 
+        // TODO: Make this one query
         const linkedEvents = (
           await fetchTelegramEventsByChatId(this.context.dbPool, channelId)
         ).map((l) => l.ticket_event_id);
