@@ -2,7 +2,7 @@ import { Pool } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Delete a verification.
+ * Delete an event <> telegram chat entry.
  */
 export async function deleteTelegramEvent(
   client: Pool,
