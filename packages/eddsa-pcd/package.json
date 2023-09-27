@@ -25,7 +25,6 @@
     "@pcd/util": "0.1.0",
     "chai": "^4.3.7",
     "circomlibjs": "^0.1.7",
-    "noble-ed25519": "^1.2.6",
     "react": "^18.2.0",
     "styled-components": "^5.3.9",
     "uuid": "^9.0.0"

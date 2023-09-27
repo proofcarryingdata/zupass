@@ -2,6 +2,21 @@ import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
+export async function updateCommitmentResetList(
+  client: Pool,
+  email: string,
+  resetTimestamps: string[]
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `
+update commitments
+set account_reset_timestamps = $1
+where email = $2`,
+    [resetTimestamps, email]
+  );
+}
+
 /**
  * Saves a new commitment. Overwrites any existing commitment for this email.
  * Returns the commitment UUID. Works for both Zupass users and PCDpass users.

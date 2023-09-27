@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { Response } from "express";
 import {
+  CommitmentRow,
   LoggedinPCDpassUser,
   LoggedInZuzaluUser,
   ZuzaluUser
@@ -15,7 +16,10 @@ import {
   fetchDevconnectDeviceLoginTicket,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { insertCommitment } from "../database/queries/saveCommitment";
+import {
+  insertCommitment,
+  updateCommitmentResetList
+} from "../database/queries/saveCommitment";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser
@@ -165,6 +169,11 @@ export class UserService {
       throw new PCDHTTPError(403, `Email mismatch.`);
     }
 
+    const existingUser = await fetchCommitment(this.context.dbPool, email);
+    if (existingUser) {
+      await this.checkAndIncrementAccountRateLimit(existingUser);
+    }
+
     // Save commitment to DB.
     logger(`[ZUID] Saving new commitment: ${commitment}`);
     const uuid = await insertCommitment(this.context.dbPool, {
@@ -260,6 +269,66 @@ export class UserService {
     res.sendStatus(200);
   }
 
+  /**
+   * Checks whether allowing a user to reset their account one more time
+   * would cause them to exceed the account reset rate limit. If it does,
+   * throws an error. If it doesn't, saves this account reset timestamp
+   * to the database and proceeds. Can only be called on users that have
+   * already created an account.
+   */
+  private async checkAndIncrementAccountRateLimit(
+    user: CommitmentRow
+  ): Promise<void> {
+    if (process.env.ACCOUNT_RESET_RATE_LIMIT_DISABLED === "true") {
+      logger("[PCDPASS] account rate limit disabled");
+      return;
+    }
+
+    const now = Date.now();
+    const configuredRateLimitDurationMs = parseInt(
+      process.env.ACCOUNT_RESET_LIMIT_DURATION_MS ?? "",
+      10
+    );
+    const configuredAccountResetQuantity = parseInt(
+      process.env.ACCOUNT_RESET_LIMIT_QUANTITY ?? "",
+      10
+    );
+    const defaultRateLimitDurationMs = 1000 * 60 * 60 * 24; // default 24 hours
+    const defaultRateLimitQuantity = 5; // default max 5 resets (not including 1st time account creation) in 24 hours
+    const rateLimitDurationMs = isNaN(configuredRateLimitDurationMs)
+      ? defaultRateLimitDurationMs
+      : configuredRateLimitDurationMs;
+    const rateLimitQuantity = isNaN(configuredAccountResetQuantity)
+      ? defaultRateLimitQuantity
+      : configuredAccountResetQuantity;
+
+    const parsedTimestamps: number[] = user.account_reset_timestamps.map((t) =>
+      new Date(t).getTime()
+    );
+
+    parsedTimestamps.push(now);
+
+    const maxAgeTimestamp = now - rateLimitDurationMs;
+    const resetsNewerThanMaxAge = parsedTimestamps.filter(
+      (t) => t > maxAgeTimestamp
+    );
+    const exceedsRateLimit = resetsNewerThanMaxAge.length > rateLimitQuantity;
+
+    if (exceedsRateLimit) {
+      throw new PCDHTTPError(
+        429,
+        "You've exceeded the maximum number of account resets." +
+          " Please contact passport@0xparc.org for further assistance."
+      );
+    }
+
+    await updateCommitmentResetList(
+      this.context.dbPool,
+      user.email,
+      resetsNewerThanMaxAge.map((t) => new Date(t).toISOString())
+    );
+  }
+
   public async handleNewPCDpassUser(
     token: string,
     email: string,
@@ -282,7 +351,12 @@ export class UserService {
       );
     }
 
-    logger(`[PCDPASS] Saving new commitment: ${commitment}`);
+    const existingUser = await fetchCommitment(this.context.dbPool, email);
+    if (existingUser) {
+      await this.checkAndIncrementAccountRateLimit(existingUser);
+    }
+
+    logger(`[PCDPASS] Saving commitment: ${commitment}`);
     await insertCommitment(this.context.dbPool, { email, commitment, salt });
 
     // Reload Merkle trees

@@ -12,6 +12,7 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import {
   FullProof,
   Proof,
@@ -196,7 +197,13 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<SemaphoreGroupPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new SemaphoreGroupPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: SemaphoreGroupPCD): DisplayOptions {
