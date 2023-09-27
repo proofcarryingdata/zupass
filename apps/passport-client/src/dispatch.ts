@@ -561,11 +561,7 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
-  if (
-    !appConfig.isZuzalu &&
-    !state.loadedIssuedPCDs &&
-    !state.loadingIssuedPCDs
-  ) {
+  if (!state.loadedIssuedPCDs && !state.loadingIssuedPCDs) {
     update({
       loadingIssuedPCDs: true
     });
@@ -593,11 +589,7 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
-  if (
-    !appConfig.isZuzalu &&
-    !state.loadedIssuedPCDs &&
-    state.loadingIssuedPCDs
-  ) {
+  if (!state.loadedIssuedPCDs && state.loadingIssuedPCDs) {
     return;
   }
 

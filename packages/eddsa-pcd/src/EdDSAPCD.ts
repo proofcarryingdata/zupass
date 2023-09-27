@@ -6,6 +6,7 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
+import { fromHexString, toHexString, requireDefinedParameter } from "@pcd/util";
 import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
@@ -72,10 +73,6 @@ async function ensureInitialized() {
 
   await initializedPromise;
 }
-
-const fromHexString = (hexString: string) => Buffer.from(hexString, "hex");
-
-const toHexString = (bytes: Uint8Array) => Buffer.from(bytes).toString("hex");
 
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   await ensureInitialized();
@@ -146,7 +143,13 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
-  return JSON.parse(serialized, reviver);
+  const { id, claim, proof } = JSON.parse(serialized, reviver);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new EdDSAPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {

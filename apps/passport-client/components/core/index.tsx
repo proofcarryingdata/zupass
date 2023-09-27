@@ -41,6 +41,13 @@ export const H5 = styled.h5<{ col?: string }>`
   font-weight: 400;
 `;
 
+export const Caption = styled.caption<{ col?: string }>`
+  color: ${(p) => p.col || "var(--white)"};
+  letter-spacing: 1px;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
 export const InfoLine = styled.div`
   color: var(--primary-dark);
   letter-spacing: 0.5px;

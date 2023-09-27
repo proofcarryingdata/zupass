@@ -22,6 +22,7 @@
   "dependencies": {
     "@pcd/passport-ui": "0.7.0",
     "@pcd/pcd-types": "0.7.0",
+    "@pcd/util": "0.1.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "node-rsa": "^1.1.1",

@@ -16,6 +16,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import {
   CircuitPubInput,
   MembershipProver,
@@ -279,21 +280,30 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<EthereumGroupPCD> {
-  const parsed = JSONBig({ useNativeBigInt: true }).parse(serialized);
+  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
+    serialized
+  );
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
   const publicInput = new PublicInput(
-    parsed.claim.publicInput.r,
-    parsed.claim.publicInput.rV,
-    Buffer.from(parsed.claim.publicInput.msgHash),
+    claim.publicInput.r,
+    claim.publicInput.rV,
+    Buffer.from(claim.publicInput.msgHash),
     new CircuitPubInput(
-      parsed.claim.publicInput.circuitPubInput.merkleRoot,
-      parsed.claim.publicInput.circuitPubInput.Tx,
-      parsed.claim.publicInput.circuitPubInput.Ty,
-      parsed.claim.publicInput.circuitPubInput.Ux,
-      parsed.claim.publicInput.circuitPubInput.Uy
+      claim.publicInput.circuitPubInput.merkleRoot,
+      claim.publicInput.circuitPubInput.Tx,
+      claim.publicInput.circuitPubInput.Ty,
+      claim.publicInput.circuitPubInput.Ux,
+      claim.publicInput.circuitPubInput.Uy
     )
   );
-  parsed.claim.publicInput = publicInput;
-  return new EthereumGroupPCD(parsed.id, parsed.claim, parsed.proof);
+
+  claim.publicInput = publicInput;
+
+  return new EthereumGroupPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: EthereumGroupPCD): DisplayOptions {

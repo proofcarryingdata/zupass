@@ -15,6 +15,7 @@
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
+    "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\"",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",

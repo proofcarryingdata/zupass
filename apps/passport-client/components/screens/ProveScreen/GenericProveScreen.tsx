@@ -11,7 +11,8 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
-import { Spacer } from "../../core";
+import { H2, Spacer } from "../../core";
+import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "./GenericProveSection";
@@ -45,9 +46,10 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
 
   return (
     <AppContainer bg="gray">
-      <Spacer h={24} />
-      <AppHeader />
-      <Spacer h={24} />
+      <MaybeModal fullScreen />
+      <AppHeader>
+        <H2>{req.options?.title ?? "Prove " + req.pcdType}</H2>
+      </AppHeader>
       <GenericProveSection
         initialArgs={req.args}
         onProve={onProve}

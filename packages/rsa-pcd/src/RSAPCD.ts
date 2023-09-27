@@ -3,8 +3,9 @@ import {
   PCD,
   PCDPackage,
   SerializedPCD,
-  StringArgument,
+  StringArgument
 } from "@pcd/pcd-types";
+import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
@@ -92,18 +93,24 @@ export async function verify(pcd: RSAPCD): Promise<boolean> {
 export async function serialize(pcd: RSAPCD): Promise<SerializedPCD<RSAPCD>> {
   return {
     type: RSAPCDTypeName,
-    pcd: JSONBig().stringify(pcd),
+    pcd: JSONBig().stringify(pcd)
   } as SerializedPCD<RSAPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<RSAPCD> {
-  return JSONBig().parse(serialized);
+  const { id, claim, proof } = JSONBig().parse(serialized);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new RSAPCD(id, claim, proof);
 }
 
 export function getDisplayOptions(pcd: RSAPCD): DisplayOptions {
   return {
     header: "RSA Signature",
-    displayName: "rsa-sig-" + pcd.id.substring(0, 4),
+    displayName: "rsa-sig-" + pcd.id.substring(0, 4)
   };
 }
 
@@ -122,5 +129,5 @@ export const RSAPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

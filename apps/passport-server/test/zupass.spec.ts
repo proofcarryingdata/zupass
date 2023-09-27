@@ -1,23 +1,45 @@
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  requestIssuanceServiceEnabled,
+  ISSUANCE_STRING,
+  PCDPassFeedIds,
+  pollFeed,
   User,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
+import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import { SetupServer } from "msw/lib/node";
+import { Pool } from "postgres-pool";
+import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../src/apis/emailAPI";
 import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { LoggedInZuzaluUser } from "../src/database/models";
+import { getDB } from "../src/database/postgresPool";
+import {
+  insertPretixEventConfig,
+  insertPretixOrganizerConfig
+} from "../src/database/queries/pretix_config/insertConfiguration";
+import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { PretixSyncStatus } from "../src/services/types";
 import { ZuzaluPretixSyncService } from "../src/services/zuzaluPretixSyncService";
 import { PCDpass } from "../src/types";
+import { sleep } from "../src/util/util";
+import { DevconnectPretixDataMocker } from "./pretix/devconnectPretixDataMocker";
+import { expectIssuanceServiceToBeRunning } from "./pretix/issuance";
+import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
 import {
   getMockPretixAPI,
   newMockZuzaluPretixAPI
 } from "./pretix/mockPretixApi";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import {
+  expectDevconnectPretixToHaveSynced,
+  expectZuzaluPretixToHaveSynced,
+  waitForPretixSyncStatus
+} from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
   expectCurrentSemaphoreToBe,
@@ -33,33 +55,95 @@ describe("zupass functionality", function () {
   this.timeout(15_000);
 
   let application: PCDpass;
-  let residentUser: User | undefined;
-  let visitorUser: User | undefined;
-  let organizerUser: User | undefined;
-  let updatedToOrganizerUser: LoggedInZuzaluUser;
   let emailAPI: IEmailAPI;
   let pretixMocker: ZuzaluPretixDataMocker;
   let pretixService: ZuzaluPretixSyncService;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let devconnectPretixSyncService: DevconnectPretixSyncService;
+  let mocker: DevconnectPretixDataMocker;
+  let db: Pool;
+  let server: SetupServer;
+
+  let residentUser: User | undefined;
+  let residentIdentity: Identity | undefined;
+  let visitorUser: User | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let visitorIdentity: Identity | undefined;
+  let organizerUser: User | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let organizerIdentity: Identity | undefined;
+  let updatedToOrganizerUser: LoggedInZuzaluUser;
+
+  let organizerConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let eventAConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let eventBConfigId: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let eventCConfigId: string;
 
   this.beforeAll(async () => {
     await overrideEnvironment(zuzaluTestingEnv);
+    db = await getDB();
 
     const pretixConfig = getZuzaluPretixConfig();
-
     if (!pretixConfig) {
       throw new Error(
         "expected to be able to get a pretix config for zuzalu tests"
       );
     }
-
     pretixMocker = new ZuzaluPretixDataMocker(pretixConfig);
-    const pretixAPI = getMockPretixAPI(pretixMocker.getMockData());
-    application = await startTestingApp({ zuzaluPretixAPI: pretixAPI });
+
+    mocker = new DevconnectPretixDataMocker();
+    organizerConfigId = await insertPretixOrganizerConfig(
+      db,
+      mocker.get().organizer1.orgUrl,
+      mocker.get().organizer1.token
+    );
+    eventAConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [
+        mocker.get().organizer1.eventAItem1.id + "",
+        mocker.get().organizer1.eventAItem2.id + ""
+      ],
+      [mocker.get().organizer1.eventAItem2.id + ""],
+      mocker.get().organizer1.eventA.slug
+    );
+    eventBConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      [mocker.get().organizer1.eventBItem3.id + ""],
+      mocker.get().organizer1.eventB.slug
+    );
+    eventCConfigId = await insertPretixEventConfig(
+      db,
+      organizerConfigId,
+      [],
+      [],
+      mocker.get().organizer1.eventC.slug
+    );
+
+    const orgUrls = mocker.get().organizersByOrgUrl.keys();
+
+    server = getDevconnectMockPretixAPIServer(orgUrls, mocker);
+    server.listen({ onUnhandledRequest: "bypass" });
+
+    application = await startTestingApp({
+      devconnectPretixAPIFactory: async () =>
+        new DevconnectPretixAPI({ requestsPerInterval: 10_000 }),
+      zuzaluPretixAPI: getMockPretixAPI(pretixMocker.getMockData())
+    });
 
     if (!application.services.zuzaluPretixSyncService) {
       throw new Error("expected there to be a pretix sync service");
     }
-
+    if (!application.services.devconnectPretixSyncService) {
+      throw new Error("expected there to be a pretix sync service");
+    }
+    devconnectPretixSyncService =
+      application.services.devconnectPretixSyncService;
     pretixService = application.services.zuzaluPretixSyncService;
   });
 
@@ -74,21 +158,16 @@ describe("zupass functionality", function () {
     emailAPI = application.apis.emailAPI;
   });
 
-  step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
-    expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
-    // stop interval that polls the api so we have more granular control over
-    // testing the sync functionality
-    application.services.zuzaluPretixSyncService?.stop();
+  step("zuzalu pretix should sync to completion", async function () {
+    await expectZuzaluPretixToHaveSynced(application);
   });
 
-  step("should NOT have issuance service running", async function () {
-    const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
-      application.expressContext.localEndpoint
-    );
-    expect(issuanceServiceEnabledResult.value).to.eq(false);
-    expect(issuanceServiceEnabledResult.error).to.eq(undefined);
-    expect(issuanceServiceEnabledResult.success).to.eq(true);
+  step("devconnect pretix should sync to completion", async function () {
+    await expectDevconnectPretixToHaveSynced(application);
+  });
+
+  step("should have issuance service running", async function () {
+    await expectIssuanceServiceToBeRunning(application);
   });
 
   step(
@@ -126,13 +205,119 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a resident to test with");
       }
 
-      residentUser = await testLoginZupass(application, resident.email, {
+      const result = await testLoginZupass(application, resident.email, {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
+      residentUser = result?.user;
+      residentIdentity = result?.identity;
+
       expect(emailAPI.send).to.have.been.called.exactly(1);
+    }
+  );
+
+  step("account reset has a rate limit", async function () {
+    if (!residentUser) {
+      // this shouldn't happen as we've inserted a resident via mock data
+      throw new Error("couldn't find a resident to test with");
+    }
+
+    // 1st reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    // 2nd reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    // 3rd reset
+    await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    let threw = false;
+    try {
+      await testLoginZupass(application, residentUser.email, {
+        force: true,
+        expectAlreadyRegistered: true,
+        expectDoesntHaveTicket: false,
+        expectEmailInvalid: false
+      });
+    } catch (e) {
+      threw = true;
+    } finally {
+      if (!threw) {
+        expect.fail("expected logging in to fail because of rate limit");
+      }
+    }
+
+    await sleep(4000); // see env.ts for where this number comes from
+
+    // 4th reset should succeed
+    const result = await testLoginZupass(application, residentUser.email, {
+      force: true,
+      expectAlreadyRegistered: true,
+      expectDoesntHaveTicket: false,
+      expectEmailInvalid: false
+    });
+
+    residentUser = result?.user;
+    residentIdentity = result?.identity;
+  });
+
+  step(
+    "after logging in, user should be able to be issued some PCDs from the server",
+    async function () {
+      if (!residentIdentity) {
+        throw new Error("expected to have a resident identity");
+      }
+
+      const response = await pollFeed(
+        application.expressContext.localEndpoint,
+        residentIdentity,
+        ISSUANCE_STRING,
+        PCDPassFeedIds.Zuzalu_1
+      );
+
+      if (response.error) {
+        throw new Error("expected to be able to get a feed response");
+      }
+
+      expect(response.value?.actions?.length).to.eq(2);
+
+      const action = response.value?.actions?.[1] as ReplaceInFolderAction;
+
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.folder).to.eq("Zuzalu");
+
+      expect(Array.isArray(action.pcds)).to.eq(true);
+      expect(action.pcds.length).to.eq(1);
+
+      const ticketPCD = action.pcds[0];
+
+      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
+
+      const deserializedTicketPCD = await EdDSATicketPCDPackage.deserialize(
+        ticketPCD.pcd
+      );
+
+      const verified = await EdDSATicketPCDPackage.verify(
+        deserializedTicketPCD
+      );
+      expect(verified).to.eq(true);
     }
   );
 
@@ -203,21 +388,30 @@ describe("zupass functionality", function () {
         throw new Error("couldn't find a visitor or organizer to test with");
       }
 
-      visitorUser = await testLoginZupass(application, visitor.email, {
+      const visitorResult = await testLoginZupass(application, visitor.email, {
         force: false,
         expectAlreadyRegistered: false,
         expectDoesntHaveTicket: false,
         expectEmailInvalid: false
       });
-      expect(emailAPI.send).to.have.been.called.exactly(2);
+      visitorUser = visitorResult?.user;
+      visitorIdentity = visitorResult?.identity;
 
-      organizerUser = await testLoginZupass(application, organizer.email, {
-        force: false,
-        expectAlreadyRegistered: false,
-        expectDoesntHaveTicket: false,
-        expectEmailInvalid: false
-      });
-      expect(emailAPI.send).to.have.been.called.exactly(3);
+      expect(emailAPI.send).to.have.been.called.exactly(7);
+
+      const organizerResult = await testLoginZupass(
+        application,
+        organizer.email,
+        {
+          force: false,
+          expectAlreadyRegistered: false,
+          expectDoesntHaveTicket: false,
+          expectEmailInvalid: false
+        }
+      );
+      organizerUser = organizerResult?.user;
+      organizerIdentity = organizerResult?.identity;
+      expect(emailAPI.send).to.have.been.called.exactly(8);
     }
   );
 
@@ -273,12 +467,18 @@ describe("zupass functionality", function () {
         })
       ).to.eq(undefined);
 
-      residentUser = await testLoginZupass(application, resident.email, {
-        force: true,
-        expectAlreadyRegistered: true,
-        expectDoesntHaveTicket: false,
-        expectEmailInvalid: false
-      });
+      const residentResult = await testLoginZupass(
+        application,
+        resident.email,
+        {
+          force: true,
+          expectAlreadyRegistered: true,
+          expectDoesntHaveTicket: false,
+          expectEmailInvalid: false
+        }
+      );
+      residentUser = residentResult?.user;
+      residentIdentity = residentResult?.identity;
 
       if (!residentUser || !visitorUser || !organizerUser) {
         throw new Error("expected user");
