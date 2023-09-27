@@ -34,7 +34,7 @@ function requestProof(message: string) {
       userProvided: true
     },
     fieldsToReveal: {
-      argumentType: ArgumentTypeName.Object,
+      argumentType: ArgumentTypeName.ToggleList,
       value: {
         revealEventId: true
       },
