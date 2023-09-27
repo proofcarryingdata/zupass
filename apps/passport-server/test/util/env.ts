@@ -26,7 +26,10 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   ).toString("base64"),
   SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
   PASSPORT_CLIENT_URL: "http://localhost:3000",
-  PRETIX_SYNC_DISABLED: undefined
+  PRETIX_SYNC_DISABLED: undefined,
+  ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
+  ACCOUNT_RESET_LIMIT_QUANTITY: "3",
+  ACCOUNT_RESET_LIMIT_DURATION_MS: "3000"
 });
 
 export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
