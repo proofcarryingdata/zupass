@@ -14,7 +14,7 @@ export function AnotherDeviceChangedPasswordModal() {
   return (
     <Container>
       <Spacer h={8} />
-      <H1>Password Outdated</H1>
+      <H1>Session Invalid</H1>
       <Spacer h={24} />
       <p>
         You've changed your password on another device, logging you out of all

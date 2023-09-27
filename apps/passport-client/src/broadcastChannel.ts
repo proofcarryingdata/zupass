@@ -4,7 +4,7 @@ import { Action } from "./dispatch";
 
 const CHANNEL_NAME = "zupass_broadcast_channel";
 // The event message that prompts other tabs to refresh their local state
-const PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE = "passwod_change_on_other_tab";
+const PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE = "password_change_on_other_tab";
 let channel: BroadcastChannel | null = null;
 
 /**
@@ -31,12 +31,16 @@ export function notifyPasswordChangeOnOtherTabs() {
 export function setupBroadcastChannel(
   dispatch: (action: Action) => Promise<void>
 ) {
-  channel = new BroadcastChannel(CHANNEL_NAME);
+  if (channel === null) {
+    channel = new BroadcastChannel(CHANNEL_NAME);
+  }
   channel.onmessage = (event) => {
     if (event.data === PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE) {
       dispatch({
         type: "password-change-on-other-tab"
       });
+    } else {
+      console.error("BroadcastChannel event has no handler", event);
     }
   };
 }

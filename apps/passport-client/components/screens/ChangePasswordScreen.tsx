@@ -61,7 +61,7 @@ export function ChangePasswordScreen() {
           error: {
             title: "Password incorrect",
             message:
-              "Double-check your password. If you've lost access, please click 'Reset Account' below.",
+              "Double-check your current password. If you've lost access, please click 'Reset Account' below.",
             dismissToCurrentPage: true
           }
         });
