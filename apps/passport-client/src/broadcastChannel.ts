@@ -15,7 +15,7 @@ export function notifyPasswordChangeOnOtherTabs() {
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
     console.error(
-      "Channel has not been set up with listener yet, please ensure you have called setupSaltBroadcast()"
+      "Channel has not been set up with listener yet, please ensure you have called setupBroadcastChannel()"
     );
   }
   channel.postMessage(PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE);
