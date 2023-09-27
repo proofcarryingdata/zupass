@@ -13,12 +13,10 @@ import {
 import { Bot, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
-import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
-  LinkedPretixTelegramEvent,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -56,7 +54,6 @@ export class TelegramService {
   // These new variables serve as piece of global state that the dynamic Grammy menu can access
   // I haven't found a cleaner way to do this yet.
   private proofUrl: string;
-  private events: LinkedPretixTelegramEvent[];
   private deleteEvents: boolean;
 
   public constructor(
@@ -68,7 +65,6 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.proofUrl = "";
-    this.events = [];
     this.deleteEvents = false;
 
     this.bot.api.setMyDescription(
@@ -88,7 +84,16 @@ export class TelegramService {
       logger(`[TELEGRAM] calling dynamic events menu...`);
 
       const range = new MenuRange();
-      for (const event of this.events) {
+      let events = await fetchLinkedPretixAndTelegramEvents(context.dbPool);
+      for (const event of events) {
+        if (!event.configEventID) {
+          logger(
+            `[TELEGRAM] events lookup failed. Make sure pretix_events_config and devconnect_pretix_items_info are populated.`
+          );
+          throw new Error(
+            `Fetching events failed. Check server logs for more detail.`
+          );
+        }
         range
           .text(
             {
@@ -135,7 +140,9 @@ export class TelegramService {
                   }
                 }
                 if (updatedOccured) {
-                  await this.loadEvents(context.dbPool);
+                  events = await fetchLinkedPretixAndTelegramEvents(
+                    context.dbPool
+                  );
                   ctx.menu.update();
                 }
               } else {
@@ -334,7 +341,7 @@ export class TelegramService {
           `Checking linked status of this chat... (id: ${channelId})`
         );
 
-        await this.loadEvents(this.context.dbPool);
+        // await this.loadEvents(this.context.dbPool);
         await ctx.reply("Link options", {
           reply_markup: eventsMenu
         });
@@ -365,7 +372,7 @@ export class TelegramService {
           return;
         }
 
-        await this.loadEvents(this.context.dbPool);
+        // await this.loadEvents(this.context.dbPool);
         this.deleteEvents = true;
         await ctx.reply("Unlink options", {
           reply_markup: eventsMenu
@@ -390,11 +397,6 @@ export class TelegramService {
         { parse_mode: "HTML" }
       );
     });
-  }
-
-  private async loadEvents(db: Pool): Promise<void> {
-    const events = await fetchLinkedPretixAndTelegramEvents(db);
-    this.events = events;
   }
 
   /**

@@ -55,7 +55,7 @@ export async function fetchLinkedPretixAndTelegramEvents(
       dpe.pretix_events_config_id AS "configEventID" 
     FROM pretix_events_config pec
     LEFT JOIN devconnect_pretix_events_info dpe ON pec.id = dpe.pretix_events_config_id
-    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+    LEFT JOIN telegram_bot_events tbe ON pec.id = tbe.ticket_event_id
     `
   );
 
