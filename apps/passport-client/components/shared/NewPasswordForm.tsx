@@ -27,7 +27,7 @@ export function PasswordInput({
 }: SetPasswordInputProps) {
   return (
     <Container>
-      <BigInput
+      <PasswordBigInput
         autoFocus={autoFocus}
         type={revealPassword ? "text" : "password"}
         placeholder={placeholder}
@@ -38,14 +38,20 @@ export function PasswordInput({
         <ShowHidePasswordIcon
           draggable="false"
           src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
-          width={24}
-          height={24}
+          width={32}
+          height={32}
           onClick={() => setRevealPassword((curr) => !curr)}
         />
       </ShowHidePasswordIconContainer>
     </Container>
   );
 }
+
+const PasswordBigInput = styled(BigInput)`
+  /* To account for show/hide password icon. We add it to both sides to preserve center text alignment. */
+  padding-right: 48px;
+  padding-left: 48px;
+`;
 
 const Container = styled.div`
   width: 100%;
