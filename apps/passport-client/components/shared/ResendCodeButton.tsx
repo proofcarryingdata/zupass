@@ -11,10 +11,10 @@ interface ResendCodeButtonProps {
 export function ResendCodeButton({ email }: ResendCodeButtonProps) {
   const identity = useIdentity();
   // If not zero, this is the number of seconds the user will have
-  // the wait before clicking this button again. Technically, this
-  // frontend check doesn't really matter for sophisticated actors
+  // to wait before clicking this button again. Technically, this
+  // frontend check doesn't really matter for sophisticated actors,
   // because our defense against spammers should happen with rate
-  // limiting at the API layer, but this is still useful to have.
+  // limiting at the API layer.
   const [waitCountInSeconds, setWaitCount] = useState(0);
   const handleClick = async (event: React.FormEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -27,8 +27,8 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
       false
     );
 
-    // We need a local variable `timer` because relying on state will have us stuck
-    // within the setInterval().
+    // We need a local variable `timer` because relying on React state
+    // will have us stuck within the setInterval().
     let timer = 10;
     setWaitCount(10);
 
