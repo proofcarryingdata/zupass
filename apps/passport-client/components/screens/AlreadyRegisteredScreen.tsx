@@ -28,7 +28,7 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
-import { PasswordInput } from "../shared/NewPasswordForm";
+import { PasswordInput } from "../shared/PasswordInput";
 
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
