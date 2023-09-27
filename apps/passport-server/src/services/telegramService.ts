@@ -87,7 +87,13 @@ export class TelegramService {
       const userId = ctx?.from?.id;
       const username = ctx?.from?.username;
       const firstName = ctx?.from?.first_name;
-      const name = username || firstName;
+      const lastName = ctx?.from?.last_name;
+      // Tedious logic to display the user's name in priority of first + last > first > username}
+      const name = firstName
+        ? lastName
+          ? `${firstName} ${lastName}`
+          : firstName
+        : username || "";
 
       if (userId && name) {
         const proofUrl = this.generateProofUrl(userId.toString());
@@ -168,7 +174,7 @@ export class TelegramService {
         // Only process the command if it comes as a private message.
         if (ctx.message && ctx.chat.type === "private") {
           await ctx.reply(
-            "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
+            "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!",
             {
               reply_markup: pcdPassMenu
             }
