@@ -3,7 +3,7 @@ import JSONBig from "json-bigint";
 import { groth16, Groth16Proof } from "snarkjs";
 import { v4 as uuid } from "uuid";
 
-import type { EDdSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -108,7 +108,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
 export interface ZKEdDSAEventTicketPCDClaim {
   partialTicket: Partial<ITicketData>;
   watermark: string;
-  signer: EDdSAPublicKey;
+  signer: EdDSAPublicKey;
 
   // only if requested in PCDArgs
   validEventIds?: string[];

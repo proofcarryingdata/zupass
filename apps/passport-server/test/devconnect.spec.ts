@@ -1,4 +1,4 @@
-import { EDdSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -131,7 +131,7 @@ describe("devconnect functionality", function () {
 
   let identity: Identity;
   let publicKeyRSA: NodeRSA;
-  let publicKeyEdDSA: EDdSAPublicKey;
+  let publicKeyEdDSA: EdDSAPublicKey;
 
   let ticket: EdDSATicketPCD;
   let checkerIdentity: Identity;

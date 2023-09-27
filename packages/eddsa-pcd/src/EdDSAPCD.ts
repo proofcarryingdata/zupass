@@ -6,14 +6,14 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-import { fromHexString, toHexString, requireDefinedParameter } from "@pcd/util";
+import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
 import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
-export type EDdSAPublicKey = [string, string];
+export type EdDSAPublicKey = [string, string];
 
 export interface EdDSAInitArgs {}
 
@@ -33,7 +33,7 @@ export interface EdDSAPCDArgs {
 export interface EdDSAPCDClaim {
   // The public key is a pair of hex strings, representing a point on
   // the elliptic curve
-  publicKey: EDdSAPublicKey;
+  publicKey: EdDSAPublicKey;
   // The message is an array of bigints, each representing a field
   message: bigint[];
 }
@@ -178,7 +178,7 @@ export const EdDSAPCDPackage: PCDPackage<
 
 export async function getEdDSAPublicKey(
   privateKey: string | Uint8Array
-): Promise<EDdSAPublicKey> {
+): Promise<EdDSAPublicKey> {
   await ensureInitialized();
 
   if (typeof privateKey === "string") {
@@ -189,5 +189,5 @@ export async function getEdDSAPublicKey(
     .prv2pub(privateKey)
     .map((p) =>
       eddsa.F.toObject(p).toString(16).padStart(64, "0")
-    ) as EDdSAPublicKey;
+    ) as EdDSAPublicKey;
 }
