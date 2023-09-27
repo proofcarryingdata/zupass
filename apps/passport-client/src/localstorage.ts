@@ -45,7 +45,7 @@ export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
 }
 
-export async function loadEncryptionKey(): Promise<string | undefined> {
+export function loadEncryptionKey(): string | undefined {
   return window.localStorage["encryption_key"];
 }
 

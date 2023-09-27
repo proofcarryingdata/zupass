@@ -25,6 +25,10 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
+import {
+  closeBroadcastChannel,
+  setupBroadcastChannel
+} from "../src/broadcastChannel";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
@@ -45,7 +49,6 @@ import {
   saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
-import { closeSaltBroadcast, setupSaltBroadcast } from "../src/saltBroadcoast";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 
@@ -60,10 +63,10 @@ class App extends React.Component<object, AppState> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
-    setupSaltBroadcast(this.dispatch);
+    setupBroadcastChannel(this.dispatch);
   }
   componentWillUnmount(): void {
-    closeSaltBroadcast();
+    closeBroadcastChannel();
   }
   stateContextState: StateContextState = {
     getState: () => this.state,
@@ -121,7 +124,7 @@ class App extends React.Component<object, AppState> {
       console.log(e);
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60 * 5);
+    setTimeout(this.jobPollUser, 1000 * 10);
   };
 }
 
@@ -200,7 +203,7 @@ async function loadInitialState(): Promise<AppState> {
 
   const self = loadSelf();
   const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const userInvalid = loadUserInvalid();
   const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();

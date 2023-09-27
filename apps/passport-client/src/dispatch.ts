@@ -19,9 +19,11 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
+import { updateStateOnOtherTabs } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  loadSelf,
   saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
@@ -30,7 +32,6 @@ import {
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import { updateSaltStateOnOtherTabs } from "./saltBroadcoast";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { sanitizeDateRanges } from "./user";
@@ -66,10 +67,6 @@ export type Action =
       self: User;
     }
   | {
-      type: "set-salt";
-      salt: string;
-    }
-  | {
       type: "set-modal";
       modal: AppState["modal"];
     }
@@ -90,6 +87,7 @@ export type Action =
       encryptionKey: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
+  | { type: "update-state-from-local-storage" }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
@@ -122,8 +120,6 @@ export async function dispatch(
       return genDeviceLoginPassport(state.identity, update);
     case "set-self":
       return setSelf(action.self, state, update);
-    case "set-salt":
-      return setSalt(action.salt, state, update);
     case "error":
       return update({ error: action.error });
     case "clear-error":
@@ -136,8 +132,10 @@ export async function dispatch(
       return update({
         modal: action.modal
       });
+    case "update-state-from-local-storage":
+      return updateStateFromLocalStorage(update);
     case "change-password":
-      return saveNewEncryptionKey(
+      return saveNewPasswordAndBroadcast(
         action.newEncryptionKey,
         action.newSalt,
         state,
@@ -336,17 +334,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   }
 }
 
-// Sets the `salt` field of state.self
-function setSalt(salt: string, state: AppState, update: ZuUpdate) {
-  update({
-    self: {
-      ...state.self,
-      salt
-    }
-  });
-}
-
-// Runs periodically, whenever we poll new participant info.
+// Runs periodically, whenever we poll new participant info and when we broadcast state updates.
 async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
@@ -483,7 +471,17 @@ async function loadFromSync(
   }
 }
 
-async function saveNewEncryptionKey(
+// Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
+async function updateStateFromLocalStorage(update: ZuUpdate) {
+  const self = loadSelf();
+  const encryptionKey = loadEncryptionKey();
+  return update({
+    self,
+    encryptionKey
+  });
+}
+
+async function saveNewPasswordAndBroadcast(
   newEncryptionKey: string,
   newSalt: string,
   state: AppState,
@@ -491,7 +489,7 @@ async function saveNewEncryptionKey(
 ) {
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
-  updateSaltStateOnOtherTabs(newSalt);
+  updateStateOnOtherTabs();
   return update({
     encryptionKey: newEncryptionKey,
     self: newSelf
@@ -528,7 +526,7 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {
-  if ((await loadEncryptionKey()) == null) {
+  if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return;
   }

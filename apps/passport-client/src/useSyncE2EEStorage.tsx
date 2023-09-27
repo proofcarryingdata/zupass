@@ -59,7 +59,7 @@ export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
 
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 
   const encryptedStorage = await passportEncrypt(
@@ -91,7 +91,7 @@ export async function uploadStorage(): Promise<void> {
 export async function downloadStorage(): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
 
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const storageResult = await requestDownloadAndDecryptStorage(
     appConfig.passportServer,
     encryptionKey
