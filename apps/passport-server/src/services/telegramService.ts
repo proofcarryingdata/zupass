@@ -10,9 +10,10 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Bot, InlineKeyboard } from "grammy";
+import { Bot, Context, InlineKeyboard } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
+import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
@@ -54,7 +55,7 @@ export class TelegramService {
   // These new variables serve as piece of global state that the dynamic Grammy menu can access
   // I haven't found a cleaner way to do this yet.
   private proofUrl: string;
-  private deleteEvents: boolean;
+  private fetchLinkMenu: () => Promise<MenuRange<Context>>;
 
   public constructor(
     context: ApplicationContext,
@@ -65,7 +66,8 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.proofUrl = "";
-    this.deleteEvents = false;
+    this.fetchLinkMenu = async (): Promise<MenuRange<Context>> =>
+      new MenuRange();
 
     this.bot.api.setMyDescription(
       "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
@@ -82,77 +84,7 @@ export class TelegramService {
     // TODO: Figure out a better way to execute the logic with the required state.
     eventsMenu.dynamic(async () => {
       logger(`[TELEGRAM] calling dynamic events menu...`);
-
-      const range = new MenuRange();
-      let events = await fetchLinkedPretixAndTelegramEvents(context.dbPool);
-      for (const event of events) {
-        if (!event.configEventID) {
-          logger(
-            `[TELEGRAM] events lookup failed. Make sure pretix_events_config and devconnect_pretix_items_info are populated.`
-          );
-          throw new Error(
-            `Fetching events failed. Check server logs for more detail.`
-          );
-        }
-        range
-          .text(
-            {
-              text: `${event.telegramChatID ? `✅` : `❌`} ${
-                event.eventName
-              } id: ${event.telegramChatID}`,
-              payload: event.configEventID
-            },
-            async (ctx) => {
-              if (ctx.chat && ctx.chat.id) {
-                // Uses Grammy payload property https://grammy.dev/plugins/menu#payloads
-                const eventIdFromPayload = ctx.match;
-                let updatedOccured = false;
-                if (this.deleteEvents) {
-                  if (event?.telegramChatID !== ctx.chat.id.toString()) {
-                    ctx.reply(
-                      `Chat is not linked with event ${event.eventName}`
-                    );
-                  } else {
-                    await deleteTelegramEvent(
-                      context.dbPool,
-                      eventIdFromPayload
-                    );
-                    updatedOccured = true;
-                    ctx.reply(
-                      `Unlinked ${event.eventName} with chat ${ctx.chat.id}`
-                    );
-                  }
-                } else {
-                  if (event?.telegramChatID === ctx.chat.id.toString()) {
-                    ctx.reply(
-                      `Chat is already linked with event ${event.eventName}`
-                    );
-                  } else {
-                    await insertTelegramEvent(
-                      context.dbPool,
-                      eventIdFromPayload,
-                      ctx.chat.id
-                    );
-                    updatedOccured = true;
-                    ctx.reply(
-                      `Linked ${event.eventName} with chat ${ctx.chat.id}`
-                    );
-                  }
-                }
-                if (updatedOccured) {
-                  events = await fetchLinkedPretixAndTelegramEvents(
-                    context.dbPool
-                  );
-                  ctx.menu.update();
-                }
-              } else {
-                ctx.reply(`Couldn't link chat with event`);
-              }
-            }
-          )
-          .row();
-      }
-      return range;
+      return await this.fetchLinkMenu();
     });
 
     pcdPassMenu.dynamic(() => {
@@ -336,7 +268,7 @@ export class TelegramService {
         }
 
         const channelId = ctx.chat.id;
-        this.deleteEvents = false;
+        this.buildLinkMenu(this.context.dbPool);
         await ctx.reply(
           `Checking linked status of this chat... (id: ${channelId})`
         );
@@ -371,9 +303,8 @@ export class TelegramService {
           );
           return;
         }
-
-        // await this.loadEvents(this.context.dbPool);
-        this.deleteEvents = true;
+        const unlink = true;
+        this.buildLinkMenu(this.context.dbPool, unlink);
         await ctx.reply("Unlink options", {
           reply_markup: eventsMenu
         });
@@ -399,6 +330,75 @@ export class TelegramService {
     });
   }
 
+  private buildLinkMenu(db: Pool, unlink?: boolean): void {
+    this.fetchLinkMenu = async (): Promise<MenuRange<Context>> => {
+      const range = new MenuRange();
+      let events = await fetchLinkedPretixAndTelegramEvents(db);
+      for (const event of events) {
+        if (!event.configEventID) {
+          logger(
+            `[TELEGRAM] events lookup failed. Make sure pretix_events_config and devconnect_pretix_items_info are populated.`
+          );
+          throw new Error(
+            `Fetching events failed. Check server logs for more detail.`
+          );
+        }
+        range
+          .text(
+            {
+              text: `${event.telegramChatID ? `✅` : `❌`} ${
+                event.eventName
+              } id: ${event.telegramChatID}`,
+              payload: event.configEventID
+            },
+            async (ctx) => {
+              if (ctx.chat && ctx.chat.id) {
+                // Uses Grammy payload property https://grammy.dev/plugins/menu#payloads
+                const eventIdFromPayload = ctx.match;
+                let updatedOccured = false;
+                if (unlink) {
+                  if (event?.telegramChatID !== ctx.chat.id.toString()) {
+                    ctx.reply(
+                      `Chat is not linked with event ${event.eventName}`
+                    );
+                  } else {
+                    await deleteTelegramEvent(db, eventIdFromPayload);
+                    updatedOccured = true;
+                    ctx.reply(
+                      `Unlinked ${event.eventName} with chat ${ctx.chat.id}`
+                    );
+                  }
+                } else {
+                  if (event?.telegramChatID === ctx.chat.id.toString()) {
+                    ctx.reply(
+                      `Chat is already linked with event ${event.eventName}`
+                    );
+                  } else {
+                    await insertTelegramEvent(
+                      db,
+                      eventIdFromPayload,
+                      ctx.chat.id
+                    );
+                    updatedOccured = true;
+                    ctx.reply(
+                      `Linked ${event.eventName} with chat ${ctx.chat.id}`
+                    );
+                  }
+                }
+                if (updatedOccured) {
+                  events = await fetchLinkedPretixAndTelegramEvents(db);
+                  ctx.menu.update();
+                }
+              } else {
+                ctx.reply(`Couldn't link chat with event`);
+              }
+            }
+          )
+          .row();
+      }
+      return range;
+    };
+  }
   /**
    * Telegram does not allow two instances of a bot to be running at once.
    * During deployment, a new instance of the app will be started before the
