@@ -28,6 +28,7 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { PasswordInput } from "../shared/PasswordInput";
 
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
@@ -38,6 +39,7 @@ export function AlreadyRegisteredScreen() {
   const identityCommitment = query?.get("identityCommitment");
   const [isLoading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  const [revealPassword, setRevealPassword] = useState(false);
 
   const handleConfirmationEmailResult = useCallback(
     async (result: ConfirmEmailResult) => {
@@ -194,12 +196,13 @@ export function AlreadyRegisteredScreen() {
                 )}
                 {salt && (
                   <form onSubmit={onSubmitPassword}>
-                    <BigInput
-                      placeholder="Password"
+                    <PasswordInput
                       autoFocus
                       value={password}
-                      type="password"
-                      onChange={(e) => setPassword(e.target.value)}
+                      setValue={setPassword}
+                      placeholder="Password"
+                      revealPassword={revealPassword}
+                      setRevealPassword={setRevealPassword}
                     />
                     <Spacer h={8} />
                     <Button type="submit">Login</Button>

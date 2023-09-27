@@ -10,7 +10,8 @@ import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
-import { NewPasswordForm, PasswordInput } from "../shared/NewPasswordForm";
+import { NewPasswordForm } from "../shared/NewPasswordForm";
+import { PasswordInput } from "../shared/PasswordInput";
 
 export function ChangePasswordScreen() {
   const self = useSelf();

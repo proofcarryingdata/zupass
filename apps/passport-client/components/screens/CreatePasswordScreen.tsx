@@ -76,6 +76,7 @@ export function CreatePasswordScreen() {
 
         <CenterColumn w={280}>
           <NewPasswordForm
+            autoFocus
             email={email}
             password={password}
             confirmPassword={confirmPassword}
