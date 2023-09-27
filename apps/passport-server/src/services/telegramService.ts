@@ -52,9 +52,6 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
-  // These new variables serve as piece of global state that the dynamic Grammy menu can access
-  // I haven't found a cleaner way to do this yet.
-  private proofUrl: string;
   private fetchLinkMenu: () => Promise<MenuRange<Context>>;
 
   public constructor(
@@ -65,7 +62,6 @@ export class TelegramService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
-    this.proofUrl = "";
     this.fetchLinkMenu = async (): Promise<MenuRange<Context>> =>
       new MenuRange();
 
@@ -87,9 +83,18 @@ export class TelegramService {
       return await this.fetchLinkMenu();
     });
 
-    pcdPassMenu.dynamic(() => {
-      const range = new MenuRange();
-      range.webApp("Generate ZKP 🚀", this.proofUrl);
+    pcdPassMenu.dynamic((ctx, range) => {
+      const userId = ctx?.from?.id;
+      const username = ctx?.from?.username;
+      const firstName = ctx?.from?.first_name;
+      const name = username || firstName;
+
+      if (userId && name) {
+        const proofUrl = this.generateProofUrl(userId.toString());
+        range.webApp(`Generate ZKP for ${name} 🚀`, proofUrl);
+      } else {
+        ctx.reply(`userId or name not found...`);
+      }
       return range;
     });
 
@@ -162,76 +167,6 @@ export class TelegramService {
       try {
         // Only process the command if it comes as a private message.
         if (ctx.message && ctx.chat.type === "private") {
-          const userId = ctx.message.from.id;
-
-          const fieldsToReveal: EdDSATicketFieldsToReveal = {
-            revealTicketId: true,
-            revealEventId: true,
-            revealProductId: true,
-            revealTimestampConsumed: false,
-            revealTimestampSigned: false,
-            revealAttendeeSemaphoreId: true,
-            revealIsConsumed: false,
-            revealIsRevoked: false
-          };
-
-          const args: ZKEdDSAEventTicketPCDArgs = {
-            ticket: {
-              argumentType: ArgumentTypeName.PCD,
-              pcdType: EdDSATicketPCDPackage.name,
-              value: undefined,
-              userProvided: true
-            },
-            identity: {
-              argumentType: ArgumentTypeName.PCD,
-              pcdType: SemaphoreIdentityPCDPackage.name,
-              value: undefined,
-              userProvided: true
-            },
-            fieldsToReveal: {
-              argumentType: ArgumentTypeName.ToggleList,
-              value: fieldsToReveal,
-              userProvided: false
-            },
-            externalNullifier: {
-              argumentType: ArgumentTypeName.BigInt,
-              value: undefined,
-              userProvided: false
-            },
-            validEventIds: {
-              argumentType: ArgumentTypeName.StringArray,
-              value: undefined,
-              userProvided: false
-            },
-            watermark: {
-              argumentType: ArgumentTypeName.BigInt,
-              value: userId.toString(),
-              userProvided: false
-            }
-          };
-
-          let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
-          if (passportOrigin === "http://localhost:3000/") {
-            // TG bot doesn't like localhost URLs
-            passportOrigin = "http://127.0.0.1:3000/";
-          }
-          const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${userId}`;
-
-          this.proofUrl = constructPassportPcdGetRequestUrl<
-            typeof ZKEdDSAEventTicketPCDPackage
-          >(
-            passportOrigin,
-            returnUrl,
-            ZKEdDSAEventTicketPCDPackage.name,
-            args,
-            {
-              genericProveScreen: true,
-              title: "ZK Ticket Proof",
-              description:
-                "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
-            }
-          );
-
           await ctx.reply(
             "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to Stanford Research Workshop, so I can add you to the attendee Telegram group!",
             {
@@ -328,6 +263,71 @@ export class TelegramService {
         { parse_mode: "HTML" }
       );
     });
+  }
+
+  private generateProofUrl(telegramUserId: string): string {
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: true,
+      revealEventId: true,
+      revealProductId: true,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: true,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: undefined,
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: undefined,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: telegramUserId.toString(),
+        userProvided: false
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
+    }
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+
+    const proofUrl = constructPassportPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: "ZK Ticket Proof",
+      description:
+        "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
+    });
+    return proofUrl;
   }
 
   private buildLinkMenu(db: Pool, unlink?: boolean): void {
