@@ -53,6 +53,8 @@ export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot;
   private rollbarService: RollbarService | null;
+  // These new variables serve as piece of global state that the dynamic Grammy menu can access
+  // I haven't found a cleaner way to do this yet.
   private proofUrl: string;
   private events: LinkedPretixTelegramEvent[];
   private deleteEvents: boolean;
@@ -80,6 +82,8 @@ export class TelegramService {
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // This callback function is inline due to the context.dbPool not being defined when putting this logic in a member function
+    // This function needs access to the global state (this.events and this.deleteEvents).
+    // TODO: Figure out a better way to execute the logic with the required state.
     eventsMenu.dynamic(async () => {
       logger(`[TELEGRAM] calling dynamic events menu...`);
 
