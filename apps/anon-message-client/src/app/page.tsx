@@ -36,8 +36,7 @@ function requestProof(message: string) {
     fieldsToReveal: {
       argumentType: ArgumentTypeName.Object,
       value: {
-        revealEventId: true,
-        revealAttendeeSemaphoreId: true
+        revealEventId: true
       },
       userProvided: false
     },
