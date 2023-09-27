@@ -1,24 +1,24 @@
+// Note: refactoring to @pcd/passport-interface in the future, especially if
+// cross-browser interaction starts to exist outside of passport-client
 import { Action } from "./dispatch";
 
 const CHANNEL_NAME = "zupass_broadcast_channel";
 // The event message that prompts other tabs to refresh their local state
-const UPDATE_STATE_MESSAGE = "update_state_on_other_tabs";
+const PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE = "passwod_change_on_other_tab";
 let channel: BroadcastChannel | null = null;
 
 /**
- * Force other tabs in the current browser session to load their AppState from
- * the saved localStorage values. This ensures that when we perform actions that
- * change localStorage like changing password, this update is also reflected in
- * the in-browser memory of other tabs within the session.
+ * Messages other tabs in the current browser session via the BroadcastChannel
+ * that we have updated our password in this tab.
  */
-export function updateStateOnOtherTabs() {
+export function notifyPasswordChangeOnOtherTabs() {
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
     console.error(
       "Channel has not been set up with listener yet, please ensure you have called setupSaltBroadcast()"
     );
   }
-  channel.postMessage(UPDATE_STATE_MESSAGE);
+  channel.postMessage(PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE);
 }
 
 /**
@@ -33,9 +33,9 @@ export function setupBroadcastChannel(
 ) {
   channel = new BroadcastChannel(CHANNEL_NAME);
   channel.onmessage = (event) => {
-    if (event.data === UPDATE_STATE_MESSAGE) {
+    if (event.data === PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE) {
       dispatch({
-        type: "update-state-from-local-storage"
+        type: "password-change-on-other-tab"
       });
     }
   };

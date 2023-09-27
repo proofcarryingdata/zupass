@@ -19,7 +19,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
-import { updateStateOnOtherTabs } from "./broadcastChannel";
+import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
@@ -87,7 +87,7 @@ export type Action =
       encryptionKey: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
-  | { type: "update-state-from-local-storage" }
+  | { type: "password-change-on-other-tab" }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
@@ -132,8 +132,8 @@ export async function dispatch(
       return update({
         modal: action.modal
       });
-    case "update-state-from-local-storage":
-      return updateStateFromLocalStorage(update);
+    case "password-change-on-other-tab":
+      return handlePasswordChangeOnOtherTab(update);
     case "change-password":
       return saveNewPasswordAndBroadcast(
         action.newEncryptionKey,
@@ -242,7 +242,7 @@ async function login(
 ) {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
-    await crypto.generateSaltAndArgon2(password);
+    await crypto.generateSaltAndKey(password);
 
   await saveEncryptionKey(encryptionKey);
 
@@ -472,7 +472,7 @@ async function loadFromSync(
 }
 
 // Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
-async function updateStateFromLocalStorage(update: ZuUpdate) {
+async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
   const self = loadSelf();
   const encryptionKey = loadEncryptionKey();
   return update({
@@ -489,7 +489,8 @@ async function saveNewPasswordAndBroadcast(
 ) {
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
-  updateStateOnOtherTabs();
+  saveEncryptionKey(newEncryptionKey);
+  notifyPasswordChangeOnOtherTabs();
   return update({
     encryptionKey: newEncryptionKey,
     self: newSelf

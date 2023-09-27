@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
-import { saveEncryptionKey } from "../../src/localstorage";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
@@ -49,7 +48,7 @@ export function ChangePasswordScreen() {
         saltResult.value
       );
       const { salt: newSalt, key: newEncryptionKey } =
-        await crypto.generateSaltAndArgon2(newPassword);
+        await crypto.generateSaltAndKey(newPassword);
       const res = await updateBlobKeyForEncryptedStorage(
         currentEncryptionKey,
         newEncryptionKey,
@@ -75,7 +74,6 @@ export function ChangePasswordScreen() {
         throw new Error(`Request failed with message ${res.error}`);
       }
 
-      await saveEncryptionKey(newEncryptionKey);
       dispatch({
         type: "set-modal",
         modal: "changed-password"

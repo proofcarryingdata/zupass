@@ -9,8 +9,10 @@ import { APIResult } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
- * Asks to upload an e2ee encrypted blob to the PCDpass server. The server
- * never learns the user's encryption key.
+ * Updates the blob key that encrypts a user's storage and updates the salt used to
+ * generate the preimage to that blob key. If this request succeeds, the user's storage
+ * is no longer accessible with the old blob key and the user's salt is guaranteed to
+ * be different.
  *
  * Never rejects. All information encoded in the resolved response.
  */

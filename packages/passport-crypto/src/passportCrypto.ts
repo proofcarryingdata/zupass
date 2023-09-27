@@ -33,9 +33,9 @@ export class PCDCrypto {
   }
 
   // Combines generateSalt and argon2 function, returns both salt and generated key
-  public generateSaltAndArgon2(password: Utf8String, length = 32) {
+  public generateSaltAndKey(password: Utf8String) {
     const salt = this.generateSalt();
-    const key = this.argon2(password, salt, length);
+    const key = this.argon2(password, salt, 32);
     return { key, salt };
   }
 
