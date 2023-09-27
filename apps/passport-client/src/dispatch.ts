@@ -242,7 +242,7 @@ async function login(
 ) {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
-    await crypto.generateSaltAndKey(password);
+    await crypto.generateSaltAndEncryptionKey(password);
 
   await saveEncryptionKey(encryptionKey);
 

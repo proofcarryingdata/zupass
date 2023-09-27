@@ -48,7 +48,7 @@ export function ChangePasswordScreen() {
         saltResult.value
       );
       const { salt: newSalt, key: newEncryptionKey } =
-        await crypto.generateSaltAndKey(newPassword);
+        await crypto.generateSaltAndEncryptionKey(newPassword);
       const res = await updateBlobKeyForEncryptedStorage(
         currentEncryptionKey,
         newEncryptionKey,

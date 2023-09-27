@@ -32,8 +32,11 @@ export class PCDCrypto {
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 
-  // Combines generateSalt and argon2 function, returns both salt and generated key
-  public generateSaltAndKey(password: Utf8String) {
+  /**
+   * Combines generateSalt and argon2 function, returns both a random salt
+   * and the resulting 32-byte encryption key.
+   */
+  public generateSaltAndEncryptionKey(password: Utf8String) {
     const salt = this.generateSalt();
     const key = this.argon2(password, salt, 32);
     return { key, salt };
