@@ -36,7 +36,10 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
-import { pretixTicketsDifferent } from "../../util/devconnectTicket";
+import {
+  mostRecentCheckinEvent,
+  pretixTicketsDifferent
+} from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
 import { setError, traced } from "../telemetryService";
@@ -849,8 +852,14 @@ export class OrganizerSync {
             );
           }
           const email = normalizeEmail(attendee_email || order.email);
+
+          // Checkin events can be either "entry" or "exit".
+          // Exits cancel out entries, so we want to find out if the most
+          // recent event was an entry or exit.
+          const checkin = mostRecentCheckinEvent(checkins);
+          // If the most recent event was an entry, the user is checked in
           const pretix_checkin_timestamp_string =
-            checkins.length > 0 ? checkins[0].datetime : null;
+            checkin && checkin.type === "entry" ? checkin.datetime : null;
 
           let pretix_checkin_timestamp: Date | null = null;
 

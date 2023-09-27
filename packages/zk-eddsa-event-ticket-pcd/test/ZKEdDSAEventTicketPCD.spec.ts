@@ -1,3 +1,8 @@
+import assert from "assert";
+import { expect } from "chai";
+import * as path from "path";
+import { v4 as uuid } from "uuid";
+
 import {
   EdDSATicketPCDPackage,
   ITicketData,
@@ -11,21 +16,19 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { BABY_JUB_NEGATIVE_ONE, uuidToBigInt } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import assert from "assert";
-import { expect } from "chai";
-import "mocha";
-import * as path from "path";
-import { v4 as uuid } from "uuid";
+
 import {
   EdDSATicketFieldsToReveal,
+  snarkInputForValidEventIds,
   VALID_EVENT_IDS_MAX_LEN,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDClaim,
   ZKEdDSAEventTicketPCDPackage,
-  ZKEdDSAEventTicketPCDTypeName,
-  snarkInputForValidEventIds
+  ZKEdDSAEventTicketPCDTypeName
 } from "../src";
+
+import "mocha";
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
@@ -219,7 +222,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       },
       fieldsToReveal: {
         value: fieldsToReveal,
-        argumentType: ArgumentTypeName.Object
+        argumentType: ArgumentTypeName.ToggleList
       },
       validEventIds: {
         value: validEventIds,

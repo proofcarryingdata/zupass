@@ -1,3 +1,8 @@
+import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
+import JSONBig from "json-bigint";
+import { groth16, Groth16Proof } from "snarkjs";
+import { v4 as uuid } from "uuid";
+
 import type { EDdSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
@@ -8,10 +13,10 @@ import {
 import {
   BigIntArgument,
   DisplayOptions,
-  ObjectArgument,
   PCD,
   PCDArgument,
   PCDPackage,
+  RevealListArgument,
   SerializedPCD,
   StringArrayArgument
 } from "@pcd/pcd-types";
@@ -28,14 +33,10 @@ import {
   fromHexString,
   generateSnarkMessageHash,
   numberToBigInt,
-  uuidToBigInt
+  uuidToBigInt,
+  requireDefinedParameter
 } from "@pcd/util";
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
-import JSONBig from "json-bigint";
-import { Groth16Proof, groth16 } from "snarkjs";
-import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
-
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
@@ -52,7 +53,7 @@ let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 /**
  * Specifies which fields of an EdDSATicket should be revealed in a proof.
  */
-export interface EdDSATicketFieldsToReveal {
+export type EdDSATicketFieldsToReveal = {
   revealTicketId?: boolean;
   revealEventId?: boolean;
   revealProductId?: boolean;
@@ -62,7 +63,7 @@ export interface EdDSATicketFieldsToReveal {
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
   revealTicketCategory?: boolean;
-}
+};
 
 /**
  * Info required to initialize this PCD package.  These are the artifacts
@@ -92,7 +93,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
   validEventIds: StringArrayArgument;
 
   // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified
-  fieldsToReveal: ObjectArgument<EdDSATicketFieldsToReveal>;
+  fieldsToReveal: RevealListArgument<EdDSATicketFieldsToReveal>;
   watermark: BigIntArgument;
 
   // provide externalNullifier field to request a nullifierHash
@@ -528,10 +529,15 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<ZKEdDSAEventTicketPCD> {
-  const parsed = JSONBig({ useNativeBigInt: true }).parse(serialized);
-  const proof = parsed.proof;
-  const claim = parsed.claim;
-  return new ZKEdDSAEventTicketPCD(parsed.id, claim, proof);
+  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
+    serialized
+  );
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new ZKEdDSAEventTicketPCD(id, claim, proof);
 }
 
 /**

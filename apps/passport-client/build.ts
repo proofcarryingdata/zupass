@@ -37,6 +37,7 @@ const passportAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   entryPoints: ["pages/index.tsx"],
+  entryNames: "[name]-[hash]",
   plugins: [
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
@@ -83,13 +84,20 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string) {
-  compileHtml();
-  compileFavicon();
-
   switch (command) {
     case "build":
       const passportRes = await build({ ...passportAppOpts, minify: true });
       console.error("Built", passportRes);
+
+      // `outputs` is an object whose keys are the output filenames
+      // There are only two outputs: a js file, and a js.map file
+      // The js file is our main output, to be referenced from index.html
+      const jsOutputFilename = Object.keys(passportRes.metafile.outputs)
+        .map((filename) => path.basename(filename))
+        .find((filename) => path.extname(filename) === ".js");
+
+      compileHtml(jsOutputFilename);
+      compileFavicon();
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
@@ -104,6 +112,8 @@ async function run(command: string) {
       console.error("Built", serviceWorkerRes);
       break;
     case "dev":
+      compileHtml("index.js");
+      compileFavicon();
       const serviceWorkerCtx = await context(serviceWorkerOpts);
       await serviceWorkerCtx.watch();
 
@@ -140,15 +150,16 @@ async function run(command: string) {
   }
 }
 
-function compileHtml() {
+function compileHtml(jsFilename: string) {
   const indexHtmlTemplateSource = fs
     .readFileSync(path.join("public", "index.hbs"))
     .toString();
   const template = Handlebars.compile(indexHtmlTemplateSource);
 
   const html = template({
-    title: IS_ZUZALU ? "Zuzalu Passport" : "PCDpass",
-    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css"
+    title: IS_ZUZALU ? "Zupass" : "PCDpass",
+    cssPath: IS_ZUZALU ? "/global-zupass.css" : "/global-pcdpass.css",
+    jsFilename
   });
 
   fs.writeFileSync(path.join("public", "index.html"), html);

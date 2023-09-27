@@ -15,10 +15,9 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
-import { PretixSyncStatus } from "../src/services/types";
 import { PCDpass } from "../src/types";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
-import { waitForPretixSyncStatus } from "./pretix/waitForPretixSyncStatus";
+import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import { testLoginPCDpass } from "./user/testLoginPCDPass";
 import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
@@ -28,7 +27,6 @@ describe("zuzalu pcdpass functionality", function () {
   this.timeout(30_000);
 
   let application: PCDpass;
-
   let pretixMocker: ZuzaluPretixDataMocker;
   let identity: Identity;
   let order: ZuzaluPretixOrder;
@@ -56,12 +54,8 @@ describe("zuzalu pcdpass functionality", function () {
     await stopApplication(application);
   });
 
-  step("pretix should sync to completion", async function () {
-    const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
-    expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
-    // stop interval that polls the api so we have more granular control over
-    // testing the sync functionality
-    application.services.zuzaluPretixSyncService?.stop();
+  step("zuzalu pretix should sync to completion", async function () {
+    await expectZuzaluPretixToHaveSynced(application);
   });
 
   step("should be able to log in", async function () {

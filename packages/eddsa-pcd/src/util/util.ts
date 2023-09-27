@@ -1,4 +1,4 @@
-import * as ed from "noble-ed25519";
+import { getRandomValues, toHexString } from "@pcd/util";
 
 /**
  * Create a new EdDSA private key.
@@ -6,5 +6,5 @@ import * as ed from "noble-ed25519";
  * @returns an EdDSA private key as hexadecimal string.
  */
 export function newEdDSAPrivateKey(): string {
-  return Buffer.from(ed.utils.randomPrivateKey()).toString("hex");
+  return toHexString(getRandomValues(32));
 }

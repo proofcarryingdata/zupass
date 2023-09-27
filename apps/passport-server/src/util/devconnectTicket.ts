@@ -1,3 +1,4 @@
+import { DevconnectPretixCheckin } from "../apis/devconnect/devconnectPretixAPI";
 import { DevconnectPretixTicket } from "../database/models";
 
 /**
@@ -31,8 +32,31 @@ export function pretixTicketsDifferent(
   if (
     oldTicket.pretix_checkin_timestamp !== newTicket.pretix_checkin_timestamp
   ) {
-    return true;
+    // The inequality might be because one of these is null, but it might
+    // also be because both are date objects, in which case we need a
+    // stricter check.
+    if (
+      oldTicket.pretix_checkin_timestamp instanceof Date &&
+      newTicket.pretix_checkin_timestamp instanceof Date
+    ) {
+      if (
+        oldTicket.pretix_checkin_timestamp.getTime() !==
+        newTicket.pretix_checkin_timestamp.getTime()
+      ) {
+        return true;
+      }
+    } else {
+      return true;
+    }
   }
 
   return false;
+}
+
+export function mostRecentCheckinEvent(
+  checkins: DevconnectPretixCheckin[]
+): DevconnectPretixCheckin | undefined {
+  // The string comparison is in the sort is safe because ISO date
+  // strings sort lexicographically.
+  return checkins.sort((a, b) => (a.datetime > b.datetime ? 1 : -1)).at(-1);
 }

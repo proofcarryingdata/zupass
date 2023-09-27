@@ -10,8 +10,8 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-import { fromHexString, toHexString } from "@pcd/util";
-import { Eddsa, Point, Poseidon, buildEddsa, buildPoseidon } from "circomlibjs";
+import { fromHexString, toHexString, requireDefinedParameter } from "@pcd/util";
+import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
@@ -258,7 +258,13 @@ export async function serialize(
  * @returns the deserialized version of the EdDSA PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
-  return JSON.parse(serialized, reviver);
+  const { id, claim, proof } = JSON.parse(serialized, reviver);
+
+  requireDefinedParameter(id, "id");
+  requireDefinedParameter(claim, "claim");
+  requireDefinedParameter(proof, "proof");
+
+  return new EdDSAPCD(id, claim, proof);
 }
 
 /**

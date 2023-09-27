@@ -1,3 +1,7 @@
+import { Bot, InlineKeyboard } from "grammy";
+import { Chat, ChatFromGetChat } from "grammy/types";
+import sha256 from "js-sha256";
+
 import { Menu } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
@@ -9,9 +13,7 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Bot, InlineKeyboard } from "grammy";
-import { Chat, ChatFromGetChat } from "grammy/types";
-import sha256 from "js-sha256";
+
 import { fetchPretixEventInfoByName } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
@@ -154,7 +156,7 @@ export class TelegramService {
               userProvided: true
             },
             fieldsToReveal: {
-              argumentType: ArgumentTypeName.Object,
+              argumentType: ArgumentTypeName.ToggleList,
               value: fieldsToReveal,
               userProvided: false
             },
@@ -191,9 +193,9 @@ export class TelegramService {
             args,
             {
               genericProveScreen: true,
-              title: "ZK-EdDSA Ticket Request",
+              title: "ZK Ticket Proof",
               description:
-                "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
+                "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
             }
           );
 
