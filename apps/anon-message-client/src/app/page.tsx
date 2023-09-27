@@ -85,10 +85,6 @@ export default function SubmitMessagePage() {
     <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
       <span className="text-white font-bold my-4">zk-TG</span>
       <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
-        <div className="flex rounded-md bg-[#037ee5] justify-between p-2">
-          <span className="font-semibold">PCD Working Group</span>
-          <span className="text-white opacity-80">Anonymous Chats</span>
-        </div>
         <textarea
           placeholder="Type your anonymous message here"
           value={message}

@@ -269,12 +269,27 @@ export class TelegramService {
 
     this.bot.command("anonsend", async (ctx) => {
       if (ctx.chat?.type !== "private") {
-        await ctx.reply(
-          "To maintain privacy, please message within a private chat."
-        );
+        const messageThreadId = ctx.message?.message_thread_id;
+        const chatId = ctx.chat.id;
+
+        // if there is a message_thread_id or a chat_id, use reply settings.
+        const replyOptions = messageThreadId
+          ? { message_thread_id: messageThreadId }
+          : chatId
+          ? {}
+          : undefined;
+
+        if (replyOptions) {
+          await ctx.reply(
+            "To maintain privacy, please message within a private chat.",
+            replyOptions
+          );
+        }
         return;
       }
-      const zktgUrl = "https://dev.local:4000/";
+
+      const zktgUrl =
+        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
 
       anonSendMenu.webApp("Send anonymous message", zktgUrl);
       await ctx.reply("Click below to anonymously send a message.", {
