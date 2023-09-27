@@ -42,6 +42,7 @@ export interface LinkedPretixTelegramEvent {
   eventName: string;
   configEventID: string;
 }
+
 export async function fetchLinkedPretixAndTelegramEvents(
   client: Pool
 ): Promise<LinkedPretixTelegramEvent[]> {
