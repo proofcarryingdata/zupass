@@ -1,9 +1,11 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
+  ChangeBlobKeyResult,
+  SyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV2,
+  requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage,
-  SyncedEncryptedStorageV2
+  requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect, useState } from "react";
@@ -19,6 +21,36 @@ import {
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 
+export async function updateBlobKeyForEncryptedStorage(
+  oldEncryptionKey: string,
+  newEncryptionKey: string,
+  newSalt: string
+): Promise<ChangeBlobKeyResult> {
+  const user = loadSelf();
+  const pcds = await loadPCDs();
+
+  const encryptedStorage = await passportEncrypt(
+    JSON.stringify({
+      pcds: await pcds.serializeCollection(),
+      self: user,
+      _storage_version: "v2"
+    } satisfies SyncedEncryptedStorageV2),
+    newEncryptionKey
+  );
+
+  const oldBlobKey = await getHash(oldEncryptionKey);
+  const newBlobKey = await getHash(newEncryptionKey);
+
+  return requestChangeBlobKey(
+    appConfig.passportServer,
+    oldBlobKey,
+    newBlobKey,
+    user.uuid,
+    newSalt,
+    encryptedStorage
+  );
+}
+
 /**
  * Uploads the state of this passport which is contained in localstorage
  * to the server, end to end encrypted.
@@ -27,12 +59,7 @@ export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
 
-  if (pcds.size() === 0) {
-    console.error("[SYNC] skipping upload, no pcds in localStorage");
-    return;
-  }
-
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 
   const encryptedStorage = await passportEncrypt(
@@ -64,7 +91,7 @@ export async function uploadStorage(): Promise<void> {
 export async function downloadStorage(): Promise<PCDCollection | null> {
   console.log("[SYNC] downloading e2ee storage");
 
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const storageResult = await requestDownloadAndDecryptStorage(
     appConfig.passportServer,
     encryptionKey

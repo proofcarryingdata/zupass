@@ -19,9 +19,12 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
+import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  loadSelf,
+  saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
@@ -83,6 +86,8 @@ export type Action =
       storage: SyncedEncryptedStorage;
       encryptionKey: string;
     }
+  | { type: "change-password"; newEncryptionKey: string; newSalt: string }
+  | { type: "password-change-on-other-tab" }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
@@ -127,6 +132,15 @@ export async function dispatch(
       return update({
         modal: action.modal
       });
+    case "password-change-on-other-tab":
+      return handlePasswordChangeOnOtherTab(update);
+    case "change-password":
+      return saveNewPasswordAndBroadcast(
+        action.newEncryptionKey,
+        action.newSalt,
+        state,
+        update
+      );
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
@@ -227,8 +241,8 @@ async function login(
   update: ZuUpdate
 ) {
   const crypto = await PCDCrypto.newInstance();
-  const newSalt = await crypto.generateSalt();
-  const encryptionKey = await crypto.argon2(password, newSalt, 32);
+  const { salt: newSalt, key: encryptionKey } =
+    await crypto.generateSaltAndEncryptionKey(password);
 
   await saveEncryptionKey(encryptionKey);
 
@@ -320,11 +334,27 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   }
 }
 
-// Runs periodically, whenever we poll new participant info.
+// Runs periodically, whenever we poll new participant info and when we broadcast state updates.
 async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
+  let hasChangedPassword = false;
 
-  if (BigInt(self.commitment) !== state.identity.commitment) {
+  if (state.self && self.salt !== state.self.salt) {
+    // If the password has been changed on a different device, the salts will mismatch
+    console.log("User salt mismatch");
+    hasChangedPassword = true;
+    requestLogToServer(
+      appConfig.passportServer,
+      "another-device-changed-password",
+      {
+        oldSalt: state.self.salt,
+        newSalt: self.salt,
+        email: self.email
+      }
+    );
+  } else if (
+    BigInt(self.commitment).toString() !== state.identity.commitment.toString()
+  ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
     requestLogToServer(appConfig.passportServer, "invalid-user", {
@@ -338,6 +368,11 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
+  }
+
+  if (hasChangedPassword) {
+    anotherDeviceChangedPassword(update);
+    return;
   }
 
   if (userMismatched) {
@@ -436,11 +471,45 @@ async function loadFromSync(
   }
 }
 
+// Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
+async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
+  const self = loadSelf();
+  const encryptionKey = loadEncryptionKey();
+  return update({
+    self,
+    encryptionKey
+  });
+}
+
+async function saveNewPasswordAndBroadcast(
+  newEncryptionKey: string,
+  newSalt: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  const newSelf = { ...state.self, salt: newSalt };
+  saveSelf(newSelf);
+  saveEncryptionKey(newEncryptionKey);
+  notifyPasswordChangeOnOtherTabs();
+  return update({
+    encryptionKey: newEncryptionKey,
+    self: newSelf
+  });
+}
+
 function userInvalid(update: ZuUpdate) {
   saveUserInvalid(true);
   update({
     userInvalid: true,
     modal: "invalid-participant"
+  });
+}
+
+function anotherDeviceChangedPassword(update: ZuUpdate) {
+  saveAnotherDeviceChangedPassword(true);
+  update({
+    anotherDeviceChangedPassword: true,
+    modal: "another-device-changed-password"
   });
 }
 
@@ -458,7 +527,7 @@ function userInvalid(update: ZuUpdate) {
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {
-  if ((await loadEncryptionKey()) == null) {
+  if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return;
   }

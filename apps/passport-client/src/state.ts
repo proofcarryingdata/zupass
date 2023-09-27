@@ -25,6 +25,8 @@ export interface AppState {
     | "settings"
     | "save-sync"
     | "invalid-participant"
+    | "changed-password"
+    | "another-device-changed-password"
     | "resolve-subscription-error"
     | "";
 
@@ -39,6 +41,8 @@ export interface AppState {
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;
+  // If set, the user has had their password changed from a different device
+  anotherDeviceChangedPassword?: boolean;
 
   uploadedUploadId?: string;
   uploadingUploadId?: string;

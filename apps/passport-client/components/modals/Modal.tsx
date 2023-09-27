@@ -6,6 +6,8 @@ import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
+import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
+import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
@@ -49,7 +51,12 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
 }
 
 function isModalDismissable(modal: AppState["modal"]) {
-  return !["save-sync", "invalid-participant"].includes(modal);
+  return ![
+    "save-sync",
+    "invalid-participant",
+    "changed-password",
+    "another-device-changed-password"
+  ].includes(modal);
 }
 
 function getModalBody(modal: AppState["modal"]) {
@@ -62,6 +69,10 @@ function getModalBody(modal: AppState["modal"]) {
       return <SaveSyncModal />;
     case "invalid-participant":
       return <InvalidUserModal />;
+    case "another-device-changed-password":
+      return <AnotherDeviceChangedPasswordModal />;
+    case "changed-password":
+      return <ChangedPasswordModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
     case "":

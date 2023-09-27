@@ -45,7 +45,7 @@ export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
 }
 
-export async function loadEncryptionKey(): Promise<string | undefined> {
+export function loadEncryptionKey(): string | undefined {
   return window.localStorage["encryption_key"];
 }
 
@@ -73,6 +73,19 @@ export function saveUserInvalid(userInvalid: boolean) {
   window.localStorage["participantInvalid"] = userInvalid;
 }
 
+export function saveAnotherDeviceChangedPassword(
+  anotherDeviceChangedPassword: boolean
+) {
+  window.localStorage["anotherDeviceChangedPassword"] =
+    anotherDeviceChangedPassword;
+}
+
 export function loadUserInvalid(): boolean {
   return JSON.parse(window.localStorage["participantInvalid"] ?? "false");
+}
+
+export function loadAnotherDeviceChangedPassword(): boolean {
+  return JSON.parse(
+    window.localStorage["anotherDeviceChangedPassword"] ?? "false"
+  );
 }

@@ -79,6 +79,48 @@ export interface DownloadEncryptedStorageRequest {
 }
 
 /**
+ * Ask the server to change the salt, delete the storage at the old blob key,
+ * and add a new encrypted storage entry encrypted with the new blob key.
+ */
+export interface ChangeBlobKeyRequest {
+  /**
+   * The original hashed encryption key to be deleted.
+   */
+  oldBlobKey: string;
+  /**
+   * The new hashed encryption key to be added.
+   */
+  newBlobKey: string;
+  /**
+   * UUID of the user making the request.
+   */
+  uuid: string;
+  /**
+   * The salt used in generating the new blob key.
+   */
+  newSalt: string;
+  /**
+   * The encrypted and stringified version of {@link EncryptedStorage} to save
+   */
+  encryptedBlob: string;
+}
+
+/**
+ * Response to {@link ChangeBlobKeyRequest}
+ */
+export type ChangeBlobKeyResponseValue = undefined;
+
+/**
+ * A {@link ChangeBlobKeyRequest} can fail for a number of reasons.
+ */
+export type ChangeBlobKeyError = { detailedMessage?: string } & (
+  | { name: "PasswordIncorrect" }
+  | { name: "UserNotFound" }
+  | { name: "RequiresNewSalt" }
+  | { name: "ServerError" }
+);
+
+/**
  * Ask the server to check whether this ticket is still eligible to be checked in.
  */
 export interface CheckTicketRequest {

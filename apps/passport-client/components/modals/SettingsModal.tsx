@@ -10,6 +10,10 @@ export function SettingsModal() {
   const dispatch = useDispatch();
   const syncKey = useSyncKey();
 
+  const close = useCallback(() => {
+    dispatch({ type: "set-modal", modal: "" });
+  }, [dispatch]);
+
   const copySyncKey = useCallback(async () => {
     // Use the window clipboard API to copy the key
     await window.navigator.clipboard.writeText(syncKey);
@@ -39,13 +43,16 @@ export function SettingsModal() {
         <LinkButton to="/scan">Scan Ticket</LinkButton>
         <Spacer h={16} />
         {appConfig.isZuzalu && (
-          <>
-            <Button onClick={copySyncKey}>
-              {justCopied ? "Copied" : "Copy Sync Key"}
-            </Button>
-            <Spacer h={16} />
-          </>
+          <Button onClick={copySyncKey}>
+            {justCopied ? "Copied" : "Copy Sync Key"}
+          </Button>
         )}
+        {!appConfig.isZuzalu && (
+          <LinkButton to="/change-password" onClick={close}>
+            Change Password
+          </LinkButton>
+        )}
+        <Spacer h={16} />
         <LinkButton
           to="/subscriptions"
           onClick={() => dispatch({ type: "set-modal", modal: "" })}

@@ -5,6 +5,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
+import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
@@ -24,15 +25,20 @@ import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
+import {
+  closeBroadcastChannel,
+  setupBroadcastChannel
+} from "../src/broadcastChannel";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadAnotherDeviceChangedPassword,
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
@@ -57,6 +63,10 @@ class App extends React.Component<object, AppState> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    setupBroadcastChannel(this.dispatch);
+  }
+  componentWillUnmount(): void {
+    closeBroadcastChannel();
   }
   stateContextState: StateContextState = {
     getState: () => this.state,
@@ -114,7 +124,7 @@ class App extends React.Component<object, AppState> {
       console.log(e);
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60 * 5);
+    setTimeout(this.jobPollUser, 1000 * 60);
   };
 }
 
@@ -136,7 +146,16 @@ function RouterImpl() {
             element={<AlreadyRegisteredScreen />}
           />
           {!appConfig.isZuzalu && (
-            <Route path="create-password" element={<CreatePasswordScreen />} />
+            <>
+              <Route
+                path="create-password"
+                element={<CreatePasswordScreen />}
+              />
+              <Route
+                path="change-password"
+                element={<ChangePasswordScreen />}
+              />
+            </>
           )}
           <Route
             path="enter-confirmation-code"
@@ -184,8 +203,9 @@ async function loadInitialState(): Promise<AppState> {
 
   const self = loadSelf();
   const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
   const userInvalid = loadUserInvalid();
+  const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
@@ -215,6 +235,7 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     userInvalid: userInvalid,
+    anotherDeviceChangedPassword,
     subscriptions,
     resolvingSubscriptionId: undefined
   };

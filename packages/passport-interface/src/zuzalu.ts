@@ -8,6 +8,9 @@ export interface User {
   /** Email address they used to register */
   email: string;
 
+  /** Salt used to secure user's password */
+  salt: string | null;
+
   /** PCDpass-specific user metadata */
   superuserEventConfigIds?: string[];
 

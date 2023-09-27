@@ -13,6 +13,7 @@ export * from "./User";
 export * from "./api/apiResult";
 export * from "./api/constants";
 export * from "./api/makeRequest";
+export * from "./api/requestChangeBlobKey";
 export * from "./api/requestCheckIn";
 export * from "./api/requestCheckTicket";
 export * from "./api/requestConfirmationEmail";
@@ -35,4 +36,3 @@ export * from "./api/requestUploadEncryptedStorage";
 export * from "./api/requestUser";
 export * from "./api/requestVerifyToken";
 export * from "./zuzalu";
-
