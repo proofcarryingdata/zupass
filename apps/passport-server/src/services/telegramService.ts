@@ -87,13 +87,7 @@ export class TelegramService {
       const userId = ctx?.from?.id;
       const username = ctx?.from?.username;
       const firstName = ctx?.from?.first_name;
-      const lastName = ctx?.from?.last_name;
-      // Tedious logic to display the user's name in priority of first + last > first > username}
-      const name = firstName
-        ? lastName
-          ? `${firstName} ${lastName}`
-          : firstName
-        : username || "";
+      const name = firstName || username;
 
       if (userId && name) {
         const proofUrl = this.generateProofUrl(userId.toString());
