@@ -1,14 +1,21 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  CheckTicketByIdRequest,
+  CheckTicketByIdResult,
+  CheckTicketInByIdRequest,
+  CheckTicketInByIdResult,
   CheckTicketInRequest,
   CheckTicketInResult,
   CheckTicketRequest,
   CheckTicketResult,
   IssuanceEnabledResponseValue,
+  KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  VerifyTicketRequest,
+  VerifyTicketResult
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { IssuanceService } from "../../services/issuanceService";
@@ -109,10 +116,18 @@ export function initPCDIssuanceRoutes(
    */
   app.post("/issue/check-ticket", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleCheckTicketRequest(
+    const result = await issuanceService.handleDevconnectCheckTicketRequest(
       req.body as CheckTicketRequest
     );
     res.json(result satisfies CheckTicketResult);
+  });
+
+  app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const result = await issuanceService.handleDevconnectCheckTicketByIdRequest(
+      req.body as CheckTicketByIdRequest
+    );
+    res.json(result satisfies CheckTicketByIdResult);
   });
 
   /**
@@ -127,9 +142,35 @@ export function initPCDIssuanceRoutes(
    */
   app.post("/issue/check-in", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleCheckInRequest(
+    const result = await issuanceService.handleDevconnectCheckInRequest(
       req.body as CheckTicketInRequest
     );
     res.json(result satisfies CheckTicketInResult);
+  });
+
+  /**
+   * Works similarly to /issue/check-in, but instead of receiving a PCD
+   * it receives a ticket ID and attempts to check in with it.
+   */
+  app.post("/issue/check-in-by-id", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const result = await issuanceService.handleDevconnectCheckInByIdRequest(
+      req.body as CheckTicketInByIdRequest
+    );
+    res.json(result satisfies CheckTicketInByIdResult);
+  });
+
+  app.post("/issue/verify-ticket", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const result = await issuanceService.handleVerifyTicketRequest(
+      req.body as VerifyTicketRequest
+    );
+    return res.json(result satisfies VerifyTicketResult);
+  });
+
+  app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const result = await issuanceService.handleKnownTicketTypesRequest();
+    return res.json(result satisfies KnownTicketTypesResult);
   });
 }

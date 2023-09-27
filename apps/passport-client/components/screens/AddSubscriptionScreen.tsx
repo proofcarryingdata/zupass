@@ -198,9 +198,7 @@ export function SubscriptionInfoRow({
         </>
       )}
       {alreadySubscribed ? (
-        <AlreadySubscribed
-          existingSubscription={existingSubscriptions[0]}
-        />
+        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
       ) : (
         <SubscribeSection
           providerUrl={providerUrl}
@@ -238,9 +236,72 @@ function SubscribeSection({
 
   const onSubscribeClick = useCallback(() => {
     (async () => {
+<<<<<<< HEAD
       dispatch({ type: "add-subscription", providerUrl, providerName, feed: info });
     })();
   }, [providerUrl, info, dispatch, providerName]);
+=======
+      if (!subscriptions.getProvider(providerUrl)) {
+        subscriptions.addProvider(providerUrl, providerName);
+      }
+
+      // If we have a credential type specified, and it's not a
+      // SemaphoreSignaturePCD, then look it up from PCDCollection.
+      // We can't do this with SemaphoreSignaturePCD because it's generated
+      // dynamically rather than stored in the collection.
+      if (info.credentialType === EmailPCDPackage.name) {
+        const matchingPcds = pcds.getPCDsByType(info.credentialType);
+        if (matchingPcds.length > 0) {
+          setSubscribing(true);
+          const credential = await pcds.serialize(matchingPcds[0]);
+          dispatch({
+            type: "add-subscription",
+            providerUrl,
+            feed: info,
+            credential
+          });
+        } else {
+          // We shouldn't get here as the UI should not allow us to attempt
+          // this
+          console.log("No credential PCD found");
+        }
+      } else {
+        setSubscribing(true);
+        const credential = await SemaphoreSignaturePCDPackage.serialize(
+          await SemaphoreSignaturePCDPackage.prove({
+            identity: {
+              argumentType: ArgumentTypeName.PCD,
+              value: await SemaphoreIdentityPCDPackage.serialize(
+                await SemaphoreIdentityPCDPackage.prove({
+                  identity: identity
+                })
+              )
+            },
+            signedMessage: {
+              argumentType: ArgumentTypeName.String,
+              value: ISSUANCE_STRING
+            }
+          })
+        );
+
+        dispatch({
+          type: "add-subscription",
+          providerUrl,
+          feed: info,
+          credential
+        });
+      }
+    })();
+  }, [
+    subscriptions,
+    providerUrl,
+    info,
+    providerName,
+    pcds,
+    identity,
+    dispatch
+  ]);
+>>>>>>> 93c05ef8 (Server-side known public keys and ticket types)
 
   const credentialHumanReadableName =
     info.credentialRequest.pcdType === EmailPCDTypeName
@@ -325,7 +386,10 @@ function AlreadySubscribed({
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
       )
     ) {
-      dispatch({ type: "remove-subscription", subscriptionId: existingSubscription.id });
+      dispatch({
+        type: "remove-subscription",
+        subscriptionId: existingSubscription.id
+      });
     }
   }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 

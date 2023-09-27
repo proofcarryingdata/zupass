@@ -36,14 +36,18 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
       </CircleButton>
       {children}
       <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
-        {subscriptions.value.getAllErrors().size > 0 &&
-          <ErrorDotContainer><ErrorDot /></ErrorDotContainer>}
+        {subscriptions.value.getAllErrors().size > 0 && (
+          <ErrorDotContainer>
+            <ErrorDot />
+          </ErrorDotContainer>
+        )}
         <img
           title="Subscriptions"
           draggable="false"
           src={icons.subscription}
           width={34}
-          height={34} />
+          height={34}
+        />
       </CircleButton>
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <img

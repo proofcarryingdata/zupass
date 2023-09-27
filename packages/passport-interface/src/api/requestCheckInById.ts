@@ -1,13 +1,12 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
-  CheckTicketInError,
-  CheckTicketInRequest,
-  CheckTicketInResponseValue,
+  CheckTicketInByIdError,
+  CheckTicketInByIdRequest,
+  CheckTicketInByIdResponseValue,
   ISSUANCE_STRING
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
@@ -18,21 +17,22 @@ import { httpPost } from "./makeRequest";
  * a 'superuser' of a particular event wants to check in a Devconnect
  * attendee into the event.
  *
- * Sends a serialized PCD. See {@link requestCheckInById} for an alternative
- * API which sends only the ticket ID.
+ * Sends the ticket ID. See {@link requestCheckIn} for an alternative
+ * API which sends a serialized PCD.
  *
  * Never rejects. All information encoded in the resolved response.
  */
-export async function requestCheckIn(
-  zupassServerUrl: string,
-  postBody: CheckTicketInRequest
-): Promise<CheckTicketInResult> {
-  return httpPost<CheckTicketInResult>(
-    urlJoin(zupassServerUrl, "/issue/check-in"),
+export async function requestCheckInById(
+  passportServerUrl: string,
+  postBody: CheckTicketInByIdRequest
+): Promise<CheckTicketInByIdResult> {
+  return httpPost<CheckTicketInByIdResult>(
+    urlJoin(passportServerUrl, "/issue/check-in-by-id"),
     {
       // @todo - here and elsewhere - how can we do better than casting, and actually
       // make sure that the response we're getting back is the right shape?
-      onValue: async (resText) => JSON.parse(resText) as CheckTicketInResult,
+      onValue: async (resText) =>
+        JSON.parse(resText) as CheckTicketInByIdResult,
       onError: async () => ({ error: { name: "ServerError" }, success: false })
     },
     postBody
@@ -40,16 +40,16 @@ export async function requestCheckIn(
 }
 
 /**
- * Generates a credential based on a semaphore identity and calls {@link requestCheckIn}
+ * Generates a credential based on a semaphore identity and calls {@link requestCheckInById}
  * to try to check a ticket in.
  */
-export async function checkinTicket(
-  zupassServerUrl: string,
-  ticket: EdDSATicketPCD,
+export async function checkinTicketById(
+  passportServer: string,
+  ticketId: string,
   checkerIdentity: Identity
-): Promise<CheckTicketInResult> {
-  return requestCheckIn(zupassServerUrl, {
-    ticket: await EdDSATicketPCDPackage.serialize(ticket),
+): Promise<CheckTicketInByIdResult> {
+  return requestCheckInById(passportServer, {
+    ticketId,
     checkerProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {
@@ -69,7 +69,7 @@ export async function checkinTicket(
   });
 }
 
-export type CheckTicketInResult = APIResult<
-  CheckTicketInResponseValue,
-  CheckTicketInError
+export type CheckTicketInByIdResult = APIResult<
+  CheckTicketInByIdResponseValue,
+  CheckTicketInByIdError
 >;

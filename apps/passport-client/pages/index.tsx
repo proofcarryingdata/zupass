@@ -1,4 +1,4 @@
-import { createCredentialCache } from "@pcd/passport-interface";
+import { createCredentialCache, requestKnownTicketTypes } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -6,6 +6,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
+import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -25,6 +26,7 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -106,9 +108,32 @@ class App extends React.Component<object, AppState> {
     } as Partial<AppState>;
   }
 
+  // Fetches known tickets types from server, so we can classify tickets
+  fetchKnownTicketTypes = async () => {
+    let completed = false;
+    try {
+      const result = await requestKnownTicketTypes(appConfig.zupassServer);
+      if (result.success) {
+        completed = true;
+        this.dispatch({
+          type: "set-known-ticket-types-and-keys",
+          knownTicketTypesAndKeys: result.value
+        });
+      }
+    } catch (e) {
+      console.log(`Error fetching known ticket types`, e);
+    }
+
+    // If we could not fetch known ticket types, try again in 1 minute
+    if (!completed) {
+      setTimeout(this.fetchKnownTicketTypes, 1000 * 60);
+    }
+  };
+
   startBackgroundJobs = () => {
     console.log("Starting background jobs...");
     this.jobPollUser();
+    this.fetchKnownTicketTypes();
   };
 
   jobPollUser = async () => {
@@ -160,10 +185,16 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          <Route path="verify-zupass" element={<VerifyScreen />} />
+          {/* This route is used by non-Devconnect tickets */}
+          <Route path="verify" element={<VerifyScreen />} />
+          {/* This route is used to check in a Devconnect ticket with the
+              full PCD in the parameters */}
+          <Route path="checkin" element={<DevconnectCheckinScreen />} />
+          {/* This route is used to check in a Devconnect ticket with only
+              the ticket ID in the parameters */}
           <Route
-            path="verify-devconnect"
-            element={<DevconnectCheckinScreen />}
+            path="checkin-by-id"
+            element={<DevconnectCheckinByIdScreen />}
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />

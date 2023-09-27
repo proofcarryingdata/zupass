@@ -20,10 +20,10 @@ export function RollbarProvider({ children }: { children: React.ReactNode }) {
     payload: {
       client: {
         javascript: {
-          source_map_enabled: true,
-        },
-      },
-    },
+          source_map_enabled: true
+        }
+      }
+    }
   };
 
   console.log("[ROLLBAR] started");

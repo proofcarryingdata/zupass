@@ -1,4 +1,8 @@
-import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEqualEdDSAPublicKey
+} from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -9,17 +13,26 @@ import {
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CheckTicketByIdRequest,
+  CheckTicketByIdResult,
+  CheckTicketInByIdRequest,
+  CheckTicketInByIdResult,
   CheckTicketInRequest,
   CheckTicketInResult,
   CheckTicketRequest,
   CheckTicketResult,
   FeedHost,
   ISSUANCE_STRING,
+  KnownPublicKeyType,
+  KnownTicketGroup,
+  KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  VerifyTicketRequest,
+  VerifyTicketResult,
   ZupassFeedIds,
   ZuzaluUserRole,
   verifyFeedCredential
@@ -44,6 +57,7 @@ import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
+import { Pool } from "postgres-pool";
 import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
@@ -54,6 +68,13 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import {
+  fetchKnownPublicKeys,
+  fetchKnownTicketByEventAndProductId,
+  fetchKnownTicketTypes,
+  setKnownPublicKey,
+  setKnownTicketType
+} from "../database/queries/knownTicketTypes";
 import { fetchUserByCommitment } from "../database/queries/users";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -65,12 +86,17 @@ import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
+export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
+
 // Since Zuzalu did not have event or product UUIDs at the time, we can
 // allocate some constant ones now.
-export const ZUZALU_RESIDENT_EVENT_ID = "5ba4cd9e-893c-4a4a-b15b-cf36ceda1938";
-export const ZUZALU_VISITOR_EVENT_ID = "53b518ed-e427-4a23-bf36-a6e1e2764256";
-export const ZUZALU_ORGANIZER_EVENT_ID = "10016d35-40df-4033-a171-7d661ebaccaa";
-export const ZUZALU_PRODUCT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
+export const ZUZALU_23_RESIDENT_PRODUCT_ID =
+  "5ba4cd9e-893c-4a4a-b15b-cf36ceda1938";
+export const ZUZALU_23_VISITOR_PRODUCT_ID =
+  "53b518ed-e427-4a23-bf36-a6e1e2764256";
+export const ZUZALU_23_ORGANIZER_PRODUCT_ID =
+  "10016d35-40df-4033-a171-7d661ebaccaa";
+export const ZUZALU_23_EVENT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -119,7 +145,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerify.bind(this)
+                this.cachedVerifySignaturePCD.bind(this)
               );
               const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
               const ticketsByEvent = _.groupBy(
@@ -225,7 +251,10 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              await verifyFeedCredential(req.pcd, this.cachedVerify.bind(this));
+              await verifyFeedCredential(
+                req.pcd,
+                this.cachedVerifySignaturePCD.bind(this)
+              );
               return {
                 actions: [
                   {
@@ -270,7 +299,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerify.bind(this)
+                this.cachedVerifySignaturePCD.bind(this)
               );
               const pcds = await this.issueEmailPCDs(pcd);
 
@@ -327,7 +356,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerify.bind(this)
+                this.cachedVerifySignaturePCD.bind(this)
               );
               const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
@@ -409,7 +438,7 @@ export class IssuanceService {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
-  public async handleCheckInRequest(
+  public async handleDevconnectCheckInRequest(
     request: CheckTicketInRequest
   ): Promise<CheckTicketInResult> {
     try {
@@ -417,7 +446,7 @@ export class IssuanceService {
         request.ticket.pcd
       );
 
-      const ticketValid = await this.checkTicket(ticketPCD);
+      const ticketValid = await this.checkDevconnectTicket(ticketPCD);
 
       if (ticketValid.error != null) {
         return ticketValid;
@@ -471,6 +500,85 @@ export class IssuanceService {
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
+        ticketData.ticketId,
+        checker.email
+      );
+
+      if (successfullyConsumed) {
+        return {
+          value: undefined,
+          success: true
+        };
+      }
+
+      return {
+        error: { name: "ServerError" },
+        success: false
+      };
+    } catch (e) {
+      logger("Error when consuming devconnect ticket", { error: e });
+      throw new PCDHTTPError(500, "failed to check in", { cause: e });
+    }
+  }
+
+  public async handleDevconnectCheckInByIdRequest(
+    request: CheckTicketInByIdRequest
+  ): Promise<CheckTicketInByIdResult> {
+    try {
+      const ticketDB = await fetchDevconnectPretixTicketByTicketId(
+        this.context.dbPool,
+        request.ticketId
+      );
+
+      if (!ticketDB) {
+        return {
+          error: { name: "InvalidTicket" },
+          success: false
+        };
+      }
+
+      const ticketData = {
+        ticketId: request.ticketId,
+        eventId: ticketDB?.pretix_events_config_id
+      };
+
+      const verified = await this.cachedVerifySignaturePCD(
+        request.checkerProof
+      );
+      if (!verified) {
+        return {
+          error: { name: "InvalidSignature" },
+          success: false
+        };
+      }
+
+      const checker = await this.checkUserExists(
+        await SemaphoreSignaturePCDPackage.deserialize(request.checkerProof.pcd)
+      );
+
+      if (!checker) {
+        return {
+          error: { name: "NotSuperuser" },
+          success: false
+        };
+      }
+
+      const checkerSuperUserPermissions =
+        await fetchDevconnectSuperusersForEmail(
+          this.context.dbPool,
+          checker.email
+        );
+
+      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
+        (perm) => perm.pretix_events_config_id === ticketData.eventId
+      );
+
+      if (!relevantSuperUserPermission) {
+        return { error: { name: "NotSuperuser" }, success: false };
+      }
+
+      const successfullyConsumed = await consumeDevconnectPretixTicket(
+        this.context.dbPool,
         ticketData.ticketId ?? "",
         checker.email
       );
@@ -492,14 +600,19 @@ export class IssuanceService {
     }
   }
 
-  public async handleCheckTicketRequest(
+  /**
+   * Check that a ticket is valid for Devconnect-only check-in by validating
+   * the PCD and checking that the ticket is in the DB and is not deleted,
+   * consumed etc.
+   */
+  public async handleDevconnectCheckTicketRequest(
     request: CheckTicketRequest
   ): Promise<CheckTicketResult> {
     try {
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
-      return this.checkTicket(ticketPCD);
+      return this.checkDevconnectTicket(ticketPCD);
     } catch (e) {
       return {
         error: { name: "ServerError" },
@@ -508,7 +621,11 @@ export class IssuanceService {
     }
   }
 
-  public async checkTicket(
+  /**
+   * Validates an EdDSATicketPCD for Devconnect check-in by checking the
+   * PCD's attributes and the status of the ticket in the DB.
+   */
+  public async checkDevconnectTicket(
     ticketPCD: EdDSATicketPCD
   ): Promise<CheckTicketResult> {
     try {
@@ -524,7 +641,7 @@ export class IssuanceService {
       }
 
       const serverPublicKey = await this.getEdDSAPublicKey();
-      if (!_.isEqual(serverPublicKey, proofPublicKey)) {
+      if (!isEqualEdDSAPublicKey(serverPublicKey, proofPublicKey)) {
         return {
           error: {
             name: "InvalidSignature",
@@ -582,6 +699,83 @@ export class IssuanceService {
       }
 
       return { value: undefined, success: true };
+    } catch (e) {
+      logger("Error when checking ticket", { error: e });
+      return {
+        error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
+        success: false
+      };
+    }
+  }
+
+  /**
+   * Checks that a ticket is valid for Devconnect check-in based on the ticket
+   * data in the DB.
+   */
+  public async handleDevconnectCheckTicketByIdRequest(
+    request: CheckTicketByIdRequest
+  ): Promise<CheckTicketByIdResult> {
+    try {
+      return this.checkDevconnectTicketById(request.ticketId);
+    } catch (e) {
+      return {
+        error: { name: "ServerError" },
+        success: false
+      };
+    }
+  }
+
+  /**
+   * Checks a ticket for validity based on the ticket's status in the DB.
+   */
+  public async checkDevconnectTicketById(
+    ticketId: string
+  ): Promise<CheckTicketByIdResult> {
+    try {
+      const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
+        this.context.dbPool,
+        ticketId
+      );
+
+      if (!ticketInDb) {
+        return {
+          error: {
+            name: "InvalidTicket",
+            detailedMessage: "Ticket does not exist on backend."
+          },
+          success: false
+        };
+      }
+
+      if (ticketInDb.is_deleted) {
+        return {
+          error: { name: "TicketRevoked", revokedTimestamp: Date.now() },
+          success: false
+        };
+      }
+
+      if (ticketInDb.is_consumed) {
+        return {
+          error: {
+            name: "AlreadyCheckedIn",
+            checker: ticketInDb.checker ?? undefined,
+            checkinTimestamp: (
+              ticketInDb.zupass_checkin_timestamp ?? new Date()
+            ).toISOString()
+          },
+          success: false
+        };
+      }
+
+      return {
+        value: {
+          eventName: ticketInDb.event_name,
+          attendeeEmail: ticketInDb.email,
+          attendeeName: ticketInDb.full_name,
+          ticketName: ticketInDb.item_name
+        },
+        success: true
+      };
     } catch (e) {
       logger("Error when checking ticket", { error: e });
       return {
@@ -919,13 +1113,13 @@ export class IssuanceService {
             ticketName: user.role.toString(),
             attendeeName: user.name,
             attendeeEmail: user.email,
-            eventId:
+            eventId: ZUZALU_23_EVENT_ID,
+            productId:
               user.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_VISITOR_EVENT_ID
+                ? ZUZALU_23_VISITOR_PRODUCT_ID
                 : user.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_ORGANIZER_EVENT_ID
-                : ZUZALU_RESIDENT_EVENT_ID,
-            productId: ZUZALU_PRODUCT_ID,
+                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
+                : ZUZALU_23_RESIDENT_PRODUCT_ID,
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -943,7 +1137,9 @@ export class IssuanceService {
    * Returns a promised verification of a PCD, either from the cache or,
    * if there is no cache entry, from the multiprocess service.
    */
-  private cachedVerify(serializedPCD: SerializedPCD): Promise<boolean> {
+  private cachedVerifySignaturePCD(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<boolean> {
     const key = JSON.stringify(serializedPCD);
     const cached = this.verificationPromiseCache.get(key);
     if (cached) {
@@ -957,32 +1153,217 @@ export class IssuanceService {
       return promise;
     }
   }
+
+  /**
+   * Verifies a ticket based on:
+   * 1) verification of the PCD (that it is correctly formed, with a proof
+   *    matching the claim)
+   * 2) whether the ticket matches the ticket types known to us, e.g. Zuzalu
+   *    or Zuconnect tickets
+   *
+   * Not used for Devconnect tickets, which have a separate check-in flow.
+   * Used for all other ticket types.
+   */
+  private async verifyTicket(
+    serializedPCD: SerializedPCD
+  ): Promise<VerifyTicketResult> {
+    if (!serializedPCD.type) {
+      throw new Error("input was not a serialized PCD");
+    }
+
+    if (serializedPCD.type !== EdDSATicketPCDPackage.name) {
+      throw new Error(
+        `serialized PCD was wrong type, '${serializedPCD.type}' instead of '${EdDSATicketPCDPackage.name}'`
+      );
+    }
+
+    await EdDSATicketPCDPackage.init?.({});
+
+    const pcd = await EdDSATicketPCDPackage.deserialize(serializedPCD.pcd);
+
+    if (!EdDSATicketPCDPackage.verify(pcd)) {
+      return {
+        success: true,
+        value: { verified: false, message: "Could not verify PCD." }
+      };
+    }
+
+    // PCD has verified, let's see if it's a known ticket
+    const ticket = pcd.claim.ticket;
+    const knownTicketType = await fetchKnownTicketByEventAndProductId(
+      this.context.dbPool,
+      ticket.eventId,
+      ticket.productId
+    );
+
+    // If we found a known ticket type, compare public keys
+    if (
+      knownTicketType &&
+      isEqualEdDSAPublicKey(
+        JSON.parse(knownTicketType.public_key),
+        pcd.proof.eddsaPCD.claim.publicKey
+      )
+    ) {
+      // We can say that the submitted ticket can be verified as belonging
+      // to a known group
+      return {
+        success: true,
+        value: {
+          verified: true,
+          knownTicketType: true,
+          publicKeyName: knownTicketType.known_public_key_name,
+          group: knownTicketType.ticket_group
+        }
+      };
+    }
+
+    return {
+      success: true,
+      value: {
+        verified: true,
+        knownTicketType: false
+      }
+    };
+  }
+
+  public async handleVerifyTicketRequest(
+    req: VerifyTicketRequest
+  ): Promise<VerifyTicketResult> {
+    const pcdStr = req.pcd;
+
+    try {
+      return this.verifyTicket(JSON.parse(pcdStr));
+    } catch (e) {
+      throw new PCDHTTPError(500, "The ticket could not be verified", {
+        cause: e
+      });
+    }
+  }
+
+  /**
+   * Returns information about the known public keys, and known ticket types.
+   * This is used by clients to perform basic checks of validity against
+   * ticket PCDs, based on the public key and ticket/event IDs.
+   */
+  public async handleKnownTicketTypesRequest(): Promise<KnownTicketTypesResult> {
+    const knownTickets = await fetchKnownTicketTypes(this.context.dbPool);
+    const knownPublicKeys = await fetchKnownPublicKeys(this.context.dbPool);
+    return {
+      success: true,
+      value: {
+        publicKeys: knownPublicKeys.map((pk) => {
+          return {
+            publicKey:
+              pk.public_key_type === "eddsa"
+                ? JSON.parse(pk.public_key)
+                : pk.public_key,
+            publicKeyName: pk.public_key_name,
+            publicKeyType: pk.public_key_type
+          };
+        }),
+        knownTicketTypes: knownTickets.map((tt) => {
+          return {
+            eventId: tt.event_id,
+            productId: tt.product_id,
+            publicKey:
+              tt.known_public_key_type === "eddsa"
+                ? JSON.parse(tt.public_key)
+                : tt.public_key,
+            publicKeyName: tt.known_public_key_name,
+            publicKeyType: tt.known_public_key_type,
+            ticketGroup: tt.ticket_group
+          };
+        })
+      }
+    };
+  }
 }
 
-export function startIssuanceService(
+export async function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
   multiprocessService: MultiProcessService
-): IssuanceService | null {
-  const rsaKey = loadRSAPrivateKey();
-  const eddsaKey = loadEdDSAPrivateKey();
+): Promise<IssuanceService | null> {
+  const zupassRsaKey = loadRSAPrivateKey();
+  const zupassEddsaKey = loadEdDSAPrivateKey();
 
-  if (rsaKey == null || eddsaKey == null) {
+  if (zupassRsaKey == null || zupassEddsaKey == null) {
     logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
+
+  await setupKnownTicketTypes(
+    context.dbPool,
+    await getEdDSAPublicKey(zupassEddsaKey)
+  );
 
   const issuanceService = new IssuanceService(
     context,
     cacheService,
     multiprocessService,
     rollbarService,
-    rsaKey,
-    eddsaKey
+    zupassRsaKey,
+    zupassEddsaKey
   );
 
   return issuanceService;
+}
+
+/**
+ * The issuance service relies on a list of known ticket types, and their
+ * associated public keys. This relies on having these stored in the database,
+ * and we can ensure that certain known public keys and tickets are stored by
+ * inserting them here.
+ *
+ * This works because we know the key we're using to issue tickets, and we
+ * have some hard-coded IDs for Zuzalu '23 tickets.
+ *
+ * See {@link verifyTicket} and {@link handleKnownTicketTypesRequest} for
+ * usage of this data.
+ *
+ * See also {@link setDevconnectTicketTypes} in the Devconnect sync service.
+ */
+async function setupKnownTicketTypes(
+  db: Pool,
+  eddsaPubKey: EdDSAPublicKey
+): Promise<void> {
+  await setKnownPublicKey(
+    db,
+    ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    KnownPublicKeyType.EdDSA,
+    JSON.stringify(eddsaPubKey)
+  );
+
+  await setKnownTicketType(
+    db,
+    "ZUZALU23_VISITOR",
+    ZUZALU_23_EVENT_ID,
+    ZUZALU_23_VISITOR_PRODUCT_ID,
+    ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    KnownPublicKeyType.EdDSA,
+    KnownTicketGroup.Zuzalu23
+  );
+
+  await setKnownTicketType(
+    db,
+    "ZUZALU23_RESIDENT",
+    ZUZALU_23_EVENT_ID,
+    ZUZALU_23_RESIDENT_PRODUCT_ID,
+    ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    KnownPublicKeyType.EdDSA,
+    KnownTicketGroup.Zuzalu23
+  );
+
+  await setKnownTicketType(
+    db,
+    "ZUZALU23_ORGANIZER",
+    ZUZALU_23_EVENT_ID,
+    ZUZALU_23_ORGANIZER_PRODUCT_ID,
+    ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    KnownPublicKeyType.EdDSA,
+    KnownTicketGroup.Zuzalu23
+  );
 }
 
 function loadRSAPrivateKey(): NodeRSA | null {

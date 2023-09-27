@@ -232,13 +232,16 @@ function PermissionUpdate({
 
   const onUpdateClick = useCallback(async () => {
     try {
-      dispatch({ type: "update-subscription-permissions", subscriptionId: subscription.id, permissions: newPermissions });
+      dispatch({
+        type: "update-subscription-permissions",
+        subscriptionId: subscription.id,
+        permissions: newPermissions
+      });
       setOutcome("success");
     } catch (e) {
       setOutcome("fail");
     }
   }, [newPermissions, subscription.id, dispatch]);
-
 
   const finish = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });

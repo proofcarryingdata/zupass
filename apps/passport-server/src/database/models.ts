@@ -1,4 +1,9 @@
-import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
+import {
+  DateRange,
+  KnownPublicKeyType,
+  KnownTicketGroup,
+  ZuzaluUserRole
+} from "@pcd/passport-interface";
 
 /**
  * All zuzalu tickets get synced to our database into this data structure.
@@ -93,6 +98,11 @@ export interface DevconnectSuperuser {
   event_id: string;
 }
 
+export interface DevconnectProduct {
+  product_id: string;
+  event_id: string;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that has logged into Zupass.
  */
@@ -167,4 +177,27 @@ export interface TelegramAnonChannel {
   telegram_chat_id: number;
   anon_topic_id: number;
   anon_topic_name: string;
+}
+
+// Representation of a "known public key" as fetched from the DB
+export interface KnownPublicKeyDB {
+  public_key_name: string;
+  public_key_type: KnownPublicKeyType;
+  public_key: string;
+}
+
+// A known ticket type as represented in the DB. Allows us to match tickets to
+// known combinations of event ID, product ID, and public key.
+export interface KnownTicketType {
+  identifier: string;
+  event_id: string;
+  product_id: string;
+  known_public_key_name: string;
+  ticket_group: KnownTicketGroup;
+}
+
+// Known ticket type with the actual public key
+export interface KnownTicketTypeWithKey extends KnownTicketType {
+  known_public_key_type: KnownPublicKeyType;
+  public_key: string;
 }
