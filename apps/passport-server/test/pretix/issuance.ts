@@ -1,9 +1,9 @@
 import { requestIssuanceServiceEnabled } from "@pcd/passport-interface";
 import { expect } from "chai";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 
 export async function expectIssuanceServiceToBeRunning(
-  application: PCDpass
+  application: Zupass
 ): Promise<void> {
   const issuanceServiceEnabledResult = await requestIssuanceServiceEnabled(
     application.expressContext.localEndpoint

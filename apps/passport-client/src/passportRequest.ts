@@ -5,7 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 
-// Ensures that a passport request is safe to process.
+// Ensures that Zupass request is safe to process.
 export function validateRequest<T extends PCDRequest>(
   params: URLSearchParams
 ): T {

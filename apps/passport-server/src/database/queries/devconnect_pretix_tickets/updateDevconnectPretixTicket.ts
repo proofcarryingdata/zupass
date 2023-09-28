@@ -14,7 +14,7 @@ export async function updateDevconnectPretixTicket(
     `\
 update devconnect_pretix_tickets
 set full_name=$1, is_deleted=$2, secret=$3, is_consumed=$4, checker=$5,
-pcdpass_checkin_timestamp=$6, pretix_checkin_timestamp=$7, email=$8
+zupass_checkin_timestamp=$6, pretix_checkin_timestamp=$7, email=$8
 where position_id=$9
 returning *`,
     [
@@ -23,7 +23,7 @@ returning *`,
       params.secret,
       params.is_consumed,
       params.checker,
-      params.pcdpass_checkin_timestamp,
+      params.zupass_checkin_timestamp,
       params.pretix_checkin_timestamp,
       params.email,
       params.position_id
@@ -44,7 +44,7 @@ export async function consumeDevconnectPretixTicket(
   const result = await sqlQuery(
     client,
     `update devconnect_pretix_tickets
-    set is_consumed=TRUE, checker=$2, pcdpass_checkin_timestamp=now()
+    set is_consumed=TRUE, checker=$2, zupass_checkin_timestamp=now()
     where id=$1 and is_deleted=FALSE and is_consumed=FALSE
     returning id`,
     [id, checkerEmail]

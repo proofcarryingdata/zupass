@@ -2,7 +2,11 @@ import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
-export async function updateCommitmentResetList(
+/**
+ * We keep track of the last few times the user has reset their account,
+ * so that we can rate limit this user action.
+ */
+export async function updateUserAccountRestTimestamps(
   client: Pool,
   email: string,
   resetTimestamps: string[]
@@ -10,7 +14,7 @@ export async function updateCommitmentResetList(
   await sqlQuery(
     client,
     `
-update commitments
+update users
 set account_reset_timestamps = $1
 where email = $2`,
     [resetTimestamps, email]
@@ -18,10 +22,10 @@ where email = $2`,
 }
 
 /**
- * Saves a new commitment. Overwrites any existing commitment for this email.
- * Returns the commitment UUID. Works for both Zupass users and PCDpass users.
+ * Saves a new user. If a user with the given email already exists, overwrites their
+ * information. Returns the user's UUID.
  */
-export async function insertCommitment(
+export async function upsertUser(
   client: Pool,
   params: {
     email: string;
@@ -30,14 +34,12 @@ export async function insertCommitment(
   }
 ): Promise<string> {
   const { email, commitment, salt } = params;
-  logger(
-    `Saving commitment email=${email} commitment=${commitment} salt=${salt}`
-  );
+  logger(`Saving user email=${email} commitment=${commitment} salt=${salt}`);
 
   const insertResult = await sqlQuery(
     client,
     `\
-INSERT INTO commitments (uuid, email, commitment, salt)
+INSERT INTO users (uuid, email, commitment, salt)
 VALUES (gen_random_uuid(), $1, $2, $3)
 ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3`,
     [email, commitment, salt]
@@ -45,7 +47,7 @@ ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3`,
   const uuidResult = await sqlQuery(
     client,
     `\
-SELECT uuid FROM commitments
+SELECT uuid FROM users
 WHERE email = $1 AND commitment = $2`,
     [email, commitment]
   );

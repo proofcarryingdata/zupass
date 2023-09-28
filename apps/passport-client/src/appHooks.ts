@@ -69,6 +69,10 @@ export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }
 
+export function useSalt(): string | undefined {
+  return useSelector<string | undefined>((s) => s.self?.salt, []);
+}
+
 export function usePendingAction(): PendingAction | undefined {
   return useSelector<PendingAction | undefined>((s) => s.pendingAction, []);
 }

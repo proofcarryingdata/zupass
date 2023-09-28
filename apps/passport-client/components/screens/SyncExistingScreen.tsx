@@ -37,8 +37,8 @@ export function SyncExistingScreen() {
       dispatch({
         type: "error",
         error: {
-          title: "Missing Password",
-          message: "You must enter a password.",
+          title: "Missing Sync Key",
+          message: "You must enter a sync key.",
           dismissToCurrentPage: true
         }
       });
@@ -47,7 +47,7 @@ export function SyncExistingScreen() {
     const load = async () => {
       setIsLoading(true);
       const storageResult = await requestDownloadAndDecryptStorage(
-        appConfig.passportServer,
+        appConfig.zupassServer,
         encryptionKey
       );
       setIsLoading(false);
@@ -92,8 +92,14 @@ export function SyncExistingScreen() {
           <Spacer h={32} />
           <TextCenter>
             If you've already registered, you can sync with your other device
-            here using your Sync Key. You can find your Sync Key
-            on your existing device by clicking on the settings icon.
+            here using your Sync Key. You can find your Sync Key on your
+            existing device by clicking on the settings icon.
+          </TextCenter>
+          <Spacer h={16} />
+          <TextCenter>
+            After you log in with your sync key, you'll be prompted to set a
+            password. After that, you will only be able to log in with your
+            password, and not your sync key.
           </TextCenter>
           <Spacer h={32} />
           <CenterColumn w={280}>

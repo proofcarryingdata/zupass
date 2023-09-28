@@ -1,8 +1,8 @@
 import { stopApplication } from "../application";
-import { PCDpass } from "../types";
+import { Zupass } from "../types";
 import { logger } from "./logger";
 
-export function trapSigTerm(app: PCDpass): void {
+export function trapSigTerm(app: Zupass): void {
   logger(`[PROCESS] server is on PID ${process.pid}`);
 
   process.on("SIGTERM", async () => {

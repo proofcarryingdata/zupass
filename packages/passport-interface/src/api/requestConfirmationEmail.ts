@@ -16,30 +16,13 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestConfirmationEmail(
-  passportServerUrl: string,
-  isZuzalu: boolean,
-  email: string,
-  commitment: string,
-  force: boolean
-): Promise<ConfirmEmailResult> {
-  return requestConfirmationEmailWithPath(
-    passportServerUrl,
-    isZuzalu ? "/zuzalu/send-login-email" : "/pcdpass/send-login-email",
-    email,
-    commitment,
-    force
-  );
-}
-
-async function requestConfirmationEmailWithPath(
-  passportServerUrl: string,
-  urlPath: string,
+  zupassServerUrl: string,
   email: string,
   commitment: string,
   force: boolean
 ): Promise<ConfirmEmailResult> {
   return httpPostSimple(
-    urlJoin(passportServerUrl, urlPath),
+    urlJoin(zupassServerUrl, "/account/send-login-email"),
     async (resText) =>
       resText === "OK"
         ? { value: undefined, success: true }

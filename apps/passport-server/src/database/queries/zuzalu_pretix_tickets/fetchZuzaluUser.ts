@@ -3,9 +3,8 @@ import { LoggedInZuzaluUser, ZuzaluUser } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Fetch all users that have a ticket on pretix, even if they haven't
- * logged into the passport app. Includes their commitment, if they
- * have one.
+ * Fetch all users that have a Zuzalu ticket on pretix, even if they haven't
+ * logged into Zupass.
  */
 export async function fetchAllZuzaluUsers(
   client: Pool
@@ -18,20 +17,19 @@ select
     p.name as name,
     p.role as role,
     p.order_id as order_id,
-    c.commitment as commitment,
-    c.uuid as uuid,
+    u.commitment as commitment,
+    u.uuid as uuid,
     p.visitor_date_ranges as visitor_date_ranges
 from zuzalu_pretix_tickets p
-left join commitments c on c.email = p.email;`
+left join users u on u.email = p.email;`
   );
 
   return result.rows;
 }
 
 /**
- * Fetch a particular user that has a ticket on pretix, even if they
- * haven't logged into the passport app. Includes their commitment,
- * if they have one.
+ * Fetch a particular user that has a Zuzalu ticket. Works even in the case
+ * that this user hasn't logged into Zupass.
  */
 export async function fetchZuzaluUser(
   client: Pool,
@@ -45,18 +43,21 @@ select
     p.name as name,
     p.role as role,
     p.order_id as order_id,
-    c.commitment as commitment,
-    c.uuid as uuid,
+    u.commitment as commitment,
+    u.uuid as uuid,
     p.visitor_date_ranges as visitor_date_ranges
 from zuzalu_pretix_tickets p
-left join commitments c on c.email = p.email
+left join users u on u.email = p.email
 where p.email = $1;`,
     [email]
   );
   return result.rows[0] || null;
 }
 
-/** Fetch a Zuzalu user who already has Passport installed. */
+/**
+ * Fetch a particular user that has both logged into Zupass and also
+ * holds a Zuzalu ticket.
+ */
 export async function fetchLoggedInZuzaluUser(
   client: Pool,
   params: { uuid: string }
@@ -65,23 +66,26 @@ export async function fetchLoggedInZuzaluUser(
     client,
     `\
 select 
-    c.uuid,
-    c.commitment,
+    u.uuid,
+    u.commitment,
     p.email,
     p.name,
     p.role,
     p.order_id,
     p.visitor_date_ranges as visitor_date_ranges
-from commitments c
-join zuzalu_pretix_tickets p on c.email=p.email
+from users u
+join zuzalu_pretix_tickets p on u.email=p.email
 left join email_tokens e on p.email = e.email
-where c.uuid = $1;`,
+where u.uuid = $1;`,
     [params.uuid]
   );
   return result.rows[0] || null;
 }
 
-/** Fetch all participants who have a Passport. */
+/**
+ * Fetch all users who both have a Zuzalu ticket and have logged
+ * into Zupass.
+ */
 export async function fetchAllLoggedInZuzaluUsers(
   client: Pool
 ): Promise<LoggedInZuzaluUser[]> {
@@ -89,21 +93,24 @@ export async function fetchAllLoggedInZuzaluUsers(
     client,
     `\
 select 
-    c.uuid,
-    c.commitment,
+    u.uuid,
+    u.commitment,
     p.email,
     p.name,
     p.role,
     p.order_id,
     p.visitor_date_ranges
 from zuzalu_pretix_tickets p
-join commitments c on c.email=p.email
-left join email_tokens e on c.email=e.email;`
+join users u on u.email=p.email
+left join email_tokens e on u.email=e.email;`
   );
   return result.rows;
 }
 
-/** Fetch a Zuzalu user who already has Passport installed. */
+/**
+ * Fetches the quantity of users that both have logged into Zupass
+ * and have a Zuzalu ticket.
+ */
 export async function fetchLoggedInZuzaluUserCount(
   client: Pool
 ): Promise<number> {
@@ -112,13 +119,13 @@ export async function fetchLoggedInZuzaluUserCount(
     `\
 select count(*) as count
 from zuzalu_pretix_tickets p
-join commitments c on c.email=p.email`
+join users u on u.email=p.email`
   );
   return parseInt(result.rows[0].count, 10);
 }
 
 /**
- * Fetch amount of tickets synced from Pretix.
+ * Fetches the quantity of Zuzalu tickets.
  */
 export async function fetchSyncedZuzaluTicketCount(
   client: Pool

@@ -22,7 +22,7 @@ export interface ProveOptions {
 }
 
 /**
- * When a website uses the passport for signing in, the passport
+ * When a website uses the Zupass for signing in, Zupass
  * signs this payload using a `SemaphoreSignaturePCD`.
  */
 export interface SignInMessagePayload {
@@ -57,7 +57,7 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
 }
 
 export function getWithoutProvingUrl(
-  passportOrigin: string,
+  zupassClientUrl: string,
   returnUrl: string,
   pcdType: string
 ) {
@@ -67,11 +67,11 @@ export function getWithoutProvingUrl(
     returnUrl
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${passportOrigin}#/get-without-proving?request=${encReq}`;
+  return `${zupassClientUrl}#/get-without-proving?request=${encReq}`;
 }
 
-export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
-  passportOrigin: string,
+export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
+  zupassClientUrl: string,
   returnUrl: string,
   pcdType: T["name"],
   args: ArgsOf<T>,
@@ -85,11 +85,11 @@ export function constructPassportPcdGetRequestUrl<T extends PCDPackage>(
     options
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${passportOrigin}#/prove?request=${encReq}`;
+  return `${zupassClientUrl}#/prove?request=${encReq}`;
 }
 
-export function constructPassportPcdAddRequestUrl(
-  passportOrigin: string,
+export function constructZupassPcdAddRequestUrl(
+  zupassClientUrl: string,
   returnUrl: string,
   pcd: SerializedPCD
 ) {
@@ -99,13 +99,13 @@ export function constructPassportPcdAddRequestUrl(
     pcd
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
-  return `${passportOrigin}#/add?request=${eqReq}`;
+  return `${zupassClientUrl}#/add?request=${eqReq}`;
 }
 
-export function constructPassportPcdProveAndAddRequestUrl<
+export function constructZupassPcdProveAndAddRequestUrl<
   T extends PCDPackage = PCDPackage
 >(
-  passportOrigin: string,
+  zupassClientUrl: string,
   returnUrl: string,
   pcdType: string,
   args: ArgsOf<T>,
@@ -121,5 +121,5 @@ export function constructPassportPcdProveAndAddRequestUrl<
     returnPCD
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
-  return `${passportOrigin}#/add?request=${eqReq}`;
+  return `${zupassClientUrl}#/add?request=${eqReq}`;
 }

@@ -70,7 +70,7 @@ export function SemaphoreGroupProveScreen({
 
       if (req.options?.proveOnServer === true) {
         const pendingPCDResult = await requestProveOnServer(
-          appConfig.passportServer,
+          appConfig.zupassServer,
           {
             pcdType: SemaphoreGroupPCDPackage.name,
             args: args

@@ -52,7 +52,7 @@ export function SemaphoreSignatureProveScreen({
 
     if (req.options?.proveOnServer === true) {
       const pendingPCDResult = await requestProveOnServer(
-        appConfig.passportServer,
+        appConfig.zupassServer,
         {
           pcdType: SemaphoreSignaturePCDPackage.name,
           args: args

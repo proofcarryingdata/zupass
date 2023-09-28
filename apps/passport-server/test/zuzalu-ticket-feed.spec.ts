@@ -1,8 +1,8 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   ISSUANCE_STRING,
-  PCDPassFeedIds,
-  pollFeed
+  pollFeed,
+  ZupassFeedIds
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -15,24 +15,24 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
-import { PCDpass } from "../src/types";
+import { Zupass } from "../src/types";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
-import { testLoginPCDpass } from "./user/testLoginPCDPass";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { testLogin } from "./user/testLoginPCDPass";
+import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("zuzalu pcdpass functionality", function () {
   this.timeout(30_000);
 
-  let application: PCDpass;
+  let application: Zupass;
   let pretixMocker: ZuzaluPretixDataMocker;
   let identity: Identity;
   let order: ZuzaluPretixOrder;
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     const pretixConfig = getZuzaluPretixConfig();
 
     if (!pretixConfig) {
@@ -60,7 +60,7 @@ describe("zuzalu pcdpass functionality", function () {
 
   step("should be able to log in", async function () {
     order = pretixMocker.getResidentsAndOrganizers()[0];
-    const result = await testLoginPCDpass(application, order.email, {
+    const result = await testLogin(application, order.email, {
       expectEmailIncorrect: false,
       expectUserAlreadyLoggedIn: false,
       force: false
@@ -80,7 +80,7 @@ describe("zuzalu pcdpass functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Zuzalu_1
+        ZupassFeedIds.Zuzalu_1
       );
 
       if (!response.success) {

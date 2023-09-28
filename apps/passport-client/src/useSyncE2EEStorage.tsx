@@ -1,11 +1,11 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyResult,
-  SyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV2,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage
+  requestUploadEncryptedStorage,
+  SyncedEncryptedStorageV2
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useContext, useEffect, useState } from "react";
@@ -42,7 +42,7 @@ export async function updateBlobKeyForEncryptedStorage(
   const newBlobKey = await getHash(newEncryptionKey);
 
   return requestChangeBlobKey(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     oldBlobKey,
     newBlobKey,
     user.uuid,
@@ -72,7 +72,7 @@ export async function uploadStorage(): Promise<void> {
   );
 
   const uploadResult = await requestUploadEncryptedStorage(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     blobKey,
     encryptedStorage
   );
@@ -93,7 +93,7 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
 
   const encryptionKey = loadEncryptionKey();
   const storageResult = await requestDownloadAndDecryptStorage(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     encryptionKey
   );
 

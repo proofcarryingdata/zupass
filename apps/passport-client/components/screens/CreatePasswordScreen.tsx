@@ -40,7 +40,7 @@ export function CreatePasswordScreen() {
     }
 
     const verifyTokenResult = await requestVerifyToken(
-      appConfig.passportServer,
+      appConfig.zupassServer,
       email,
       token
     );
@@ -110,7 +110,7 @@ export function CreatePasswordScreen() {
 function Header() {
   return (
     <TextCenter>
-      <H1>PCDPASS</H1>
+      <H1>ZUPASS</H1>
       <Spacer h={24} />
       <Description>
         Choose a secure, unique password. This password will be used to generate

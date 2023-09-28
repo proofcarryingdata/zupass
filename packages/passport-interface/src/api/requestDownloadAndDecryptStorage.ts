@@ -12,13 +12,13 @@ import { requestEncryptedStorage } from "./requestEncryptedStorage";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestDownloadAndDecryptStorage(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   encryptionKey: string
 ): Promise<DownloadAndDecryptResult> {
   try {
     const encryptionKeyHash = await getHash(encryptionKey);
     const storageResult = await requestEncryptedStorage(
-      passportServerUrl,
+      zupassServerUrl,
       encryptionKeyHash
     );
 

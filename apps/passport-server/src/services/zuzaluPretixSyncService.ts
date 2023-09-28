@@ -84,7 +84,7 @@ export class ZuzaluPretixSyncService {
   public async trySync(): Promise<boolean> {
     try {
       await this.sync();
-      await this.semaphoreService.reload();
+      this.semaphoreService.scheduleReload();
       this._hasCompletedSyncSinceStarting = true;
       return true;
     } catch (e) {
@@ -346,7 +346,7 @@ export class ZuzaluPretixSyncService {
 
   /**
    * Some visitors have multiple orders. These orders need to be merged
-   * into a single pretix ticket passport-side, so that a single user
+   * into a single pretix ticket Zupass-side, so that a single user
    * on our end contains all the dates they have a visitor ticket to.
    */
   private deduplicateVisitorTickets(

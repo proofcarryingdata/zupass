@@ -689,19 +689,19 @@ export class OrganizerSync {
           );
 
           let checker = null;
-          let pcdpass_checkin_timestamp = null;
+          let zupass_checkin_timestamp = null;
 
           // This is the first time we've seen this ticket, and it's already
           // checked in on Pretix.
           if (ticket.pretix_checkin_timestamp) {
             checker = PRETIX_CHECKER;
-            pcdpass_checkin_timestamp = ticket.pretix_checkin_timestamp;
+            zupass_checkin_timestamp = ticket.pretix_checkin_timestamp;
           }
 
           await insertDevconnectPretixTicket(this.db, {
             ...ticket,
             checker,
-            pcdpass_checkin_timestamp
+            zupass_checkin_timestamp
           });
         }
 
@@ -736,8 +736,8 @@ export class OrganizerSync {
           // These values do not come from Pretix sync, so we have to compute
           // them. We start with the old ticket as default.
           let checker = oldTicket?.checker ?? null;
-          let pcdpass_checkin_timestamp =
-            oldTicket?.pcdpass_checkin_timestamp ?? null;
+          let zupass_checkin_timestamp =
+            oldTicket?.zupass_checkin_timestamp ?? null;
 
           // If a ticket has been checked in on Pretix, but was not checked
           // in on our side, then use the checkin details provided by Pretix.
@@ -746,7 +746,7 @@ export class OrganizerSync {
             updatedTicket.pretix_checkin_timestamp
           ) {
             checker = PRETIX_CHECKER;
-            pcdpass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
+            zupass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
           }
 
           // Here we are checking for a ticket which, prior to this point,
@@ -757,7 +757,7 @@ export class OrganizerSync {
           // In this.ordersToDevconnectPretixTickets(), we set is_consumed
           // based on data from Pretix, but since there has been no push-sync
           // yet, this will be set to 'false'. Instead, we should ensure
-          // that is_consumed remains true, so that the PCDpass UI shows the
+          // that is_consumed remains true, so that the Zupass UI shows the
           // expected values while sync remains pending.
           if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
             updatedTicket.is_consumed = true;
@@ -767,7 +767,7 @@ export class OrganizerSync {
           await updateDevconnectPretixTicket(this.db, {
             ...updatedTicket,
             checker,
-            pcdpass_checkin_timestamp
+            zupass_checkin_timestamp
           });
         }
 
@@ -917,7 +917,7 @@ export class OrganizerSync {
     );
 
     for (const ticket of ticketsToSync) {
-      const checkinTimestamp = ticket.pcdpass_checkin_timestamp as Date;
+      const checkinTimestamp = ticket.zupass_checkin_timestamp as Date;
       // Send the API request
       // Will throw an exception if it fails
       await this.pretixAPI.pushCheckin(

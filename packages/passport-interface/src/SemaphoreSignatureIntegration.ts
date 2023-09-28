@@ -2,28 +2,28 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
-import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { openPassportPopup } from "./PassportPopup";
+import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
+import { openZupassPopup } from "./PassportPopup";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
- * Opens a passport popup to generate a Semaphore signature proof.
+ * Opens a Zupass popup to generate a Semaphore signature proof.
  *
- * @param urlToPassportWebsite URL of passport website
- * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param urlToZupassClient URL of the Zupass client
+ * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param messageToSign Message being attested to
  * @param proveOnServer Boolean indicating whether proof should be generated on server
  */
 export function openSemaphoreSignaturePopup(
-  urlToPassportWebsite: string,
+  urlToZupassClient: string,
   popupUrl: string,
   messageToSign: string,
   proveOnServer?: boolean
 ) {
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
-    urlToPassportWebsite,
+    urlToZupassClient,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
@@ -31,44 +31,44 @@ export function openSemaphoreSignaturePopup(
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
-        userProvided: true,
+        userProvided: true
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         value: messageToSign,
-        userProvided: false,
-      },
+        userProvided: false
+      }
     },
     {
-      proveOnServer: proveOnServer,
+      proveOnServer: proveOnServer
     }
   );
 
-  openPassportPopup(popupUrl, proofUrl);
+  openZupassPopup(popupUrl, proofUrl);
 }
 
 /**
  * WARNING: Deprecated for sign-in purposes!
  *
- * Opens a passport popup to generate a Semaphore signature proof on the user's
- * Zuzalu DB uuid, which can then be used to fetch user details from the passport
+ * Opens a Zupass popup to generate a Semaphore signature proof on the user's
+ * Zuzalu DB uuid, which can then be used to fetch user details from the Zupass
  * server. Built specifically for Zuzalu apps.
  *
- * @param urlToPassportWebsite URL of passport website
- * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param urlToZupassClient URL of the Zupass client
+ * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param originalSiteName Name of site requesting proof
  *
  * @deprecated
  */
 export function openSignedZuzaluUUIDPopup(
-  urlToPassportWebsite: string,
+  urlToZupassClient: string,
   popupUrl: string,
   originalSiteName: string
 ) {
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
-    urlToPassportWebsite,
+    urlToZupassClient,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
@@ -76,42 +76,42 @@ export function openSignedZuzaluUUIDPopup(
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
-        userProvided: true,
+        userProvided: true
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
         userProvided: true,
-        value: undefined,
-      },
+        value: undefined
+      }
     },
     {
       title: "Zuzalu Auth",
-      description: originalSiteName,
+      description: originalSiteName
     }
   );
 
-  openPassportPopup(popupUrl, proofUrl);
+  openZupassPopup(popupUrl, proofUrl);
 }
 
 /**
- * Opens a passport popup to generate a Semaphore signature proof on the user's
+ * Opens a Zupass popup to generate a Semaphore signature proof on the user's
  * Zuzalu DB uuid and website referer, which can then be used to fetch user details
- * from the passport server, and ensure that the sign in signature was meant for this
+ * from the Zupass server, and ensure that the sign in signature was meant for this
  * website. Built specifically for Zuzalu apps.
  *
- * @param urlToPassportWebsite URL of passport website
- * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param zupassClientUrl URL of the Zupass client
+ * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param originalSiteName Name of site requesting proof
  */
 export function openSignedZuzaluSignInPopup(
-  urlToPassportWebsite: string,
+  zupassClientUrl: string,
   popupUrl: string,
   originalSiteName: string
 ) {
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
-    urlToPassportWebsite,
+    zupassClientUrl,
     popupUrl,
     SemaphoreSignaturePCDPackage.name,
     {
@@ -119,20 +119,20 @@ export function openSignedZuzaluSignInPopup(
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
         value: undefined,
-        userProvided: true,
+        userProvided: true
       },
       signedMessage: {
-        argumentType: ArgumentTypeName.String,
-      },
+        argumentType: ArgumentTypeName.String
+      }
     },
     {
       title: "Zuzalu Auth",
       description: originalSiteName,
-      signIn: true,
+      signIn: true
     }
   );
 
-  openPassportPopup(popupUrl, proofUrl);
+  openZupassPopup(popupUrl, proofUrl);
 }
 
 /**
@@ -156,6 +156,6 @@ export function useSemaphoreSignatureProof(
   }, [semaphoreSignaturePCD, onVerified]);
 
   return {
-    signatureProof: semaphoreSignaturePCD,
+    signatureProof: semaphoreSignaturePCD
   };
 }

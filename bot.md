@@ -41,10 +41,10 @@ In the environment file `apps/passport-server/.env`, fill in the `TELEGRAM_BOT_T
 
 - In the Telegram app, go to the chat with your bot and type `/start`
 - Click `Generate ZKP`
-- Follow the link to PCDPass within Telegram (http://localhost:3000) and hit `Prove` when your ticket appears
-- If this is your first time, you will need to make a new PCDPass account:
+- Follow the link to Zupass within Telegram (http://localhost:3000) and hit `Prove` when your ticket appears
+- If this is your first time, you will need to make a new Zupass account:
 
-  - Make a new PCDPass account with an email you **know** has a ticket for the event in question (`ivan@0xparc.org` should work).
+  - Make a new Zupass account with an email you **know** has a ticket for the event in question (`ivan@0xparc.org` should work).
   - _Note: This account will only exist locally on your device_
 
 - You should be returned to the Telegram app and presented with the `Send ZKP` option.
@@ -96,6 +96,6 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
 
 - When restarting your database, make sure to run `localdb:restart` not `yarn localdb:init && yarn localdb:up`.
 
-  - If you do accidentally run `init`, you will clear all local data. This is ok, but it causes some problems because your local PCDPass ticket still exists in localStorage in the Telegram Web View of PCDPass, but doesn't exist in the database.
-  - To rectify this situation, you should clear localStorage on Telegram PCDPass by right-clicking the on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
+  - If you do accidentally run `init`, you will clear all local data. This is ok, but it causes some problems because your local Zupass ticket still exists in localStorage in the Telegram Web View of Zupass, but doesn't exist in the database.
+  - To rectify this situation, you should clear localStorage on Telegram Zupass by right-clicking the on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
   - Then, you just have to login again with an account that has a ticket

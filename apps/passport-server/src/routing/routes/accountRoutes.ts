@@ -12,19 +12,12 @@ import { normalizeEmail } from "../../util/util";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
-export function initPCDpassRoutes(
+export function initAccountRoutes(
   app: express.Application,
   _context: ApplicationContext,
   { userService, emailTokenService }: GlobalServices
 ): void {
-  logger("[INIT] initializing PCDpass routes");
-
-  /**
-   * Always returns 200 OK.
-   */
-  app.get("/pcdpass/", (req: Request, res: Response) => {
-    res.sendStatus(200);
-  });
+  logger("[INIT] initializing account routes");
 
   /**
    * Gets the password salt for a given email address.
@@ -35,21 +28,21 @@ export function initPCDpassRoutes(
    *
    * @todo access-control?
    */
-  app.get("/pcdpass/salt", async (req: Request, res: Response) => {
+  app.get("/account/salt", async (req: Request, res: Response) => {
     const email = normalizeEmail(checkQueryParam(req, "email"));
     const salt = await userService.getSaltByEmail(email);
     res.send(salt satisfies SaltResponseValue);
   });
 
   /**
-   * Step 1 of account creation on PCDpass.
+   * Step 1 of account creation on Zupass.
    *
    * If a user already exists with the given email address, and the `force` option
    * is not set to true, returns a 403 server error with the message
    * "<email address> already registered."
    *
    * If `force` *is* true, then calling this api creates and sends a new token to the
-   * given email, which can be used in step 2 (/pcdpass/verify-token) to proceed
+   * given email, which can be used in step 2 (/account/verify-token) to proceed
    * with account creation.
    *
    * If this is the first time this user is calling this route, then the `force`
@@ -63,7 +56,7 @@ export function initPCDpassRoutes(
    *
    * In the case that an email *was* successfully sent, just returns a 200 OK.
    */
-  app.post("/pcdpass/send-login-email", async (req: Request, res: Response) => {
+  app.post("/account/send-login-email", async (req: Request, res: Response) => {
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
@@ -74,7 +67,7 @@ export function initPCDpassRoutes(
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    await userService.handleSendPCDpassEmail(email, commitment, force, res);
+    await userService.handleSendTokenEmail(email, commitment, force, res);
   });
 
   /**
@@ -84,7 +77,7 @@ export function initPCDpassRoutes(
    *
    * If the token is invalid, returns a 403 error.
    */
-  app.post("/pcdpass/verify-token", async (req: Request, res: Response) => {
+  app.post("/account/verify-token", async (req: Request, res: Response) => {
     const token = checkBody<VerifyTokenRequest, "token">(req, "token");
     const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
@@ -106,13 +99,13 @@ export function initPCDpassRoutes(
   /**
    * Step 3 of account creation.
    *
-   * Creates a new PCDpass user. The user must call this route with the token
+   * Creates a new Zupass user. The user must call this route with the token
    * they received in their email. They must also upload the public component
    * of their semaphore identity (via the `commitment` parameter), as well as
-   * the `salt` their PCDpass client generated for them, so that they can use
+   * the `salt` their Zupass client generated for them, so that they can use
    * it again later on. Finally, they must also include the token they got in
    * their email inbox (or via the `devToken` feature described in the comment
-   * of the /pcdpass/send-login-email route).
+   * of the /account/send-login-email route).
    *
    * If the token is incorrect, returns a 403 server error.
    *
@@ -122,9 +115,9 @@ export function initPCDpassRoutes(
    * commitment. In the case a user already existed for this email, this route
    * is effectively an 'account reset' feature.
    *
-   * In the successful case, returns a {@link PCDpassUserJson}.
+   * In the successful case, returns a {@link ZupassUserJson}.
    */
-  app.post("/pcdpass/new-participant", async (req: Request, res: Response) => {
+  app.post("/account/new-participant", async (req: Request, res: Response) => {
     const email = normalizeEmail(
       checkBody<CreateNewUserRequest, "email">(req, "email")
     );
@@ -135,7 +128,7 @@ export function initPCDpassRoutes(
       "commitment"
     );
 
-    await userService.handleNewPCDpassUser(token, email, commitment, salt, res);
+    await userService.handleNewUser(token, email, commitment, salt, res);
   });
 
   /**
@@ -150,10 +143,10 @@ export function initPCDpassRoutes(
    * In the case that a user has already signed in with that email, overwrites
    * their account.
    *
-   * If logging in was successful, returns a {@link PCDpassUserJson}, otherwise
+   * If logging in was successful, returns a {@link ZupassUserJson}, otherwise
    * a 500 server error.
    */
-  app.post("/pcdpass/device-login", async (req: Request, res: Response) => {
+  app.post("/account/device-login", async (req: Request, res: Response) => {
     const secret = checkBody<DeviceLoginRequest, "secret">(req, "secret");
     const email = normalizeEmail(
       checkBody<DeviceLoginRequest, "email">(req, "email")
@@ -167,15 +160,29 @@ export function initPCDpassRoutes(
   });
 
   /**
-   * Gets a PCDpass user by their uuid.
+   * Gets a Zupass user by their uuid.
    * If the service is not ready, returns a 503 server error.
    * If the user does not exist, returns a 404.
-   * Otherwise returns the user as a {@link PCDpassUserJson}
+   * Otherwise returns the user as a {@link ZupassUserJson}
    *
    * @todo - should we censor part of this unless you're the given user? eg.
    * should we be returning the `salt` here?
    */
+  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
+    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+  });
+
+  /**
+   * temporary, for backwards compat; same as /account/user/:uuid
+   */
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetPCDpassUser(checkUrlParam(req, "uuid"), res);
+    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+  });
+
+  /**
+   * temporary, for backwards compat; same as /account/user/:uuid
+   */
+  app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
+    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
   });
 }

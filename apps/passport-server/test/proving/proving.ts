@@ -8,11 +8,11 @@ import {
   ServerProofStatusResult
 } from "@pcd/passport-interface";
 import { expect } from "chai";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 import { sleep } from "../../src/util/util";
 
 export async function sendProveRequest(
-  application: PCDpass,
+  application: Zupass,
   proveRequest: ServerProofRequest,
   handler: (r: ProveOnServerResult) => Promise<void>
 ): Promise<ProveOnServerResult> {
@@ -27,7 +27,7 @@ export async function sendProveRequest(
 }
 
 export async function sendStatusRequest(
-  application: PCDpass,
+  application: Zupass,
   statusRequest: ProofStatusRequest,
   handler?: (r: ServerProofStatusResult) => Promise<void>
 ): Promise<ServerProofStatusResult> {
@@ -42,7 +42,7 @@ export async function sendStatusRequest(
 }
 
 export async function waitForSettledStatus(
-  application: PCDpass,
+  application: Zupass,
   statusRequest: ProofStatusRequest,
   handler?: (r: ServerProofStatusResult) => Promise<void>
 ): Promise<ServerProofStatusResult> {
@@ -61,7 +61,7 @@ export async function waitForSettledStatus(
 }
 
 export async function submitAndWaitForPendingPCD(
-  application: PCDpass,
+  application: Zupass,
   proveRequest: ServerProofRequest,
   settledResponseHandler: (status: ServerProofStatusResult) => Promise<void>
 ): Promise<void> {

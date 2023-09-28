@@ -14,18 +14,18 @@ import { APIResult } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
- * Tries to check the user in. This is called by the PCDpass client when
+ * Tries to check the user in. This is called by the Zupass client when
  * a 'superuser' of a particular event wants to check in a Devconnect
  * attendee into the event.
  *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestCheckIn(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   postBody: CheckTicketInRequest
 ): Promise<CheckTicketInResult> {
   return httpPost<CheckTicketInResult>(
-    urlJoin(passportServerUrl, "/issue/check-in"),
+    urlJoin(zupassServerUrl, "/issue/check-in"),
     {
       // @todo - here and elsewhere - how can we do better than casting, and actually
       // make sure that the response we're getting back is the right shape?
@@ -41,11 +41,11 @@ export async function requestCheckIn(
  * to try to check a ticket in.
  */
 export async function checkinTicket(
-  passportServer: string,
+  zupassServerUrl: string,
   ticket: EdDSATicketPCD,
   checkerIdentity: Identity
 ): Promise<CheckTicketInResult> {
-  return requestCheckIn(passportServer, {
+  return requestCheckIn(zupassServerUrl, {
     ticket: await EdDSATicketPCDPackage.serialize(ticket),
     checkerProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({

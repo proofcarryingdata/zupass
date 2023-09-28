@@ -14,12 +14,12 @@ export function InvalidUserModal() {
   return (
     <Container>
       <Spacer h={8} />
-      <H1>Invalid Passport</H1>
+      <H1>Invalid Zupass</H1>
       <Spacer h={24} />
       <p>
-        You've reset your passport on another device, invalidating this one.
-        Click the button below to log out. Then you'll be able to sync your
-        existing passport onto this device.
+        You've reset your Zupass account on another device, invalidating this
+        one. Click the button below to log out. Then you'll be able to sync your
+        existing Zupass account onto this device.
       </p>
       <Spacer h={24} />
       <Button onClick={onClick}>Exit</Button>

@@ -1,8 +1,8 @@
 /**
- * Popup window will redirect to the passport to request a proof.
+ * Popup window will redirect to Zupass to request a proof.
  * Open the popup window under the current domain, let it redirect there.
  */
-export function sendPassportRequest(proofUrl: string) {
+export function sendZupassRequest(proofUrl: string) {
   const popupUrl = `#/popup?proofUrl=${encodeURIComponent(proofUrl)}`;
   window.open(popupUrl, "_blank", "width=450,height=600,top=100,popup");
 }

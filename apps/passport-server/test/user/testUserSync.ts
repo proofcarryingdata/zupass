@@ -10,9 +10,9 @@ import {
 import { expect } from "chai";
 import "chai-spies";
 import "mocha";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 
-export async function testUserSync(application: PCDpass): Promise<void> {
+export async function testUserSync(application: Zupass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();
 

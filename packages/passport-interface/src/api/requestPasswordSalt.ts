@@ -9,13 +9,13 @@ import { httpGetSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestPasswordSalt(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   email: string
 ): Promise<PasswordSaltResponse> {
   return httpGetSimple(
     urlJoin(
-      passportServerUrl,
-      `/pcdpass/salt?${new URLSearchParams({
+      zupassServerUrl,
+      `/account/salt?${new URLSearchParams({
         email
       } satisfies SaltRequest).toString()}`
     ),

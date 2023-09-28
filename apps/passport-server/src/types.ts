@@ -24,9 +24,6 @@ import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 export interface ApplicationContext {
   dbPool: Pool;
   honeyClient: Libhoney | null;
-  // whether this is the version of the application purpose-built for zuzalu,
-  // or the generic version
-  isZuzalu: boolean;
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
@@ -48,7 +45,7 @@ export interface GlobalServices {
   persistentCacheService: PersistentCacheService;
 }
 
-export interface PCDpass {
+export interface Zupass {
   context: ApplicationContext;
   services: GlobalServices;
   apis: APIs;
@@ -66,7 +63,6 @@ export interface APIs {
 }
 
 export interface EnvironmentVariables {
-  IS_ZUZALU?: string;
   MAILGUN_API_KEY?: string;
   DATABASE_USERNAME?: string;
   DATABASE_PASSWORD?: string;

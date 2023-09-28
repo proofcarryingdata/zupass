@@ -9,12 +9,12 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestVerifyToken(
-  passportServer: string,
+  zupassServerUrl: string,
   email: string,
   token: string
 ): Promise<VerifyTokenResult> {
   return httpPostSimple(
-    urlJoin(passportServer, `/pcdpass/verify-token`),
+    urlJoin(zupassServerUrl, `/account/verify-token`),
     async () => ({ value: undefined, success: true }),
     { email, token } satisfies VerifyTokenRequest
   );

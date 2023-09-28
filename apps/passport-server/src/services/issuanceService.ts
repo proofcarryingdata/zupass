@@ -18,9 +18,9 @@ import {
   ListFeedsRequest,
   ListFeedsResponseValue,
   ListSingleFeedRequest,
-  PCDPassFeedIds,
   PollFeedRequest,
   PollFeedResponseValue,
+  ZupassFeedIds,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
 import {
@@ -44,16 +44,16 @@ import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import NodeRSA from "node-rsa";
 import {
-  CommitmentRow,
-  DevconnectPretixTicketDBWithEmailAndItem
+  DevconnectPretixTicketDBWithEmailAndItem,
+  UserRow
 } from "../database/models";
-import { fetchCommitmentByPublicCommitment } from "../database/queries/commitments";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { fetchUserByCommitment } from "../database/queries/users";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -94,7 +94,7 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    const FEED_PROVIDER_NAME = "PCDPass";
+    const FEED_PROVIDER_NAME = "Zupass";
 
     this.feedHost = new FeedHost(
       [
@@ -159,7 +159,7 @@ export class IssuanceService {
             return { actions };
           },
           feed: {
-            id: PCDPassFeedIds.Devconnect,
+            id: ZupassFeedIds.Devconnect,
             name: "Devconnect Tickets",
             description: "Get your Devconnect tickets here!",
             inputPCDType: EdDSATicketPCDPackage.name,
@@ -200,7 +200,7 @@ export class IssuanceService {
             };
           },
           feed: {
-            id: PCDPassFeedIds.Frogs,
+            id: ZupassFeedIds.Frogs,
             name: "Frogs",
             description: "Get your Frogs here!",
             inputPCDType: undefined,
@@ -241,9 +241,9 @@ export class IssuanceService {
             return { actions };
           },
           feed: {
-            id: PCDPassFeedIds.Email,
-            name: "PCDPass Verified Emails",
-            description: "Emails verified by PCDPass",
+            id: ZupassFeedIds.Email,
+            name: "Zupass Verified Emails",
+            description: "Emails verified by Zupass",
             inputPCDType: EmailPCDPackage.name,
             partialArgs: undefined,
             permissions: [
@@ -286,7 +286,7 @@ export class IssuanceService {
             return { actions };
           },
           feed: {
-            id: PCDPassFeedIds.Zuzalu_1,
+            id: ZupassFeedIds.Zuzalu_1,
             name: "Zuzalu tickets",
             description: "Your Zuzalu Tickets",
             inputPCDType: EdDSATicketPCD.name,
@@ -444,7 +444,7 @@ export class IssuanceService {
         return {
           error: {
             name: "InvalidSignature",
-            detailedMessage: "This ticket was not signed by PCDpass."
+            detailedMessage: "This ticket was not signed by Zupass."
           },
           success: false
         };
@@ -490,7 +490,7 @@ export class IssuanceService {
             name: "AlreadyCheckedIn",
             checker: ticketInDb.checker ?? undefined,
             checkinTimestamp: (
-              ticketInDb.pcdpass_checkin_timestamp ?? new Date()
+              ticketInDb.zupass_checkin_timestamp ?? new Date()
             ).toISOString()
           },
           success: false
@@ -509,7 +509,7 @@ export class IssuanceService {
 
   private async checkUserExists(
     proof: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<CommitmentRow | null> {
+  ): Promise<UserRow | null> {
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
@@ -528,13 +528,12 @@ export class IssuanceService {
       return null;
     }
 
-    const requestingFor = deserializedSignature.claim.identityCommitment;
-    const storedCommitment = await fetchCommitmentByPublicCommitment(
+    const user = await fetchUserByCommitment(
       this.context.dbPool,
-      requestingFor
+      deserializedSignature.claim.identityCommitment
     );
 
-    if (storedCommitment == null) {
+    if (user == null) {
       logger(
         `can't issue PCDs for ${deserializedSignature.claim.identityCommitment} because ` +
           `we don't have a user with that commitment in the database`
@@ -542,7 +541,7 @@ export class IssuanceService {
       return null;
     }
 
-    return storedCommitment;
+    return user;
   }
 
   /**
@@ -709,9 +708,9 @@ export class IssuanceService {
       eventId: t.pretix_events_config_id,
       productId: t.devconnect_pretix_items_info_id,
       timestampConsumed:
-        t.pcdpass_checkin_timestamp == null
+        t.zupass_checkin_timestamp == null
           ? 0
-          : new Date(t.pcdpass_checkin_timestamp).getTime(),
+          : new Date(t.zupass_checkin_timestamp).getTime(),
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
       isConsumed: t.is_consumed,

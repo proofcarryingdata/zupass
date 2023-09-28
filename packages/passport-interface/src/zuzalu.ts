@@ -11,13 +11,8 @@ export interface User {
   /** Salt used to secure user's password */
   salt: string | null;
 
-  /** PCDpass-specific user metadata */
+  /** Devconnect-specific user metadata */
   superuserEventConfigIds?: string[];
-
-  /** Zuzalu-specific user metadata */
-  name?: string;
-  role?: ZuzaluUserRole | undefined;
-  visitor_date_ranges?: DateRange[] | null;
 }
 
 export interface DateRange {

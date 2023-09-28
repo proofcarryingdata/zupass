@@ -61,7 +61,7 @@ export function EnterConfirmationCodeScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H1>PCDPASS</H1>
+            <H1>ZUPASS</H1>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>

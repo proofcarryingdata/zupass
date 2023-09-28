@@ -1,9 +1,5 @@
 import urlJoin from "url-join";
-import {
-  DeviceLoginRequest,
-  PCDpassUserJson,
-  UserResponseValue
-} from "../RequestTypes";
+import { DeviceLoginRequest, UserResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -14,15 +10,15 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestDeviceLogin(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   email: string,
   secret: string,
   commitment: string
 ): Promise<DeviceLoginResult> {
   return httpPostSimple(
-    urlJoin(passportServerUrl, `pcdpass/device-login`),
+    urlJoin(zupassServerUrl, `/account/device-login`),
     async (resText) => ({
-      value: JSON.parse(resText) as PCDpassUserJson,
+      value: JSON.parse(resText) as UserResponseValue,
       success: true
     }),
     {

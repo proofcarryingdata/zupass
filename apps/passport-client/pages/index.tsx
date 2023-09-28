@@ -16,7 +16,7 @@ import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
-import { NewPassportScreen } from "../components/screens/NewPassportScreen";
+import { NewZupassScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -24,7 +24,6 @@ import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
-import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -32,9 +31,9 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -145,23 +144,14 @@ function RouterImpl() {
             path="already-registered"
             element={<AlreadyRegisteredScreen />}
           />
-          {!appConfig.isZuzalu && (
-            <>
-              <Route
-                path="create-password"
-                element={<CreatePasswordScreen />}
-              />
-              <Route
-                path="change-password"
-                element={<ChangePasswordScreen />}
-              />
-            </>
-          )}
+          <Route path="sync-existing" element={<SyncExistingScreen />} />
+          <Route path="create-password" element={<CreatePasswordScreen />} />
+          <Route path="change-password" element={<ChangePasswordScreen />} />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
           />
-          <Route path="new-passport" element={<NewPassportScreen />} />
+          <Route path="new-passport" element={<NewZupassScreen />} />
           <Route
             path="get-without-proving"
             element={<GetWithoutProvingScreen />}
@@ -170,18 +160,10 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && (
-            <Route path="sync-existing" element={<SyncExistingScreen />} />
-          )}
+          <Route path="verify-zupass" element={<VerifyScreen />} />
           <Route
-            path="verify"
-            element={
-              appConfig.isZuzalu ? (
-                <VerifyScreen />
-              ) : (
-                <DevconnectCheckinScreen />
-              )
-            }
+            path="verify-devconnect"
+            element={<DevconnectCheckinScreen />}
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
@@ -195,6 +177,7 @@ function RouterImpl() {
 
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
+
   if (identity == null) {
     console.log("Generating a new Semaphore identity...");
     identity = new Identity();
@@ -204,6 +187,7 @@ async function loadInitialState(): Promise<AppState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
+
   const userInvalid = loadUserInvalid();
   const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
@@ -219,13 +203,12 @@ async function loadInitialState(): Promise<AppState> {
   if (userInvalid) {
     modal = "invalid-participant";
   } else if (
-    // If on Zupass legacy login, ask user to save their Sync Key
-    appConfig.isZuzalu &&
+    // If on Zupass legacy login, ask user to set passwrod
     self != null &&
-    !localStorage["savedSyncKey"]
+    self.salt == null
   ) {
-    console.log("Asking existing user to save their Sync Key...");
-    modal = "save-sync";
+    console.log("Asking existing user to set a passw2ord");
+    modal = "upgrade-account-modal";
   }
 
   return {

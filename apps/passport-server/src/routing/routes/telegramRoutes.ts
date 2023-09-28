@@ -14,7 +14,7 @@ export function initTelegramRoutes(
 
   /**
    * When the user issues the `start` command to the bot, they are sent to
-   * the passport client. Once they have selected their PCD, they will be
+   * the Zupass client. Once they have selected their PCD, they will be
    * directed here, with the proof in the query parameters.
    *
    * If we can verify the PCD, the bot will send them a message containing
@@ -71,7 +71,7 @@ export function initTelegramRoutes(
 
   /**
    * When an EdDSATicket holder wants to send an anonymous message to
-   * the Telegram Q&A channel, they are first directed to passport client.
+   * the Telegram Q&A channel, they are first directed to the Zupass client.
    * Once they have created a ZKEdDSA proof, they will be directed here,
    * with the proof in the query parameters.
    *

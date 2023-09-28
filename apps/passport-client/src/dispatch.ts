@@ -34,7 +34,6 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
@@ -184,15 +183,8 @@ async function verifyToken(
   state: AppState,
   update: ZuUpdate
 ) {
-  // For Zupass, skip directly to login as we don't let users set their password
-  if (appConfig.isZuzalu) {
-    // Password can be empty string for the argon2 KDF. Random salt ensures that
-    // this generated key is not less secure than generating a random key.
-    return login(email, token, "", state, update);
-  }
-
   const verifyTokenResult = await requestVerifyToken(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     email,
     token
   );
@@ -251,8 +243,7 @@ async function login(
   });
 
   const newUserResult = await requestCreateNewUser(
-    appConfig.passportServer,
-    appConfig.isZuzalu,
+    appConfig.zupassServer,
     email,
     token,
     state.identity.commitment.toString(),
@@ -279,7 +270,7 @@ async function deviceLogin(
   update: ZuUpdate
 ) {
   const deviceLoginResult = await requestDeviceLogin(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     email,
     secret,
     state.identity.commitment.toString()
@@ -309,7 +300,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
     update({
       error: {
         title: "Invalid identity",
-        message: "Something went wrong saving your passport. Contact support."
+        message: "Something went wrong saving your Zupass. Contact support."
       }
     });
   }
@@ -327,11 +318,6 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
-
-  // If on Zupass legacy login, ask user to save their Sync Key
-  if (appConfig.isZuzalu) {
-    update({ modal: "save-sync" });
-  }
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
@@ -344,7 +330,7 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
     console.log("User salt mismatch");
     hasChangedPassword = true;
     requestLogToServer(
-      appConfig.passportServer,
+      appConfig.zupassServer,
       "another-device-changed-password",
       {
         oldSalt: state.self.salt,
@@ -357,14 +343,14 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
+    requestLogToServer(appConfig.zupassServer, "invalid-user", {
       oldCommitment: state.identity.commitment.toString(),
       newCommitment: self.commitment.toString()
     });
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
+    requestLogToServer(appConfig.zupassServer, "invalid-user", {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
@@ -380,10 +366,6 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
     return;
   }
 
-  if (self.visitor_date_ranges) {
-    self.visitor_date_ranges = sanitizeDateRanges(self.visitor_date_ranges);
-  }
-
   saveSelf(self); // Save to local storage.
   update({ self }); // Update in-memory state.
 }
@@ -396,7 +378,7 @@ function clearError(state: AppState, update: ZuUpdate) {
 }
 
 async function resetPassport(state: AppState) {
-  await requestLogToServer(appConfig.passportServer, "logout", {
+  await requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
     commitment: state.self?.commitment
@@ -440,14 +422,22 @@ async function loadFromSync(
     await pcds.deserializeAllAndAdd(storage.pcds);
   }
 
-  // assumes that we only have one semaphore identity in the passport.
+  // assumes that we only have one semaphore identity in Zupass.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
 
+  let modal: AppState["modal"] = "";
   if (!identityPCD) {
     // TODO: handle error gracefully
     throw new Error("no identity found in encrypted storage");
+  } else if (
+    // If on Zupass legacy login, ask user to set passwrod
+    self != null &&
+    storage.self.salt == null
+  ) {
+    console.log("Asking existing user to set a passw2ord");
+    modal = "upgrade-account-modal";
   }
 
   await savePCDs(pcds);
@@ -459,7 +449,8 @@ async function loadFromSync(
     encryptionKey,
     pcds,
     identity: identityPCD.claim.identity,
-    self: storage.self
+    self: storage.self,
+    modal
   });
 
   console.log("Loaded from sync key, redirecting to home screen...");
@@ -522,8 +513,8 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
  *   them from e2ee.
  *
  * - if the PCDs have been downloaded, and the current set of PCDs
- *   in the passport does not equal the downloaded set, and if the
- *   passport is not currently uploading the current set of PCDs
+ *   in Zupass does not equal the downloaded set, and if
+ *   Zupass is not currently uploading the current set of PCDs
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {

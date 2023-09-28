@@ -1,15 +1,10 @@
-import {
-  requestDeviceLogin,
-  requestUser,
-  toPCDpassUser,
-  User
-} from "@pcd/passport-interface";
+import { requestDeviceLogin, requestUser, User } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 
 export async function testDeviceLogin(
-  application: PCDpass,
+  application: Zupass,
   email: string,
   secret: string
 ): Promise<{ user: User; identity: Identity } | undefined> {
@@ -36,7 +31,6 @@ export async function testDeviceLogin(
 
   const getUserResult = await requestUser(
     application.expressContext.localEndpoint,
-    false,
     deviceLoginResponse.value?.uuid
   );
 
@@ -47,11 +41,11 @@ export async function testDeviceLogin(
   expect(getUserResult.value).to.deep.eq(deviceLoginResponse.value);
   expect(getUserResult.success).to.deep.eq(true);
 
-  return { user: toPCDpassUser(getUserResult.value), identity };
+  return { user: getUserResult.value, identity };
 }
 
 export async function testFailedDeviceLogin(
-  application: PCDpass,
+  application: Zupass,
   email: string,
   secret: string
 ): Promise<void> {

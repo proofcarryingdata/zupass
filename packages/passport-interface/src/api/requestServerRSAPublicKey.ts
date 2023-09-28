@@ -3,16 +3,16 @@ import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
 /**
- * Asks the PCDpass server for its RSA public key, which can be
- * used to verify PCDpass-issued attestations.
+ * Asks the Zupass server for its RSA public key, which can be
+ * used to verify Zupass-issued attestations.
  *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestServerRSAPublicKey(
-  passportServerUrl: string
+  zupassServerUrl: string
 ): Promise<ServerRSAPublicKeyResult> {
   return httpGetSimple(
-    urlJoin(passportServerUrl, `/issue/rsa-public-key`),
+    urlJoin(zupassServerUrl, `/issue/rsa-public-key`),
     async (resText) => ({ value: resText, success: true })
   );
 }

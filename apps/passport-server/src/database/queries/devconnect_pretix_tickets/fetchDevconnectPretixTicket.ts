@@ -9,7 +9,7 @@ import { sqlQuery } from "../../sqlQuery";
 
 /*
  * Fetch all users that have a ticket on pretix, even if they haven't
- * logged into the passport app.
+ * logged into Zupass.
  */
 export async function fetchAllNonDeletedDevconnectPretixTickets(
   client: Pool
@@ -25,7 +25,7 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
 
 /*
  * Fetch users by org and event that have a ticket on pretix, even if they haven't
- * logged into the passport app.
+ * logged into Zupass.
  */
 export async function fetchDevconnectPretixTicketsByEvent(
   client: Pool,
@@ -173,7 +173,7 @@ and t.is_deleted = false
 }
 
 /**
- * Fetches tickets which have been consumed in PCDpass, but not checked in
+ * Fetches tickets which have been consumed in Zupass, but not checked in
  * on Pretix.
  */
 export async function fetchDevconnectTicketsAwaitingSync(
