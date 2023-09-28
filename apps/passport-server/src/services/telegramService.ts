@@ -75,9 +75,7 @@ export class TelegramService {
     const eventsMenu = new Menu("events");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
-    // This callback function is inline due to the context.dbPool not being defined when putting this logic in a member function
-    // This function needs access to the global state (this.events and this.deleteEvents).
-    // TODO: Figure out a better way to execute the logic with the required state.
+    // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(async () => {
       logger(`[TELEGRAM] calling dynamic events menu...`);
       return await this.fetchLinkMenu();
@@ -91,7 +89,7 @@ export class TelegramService {
 
       if (userId && name) {
         const proofUrl = this.generateProofUrl(userId.toString());
-        range.webApp(`Generate ZKP for ${name} 🚀`, proofUrl);
+        range.webApp(`Generate a proof of ticket for ${name} 🚀`, proofUrl);
       } else {
         ctx.reply(`userId or name not found...`);
       }
@@ -524,14 +522,16 @@ export class TelegramService {
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
-    logger(`[TELEGRAM] Creating chat invite link to ${chat.id} for ${userId}`);
+    logger(
+      `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
+    );
     const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
       name: "test invite link"
     });
     await this.bot.api.sendMessage(
       userId,
-      `You've generated a ZK proof! Press this button to send your proof to the chat.`,
+      `You've generated a ZK proof! Press this button to send your proof to ${chat.title}`,
       {
         reply_markup: new InlineKeyboard().url(
           `Send ZKP`,
