@@ -91,7 +91,9 @@ export class TelegramService {
         const proofUrl = this.generateProofUrl(userId.toString());
         range.webApp(`Generate a proof of ticket for ${name} 🚀`, proofUrl);
       } else {
-        ctx.reply(`userId or name not found...`);
+        ctx.reply(
+          `Unable to locate your Telegram account. Please try again, or contat passport@0xparc.org`
+        );
       }
       return range;
     });
