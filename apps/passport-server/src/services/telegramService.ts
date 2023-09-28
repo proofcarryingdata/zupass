@@ -92,7 +92,7 @@ export class TelegramService {
         range.webApp(`Generate a proof of ticket for ${name} 🚀`, proofUrl);
       } else {
         ctx.reply(
-          `Unable to locate your Telegram account. Please try again, or contat passport@0xparc.org`
+          `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
         );
       }
       return range;
