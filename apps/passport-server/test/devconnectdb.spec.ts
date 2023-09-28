@@ -26,7 +26,6 @@ import {
 } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
-  fetchPretixEventInfoByName,
   insertPretixEventsInfo
 } from "../src/database/queries/pretixEventInfo";
 import { insertPretixItemsInfo } from "../src/database/queries/pretixItemInfo";
@@ -294,21 +293,6 @@ describe("database reads and writes for devconnect ticket features", function ()
         event.dbEventConfigId
       );
       expect(eventInfoFromDb?.id).to.eq(dbEventInfoId);
-    }
-  });
-
-  step("should be able to fetch pretix_event_info by name", async function () {
-    for (let i = 0; i < testEvents.length; i++) {
-      const event = testEvents[i];
-
-      const eventInfoFromDb = await fetchPretixEventInfoByName(
-        db,
-        event.eventName
-      );
-      expect(eventInfoFromDb?.event_name).to.eq(event.eventName);
-      expect(eventInfoFromDb?.pretix_events_config_id).to.eq(
-        event.dbEventConfigId
-      );
     }
   });
 
