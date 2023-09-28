@@ -12,6 +12,7 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 export function EnterConfirmationCodeScreen() {
   const dispatch = useDispatch();
@@ -86,6 +87,8 @@ export function EnterConfirmationCodeScreen() {
               <>
                 <Spacer h={8} />
                 <Button onClick={onCreateClick}>Continue</Button>
+                <Spacer h={8} />
+                <ResendCodeButton email={email} />
                 <Spacer h={8} />
                 <Button onClick={onCancelClick}>Cancel</Button>
               </>

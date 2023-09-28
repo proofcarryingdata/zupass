@@ -22,6 +22,7 @@ import {
 import { Button, LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 /**
  * Show the user that we're generating their passport. Direct them to the email
@@ -123,7 +124,13 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <Header />
-          <PHeavy>{emailSent ? "Check your email." : <>&nbsp;</>}</PHeavy>
+          <PHeavy>
+            {emailSent ? (
+              "Check your email. Please use the most recent code you have received."
+            ) : (
+              <>&nbsp;</>
+            )}
+          </PHeavy>
         </TextCenter>
         <Spacer h={24} />
         <form onSubmit={verify}>
@@ -145,7 +152,11 @@ function SendEmailVerification({ email }: { email: string }) {
               </div>
             )}
             {!verifyingCode && emailSent && (
-              <Button type="submit">Verify</Button>
+              <>
+                <Button type="submit">Verify</Button>
+                <Spacer h={8} />
+                <ResendCodeButton email={email} />
+              </>
             )}
           </CenterColumn>
         </form>
