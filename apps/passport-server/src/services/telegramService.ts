@@ -19,7 +19,8 @@ import { deleteTelegramVerification } from "../database/queries/telegram/deleteT
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchLinkedPretixAndTelegramEvents,
-  fetchTelegramEventByEventId
+  fetchTelegramEventByEventId,
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
@@ -73,6 +74,7 @@ export class TelegramService {
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu("events");
+    const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
@@ -98,8 +100,16 @@ export class TelegramService {
       return range;
     });
 
+    anonSendMenu.dynamic((_, menu) => {
+      const zktgUrl =
+        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
+      menu.webApp("Send anonymous message", zktgUrl);
+      return menu;
+    });
+
     this.bot.use(eventsMenu);
     this.bot.use(pcdPassMenu);
+    this.bot.use(anonSendMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -262,6 +272,94 @@ export class TelegramService {
       `,
         { parse_mode: "HTML" }
       );
+    });
+
+    this.bot.command("anonsend", async (ctx) => {
+      if (ctx.chat?.type !== "private") {
+        const messageThreadId = ctx.message?.message_thread_id;
+        const chatId = ctx.chat.id;
+
+        // if there is a message_thread_id or a chat_id, use reply settings.
+        const replyOptions = messageThreadId
+          ? { message_thread_id: messageThreadId }
+          : chatId
+          ? {}
+          : undefined;
+
+        if (replyOptions) {
+          await ctx.reply(
+            "Please message directly within a private chat.",
+            replyOptions
+          );
+        }
+        return;
+      }
+
+      await ctx.reply("Click below to anonymously send a message.", {
+        reply_markup: anonSendMenu
+      });
+    });
+
+    this.bot.command("incognito", async (ctx) => {
+      const messageThreadId = ctx.message?.message_thread_id;
+      if (!messageThreadId) {
+        logger("[TELEGRAM] message thread id not found");
+        return;
+      }
+
+      if (ctx.chat?.type !== "supergroup") {
+        await ctx.reply(
+          "This command only works in a group with Topics enabled.",
+          { message_thread_id: messageThreadId }
+        );
+      }
+      const admins = await ctx.getChatAdministrators();
+      const isAdmin = admins.some((admin) => admin.user.id === ctx.from?.id);
+      if (!isAdmin) {
+        await ctx.reply(
+          "Must be an admin to convert a channel to Incognito mode.",
+          { message_thread_id: messageThreadId }
+        );
+        return;
+      }
+
+      try {
+        const telegramEvents = await fetchTelegramEventsByChatId(
+          this.context.dbPool,
+          ctx.chat.id
+        );
+        const hasLinked = telegramEvents.length > 0;
+        if (!hasLinked) {
+          await ctx.reply(
+            "This group is not linked to an event. Please use /link to link this group to an event.",
+            { message_thread_id: messageThreadId }
+          );
+          return;
+        } else if (telegramEvents.filter((e) => e.anon_chat_id).length > 0) {
+          await ctx.reply(
+            `This group has already linked an anonymous channel.`,
+            { message_thread_id: messageThreadId }
+          );
+          return;
+        }
+
+        await insertTelegramEvent(
+          this.context.dbPool,
+          telegramEvents[0].ticket_event_id,
+          telegramEvents[0].telegram_chat_id,
+          messageThreadId
+        );
+
+        await ctx.reply(
+          `Successfully linked anonymous channel. DM me with /anonsend to anonymously send a message.`,
+          { message_thread_id: messageThreadId }
+        );
+      } catch (error) {
+        logger(`[ERROR] ${error}`);
+        await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
+          message_thread_id: messageThreadId
+        });
+      }
     });
   }
 
