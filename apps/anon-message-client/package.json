@@ -6,7 +6,7 @@
     "dev": "NODE_ENV=development nodemon dev.ts",
     "build": "next build",
     "export": "next export",
-    "start": "next start -p 4000",
+    "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {

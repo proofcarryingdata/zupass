@@ -100,6 +100,13 @@ export class TelegramService {
       return range;
     });
 
+    anonSendMenu.dynamic((_, menu) => {
+      const zktgUrl =
+        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
+      menu.webApp("Send anonymous message", zktgUrl);
+      return menu;
+    });
+
     this.bot.use(eventsMenu);
     this.bot.use(pcdPassMenu);
     this.bot.use(anonSendMenu);
@@ -281,17 +288,13 @@ export class TelegramService {
 
         if (replyOptions) {
           await ctx.reply(
-            "To maintain privacy, please message within a private chat.",
+            "Please message directly within a private chat.",
             replyOptions
           );
         }
         return;
       }
 
-      const zktgUrl =
-        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
-
-      anonSendMenu.webApp("Send anonymous message", zktgUrl);
       await ctx.reply("Click below to anonymously send a message.", {
         reply_markup: anonSendMenu
       });
