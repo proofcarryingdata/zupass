@@ -5,6 +5,7 @@ import {
   requestDownloadAndDecryptStorage,
   requestLogToServer
 } from "@pcd/passport-interface";
+import { sleep } from "@pcd/util";
 import {
   FormEvent,
   useCallback,
@@ -106,6 +107,7 @@ export function AlreadyRegisteredScreen() {
       }
 
       setLoading(true);
+      await sleep(10);
       const crypto = await PCDCrypto.newInstance();
       const encryptionKey = await crypto.argon2(password, salt, 32);
       const storageResult = await requestDownloadAndDecryptStorage(
