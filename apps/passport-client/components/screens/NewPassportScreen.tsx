@@ -4,7 +4,6 @@ import {
   requestPasswordSalt
 } from "@pcd/passport-interface";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
 import { err } from "../../src/util";
@@ -12,7 +11,6 @@ import {
   BackgroundGlow,
   BigInput,
   CenterColumn,
-  H1,
   HR,
   Spacer,
   TextCenter
@@ -26,7 +24,7 @@ import { ResendCodeButton } from "../shared/ResendCodeButton";
  * Show the user that we're generating their Zupass. Direct them to the email
  * verification link.
  */
-export function NewZupassScreen() {
+export function NewPassportScreen() {
   const pendingAction = usePendingAction();
 
   useEffect(() => {
@@ -48,6 +46,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const dispatch = useDispatch();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
 
   const handleConfirmationEmailResult = useCallback(
@@ -81,12 +80,14 @@ function SendEmailVerification({ email }: { email: string }) {
   );
 
   const doRequestConfirmationEmail = useCallback(async () => {
+    setEmailSending(true);
     const confirmationEmailResult = await requestConfirmationEmail(
       appConfig.zupassServer,
       email,
       identity.commitment.toString(),
       false
     );
+    setEmailSending(false);
 
     handleConfirmationEmailResult(confirmationEmailResult);
   }, [email, handleConfirmationEmailResult, identity.commitment]);
@@ -111,25 +112,24 @@ function SendEmailVerification({ email }: { email: string }) {
     [dispatch, email, verifyingCode]
   );
 
-  return (
-    <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
+  let content = null;
+
+  if (emailSending) {
+    content = (
+      <>
         <Spacer h={64} />
+        <TextCenter>Checking if you already have an account</TextCenter>
+        <Spacer h={32} />
+        <RippleLoader />
+      </>
+    );
+  } else if (emailSent) {
+    content = (
+      <>
         <TextCenter>
-          <Header />
-          <PHeavy>
-            {emailSent ? (
-              "Check your email. Please use the most recent code you have received."
-            ) : (
-              <>&nbsp;</>
-            )}
-          </PHeavy>
+          Check your inbox for an email from <pre>passport@0xparc.org</pre>. Use
+          the most recent code you received to continue with the login process.
         </TextCenter>
-        <Spacer h={24} />
         <form onSubmit={verify}>
           <CenterColumn w={280}>
             {emailSent && (
@@ -157,6 +157,19 @@ function SendEmailVerification({ email }: { email: string }) {
             )}
           </CenterColumn>
         </form>
+      </>
+    );
+  }
+
+  return (
+    <AppContainer bg="primary">
+      <BackgroundGlow
+        y={224}
+        from="var(--bg-lite-primary)"
+        to="var(--bg-dark-primary)"
+      >
+        <CenterColumn w={280}>{content}</CenterColumn>
+
         {!verifyingCode && emailSent && (
           <>
             <Spacer h={48} />
@@ -173,19 +186,3 @@ function SendEmailVerification({ email }: { email: string }) {
     </AppContainer>
   );
 }
-
-function Header() {
-  return (
-    <>
-      <H1>Zupass</H1>
-      <Spacer h={24} />
-    </>
-  );
-}
-
-const PHeavy = styled.p`
-  font-size: 20px;
-  font-weight: 400;
-  line-height: 2;
-  color: var(--accent-lite);
-`;

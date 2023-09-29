@@ -16,7 +16,7 @@ import { HomeScreen } from "../components/screens/HomeScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
-import { NewZupassScreen } from "../components/screens/NewPassportScreen";
+import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -151,7 +151,7 @@ function RouterImpl() {
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
           />
-          <Route path="new-passport" element={<NewZupassScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
             path="get-without-proving"
             element={<GetWithoutProvingScreen />}

@@ -147,7 +147,14 @@ export function LoginScreen() {
           </>
         ) : (
           <>
-            <LoginHeader />
+            <TextCenter>
+              <H1>ZUPASS</H1>
+              <Spacer h={24} />
+              <Description>
+                This is an experimental personal cryptography manager, powered
+                by Zero-Knowledge.
+              </Description>
+            </TextCenter>
           </>
         )}
 
@@ -174,19 +181,6 @@ export function LoginScreen() {
       </BackgroundGlow>
       <Spacer h={64} />
     </AppContainer>
-  );
-}
-
-function LoginHeader() {
-  return (
-    <TextCenter>
-      <H1>ZUPASS</H1>
-      <Spacer h={24} />
-      <Description>
-        This is an experimental personal cryptography manager, powered by
-        Zero-Knowledge.
-      </Description>
-    </TextCenter>
   );
 }
 
