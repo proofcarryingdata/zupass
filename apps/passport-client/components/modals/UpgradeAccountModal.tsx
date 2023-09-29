@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf, useSyncKey } from "../../src/appHooks";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
-import { H2, Spacer } from "../core";
+import { BigInput, H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 
 /**
@@ -95,8 +95,12 @@ export function UpgradeAccountModal() {
     <Container>
       <H2>Upgrade Your Account</H2>
       <Spacer h={24} />
-      Zupass now supports logging in with a password!
+      Zupass now supports logging in with a password! To continue to use Zupass,
+      you must choose a password. Make sure to remember it, otherwise you will
+      lose access to all your PCDs.
       <Spacer h={24} />
+      <BigInput value={self.email} disabled={true} />
+      <Spacer h={8} />
       <NewPasswordForm
         passwordInputPlaceholder="New password"
         email={self.email}
