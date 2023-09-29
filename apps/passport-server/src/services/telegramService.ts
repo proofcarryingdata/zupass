@@ -29,8 +29,7 @@ import {
   BotContext,
   SessionData,
   dynamicEvents,
-  getSessionKey,
-  manageEvent
+  getSessionKey
 } from "../util/telegramMenu";
 import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -75,14 +74,11 @@ export class TelegramService {
 
     const pcdPassMenu = new Menu("pcdpass");
     const eventsMenu = new Menu<BotContext>("events");
-    const manageEventMenu = new Menu<BotContext>("manageEvent");
     const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
-    manageEventMenu.dynamic(manageEvent);
-
     pcdPassMenu.dynamic((ctx, range) => {
       const userId = ctx?.from?.id;
       const username = ctx?.from?.username;
@@ -107,7 +103,6 @@ export class TelegramService {
       return menu;
     });
 
-    eventsMenu.register(manageEventMenu);
     this.bot.use(eventsMenu);
     this.bot.use(pcdPassMenu);
     this.bot.use(anonSendMenu);
@@ -234,7 +229,7 @@ export class TelegramService {
         <b>/start</b> - join a group with a ZK proof of a ticket
     
         <b>Admins</b>
-        <b>/manage/b> - Gate / Ungate this group with a ticketed event
+        <b>/manage</b> - Gate / Ungate this group with a ticketed event
       `,
         { parse_mode: "HTML" }
       );
@@ -703,6 +698,9 @@ export async function startTelegramService(
   await bot.init();
 
   const service = new TelegramService(context, rollbarService, bot);
+  bot.catch((error) => {
+    logger(`[TELEGRAM] Bot error`, error);
+  });
   // Start the bot, but do not await on the result here.
   service.startBot();
 

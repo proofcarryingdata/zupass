@@ -59,66 +59,63 @@ export const dynamicEvents = async (
     range.text(`Database not connected. Try again...`);
     return;
   }
-  const events = await fetchLinkedPretixAndTelegramEvents(db);
-  const eventsWithGateStatus = events.map((e) => {
-    return { ...e, isLinked: e.telegramChatID === ctx.chat?.id.toString() };
-  });
-  for (const event of eventsWithGateStatus) {
+  // If an event is selected, display it and its menu options
+  if (ctx.session.selectedEvent) {
+    const event = ctx.session.selectedEvent;
+    range.text(`${event.isLinked ? "✅" : ""} ${event.eventName}`).row();
     range
-      .text(`${event.isLinked ? "✅" : ""} ${event.eventName}`, async (ctx) => {
-        if (ctx.session) {
-          ctx.session.selectedEvent = event;
-          let initText = "";
-          if (event.isLinked) {
-            initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will no longer be able to join this chat</i>`;
-          } else {
-            initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} can now join this chat</i>`;
-          }
-          await editOrSendMessage(ctx, initText);
-          ctx.menu.nav(`manageEvent`);
+      .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
+        if (!ctx.chat?.id) {
+          await editOrSendMessage(ctx, `Chat Id not found`);
         } else {
-          ctx.reply(`No session found`);
+          if (!event.isLinked) {
+            const replyText = `<i>Added ${event.eventName} to chat</i>`;
+            await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
+            await editOrSendMessage(ctx, replyText);
+          } else {
+            const replyText = `<i>Removed ${event.eventName} to chat</i>`;
+            await deleteTelegramEvent(db, event.configEventID);
+            await editOrSendMessage(ctx, replyText);
+          }
         }
+        ctx.session.selectedEvent = undefined;
+        ctx.menu.update();
       })
       .row();
-  }
-};
 
-export const manageEvent = async (
-  ctx: BotContext,
-  range: MenuRange<BotContext>
-): Promise<void> => {
-  const event = ctx?.session?.selectedEvent;
-  if (!event) {
-    range.text(`No event selected`).row().back(`Go back`);
-    return;
+    range.text(`Go back`, (ctx) => {
+      checkDeleteMessage(ctx);
+      ctx.session.selectedEvent = undefined;
+      ctx.menu.update();
+    });
   }
-  const db = ctx.session.dbPool;
-  if (!db) {
-    range.text(`Database not connected. Try again...`);
-    return;
+  // Otherwise, display all events to manage.
+  else {
+    const events = await fetchLinkedPretixAndTelegramEvents(db);
+    const eventsWithGateStatus = events.map((e) => {
+      return { ...e, isLinked: e.telegramChatID === ctx.chat?.id.toString() };
+    });
+    for (const event of eventsWithGateStatus) {
+      range
+        .text(
+          `${event.isLinked ? "✅" : ""} ${event.eventName}`,
+          async (ctx) => {
+            if (ctx.session) {
+              ctx.session.selectedEvent = event;
+              let initText = "";
+              if (event.isLinked) {
+                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will not be able to join this chat</i>`;
+              } else {
+                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
+              }
+              await editOrSendMessage(ctx, initText);
+              ctx.menu.update();
+            } else {
+              ctx.reply(`No session found`);
+            }
+          }
+        )
+        .row();
+    }
   }
-
-  range
-    .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
-      if (!ctx.chat?.id) {
-        await editOrSendMessage(ctx, `Chat Id not found`);
-      } else {
-        if (!event.isLinked) {
-          const replyText = `<i>Added ${event.eventName} to chat</i>`;
-          await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
-          await editOrSendMessage(ctx, replyText);
-        } else {
-          const replyText = `<i>Removed ${event.eventName} to chat</i>`;
-          await deleteTelegramEvent(db, event.configEventID);
-          await editOrSendMessage(ctx, replyText);
-        }
-      }
-      ctx.menu.back();
-    })
-    .row();
-
-  range.back(`Go back`, (ctx) => {
-    checkDeleteMessage(ctx);
-  });
 };
