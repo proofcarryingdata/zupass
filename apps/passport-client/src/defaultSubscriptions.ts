@@ -2,8 +2,8 @@ import {
   Feed,
   FeedSubscriptionManager,
   ISSUANCE_STRING,
-  PCDPassFeedIds,
-  Subscription
+  Subscription,
+  ZupassFeedIds
 } from "@pcd/passport-interface";
 import {
   AppendToFolderPermission,
@@ -19,12 +19,12 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../src/appConfig";
 
-const DEFAULT_FEED_URL = `${appConfig.passportServer}/feeds`;
-const DEFAULT_FEED_PROVIDER_NAME = "PCDPass";
+const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
+const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
 
 const DEFAULT_FEEDS: Feed[] = [
   {
-    id: PCDPassFeedIds.Devconnect,
+    id: ZupassFeedIds.Devconnect,
     name: "Devconnect",
     description: "Devconnect Tickets",
     permissions: [
@@ -48,9 +48,9 @@ const DEFAULT_FEEDS: Feed[] = [
     credentialType: SemaphoreSignaturePCDTypeName
   },
   {
-    id: PCDPassFeedIds.Email,
-    name: "PCDPass Verified Email",
-    description: "Emails verified with PCDPass",
+    id: ZupassFeedIds.Email,
+    name: "Zupass Verified Email",
+    description: "Emails verified with Zupass",
     permissions: [
       {
         type: PCDPermissionType.AppendToFolder,
@@ -64,7 +64,7 @@ const DEFAULT_FEEDS: Feed[] = [
     credentialType: SemaphoreSignaturePCDTypeName
   },
   {
-    id: PCDPassFeedIds.Zuzalu_1,
+    id: ZupassFeedIds.Zuzalu_1,
     name: "Zuzalu",
     description: "Zuzalu Tickets",
     permissions: [

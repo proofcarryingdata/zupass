@@ -63,15 +63,14 @@ export function AlreadyRegisteredScreen() {
   );
 
   const onOverwriteClick = useCallback(async () => {
-    requestLogToServer(appConfig.passportServer, "overwrite-account-click", {
+    requestLogToServer(appConfig.zupassServer, "overwrite-account-click", {
       email,
       identityCommitment
     });
 
     setLoading(true);
     const emailConfirmationResult = await requestConfirmationEmail(
-      appConfig.passportServer,
-      appConfig.isZuzalu,
+      appConfig.zupassServer,
       email,
       identityCommitment,
       true
@@ -81,7 +80,7 @@ export function AlreadyRegisteredScreen() {
 
   const onLoginWithMasterPasswordClick = useCallback(() => {
     requestLogToServer(
-      appConfig.passportServer,
+      appConfig.zupassServer,
       "login-with-master-password-click",
       {
         email,
@@ -110,7 +109,7 @@ export function AlreadyRegisteredScreen() {
       const crypto = await PCDCrypto.newInstance();
       const encryptionKey = await crypto.argon2(password, salt, 32);
       const storageResult = await requestDownloadAndDecryptStorage(
-        appConfig.passportServer,
+        appConfig.zupassServer,
         encryptionKey
       );
       setLoading(false);
@@ -166,7 +165,7 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H1>PCDPASS</H1>
+            <H1>ZUPASS</H1>
           </TextCenter>
           <Spacer h={32} />
           <TextCenter>

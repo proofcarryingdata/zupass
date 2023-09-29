@@ -20,8 +20,7 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
     event.preventDefault();
     console.log("handling click");
     await requestConfirmationEmail(
-      appConfig.passportServer,
-      appConfig.isZuzalu,
+      appConfig.zupassServer,
       email,
       identity.commitment.toString(),
       false

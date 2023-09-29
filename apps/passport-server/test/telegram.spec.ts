@@ -17,7 +17,7 @@ import {
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { overrideEnvironment, testingEnv } from "./util/env";
 
 describe("telegram bot functionality", function () {
   this.timeout(15_000);
@@ -25,7 +25,7 @@ describe("telegram bot functionality", function () {
   let db: Pool;
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     db = await getDB();
   });
 

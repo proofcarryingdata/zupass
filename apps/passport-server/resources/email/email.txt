@@ -1,6 +1,6 @@
 Hi there,
 
-Welcome to PCDpass.
+Welcome to Zupass.
 
 Here's the code to verify your email:
 {{token}}

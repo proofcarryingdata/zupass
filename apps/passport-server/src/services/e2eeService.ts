@@ -5,12 +5,12 @@ import {
   UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
 import { Response } from "express";
-import { fetchCommitmentByUuid } from "../database/queries/commitments";
 import {
   fetchEncryptedStorage,
   insertEncryptedStorage,
   updateEncryptedStorage
 } from "../database/queries/e2ee";
+import { fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -92,24 +92,20 @@ export class E2EEService {
     }
 
     // Ensure that new salt is different from old salt
-    const commitment = await fetchCommitmentByUuid(
-      this.context.dbPool,
-      request.uuid
-    );
-    if (!commitment) {
-      res
-        .status(404)
-        .json({
-          error: {
-            name: "UserNotFound",
-            detailedMessage: "User with this uuid was not found",
-            success: false
-          }
-        });
+    const user = await fetchUserByUUID(this.context.dbPool, request.uuid);
+    if (!user) {
+      // @todo: make {@link PCDHTTPError} be able to return JSON, not just plain text
+      res.status(404).json({
+        error: {
+          name: "UserNotFound",
+          detailedMessage: "User with this uuid was not found",
+          success: false
+        }
+      });
       return;
     }
 
-    const { salt: oldSalt } = commitment;
+    const { salt: oldSalt } = user;
     if (oldSalt === request.newSalt) {
       res.status(400).json({
         error: {
@@ -118,6 +114,7 @@ export class E2EEService {
           success: false
         }
       });
+      return;
     }
 
     await updateEncryptedStorage(

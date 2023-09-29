@@ -18,7 +18,7 @@ export function initSemaphoreRoutes(
 
   /**
    * We maintain semaphore groups of our users. Whenever a new Semaphore
-   * identity is created on PCDpass/Zupass, we update the appropriate groups.
+   * identity is created on Zupass, we update the appropriate groups.
    * This route lets callers determine whether the given group ever had the
    * given root hash.
    *

@@ -1,6 +1,6 @@
 /**
- * When we call the PCDpass server, we encapsulate the result in a
- * {@link APIResult}. HTTP requests to the PCDpass server never throw
+ * When we call the Zupass server, we encapsulate the result in a
+ * {@link APIResult}. HTTP requests to the Zupass server never throw
  * exceptions or reject promises - all possible results are encoded
  * in this type.
  */

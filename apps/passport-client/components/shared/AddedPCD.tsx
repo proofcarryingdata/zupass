@@ -3,8 +3,8 @@ import { Button, H1 } from "../core";
 
 /**
  * UI that is shown to the user immediately after they added a PCD to
- * their passport. PCDs can be added by third party websites via uploading
- * a `SerializedPCD`, or by requesting a new PCD to be proved by the passport.
+ * their Zupass. PCDs can be added by third party websites via uploading
+ * a `SerializedPCD`, or by requesting a new PCD to be proved by Zupass.
  */
 export function AddedPCD({ onCloseClick }: { onCloseClick: () => void }) {
   return (

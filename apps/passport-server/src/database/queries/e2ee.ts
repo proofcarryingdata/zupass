@@ -64,7 +64,7 @@ export async function updateEncryptedStorage(
       ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
       [newBlobKey, encryptedBlob]
     );
-    await txClient.query("UPDATE commitments SET salt = $2 WHERE uuid = $1", [
+    await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
       uuid,
       newSalt
     ]);

@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import { QRPayload } from "../../src/createQRProof";
-import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
 import {
   BackgroundGlow,
@@ -104,7 +103,7 @@ export function VerifyScreen() {
           <CenterColumn w={280}>
             <LinkButton to="/scan">Verify another</LinkButton>
             <Spacer h={8} />
-            <LinkButton to="/">Back to Passport</LinkButton>
+            <LinkButton to="/">Back to Zupass</LinkButton>
             <Spacer h={24} />
           </CenterColumn>
         )}
@@ -120,9 +119,7 @@ function getCard(result: VerifyResult) {
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>
-        <CardHeader col="var(--accent-lite)">
-          VERIFIED ZUZALU PASSPORT
-        </CardHeader>
+        <CardHeader col="var(--accent-lite)">VERIFIED ZUPASS</CardHeader>
         <MainIdentityCard user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
@@ -152,7 +149,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   // Verify identity proof
   const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const userResult = await requestUser(appConfig.passportServer, true, uuid);
+  const userResult = await requestUser(appConfig.zupassServer, uuid);
 
   if (userResult.error?.userMissing) {
     return {
@@ -188,20 +185,6 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
       valid: false,
       type: "identity-proof",
       message: "Proof expired"
-    };
-  }
-
-  const visitorStatus = getVisitorStatus(userResult.value);
-
-  if (
-    visitorStatus !== undefined &&
-    visitorStatus.isVisitor &&
-    visitorStatus.status !== VisitorStatus.Current
-  ) {
-    return {
-      valid: false,
-      type: "identity-proof",
-      message: "Expired visitor."
     };
   }
 

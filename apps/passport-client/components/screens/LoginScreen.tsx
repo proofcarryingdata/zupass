@@ -29,11 +29,9 @@ import {
   CenterColumn,
   H1,
   H2,
-  HR,
   Spacer,
   TextCenter
 } from "../core";
-import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 export function LoginScreen() {
@@ -74,7 +72,7 @@ export function LoginScreen() {
     }
 
     if (pendingRequestForLogging != null) {
-      requestLogToServer(appConfig.passportServer, "login-with-pending", {
+      requestLogToServer(appConfig.zupassServer, "login-with-pending", {
         pending: pendingRequestForLogging
       });
     }
@@ -144,7 +142,7 @@ export function LoginScreen() {
             <Spacer h={32} />
             <TextCenter>
               To complete this request, you need to either log into your
-              existing PCDpass account, or create a new one.
+              existing Zupass account, or create a new one.
             </TextCenter>
           </>
         ) : (
@@ -172,17 +170,6 @@ export function LoginScreen() {
               Continue
             </Button>
           </form>
-        </CenterColumn>
-        <CenterColumn w={280}>
-          {appConfig.isZuzalu && (
-            <>
-              <Spacer h={24} />
-              <HR />
-              <Spacer h={24} />
-              <Spacer h={8} />
-              <LinkButton to={"/scan"}>Verify a Passport</LinkButton>
-            </>
-          )}
         </CenterColumn>
       </BackgroundGlow>
       <Spacer h={64} />

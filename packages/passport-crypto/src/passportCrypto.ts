@@ -61,7 +61,7 @@ export class PCDCrypto {
       utils.hexStringToArrayBuffer(salt),
       // `oplimit` represents the maximum amount of computations to perform
       // for generating a key. `crypto_pwhash_OPSLIMIT_INTERACTIVE` is recommended
-      // for intereactive, online applications such as PCDPass.
+      // for intereactive, online applications such as Zupass.
       // Source: https://libsodium.gitbook.io/doc/password_hashing/default_phf
       this.sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
       // `memlimit` represents the maximum amount of RAM in bytes thet function

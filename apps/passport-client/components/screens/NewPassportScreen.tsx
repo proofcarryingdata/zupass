@@ -13,11 +13,9 @@ import {
   BigInput,
   CenterColumn,
   H1,
-  H2,
   HR,
   Spacer,
-  TextCenter,
-  ZuLogo
+  TextCenter
 } from "../core";
 import { Button, LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
@@ -25,10 +23,10 @@ import { AppContainer } from "../shared/AppContainer";
 import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 /**
- * Show the user that we're generating their passport. Direct them to the email
+ * Show the user that we're generating their Zupass. Direct them to the email
  * verification link.
  */
-export function NewPassportScreen() {
+export function NewZupassScreen() {
   const pendingAction = usePendingAction();
 
   useEffect(() => {
@@ -60,7 +58,7 @@ function SendEmailVerification({ email }: { email: string }) {
         }
 
         const saltResult = await requestPasswordSalt(
-          appConfig.passportServer,
+          appConfig.zupassServer,
           email
         );
 
@@ -84,8 +82,7 @@ function SendEmailVerification({ email }: { email: string }) {
 
   const doRequestConfirmationEmail = useCallback(async () => {
     const confirmationEmailResult = await requestConfirmationEmail(
-      appConfig.passportServer,
-      appConfig.isZuzalu,
+      appConfig.zupassServer,
       email,
       identity.commitment.toString(),
       false
@@ -178,25 +175,12 @@ function SendEmailVerification({ email }: { email: string }) {
 }
 
 function Header() {
-  if (!appConfig.isZuzalu) {
-    return (
-      <>
-        <H1>PCDPASS</H1>
-        <Spacer h={24} />
-      </>
-    );
-  } else {
-    return (
-      <>
-        <H1>PASSPORT</H1>
-        <Spacer h={24} />
-        <ZuLogo />
-        <Spacer h={24} />
-        <H2>ZUZALU</H2>
-        <Spacer h={48} />
-      </>
-    );
-  }
+  return (
+    <>
+      <H1>Zupass</H1>
+      <Spacer h={24} />
+    </>
+  );
 }
 
 const PHeavy = styled.p`

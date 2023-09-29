@@ -8,7 +8,7 @@ import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
  */
 export function usePendingPCD(
   pendingPCDStr: string,
-  passportURL: string
+  zupassServerUrl: string
 ): [PendingPCDStatus, string, string] {
   const [pendingPCDStatus, setPendingPCDStatus] = useState<PendingPCDStatus>(
     PendingPCDStatus.NONE
@@ -23,9 +23,12 @@ export function usePendingPCD(
       if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
         const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
 
-        const proofStatusResult = await requestServerProofStatus(passportURL, {
-          hash: pendingPCD.hash
-        });
+        const proofStatusResult = await requestServerProofStatus(
+          zupassServerUrl,
+          {
+            hash: pendingPCD.hash
+          }
+        );
 
         if (!proofStatusResult.success) {
           setPendingPCDStatus(PendingPCDStatus.ERROR);
@@ -56,7 +59,7 @@ export function usePendingPCD(
     interval = setInterval(getProofStatus, 1000);
 
     return () => clearInterval(interval);
-  }, [pendingPCDStr, passportURL]);
+  }, [pendingPCDStr, zupassServerUrl]);
 
   return [pendingPCDStatus, pendingPCDError, pcdStr];
 }
@@ -65,19 +68,19 @@ export function usePendingPCD(
  * Multiplexer hook to choose between client-side and server-side PCDs.
  */
 export function usePCDMultiplexer(
-  passportPCDStr: string,
+  zupassPCDStr: string,
   serverPCDStr: string
 ): string {
   const [pcdStr, setPCDStr] = useState("");
 
   useEffect(() => {
-    console.log(passportPCDStr);
-    if (passportPCDStr) {
-      setPCDStr(passportPCDStr);
+    console.log(zupassPCDStr);
+    if (zupassPCDStr) {
+      setPCDStr(zupassPCDStr);
     } else if (serverPCDStr) {
       setPCDStr(serverPCDStr);
     }
-  }, [passportPCDStr, serverPCDStr]);
+  }, [zupassPCDStr, serverPCDStr]);
 
   return pcdStr;
 }

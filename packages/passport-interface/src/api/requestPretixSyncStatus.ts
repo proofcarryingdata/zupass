@@ -8,13 +8,13 @@ import { httpGetSimple } from "./makeRequest";
  * services have completed at least one sync since server startup.
  */
 export async function requestPretixSyncStatus(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   isZuzalu: boolean
 ): Promise<PretixSyncStatusResult> {
   return httpGetSimple(
     isZuzalu
-      ? urlJoin(passportServerUrl, `/pretix/status`)
-      : urlJoin(passportServerUrl, `/devconnect-pretix/status`),
+      ? urlJoin(zupassServerUrl, `/pretix/status`)
+      : urlJoin(zupassServerUrl, `/devconnect-pretix/status`),
     async (resText) => ({ value: resText, success: true })
   );
 }

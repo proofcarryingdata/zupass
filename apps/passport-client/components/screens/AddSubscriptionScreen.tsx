@@ -6,9 +6,9 @@ import {
   Subscription
 } from "@pcd/passport-interface";
 import {
-  PCDPermission,
   isAppendToFolderPermission,
-  isReplaceInFolderPermission
+  isReplaceInFolderPermission,
+  PCDPermission
 } from "@pcd/pcd-collection";
 import {
   ArgumentTypeName,
@@ -40,7 +40,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { Spinner } from "../shared/Spinner";
 import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 
-const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds";
+const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
 export function AddSubscriptionScreen() {
   const query = useQuery();

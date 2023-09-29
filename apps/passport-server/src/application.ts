@@ -1,3 +1,4 @@
+import process from "node:process";
 import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
@@ -6,11 +7,9 @@ import { getZuzaluPretixAPI, ZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
-import { APIs, ApplicationContext, PCDpass } from "./types";
-import { logger } from "./util/logger";
-
-import process from "node:process";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
+import { APIs, ApplicationContext, Zupass } from "./types";
+import { logger } from "./util/logger";
 import { trapSigTerm } from "./util/terminate";
 import { getCommitHash } from "./util/util";
 
@@ -28,14 +27,13 @@ process.on("unhandledRejection", (reason) => {
  */
 export async function startApplication(
   apiOverrides?: Partial<APIs>
-): Promise<PCDpass> {
+): Promise<Zupass> {
   const dbPool = await getDB();
   const honeyClient = getHoneycombAPI();
 
   const context: ApplicationContext = {
     dbPool,
     honeyClient,
-    isZuzalu: process.env.IS_ZUZALU === "true" ? true : false,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
     gitCommitHash: await getCommitHash()
@@ -50,19 +48,19 @@ export async function startApplication(
     `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
   );
 
-  const pcdpass: PCDpass = {
+  const zupass: Zupass = {
     context,
     services,
     apis,
     expressContext: expressServer
   };
 
-  trapSigTerm(pcdpass);
+  trapSigTerm(zupass);
 
-  return pcdpass;
+  return zupass;
 }
 
-export async function stopApplication(app?: PCDpass): Promise<void> {
+export async function stopApplication(app?: Zupass): Promise<void> {
   if (!app) return;
   await stopServices(app.services);
   await stopHttpServer(app);

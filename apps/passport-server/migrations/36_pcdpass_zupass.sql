@@ -1,0 +1,2 @@
+alter table devconnect_pretix_tickets
+rename column pcdpass_checkin_timestamp to zupass_checkin_timestamp;

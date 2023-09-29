@@ -104,7 +104,7 @@ export function GetWithoutProvingScreen() {
         <H1>Get {request.pcdType}</H1>
         <p>
           This website is requesting a pcd of type {request.pcdType} from your
-          passport. Choose the one you want to return, and click 'Send' below to
+          Zupass. Choose the one you want to return, and click 'Send' below to
           give it to the website.
         </p>
         <Spacer h={16} />

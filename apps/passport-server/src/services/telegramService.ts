@@ -1,7 +1,7 @@
 import { Menu, MenuRange } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -417,7 +417,7 @@ export class TelegramService {
     }
     const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
 
-    const proofUrl = constructPassportPcdGetRequestUrl<
+    const proofUrl = constructZupassPcdGetRequestUrl<
       typeof ZKEdDSAEventTicketPCDPackage
     >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
       genericProveScreen: true,

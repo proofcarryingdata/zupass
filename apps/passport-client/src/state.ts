@@ -4,9 +4,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 import { Emitter } from "./emitter";
 
-export type PendingAction =
-  | { type: "new-passport"; email: string }
-  | { type: "save-sync-key" };
+export type PendingAction = { type: "new-passport"; email: string };
 
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
@@ -23,11 +21,11 @@ export interface AppState {
   modal:
     | "info"
     | "settings"
-    | "save-sync"
     | "invalid-participant"
     | "changed-password"
     | "another-device-changed-password"
     | "resolve-subscription-error"
+    | "upgrade-account-modal"
     | "";
 
   // User metadata.

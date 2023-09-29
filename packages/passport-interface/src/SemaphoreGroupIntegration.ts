@@ -9,32 +9,32 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup";
-import { constructPassportPcdGetRequestUrl } from "./PassportInterface";
-import { openPassportPopup } from "./PassportPopup";
+import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
+import { openZupassPopup } from "./PassportPopup";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
- * Opens a passport popup to generate a Zuzalu membership proof.
+ * Opens a Zupass popup to generate a Zuzalu membership proof.
  *
- * @param urlToPassportWebsite URL of passport website
- * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param urlToZupassClient URL of the Zupass client
+ * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param urlToSemaphoreGroup URL where Zuzalu semaphore group is being served from
  * @param originalSiteName Name of site requesting proof
  * @param signal Optional signal that user is anonymously attesting to
  * @param externalNullifier Optional unique identifier for this SemaphoreGroupPCD
  */
 export function openGroupMembershipPopup(
-  urlToPassportWebsite: string,
+  urlToZupassClient: string,
   popupUrl: string,
   urlToSemaphoreGroup: string,
   originalSiteName: string,
   signal?: string,
   externalNullifier?: string
 ) {
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
-    urlToPassportWebsite,
+    urlToZupassClient,
     popupUrl,
     SemaphoreGroupPCDPackage.name,
     {
@@ -68,7 +68,7 @@ export function openGroupMembershipPopup(
     }
   );
 
-  openPassportPopup(popupUrl, proofUrl);
+  openZupassPopup(popupUrl, proofUrl);
 }
 
 /**

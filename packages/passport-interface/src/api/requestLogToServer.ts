@@ -8,12 +8,12 @@ import { POST } from "./constants";
  * Never rejects.
  */
 export async function requestLogToServer(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   eventName: string,
   value: object
 ): Promise<void> {
   try {
-    await fetch(urlJoin(passportServerUrl, "client-log"), {
+    await fetch(urlJoin(zupassServerUrl, "client-log"), {
       ...POST,
       body: JSON.stringify({ name: eventName, ...value })
     });

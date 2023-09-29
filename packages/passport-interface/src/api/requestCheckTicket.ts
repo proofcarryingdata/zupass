@@ -14,11 +14,11 @@ import { httpPost } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestCheckTicket(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   postBody: CheckTicketRequest
 ): Promise<CheckTicketResult> {
   return httpPost<CheckTicketResult>(
-    urlJoin(passportServerUrl, "/issue/check-ticket"),
+    urlJoin(zupassServerUrl, "/issue/check-ticket"),
     {
       onValue: async (resText) => JSON.parse(resText) as CheckTicketResult,
       onError: async (): Promise<CheckTicketResult> => ({

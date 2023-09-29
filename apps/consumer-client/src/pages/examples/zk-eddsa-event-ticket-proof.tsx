@@ -1,9 +1,9 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  constructPassportPcdGetRequestUrl,
-  openPassportPopup,
-  usePassportPopupMessages,
-  useSerializedPCD
+  constructZupassPcdGetRequestUrl,
+  openZupassPopup,
+  useSerializedPCD,
+  useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -17,11 +17,8 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { PCDPASS_URL } from "../../constants";
+import { ZUPASS_SERVER_URL } from "../../constants";
 
-/**
- * Example page for proving ZKEdDSAEventTicketPCD.
- */
 export default function Page() {
   const watermark = generateSnarkMessageHash(
     "consumer-client zk-eddsa-event-ticket-pcd challenge"
@@ -68,8 +65,8 @@ export default function Page() {
     ]
   );
 
-  // Populate PCD from either client-side or server-side proving using passport popup
-  const [pcdStr, _passportPendingPCDStr] = usePassportPopupMessages();
+  // Populate PCD from either client-side or server-side proving using the Zupass popup
+  const [pcdStr] = useZupassPopupMessages();
 
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = (valid: boolean) => {
@@ -87,17 +84,11 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>PCDpass ZKEdDSA Event Ticket Proof</h2>
+      <h2>ZKEdDSA Event Ticket Proof</h2>
       <p>
-        This page shows a working example of an integration with the PCDpass
-        application which requests and verifies that the user has an
-        EdDSA-signed ticket to one of a list of valid events.
-      </p>
-      <p>
-        To be able to use this flow in production, to be able to generate this
-        proof, you have to have signed in on{" "}
-        <a href={"https://pcdpass.xyz"}>pcdpass.xyz</a>. To use this flow
-        locally, you either have to sign in on a local instance of the passport.
+        This page shows a working example of an integration Zupass which
+        requests and verifies that the user has an EdDSA-signed ticket to one of
+        a list of valid events.
       </p>
       <p>
         The underlying PCD that this example uses is{" "}
@@ -112,7 +103,7 @@ export default function Page() {
         <button
           onClick={() =>
             openZKEdDSAEventTicketPopup(
-              PCDPASS_URL,
+              ZUPASS_SERVER_URL,
               window.location.origin + "#/popup",
               fieldsToReveal,
               watermark,
@@ -122,7 +113,7 @@ export default function Page() {
           }
           disabled={valid}
         >
-          Request PCDpass Event Ticket Proof
+          Request Zupass Event Ticket Proof
         </button>
         <br />
         Valid event ids, comma separated (or empty for no validation):
@@ -224,7 +215,7 @@ export default function Page() {
         </label>
         {!!pcd && (
           <>
-            <p>Got PCDpass ZKEdDSA Event Ticket Proof from Passport</p>
+            <p>Got Zupass ZKEdDSA Event Ticket Proof from Zupass</p>
             <CollapsableCode code={JSON.stringify(pcd, null, 2)} />
             {valid === undefined && <p>❓ Proof verifying</p>}
             {valid === false && <p>❌ Proof is invalid</p>}
@@ -301,16 +292,16 @@ export default function Page() {
 }
 
 /**
- * Opens a passport popup to prove a prove a ZKEdDSATicketPCD.
+ * Opens a Zupass popup to prove a prove a ZKEdDSATicketPCD.
  *
- * @param urlToPassportWebsite URL of passport website
- * @param popupUrl Route where the usePassportPopupSetup hook is being served from
+ * @param urlToZupassWebsite URL of the Zupass website
+ * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param fieldsToReveal Ticket data fields that site is requesting for user to reveal
  * @param watermark Challenge to watermark this proof to
  * @param externalNullifier Optional unique identifier for this ZKEdDSAEventTicketPCD
  */
 export function openZKEdDSAEventTicketPopup(
-  urlToPassportWebsite: string,
+  urlToZupassWebsite: string,
   popupUrl: string,
   fieldsToReveal: EdDSATicketFieldsToReveal,
   watermark: bigint,
@@ -352,15 +343,15 @@ export function openZKEdDSAEventTicketPopup(
     }
   };
 
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
-  >(urlToPassportWebsite, popupUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+  >(urlToZupassWebsite, popupUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
     title: "ZKEdDSA Proof",
     description: "zkeddsa ticket pcd request"
   });
 
-  openPassportPopup(popupUrl, proofUrl);
+  openZupassPopup(popupUrl, proofUrl);
 }
 
 /**

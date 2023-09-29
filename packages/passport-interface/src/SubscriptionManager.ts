@@ -17,7 +17,7 @@ import { v4 as uuid } from "uuid";
 import { IFeedApi } from "./FeedAPI";
 import { ListFeedsResponseValue } from "./RequestTypes";
 
-export const enum PCDPassFeedIds {
+export const enum ZupassFeedIds {
   Devconnect = "1",
   Frogs = "2",
   Email = "3",

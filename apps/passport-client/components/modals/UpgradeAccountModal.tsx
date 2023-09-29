@@ -1,36 +1,30 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { useDispatch, useSelf, useSyncKey } from "../../src/appHooks";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
-import { CenterColumn, H2, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
-import { MaybeModal } from "../modals/Modal";
-import { AppContainer } from "../shared/AppContainer";
+import { BigInput, H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
-import { PasswordInput } from "../shared/PasswordInput";
 
-export function ChangePasswordScreen() {
-  const self = useSelf();
-  const navigate = useNavigate();
+/**
+ * This uncloseable modal is shown to users of Zupass who have a sync key,
+ * and have never created a password. It asks them to create a password.
+ */
+export function UpgradeAccountModal() {
   const [loading, setLoading] = useState(false);
-
   const dispatch = useDispatch();
+  const self = useSelf();
+  const encryptionKey = useSyncKey();
 
-  useEffect(() => {
-    if (self == null) {
-      navigate("/login", { replace: true });
-    }
-  }, [self, navigate]);
-
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
 
+  // copied from `ChangePasswordScreen`.
+  // @todo - factor this out. I don't forsee us needing to do this anytime soon.
+  // @alternatively, delete this screen after Devconnect.
   const onChangePassword = useCallback(async () => {
     if (loading) return;
     setLoading(true);
@@ -45,10 +39,7 @@ export function ChangePasswordScreen() {
       }
 
       const crypto = await PCDCrypto.newInstance();
-      const currentEncryptionKey = await crypto.argon2(
-        currentPassword,
-        saltResult.value
-      );
+      const currentEncryptionKey = encryptionKey;
       const { salt: newSalt, key: newEncryptionKey } =
         await crypto.generateSaltAndEncryptionKey(newPassword);
       const res = await updateBlobKeyForEncryptedStorage(
@@ -98,63 +89,34 @@ export function ChangePasswordScreen() {
       });
       return;
     }
-  }, [currentPassword, newPassword, dispatch, loading, self.email]);
+  }, [loading, self.email, encryptionKey, newPassword, dispatch]);
 
   return (
-    <>
-      <MaybeModal />
-      <AppContainer bg="gray">
-        <Spacer h={64} />
-        <Header />
-        <Spacer h={24} />
-
-        <CenterColumn w={280}>
-          <PasswordInput
-            placeholder="Current password"
-            autoFocus
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            value={currentPassword}
-            setValue={setCurrentPassword}
-          />
-          <Spacer h={8} />
-          <NewPasswordForm
-            passwordInputPlaceholder="New password"
-            email={self.email}
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            submitButtonText="Confirm"
-            password={newPassword}
-            confirmPassword={confirmPassword}
-            setPassword={setNewPassword}
-            setConfirmPassword={setConfirmPassword}
-            onSuccess={onChangePassword}
-          />
-        </CenterColumn>
-        <Spacer h={8} />
-        <CenterColumn w={280}>
-          <LinkButton to={"/"}>Cancel</LinkButton>
-        </CenterColumn>
-        <Spacer h={64} />
-      </AppContainer>
-    </>
-  );
-}
-
-function Header() {
-  return (
-    <TextCenter>
-      <H2>Change Password</H2>
+    <Container>
+      <H2>Upgrade Your Account</H2>
       <Spacer h={24} />
-      <Description>
-        Make sure that your new password is secure, unique, and memorable.
-      </Description>
-    </TextCenter>
+      Zupass now supports logging in with a password! To continue to use Zupass,
+      you must choose a password. Make sure to remember it, otherwise you will
+      lose access to all your PCDs.
+      <Spacer h={24} />
+      <BigInput value={self.email} disabled={true} />
+      <Spacer h={8} />
+      <NewPasswordForm
+        passwordInputPlaceholder="New password"
+        email={self.email}
+        revealPassword={revealPassword}
+        setRevealPassword={setRevealPassword}
+        submitButtonText="Confirm"
+        password={newPassword}
+        confirmPassword={confirmPassword}
+        setPassword={setNewPassword}
+        setConfirmPassword={setConfirmPassword}
+        onSuccess={onChangePassword}
+      />
+    </Container>
   );
 }
 
-const Description = styled.p`
-  font-weight: 300;
-  width: 220px;
-  margin: 0 auto;
+const Container = styled.div`
+  padding: 32px;
 `;

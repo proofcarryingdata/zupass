@@ -20,9 +20,9 @@ import { JustAddScreen } from "./JustAddScreen";
 import { ProveAndAddScreen } from "./ProveAndAddScreen";
 
 /**
- * Asks user if they want to add the given PCD to their passport. The
+ * Asks user if they want to add the given PCD to their Zupass. The
  * PCD can either be a `SerializedPCD` passed in via a url, or one that
- * is freshly generated in-passport via a proving screen.
+ * is freshly generated in Zupass via a proving screen.
  */
 export function AddScreen() {
   useSyncE2EEStorage();

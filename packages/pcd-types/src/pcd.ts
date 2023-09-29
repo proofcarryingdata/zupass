@@ -10,7 +10,7 @@
  */
 export interface PCD<C = unknown, P = unknown> {
   /**
-   * Uniquely identifies this instance. PCDpass cannot have more than one
+   * Uniquely identifies this instance. Zupass cannot have more than one
    * {@link PCD} with the same id. In practice this is often a UUID generated
    * by the {@link PCDPackage#prove} function.
    */
@@ -58,7 +58,7 @@ export interface PCD<C = unknown, P = unknown> {
  *   should be able to be passed over the wire trivially. This may cause the type of {@link A}
  *   to be less convenient that desired. Eg. you may have to pass {@code BigInt}s in as strings,
  *   etc. Another important note about {@link A} is that each of its fields must implement the
- *   {@link Argument} interface. This is important because it enables PCDpass to introspect the
+ *   {@link Argument} interface. This is important because it enables Zupass to introspect the
  *   arguments, and to implement useful features like the {@code GenericProveScreen}, which is
  *   a screen that automatically builds a UI which lets a user input all the arguments required to
  *   instantiate a new instance of a particular {@link PCD} based on the request it gets from a
@@ -74,17 +74,17 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
   name: string;
 
   /**
-   * Intended for use by PCDpass. Given a {@link PCD}, returns some information about
-   * how this {@link PCD} should be displayed to the user within the passport app.
+   * Intended for use by Zupass. Given a {@link PCD}, returns some information about
+   * how this {@link PCD} should be displayed to the user within Zupass app.
    */
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
 
   /**
-   * Intended to be used by PCDpass. Given a {@link PCD}, renders the body of a card
-   * that appears in PCDpass representing this {@link PCD}.
+   * Intended to be used by Zupass. Given a {@link PCD}, renders the body of a card
+   * that appears in Zupass representing this {@link PCD}.
    *
    * If the {@link DisplayOptions#header} returned by {@link PCDPackage#getDisplayOptions}
-   * is undefined, PCDpass will call this function with the `returnHeader` field set to true,
+   * is undefined, Zupass will call this function with the `returnHeader` field set to true,
    * and use the result as the header of the card.
    */
   renderCardBody?: ({
@@ -158,12 +158,12 @@ export type PCDOf<T> = T extends PCDPackage<infer C, infer P, any, any>
 /**
  * This interface can be optionally returned by the package for any given
  * PCD, which allows the package some degree of control over how the PCD
- * is displayed in the passport application.
+ * is displayed in Zupass.
  */
 export interface DisplayOptions {
   /**
-   * Shown to the user in the main page of the passport, where they can
-   * see all of their cards. If `header` is undefined, the passport will use
+   * Shown to the user in the main page of Zupass, where they can
+   * see all of their cards. If `header` is undefined, the Zupass will use
    * `renderCardBody` with `returnHeader` set to true.
    */
   header?: string;
