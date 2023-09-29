@@ -7,6 +7,7 @@ import {
   fetchLinkedPretixAndTelegramEvents
 } from "../database/queries/telegram/fetchTelegramEvent";
 import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
+import { logger } from "./logger";
 
 export interface SessionData {
   dbPool: Pool;
@@ -15,6 +16,15 @@ export interface SessionData {
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+const isAdmin = async (ctx: Context): Promise<boolean> => {
+  const admins = await ctx.getChatAdministrators();
+  const username = ctx.from?.username;
+  const admin =
+    !!username && !!admins.find((a) => a.user.username === username);
+  if (!admin) logger("[TELEGRAM]", username, `is not an admin`);
+  return admin;
+};
 
 export const getSessionKey = (ctx: Context): string | undefined => {
   // Give every user their one personal session storage per chat with the bot
@@ -75,6 +85,7 @@ export const dynamicEvents = async (
     range
       .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
         let replyText = "";
+        if (!(await isAdmin(ctx))) return;
 
         if (!ctx.chat?.id) {
           await editOrSendMessage(ctx, `Chat Id not found`);
@@ -95,6 +106,7 @@ export const dynamicEvents = async (
       .row();
 
     range.text(`Go back`, async (ctx) => {
+      if (!(await isAdmin(ctx))) return;
       checkDeleteMessage(ctx);
       ctx.session.selectedEvent = undefined;
       await ctx.menu.update({ immediate: true });
@@ -111,6 +123,7 @@ export const dynamicEvents = async (
         .text(
           `${event.isLinked ? "✅" : ""} ${event.eventName}`,
           async (ctx) => {
+            if (!(await isAdmin(ctx))) return;
             if (ctx.session) {
               ctx.session.selectedEvent = event;
               await ctx.menu.update({ immediate: true });
