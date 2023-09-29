@@ -11,7 +11,7 @@ import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncServi
 import { APIs, ApplicationContext, Zupass } from "./types";
 import { logger } from "./util/logger";
 import { trapSigTerm } from "./util/terminate";
-import { getCommitHash } from "./util/util";
+import { getCommitHash, getCommitMessage } from "./util/util";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {
@@ -43,10 +43,13 @@ export async function startApplication(
   const services = await startServices(context, apis);
   const expressServer = await startHttpServer(context, services);
 
+  const commitMessage = await getCommitMessage();
+  const discordAlertMessage = `Server \`${process.env.ROLLBAR_ENV_NAME}\` started at commit \`[${context.gitCommitHash}](https://github.com/proofcarryingdata/zupass/commit/${context.gitCommitHash}) - '${commitMessage}'\``;
   services.rollbarService?.log("Server started.");
-  services.discordService?.sendAlert(
-    `Server \`${process.env.ROLLBAR_ENV_NAME}\` started`
-  );
+  services.discordService?.sendAlert(discordAlertMessage);
+  console.log(discordAlertMessage);
+
+  process.exit(0);
 
   const zupass: Zupass = {
     context,
