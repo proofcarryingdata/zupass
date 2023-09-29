@@ -1,4 +1,4 @@
-import { Dispatch, FormEvent, SetStateAction, useState } from "react";
+import { Dispatch, FormEvent, SetStateAction } from "react";
 import {
   checkPasswordStrength,
   PASSWORD_MINIMUM_LENGTH
@@ -19,6 +19,8 @@ interface NewPasswordForm {
   submitButtonText: string;
   passwordInputPlaceholder?: string; // Override placeholder on the first input
   autoFocus?: boolean;
+  setError: Dispatch<SetStateAction<string | undefined>>;
+  error?: string;
 }
 
 export function NewPasswordForm({
@@ -32,28 +34,28 @@ export function NewPasswordForm({
   onSuccess,
   submitButtonText,
   passwordInputPlaceholder,
-  autoFocus
+  autoFocus,
+  setError,
+  error
 }: NewPasswordForm) {
-  const [passwordError, setErrorMessage] = useState("");
-
   const checkPasswordAndSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (password === "") {
-      setErrorMessage("Please enter a password.");
+      setError("Please enter a password.");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
-      setErrorMessage(
+      setError(
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
       );
     } else if (!checkPasswordStrength(password)) {
       // Inspired by Dashlane's zxcvbn guidance:
       // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
-      setErrorMessage(
+      setError(
         "Password is too weak. Try adding another word or two. Uncommon words are better."
       );
     } else if (confirmPassword === "") {
-      setErrorMessage("Please confirm your password.");
+      setError("Please confirm your password.");
     } else if (password !== confirmPassword) {
-      setErrorMessage("Your passwords do not match.");
+      setError("Your passwords do not match.");
     } else {
       onSuccess();
     }
@@ -67,7 +69,7 @@ export function NewPasswordForm({
       <PasswordInput
         value={password}
         setValue={(value) => {
-          setErrorMessage("");
+          setError("");
           setPassword(value);
         }}
         placeholder={passwordInputPlaceholder || "Password"}
@@ -79,7 +81,7 @@ export function NewPasswordForm({
       <PasswordInput
         value={confirmPassword}
         setValue={(value) => {
-          setErrorMessage("");
+          setError("");
           setConfirmPassword(value);
         }}
         placeholder="Confirm password"
@@ -87,10 +89,11 @@ export function NewPasswordForm({
         setRevealPassword={setRevealPassword}
       />
 
-      {passwordError && (
+      {error && (
         <>
+          <Spacer h={16} />
+          <ErrorMessage>{error}</ErrorMessage>
           <Spacer h={8} />
-          <ErrorMessage>{passwordError}</ErrorMessage>
         </>
       )}
 

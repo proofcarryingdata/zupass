@@ -2,7 +2,6 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
@@ -16,21 +15,20 @@ import { PasswordInput } from "../shared/PasswordInput";
 
 export function ChangePasswordScreen() {
   const self = useSelf();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
-  const dispatch = useDispatch();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [revealPassword, setRevealPassword] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     if (self == null) {
       navigate("/login", { replace: true });
     }
   }, [self, navigate]);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [revealPassword, setRevealPassword] = useState(false);
 
   const onChangePassword = useCallback(async () => {
     if (loading) return;
@@ -59,15 +57,9 @@ export function ChangePasswordScreen() {
       );
       // Meaning password is incorrect, as old row is not found
       if (!res.success && res.error.name === "PasswordIncorrect") {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Password incorrect",
-            message:
-              "Double-check your current password. If you've lost access, please click 'Reset Account' below.",
-            dismissToCurrentPage: true
-          }
-        });
+        setError(
+          "Incorrect password. If you've lost your password, reset your account below."
+        );
         setLoading(false);
         return;
       }
@@ -81,6 +73,7 @@ export function ChangePasswordScreen() {
         type: "set-modal",
         modal: "changed-password"
       });
+
       dispatch({
         type: "change-password",
         newEncryptionKey,
@@ -88,16 +81,9 @@ export function ChangePasswordScreen() {
       });
       setLoading(false);
     } catch (e) {
+      console.log("error changing password", e);
       setLoading(false);
-      dispatch({
-        type: "error",
-        error: {
-          title: "Error while changing password",
-          message: "Please refresh the page and try again",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
+      setError("Error while changing password.");
     }
   }, [currentPassword, newPassword, dispatch, loading, self.email]);
 
@@ -137,6 +123,8 @@ export function ChangePasswordScreen() {
               />
               <Spacer h={8} />
               <NewPasswordForm
+                error={error}
+                setError={setError}
                 passwordInputPlaceholder="New password"
                 email={self.email}
                 revealPassword={revealPassword}
@@ -159,9 +147,3 @@ export function ChangePasswordScreen() {
     </>
   );
 }
-
-const Description = styled.p`
-  font-weight: 300;
-  width: 220px;
-  margin: 0 auto;
-`;
