@@ -7,6 +7,7 @@ import {
   pendingViewSubscriptionsRequestKey,
   setPendingViewSubscriptionsRequest
 } from "../../src/sessionStorage";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, H2, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -14,6 +15,7 @@ import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
+  useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
   const self = useSelf();
 
