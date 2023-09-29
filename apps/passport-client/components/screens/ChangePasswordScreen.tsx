@@ -8,6 +8,7 @@ import { useDispatch, useSelf } from "../../src/appHooks";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
+import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
@@ -105,50 +106,57 @@ export function ChangePasswordScreen() {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={64} />
-        <Header />
-        <Spacer h={24} />
 
         <CenterColumn w={280}>
-          <PasswordInput
-            placeholder="Current password"
-            autoFocus
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            value={currentPassword}
-            setValue={setCurrentPassword}
-          />
-          <Spacer h={8} />
-          <NewPasswordForm
-            passwordInputPlaceholder="New password"
-            email={self.email}
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            submitButtonText="Confirm"
-            password={newPassword}
-            confirmPassword={confirmPassword}
-            setPassword={setNewPassword}
-            setConfirmPassword={setConfirmPassword}
-            onSuccess={onChangePassword}
-          />
-          <Spacer h={24} />
-          <HR />
-          <Spacer h={24} />
-          <LinkButton to={"/"}>Cancel</LinkButton>
+          {loading ? (
+            <>
+              <TextCenter>
+                <H2>Change Password</H2>
+                <Spacer h={24} />
+                Changing your password...
+              </TextCenter>
+              <Spacer h={24} />
+              <RippleLoader />
+            </>
+          ) : (
+            <>
+              <TextCenter>
+                <H2>Change Password</H2>
+                <Spacer h={24} />
+                Make sure that your new password is secure, unique, and
+                memorable.
+              </TextCenter>
+              <Spacer h={24} />
+              <PasswordInput
+                placeholder="Current password"
+                autoFocus
+                revealPassword={revealPassword}
+                setRevealPassword={setRevealPassword}
+                value={currentPassword}
+                setValue={setCurrentPassword}
+              />
+              <Spacer h={8} />
+              <NewPasswordForm
+                passwordInputPlaceholder="New password"
+                email={self.email}
+                revealPassword={revealPassword}
+                setRevealPassword={setRevealPassword}
+                submitButtonText="Confirm"
+                password={newPassword}
+                confirmPassword={confirmPassword}
+                setPassword={setNewPassword}
+                setConfirmPassword={setConfirmPassword}
+                onSuccess={onChangePassword}
+              />
+              <Spacer h={24} />
+              <HR />
+              <Spacer h={24} />
+              <LinkButton to={"/"}>Cancel</LinkButton>
+            </>
+          )}
         </CenterColumn>
       </AppContainer>
     </>
-  );
-}
-
-function Header() {
-  return (
-    <TextCenter>
-      <H2>Change Password</H2>
-      <Spacer h={24} />
-      <Description>
-        Make sure that your new password is secure, unique, and memorable.
-      </Description>
-    </TextCenter>
   );
 }
 
