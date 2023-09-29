@@ -54,9 +54,6 @@ export async function startApplication(
   }>)\n\`\`\`\n${commitMessage}\n\`\`\``;
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(discordAlertMessage);
-  console.log(discordAlertMessage);
-
-  process.exit(0);
 
   const zupass: Zupass = {
     context,
