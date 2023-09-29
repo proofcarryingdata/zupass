@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { EdDSAPCD } from "./EdDSAPCD";
 
 /**
- * The interface to send an {@link EdDSAPCD} claim through the passport.
+ * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
 export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (
