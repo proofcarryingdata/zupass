@@ -1,7 +1,7 @@
 import { Dispatch, FormEvent, SetStateAction, useState } from "react";
 import {
-  PASSWORD_MINIMUM_LENGTH,
-  checkPasswordStrength
+  checkPasswordStrength,
+  PASSWORD_MINIMUM_LENGTH
 } from "../../src/password";
 import { Button, Spacer } from "../core";
 import { ErrorMessage } from "../core/error";
@@ -86,9 +86,15 @@ export function NewPasswordForm({
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
       />
+
+      {passwordError && (
+        <>
+          <Spacer h={8} />
+          <ErrorMessage>{passwordError}</ErrorMessage>
+        </>
+      )}
+
       <Spacer h={8} />
-      {passwordError && <ErrorMessage>{passwordError}</ErrorMessage>}
-      <Spacer h={16} />
       <Button style="primary" type="submit">
         {submitButtonText}
       </Button>

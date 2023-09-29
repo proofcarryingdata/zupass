@@ -11,6 +11,7 @@ import {
   BackgroundGlow,
   BigInput,
   CenterColumn,
+  H2,
   HR,
   Spacer,
   TextCenter
@@ -138,36 +139,38 @@ function SendEmailVerification({ email }: { email: string }) {
   } else if (emailSent) {
     content = (
       <>
+        <Spacer h={64} />
         <TextCenter>
-          Check your inbox for an email from <pre>passport@0xparc.org</pre>. Use
-          the most recent code you received to continue with the login process.
+          <H2>Enter Code</H2>
+          <Spacer h={32} />
+          Check your inbox for an email from <span>passport@0xparc.org</span>.
+          Use the most recent code you received to continue.
         </TextCenter>
+        <Spacer h={32} />
         <form onSubmit={verify}>
-          <CenterColumn w={280}>
-            {emailSent && (
-              <>
-                <BigInput
-                  disabled={verifyingCode}
-                  ref={inRef}
-                  autoFocus
-                  placeholder="code from email"
-                />
-                <Spacer h={8} />
-              </>
-            )}
-            {verifyingCode && (
-              <div>
-                <RippleLoader />
-              </div>
-            )}
-            {!verifyingCode && emailSent && (
-              <>
-                <Button type="submit">Verify</Button>
-                <Spacer h={8} />
-                <ResendCodeButton email={email} />
-              </>
-            )}
-          </CenterColumn>
+          {emailSent && (
+            <>
+              <BigInput
+                disabled={verifyingCode}
+                ref={inRef}
+                autoFocus
+                placeholder="code from email"
+              />
+              <Spacer h={8} />
+            </>
+          )}
+          {verifyingCode && (
+            <div>
+              <RippleLoader />
+            </div>
+          )}
+          {!verifyingCode && emailSent && (
+            <>
+              <Button type="submit">Verify</Button>
+              <Spacer h={8} />
+              <ResendCodeButton email={email} />
+            </>
+          )}
         </form>
       </>
     );
@@ -184,7 +187,7 @@ function SendEmailVerification({ email }: { email: string }) {
 
         {!verifyingCode && emailSent && (
           <>
-            <Spacer h={48} />
+            <Spacer h={24} />
             <HR />
             <Spacer h={24} />
             <CenterColumn w={280}>
