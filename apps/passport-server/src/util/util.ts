@@ -61,6 +61,19 @@ export async function getCommitHash(): Promise<string> {
   return "unknown commit hash";
 }
 
+export async function getCommitMessage(): Promise<string> {
+  try {
+    const result = await execAsync('git show -s --format="%s"', {
+      cwd: process.cwd()
+    });
+    return result.stdout.trim();
+  } catch (e) {
+    logger("couldn't get commit message", e);
+  }
+
+  return "unknown commit message";
+}
+
 export function isLocalServer(): boolean {
   return (
     process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
