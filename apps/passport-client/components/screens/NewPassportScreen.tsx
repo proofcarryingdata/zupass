@@ -142,7 +142,7 @@ function SendEmailVerification({ email }: { email: string }) {
         <Spacer h={64} />
         <TextCenter>
           <H2>Enter Code</H2>
-          <Spacer h={32} />
+          <Spacer h={24} />
           Check your inbox for an email from <span>passport@0xparc.org</span>.
           Use the most recent code you received to continue.
         </TextCenter>

@@ -7,7 +7,6 @@ import { validateEmail } from "../../src/util";
 import {
   BackgroundGlow,
   CenterColumn,
-  H1,
   H2,
   HR,
   Spacer,
@@ -111,8 +110,6 @@ export function CreatePasswordScreen() {
 function Header() {
   return (
     <TextCenter>
-      <H1>ZUPASS</H1>
-      <Spacer h={16} />
       <H2>Set Password</H2>
       <Spacer h={24} />
       <Description>
