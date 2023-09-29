@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
-import { CenterColumn, H2, Spacer, TextCenter } from "../core";
+import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -130,12 +130,11 @@ export function ChangePasswordScreen() {
             setConfirmPassword={setConfirmPassword}
             onSuccess={onChangePassword}
           />
-        </CenterColumn>
-        <Spacer h={8} />
-        <CenterColumn w={280}>
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
           <LinkButton to={"/"}>Cancel</LinkButton>
         </CenterColumn>
-        <Spacer h={64} />
       </AppContainer>
     </>
   );
