@@ -49,9 +49,9 @@ export async function startApplication(
   }\` started at [\`${context.gitCommitHash.substring(
     0,
     8
-  )}\`](https://github.com/proofcarryingdata/zupass/commit/${
+  )}\`](<https://github.com/proofcarryingdata/zupass/commit/${
     context.gitCommitHash
-  })\n\`\`\`\n${commitMessage}\n\`\`\``;
+  }>)\n\`\`\`\n${commitMessage}\n\`\`\``;
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(discordAlertMessage);
   console.log(discordAlertMessage);
