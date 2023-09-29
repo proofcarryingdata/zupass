@@ -23,6 +23,7 @@ export function ChangePasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
     if (self == null) {
@@ -69,16 +70,14 @@ export function ChangePasswordScreen() {
         throw new Error(`Request failed with message ${res.error}`);
       }
 
-      dispatch({
-        type: "set-modal",
-        modal: "changed-password"
-      });
+      setFinished(true);
 
       dispatch({
         type: "change-password",
         newEncryptionKey,
         newSalt
       });
+
       setLoading(false);
     } catch (e) {
       console.log("error changing password", e);
@@ -87,62 +86,72 @@ export function ChangePasswordScreen() {
     }
   }, [currentPassword, newPassword, dispatch, loading, self.email]);
 
+  let content = null;
+
+  if (loading) {
+    content = (
+      <>
+        <Spacer h={128} />
+        <TextCenter>Changing your password...</TextCenter>
+        <Spacer h={24} />
+        <RippleLoader />
+      </>
+    );
+  } else if (finished) {
+    content = (
+      <TextCenter>
+        <H2>Changed Password!</H2>
+        <Spacer h={24} />
+        You've changed your password successfully.
+        <Spacer h={24} />
+        <LinkButton to={"/"}>Done</LinkButton>
+      </TextCenter>
+    );
+  } else {
+    content = (
+      <>
+        <TextCenter>
+          <H2>Change Password</H2>
+          <Spacer h={24} />
+          Make sure that your new password is secure, unique, and memorable.
+        </TextCenter>
+        <Spacer h={24} />
+        <PasswordInput
+          placeholder="Current password"
+          autoFocus
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          value={currentPassword}
+          setValue={setCurrentPassword}
+        />
+        <Spacer h={8} />
+        <NewPasswordForm
+          error={error}
+          setError={setError}
+          passwordInputPlaceholder="New password"
+          email={self.email}
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          submitButtonText="Confirm"
+          password={newPassword}
+          confirmPassword={confirmPassword}
+          setPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          onSuccess={onChangePassword}
+        />
+        <Spacer h={24} />
+        <HR />
+        <Spacer h={24} />
+        <LinkButton to={"/"}>Cancel</LinkButton>
+      </>
+    );
+  }
   return (
     <>
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={64} />
-
-        <CenterColumn w={280}>
-          {loading ? (
-            <>
-              <TextCenter>
-                <H2>Change Password</H2>
-                <Spacer h={24} />
-                Changing your password...
-              </TextCenter>
-              <Spacer h={24} />
-              <RippleLoader />
-            </>
-          ) : (
-            <>
-              <TextCenter>
-                <H2>Change Password</H2>
-                <Spacer h={24} />
-                Make sure that your new password is secure, unique, and
-                memorable.
-              </TextCenter>
-              <Spacer h={24} />
-              <PasswordInput
-                placeholder="Current password"
-                autoFocus
-                revealPassword={revealPassword}
-                setRevealPassword={setRevealPassword}
-                value={currentPassword}
-                setValue={setCurrentPassword}
-              />
-              <Spacer h={8} />
-              <NewPasswordForm
-                error={error}
-                setError={setError}
-                passwordInputPlaceholder="New password"
-                email={self.email}
-                revealPassword={revealPassword}
-                setRevealPassword={setRevealPassword}
-                submitButtonText="Confirm"
-                password={newPassword}
-                confirmPassword={confirmPassword}
-                setPassword={setNewPassword}
-                setConfirmPassword={setConfirmPassword}
-                onSuccess={onChangePassword}
-              />
-              <Spacer h={24} />
-              <HR />
-              <Spacer h={24} />
-              <LinkButton to={"/"}>Cancel</LinkButton>
-            </>
-          )}
-        </CenterColumn>
+        <CenterColumn w={280}>{content}</CenterColumn>
       </AppContainer>
     </>
   );

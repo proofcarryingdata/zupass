@@ -22,6 +22,7 @@ export function CreatePasswordScreen() {
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
+  const [error, setError] = useState<string | undefined>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
@@ -105,6 +106,8 @@ export function CreatePasswordScreen() {
           ) : (
             <>
               <NewPasswordForm
+                error={error}
+                setError={setError}
                 autoFocus
                 email={email}
                 password={password}
