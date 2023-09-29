@@ -28,7 +28,7 @@ import {
   insertEmailToken
 } from "../src/database/queries/emailToken";
 import { insertCommitment } from "../src/database/queries/saveCommitment";
-import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
+import { deleteZuzaluTicket } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
   fetchAllLoggedInZuzaluUsers,
   fetchLoggedInZuzaluUser,
@@ -187,7 +187,7 @@ describe("database reads and writes", function () {
     if (!loggedinUser || !loggedinUser.uuid) {
       throw new Error("expected there to be a logged in user");
     }
-    await deleteZuzaluUser(db, testTicket.email);
+    await deleteZuzaluTicket(db, testTicket.email);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
     expect(
       await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
@@ -198,7 +198,7 @@ describe("database reads and writes", function () {
   step("deleting a non logged in user should work", async function () {
     await insertZuzaluPretixTicket(db, testTicket);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.not.eq(null);
-    await deleteZuzaluUser(db, testTicket.email);
+    await deleteZuzaluTicket(db, testTicket.email);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
   });
 
