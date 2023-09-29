@@ -48,6 +48,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
+  const [loadingSalt, setLoadingSalt] = useState(false);
 
   const handleConfirmationEmailResult = useCallback(
     async (result: ConfirmEmailResult) => {
@@ -56,10 +57,12 @@ function SendEmailVerification({ email }: { email: string }) {
           return err(dispatch, "Email failed", result.error);
         }
 
+        setLoadingSalt(true);
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
           email
         );
+        setLoadingSalt(false);
 
         if (saltResult.success) {
           window.location.href = `#/already-registered?email=${encodeURIComponent(
@@ -114,11 +117,20 @@ function SendEmailVerification({ email }: { email: string }) {
 
   let content = null;
 
-  if (emailSending) {
+  if (loadingSalt) {
     content = (
       <>
-        <Spacer h={64} />
-        <TextCenter>Checking if you already have an account</TextCenter>
+        <Spacer h={128} />
+        <TextCenter>Loading account information...</TextCenter>
+        <Spacer h={32} />
+        <RippleLoader />
+      </>
+    );
+  } else if (emailSending) {
+    content = (
+      <>
+        <Spacer h={128} />
+        <TextCenter>Checking if you already have an account...</TextCenter>
         <Spacer h={32} />
         <RippleLoader />
       </>
