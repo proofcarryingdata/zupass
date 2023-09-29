@@ -7,9 +7,9 @@ import {
   ServerProofRequest,
   ServerProofStatusResult
 } from "@pcd/passport-interface";
+import { sleep } from "@pcd/util";
 import { expect } from "chai";
 import { Zupass } from "../../src/types";
-import { sleep } from "../../src/util/util";
 
 export async function sendProveRequest(
   application: Zupass,

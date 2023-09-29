@@ -4,6 +4,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { sleep } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
@@ -28,7 +29,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { isLocalServer, sleep } from "../util/util";
+import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const ALLOWED_EVENT_IDS = [

@@ -1,4 +1,4 @@
-import { getErrorMessage } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import urlJoin from "url-join";
 import { APIResult, GetResultValue, ResultMapper } from "./apiResult";
 import { POST } from "./constants";
@@ -67,6 +67,8 @@ export async function httpPostSimple<TResult>(
   );
 }
 
+const throttle = 5000;
+
 /**
  * Sends a non-blocking HTTP request to the given URL, either a POST
  * or a GET, with the given body, and converts it into a {@link APIResult}.
@@ -78,6 +80,8 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   opts: ResultMapper<T>,
   postBody?: object
 ): Promise<T> {
+  await sleep(throttle);
+
   let requestOptions: RequestInit = {
     method: "GET"
   };

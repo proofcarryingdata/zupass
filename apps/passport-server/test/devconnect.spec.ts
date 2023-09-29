@@ -72,8 +72,8 @@ import {
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { Zupass } from "../src/types";
-import { sleep } from "../src/util/util";
 
+import { sleep } from "@pcd/util";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser
