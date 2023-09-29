@@ -214,7 +214,7 @@ export class TelegramService {
         }
 
         ctx.reply(
-          `Choose an event to manage.\n\n <i>✅ = event is linked to this chat.</i>`,
+          `Choose an event to manage.\n\n <i>✅ = this chat is gated by event.</i>`,
           {
             reply_markup: eventsMenu,
             parse_mode: "HTML"

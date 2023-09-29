@@ -68,7 +68,12 @@ export const dynamicEvents = async (
       .text(`${event.isLinked ? "✅" : ""} ${event.eventName}`, async (ctx) => {
         if (ctx.session) {
           ctx.session.selectedEvent = event;
-          const initText = `<i>Choose an action for ${ctx.session.selectedEvent.eventName}</i>`;
+          let initText = "";
+          if (event.isLinked) {
+            initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will no longer be able to join this chat</i>`;
+          } else {
+            initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} can now join this chat</i>`;
+          }
           await editOrSendMessage(ctx, initText);
           ctx.menu.nav(`manageEvent`);
         } else {
@@ -94,34 +99,24 @@ export const manageEvent = async (
     return;
   }
 
-  // Gate
-  if (!event.isLinked) {
-    range
-      .text(`Add gate`, async (ctx) => {
-        const replyText = `<i>Added gate for ${event.eventName}</i>`;
-        if (!ctx.chat?.id) {
-          await editOrSendMessage(ctx, `Chat Id not found`);
-        } else {
+  range
+    .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
+      if (!ctx.chat?.id) {
+        await editOrSendMessage(ctx, `Chat Id not found`);
+      } else {
+        if (!event.isLinked) {
+          const replyText = `<i>Added ${event.eventName} to chat</i>`;
           await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
           await editOrSendMessage(ctx, replyText);
-        }
-        ctx.menu.back();
-      })
-      .row();
-  } else {
-    range
-      .text(`Remove gate`, async (ctx) => {
-        const replyText = `<i>Removed gate for ${event.eventName}</i>`;
-        if (!ctx.chat?.id) {
-          await editOrSendMessage(ctx, `Chat Id not found`);
         } else {
+          const replyText = `<i>Removed ${event.eventName} to chat</i>`;
           await deleteTelegramEvent(db, event.configEventID);
           await editOrSendMessage(ctx, replyText);
         }
-        ctx.menu.back();
-      })
-      .row();
-  }
+      }
+      ctx.menu.back();
+    })
+    .row();
 
   range.back(`Go back`, (ctx) => {
     checkDeleteMessage(ctx);
