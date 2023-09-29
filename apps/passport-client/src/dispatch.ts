@@ -436,7 +436,7 @@ async function loadFromSync(
     self != null &&
     storage.self.salt == null
   ) {
-    console.log("Asking existing user to set a passw2ord");
+    console.log("Asking existing user to set a password");
     modal = "upgrade-account-modal";
   }
 

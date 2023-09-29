@@ -207,7 +207,7 @@ async function loadInitialState(): Promise<AppState> {
     self != null &&
     self.salt == null
   ) {
-    console.log("Asking existing user to set a passw2ord");
+    console.log("Asking existing user to set a password");
     modal = "upgrade-account-modal";
   }
 
