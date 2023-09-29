@@ -44,7 +44,14 @@ export async function startApplication(
   const expressServer = await startHttpServer(context, services);
 
   const commitMessage = await getCommitMessage();
-  const discordAlertMessage = `Server \`${process.env.ROLLBAR_ENV_NAME}\` started at commit \`[${context.gitCommitHash}](https://github.com/proofcarryingdata/zupass/commit/${context.gitCommitHash}) - '${commitMessage}'\``;
+  const discordAlertMessage = `Server \`${
+    process.env.ROLLBAR_ENV_NAME
+  }\` started at [\`${context.gitCommitHash.substring(
+    0,
+    8
+  )}\`](https://github.com/proofcarryingdata/zupass/commit/${
+    context.gitCommitHash
+  })\n\`\`\`\n${commitMessage}\n\`\`\``;
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(discordAlertMessage);
   console.log(discordAlertMessage);
