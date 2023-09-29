@@ -1,7 +1,3 @@
-/**
- * @file This file contains the class and methods needed to work with an EdDSA PCD.
- */
-
 import {
   DisplayOptions,
   PCD,
@@ -31,8 +27,6 @@ export interface EdDSAInitArgs {}
  * This interface defines the arguments to make a new EdDSA PCD. The goal is 
  * to demonstrate that a certain EdDSA keypair is known by signing 
  * an array of messages using the correspondent private key.
- * 
- * @summary The arguments for an EdDSA PCD.
  */
 export interface EdDSAPCDArgs {
   /**
@@ -56,8 +50,6 @@ export interface EdDSAPCDArgs {
 /**
  * This interface defines the EdDSA PCD claim. The claim contains a message signed 
  * with the private key corresponding to the given public key.
- * 
- * @summary The EdDSA PCD claim.
  */
 export interface EdDSAPCDClaim {
   /**
@@ -74,8 +66,6 @@ export interface EdDSAPCDClaim {
  * This interface defines the EdDSA PCD proof. The proof is the signature which proves 
  * that the private key corresponding to the public key in the claim, has been successfully 
  * used to sign the message.
- * 
- * @summary The EdDSA PCD proof.
  */
 export interface EdDSAPCDProof {
   /**
@@ -86,9 +76,6 @@ export interface EdDSAPCDProof {
 
 /**
  * Create a new EdDSA PCD from an {@link EdDSAPCDClaim} and {@link EdDSAPCDProof}.
- * 
- * @classdesc This class can be instantiated to create an EdDSA PCD.
- * @implements {PCD<EdDSAPCDClaim, EdDSAPCDProof>}
  */
 export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   public type = EdDSAPCDTypeName;
@@ -116,9 +103,7 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
  * @see {@link https://github.com/iden3/circomlibjs/blob/main/src/eddsa.js#L9C31-L9C41}
  */
 let initializedPromise: Promise<void> | undefined;
-/** {@link Eddsa} */
 let eddsa: Eddsa;
-/** {@link Poseidon} */
 let poseidon: Poseidon;
 
 /**
@@ -141,7 +126,6 @@ async function ensureInitialized() {
  * and deriving a {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
  * 
  * @param args - the set of arguments to make a new {@link EdDSAPCD}.
- * @returns the {@link EdDSAPCD}.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   /** init & input sanity check */
