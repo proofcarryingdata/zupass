@@ -35,7 +35,15 @@ const editOrSendMessage = async (
   ctx: BotContext,
   replyText: string
 ): Promise<void> => {
-  if (ctx.chat?.id && ctx.session.lastMessageId)
+  if (ctx.chat?.id && ctx.session.lastMessageId) {
+    await ctx.api.editMessageText(
+      ctx.chat?.id,
+      ctx.session.lastMessageId,
+      "...",
+      {
+        parse_mode: "HTML"
+      }
+    );
     await ctx.api.editMessageText(
       ctx.chat?.id,
       ctx.session.lastMessageId,
@@ -44,7 +52,7 @@ const editOrSendMessage = async (
         parse_mode: "HTML"
       }
     );
-  else {
+  } else {
     const msg = await ctx.reply(replyText, { parse_mode: "HTML" });
     ctx.session.lastMessageId = msg.message_id;
   }
@@ -62,31 +70,34 @@ export const dynamicEvents = async (
   // If an event is selected, display it and its menu options
   if (ctx.session.selectedEvent) {
     const event = ctx.session.selectedEvent;
+
     range.text(`${event.isLinked ? "✅" : ""} ${event.eventName}`).row();
     range
       .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
+        let replyText = "";
+
         if (!ctx.chat?.id) {
           await editOrSendMessage(ctx, `Chat Id not found`);
         } else {
           if (!event.isLinked) {
-            const replyText = `<i>Added ${event.eventName} to chat</i>`;
+            replyText = `<i>Added ${event.eventName} to chat</i>`;
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
-            const replyText = `<i>Removed ${event.eventName} to chat</i>`;
+            replyText = `<i>Removed ${event.eventName} to chat</i>`;
             await deleteTelegramEvent(db, event.configEventID);
-            await editOrSendMessage(ctx, replyText);
           }
         }
         ctx.session.selectedEvent = undefined;
-        ctx.menu.update();
+        await ctx.menu.update({ immediate: true });
+        await editOrSendMessage(ctx, replyText);
       })
       .row();
 
-    range.text(`Go back`, (ctx) => {
+    range.text(`Go back`, async (ctx) => {
       checkDeleteMessage(ctx);
       ctx.session.selectedEvent = undefined;
-      ctx.menu.update();
+      await ctx.menu.update({ immediate: true });
     });
   }
   // Otherwise, display all events to manage.
@@ -102,14 +113,14 @@ export const dynamicEvents = async (
           async (ctx) => {
             if (ctx.session) {
               ctx.session.selectedEvent = event;
+              await ctx.menu.update({ immediate: true });
               let initText = "";
               if (event.isLinked) {
-                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will not be able to join this chat</i>`;
+                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
               } else {
                 initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
               }
               await editOrSendMessage(ctx, initText);
-              ctx.menu.update();
             } else {
               ctx.reply(`No session found`);
             }
