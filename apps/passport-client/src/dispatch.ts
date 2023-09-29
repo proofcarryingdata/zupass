@@ -295,7 +295,9 @@ async function deviceLogin(
 async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
+
   console.log("Save self", identity, user);
+
   if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
@@ -317,7 +319,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
-  await uploadStorage();
+  uploadStorage();
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.

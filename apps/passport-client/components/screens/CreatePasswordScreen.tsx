@@ -1,6 +1,5 @@
 import { requestVerifyToken } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
 import { validateEmail } from "../../src/util";
@@ -13,6 +12,7 @@ import {
   TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 
@@ -25,6 +25,7 @@ export function CreatePasswordScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
+  const [settingPassword, setSettingPassword] = useState(false);
 
   const redirectToLoginPageWithError = useCallback((e: Error | string) => {
     console.error(e);
@@ -63,6 +64,20 @@ export function CreatePasswordScreen() {
     }
   }, [self]);
 
+  const onSetPassword = useCallback(async () => {
+    try {
+      setSettingPassword(true);
+      await dispatch({
+        type: "login",
+        email,
+        token,
+        password
+      });
+    } finally {
+      setSettingPassword(false);
+    }
+  }, [dispatch, email, password, token]);
+
   return (
     <AppContainer bg="primary">
       <BackgroundGlow
@@ -70,58 +85,46 @@ export function CreatePasswordScreen() {
         from="var(--bg-lite-primary)"
         to="var(--bg-dark-primary)"
       >
-        <Spacer h={64} />
-        <Header />
-        <Spacer h={24} />
+        <CenterColumn w={280}>
+          <Spacer h={64} />
 
-        <CenterColumn w={280}>
-          <NewPasswordForm
-            autoFocus
-            email={email}
-            password={password}
-            confirmPassword={confirmPassword}
-            setPassword={setPassword}
-            setConfirmPassword={setConfirmPassword}
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            submitButtonText="Continue"
-            onSuccess={() =>
-              dispatch({
-                type: "login",
-                email,
-                token,
-                password
-              })
-            }
-          />
-        </CenterColumn>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-        <CenterColumn w={280}>
-          <LinkButton to={"/"}>Cancel</LinkButton>
+          <TextCenter>
+            <H2>Set Password</H2>
+            <Spacer h={24} />
+            Choose a secure, unique password. This password will be used to
+            generate your key to encrypt your data. Save your password somewhere
+            secure.
+          </TextCenter>
+
+          <Spacer h={24} />
+
+          {settingPassword ? (
+            <>
+              <RippleLoader />
+            </>
+          ) : (
+            <>
+              <NewPasswordForm
+                autoFocus
+                email={email}
+                password={password}
+                confirmPassword={confirmPassword}
+                setPassword={setPassword}
+                setConfirmPassword={setConfirmPassword}
+                revealPassword={revealPassword}
+                setRevealPassword={setRevealPassword}
+                submitButtonText="Continue"
+                onSuccess={onSetPassword}
+              />
+              <Spacer h={24} />
+              <HR />
+              <Spacer h={24} />
+              <LinkButton to={"/"}>Cancel</LinkButton>
+            </>
+          )}
         </CenterColumn>
       </BackgroundGlow>
       <Spacer h={64} />
     </AppContainer>
   );
 }
-
-function Header() {
-  return (
-    <TextCenter>
-      <H2>Set Password</H2>
-      <Spacer h={24} />
-      <Description>
-        Choose a secure, unique password. This password will be used to generate
-        your key to encrypt your data. Save your password somewhere secure.
-      </Description>
-    </TextCenter>
-  );
-}
-
-const Description = styled.p`
-  font-weight: 300;
-  width: 220px;
-  margin: 0 auto;
-`;
