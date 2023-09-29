@@ -84,7 +84,7 @@ export class ZuzaluPretixSyncService {
   public async trySync(): Promise<boolean> {
     try {
       await this.sync();
-      this.semaphoreService.scheduleReload();
+      await this.semaphoreService.reload();
       this._hasCompletedSyncSinceStarting = true;
       return true;
     } catch (e) {

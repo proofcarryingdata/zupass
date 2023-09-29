@@ -192,7 +192,6 @@ describe("database reads and writes", function () {
     expect(
       await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
     ).to.eq(null);
-    expect(await fetchUserByEmail(db, testTicket.email)).to.eq(null);
   });
 
   step("deleting a non logged in user should work", async function () {

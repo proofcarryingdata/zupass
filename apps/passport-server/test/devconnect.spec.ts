@@ -266,6 +266,27 @@ describe("devconnect functionality", function () {
     await expectZuzaluPretixToHaveSynced(application);
   });
 
+  step(
+    "since nobody has logged in yet, all the semaphore groups should be empty",
+    async function () {
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: []
+      });
+    }
+  );
+
+  step(
+    "after pretix sync, semaphore should have synced too," +
+      " and saved historic semaphore groups",
+    async function () {
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
   step("logging in as a zuzalu resident should work", async function () {
     const ticketHolders = await fetchAllZuzaluUsers(db);
     const resident = ticketHolders.find(
@@ -672,7 +693,8 @@ describe("devconnect functionality", function () {
   );
 
   step(
-    "replace api and sync should cause all users to be replaced",
+    "replace zuzalu pretix api and sync should cause all users to be removed from " +
+      "their role-specific semaphore groups, but they should remain signed in",
     async function () {
       const oldTicketHolders = await fetchAllZuzaluUsers(db);
 
@@ -684,6 +706,8 @@ describe("devconnect functionality", function () {
       const syncStatus = await waitForPretixSyncStatus(application, true);
       expect(syncStatus).to.eq(PretixSyncStatus.Synced);
 
+      await sleep(100);
+
       const newTicketHolders = await fetchAllZuzaluUsers(db);
 
       const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
@@ -691,12 +715,25 @@ describe("devconnect functionality", function () {
 
       expect(oldEmails).to.not.eq(newEmails);
 
+      if (
+        !residentUser ||
+        !visitorUser ||
+        !organizerUser ||
+        !updatedToOrganizerUser
+      ) {
+        throw new Error("expected user");
+      }
+
       expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],
         v: [],
         o: [],
-        g: []
+        g: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
       });
     }
   );
@@ -1456,27 +1493,6 @@ describe("devconnect functionality", function () {
       const regex32ByteHexString = /^[0-9A-Fa-f]{64}$/;
       expect(regex32ByteHexString.test(xValue)).to.eq(true);
       expect(regex32ByteHexString.test(yValue)).to.eq(true);
-    }
-  );
-
-  step(
-    "since nobody has logged in yet, all the semaphore groups should be empty",
-    async function () {
-      expectCurrentSemaphoreToBe(application, {
-        p: [],
-        r: [],
-        v: [],
-        o: [],
-        g: []
-      });
-    }
-  );
-
-  step(
-    "after pretix sync, semaphore should have synced too," +
-      " and saved historic semaphore groups",
-    async function () {
-      await testLatestHistoricSemaphoreGroups(application);
     }
   );
 

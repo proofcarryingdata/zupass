@@ -77,7 +77,7 @@ export class SemaphoreService {
   /**
    * Load users from DB, rebuild semaphore groups
    */
-  private async reload(): Promise<void> {
+  public async reload(): Promise<void> {
     return traced("Semaphore", "reload", async () => {
       logger(`[SEMA] Reloading semaphore service...`);
 
