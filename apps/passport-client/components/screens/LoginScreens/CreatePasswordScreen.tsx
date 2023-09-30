@@ -1,9 +1,9 @@
 import { requestVerifyToken } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
-import { validateEmail } from "../../src/util";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
+import { validateEmail } from "../../../src/util";
 import {
   BackgroundGlow,
   CenterColumn,
@@ -11,11 +11,11 @@ import {
   HR,
   Spacer,
   TextCenter
-} from "../core";
-import { LinkButton } from "../core/Button";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
-import { NewPasswordForm } from "../shared/NewPasswordForm";
+} from "../../core";
+import { LinkButton } from "../../core/Button";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
+import { NewPasswordForm } from "../../shared/NewPasswordForm";
 
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();

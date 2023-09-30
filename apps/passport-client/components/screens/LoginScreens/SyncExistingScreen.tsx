@@ -1,7 +1,7 @@
 import { requestDownloadAndDecryptStorage } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch, useSelf } from "../../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -10,9 +10,9 @@ import {
   H2,
   Spacer,
   TextCenter
-} from "../core";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
 
 /**
  * Users can navigate to this page in order to download

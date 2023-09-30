@@ -1,7 +1,7 @@
 import { Spacer } from "@pcd/passport-ui";
 import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLoadedIssuedPCDs } from "../../src/appHooks";
+import { useLoadedIssuedPCDs } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
   getPendingAddRequest,
@@ -10,11 +10,11 @@ import {
   getPendingHaloRequest,
   getPendingProofRequest,
   getPendingViewSubscriptionsPageRequest
-} from "../../src/sessionStorage";
-import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BackgroundGlow, CenterColumn } from "../core";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../../src/sessionStorage";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { BackgroundGlow, CenterColumn } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
 
 export function LoginInterstitialScreen() {
   useSyncE2EEStorage();

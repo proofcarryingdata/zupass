@@ -7,8 +7,8 @@ import {
   useState
 } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingAddSubscriptionRequestKey,
@@ -20,8 +20,8 @@ import {
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewSubscriptionsRequest
-} from "../../src/sessionStorage";
-import { validateEmail } from "../../src/util";
+} from "../../../src/sessionStorage";
+import { validateEmail } from "../../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -31,8 +31,8 @@ import {
   H2,
   Spacer,
   TextCenter
-} from "../core";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../core";
+import { AppContainer } from "../../shared/AppContainer";
 
 export function LoginScreen() {
   const dispatch = useDispatch();

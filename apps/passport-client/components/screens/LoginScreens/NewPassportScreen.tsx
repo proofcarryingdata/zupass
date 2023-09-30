@@ -5,9 +5,13 @@ import {
   requestVerifyToken
 } from "@pcd/passport-interface";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useIdentity, usePendingAction } from "../../src/appHooks";
-import { err } from "../../src/util";
+import { appConfig } from "../../../src/appConfig";
+import {
+  useDispatch,
+  useIdentity,
+  usePendingAction
+} from "../../../src/appHooks";
+import { err } from "../../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -16,11 +20,11 @@ import {
   HR,
   Spacer,
   TextCenter
-} from "../core";
-import { Button, LinkButton } from "../core/Button";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
-import { ResendCodeButton } from "../shared/ResendCodeButton";
+} from "../../core";
+import { Button, LinkButton } from "../../core/Button";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
+import { ResendCodeButton } from "../../shared/ResendCodeButton";
 
 /**
  * Show the user that we're generating their Zupass. Direct them to the email

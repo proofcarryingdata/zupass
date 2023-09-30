@@ -13,8 +13,8 @@ import {
   useLayoutEffect,
   useState
 } from "react";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -24,12 +24,12 @@ import {
   HR,
   Spacer,
   TextCenter
-} from "../core";
-import { ErrorMessage } from "../core/error";
-import { RippleLoader } from "../core/RippleLoader";
-import { MaybeModal } from "../modals/Modal";
-import { AppContainer } from "../shared/AppContainer";
-import { PasswordInput } from "../shared/PasswordInput";
+} from "../../core";
+import { ErrorMessage } from "../../core/error";
+import { RippleLoader } from "../../core/RippleLoader";
+import { MaybeModal } from "../../modals/Modal";
+import { AppContainer } from "../../shared/AppContainer";
+import { PasswordInput } from "../../shared/PasswordInput";
 
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
