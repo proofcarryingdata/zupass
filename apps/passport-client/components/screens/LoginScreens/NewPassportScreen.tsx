@@ -188,11 +188,11 @@ function SendEmailVerification({ email }: { email: string }) {
             )}
             <Spacer h={8} />
             <Button type="submit">Verify</Button>
-            <Spacer h={8} />
-            <ResendCodeButton email={email} />
             <Spacer h={24} />
             <HR />
             <Spacer h={24} />
+            <ResendCodeButton email={email} />
+            <Spacer h={8} />
             <LinkButton to={"/"}>Cancel</LinkButton>
           </form>
         </CenterColumn>
