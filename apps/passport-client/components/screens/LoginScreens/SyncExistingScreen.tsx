@@ -10,6 +10,7 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
+import { ErrorMessage } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 
@@ -23,6 +24,7 @@ export function SyncExistingScreen() {
   const dispatch = useDispatch();
   const [encryptionKey, setEncryptionKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
   const self = useSelf();
 
   useEffect(() => {
@@ -33,16 +35,10 @@ export function SyncExistingScreen() {
 
   const onSyncClick = useCallback(() => {
     if (encryptionKey === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Missing Sync Key",
-          message: "You must enter a sync key.",
-          dismissToCurrentPage: true
-        }
-      });
+      setError("Enter your Sync Key");
       return;
     }
+
     const load = async () => {
       setIsLoading(true);
       const storageResult = await requestDownloadAndDecryptStorage(
@@ -52,16 +48,11 @@ export function SyncExistingScreen() {
       setIsLoading(false);
 
       if (!storageResult.success) {
-        return dispatch({
-          type: "error",
-          error: {
-            title: "Failed to Log In",
-            message:
-              "Couldn't login with this Sync Key. If you've lost access to your Sync Key" +
-              " you can reset your account from the homepage of this website.",
-            dismissToCurrentPage: true
-          }
-        });
+        setError(
+          "Couldn't login with this Sync Key. If you've lost access to your Sync Key" +
+            " you can reset your account from the homepage of this website."
+        );
+        return;
       }
 
       dispatch({
@@ -109,6 +100,14 @@ export function SyncExistingScreen() {
           <Spacer h={8} />
           {!isLoading && (
             <>
+              {error && (
+                <>
+                  <Spacer h={16} />
+                  <ErrorMessage>{error}</ErrorMessage>
+                  <Spacer h={8} />
+                </>
+              )}
+
               <Button style="primary" type="submit" onClick={onSyncClick}>
                 Login
               </Button>

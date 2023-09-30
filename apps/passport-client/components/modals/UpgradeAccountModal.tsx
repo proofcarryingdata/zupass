@@ -48,47 +48,25 @@ export function UpgradeAccountModal() {
         newEncryptionKey,
         newSalt
       );
-      // Meaning password is incorrect, as old row is not found
-      if (!res.success && res.error.name === "PasswordIncorrect") {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Password incorrect",
-            message:
-              "Double-check your current password. If you've lost access, please click 'Reset Account' below.",
-            dismissToCurrentPage: true
-          }
-        });
-        setLoading(false);
-        return;
-      }
 
-      // Handle
       if (!res.success) {
-        throw new Error(`Request failed with message ${res.error}`);
+        throw new Error("couldn't set password");
       }
 
       dispatch({
         type: "set-modal",
         modal: "changed-password"
       });
+
       dispatch({
         type: "change-password",
         newEncryptionKey,
         newSalt
       });
-      setLoading(false);
     } catch (e) {
+      setError("Couldn't set a password. Try again later.");
+    } finally {
       setLoading(false);
-      dispatch({
-        type: "error",
-        error: {
-          title: "Error while changing password",
-          message: "Please refresh the page and try again",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
     }
   }, [loading, self.email, encryptionKey, newPassword, dispatch]);
 
