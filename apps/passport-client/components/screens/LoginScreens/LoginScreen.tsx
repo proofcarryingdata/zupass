@@ -31,10 +31,12 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
+import { ErrorMessage } from "../../core/error";
 import { AppContainer } from "../../shared/AppContainer";
 
 export function LoginScreen() {
   const dispatch = useDispatch();
+  const [error, setError] = useState<string | undefined>();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
 
@@ -91,23 +93,9 @@ export function LoginScreen() {
       e.preventDefault();
 
       if (email === "") {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Enter an Email",
-            message: "You must enter an email address to continue.",
-            dismissToCurrentPage: true
-          }
-        });
+        setError("Enter an email address to continue.");
       } else if (validateEmail(email) === false) {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Invalid Email",
-            message: `'${email}' is not a valid email.`,
-            dismissToCurrentPage: true
-          }
-        });
+        setError("Enter a valid email address to continue.");
       } else {
         dispatch({
           type: "new-passport",
@@ -166,6 +154,13 @@ export function LoginScreen() {
               [setEmail]
             )}
           />
+          {error && (
+            <>
+              <Spacer h={16} />
+              <ErrorMessage>{error}</ErrorMessage>
+              <Spacer h={8} />
+            </>
+          )}
           <Spacer h={8} />
           <Button style="primary" type="submit">
             Continue
