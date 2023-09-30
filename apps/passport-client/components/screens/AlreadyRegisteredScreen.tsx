@@ -167,14 +167,13 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H2>Log In</H2>
+            <H2>Welcome Back</H2>
           </TextCenter>
           <Spacer h={24} />
           <TextCenter>
-            Welcome back! Enter your password below to continue. If you've lost
-            your password, you can reset your account. Resetting your account
-            will let you access your tickets, but you'll lose all non-ticket
-            PCDs.
+            Enter your password below to continue. If you've lost your password,
+            you can reset your account. Resetting your account will let you
+            access your tickets, but you'll lose all non-ticket PCDs.
           </TextCenter>
           <Spacer h={24} />
           {isLoading ? (
