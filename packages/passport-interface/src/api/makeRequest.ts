@@ -67,7 +67,7 @@ export async function httpPostSimple<TResult>(
   );
 }
 
-const throttle = 5000;
+const throttle = 0;
 
 /**
  * Sends a non-blocking HTTP request to the given URL, either a POST

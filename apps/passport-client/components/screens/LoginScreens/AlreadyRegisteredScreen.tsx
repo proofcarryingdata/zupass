@@ -3,7 +3,8 @@ import {
   ConfirmEmailResult,
   requestConfirmationEmail,
   requestDownloadAndDecryptStorage,
-  requestLogToServer
+  requestLogToServer,
+  requestVerifyToken
 } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import {
@@ -44,6 +45,30 @@ export function AlreadyRegisteredScreen() {
     useState(false);
   const [password, setPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+
+  const verifyToken = useCallback(
+    async (token: string) => {
+      if (verifyingCode) return;
+
+      setVerifyingCode(true);
+      const verifyTokenResult = await requestVerifyToken(
+        appConfig.zupassServer,
+        email,
+        token
+      );
+      setVerifyingCode(false);
+      if (verifyTokenResult.success) {
+        window.location.hash = `#/create-password?email=${encodeURIComponent(
+          email
+        )}&token=${encodeURIComponent(token)}`;
+        return;
+      } else {
+        setError("Invalid confirmation code");
+      }
+    },
+    [email, verifyingCode]
+  );
 
   const handleConfirmationEmailResult = useCallback(
     async (result: ConfirmEmailResult) => {
@@ -52,18 +77,14 @@ export function AlreadyRegisteredScreen() {
         setSendingConfirmationEmail(false);
       } else if (result.value?.devToken != null) {
         setSendingConfirmationEmail(false);
-        await dispatch({
-          type: "verify-token",
-          email,
-          token: result.value.devToken
-        });
+        verifyToken(result.value?.devToken);
       } else {
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
         )}&identityCommitment=${encodeURIComponent(identityCommitment)}`;
       }
     },
-    [dispatch, email, identityCommitment]
+    [email, identityCommitment, verifyToken]
   );
 
   const onOverwriteClick = useCallback(async () => {
