@@ -35,7 +35,7 @@ import {
 import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
-const ALLOWED_EVENT_IDS = [
+const ALLOWED_EVENTS = [
   { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
   { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
   {
@@ -55,7 +55,7 @@ const eventIdsAreValid = (eventIds?: string[]): boolean => {
     !!(subset && subset.length && _.difference(subset, superset).length === 0);
 
   return isNonEmptySubset(
-    ALLOWED_EVENT_IDS.map((e) => e.eventId),
+    ALLOWED_EVENTS.map((e) => e.eventId),
     eventIds
   );
 };
@@ -371,10 +371,10 @@ export class TelegramService {
         argumentType: ArgumentTypeName.StringArray,
         // For local development, we do not validate eventIds
         // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
-        // and add it to ALLOWED_EVENT_IDS. Then set value: ALLOWED_EVENT_IDS.map((e) => e.eventId)
+        // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
         value: isLocalServer()
           ? undefined
-          : ALLOWED_EVENT_IDS.map((e) => e.eventId),
+          : ALLOWED_EVENTS.map((e) => e.eventId),
         userProvided: false
       },
       watermark: {
