@@ -156,6 +156,77 @@ export function AlreadyRegisteredScreen() {
     return null;
   }
 
+  let content = null;
+
+  if (isLoading) {
+    content = (
+      <>
+        <Spacer h={128} />
+        Logging you in...
+        <Spacer h={24} />
+        <RippleLoader />
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <Spacer h={64} />
+
+        <TextCenter>
+          <H2>Welcome Back</H2>
+          <Spacer h={24} />
+          Enter your password below to continue. If you've lost your password,
+          you can reset your account. Resetting your account will let you access
+          your tickets, but you'll lose all non-ticket PCDs.
+        </TextCenter>
+
+        <Spacer h={24} />
+
+        <BigInput value={email} disabled={true} readOnly />
+
+        <Spacer h={8} />
+
+        {/*
+         * If a user has a `salt` field, then that means they chose their own password
+         * and we saved the randomly generated salt for them. This is default true for
+         * new PCDPass accounts, but false for Zupass accounts, where we give them a
+         * Sync Key instead.
+         */}
+
+        {salt ? (
+          <form onSubmit={onSubmitPassword}>
+            <PasswordInput
+              autoFocus
+              value={password}
+              setValue={setPassword}
+              placeholder="Password"
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
+            />
+            <Spacer h={8} />
+            <Button type="submit">Login</Button>
+          </form>
+        ) : (
+          <Button onClick={onLoginWithMasterPasswordClick}>
+            Login with Sync Key
+          </Button>
+        )}
+
+        <Spacer h={8} />
+
+        <Button onClick={onCancelClick}>Cancel</Button>
+
+        <Spacer h={24} />
+        <HR />
+        <Spacer h={24} />
+
+        <Button onClick={onOverwriteClick} style="danger">
+          Reset Account
+        </Button>
+      </>
+    );
+  }
+
   return (
     <>
       <MaybeModal />
@@ -165,62 +236,7 @@ export function AlreadyRegisteredScreen() {
           from="var(--bg-lite-primary)"
           to="var(--bg-dark-primary)"
         >
-          <Spacer h={64} />
-          <TextCenter>
-            <H2>Welcome Back</H2>
-          </TextCenter>
-          <Spacer h={24} />
-          <TextCenter>
-            Enter your password below to continue. If you've lost your password,
-            you can reset your account. Resetting your account will let you
-            access your tickets, but you'll lose all non-ticket PCDs.
-          </TextCenter>
-          <Spacer h={24} />
-          {isLoading ? (
-            <RippleLoader />
-          ) : (
-            <>
-              <CenterColumn w={280}>
-                <BigInput value={email} disabled={true} readOnly />
-                <Spacer h={8} />
-                {/*
-                 * If a user has a `salt` field, then that means they chose their own password
-                 * and we saved the randomly generated salt for them. This is default true for
-                 * new PCDPass accounts, but false for Zupass accounts, where we give them a
-                 * Sync Key instead.
-                 */}
-                {!salt && (
-                  <Button onClick={onLoginWithMasterPasswordClick}>
-                    Login with Sync Key
-                  </Button>
-                )}
-                {salt && (
-                  <form onSubmit={onSubmitPassword}>
-                    <PasswordInput
-                      autoFocus
-                      value={password}
-                      setValue={setPassword}
-                      placeholder="Password"
-                      revealPassword={revealPassword}
-                      setRevealPassword={setRevealPassword}
-                    />
-                    <Spacer h={8} />
-                    <Button type="submit">Login</Button>
-                  </form>
-                )}
-                <Spacer h={8} />
-                <Button onClick={onCancelClick}>Cancel</Button>
-              </CenterColumn>
-              <Spacer h={24} />
-              <HR />
-              <Spacer h={24} />
-              <CenterColumn w={280}>
-                <Button onClick={onOverwriteClick} style="danger">
-                  Reset Account
-                </Button>
-              </CenterColumn>
-            </>
-          )}
+          <CenterColumn w={280}>{content}</CenterColumn>
         </BackgroundGlow>
         <Spacer h={64} />
       </AppContainer>
