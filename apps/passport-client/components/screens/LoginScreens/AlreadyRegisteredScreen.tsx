@@ -196,11 +196,9 @@ export function AlreadyRegisteredScreen() {
       <>
         <Spacer h={64} />
         <TextCenter>
-          <H2>Account Exists</H2>
+          <H2>Login</H2>
           <Spacer h={24} />
-          Welcome back. Enter your password below to continue. If you've lost
-          your password, you can reset your account. Resetting your account will
-          let you access your tickets, but you'll lose all non-ticket PCDs.
+          You already have an account. Log in with your password.
         </TextCenter>
         <Spacer h={24} />
 
@@ -249,7 +247,7 @@ export function AlreadyRegisteredScreen() {
           <Button onClick={onCancelClick}>Cancel</Button>
           <Spacer h={8} />
           <Button onClick={onOverwriteClick} style="danger">
-            Reset Account
+            Forgot Password
           </Button>
         </CenterColumn>
       </>
