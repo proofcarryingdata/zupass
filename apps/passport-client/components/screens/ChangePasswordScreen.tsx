@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
-import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
+import {
+  updateBlobKeyForEncryptedStorage,
+  uploadStorage
+} from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
@@ -77,6 +80,9 @@ export function ChangePasswordScreen() {
         newEncryptionKey,
         newSalt
       });
+
+      // to make sure the salt is uploaded properly
+      await uploadStorage();
 
       setLoading(false);
     } catch (e) {
