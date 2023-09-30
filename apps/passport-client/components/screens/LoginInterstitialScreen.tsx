@@ -1,5 +1,5 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import {
@@ -21,7 +21,7 @@ export function LoginInterstitialScreen() {
   const navigate = useNavigate();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (loadedIssuedPCDs) {
       if (getPendingProofRequest() != null) {
         console.log("Redirecting to prove screen");
