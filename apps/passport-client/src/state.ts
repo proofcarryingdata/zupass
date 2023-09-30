@@ -4,8 +4,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 import { Emitter } from "./emitter";
 
-export type PendingAction = { type: "new-passport"; email: string };
-
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -17,7 +15,6 @@ export interface AppState {
   encryptionKey?: string;
 
   // View state
-  pendingAction?: PendingAction;
   modal:
     | "info"
     | "settings"

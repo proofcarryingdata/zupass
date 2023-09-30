@@ -6,11 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
-import {
-  useDispatch,
-  useIdentity,
-  usePendingAction
-} from "../../../src/appHooks";
+import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
@@ -24,20 +20,20 @@ import { ResendCodeButton } from "../../shared/ResendCodeButton";
  * verification link.
  */
 export function NewPassportScreen() {
-  const pendingAction = usePendingAction();
+  const query = useQuery();
+  const email = query.get("email");
 
   useEffect(() => {
-    if (pendingAction == null || pendingAction.type !== "new-passport") {
+    if (!email) {
       window.location.hash = "#/";
-      window.location.reload();
     }
-  }, [pendingAction]);
+  }, [email]);
 
-  if (pendingAction == null || pendingAction.type !== "new-passport") {
+  if (!email) {
     return null;
   }
 
-  return <SendEmailVerification email={pendingAction.email} />;
+  return <SendEmailVerification email={email} />;
 }
 
 function SendEmailVerification({ email }: { email: string }) {
@@ -174,7 +170,7 @@ function SendEmailVerification({ email }: { email: string }) {
       <>
         <Spacer h={64} />
         <TextCenter>
-          <H2>Enter Code</H2>
+          <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
           Check your inbox for an email from <span>passport@0xparc.org</span>.
           Use the most recent code you received to continue.
@@ -183,6 +179,8 @@ function SendEmailVerification({ email }: { email: string }) {
 
         <CenterColumn>
           <form onSubmit={onSubmit}>
+            <BigInput value={email} disabled={true} />
+            <Spacer h={8} />
             <BigInput ref={inRef} autoFocus placeholder="code from email" />
             {error && (
               <>

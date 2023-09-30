@@ -154,20 +154,14 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
-  // Show the NewPassportScreen.
-  // This will save the sema identity & request email verification.
-  update({ pendingAction: { type: "new-passport", email } });
-  window.location.hash = "#/new-passport";
-
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
 
-  update({
-    pcds,
-    pendingAction: { type: "new-passport", email }
-  });
+  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+
+  update({ pcds });
 }
 
 /**
