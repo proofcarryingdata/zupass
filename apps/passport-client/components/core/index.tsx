@@ -61,8 +61,8 @@ export const HR = styled.hr`
   margin: 0 16px;
 `;
 
-export const CenterColumn = styled.div<{ w: number }>`
-  width: ${(p) => p.w + "px"};
+export const CenterColumn = styled.div<{ w?: number }>`
+  width: ${(p) => (p.w ?? 280) + "px"};
   margin: 0 auto;
 `;
 

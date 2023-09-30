@@ -85,18 +85,17 @@ export function CreatePasswordScreen() {
 
   if (settingPassword) {
     content = (
-      <>
+      <CenterColumn>
         <Spacer h={128} />
         <TextCenter>Creating your account...</TextCenter>
         <Spacer h={24} />
         <RippleLoader />
-      </>
+      </CenterColumn>
     );
   } else {
     content = (
       <>
         <Spacer h={64} />
-
         <TextCenter>
           <H2>Set Password</H2>
           <Spacer h={24} />
@@ -104,26 +103,28 @@ export function CreatePasswordScreen() {
           generate your key to encrypt your data. Save your password somewhere
           secure.
         </TextCenter>
+        <Spacer h={24} />
 
-        <Spacer h={24} />
-        <NewPasswordForm
-          error={error}
-          setError={setError}
-          autoFocus
-          email={email}
-          password={password}
-          confirmPassword={confirmPassword}
-          setPassword={setPassword}
-          setConfirmPassword={setConfirmPassword}
-          revealPassword={revealPassword}
-          setRevealPassword={setRevealPassword}
-          submitButtonText="Continue"
-          onSuccess={onSetPassword}
-        />
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-        <LinkButton to={"/"}>Cancel</LinkButton>
+        <CenterColumn>
+          <NewPasswordForm
+            error={error}
+            setError={setError}
+            autoFocus
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            setPassword={setPassword}
+            setConfirmPassword={setConfirmPassword}
+            revealPassword={revealPassword}
+            setRevealPassword={setRevealPassword}
+            submitButtonText="Continue"
+            onSuccess={onSetPassword}
+          />
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
+          <LinkButton to={"/"}>Cancel</LinkButton>
+        </CenterColumn>
       </>
     );
   }
@@ -135,7 +136,7 @@ export function CreatePasswordScreen() {
         from="var(--bg-lite-primary)"
         to="var(--bg-dark-primary)"
       >
-        <CenterColumn w={280}>{content}</CenterColumn>
+        {content}
       </BackgroundGlow>
       <Spacer h={64} />
     </AppContainer>

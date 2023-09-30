@@ -151,27 +151,30 @@ export function AlreadyRegisteredScreen() {
   let content = null;
   if (sendingConfirmationEmail) {
     content = (
-      <TextCenter>
-        <Spacer h={128} />
-        Sending you an email with a reset token...
-        <Spacer h={24} />
-        <RippleLoader />
-      </TextCenter>
+      <CenterColumn>
+        <TextCenter>
+          <Spacer h={128} />
+          Sending you an email with a reset token...
+          <Spacer h={24} />
+          <RippleLoader />
+        </TextCenter>
+      </CenterColumn>
     );
   } else if (isLoggingIn) {
     content = (
-      <TextCenter>
-        <Spacer h={128} />
-        Logging you in...
-        <Spacer h={24} />
-        <RippleLoader />
-      </TextCenter>
+      <CenterColumn>
+        <TextCenter>
+          <Spacer h={128} />
+          Logging you in...
+          <Spacer h={24} />
+          <RippleLoader />
+        </TextCenter>
+      </CenterColumn>
     );
   } else {
     content = (
       <>
         <Spacer h={64} />
-
         <TextCenter>
           <H2>Welcome Back</H2>
           <Spacer h={24} />
@@ -179,55 +182,56 @@ export function AlreadyRegisteredScreen() {
           you can reset your account. Resetting your account will let you access
           your tickets, but you'll lose all non-ticket PCDs.
         </TextCenter>
-
         <Spacer h={24} />
 
-        <BigInput value={email} disabled={true} readOnly />
+        <CenterColumn>
+          <BigInput value={email} disabled={true} readOnly />
 
-        <Spacer h={8} />
+          <Spacer h={8} />
 
-        {/*
-         * If a user has a `salt` field, then that means they chose their own password
-         * and we saved the randomly generated salt for them. This is default true for
-         * new PCDPass accounts, but false for Zupass accounts, where we give them a
-         * Sync Key instead.
-         */}
+          {/*
+           * If a user has a `salt` field, then that means they chose their own password
+           * and we saved the randomly generated salt for them. This is default true for
+           * new PCDPass accounts, but false for Zupass accounts, where we give them a
+           * Sync Key instead.
+           */}
 
-        {salt ? (
-          <form onSubmit={onSubmitPassword}>
-            <PasswordInput
-              autoFocus
-              value={password}
-              setValue={setPassword}
-              placeholder="Password"
-              revealPassword={revealPassword}
-              setRevealPassword={setRevealPassword}
-            />
-            {error && (
-              <>
-                <Spacer h={16} />
-                <ErrorMessage>{error}</ErrorMessage>
-                <Spacer h={8} />
-              </>
-            )}
-            <Spacer h={8} />
-            <Button type="submit">Login</Button>
-          </form>
-        ) : (
-          <Button onClick={onLoginWithMasterPasswordClick}>
-            Login with Sync Key
+          {salt ? (
+            <form onSubmit={onSubmitPassword}>
+              <PasswordInput
+                autoFocus
+                value={password}
+                setValue={setPassword}
+                placeholder="Password"
+                revealPassword={revealPassword}
+                setRevealPassword={setRevealPassword}
+              />
+              {error && (
+                <>
+                  <Spacer h={16} />
+                  <ErrorMessage>{error}</ErrorMessage>
+                  <Spacer h={8} />
+                </>
+              )}
+              <Spacer h={8} />
+              <Button type="submit">Login</Button>
+            </form>
+          ) : (
+            <Button onClick={onLoginWithMasterPasswordClick}>
+              Login with Sync Key
+            </Button>
+          )}
+
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
+
+          <Button onClick={onCancelClick}>Cancel</Button>
+          <Spacer h={8} />
+          <Button onClick={onOverwriteClick} style="danger">
+            Reset Account
           </Button>
-        )}
-
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-
-        <Button onClick={onCancelClick}>Cancel</Button>
-        <Spacer h={8} />
-        <Button onClick={onOverwriteClick} style="danger">
-          Reset Account
-        </Button>
+        </CenterColumn>
       </>
     );
   }
@@ -241,7 +245,7 @@ export function AlreadyRegisteredScreen() {
           from="var(--bg-lite-primary)"
           to="var(--bg-dark-primary)"
         >
-          <CenterColumn w={280}>{content}</CenterColumn>
+          {content}
         </BackgroundGlow>
         <Spacer h={64} />
       </AppContainer>

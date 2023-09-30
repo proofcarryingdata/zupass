@@ -100,7 +100,7 @@ export function VerifyScreen() {
         </Placeholder>
         <Spacer h={64} />
         {verifyResult != null && (
-          <CenterColumn w={280}>
+          <CenterColumn>
             <LinkButton to="/scan">Verify another</LinkButton>
             <Spacer h={8} />
             <LinkButton to="/">Back to Zupass</LinkButton>

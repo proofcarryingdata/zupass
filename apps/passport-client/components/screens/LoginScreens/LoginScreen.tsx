@@ -160,7 +160,7 @@ export function LoginScreen() {
 
         <Spacer h={24} />
 
-        <CenterColumn w={280}>
+        <CenterColumn>
           <form onSubmit={onGenPass}>
             <BigInput
               type="text"

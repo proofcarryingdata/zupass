@@ -157,7 +157,7 @@ export function ChangePasswordScreen() {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={64} />
-        <CenterColumn w={280}>{content}</CenterColumn>
+        <CenterColumn>{content}</CenterColumn>
       </AppContainer>
     </>
   );

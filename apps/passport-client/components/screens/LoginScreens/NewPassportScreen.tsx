@@ -22,6 +22,7 @@ import {
   TextCenter
 } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
+import { ErrorMessage } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { ResendCodeButton } from "../../shared/ResendCodeButton";
@@ -144,23 +145,32 @@ function SendEmailVerification({ email }: { email: string }) {
 
   let content = null;
 
-  if (loadingSalt) {
+  if (verifyingCode) {
     content = (
-      <>
+      <CenterColumn>
+        <Spacer h={128} />
+        <TextCenter>Verifying token...</TextCenter>
+        <Spacer h={32} />
+        <RippleLoader />
+      </CenterColumn>
+    );
+  } else if (loadingSalt) {
+    content = (
+      <CenterColumn>
         <Spacer h={128} />
         <TextCenter>Loading account information...</TextCenter>
         <Spacer h={32} />
         <RippleLoader />
-      </>
+      </CenterColumn>
     );
   } else if (emailSending) {
     content = (
-      <>
+      <CenterColumn>
         <Spacer h={128} />
         <TextCenter>Checking if you already have an account...</TextCenter>
         <Spacer h={32} />
         <RippleLoader />
-      </>
+      </CenterColumn>
     );
   } else if (emailSent) {
     content = (
@@ -172,32 +182,28 @@ function SendEmailVerification({ email }: { email: string }) {
           Check your inbox for an email from <span>passport@0xparc.org</span>.
           Use the most recent code you received to continue.
         </TextCenter>
-        <Spacer h={32} />
-        <form onSubmit={onSubmit}>
-          {emailSent && (
-            <>
-              <BigInput
-                disabled={verifyingCode}
-                ref={inRef}
-                autoFocus
-                placeholder="code from email"
-              />
-              <Spacer h={8} />
-            </>
-          )}
-          {verifyingCode && (
-            <div>
-              <RippleLoader />
-            </div>
-          )}
-          {!verifyingCode && emailSent && (
-            <>
-              <Button type="submit">Verify</Button>
-              <Spacer h={8} />
-              <ResendCodeButton email={email} />
-            </>
-          )}
-        </form>
+        <Spacer h={24} />
+
+        <CenterColumn>
+          <form onSubmit={onSubmit}>
+            <BigInput ref={inRef} autoFocus placeholder="code from email" />
+            {error && (
+              <>
+                <Spacer h={16} />
+                <ErrorMessage>{error}</ErrorMessage>
+                <Spacer h={8} />
+              </>
+            )}
+            <Spacer h={8} />
+            <Button type="submit">Verify</Button>
+            <Spacer h={8} />
+            <ResendCodeButton email={email} />
+            <Spacer h={24} />
+            <HR />
+            <Spacer h={24} />
+            <LinkButton to={"/"}>Cancel</LinkButton>
+          </form>
+        </CenterColumn>
       </>
     );
   }
@@ -209,20 +215,7 @@ function SendEmailVerification({ email }: { email: string }) {
         from="var(--bg-lite-primary)"
         to="var(--bg-dark-primary)"
       >
-        <CenterColumn w={280}>{content}</CenterColumn>
-
-        {!verifyingCode && emailSent && (
-          <>
-            <Spacer h={24} />
-            <HR />
-            <Spacer h={24} />
-            <CenterColumn w={280}>
-              <LinkButton to={"/"}>Cancel</LinkButton>
-            </CenterColumn>
-          </>
-        )}
-
-        <Spacer h={24} />
+        {content}
       </BackgroundGlow>
     </AppContainer>
   );

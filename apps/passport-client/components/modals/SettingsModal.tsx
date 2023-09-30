@@ -28,7 +28,7 @@ export function SettingsModal() {
         />
       </TextCenter>
       <Spacer h={24} />
-      <CenterColumn w={280}>
+      <CenterColumn>
         <LinkButton to="/scan">Scan Ticket</LinkButton>
         <Spacer h={16} />
         <LinkButton to="/change-password" onClick={close}>

@@ -37,7 +37,7 @@ export function DeviceLoginScreen() {
           </TextCenter>
         </TextCenter>
         <Spacer h={24} />
-        <CenterColumn w={280}>
+        <CenterColumn>
           <form>
             <BigInput
               type="text"

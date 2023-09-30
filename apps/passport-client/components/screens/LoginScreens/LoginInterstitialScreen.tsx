@@ -73,7 +73,7 @@ export function LoginInterstitialScreen() {
           to="var(--bg-dark-primary)"
         >
           <Spacer h={64} />
-          <CenterColumn w={280}>
+          <CenterColumn>
             <RippleLoader />
           </CenterColumn>
         </BackgroundGlow>

@@ -119,7 +119,7 @@ export function EnterConfirmationCodeScreen() {
           from="var(--bg-lite-primary)"
           to="var(--bg-dark-primary)"
         >
-          <CenterColumn w={280}>{content}</CenterColumn>
+          <CenterColumn>{content}</CenterColumn>
         </BackgroundGlow>
       </AppContainer>
     </>

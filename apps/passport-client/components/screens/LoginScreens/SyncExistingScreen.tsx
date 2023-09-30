@@ -102,7 +102,7 @@ export function SyncExistingScreen() {
             password, and not your sync key.
           </TextCenter>
           <Spacer h={32} />
-          <CenterColumn w={280}>
+          <CenterColumn>
             <BigInput
               disabled={isLoading}
               type="text"
