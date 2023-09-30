@@ -1,5 +1,5 @@
 import { requestConfirmationEmail } from "@pcd/passport-interface";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useIdentity } from "../../src/appHooks";
 import { Button } from "../core";
@@ -15,17 +15,9 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
   // frontend check doesn't really matter for sophisticated actors,
   // because our defense against spammers should happen with rate
   // limiting at the API layer.
-  const [waitCountInSeconds, setWaitCount] = useState(0);
-  const handleClick = async (event: React.FormEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    console.log("handling click");
-    await requestConfirmationEmail(
-      appConfig.zupassServer,
-      email,
-      identity.commitment.toString(),
-      false
-    );
+  const [waitCountInSeconds, setWaitCount] = useState(10);
 
+  const startTimer = useCallback(() => {
     // We need a local variable `timer` because relying on React state
     // will have us stuck within the setInterval().
     let timer = 10;
@@ -39,6 +31,22 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
         clearInterval(countdown);
       }
     }, 1000);
+  }, []);
+
+  useEffect(() => {
+    startTimer();
+  }, [startTimer]);
+
+  const handleClick = async (event: React.FormEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    console.log("handling click");
+    await requestConfirmationEmail(
+      appConfig.zupassServer,
+      email,
+      identity.commitment.toString(),
+      false
+    );
+    startTimer();
   };
 
   const disabled = waitCountInSeconds > 0;

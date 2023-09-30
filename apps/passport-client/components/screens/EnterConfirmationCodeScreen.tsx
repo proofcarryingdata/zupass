@@ -78,8 +78,8 @@ export function EnterConfirmationCodeScreen() {
         <TextCenter>
           <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
-          We've sent you a confirmation code, please enter it below to set up
-          your account.
+          Check your inbox for an email from <span>passport@0xparc.org</span>.
+          Use the most recent code you received to continue.
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn>
