@@ -6,6 +6,7 @@ import {
   Button,
   CenterColumn,
   H2,
+  HR,
   Spacer,
   TextCenter
 } from "../core";
@@ -50,6 +51,48 @@ export function EnterConfirmationCodeScreen() {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
+  let content = null;
+
+  if (verifyingCode) {
+    content = (
+      <TextCenter>
+        <Spacer h={128} />
+        Verifying code
+        <Spacer h={24} />
+        <RippleLoader />
+      </TextCenter>
+    );
+  } else {
+    content = (
+      <>
+        <Spacer h={64} />
+        <TextCenter>
+          <H2>Enter Confirmation Code</H2>
+          <Spacer h={24} />
+          We've sent you a confirmation code, please enter it below to set up
+          your account.
+        </TextCenter>
+        <Spacer h={24} />
+        <BigInput value={email} disabled />
+        <Spacer h={8} />
+        <BigInput
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="confirmation code"
+          disabled={verifyingCode}
+        />
+        <Spacer h={8} />
+        <Button onClick={onCreateClick}>Continue</Button>
+        <Spacer h={24} />
+        <HR />
+        <Spacer h={24} />
+        <ResendCodeButton email={email} />
+        <Spacer h={8} />
+        <Button onClick={onCancelClick}>Cancel</Button>
+      </>
+    );
+  }
+
   return (
     <>
       <MaybeModal />
@@ -59,39 +102,7 @@ export function EnterConfirmationCodeScreen() {
           from="var(--bg-lite-primary)"
           to="var(--bg-dark-primary)"
         >
-          <Spacer h={64} />
-          <TextCenter>
-            <H2>Enter Confirmation Code</H2>
-            <Spacer h={24} />
-            We've sent you a confirmation code, please enter it below to set up
-            your account.
-          </TextCenter>
-          <Spacer h={24} />
-          <CenterColumn w={280}>
-            <BigInput value={email} disabled />
-            <Spacer h={8} />
-            <BigInput
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="confirmation code"
-              disabled={verifyingCode}
-            />
-            {verifyingCode ? (
-              <>
-                <Spacer h={16} />
-                <RippleLoader />
-              </>
-            ) : (
-              <>
-                <Spacer h={8} />
-                <Button onClick={onCreateClick}>Continue</Button>
-                <Spacer h={8} />
-                <ResendCodeButton email={email} />
-                <Spacer h={8} />
-                <Button onClick={onCancelClick}>Cancel</Button>
-              </>
-            )}
-          </CenterColumn>
+          <CenterColumn w={280}>{content}</CenterColumn>
         </BackgroundGlow>
       </AppContainer>
     </>
