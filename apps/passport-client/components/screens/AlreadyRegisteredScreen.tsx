@@ -26,6 +26,7 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { ErrorMessage } from "../core/error";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -38,6 +39,7 @@ export function AlreadyRegisteredScreen() {
   const email = query?.get("email");
   const salt = query?.get("salt");
   const identityCommitment = query?.get("identityCommitment");
+  let [error, setError] = useState<string | undefined>();
   const [isLoading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
@@ -94,16 +96,10 @@ export function AlreadyRegisteredScreen() {
   const onSubmitPassword = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      setError(undefined);
 
       if (password == "" || password == null) {
-        return dispatch({
-          type: "error",
-          error: {
-            title: "Missing password",
-            message: "Please enter a password",
-            dismissToCurrentPage: true
-          }
-        });
+        return setError("Enter a password");
       }
 
       setLoading(true);
@@ -117,15 +113,10 @@ export function AlreadyRegisteredScreen() {
       setLoading(false);
 
       if (!storageResult.success) {
-        return dispatch({
-          type: "error",
-          error: {
-            title: "Password incorrect",
-            message:
-              "Double-check your password. If you've lost access, please click 'Reset Account' below.",
-            dismissToCurrentPage: true
-          }
-        });
+        return setError(
+          "Password incorrect. Double-check your password. " +
+            "If you've lost access, you can reset your account below."
+        );
       }
 
       dispatch({
@@ -203,6 +194,13 @@ export function AlreadyRegisteredScreen() {
               revealPassword={revealPassword}
               setRevealPassword={setRevealPassword}
             />
+            {error && (
+              <>
+                <Spacer h={16} />
+                <ErrorMessage>{error}</ErrorMessage>
+                <Spacer h={8} />
+              </>
+            )}
             <Spacer h={8} />
             <Button type="submit">Login</Button>
           </form>
