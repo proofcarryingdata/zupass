@@ -6,7 +6,6 @@ import {
   useEffect,
   useState
 } from "react";
-import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
@@ -132,10 +131,8 @@ export function LoginScreen() {
           <TextCenter>
             <H1>ZUPASS</H1>
             <Spacer h={24} />
-            <Description>
-              This is an experimental personal cryptography manager, powered by
-              Zero-Knowledge.
-            </Description>
+            This is an experimental personal cryptography manager, powered by
+            Zero-Knowledge.
           </TextCenter>
         </>
       )}
@@ -147,7 +144,7 @@ export function LoginScreen() {
           <BigInput
             type="text"
             autoFocus
-            placeholder="your email address"
+            placeholder="email address"
             value={email}
             onChange={useCallback(
               (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
@@ -171,9 +168,3 @@ export function LoginScreen() {
     </AppContainer>
   );
 }
-
-const Description = styled.p`
-  font-weight: 300;
-  width: 220px;
-  margin: 0 auto;
-`;

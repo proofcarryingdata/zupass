@@ -82,29 +82,31 @@ export function EnterConfirmationCodeScreen() {
           your account.
         </TextCenter>
         <Spacer h={24} />
-        <BigInput value={email} disabled />
-        <Spacer h={8} />
-        <BigInput
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="confirmation code"
-          disabled={verifyingCode}
-        />
-        {error && (
-          <>
-            <Spacer h={16} />
-            <ErrorMessage>{error}</ErrorMessage>
-            <Spacer h={8} />
-          </>
-        )}
-        <Spacer h={8} />
-        <Button onClick={onCreateClick}>Continue</Button>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-        <ResendCodeButton email={email} />
-        <Spacer h={8} />
-        <Button onClick={onCancelClick}>Cancel</Button>
+        <CenterColumn>
+          <BigInput value={email} disabled />
+          <Spacer h={8} />
+          <BigInput
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="confirmation code"
+            disabled={verifyingCode}
+          />
+          {error && (
+            <>
+              <Spacer h={16} />
+              <ErrorMessage>{error}</ErrorMessage>
+              <Spacer h={8} />
+            </>
+          )}
+          <Spacer h={8} />
+          <Button onClick={onCreateClick}>Continue</Button>
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
+          <ResendCodeButton email={email} />
+          <Spacer h={8} />
+          <Button onClick={onCancelClick}>Cancel</Button>
+        </CenterColumn>
       </>
     );
   }
@@ -112,9 +114,7 @@ export function EnterConfirmationCodeScreen() {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="primary">
-        <CenterColumn>{content}</CenterColumn>
-      </AppContainer>
+      <AppContainer bg="primary">{content}</AppContainer>
     </>
   );
 }
