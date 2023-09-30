@@ -13,6 +13,7 @@ import {
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
+import _ from "lodash";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
@@ -45,11 +46,18 @@ const ALLOWED_EVENT_IDS = [
     eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
     name: "AW (Internal Test)"
   }
+  // Add this value and set the value field of validEventIds in generateProofUrl
+  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
-const eventIdIsAllowed = (eventId?: string): boolean => {
-  if (!eventId) throw new Error(`No Event Id found for verification`);
-  return ALLOWED_EVENT_IDS.map((a) => a.eventId).includes(eventId);
+const eventIdsAreValid = (eventIds?: string[]): boolean => {
+  const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
+    !!(subset && subset.length && _.difference(subset, superset).length === 0);
+
+  return isNonEmptySubset(
+    ALLOWED_EVENT_IDS.map((e) => e.eventId),
+    eventIds
+  );
 };
 
 export class TelegramService {
@@ -326,7 +334,7 @@ export class TelegramService {
 
   private generateProofUrl(telegramUserId: string): string {
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
-      revealTicketId: true,
+      revealTicketId: false,
       revealEventId: true,
       revealProductId: true,
       revealTimestampConsumed: false,
@@ -361,7 +369,12 @@ export class TelegramService {
       },
       validEventIds: {
         argumentType: ArgumentTypeName.StringArray,
-        value: undefined,
+        // For local development, we do not validate eventIds
+        // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
+        // and add it to ALLOWED_EVENT_IDS. Then set value: ALLOWED_EVENT_IDS.map((e) => e.eventId)
+        value: isLocalServer()
+          ? undefined
+          : ALLOWED_EVENT_IDS.map((e) => e.eventId),
         userProvided: false
       },
       watermark: {
@@ -464,12 +477,12 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
+      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
+      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
