@@ -81,6 +81,53 @@ export function CreatePasswordScreen() {
     }
   }, [dispatch, email, password, token]);
 
+  let content = null;
+
+  if (settingPassword) {
+    content = (
+      <>
+        <Spacer h={128} />
+        <TextCenter>Creating your account...</TextCenter>
+        <Spacer h={24} />
+        <RippleLoader />
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <Spacer h={64} />
+
+        <TextCenter>
+          <H2>Set Password</H2>
+          <Spacer h={24} />
+          Choose a secure, unique password. This password will be used to
+          generate your key to encrypt your data. Save your password somewhere
+          secure.
+        </TextCenter>
+
+        <Spacer h={24} />
+        <NewPasswordForm
+          error={error}
+          setError={setError}
+          autoFocus
+          email={email}
+          password={password}
+          confirmPassword={confirmPassword}
+          setPassword={setPassword}
+          setConfirmPassword={setConfirmPassword}
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          submitButtonText="Continue"
+          onSuccess={onSetPassword}
+        />
+        <Spacer h={24} />
+        <HR />
+        <Spacer h={24} />
+        <LinkButton to={"/"}>Cancel</LinkButton>
+      </>
+    );
+  }
+
   return (
     <AppContainer bg="primary">
       <BackgroundGlow
@@ -88,46 +135,7 @@ export function CreatePasswordScreen() {
         from="var(--bg-lite-primary)"
         to="var(--bg-dark-primary)"
       >
-        <CenterColumn w={280}>
-          <Spacer h={64} />
-
-          <TextCenter>
-            <H2>Set Password</H2>
-            <Spacer h={24} />
-            Choose a secure, unique password. This password will be used to
-            generate your key to encrypt your data. Save your password somewhere
-            secure.
-          </TextCenter>
-
-          <Spacer h={24} />
-
-          {settingPassword ? (
-            <>
-              <RippleLoader />
-            </>
-          ) : (
-            <>
-              <NewPasswordForm
-                error={error}
-                setError={setError}
-                autoFocus
-                email={email}
-                password={password}
-                confirmPassword={confirmPassword}
-                setPassword={setPassword}
-                setConfirmPassword={setConfirmPassword}
-                revealPassword={revealPassword}
-                setRevealPassword={setRevealPassword}
-                submitButtonText="Continue"
-                onSuccess={onSetPassword}
-              />
-              <Spacer h={24} />
-              <HR />
-              <Spacer h={24} />
-              <LinkButton to={"/"}>Cancel</LinkButton>
-            </>
-          )}
-        </CenterColumn>
+        <CenterColumn w={280}>{content}</CenterColumn>
       </BackgroundGlow>
       <Spacer h={64} />
     </AppContainer>
