@@ -4,14 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { validateEmail } from "../../../src/util";
-import {
-  BackgroundGlow,
-  CenterColumn,
-  H2,
-  HR,
-  Spacer,
-  TextCenter
-} from "../../core";
+import { CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { LinkButton } from "../../core/Button";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
@@ -131,13 +124,7 @@ export function CreatePasswordScreen() {
 
   return (
     <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        {content}
-      </BackgroundGlow>
+      {content}
       <Spacer h={64} />
     </AppContainer>
   );

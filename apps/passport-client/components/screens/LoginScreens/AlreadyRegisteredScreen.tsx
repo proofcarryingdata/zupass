@@ -17,7 +17,6 @@ import {
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -261,13 +260,7 @@ export function AlreadyRegisteredScreen() {
     <>
       <MaybeModal />
       <AppContainer bg="primary">
-        <BackgroundGlow
-          y={224}
-          from="var(--bg-lite-primary)"
-          to="var(--bg-dark-primary)"
-        >
-          {content}
-        </BackgroundGlow>
+        {content}
         <Spacer h={64} />
       </AppContainer>
     </>

@@ -90,20 +90,6 @@ export const PreWrap = styled.pre`
   overflow: hidden;
 `;
 
-export const BackgroundGlow = styled.div<{
-  y: number;
-  from: string;
-  to: string;
-}>`
-  width: 100%;
-  min-height: 100vh;
-  background: radial-gradient(
-    circle 160px at center ${(p) => p.y}px,
-    ${(p) => p.from},
-    ${(p) => p.to}
-  );
-`;
-
 export function ZuLogo() {
   return (
     <img draggable="false" src={icons.logo} width="160px" height="155px" />

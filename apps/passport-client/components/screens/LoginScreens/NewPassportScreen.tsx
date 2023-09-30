@@ -12,15 +12,7 @@ import {
   usePendingAction
 } from "../../../src/appHooks";
 import { err } from "../../../src/util";
-import {
-  BackgroundGlow,
-  BigInput,
-  CenterColumn,
-  H2,
-  HR,
-  Spacer,
-  TextCenter
-} from "../../core";
+import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
 import { ErrorMessage } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -208,15 +200,5 @@ function SendEmailVerification({ email }: { email: string }) {
     );
   }
 
-  return (
-    <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        {content}
-      </BackgroundGlow>
-    </AppContainer>
-  );
+  return <AppContainer bg="primary">{content}</AppContainer>;
 }

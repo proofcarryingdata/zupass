@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSelf } from "../../../src/appHooks";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -81,60 +80,51 @@ export function SyncExistingScreen() {
 
   return (
     <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        <Spacer h={64} />
+      <Spacer h={64} />
+      <TextCenter>
+        <H2>LOGIN WITH SYNC KEY</H2>
+        <Spacer h={32} />
         <TextCenter>
-          <H2>LOGIN WITH SYNC KEY</H2>
-          <Spacer h={32} />
-          <TextCenter>
-            If you've already registered, you can sync with your other device
-            here using your Sync Key. You can find your Sync Key on your
-            existing device by clicking on the settings icon.
-          </TextCenter>
-          <Spacer h={16} />
-          <TextCenter>
-            After you log in with your sync key, you'll be prompted to set a
-            password. After that, you will only be able to log in with your
-            password, and not your sync key.
-          </TextCenter>
-          <Spacer h={32} />
-          <CenterColumn>
-            <BigInput
-              disabled={isLoading}
-              type="text"
-              placeholder="Sync Key"
-              value={encryptionKey}
-              onChange={useCallback(
-                (e: React.ChangeEvent<HTMLInputElement>) => {
-                  setEncryptionKey(e.target.value);
-                },
-                []
-              )}
-            ></BigInput>
-            <Spacer h={8} />
-            {!isLoading && (
-              <>
-                <Button style="primary" type="submit" onClick={onSyncClick}>
-                  Login
-                </Button>
-                <Spacer h={8} />
-                <Button type="submit" onClick={onClose}>
-                  Cancel
-                </Button>
-              </>
-            )}
-            {isLoading && (
-              <div>
-                <RippleLoader />
-              </div>
-            )}
-          </CenterColumn>
+          If you've already registered, you can sync with your other device here
+          using your Sync Key. You can find your Sync Key on your existing
+          device by clicking on the settings icon.
         </TextCenter>
-      </BackgroundGlow>
+        <Spacer h={16} />
+        <TextCenter>
+          After you log in with your sync key, you'll be prompted to set a
+          password. After that, you will only be able to log in with your
+          password, and not your sync key.
+        </TextCenter>
+        <Spacer h={32} />
+        <CenterColumn>
+          <BigInput
+            disabled={isLoading}
+            type="text"
+            placeholder="Sync Key"
+            value={encryptionKey}
+            onChange={useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+              setEncryptionKey(e.target.value);
+            }, [])}
+          ></BigInput>
+          <Spacer h={8} />
+          {!isLoading && (
+            <>
+              <Button style="primary" type="submit" onClick={onSyncClick}>
+                Login
+              </Button>
+              <Spacer h={8} />
+              <Button type="submit" onClick={onClose}>
+                Cancel
+              </Button>
+            </>
+          )}
+          {isLoading && (
+            <div>
+              <RippleLoader />
+            </div>
+          )}
+        </CenterColumn>
+      </TextCenter>
       <Spacer h={64} />
     </AppContainer>
   );

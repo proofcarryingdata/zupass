@@ -23,7 +23,6 @@ import {
 } from "../../../src/sessionStorage";
 import { validateEmail } from "../../../src/util";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -128,57 +127,51 @@ export function LoginScreen() {
 
   return (
     <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        <Spacer h={64} />
-        {redirectedFromAction ? (
-          <>
-            <TextCenter>
-              <H2>LOGIN</H2>
-            </TextCenter>
-            <Spacer h={32} />
-            <TextCenter>
-              To complete this request, you need to either log into your
-              existing Zupass account, or create a new one.
-            </TextCenter>
-          </>
-        ) : (
-          <>
-            <TextCenter>
-              <H1>ZUPASS</H1>
-              <Spacer h={24} />
-              <Description>
-                This is an experimental personal cryptography manager, powered
-                by Zero-Knowledge.
-              </Description>
-            </TextCenter>
-          </>
-        )}
+      <Spacer h={64} />
+      {redirectedFromAction ? (
+        <>
+          <TextCenter>
+            <H2>LOGIN</H2>
+          </TextCenter>
+          <Spacer h={32} />
+          <TextCenter>
+            To complete this request, you need to either log into your existing
+            Zupass account, or create a new one.
+          </TextCenter>
+        </>
+      ) : (
+        <>
+          <TextCenter>
+            <H1>ZUPASS</H1>
+            <Spacer h={24} />
+            <Description>
+              This is an experimental personal cryptography manager, powered by
+              Zero-Knowledge.
+            </Description>
+          </TextCenter>
+        </>
+      )}
 
-        <Spacer h={24} />
+      <Spacer h={24} />
 
-        <CenterColumn>
-          <form onSubmit={onGenPass}>
-            <BigInput
-              type="text"
-              autoFocus
-              placeholder="your email address"
-              value={email}
-              onChange={useCallback(
-                (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
-                [setEmail]
-              )}
-            />
-            <Spacer h={8} />
-            <Button style="primary" type="submit">
-              Continue
-            </Button>
-          </form>
-        </CenterColumn>
-      </BackgroundGlow>
+      <CenterColumn>
+        <form onSubmit={onGenPass}>
+          <BigInput
+            type="text"
+            autoFocus
+            placeholder="your email address"
+            value={email}
+            onChange={useCallback(
+              (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
+              [setEmail]
+            )}
+          />
+          <Spacer h={8} />
+          <Button style="primary" type="submit">
+            Continue
+          </Button>
+        </form>
+      </CenterColumn>
       <Spacer h={64} />
     </AppContainer>
   );

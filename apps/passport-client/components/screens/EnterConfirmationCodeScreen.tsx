@@ -3,7 +3,6 @@ import { useCallback, useLayoutEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useQuery } from "../../src/appHooks";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -114,13 +113,7 @@ export function EnterConfirmationCodeScreen() {
     <>
       <MaybeModal />
       <AppContainer bg="primary">
-        <BackgroundGlow
-          y={224}
-          from="var(--bg-lite-primary)"
-          to="var(--bg-dark-primary)"
-        >
-          <CenterColumn>{content}</CenterColumn>
-        </BackgroundGlow>
+        <CenterColumn>{content}</CenterColumn>
       </AppContainer>
     </>
   );

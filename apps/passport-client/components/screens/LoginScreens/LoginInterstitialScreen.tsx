@@ -12,7 +12,7 @@ import {
   getPendingViewSubscriptionsPageRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { BackgroundGlow, CenterColumn } from "../../core";
+import { CenterColumn } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 
@@ -67,16 +67,10 @@ export function LoginInterstitialScreen() {
   return (
     <>
       <AppContainer bg="primary">
-        <BackgroundGlow
-          y={224}
-          from="var(--bg-lite-primary)"
-          to="var(--bg-dark-primary)"
-        >
-          <Spacer h={64} />
-          <CenterColumn>
-            <RippleLoader />
-          </CenterColumn>
-        </BackgroundGlow>
+        <Spacer h={64} />
+        <CenterColumn>
+          <RippleLoader />
+        </CenterColumn>
       </AppContainer>
     </>
   );
