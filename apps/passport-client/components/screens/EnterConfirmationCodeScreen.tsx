@@ -105,7 +105,9 @@ export function EnterConfirmationCodeScreen() {
           <Spacer h={24} />
           <ResendCodeButton email={email} />
           <Spacer h={8} />
-          <Button onClick={onCancelClick}>Cancel</Button>
+          <Button onClick={onCancelClick} style="secondary">
+            Cancel
+          </Button>
         </CenterColumn>
       </>
     );

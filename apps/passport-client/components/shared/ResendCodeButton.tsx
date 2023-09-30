@@ -44,7 +44,7 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
       appConfig.zupassServer,
       email,
       identity.commitment.toString(),
-      false
+      true
     );
     startTimer();
   };
@@ -52,7 +52,7 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
   const disabled = waitCountInSeconds > 0;
 
   return (
-    <Button disabled={disabled} onClick={handleClick}>
+    <Button disabled={disabled} onClick={handleClick} style="secondary">
       {disabled ? `Resend code (${waitCountInSeconds})` : "Resend code"}
     </Button>
   );

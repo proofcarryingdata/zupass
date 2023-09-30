@@ -12,12 +12,17 @@ export function Button({
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  style?: "primary" | "danger";
+  style?: "primary" | "secondary" | "danger";
   size?: "large" | "small";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }) {
-  const Btn = style === "danger" ? BtnDanger : BtnBase;
+  const Btn =
+    style === "danger"
+      ? BtnDanger
+      : style === "secondary"
+      ? BtnSecondary
+      : BtnBase;
   return (
     <Btn type={type} size={size} onClick={onClick} disabled={disabled}>
       {children}
@@ -41,7 +46,7 @@ const buttonStyle = `
   &:hover {
     background: var(--accent-darker);
   }
-  &:active {
+  &:active:not([disabled]) {
     opacity: 0.9;
   }
 `;
@@ -73,6 +78,14 @@ const BtnDanger = styled(BtnBase)`
   background: var(--danger);
   &:hover {
     background: var(--danger-lite);
+  }
+`;
+
+const BtnSecondary = styled(BtnBase)`
+  color: #fff;
+  background: #696969;
+  &:hover {
+    background: #7a7a7a;
   }
 `;
 

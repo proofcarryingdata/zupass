@@ -244,7 +244,9 @@ export function AlreadyRegisteredScreen() {
           <HR />
           <Spacer h={24} />
 
-          <Button onClick={onCancelClick}>Cancel</Button>
+          <Button onClick={onCancelClick} style="secondary">
+            Cancel
+          </Button>
           <Spacer h={8} />
           <Button onClick={onOverwriteClick} style="danger">
             Forgot Password

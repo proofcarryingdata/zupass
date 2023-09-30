@@ -5,7 +5,7 @@ import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { validateEmail } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
-import { LinkButton } from "../../core/Button";
+import { Button } from "../../core/Button";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { NewPasswordForm } from "../../shared/NewPasswordForm";
@@ -74,6 +74,10 @@ export function CreatePasswordScreen() {
     }
   }, [dispatch, email, password, token]);
 
+  const onCancelClick = useCallback(() => {
+    window.location.href = "#/";
+  }, []);
+
   let content = null;
 
   if (settingPassword) {
@@ -118,7 +122,10 @@ export function CreatePasswordScreen() {
           <Spacer h={24} />
           <HR />
           <Spacer h={24} />
-          <LinkButton to={"/"}>Cancel</LinkButton>
+
+          <Button onClick={onCancelClick} style="secondary">
+            Cancel
+          </Button>
         </CenterColumn>
       </>
     );
