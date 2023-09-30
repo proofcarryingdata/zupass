@@ -21,7 +21,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
-  H1,
+  H2,
   HR,
   Spacer,
   TextCenter
@@ -167,16 +167,16 @@ export function AlreadyRegisteredScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H1>ZUPASS</H1>
+            <H2>Log In</H2>
           </TextCenter>
-          <Spacer h={32} />
+          <Spacer h={24} />
           <TextCenter>
             Welcome back! Enter your password below to continue. If you've lost
             your password, you can reset your account. Resetting your account
             will let you access your tickets, but you'll lose all non-ticket
             PCDs.
           </TextCenter>
-          <Spacer h={32} />
+          <Spacer h={24} />
           {isLoading ? (
             <RippleLoader />
           ) : (
