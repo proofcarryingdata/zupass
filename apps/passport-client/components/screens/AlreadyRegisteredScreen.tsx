@@ -15,7 +15,6 @@ import {
 } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
-import { err } from "../../src/util";
 import {
   BackgroundGlow,
   BigInput,
@@ -39,23 +38,25 @@ export function AlreadyRegisteredScreen() {
   const email = query?.get("email");
   const salt = query?.get("salt");
   const identityCommitment = query?.get("identityCommitment");
-  let [error, setError] = useState<string | undefined>();
-  const [isLoading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [sendingConfirmationEmail, setSendingConfirmationEmail] =
+    useState(false);
   const [password, setPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
 
   const handleConfirmationEmailResult = useCallback(
     async (result: ConfirmEmailResult) => {
       if (!result.success) {
-        err(dispatch, "Email failed", result.error);
-        setLoading(false);
+        setError("Couldn't send pasword reset email. Try again later.");
+        setSendingConfirmationEmail(false);
       } else if (result.value?.devToken != null) {
+        setSendingConfirmationEmail(false);
         await dispatch({
           type: "verify-token",
           email,
           token: result.value.devToken
         });
-        setLoading(false);
       } else {
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
@@ -71,7 +72,7 @@ export function AlreadyRegisteredScreen() {
       identityCommitment
     });
 
-    setLoading(true);
+    setSendingConfirmationEmail(true);
     const emailConfirmationResult = await requestConfirmationEmail(
       appConfig.zupassServer,
       email,
@@ -102,7 +103,7 @@ export function AlreadyRegisteredScreen() {
         return setError("Enter a password");
       }
 
-      setLoading(true);
+      setIsLoggingIn(true);
       await sleep(10);
       const crypto = await PCDCrypto.newInstance();
       const encryptionKey = await crypto.argon2(password, salt, 32);
@@ -110,7 +111,7 @@ export function AlreadyRegisteredScreen() {
         appConfig.zupassServer,
         encryptionKey
       );
-      setLoading(false);
+      setIsLoggingIn(false);
 
       if (!storageResult.success) {
         return setError(
@@ -148,8 +149,16 @@ export function AlreadyRegisteredScreen() {
   }
 
   let content = null;
-
-  if (isLoading) {
+  if (sendingConfirmationEmail) {
+    content = (
+      <TextCenter>
+        <Spacer h={128} />
+        Sending you an email with a reset token...
+        <Spacer h={24} />
+        <RippleLoader />
+      </TextCenter>
+    );
+  } else if (isLoggingIn) {
     content = (
       <TextCenter>
         <Spacer h={128} />

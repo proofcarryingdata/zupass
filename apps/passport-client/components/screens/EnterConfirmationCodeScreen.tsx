@@ -5,7 +5,7 @@ import {
   BigInput,
   Button,
   CenterColumn,
-  H1,
+  H2,
   Spacer,
   TextCenter
 } from "../core";
@@ -61,10 +61,8 @@ export function EnterConfirmationCodeScreen() {
         >
           <Spacer h={64} />
           <TextCenter>
-            <H1>ZUPASS</H1>
-          </TextCenter>
-          <Spacer h={32} />
-          <TextCenter>
+            <H2>Enter Confirmation Code</H2>
+            <Spacer h={24} />
             We've sent you a confirmation code, please enter it below to set up
             your account.
           </TextCenter>
