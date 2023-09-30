@@ -2,7 +2,7 @@ import { Spacer } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
-import { Button, H1 } from "../core";
+import { Button, H2 } from "../core";
 
 export function AnotherDeviceChangedPasswordModal() {
   const dispatch = useDispatch();
@@ -13,8 +13,7 @@ export function AnotherDeviceChangedPasswordModal() {
 
   return (
     <Container>
-      <Spacer h={8} />
-      <H1>Session Invalid</H1>
+      <H2>Session Invalid</H2>
       <Spacer h={24} />
       <p>
         You've changed your password on another device, logging you out of all

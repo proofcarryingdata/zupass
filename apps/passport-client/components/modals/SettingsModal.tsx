@@ -27,7 +27,7 @@ export function SettingsModal() {
           height={34}
         />
       </TextCenter>
-      <Spacer h={32} />
+      <Spacer h={24} />
       <CenterColumn w={280}>
         <LinkButton to="/scan">Scan Ticket</LinkButton>
         <Spacer h={16} />

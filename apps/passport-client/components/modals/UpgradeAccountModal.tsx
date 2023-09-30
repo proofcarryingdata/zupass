@@ -21,6 +21,7 @@ export function UpgradeAccountModal() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
   // copied from `ChangePasswordScreen`.
   // @todo - factor this out. I don't forsee us needing to do this anytime soon.
@@ -102,6 +103,8 @@ export function UpgradeAccountModal() {
       <BigInput value={self.email} disabled={true} />
       <Spacer h={8} />
       <NewPasswordForm
+        error={error}
+        setError={setError}
         passwordInputPlaceholder="New password"
         email={self.email}
         revealPassword={revealPassword}
