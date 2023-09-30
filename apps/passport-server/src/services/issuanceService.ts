@@ -522,7 +522,7 @@ export class IssuanceService {
   private async checkUserExists(
     proof: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UserRow | null> {
-    const startTime = Date.now();
+    let startTime = Date.now();
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
@@ -545,10 +545,16 @@ export class IssuanceService {
       logger(`can't issue PCDs, wrong message signed by user`);
       return null;
     }
+    startTime = Date.now();
 
     const user = await fetchUserByCommitment(
       this.context.dbPool,
       deserializedSignature.claim.identityCommitment
+    );
+    logger(
+      `[CHECK USER EXISTS] fetchUserByCommitment in ${
+        Date.now() - startTime
+      } ms, ${(Date.now() - startTime) / 1000} s`
     );
 
     if (user == null) {
@@ -572,7 +578,6 @@ export class IssuanceService {
       "IssuanceService",
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
-        const firstTime = Date.now();
         let startTime = Date.now();
         logger(`[ISSUE DEVCONNECT] starting...`);
         const commitmentRow = await this.checkUserExists(credential);
@@ -615,7 +620,7 @@ export class IssuanceService {
             .map((ticketData) => this.getOrGenerateTicket(ticketData))
         );
         logger(
-          `[ISSUE DEVCONNECT] tocketRowToTicketData in ${
+          `[ISSUE DEVCONNECT] ticketRowToTicketData in ${
             Date.now() - startTime
           } ms, ${(Date.now() - startTime) / 1000} s`
         );
@@ -693,19 +698,15 @@ export class IssuanceService {
   private async getCachedTicket(
     ticketData: ITicketData
   ): Promise<EdDSATicketPCD | undefined> {
-    let startTime = Date.now();
     const key = await IssuanceService.getTicketCacheKey(ticketData);
-    logger(
-      `[GET CACHED TICKET] getTicketCacheKey ${Date.now() - startTime} ms, ${
-        (Date.now() - startTime) / 1000
-      } s`
-    );
-    startTime = Date.now();
+
+    const startTime = Date.now();
     const serializedTicket = await this.cacheService.getValue(key);
     logger(
       `[GET CACHED TICKET] cacheService.getValue ${
         Date.now() - startTime
-      } ms, ${(Date.now() - startTime) / 1000} s`
+      } ms, ${(Date.now() - startTime) / 1000} s`,
+      { key }
     );
     if (!serializedTicket) {
       logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
