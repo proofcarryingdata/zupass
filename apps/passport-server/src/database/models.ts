@@ -107,6 +107,7 @@ export interface CommitmentRow {
   commitment: string;
   email: string;
   salt: string | null;
+  encryption_key: string | null;
   account_reset_timestamps: string[];
 }
 

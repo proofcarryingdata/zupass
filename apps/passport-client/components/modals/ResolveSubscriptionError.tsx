@@ -25,7 +25,7 @@ export function ResolveSubscriptionErrorModal() {
 
   const dispatch = useDispatch();
   const finish = useCallback(() => {
-    dispatch({ type: "set-modal", modal: "" });
+    dispatch({ type: "set-modal", modal: { modalType: "none" } });
   }, [dispatch]);
 
   return (
@@ -239,7 +239,7 @@ function PermissionUpdate({
   const dispatch = useDispatch();
 
   const finish = useCallback(() => {
-    dispatch({ type: "set-modal", modal: "" });
+    dispatch({ type: "set-modal", modal: { modalType: "none" } });
   }, [dispatch]);
 
   return (

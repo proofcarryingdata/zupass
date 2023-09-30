@@ -1,13 +1,14 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  SyncedEncryptedStorage,
+  User,
   applyActions,
   isSyncedEncryptedStorageV2,
   requestCreateNewUser,
   requestDeviceLogin,
+  requestDownloadAndDecryptStorage,
   requestLogToServer,
-  requestVerifyToken,
-  SyncedEncryptedStorage,
-  User
+  requestVerifyToken
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -34,8 +35,8 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { sanitizeDateRanges } from "./user";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import { sanitizeDateRanges } from "./user";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -44,6 +45,11 @@ export type Action =
   | {
       type: "new-passport";
       email: string;
+    }
+  | {
+      type: "create-user-skip-password";
+      email: string;
+      token: string;
     }
   | {
       type: "login";
@@ -110,8 +116,21 @@ export async function dispatch(
   switch (action.type) {
     case "new-passport":
       return genPassport(state.identity, action.email, update);
+    case "create-user-skip-password":
+      return createNewUserSkipPassword(
+        action.email,
+        action.token,
+        state,
+        update
+      );
     case "login":
-      return login(action.email, action.token, action.password, state, update);
+      return createNewUserWithPassword(
+        action.email,
+        action.token,
+        action.password,
+        state,
+        update
+      );
     case "verify-token":
       return verifyToken(action.email, action.token, state, update);
     case "device-login":
@@ -188,7 +207,7 @@ async function verifyToken(
   if (appConfig.isZuzalu) {
     // Password can be empty string for the argon2 KDF. Random salt ensures that
     // this generated key is not less secure than generating a random key.
-    return login(email, token, "", state, update);
+    return createNewUserWithPassword(email, token, "", state, update);
   }
 
   const verifyTokenResult = await requestVerifyToken(
@@ -197,20 +216,44 @@ async function verifyToken(
     token
   );
 
-  if (verifyTokenResult.success) {
-    window.location.hash = `#/create-password?email=${encodeURIComponent(
-      email
-    )}&token=${encodeURIComponent(token)}`;
+  console.log({ verifyTokenResult });
+
+  if (!verifyTokenResult.success) {
+    update({
+      error: {
+        title: "Login failed",
+        message: verifyTokenResult.error,
+        dismissToCurrentPage: true
+      }
+    });
     return;
   }
 
-  update({
-    error: {
-      title: "Login failed",
-      message: verifyTokenResult.error,
-      dismissToCurrentPage: true
+  // If we have an encryption key stored on the server,
+  // save that on the client and log in
+  const { encryptionKey } = verifyTokenResult.value;
+  if (encryptionKey) {
+    const storageResult = await requestDownloadAndDecryptStorage(
+      appConfig.passportServer,
+      encryptionKey
+    );
+
+    if (!storageResult.success) {
+      return update({
+        error: {
+          title: "An error occurred while downloading storage",
+          message: storageResult.error,
+          dismissToCurrentPage: true
+        }
+      });
     }
-  });
+
+    loadFromSync(encryptionKey, storageResult.value, state, update);
+  }
+
+  window.location.hash = `#/create-password?email=${encodeURIComponent(
+    email
+  )}&token=${encodeURIComponent(token)}`;
 }
 
 /**
@@ -233,7 +276,44 @@ async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
   });
 }
 
-async function login(
+async function createNewUserSkipPassword(
+  email: string,
+  token: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = await crypto.generateRandomKey();
+  await saveEncryptionKey(encryptionKey);
+
+  update({
+    encryptionKey
+  });
+
+  const newUserResult = await requestCreateNewUser(
+    appConfig.passportServer,
+    appConfig.isZuzalu,
+    email,
+    token,
+    state.identity.commitment.toString(),
+    undefined,
+    encryptionKey
+  );
+
+  if (newUserResult.success) {
+    return finishLogin(newUserResult.value, state, update);
+  }
+
+  update({
+    error: {
+      title: "Login failed",
+      message: "Couldn't log in. " + newUserResult.error,
+      dismissToCurrentPage: true
+    }
+  });
+}
+
+async function createNewUserWithPassword(
   email: string,
   token: string,
   password: string,
@@ -256,7 +336,8 @@ async function login(
     email,
     token,
     state.identity.commitment.toString(),
-    newSalt
+    newSalt,
+    undefined
   );
 
   if (newUserResult.success) {
@@ -328,9 +409,12 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Save PCDs to E2EE storage.
   await uploadStorage();
 
+  // Close any existing modal, if it exists
+  update({ modal: { modalType: "none" } });
+
   // If on Zupass legacy login, ask user to save their Sync Key
   if (appConfig.isZuzalu) {
-    update({ modal: "save-sync" });
+    update({ modal: { modalType: "save-sync" } });
   }
 }
 
@@ -501,7 +585,7 @@ function userInvalid(update: ZuUpdate) {
   saveUserInvalid(true);
   update({
     userInvalid: true,
-    modal: "invalid-participant"
+    modal: { modalType: "invalid-participant" }
   });
 }
 
@@ -509,7 +593,7 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
   saveAnotherDeviceChangedPassword(true);
   update({
     anotherDeviceChangedPassword: true,
-    modal: "another-device-changed-password"
+    modal: { modalType: "another-device-changed-password" }
   });
 }
 
@@ -622,6 +706,6 @@ async function resolveSubscriptionError(
 ) {
   update({
     resolvingSubscriptionId: subscriptionId,
-    modal: "resolve-subscription-error"
+    modal: { modalType: "resolve-subscription-error" }
   });
 }

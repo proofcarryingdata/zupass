@@ -1,3 +1,4 @@
+import { HexString } from "@pcd/passport-crypto";
 import {
   ConfirmEmailResponseValue,
   PCDpassUserJson,
@@ -7,8 +8,8 @@ import {
 import { Response } from "express";
 import {
   CommitmentRow,
-  LoggedinPCDpassUser,
   LoggedInZuzaluUser,
+  LoggedinPCDpassUser,
   ZuzaluUser
 } from "../database/models";
 import { fetchCommitment } from "../database/queries/commitments";
@@ -201,6 +202,18 @@ export class UserService {
   }
 
   /**
+   * Returns the encryption key for a given user, if it is stored on
+   * our server. Returns null if the user does not exist, or if
+   * the user does not have an encryption key stored on the server.
+   */
+  public async getEncryptionKeyForUser(
+    email: string
+  ): Promise<HexString | null> {
+    const existingUser = await fetchCommitment(this.context.dbPool, email);
+    return existingUser?.encryption_key ?? null;
+  }
+
+  /**
    * If the service is not ready, returns a 500 server error.
    * If the user does not exist, returns a 404.
    * Otherwise returns the user.
@@ -245,7 +258,13 @@ export class UserService {
       email
     );
 
-    if (existingCommitment != null && !force) {
+    if (
+      existingCommitment != null &&
+      !force &&
+      // Users with an `encryption_key` do not have a password,
+      // so we will need to verify email ownership with code.
+      !existingCommitment.encryption_key
+    ) {
       throw new PCDHTTPError(403, `'${email}' already registered`);
     }
 
@@ -333,7 +352,8 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
-    salt: string,
+    salt: string | undefined,
+    encryptionKey: string | undefined,
     res: Response
   ): Promise<void> {
     logger(
@@ -343,6 +363,13 @@ export class UserService {
         commitment
       })}`
     );
+
+    if ((!salt && !encryptionKey) || (salt && encryptionKey)) {
+      throw new PCDHTTPError(
+        400,
+        "Must have exactly either salt or encryptionKey, but not both or none."
+      );
+    }
 
     if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
       throw new PCDHTTPError(
@@ -357,7 +384,12 @@ export class UserService {
     }
 
     logger(`[PCDPASS] Saving commitment: ${commitment}`);
-    await insertCommitment(this.context.dbPool, { email, commitment, salt });
+    await insertCommitment(this.context.dbPool, {
+      email,
+      commitment,
+      salt,
+      encryptionKey
+    });
 
     // Reload Merkle trees
     await this.semaphoreService.reload();

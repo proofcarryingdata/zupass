@@ -11,7 +11,7 @@ export function SettingsModal() {
   const syncKey = useSyncKey();
 
   const close = useCallback(() => {
-    dispatch({ type: "set-modal", modal: "" });
+    dispatch({ type: "set-modal", modal: { modalType: "none" } });
   }, [dispatch]);
 
   const copySyncKey = useCallback(async () => {
@@ -55,7 +55,9 @@ export function SettingsModal() {
         <Spacer h={16} />
         <LinkButton
           to="/subscriptions"
-          onClick={() => dispatch({ type: "set-modal", modal: "" })}
+          onClick={() =>
+            dispatch({ type: "set-modal", modal: { modalType: "none" } })
+          }
         >
           Manage Subscriptions
         </LinkButton>

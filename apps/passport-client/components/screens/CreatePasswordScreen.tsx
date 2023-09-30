@@ -13,6 +13,7 @@ import {
   TextCenter
 } from "../core";
 import { LinkButton } from "../core/Button";
+import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 
@@ -52,6 +53,16 @@ export function CreatePasswordScreen() {
     }
   }, [email, redirectToLoginPageWithError, token]);
 
+  const openSkipModal = () =>
+    dispatch({
+      type: "set-modal",
+      modal: {
+        modalType: "confirm-setup-later",
+        onConfirm: () =>
+          dispatch({ type: "create-user-skip-password", email, token })
+      }
+    });
+
   useEffect(() => {
     checkIfShouldRedirect();
   }, [checkIfShouldRedirect]);
@@ -64,46 +75,52 @@ export function CreatePasswordScreen() {
   }, [self]);
 
   return (
-    <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        <Spacer h={64} />
-        <Header />
-        <Spacer h={24} />
+    <>
+      <MaybeModal />
+      <AppContainer bg="primary">
+        <BackgroundGlow
+          y={224}
+          from="var(--bg-lite-primary)"
+          to="var(--bg-dark-primary)"
+        >
+          <Spacer h={64} />
+          <Header />
+          <Spacer h={24} />
 
-        <CenterColumn w={280}>
-          <NewPasswordForm
-            autoFocus
-            email={email}
-            password={password}
-            confirmPassword={confirmPassword}
-            setPassword={setPassword}
-            setConfirmPassword={setConfirmPassword}
-            revealPassword={revealPassword}
-            setRevealPassword={setRevealPassword}
-            submitButtonText="Continue"
-            onSuccess={() =>
-              dispatch({
-                type: "login",
-                email,
-                token,
-                password
-              })
-            }
-          />
-        </CenterColumn>
-        <Spacer h={24} />
-        <HR />
-        <Spacer h={24} />
-        <CenterColumn w={280}>
-          <LinkButton to={"/"}>Cancel</LinkButton>
-        </CenterColumn>
-      </BackgroundGlow>
-      <Spacer h={64} />
-    </AppContainer>
+          <CenterColumn w={280}>
+            <NewPasswordForm
+              autoFocus
+              email={email}
+              password={password}
+              confirmPassword={confirmPassword}
+              setPassword={setPassword}
+              setConfirmPassword={setConfirmPassword}
+              revealPassword={revealPassword}
+              setRevealPassword={setRevealPassword}
+              submitButtonText="Continue"
+              onSuccess={() =>
+                dispatch({
+                  type: "login",
+                  email,
+                  token,
+                  password
+                })
+              }
+            />
+            <Spacer h={8} />
+            <LinkButton to={"/"}>Cancel</LinkButton>
+            <Spacer h={24} />
+            <HR />
+            <Spacer h={24} />
+            <TextCenter>
+              <SetUpLaterLink onClick={openSkipModal}>
+                Set up later
+              </SetUpLaterLink>
+            </TextCenter>
+          </CenterColumn>
+        </BackgroundGlow>
+      </AppContainer>
+    </>
   );
 }
 
@@ -124,4 +141,15 @@ const Description = styled.p`
   font-weight: 300;
   width: 220px;
   margin: 0 auto;
+`;
+
+const SetUpLaterLink = styled.div`
+  cursor: pointer;
+  color: #aaa;
+  &:hover {
+    text-decoration: underline;
+  }
+  &:visited {
+    color: #aaa;
+  }
 `;

@@ -124,7 +124,7 @@ class App extends React.Component<object, AppState> {
       console.log(e);
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60);
+    setTimeout(this.jobPollUser, 1000 * 1);
   };
 }
 
@@ -214,10 +214,10 @@ async function loadInitialState(): Promise<AppState> {
     await addDefaultSubscriptions(identity, subscriptions);
   }
 
-  let modal = "" as AppState["modal"];
+  let modal = { modalType: "none" } as AppState["modal"];
 
   if (userInvalid) {
-    modal = "invalid-participant";
+    modal = { modalType: "invalid-participant" };
   } else if (
     // If on Zupass legacy login, ask user to save their Sync Key
     appConfig.isZuzalu &&
@@ -225,7 +225,7 @@ async function loadInitialState(): Promise<AppState> {
     !localStorage["savedSyncKey"]
   ) {
     console.log("Asking existing user to save their Sync Key...");
-    modal = "save-sync";
+    modal = { modalType: "save-sync" };
   }
 
   return {

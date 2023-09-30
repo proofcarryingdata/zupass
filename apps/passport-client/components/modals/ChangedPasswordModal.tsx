@@ -8,7 +8,7 @@ export function ChangedPasswordModal() {
   const dispatch = useDispatch();
 
   const close = useCallback(() => {
-    dispatch({ type: "set-modal", modal: "" });
+    dispatch({ type: "set-modal", modal: { modalType: "none" } });
 
     window.location.hash = "#/";
   }, [dispatch]);

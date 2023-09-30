@@ -302,10 +302,10 @@ export type VerifyTokenRequest = {
 };
 
 /**
- * On the happy path, we don't need to say anything in response to
+ * Returns the encryption_key of the account, if stored on our server.
  * {@link VerifyTokenRequest}.
  */
-export type VerifyTokenResponseValue = undefined;
+export type VerifyTokenResponseValue = { encryptionKey: string | null };
 
 /**
  * Ask the server to log us in using a special login flow designed
@@ -329,7 +329,8 @@ export type CreateNewUserRequest = {
   /**
    * Zupass users don't have a salt.
    */
-  salt: string | null;
+  salt: string | undefined;
+  encryptionKey: string | undefined;
 };
 
 /**

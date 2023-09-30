@@ -20,7 +20,8 @@ export async function requestCreateNewUser(
   email: string,
   token: string,
   commitment: string,
-  salt: HexString | null
+  salt: HexString | undefined,
+  encryptionKey: HexString | undefined
 ): Promise<NewUserResult> {
   return requestCreateNewUserWithPath(
     passportServerUrl,
@@ -28,6 +29,7 @@ export async function requestCreateNewUser(
     token,
     commitment,
     salt,
+    encryptionKey,
     isZuzalu ? "/zuzalu/new-participant" : "/pcdpass/new-participant"
   );
 }
@@ -37,7 +39,8 @@ async function requestCreateNewUserWithPath(
   email: string,
   token: string,
   commitment: string,
-  salt: HexString | null,
+  salt: HexString | undefined,
+  encryptionKey: HexString | undefined,
   urlPath: string
 ): Promise<NewUserResult> {
   return httpPostSimple(
@@ -50,7 +53,8 @@ async function requestCreateNewUserWithPath(
       email,
       token,
       commitment,
-      salt
+      salt,
+      encryptionKey
     } satisfies CreateNewUserRequest
   );
 }

@@ -77,7 +77,7 @@ export function ChangePasswordScreen() {
 
       dispatch({
         type: "set-modal",
-        modal: "changed-password"
+        modal: { modalType: "changed-password" }
       });
       dispatch({
         type: "change-password",

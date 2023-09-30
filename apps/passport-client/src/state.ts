@@ -21,14 +21,15 @@ export interface AppState {
   // View state
   pendingAction?: PendingAction;
   modal:
-    | "info"
-    | "settings"
-    | "save-sync"
-    | "invalid-participant"
-    | "changed-password"
-    | "another-device-changed-password"
-    | "resolve-subscription-error"
-    | "";
+    | { modalType: "info" }
+    | { modalType: "settings" }
+    | { modalType: "save-sync" }
+    | { modalType: "invalid-participant" }
+    | { modalType: "changed-password" }
+    | { modalType: "another-device-changed-password" }
+    | { modalType: "resolve-subscription-error" }
+    | { modalType: "confirm-setup-later"; onConfirm: () => void }
+    | { modalType: "none" };
 
   // User metadata.
   self?: User;

@@ -8,6 +8,7 @@ import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
+import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
@@ -19,7 +20,7 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const modal = useModal();
 
   const close = useCallback(
-    () => dispatch({ type: "set-modal", modal: "" }),
+    () => dispatch({ type: "set-modal", modal: { modalType: "none" } }),
     [dispatch]
   );
   const dismissable = isModalDismissable(modal);
@@ -56,11 +57,11 @@ function isModalDismissable(modal: AppState["modal"]) {
     "invalid-participant",
     "changed-password",
     "another-device-changed-password"
-  ].includes(modal);
+  ].includes(modal.modalType);
 }
 
 function getModalBody(modal: AppState["modal"]) {
-  switch (modal) {
+  switch (modal.modalType) {
     case "info":
       return <InfoModal />;
     case "settings":
@@ -75,7 +76,9 @@ function getModalBody(modal: AppState["modal"]) {
       return <ChangedPasswordModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
-    case "":
+    case "confirm-setup-later":
+      return <ConfirmSkipSetupModal onConfirm={modal.onConfirm} />;
+    case "none":
       return null;
     default:
       assertUnreachable(modal);

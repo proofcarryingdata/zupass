@@ -80,7 +80,8 @@ export async function testLoginPCDpass(
     email,
     token,
     commitment,
-    salt
+    salt,
+    undefined
   );
 
   if (!newUserResult.value) {

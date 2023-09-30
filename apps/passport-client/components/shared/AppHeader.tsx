@@ -18,8 +18,14 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
       }),
     [dispatch]
   );
-  const openInfo = useCallback(() => setModal("info"), [setModal]);
-  const openSettings = useCallback(() => setModal("settings"), [setModal]);
+  const openInfo = useCallback(
+    () => setModal({ modalType: "info" }),
+    [setModal]
+  );
+  const openSettings = useCallback(
+    () => setModal({ modalType: "settings" }),
+    [setModal]
+  );
 
   return (
     <AppHeaderWrap>

@@ -81,7 +81,8 @@ export async function testLoginZupass(
     email,
     token,
     commitment,
-    ""
+    "",
+    undefined
   );
 
   if (!newUserResult.value) {

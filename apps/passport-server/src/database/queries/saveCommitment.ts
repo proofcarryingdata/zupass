@@ -27,20 +27,21 @@ export async function insertCommitment(
     email: string;
     commitment: string;
     salt?: string;
+    encryptionKey?: string;
   }
 ): Promise<string> {
-  const { email, commitment, salt } = params;
+  const { email, commitment, salt, encryptionKey } = params;
   logger(
-    `Saving commitment email=${email} commitment=${commitment} salt=${salt}`
+    `Saving commitment email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey}`
   );
 
   const insertResult = await sqlQuery(
     client,
     `\
-INSERT INTO commitments (uuid, email, commitment, salt)
-VALUES (gen_random_uuid(), $1, $2, $3)
-ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3`,
-    [email, commitment, salt]
+INSERT INTO commitments (uuid, email, commitment, salt, encryption_key)
+VALUES (gen_random_uuid(), $1, $2, $3, $4)
+ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3, encryption_key = $4`,
+    [email, commitment, salt, encryptionKey]
   );
   const uuidResult = await sqlQuery(
     client,
@@ -52,13 +53,13 @@ WHERE email = $1 AND commitment = $2`,
   const uuid = uuidResult.rows[0]?.uuid as string | undefined;
   if (uuid == null) {
     throw new Error(
-      `Failed to save commitment. Wrong email? ${email} ${commitment} ${salt}`
+      `Failed to save commitment. Wrong email? ${email} ${commitment} ${salt} ${encryptionKey}`
     );
   }
 
   const stat = insertResult.rowCount === 1 ? "NEW" : "EXISTING";
   logger(
-    `Saved. email=${email} commitment=${commitment} salt=${salt} has ${stat} uuid=${uuid}`
+    `Saved. email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey} has ${stat} uuid=${uuid}`
   );
   return uuid;
 }
