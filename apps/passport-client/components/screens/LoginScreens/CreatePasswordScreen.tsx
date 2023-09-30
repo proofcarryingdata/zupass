@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { validateEmail } from "../../../src/util";
-import { CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
+import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { LinkButton } from "../../core/Button";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
@@ -90,15 +90,17 @@ export function CreatePasswordScreen() {
       <>
         <Spacer h={64} />
         <TextCenter>
-          <H2>Set Password</H2>
+          <H2>Choose a Password</H2>
           <Spacer h={24} />
           Choose a secure, unique password. This password will be used to
-          generate your key to encrypt your data. Save your password somewhere
-          secure.
+          generate an encryption key that secures your data. Save your password
+          somewhere you'll be able to find it later.
         </TextCenter>
         <Spacer h={24} />
 
         <CenterColumn>
+          <BigInput value={email} disabled={true} />
+          <Spacer h={8} />
           <NewPasswordForm
             error={error}
             setError={setError}
