@@ -1,4 +1,4 @@
-import { Menu, MenuRange } from "@grammyjs/menu";
+import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
@@ -10,15 +10,13 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Bot, Context, InlineKeyboard } from "grammy";
+import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
-import { Pool } from "postgres-pool";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import _ from "lodash";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
-  fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -28,10 +26,16 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import {
+  BotContext,
+  SessionData,
+  dynamicEvents,
+  getSessionKey
+} from "../util/telegramMenu";
 import { isLocalServer, sleep } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
-const ALLOWED_EVENT_IDS = [
+const ALLOWED_EVENTS = [
   { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
   { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
   {
@@ -42,29 +46,33 @@ const ALLOWED_EVENT_IDS = [
     eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
     name: "AW (Internal Test)"
   }
+  // Add this value and set the value field of validEventIds in generateProofUrl
+  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
-const eventIdIsAllowed = (eventId?: string): boolean => {
-  if (!eventId) throw new Error(`No Event Id found for verification`);
-  return ALLOWED_EVENT_IDS.map((a) => a.eventId).includes(eventId);
+const eventIdsAreValid = (eventIds?: string[]): boolean => {
+  const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
+    !!(subset && subset.length && _.difference(subset, superset).length === 0);
+
+  return isNonEmptySubset(
+    ALLOWED_EVENTS.map((e) => e.eventId),
+    eventIds
+  );
 };
 
 export class TelegramService {
   private context: ApplicationContext;
-  private bot: Bot;
+  private bot: Bot<BotContext>;
   private rollbarService: RollbarService | null;
-  private fetchLinkMenu: () => Promise<MenuRange<Context>>;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
-    bot: Bot
+    bot: Bot<BotContext>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
-    this.fetchLinkMenu = async (): Promise<MenuRange<Context>> =>
-      new MenuRange();
 
     this.bot.api.setMyDescription(
       "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
@@ -72,26 +80,18 @@ export class TelegramService {
 
     this.bot.api.setMyShortDescription("ZK Auth Bot manages events using ZKPs");
 
-    const pcdPassMenu = new Menu("pcdpass");
-    const eventsMenu = new Menu("events");
+    const zupassMenu = new Menu("zupass");
+    const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
-    eventsMenu.dynamic(async () => {
-      logger(`[TELEGRAM] calling dynamic events menu...`);
-      return await this.fetchLinkMenu();
-    });
-
-    pcdPassMenu.dynamic((ctx, range) => {
+    eventsMenu.dynamic(dynamicEvents);
+    zupassMenu.dynamic((ctx, range) => {
       const userId = ctx?.from?.id;
-      const username = ctx?.from?.username;
-      const firstName = ctx?.from?.first_name;
-      const name = firstName || username;
-
-      if (userId && name) {
+      if (userId) {
         const proofUrl = this.generateProofUrl(userId.toString());
-        range.webApp(`Generate a proof of ticket for ${name} 🚀`, proofUrl);
+        range.webApp(`Generate proof 🚀`, proofUrl);
       } else {
         ctx.reply(
           `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
@@ -108,7 +108,7 @@ export class TelegramService {
     });
 
     this.bot.use(eventsMenu);
-    this.bot.use(pcdPassMenu);
+    this.bot.use(zupassMenu);
     this.bot.use(anonSendMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
@@ -177,10 +177,13 @@ export class TelegramService {
       try {
         // Only process the command if it comes as a private message.
         if (ctx.message && ctx.chat.type === "private") {
+          const username = ctx?.from?.username;
+          const firstName = ctx?.from?.first_name;
+          const name = firstName || username;
           await ctx.reply(
-            "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!",
+            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!`,
             {
-              reply_markup: pcdPassMenu
+              reply_markup: zupassMenu
             }
           );
         }
@@ -191,9 +194,9 @@ export class TelegramService {
     });
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
-    this.bot.command("link", async (ctx) => {
+    this.bot.command("manage", async (ctx) => {
       try {
-        await ctx.reply(`Checking you have permission to link...`);
+        await ctx.reply(`Checking you have permission...`);
         if (ctx.chat?.type === "private") {
           await ctx.reply(
             "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
@@ -212,49 +215,15 @@ export class TelegramService {
           return;
         }
 
-        const channelId = ctx.chat.id;
-        this.buildLinkMenu(this.context.dbPool);
-        await ctx.reply(
-          `Checking linked status of this chat... (id: ${channelId})`
+        ctx.reply(
+          `Choose an event to manage.\n\n <i>✅ = this chat is gated by event.</i>`,
+          {
+            reply_markup: eventsMenu,
+            parse_mode: "HTML"
+          }
         );
-
-        // await this.loadEvents(this.context.dbPool);
-        await ctx.reply("Link options", {
-          reply_markup: eventsMenu
-        });
       } catch (error) {
         await ctx.reply(`Error linking. Check server logs for details`);
-        logger(`[TELEGRAM] ERROR`, error);
-      }
-    });
-
-    this.bot.command("unlink", async (ctx) => {
-      try {
-        await ctx.reply(`Checking you have permission to unlink...`);
-        if (ctx.chat?.type === "private") {
-          await ctx.reply(
-            "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
-          );
-          return;
-        }
-
-        const admins = await ctx.getChatAdministrators();
-        const isAdmin = admins.some(
-          (admin) => admin.user.id === this.bot.botInfo.id
-        );
-        if (!isAdmin) {
-          await ctx.reply(
-            "Please add me as an admin to the telegram channel associated with your event."
-          );
-          return;
-        }
-        const unlink = true;
-        this.buildLinkMenu(this.context.dbPool, unlink);
-        await ctx.reply("Unlink options", {
-          reply_markup: eventsMenu
-        });
-      } catch (error) {
-        await ctx.reply(`Error Unlinking. Check server logs for details`);
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
@@ -267,8 +236,7 @@ export class TelegramService {
         <b>/start</b> - join a group with a ZK proof of a ticket
     
         <b>Admins</b>
-        <b>/link</b> - Link this group with a ticketed event
-        <b>/unlink</b> - Unlink this group with a ticketed event
+        <b>/manage</b> - Gate / Ungate this group with a ticketed event
       `,
         { parse_mode: "HTML" }
       );
@@ -365,7 +333,7 @@ export class TelegramService {
 
   private generateProofUrl(telegramUserId: string): string {
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
-      revealTicketId: true,
+      revealTicketId: false,
       revealEventId: true,
       revealProductId: true,
       revealTimestampConsumed: false,
@@ -400,7 +368,12 @@ export class TelegramService {
       },
       validEventIds: {
         argumentType: ArgumentTypeName.StringArray,
-        value: undefined,
+        // For local development, we do not validate eventIds
+        // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
+        // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
+        value: isLocalServer()
+          ? undefined
+          : ALLOWED_EVENTS.map((e) => e.eventId),
         userProvided: false
       },
       watermark: {
@@ -428,75 +401,6 @@ export class TelegramService {
     return proofUrl;
   }
 
-  private buildLinkMenu(db: Pool, unlink?: boolean): void {
-    this.fetchLinkMenu = async (): Promise<MenuRange<Context>> => {
-      const range = new MenuRange();
-      let events = await fetchLinkedPretixAndTelegramEvents(db);
-      for (const event of events) {
-        if (!event.configEventID) {
-          logger(
-            `[TELEGRAM] events lookup failed. Make sure pretix_events_config and devconnect_pretix_items_info are populated.`
-          );
-          throw new Error(
-            `Fetching events failed. Check server logs for more detail.`
-          );
-        }
-        range
-          .text(
-            {
-              text: `${event.telegramChatID ? `✅` : `❌`} ${
-                event.eventName
-              } id: ${event.telegramChatID}`,
-              payload: event.configEventID
-            },
-            async (ctx) => {
-              if (ctx.chat && ctx.chat.id) {
-                // Uses Grammy payload property https://grammy.dev/plugins/menu#payloads
-                const eventIdFromPayload = ctx.match;
-                let updatedOccured = false;
-                if (unlink) {
-                  if (event?.telegramChatID !== ctx.chat.id.toString()) {
-                    ctx.reply(
-                      `Chat is not linked with event ${event.eventName}`
-                    );
-                  } else {
-                    await deleteTelegramEvent(db, eventIdFromPayload);
-                    updatedOccured = true;
-                    ctx.reply(
-                      `Unlinked ${event.eventName} with chat ${ctx.chat.id}`
-                    );
-                  }
-                } else {
-                  if (event?.telegramChatID === ctx.chat.id.toString()) {
-                    ctx.reply(
-                      `Chat is already linked with event ${event.eventName}`
-                    );
-                  } else {
-                    await insertTelegramEvent(
-                      db,
-                      eventIdFromPayload,
-                      ctx.chat.id
-                    );
-                    updatedOccured = true;
-                    ctx.reply(
-                      `Linked ${event.eventName} with chat ${ctx.chat.id}`
-                    );
-                  }
-                }
-                if (updatedOccured) {
-                  events = await fetchLinkedPretixAndTelegramEvents(db);
-                  ctx.menu.update();
-                }
-              } else {
-                ctx.reply(`Couldn't link chat with event`);
-              }
-            }
-          )
-          .row();
-      }
-      return range;
-    };
-  }
   /**
    * Telegram does not allow two instances of a bot to be running at once.
    * During deployment, a new instance of the app will be started before the
@@ -572,12 +476,12 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
+      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
     } else {
-      eventIdMatch = eventIdIsAllowed(pcd.claim.partialTicket.eventId);
+      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
       signerMatch =
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
@@ -797,10 +701,18 @@ export async function startTelegramService(
     return null;
   }
 
-  const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN);
+  const bot = new Bot<BotContext>(process.env.TELEGRAM_BOT_TOKEN);
+  const initial = (): SessionData => {
+    return { dbPool: context.dbPool };
+  };
+
+  bot.use(session({ initial, getSessionKey }));
   await bot.init();
 
   const service = new TelegramService(context, rollbarService, bot);
+  bot.catch((error) => {
+    logger(`[TELEGRAM] Bot error`, error);
+  });
   // Start the bot, but do not await on the result here.
   service.startBot();
 
