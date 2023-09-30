@@ -54,6 +54,11 @@ function SendEmailVerification({ email }: { email: string }) {
     async (token: string) => {
       if (verifyingCode) return;
 
+      if (token === "") {
+        setError("Enter your confirmation code.");
+        return;
+      }
+
       setVerifyingCode(true);
       const verifyTokenResult = await requestVerifyToken(
         appConfig.zupassServer,
