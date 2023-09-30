@@ -83,7 +83,7 @@ export const dynamicEvents = async (
 
     range.text(`${event.isLinked ? "✅" : ""} ${event.eventName}`).row();
     range
-      .text(`Yes, ${event.isLinked ? "Remove" : "Add"}`, async (ctx) => {
+      .text(`Yes, ${event.isLinked ? "remove" : "add"}`, async (ctx) => {
         let replyText = "";
         if (!(await isAdmin(ctx))) return;
 
@@ -91,7 +91,7 @@ export const dynamicEvents = async (
           await editOrSendMessage(ctx, `Chat Id not found`);
         } else {
           if (!event.isLinked) {
-            replyText = `<i>Added ${event.eventName} to chat</i>`;
+            replyText = `<i>Added ${event.eventName} from chat</i>`;
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
