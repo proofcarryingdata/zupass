@@ -2,9 +2,9 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
-  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission
+  ReplaceInFolderPermission,
+  joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -102,8 +102,16 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
           ): Promise<PollFeedResponseValue> => {
+            logger(`[FEED HOST] start...`);
+            const startTime = Date.now();
             const pcds = await this.issueDevconnectPretixTicketPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
+            );
+
+            logger(
+              `[FEED HOST] Loaded pcds in ${Date.now() - startTime} ms, ${
+                (Date.now() - startTime) / 1000
+              } s`
             );
             const ticketsByEvent = _.groupBy(
               pcds,
@@ -155,7 +163,11 @@ export class IssuanceService {
                 }))
               ))
             );
-
+            logger(
+              `[FEED HOST] Handled feed request in ${
+                Date.now() - startTime
+              } ms, ${(Date.now() - startTime) / 1000} s`
+            );
             return { actions };
           },
           feed: {
@@ -510,10 +522,16 @@ export class IssuanceService {
   private async checkUserExists(
     proof: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UserRow | null> {
+    const startTime = Date.now();
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
       deserializedSignature
+    );
+    logger(
+      `[CHECK USER EXISTS] deserialized and verified in ${
+        Date.now() - startTime
+      } ms, ${(Date.now() - startTime) / 1000} s`
     );
     if (!isValid) {
       logger(
@@ -554,7 +572,16 @@ export class IssuanceService {
       "IssuanceService",
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
+        const firstTime = Date.now();
+        let startTime = Date.now();
+        logger(`[ISSUE DEVCONNECT] starting...`);
         const commitmentRow = await this.checkUserExists(credential);
+        logger(
+          `[ISSUE DEVCONNECT] checkedUserExists in ${
+            Date.now() - startTime
+          } ms, ${(Date.now() - startTime) / 1000} s`
+        );
+        startTime = Date.now();
         const email = commitmentRow?.email;
         if (commitmentRow) {
           span?.setAttribute(
@@ -575,11 +602,22 @@ export class IssuanceService {
           this.context.dbPool,
           email
         );
+        logger(
+          `[ISSUE DEVCONNECT] fetchedTixByEmail in ${
+            Date.now() - startTime
+          } ms, ${(Date.now() - startTime) / 1000} s`
+        );
+        startTime = Date.now();
 
         const tickets = await Promise.all(
           ticketsDB
             .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
             .map((ticketData) => this.getOrGenerateTicket(ticketData))
+        );
+        logger(
+          `[ISSUE DEVCONNECT] tocketRowToTicketData in ${
+            Date.now() - startTime
+          } ms, ${(Date.now() - startTime) / 1000} s`
         );
 
         span?.setAttribute("ticket_count", tickets.length);
@@ -597,19 +635,28 @@ export class IssuanceService {
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
       span?.setAttribute("ticket_name", ticketData.attendeeName);
 
-      const cachedTicket = await this.getCachedTicket(ticketData);
+      const startTime = Date.now();
 
+      const cachedTicket = await this.getCachedTicket(ticketData);
+      logger(
+        `[GET OR GENERATE] getCachedTicket in ${Date.now() - startTime} ms, ${
+          (Date.now() - startTime) / 1000
+        } s`
+      );
       if (cachedTicket) {
         return cachedTicket;
       }
 
       logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
-
       const generatedTicket = await IssuanceService.ticketDataToTicketPCD(
         ticketData,
         this.eddsaPrivateKey
       );
-
+      logger(
+        `[GET OR GENERATE] ticketDataToTicketPCD in ${
+          Date.now() - startTime
+        } ms, ${(Date.now() - startTime) / 1000} s`
+      );
       try {
         this.cacheTicket(generatedTicket);
       } catch (e) {
@@ -646,8 +693,20 @@ export class IssuanceService {
   private async getCachedTicket(
     ticketData: ITicketData
   ): Promise<EdDSATicketPCD | undefined> {
+    let startTime = Date.now();
     const key = await IssuanceService.getTicketCacheKey(ticketData);
+    logger(
+      `[GET CACHED TICKET] getTicketCacheKey ${Date.now() - startTime} ms, ${
+        (Date.now() - startTime) / 1000
+      } s`
+    );
+    startTime = Date.now();
     const serializedTicket = await this.cacheService.getValue(key);
+    logger(
+      `[GET CACHED TICKET] cacheService.getValue ${
+        Date.now() - startTime
+      } ms, ${(Date.now() - startTime) / 1000} s`
+    );
     if (!serializedTicket) {
       logger(`[ISSUANCE] cache miss for ticket id ${ticketData.ticketId}`);
       return undefined;

@@ -85,9 +85,18 @@ export function initPCDIssuanceRoutes(
    */
   app.post("/feeds", async (req, res) => {
     checkIssuanceServiceStarted(issuanceService);
+    logger(`Got feed request`, Date.now());
+    const startTime = Date.now();
     const result = await issuanceService.handleFeedRequest(
       req.body as PollFeedRequest
     );
+    logger(
+      `Handled feed request in ${Date.now() - startTime} ms, ${
+        (Date.now() - startTime) / 1000
+      } s`,
+      result
+    );
+
     res.json(result satisfies PollFeedResponseValue);
   });
 
