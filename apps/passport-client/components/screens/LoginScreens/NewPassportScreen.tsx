@@ -141,27 +141,27 @@ function SendEmailVerification({ email }: { email: string }) {
     content = (
       <CenterColumn>
         <Spacer h={128} />
-        <TextCenter>Verifying token...</TextCenter>
-        <Spacer h={32} />
         <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Verifying token...</TextCenter>
       </CenterColumn>
     );
   } else if (loadingSalt) {
     content = (
       <CenterColumn>
         <Spacer h={128} />
-        <TextCenter>Loading account information...</TextCenter>
-        <Spacer h={32} />
         <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Loading account information...</TextCenter>
       </CenterColumn>
     );
   } else if (emailSending) {
     content = (
       <CenterColumn>
         <Spacer h={128} />
-        <TextCenter>Checking if you already have an account...</TextCenter>
-        <Spacer h={32} />
         <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Checking if you already have an account...</TextCenter>
       </CenterColumn>
     );
   } else if (emailSent) {

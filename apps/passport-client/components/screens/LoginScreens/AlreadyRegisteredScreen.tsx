@@ -174,9 +174,9 @@ export function AlreadyRegisteredScreen() {
       <CenterColumn>
         <TextCenter>
           <Spacer h={128} />
-          Sending you an email with a reset token...
-          <Spacer h={24} />
           <RippleLoader />
+          <Spacer h={24} />
+          Sending you an email with a reset token...
         </TextCenter>
       </CenterColumn>
     );
@@ -185,9 +185,9 @@ export function AlreadyRegisteredScreen() {
       <CenterColumn>
         <TextCenter>
           <Spacer h={128} />
-          Logging you in...
-          <Spacer h={24} />
           <RippleLoader />
+          <Spacer h={24} />
+          Logging you in...
         </TextCenter>
       </CenterColumn>
     );

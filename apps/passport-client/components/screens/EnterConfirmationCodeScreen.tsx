@@ -64,12 +64,12 @@ export function EnterConfirmationCodeScreen() {
 
   if (verifyingCode) {
     content = (
-      <TextCenter>
+      <>
         <Spacer h={128} />
-        Verifying code
-        <Spacer h={24} />
         <RippleLoader />
-      </TextCenter>
+        <Spacer h={24} />
+        <TextCenter>Verifying code...</TextCenter>
+      </>
     );
   } else {
     content = (

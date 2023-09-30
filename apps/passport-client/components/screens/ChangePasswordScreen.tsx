@@ -98,9 +98,9 @@ export function ChangePasswordScreen() {
     content = (
       <>
         <Spacer h={128} />
-        <TextCenter>Changing your password...</TextCenter>
-        <Spacer h={24} />
         <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Changing your password...</TextCenter>
       </>
     );
   } else if (finished) {

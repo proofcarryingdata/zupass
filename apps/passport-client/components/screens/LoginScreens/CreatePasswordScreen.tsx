@@ -80,9 +80,9 @@ export function CreatePasswordScreen() {
     content = (
       <CenterColumn>
         <Spacer h={128} />
-        <TextCenter>Creating your account...</TextCenter>
-        <Spacer h={24} />
         <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Creating your account...</TextCenter>
       </CenterColumn>
     );
   } else {
