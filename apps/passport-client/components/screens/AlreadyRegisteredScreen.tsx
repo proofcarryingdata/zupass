@@ -160,12 +160,12 @@ export function AlreadyRegisteredScreen() {
 
   if (isLoading) {
     content = (
-      <>
+      <TextCenter>
         <Spacer h={128} />
         Logging you in...
         <Spacer h={24} />
         <RippleLoader />
-      </>
+      </TextCenter>
     );
   } else {
     content = (
