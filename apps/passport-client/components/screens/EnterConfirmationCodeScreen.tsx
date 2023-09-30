@@ -1,5 +1,7 @@
+import { requestVerifyToken } from "@pcd/passport-interface";
 import { useCallback, useLayoutEffect, useState } from "react";
-import { useDispatch, useQuery } from "../../src/appHooks";
+import { appConfig } from "../../src/appConfig";
+import { useQuery } from "../../src/appHooks";
 import {
   BackgroundGlow,
   BigInput,
@@ -10,37 +12,45 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { ErrorMessage } from "../core/error";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 export function EnterConfirmationCodeScreen() {
-  const dispatch = useDispatch();
   const query = useQuery();
   const email = query?.get("email");
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
+  const [error, setError] = useState<string | undefined>();
 
   const onCreateClick = useCallback(async () => {
     const token = input;
 
     if (token === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Enter Token",
-          message:
-            "Check your email for an access token from passport@0xparc.org",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
+      return setError(
+        "Check your email for an access token from passport@0xparc.org, and enter it here."
+      );
     }
+
     setVerifyingCode(true);
-    await dispatch({ type: "verify-token", email, token });
+    const verifyTokenResult = await requestVerifyToken(
+      appConfig.zupassServer,
+      email,
+      token
+    );
     setVerifyingCode(false);
-  }, [dispatch, email, input]);
+
+    if (verifyTokenResult.success) {
+      window.location.hash = `#/create-password?email=${encodeURIComponent(
+        email
+      )}&token=${encodeURIComponent(token)}`;
+      return;
+    } else {
+      setError("The token you entered is incorrect.");
+    }
+  }, [email, input]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
@@ -81,6 +91,13 @@ export function EnterConfirmationCodeScreen() {
           placeholder="confirmation code"
           disabled={verifyingCode}
         />
+        {error && (
+          <>
+            <Spacer h={16} />
+            <ErrorMessage>{error}</ErrorMessage>
+            <Spacer h={8} />
+          </>
+        )}
         <Spacer h={8} />
         <Button onClick={onCreateClick}>Continue</Button>
         <Spacer h={24} />

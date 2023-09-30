@@ -1,4 +1,5 @@
 import { requestVerifyToken } from "@pcd/passport-interface";
+import { sleep } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
@@ -68,6 +69,7 @@ export function CreatePasswordScreen() {
   const onSetPassword = useCallback(async () => {
     try {
       setSettingPassword(true);
+      await sleep(10);
       await dispatch({
         type: "login",
         email,

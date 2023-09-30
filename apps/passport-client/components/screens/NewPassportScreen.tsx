@@ -1,7 +1,8 @@
 import {
   ConfirmEmailResult,
   requestConfirmationEmail,
-  requestPasswordSalt
+  requestPasswordSalt,
+  requestVerifyToken
 } from "@pcd/passport-interface";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { appConfig } from "../../src/appConfig";
@@ -45,11 +46,35 @@ export function NewPassportScreen() {
 function SendEmailVerification({ email }: { email: string }) {
   const identity = useIdentity();
   const dispatch = useDispatch();
+  const [error, setError] = useState<string | undefined>();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [loadingSalt, setLoadingSalt] = useState(false);
+
+  const verifyToken = useCallback(
+    async (token: string) => {
+      if (verifyingCode) return;
+
+      setVerifyingCode(true);
+      const verifyTokenResult = await requestVerifyToken(
+        appConfig.zupassServer,
+        email,
+        token
+      );
+      setVerifyingCode(false);
+      if (verifyTokenResult.success) {
+        window.location.hash = `#/create-password?email=${encodeURIComponent(
+          email
+        )}&token=${encodeURIComponent(token)}`;
+        return;
+      } else {
+        setError("Invalid confirmation code");
+      }
+    },
+    [email, verifyingCode]
+  );
 
   const handleConfirmationEmailResult = useCallback(
     async (result: ConfirmEmailResult) => {
@@ -75,12 +100,12 @@ function SendEmailVerification({ email }: { email: string }) {
           err(dispatch, "Email failed", saltResult.error);
         }
       } else if (result.value?.devToken != null) {
-        dispatch({ type: "verify-token", email, token: result.value.devToken });
+        verifyToken(result.value.devToken);
       } else {
         setEmailSent(true);
       }
     },
-    [dispatch, email, identity.commitment]
+    [dispatch, email, identity.commitment, verifyToken]
   );
 
   const doRequestConfirmationEmail = useCallback(async () => {
@@ -104,16 +129,13 @@ function SendEmailVerification({ email }: { email: string }) {
 
   // Verify the code the user entered.
   const inRef = useRef<HTMLInputElement>();
-  const verify = useCallback(
+  const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (verifyingCode) return;
       const token = inRef.current?.value || "";
-      setVerifyingCode(true);
-      await dispatch({ type: "verify-token", email, token });
-      setVerifyingCode(false);
+      verifyToken(token);
     },
-    [dispatch, email, verifyingCode]
+    [verifyToken]
   );
 
   let content = null;
@@ -147,7 +169,7 @@ function SendEmailVerification({ email }: { email: string }) {
           Use the most recent code you received to continue.
         </TextCenter>
         <Spacer h={32} />
-        <form onSubmit={verify}>
+        <form onSubmit={onSubmit}>
           {emailSent && (
             <>
               <BigInput

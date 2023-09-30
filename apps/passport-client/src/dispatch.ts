@@ -5,7 +5,6 @@ import {
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  requestVerifyToken,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
@@ -48,11 +47,6 @@ export type Action =
       type: "login";
       email: string;
       password: string;
-      token: string;
-    }
-  | {
-      type: "verify-token";
-      email: string;
       token: string;
     }
   | {
@@ -111,8 +105,6 @@ export async function dispatch(
       return genPassport(state.identity, action.email, update);
     case "login":
       return login(action.email, action.token, action.password, state, update);
-    case "verify-token":
-      return verifyToken(action.email, action.token, state, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -174,34 +166,6 @@ async function genPassport(
   update({
     pcds,
     pendingAction: { type: "new-passport", email }
-  });
-}
-
-async function verifyToken(
-  email: string,
-  token: string,
-  state: AppState,
-  update: ZuUpdate
-) {
-  const verifyTokenResult = await requestVerifyToken(
-    appConfig.zupassServer,
-    email,
-    token
-  );
-
-  if (verifyTokenResult.success) {
-    window.location.hash = `#/create-password?email=${encodeURIComponent(
-      email
-    )}&token=${encodeURIComponent(token)}`;
-    return;
-  }
-
-  update({
-    error: {
-      title: "Login failed",
-      message: verifyTokenResult.error,
-      dismissToCurrentPage: true
-    }
   });
 }
 
