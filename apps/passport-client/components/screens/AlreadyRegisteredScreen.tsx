@@ -219,14 +219,12 @@ export function AlreadyRegisteredScreen() {
           </Button>
         )}
 
-        <Spacer h={8} />
-
-        <Button onClick={onCancelClick}>Cancel</Button>
-
         <Spacer h={24} />
         <HR />
         <Spacer h={24} />
 
+        <Button onClick={onCancelClick}>Cancel</Button>
+        <Spacer h={8} />
         <Button onClick={onOverwriteClick} style="danger">
           Reset Account
         </Button>
