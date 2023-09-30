@@ -80,22 +80,18 @@ export class TelegramService {
 
     this.bot.api.setMyShortDescription("ZK Auth Bot manages events using ZKPs");
 
-    const pcdPassMenu = new Menu("pcdpass");
+    const zupassMenu = new Menu("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
-    pcdPassMenu.dynamic((ctx, range) => {
+    zupassMenu.dynamic((ctx, range) => {
       const userId = ctx?.from?.id;
-      const username = ctx?.from?.username;
-      const firstName = ctx?.from?.first_name;
-      const name = firstName || username;
-
-      if (userId && name) {
+      if (userId) {
         const proofUrl = this.generateProofUrl(userId.toString());
-        range.webApp(`Generate a proof of ticket for ${name} 🚀`, proofUrl);
+        range.webApp(`Generate proof 🚀`, proofUrl);
       } else {
         ctx.reply(
           `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
@@ -112,7 +108,7 @@ export class TelegramService {
     });
 
     this.bot.use(eventsMenu);
-    this.bot.use(pcdPassMenu);
+    this.bot.use(zupassMenu);
     this.bot.use(anonSendMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
@@ -181,10 +177,13 @@ export class TelegramService {
       try {
         // Only process the command if it comes as a private message.
         if (ctx.message && ctx.chat.type === "private") {
+          const username = ctx?.from?.username;
+          const firstName = ctx?.from?.first_name;
+          const name = firstName || username;
           await ctx.reply(
-            "Welcome! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!",
+            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!`,
             {
-              reply_markup: pcdPassMenu
+              reply_markup: zupassMenu
             }
           );
         }
