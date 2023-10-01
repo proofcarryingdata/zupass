@@ -88,7 +88,7 @@ export function ChangePasswordScreen() {
     } catch (e) {
       console.log("error changing password", e);
       setLoading(false);
-      setError("Error while changing password.");
+      setError("Error while changing password");
     }
   }, [currentPassword, newPassword, dispatch, loading, self.email]);
 

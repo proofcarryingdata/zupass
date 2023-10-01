@@ -51,7 +51,7 @@ function SendEmailVerification({ email }: { email: string }) {
       if (verifyingCode) return;
 
       if (token === "") {
-        setError("Enter your confirmation code.");
+        setError("Enter confirmation code");
         return;
       }
 

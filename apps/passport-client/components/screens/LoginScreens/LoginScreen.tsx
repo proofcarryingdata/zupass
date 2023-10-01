@@ -91,10 +91,8 @@ export function LoginScreen() {
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
 
-      if (email === "") {
-        setError("Enter an email address to continue.");
-      } else if (validateEmail(email) === false) {
-        setError("Enter a valid email address to continue.");
+      if (email === "" || validateEmail(email) === false) {
+        setError("Enter a valid email address");
       } else {
         dispatch({
           type: "new-passport",

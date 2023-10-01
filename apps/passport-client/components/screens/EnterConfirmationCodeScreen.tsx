@@ -46,7 +46,7 @@ export function EnterConfirmationCodeScreen() {
         email
       )}&token=${encodeURIComponent(token)}`;
     } else {
-      setError("The token you entered is incorrect.");
+      setError("The code you entered is incorrect");
     }
   }, [email, input]);
 

@@ -64,7 +64,7 @@ export function UpgradeAccountModal() {
         newSalt
       });
     } catch (e) {
-      setError("Couldn't set a password. Try again later.");
+      setError("Couldn't set a password - try again later");
     } finally {
       setLoading(false);
     }

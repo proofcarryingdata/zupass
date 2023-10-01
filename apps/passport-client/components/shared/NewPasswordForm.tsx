@@ -41,7 +41,7 @@ export function NewPasswordForm({
   const checkPasswordAndSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (password === "") {
-      setError("Please enter a password.");
+      setError("Enter a password");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
       setError(
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
@@ -53,9 +53,9 @@ export function NewPasswordForm({
         "Password is too weak. Try adding another word or two. Uncommon words are better."
       );
     } else if (confirmPassword === "") {
-      setError("Please confirm your password.");
+      setError("Confirm your password");
     } else if (password !== confirmPassword) {
-      setError("Your passwords do not match.");
+      setError("Passwords do not match");
     } else {
       onSuccess();
     }
