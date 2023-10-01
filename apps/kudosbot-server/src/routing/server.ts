@@ -2,9 +2,10 @@ import express from "express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initUploadRoute } from "./routes/uploadRoute";
 import { RouteInitializer } from "./types";
 
-const routes: RouteInitializer[] = [initHealthcheckRoutes];
+const routes: RouteInitializer[] = [initHealthcheckRoutes, initUploadRoute];
 
 export async function startServer(
   context: ApplicationContext

@@ -1,12 +1,60 @@
 import {
-  openSemaphoreSignaturePopup,
+  PCDGetRequest,
+  PCDRequestType,
+  ProveOptions,
   useSemaphoreSignatureProof,
   useZupassPopupMessages
 } from "@pcd/passport-interface";
-import React, { useCallback, useState } from "react";
+import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { useCallback, useState } from "react";
 import { CollapsableCode } from "../components/Core";
 import { ExampleContainer } from "../components/ExamplePage";
-import { ZUPASS_URL } from "../constants";
+import { KUDOSBOT_SERVER_UPLOAD_URL, ZUPASS_URL } from "../constants";
+
+export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
+  zupassClientUrl: string,
+  returnUrl: string,
+  pcdType: T["name"],
+  args: ArgsOf<T>,
+  options?: ProveOptions
+) {
+  const req: PCDGetRequest<T> = {
+    type: PCDRequestType.Get,
+    returnUrl: returnUrl,
+    args: args,
+    pcdType,
+    options
+  };
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${zupassClientUrl}#/prove?request=${encReq}`;
+}
+
+const openSemaphoreSignaturePopup = (
+  urlToZupassClient: string,
+  popupUrl: string,
+  returnUrl: string,
+  messageToSign: string
+) => {
+  const proofUrl = constructZupassPcdGetRequestUrl<
+    typeof SemaphoreSignaturePCDPackage
+  >(urlToZupassClient, returnUrl, SemaphoreSignaturePCDPackage.name, {
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDPackage.name,
+      value: undefined,
+      userProvided: true
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: messageToSign,
+      userProvided: false
+    }
+  });
+  const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
+  window.open(url, "_blank", "width=450,height=600,top=100,popup");
+};
 
 export default function Page() {
   const [zupassPCDStr, zupassPendingPCDStr] = useZupassPopupMessages();
@@ -46,6 +94,7 @@ export default function Page() {
               openSemaphoreSignaturePopup(
                 ZUPASS_URL,
                 window.location.origin + "#/popup",
+                KUDOSBOT_SERVER_UPLOAD_URL,
                 messageToSign
               ),
             [messageToSign]

@@ -20,3 +20,9 @@ export const EVERYONE_SEMAPHORE_GROUP_URL = IS_PROD
   : IS_STAGING
   ? "https://api-staging.zupass.org/semaphore/5"
   : "http://localhost:3002/semaphore/5";
+
+export const KUDOSBOT_SERVER_UPLOAD_URL = IS_PROD
+  ? ""
+  : IS_STAGING
+  ? ""
+  : "http://localhost:3005/upload";
