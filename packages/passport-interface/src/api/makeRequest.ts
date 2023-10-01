@@ -67,7 +67,13 @@ export async function httpPostSimple<TResult>(
   );
 }
 
-const throttle = 0;
+/**
+ * DEVELOPMENT ONLY!
+ *
+ * Set this to a value like 5000 to delay all http requests by 5 seconds.
+ * Useful for testing intermediate loading states in the Zupass application.
+ */
+const throttleMs = 0;
 
 /**
  * Sends a non-blocking HTTP request to the given URL, either a POST
@@ -80,7 +86,7 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   opts: ResultMapper<T>,
   postBody?: object
 ): Promise<T> {
-  await sleep(throttle);
+  await sleep(throttleMs);
 
   let requestOptions: RequestInit = {
     method: "GET"
