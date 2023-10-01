@@ -62,7 +62,7 @@ export function CreatePasswordScreen() {
   const onSetPassword = useCallback(async () => {
     try {
       setSettingPassword(true);
-      await sleep(10);
+      await sleep();
       await dispatch({
         type: "login",
         email,
