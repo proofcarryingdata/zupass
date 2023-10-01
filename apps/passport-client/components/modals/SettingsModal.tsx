@@ -1,11 +1,12 @@
 import { useCallback } from "react";
-import { useDispatch } from "../../src/appHooks";
+import { useDispatch, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 
 export function SettingsModal() {
   const dispatch = useDispatch();
+  const self = useSelf();
 
   const close = useCallback(() => {
     dispatch({ type: "set-modal", modal: "" });
@@ -29,6 +30,8 @@ export function SettingsModal() {
       </TextCenter>
       <Spacer h={24} />
       <CenterColumn>
+        <TextCenter>{self.email}</TextCenter>
+        <Spacer h={16} />
         <LinkButton primary={true} to="/scan">
           Scan Ticket
         </LinkButton>
