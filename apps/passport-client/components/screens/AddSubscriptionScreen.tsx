@@ -35,6 +35,7 @@ import {
   pendingAddSubscriptionRequestKey,
   setPendingAddSubscriptionRequest
 } from "../../src/sessionStorage";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, Button, H2, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { Spinner } from "../shared/Spinner";
@@ -43,6 +44,7 @@ import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
 export function AddSubscriptionScreen() {
+  useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
   const [providerUrl, setProviderUrl] = useState(
