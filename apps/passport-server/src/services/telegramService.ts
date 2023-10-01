@@ -15,6 +15,7 @@ import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 import _ from "lodash";
+import { fetchPretixEventInfo } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
@@ -29,9 +30,9 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
+  SessionData,
   dynamicEvents,
-  getSessionKey,
-  SessionData
+  getSessionKey
 } from "../util/telegramMenu";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -76,10 +77,12 @@ export class TelegramService {
     this.bot = bot;
 
     this.bot.api.setMyDescription(
-      "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
+      "I'm Zucat 😻! I manage fun events with zero-knowledge proofs. Press START to get started!"
     );
 
-    this.bot.api.setMyShortDescription("ZK Auth Bot manages events using ZKPs");
+    this.bot.api.setMyShortDescription(
+      "Zucat manages events and groups with zero-knowledge proofs"
+    );
 
     const zupassMenu = new Menu("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -124,7 +127,6 @@ export class TelegramService {
         const userId = ctx.chatJoinRequest.user_chat_id;
 
         logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
-
         // Check if this user is verified for the chat in question
         const isVerified = await fetchTelegramVerificationStatus(
           this.context.dbPool,
@@ -137,13 +139,21 @@ export class TelegramService {
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
+          const chat = (await this.bot.api.getChat(
+            chatId
+          )) as Chat.GroupGetChat;
           const inviteLink = await ctx.createChatInviteLink();
-          await this.bot.api.sendMessage(userId, `You're approved.`, {
-            reply_markup: new InlineKeyboard().url(
-              `Join`,
-              inviteLink.invite_link
-            )
-          });
+          await this.bot.api.sendMessage(
+            userId,
+            `You're approved for <b>${chat.title}</b>`,
+            {
+              reply_markup: new InlineKeyboard().url(
+                `Join 🤝`,
+                inviteLink.invite_link
+              ),
+              parse_mode: "HTML"
+            }
+          );
           await this.bot.api.sendMessage(userId, `Congrats!`);
         }
       } catch (e) {
@@ -523,25 +533,37 @@ export class TelegramService {
 
   private async sendInviteLink(
     userId: number,
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
+    eventConfigID: string
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
+    const event = await fetchPretixEventInfo(
+      this.context.dbPool,
+      eventConfigID
+    );
+    if (!event) {
+      throw new Error(
+        `User used a ticket with no corresponding event confg id: ${eventConfigID}`
+      );
+    }
+
     logger(
       `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
     );
     const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
-      name: "test invite link"
+      name: "bot invite link"
     });
     await this.bot.api.sendMessage(
       userId,
-      `You've generated a ZK proof! Press this button to send your proof to ${chat.title}`,
+      `You've proved that you have at ticket to <b>${event.event_name}</b>!\nPress this button to send your proof to <b>${chat.title}</b>`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Send ZKP`,
+          `Send Proof ✈️`,
           inviteLink.invite_link
-        )
+        ),
+        parse_mode: "HTML"
       }
     );
   }
@@ -615,7 +637,7 @@ export class TelegramService {
     );
 
     // Send invite link
-    await this.sendInviteLink(telegramUserId, chat);
+    await this.sendInviteLink(telegramUserId, chat, eventId);
   }
 
   public async handleSendAnonymousMessage(
