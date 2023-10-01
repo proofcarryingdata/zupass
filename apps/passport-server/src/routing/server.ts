@@ -4,6 +4,7 @@ import * as fs from "fs";
 import * as http from "http";
 import * as https from "https";
 import morgan from "morgan";
+import nocache from "nocache";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices, Zupass } from "../types";
 import { IS_PROD } from "../util/isProd";
@@ -37,6 +38,8 @@ export async function startHttpServer(
     }
 
     const app = express();
+    app.use(nocache());
+    app.set("etag", false);
 
     if (process.env.SUPPRESS_LOGGING !== "true") {
       app.use(morgan("tiny"));
