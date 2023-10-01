@@ -4,10 +4,10 @@ export function isFulfilled<T>(
   return result.status === "fulfilled";
 }
 
-export async function sleep(ms: number): Promise<void> {
+export async function sleep(ms?: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(() => {
       resolve();
-    }, ms);
+    }, ms ?? 1);
   });
 }

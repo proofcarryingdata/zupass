@@ -124,7 +124,7 @@ export function AlreadyRegisteredScreen() {
       }
 
       setIsLoggingIn(true);
-      await sleep(10);
+      await sleep();
       const crypto = await PCDCrypto.newInstance();
       const encryptionKey = await crypto.argon2(password, salt, 32);
       const storageResult = await requestDownloadAndDecryptStorage(

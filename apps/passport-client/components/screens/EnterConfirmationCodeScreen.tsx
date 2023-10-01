@@ -45,7 +45,6 @@ export function EnterConfirmationCodeScreen() {
       window.location.hash = `#/create-password?email=${encodeURIComponent(
         email
       )}&token=${encodeURIComponent(token)}`;
-      return;
     } else {
       setError("The token you entered is incorrect.");
     }
