@@ -55,7 +55,7 @@ export function NewPasswordForm({
     } else if (confirmPassword === "") {
       setError("Confirm your password");
     } else if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords don't match");
     } else {
       onSuccess();
     }
