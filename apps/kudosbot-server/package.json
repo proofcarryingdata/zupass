@@ -1,0 +1,35 @@
+{
+  "name": "kudosbot-server",
+  "version": "0.0.13",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev src/main.ts",
+    "build": "tsc --noEmit",
+    "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "react": "^18.2.0",
+    "ts-node": "^10.9.1"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.7.0",
+    "@pcd/tsconfig": "0.7.0",
+    "@types/express": "^4.17.16",
+    "@types/mocha": "^10.0.1",
+    "@types/morgan": "^1.9.4",
+    "@types/node": "^17.0.12",
+    "@types/react": "^18.0.22",
+    "dotenv": "^16.0.3",
+    "eslint": "7.32.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.5"
+  }
+}
