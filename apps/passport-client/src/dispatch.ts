@@ -5,7 +5,6 @@ import {
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  requestVerifyToken,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
@@ -16,6 +15,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
+import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
@@ -48,11 +48,6 @@ export type Action =
       type: "login";
       email: string;
       password: string;
-      token: string;
-    }
-  | {
-      type: "verify-token";
-      email: string;
       token: string;
     }
   | {
@@ -111,8 +106,6 @@ export async function dispatch(
       return genPassport(state.identity, action.email, update);
     case "login":
       return login(action.email, action.token, action.password, state, update);
-    case "verify-token":
-      return verifyToken(action.email, action.token, state, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -161,48 +154,14 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
-  // Show the NewPassportScreen.
-  // This will save the sema identity & request email verification.
-  update({ pendingAction: { type: "new-passport", email } });
-  window.location.hash = "#/new-passport";
-
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
 
-  update({
-    pcds,
-    pendingAction: { type: "new-passport", email }
-  });
-}
+  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
 
-async function verifyToken(
-  email: string,
-  token: string,
-  state: AppState,
-  update: ZuUpdate
-) {
-  const verifyTokenResult = await requestVerifyToken(
-    appConfig.zupassServer,
-    email,
-    token
-  );
-
-  if (verifyTokenResult.success) {
-    window.location.hash = `#/create-password?email=${encodeURIComponent(
-      email
-    )}&token=${encodeURIComponent(token)}`;
-    return;
-  }
-
-  update({
-    error: {
-      title: "Login failed",
-      message: verifyTokenResult.error,
-      dismissToCurrentPage: true
-    }
-  });
+  update({ pcds });
 }
 
 /**
@@ -295,7 +254,9 @@ async function deviceLogin(
 async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
+
   console.log("Save self", identity, user);
+
   if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
@@ -317,7 +278,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
-  await uploadStorage();
+  uploadStorage();
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
@@ -452,6 +413,8 @@ async function loadFromSync(
     self: storage.self,
     modal
   });
+
+  await sleep(1);
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";

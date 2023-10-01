@@ -12,12 +12,17 @@ export function Button({
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  style?: "primary" | "danger";
+  style?: "primary" | "secondary" | "danger";
   size?: "large" | "small";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }) {
-  const Btn = style === "danger" ? BtnDanger : BtnBase;
+  const Btn =
+    style === "danger"
+      ? BtnDanger
+      : style === "secondary"
+      ? BtnSecondary
+      : BtnBase;
   return (
     <Btn type={type} size={size} onClick={onClick} disabled={disabled}>
       {children}
@@ -41,7 +46,7 @@ const buttonStyle = `
   &:hover {
     background: var(--accent-darker);
   }
-  &:active {
+  &:active:not([disabled]) {
     opacity: 0.9;
   }
 `;
@@ -76,13 +81,33 @@ const BtnDanger = styled(BtnBase)`
   }
 `;
 
+const BtnSecondary = styled(BtnBase)`
+  color: #fff;
+  background: #696969;
+  &:hover {
+    background: #7a7a7a;
+  }
+`;
+
 export const LinkButton = styled(Link)`
   ${buttonStyle}
-  display: block;
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
-  color: var(--bg-dark-primary) !important;
+
+  ${({ primary }: { primary?: boolean }) => css`
+    color: var(--bg-dark-primary) !important;
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+
+    ${!primary &&
+    css`
+      color: #fff !important;
+      background: #696969;
+      &:hover {
+        background: #7a7a7a;
+      }
+    `}
+  `}
 `;
 
 export const CircleButton = styled.button<{

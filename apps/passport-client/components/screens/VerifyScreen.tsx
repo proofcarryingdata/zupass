@@ -9,14 +9,7 @@ import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import { QRPayload } from "../../src/createQRProof";
 import { bigintToUuid } from "../../src/util";
-import {
-  BackgroundGlow,
-  CenterColumn,
-  H4,
-  Placeholder,
-  Spacer,
-  TextCenter
-} from "../core";
+import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
@@ -67,10 +60,7 @@ export function VerifyScreen() {
       });
   }, [encodedQRPayload, setVerifyResult, dispatch]);
 
-  const [from, to, bg]: [string, string, "primary" | "gray"] =
-    verifyResult?.valid
-      ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
-      : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
+  const bg = verifyResult?.valid ? "primary" : "gray";
 
   const icon = {
     true: icons.verifyValid,
@@ -80,34 +70,32 @@ export function VerifyScreen() {
 
   return (
     <AppContainer bg={bg}>
-      <BackgroundGlow y={96} {...{ from, to }}>
-        <Spacer h={48} />
-        <TextCenter>
-          <img draggable="false" width="90" height="90" src={icon} />
-          <Spacer h={24} />
-          {verifyResult == null && <H4>VERIFYING PROOF...</H4>}
-          {verifyResult?.valid && (
-            <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
-          )}
-          {verifyResult?.valid === false && <H4>PROOF INVALID.</H4>}
-        </TextCenter>
-        <Spacer h={48} />
-        <Placeholder minH={160}>
-          {verifyResult?.valid === false && (
-            <TextCenter>{verifyResult.message}</TextCenter>
-          )}
-          {verifyResult && verifyResult.valid && getCard(verifyResult)}
-        </Placeholder>
-        <Spacer h={64} />
-        {verifyResult != null && (
-          <CenterColumn w={280}>
-            <LinkButton to="/scan">Verify another</LinkButton>
-            <Spacer h={8} />
-            <LinkButton to="/">Back to Zupass</LinkButton>
-            <Spacer h={24} />
-          </CenterColumn>
+      <Spacer h={48} />
+      <TextCenter>
+        <img draggable="false" width="90" height="90" src={icon} />
+        <Spacer h={24} />
+        {verifyResult == null && <H4>VERIFYING PROOF...</H4>}
+        {verifyResult?.valid && (
+          <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
         )}
-      </BackgroundGlow>
+        {verifyResult?.valid === false && <H4>PROOF INVALID.</H4>}
+      </TextCenter>
+      <Spacer h={48} />
+      <Placeholder minH={160}>
+        {verifyResult?.valid === false && (
+          <TextCenter>{verifyResult.message}</TextCenter>
+        )}
+        {verifyResult && verifyResult.valid && getCard(verifyResult)}
+      </Placeholder>
+      <Spacer h={64} />
+      {verifyResult != null && (
+        <CenterColumn>
+          <LinkButton to="/scan">Verify another</LinkButton>
+          <Spacer h={8} />
+          <LinkButton to="/">Back to Zupass</LinkButton>
+          <Spacer h={24} />
+        </CenterColumn>
+      )}
     </AppContainer>
   );
 }

@@ -21,6 +21,7 @@ export function UpgradeAccountModal() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
   // copied from `ChangePasswordScreen`.
   // @todo - factor this out. I don't forsee us needing to do this anytime soon.
@@ -47,47 +48,25 @@ export function UpgradeAccountModal() {
         newEncryptionKey,
         newSalt
       );
-      // Meaning password is incorrect, as old row is not found
-      if (!res.success && res.error.name === "PasswordIncorrect") {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Password incorrect",
-            message:
-              "Double-check your current password. If you've lost access, please click 'Reset Account' below.",
-            dismissToCurrentPage: true
-          }
-        });
-        setLoading(false);
-        return;
-      }
 
-      // Handle
       if (!res.success) {
-        throw new Error(`Request failed with message ${res.error}`);
+        throw new Error("couldn't set password");
       }
 
       dispatch({
         type: "set-modal",
         modal: "changed-password"
       });
+
       dispatch({
         type: "change-password",
         newEncryptionKey,
         newSalt
       });
-      setLoading(false);
     } catch (e) {
+      setError("Couldn't set a password - try again later");
+    } finally {
       setLoading(false);
-      dispatch({
-        type: "error",
-        error: {
-          title: "Error while changing password",
-          message: "Please refresh the page and try again",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
     }
   }, [loading, self.email, encryptionKey, newPassword, dispatch]);
 
@@ -102,6 +81,8 @@ export function UpgradeAccountModal() {
       <BigInput value={self.email} disabled={true} />
       <Spacer h={8} />
       <NewPasswordForm
+        error={error}
+        setError={setError}
         passwordInputPlaceholder="New password"
         email={self.email}
         revealPassword={revealPassword}

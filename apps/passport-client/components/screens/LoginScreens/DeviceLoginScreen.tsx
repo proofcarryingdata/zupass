@@ -1,9 +1,9 @@
 import { Spacer } from "@pcd/passport-ui";
 import { ChangeEvent, useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../../src/appHooks";
-import { BigInput, Button, CenterColumn, H2, TextCenter } from "../core";
-import { AppContainer } from "../shared/AppContainer";
+import { useDispatch } from "../../../src/appHooks";
+import { BigInput, Button, CenterColumn, H2, TextCenter } from "../../core";
+import { AppContainer } from "../../shared/AppContainer";
 
 export function DeviceLoginScreen() {
   const [email, setEmail] = useState("");
@@ -37,7 +37,7 @@ export function DeviceLoginScreen() {
           </TextCenter>
         </TextCenter>
         <Spacer h={24} />
-        <CenterColumn w={280}>
+        <CenterColumn>
           <form>
             <BigInput
               type="text"

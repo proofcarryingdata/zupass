@@ -8,7 +8,7 @@ import {
   SyncedEncryptedStorageV2
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { appConfig } from "./appConfig";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
@@ -126,9 +126,17 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
 export function useSyncE2EEStorage() {
   const { dispatch } = useContext(StateContext);
 
-  useOnStateChange(() => {
+  const load = useCallback(() => {
     dispatch({ type: "sync" });
   }, [dispatch]);
+
+  useOnStateChange(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 }
 
 export function useHasUploaded() {

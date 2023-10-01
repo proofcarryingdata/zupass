@@ -1,4 +1,4 @@
-import { getErrorMessage } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import urlJoin from "url-join";
 import { APIResult, GetResultValue, ResultMapper } from "./apiResult";
 import { POST } from "./constants";
@@ -68,6 +68,14 @@ export async function httpPostSimple<TResult>(
 }
 
 /**
+ * DEVELOPMENT ONLY!
+ *
+ * Set this to a value like 5000 to delay all http requests by 5 seconds.
+ * Useful for testing intermediate loading states in the Zupass application.
+ */
+const throttleMs = 0;
+
+/**
  * Sends a non-blocking HTTP request to the given URL, either a POST
  * or a GET, with the given body, and converts it into a {@link APIResult}.
  *
@@ -78,6 +86,8 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   opts: ResultMapper<T>,
   postBody?: object
 ): Promise<T> {
+  await sleep(throttleMs);
+
   let requestOptions: RequestInit = {
     method: "GET"
   };

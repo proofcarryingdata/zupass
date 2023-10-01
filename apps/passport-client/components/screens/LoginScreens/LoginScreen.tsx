@@ -6,9 +6,8 @@ import {
   useEffect,
   useState
 } from "react";
-import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../src/appHooks";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingAddSubscriptionRequestKey,
@@ -20,10 +19,9 @@ import {
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewSubscriptionsRequest
-} from "../../src/sessionStorage";
-import { validateEmail } from "../../src/util";
+} from "../../../src/sessionStorage";
+import { validateEmail } from "../../../src/util";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
@@ -31,11 +29,13 @@ import {
   H2,
   Spacer,
   TextCenter
-} from "../core";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../core";
+import { AppContainer } from "../../shared/AppContainer";
+import { InlineError } from "../../shared/InlineError";
 
 export function LoginScreen() {
   const dispatch = useDispatch();
+  const [error, setError] = useState<string | undefined>();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
 
@@ -91,24 +91,8 @@ export function LoginScreen() {
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
 
-      if (email === "") {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Enter an Email",
-            message: "You must enter an email address to continue.",
-            dismissToCurrentPage: true
-          }
-        });
-      } else if (validateEmail(email) === false) {
-        dispatch({
-          type: "error",
-          error: {
-            title: "Invalid Email",
-            message: `'${email}' is not a valid email.`,
-            dismissToCurrentPage: true
-          }
-        });
+      if (email === "" || validateEmail(email) === false) {
+        setError("Enter a valid email address");
       } else {
         dispatch({
           type: "new-passport",
@@ -128,70 +112,49 @@ export function LoginScreen() {
 
   return (
     <AppContainer bg="primary">
-      <BackgroundGlow
-        y={224}
-        from="var(--bg-lite-primary)"
-        to="var(--bg-dark-primary)"
-      >
-        <Spacer h={64} />
-        {redirectedFromAction ? (
-          <>
-            <TextCenter>
-              <H2>LOGIN</H2>
-            </TextCenter>
-            <Spacer h={32} />
-            <TextCenter>
-              To complete this request, you need to either log into your
-              existing Zupass account, or create a new one.
-            </TextCenter>
-          </>
-        ) : (
-          <>
-            <LoginHeader />
-          </>
-        )}
+      <Spacer h={64} />
+      {redirectedFromAction ? (
+        <>
+          <TextCenter>
+            <H2>ZUPASS</H2>
+            <Spacer h={24} />
+            To complete this request, you need to either log into your existing
+            Zupass account, or create a new one.
+          </TextCenter>
+        </>
+      ) : (
+        <>
+          <TextCenter>
+            <H1>ZUPASS</H1>
+            <Spacer h={24} />
+            This is an experimental personal cryptography manager, powered by
+            Zero-Knowledge.
+          </TextCenter>
+        </>
+      )}
 
-        <Spacer h={24} />
+      <Spacer h={24} />
 
-        <CenterColumn w={280}>
-          <form onSubmit={onGenPass}>
-            <BigInput
-              type="text"
-              autoFocus
-              placeholder="your email address"
-              value={email}
-              onChange={useCallback(
-                (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
-                [setEmail]
-              )}
-            />
-            <Spacer h={8} />
-            <Button style="primary" type="submit">
-              Continue
-            </Button>
-          </form>
-        </CenterColumn>
-      </BackgroundGlow>
+      <CenterColumn>
+        <form onSubmit={onGenPass}>
+          <BigInput
+            type="text"
+            autoFocus
+            placeholder="email address"
+            value={email}
+            onChange={useCallback(
+              (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
+              [setEmail]
+            )}
+          />
+          <InlineError error={error} />
+          <Spacer h={8} />
+          <Button style="primary" type="submit">
+            Continue
+          </Button>
+        </form>
+      </CenterColumn>
       <Spacer h={64} />
     </AppContainer>
   );
 }
-
-function LoginHeader() {
-  return (
-    <TextCenter>
-      <H1>ZUPASS</H1>
-      <Spacer h={24} />
-      <Description>
-        This is an experimental personal cryptography manager, powered by
-        Zero-Knowledge.
-      </Description>
-    </TextCenter>
-  );
-}
-
-const Description = styled.p`
-  font-weight: 300;
-  width: 220px;
-  margin: 0 auto;
-`;

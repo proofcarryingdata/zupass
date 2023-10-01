@@ -1,7 +1,7 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLoadedIssuedPCDs } from "../../src/appHooks";
+import { useLoadedIssuedPCDs } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
   getPendingAddRequest,
@@ -10,18 +10,18 @@ import {
   getPendingHaloRequest,
   getPendingProofRequest,
   getPendingViewSubscriptionsPageRequest
-} from "../../src/sessionStorage";
-import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BackgroundGlow, CenterColumn } from "../core";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../../src/sessionStorage";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { CenterColumn } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
 
 export function LoginInterstitialScreen() {
   useSyncE2EEStorage();
   const navigate = useNavigate();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (loadedIssuedPCDs) {
       if (getPendingProofRequest() != null) {
         console.log("Redirecting to prove screen");
@@ -67,16 +67,10 @@ export function LoginInterstitialScreen() {
   return (
     <>
       <AppContainer bg="primary">
-        <BackgroundGlow
-          y={224}
-          from="var(--bg-lite-primary)"
-          to="var(--bg-dark-primary)"
-        >
-          <Spacer h={64} />
-          <CenterColumn w={280}>
-            <RippleLoader />
-          </CenterColumn>
-        </BackgroundGlow>
+        <Spacer h={64} />
+        <CenterColumn>
+          <RippleLoader />
+        </CenterColumn>
       </AppContainer>
     </>
   );

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import styled from "styled-components";
 import { AppError } from "../../src/state";
-import { Button, H1, PreWrap, Spacer } from "../core";
+import { Button, H2, PreWrap, Spacer } from "../core";
 
 export function ErrorPopup({
   error,
@@ -14,8 +14,7 @@ export function ErrorPopup({
   return (
     <ErrorBg onClick={onClose}>
       <ErrorWrap onClick={ignore}>
-        <Spacer h={24} />
-        <H1>{error.title}</H1>
+        <H2>{error.title}</H2>
         <Spacer h={24} />
         <p>{error.message}</p>
         {error.stack && (
