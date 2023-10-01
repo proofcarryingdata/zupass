@@ -1,10 +1,9 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import { getErrorMessage } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import { QueryResult } from "pg";
 import { Pool } from "postgres-pool";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
-import { sleep } from "../util/util";
 
 /**
  * This function executes a sql query against the database, and traces
