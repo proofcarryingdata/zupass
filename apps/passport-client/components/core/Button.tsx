@@ -95,7 +95,12 @@ export const LinkButton = styled(Link)`
   width: 100%;
   text-align: center;
   text-decoration: none;
-  color: var(--bg-dark-primary) !important;
+
+  color: #fff !important;
+  background: #696969;
+  &:hover {
+    background: #7a7a7a;
+  }
 `;
 
 export const CircleButton = styled.button<{
