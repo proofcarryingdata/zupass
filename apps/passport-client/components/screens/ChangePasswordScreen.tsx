@@ -106,11 +106,13 @@ export function ChangePasswordScreen() {
   } else if (finished) {
     content = (
       <TextCenter>
-        <H2>Changed Password!</H2>
+        <H2>Changed Password</H2>
         <Spacer h={24} />
         You've changed your password successfully.
         <Spacer h={24} />
-        <LinkButton to={"/"}>Done</LinkButton>
+        <LinkButton to={"/"} primary={true}>
+          Done
+        </LinkButton>
       </TextCenter>
     );
   } else {

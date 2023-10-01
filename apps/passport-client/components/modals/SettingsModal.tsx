@@ -29,13 +29,16 @@ export function SettingsModal() {
       </TextCenter>
       <Spacer h={24} />
       <CenterColumn>
-        <LinkButton to="/scan">Scan Ticket</LinkButton>
+        <LinkButton primary={true} to="/scan">
+          Scan Ticket
+        </LinkButton>
         <Spacer h={16} />
-        <LinkButton to="/change-password" onClick={close}>
+        <LinkButton primary={true} to="/change-password" onClick={close}>
           Change Password
         </LinkButton>
         <Spacer h={16} />
         <LinkButton
+          primary={true}
           to="/subscriptions"
           onClick={() => dispatch({ type: "set-modal", modal: "" })}
         >

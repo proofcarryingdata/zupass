@@ -91,16 +91,23 @@ const BtnSecondary = styled(BtnBase)`
 
 export const LinkButton = styled(Link)`
   ${buttonStyle}
-  display: block;
-  width: 100%;
-  text-align: center;
-  text-decoration: none;
 
-  color: #fff !important;
-  background: #696969;
-  &:hover {
-    background: #7a7a7a;
-  }
+  ${({ primary }: { primary?: boolean }) => css`
+    color: var(--bg-dark-primary) !important;
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none;
+
+    ${!primary &&
+    css`
+      color: #fff !important;
+      background: #696969;
+      &:hover {
+        background: #7a7a7a;
+      }
+    `}
+  `}
 `;
 
 export const CircleButton = styled.button<{
