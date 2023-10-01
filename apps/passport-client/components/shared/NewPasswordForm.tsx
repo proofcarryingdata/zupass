@@ -4,7 +4,7 @@ import {
   PASSWORD_MINIMUM_LENGTH
 } from "../../src/password";
 import { Button, Spacer } from "../core";
-import { ErrorMessage } from "../core/error";
+import { InlineError } from "./InlineError";
 import { PasswordInput } from "./PasswordInput";
 
 interface NewPasswordForm {
@@ -88,15 +88,7 @@ export function NewPasswordForm({
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
       />
-
-      {error && (
-        <>
-          <Spacer h={16} />
-          <ErrorMessage>{error}</ErrorMessage>
-          <Spacer h={8} />
-        </>
-      )}
-
+      <InlineError error={error} />
       <Spacer h={8} />
       <Button style="primary" type="submit">
         {submitButtonText}

@@ -11,10 +11,10 @@ import {
   Spacer,
   TextCenter
 } from "../core";
-import { ErrorMessage } from "../core/error";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { InlineError } from "../shared/InlineError";
 import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 export function EnterConfirmationCodeScreen() {
@@ -90,13 +90,7 @@ export function EnterConfirmationCodeScreen() {
             placeholder="confirmation code"
             disabled={verifyingCode}
           />
-          {error && (
-            <>
-              <Spacer h={16} />
-              <ErrorMessage>{error}</ErrorMessage>
-              <Spacer h={8} />
-            </>
-          )}
+          <InlineError error={error} />
           <Spacer h={8} />
           <Button onClick={onCreateClick}>Continue</Button>
           <Spacer h={24} />

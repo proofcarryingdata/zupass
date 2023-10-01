@@ -10,9 +10,9 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
-import { ErrorMessage } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
+import { InlineError } from "../../shared/InlineError";
 
 /**
  * Users can navigate to this page in order to download
@@ -100,14 +100,7 @@ export function SyncExistingScreen() {
           <Spacer h={8} />
           {!isLoading && (
             <>
-              {error && (
-                <>
-                  <Spacer h={16} />
-                  <ErrorMessage>{error}</ErrorMessage>
-                  <Spacer h={8} />
-                </>
-              )}
-
+              <InlineError error={error} />
               <Button style="primary" type="submit" onClick={onSyncClick}>
                 Login
               </Button>

@@ -30,8 +30,8 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
-import { ErrorMessage } from "../../core/error";
 import { AppContainer } from "../../shared/AppContainer";
+import { InlineError } from "../../shared/InlineError";
 
 export function LoginScreen() {
   const dispatch = useDispatch();
@@ -151,13 +151,7 @@ export function LoginScreen() {
               [setEmail]
             )}
           />
-          {error && (
-            <>
-              <Spacer h={16} />
-              <ErrorMessage>{error}</ErrorMessage>
-              <Spacer h={8} />
-            </>
-          )}
+          <InlineError error={error} />
           <Spacer h={8} />
           <Button style="primary" type="submit">
             Continue

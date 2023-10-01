@@ -25,9 +25,9 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
-import { ErrorMessage } from "../../core/error";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+import { InlineError } from "../../shared/InlineError";
 import { PasswordInput } from "../../shared/PasswordInput";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
@@ -208,13 +208,7 @@ export function AlreadyRegisteredScreen() {
                 revealPassword={revealPassword}
                 setRevealPassword={setRevealPassword}
               />
-              {error && (
-                <>
-                  <Spacer h={16} />
-                  <ErrorMessage>{error}</ErrorMessage>
-                  <Spacer h={8} />
-                </>
-              )}
+              <InlineError error={error} />
               <Spacer h={8} />
               <Button type="submit">Login</Button>
             </form>

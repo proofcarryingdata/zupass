@@ -10,8 +10,8 @@ import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
-import { ErrorMessage } from "../../core/error";
 import { AppContainer } from "../../shared/AppContainer";
+import { InlineError } from "../../shared/InlineError";
 import { ResendCodeButton } from "../../shared/ResendCodeButton";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
@@ -163,13 +163,7 @@ function SendEmailVerification({ email }: { email: string }) {
             <BigInput value={email} disabled={true} />
             <Spacer h={8} />
             <BigInput ref={inRef} autoFocus placeholder="code from email" />
-            {error && (
-              <>
-                <Spacer h={16} />
-                <ErrorMessage>{error}</ErrorMessage>
-                <Spacer h={8} />
-              </>
-            )}
+            <InlineError error={error} />
             <Spacer h={8} />
             <Button type="submit">Verify</Button>
             <Spacer h={24} />
