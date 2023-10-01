@@ -118,10 +118,8 @@ export function LoginScreen() {
       {redirectedFromAction ? (
         <>
           <TextCenter>
-            <H2>LOGIN</H2>
-          </TextCenter>
-          <Spacer h={32} />
-          <TextCenter>
+            <H2>ZUPASS</H2>
+            <Spacer h={24} />
             To complete this request, you need to either log into your existing
             Zupass account, or create a new one.
           </TextCenter>
