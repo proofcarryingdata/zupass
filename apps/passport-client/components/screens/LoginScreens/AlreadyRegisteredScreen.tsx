@@ -26,10 +26,10 @@ import {
   TextCenter
 } from "../../core";
 import { ErrorMessage } from "../../core/error";
-import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { PasswordInput } from "../../shared/PasswordInput";
+import { ScreenLoader } from "../../shared/ScreenLoader";
 
 export function AlreadyRegisteredScreen() {
   const dispatch = useDispatch();
@@ -171,26 +171,10 @@ export function AlreadyRegisteredScreen() {
   let content = null;
   if (sendingConfirmationEmail) {
     content = (
-      <CenterColumn>
-        <TextCenter>
-          <Spacer h={128} />
-          <RippleLoader />
-          <Spacer h={24} />
-          Sending you an email with a reset token...
-        </TextCenter>
-      </CenterColumn>
+      <ScreenLoader text="Sending you an email with a reset token..." />
     );
   } else if (isLoggingIn) {
-    content = (
-      <CenterColumn>
-        <TextCenter>
-          <Spacer h={128} />
-          <RippleLoader />
-          <Spacer h={24} />
-          Logging you in...
-        </TextCenter>
-      </CenterColumn>
-    );
+    content = <ScreenLoader text="Logging you in..." />;
   } else {
     content = (
       <>

@@ -6,9 +6,9 @@ import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { validateEmail } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button } from "../../core/Button";
-import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { NewPasswordForm } from "../../shared/NewPasswordForm";
+import { ScreenLoader } from "../../shared/ScreenLoader";
 
 export function CreatePasswordScreen() {
   const dispatch = useDispatch();
@@ -81,14 +81,7 @@ export function CreatePasswordScreen() {
   let content = null;
 
   if (settingPassword) {
-    content = (
-      <CenterColumn>
-        <Spacer h={128} />
-        <RippleLoader />
-        <Spacer h={24} />
-        <TextCenter>Creating your account...</TextCenter>
-      </CenterColumn>
-    );
+    content = <ScreenLoader text="Creating your account..." />;
   } else {
     content = (
       <>

@@ -11,9 +11,9 @@ import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
 import { ErrorMessage } from "../../core/error";
-import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { ResendCodeButton } from "../../shared/ResendCodeButton";
+import { ScreenLoader } from "../../shared/ScreenLoader";
 
 /**
  * Show the user that we're generating their Zupass. Direct them to the email
@@ -139,31 +139,12 @@ function SendEmailVerification({ email }: { email: string }) {
   let content = null;
 
   if (verifyingCode) {
-    content = (
-      <CenterColumn>
-        <Spacer h={128} />
-        <RippleLoader />
-        <Spacer h={24} />
-        <TextCenter>Verifying token...</TextCenter>
-      </CenterColumn>
-    );
+    content = <ScreenLoader text="Verifying token..." />;
   } else if (loadingSalt) {
-    content = (
-      <CenterColumn>
-        <Spacer h={128} />
-        <RippleLoader />
-        <Spacer h={24} />
-        <TextCenter>Loading account information...</TextCenter>
-      </CenterColumn>
-    );
+    content = <ScreenLoader text="Loading account information..." />;
   } else if (emailSending) {
     content = (
-      <CenterColumn>
-        <Spacer h={128} />
-        <RippleLoader />
-        <Spacer h={24} />
-        <TextCenter>Checking if you already have an account...</TextCenter>
-      </CenterColumn>
+      <ScreenLoader text="Checking if you already have an account..." />
     );
   } else if (emailSent) {
     content = (
