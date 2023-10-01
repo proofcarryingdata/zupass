@@ -23,6 +23,7 @@ import {
   ReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
@@ -66,19 +67,17 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
+  fetchAllZuzaluUsers,
+  fetchZuzaluUser
+} from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import {
   OrganizerSync,
   PRETIX_CHECKER,
   SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
-import { Zupass } from "../src/types";
-
-import { sleep } from "@pcd/util";
-import {
-  fetchAllZuzaluUsers,
-  fetchZuzaluUser
-} from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PretixSyncStatus } from "../src/services/types";
+import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
 import {
   DevconnectPretixDataMocker,
