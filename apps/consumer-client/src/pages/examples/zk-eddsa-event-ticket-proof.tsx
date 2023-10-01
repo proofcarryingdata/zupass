@@ -17,7 +17,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_SERVER_URL } from "../../constants";
+import { ZUPASS_URL } from "../../constants";
 
 export default function Page() {
   const watermark = generateSnarkMessageHash(
@@ -103,7 +103,7 @@ export default function Page() {
         <button
           onClick={() =>
             openZKEdDSAEventTicketPopup(
-              ZUPASS_SERVER_URL,
+              ZUPASS_URL,
               window.location.origin + "#/popup",
               fieldsToReveal,
               watermark,
