@@ -57,7 +57,7 @@ const openSemaphoreSignaturePopup = (
 };
 
 export default function Page() {
-  const [zupassPCDStr, zupassPendingPCDStr] = useZupassPopupMessages();
+  const [zupassPCDStr, _] = useZupassPopupMessages();
   const [signatureProofValid, setSignatureProofValid] = useState<
     boolean | undefined
   >();
