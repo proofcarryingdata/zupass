@@ -17,38 +17,41 @@ import { EdDSACardBody } from "./CardBody";
  */
 export type EDdSAPublicKey = [string, string];
 
-/** The globally-unique representation of the specific type of the PCD. */
+/** 
+ * The globally unique type name of the EdDSAPCD.
+ */
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
-/** This interface defines the arguments required to initialize a PCD. */
+/**
+ * Defines the arguments required to initialize a PCD.
+ * It is currently empty but new arguments may be added in the future.
+ */
 export interface EdDSAInitArgs {}
 
 /**
- * This interface defines the arguments to make a new EdDSA PCD. The goal is 
- * to demonstrate that a certain EdDSA keypair is known by signing 
- * an array of messages using the correspondent private key.
+ * Defines the essential parameters required for creating an {@link EdDSAPCD}.
  */
 export interface EdDSAPCDArgs {
   /**
-   * Any 32-bytes EdDSA private key (32-bytes hexadecimal string) for signing the message.
-   * Use {@link newEdDSAPrivateKey} to generate a new one securely.
+   * The EdDSA private key is a 32-byte value used to sign the message.
+   * {@link newEdDSAPrivateKey} is a recommended choice for generating highly secure private keys.
    */
   privateKey: StringArgument;
   
   /**
-   * An array of contents to be signed with the private key. 
-   * The message is represented as a string version of a set of BigInts signing object.
+   * The message is composed of a list of stringified big integer so that both `proof` and `claim`
+   * can also be utilized within SNARK circuits, which operate on fields that are themselves big integers. 
    */
   message: StringArrayArgument;
  
   /**
-   * The unique identifier of the PCD.
+   * A string that uniquely identifies a PCD. 
    */
   id: StringArgument;
 }
 
 /**
- * This interface defines the EdDSA PCD claim. The claim contains a message signed 
+ * Defines the EdDSA PCD claim. The claim contains a message signed 
  * with the private key corresponding to the given public key.
  */
 export interface EdDSAPCDClaim {
@@ -75,7 +78,9 @@ export interface EdDSAPCDProof {
 }
 
 /**
- * Create a new EdDSA PCD from an {@link EdDSAPCDClaim} and {@link EdDSAPCDProof}.
+ * The EdDSA PCD enables the verification that a specific message has been signed with an
+ * EdDSA private key. The {@link EdDSAPCDProof}, serving as the signature, is verified
+ * using the {@link EdDSAPCDClaim}, which consists of the EdDSA public key and the message.
  */
 export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   public type = EdDSAPCDTypeName;
@@ -91,19 +96,14 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   }
 }
 
-/** 
- * This variable is a placeholder to check whether the {@link Eddsa} and {@link Poseidon} classes 
- * have been properly initialized from external library.
- * 
- * @see {@link https://github.com/iden3/circomlibjs/blob/main/src/eddsa.js#L9C31-L9C41}
- */
 let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;
 let poseidon: Poseidon;
 
-/**
- * Initialize the {@link Eddsa} and {@link Poseidon} classes from the external 
- * library only if they have not already been initialized.
+/** 
+ * A promise designed to make sure that the EdDSA and Poseidon algorithms
+ * of the `circomlib` package have been properly initialized.
+ * It only initializes them once.
  */
 async function ensureInitialized() {
   if (!initializedPromise) {
@@ -117,10 +117,10 @@ async function ensureInitialized() {
 }
 
 /**
- * Make a new {@link EdDSAPCD} by generating a {@link EdDSAPCDProof} 
+ * Creates a new {@link EdDSAPCD} by generating a {@link EdDSAPCDProof}
  * and deriving a {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
- * 
- * @param args - the set of arguments to make a new {@link EdDSAPCD}.
+ * @param args The set of arguments to make a new {@link EdDSAPCD}.
+ * @returns An instance of the EdDSA PCD.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   await ensureInitialized();
@@ -160,10 +160,9 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 }
 
 /**
- * Verify if a given {@link EdDSAPCDClaim} corresponds to a given {@link EdDSAPCDProof}.
- * 
- * @param pcd - the {@link EdDSAPCD} to be verified.
- * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}; otherwise false.
+ * Verifies if a given {@link EdDSAPCDClaim} corresponds to a given {@link EdDSAPCDProof}.
+ * @param pcd The {@link EdDSAPCD} to be verified.
+ * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}, otherwise false.
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   await ensureInitialized();
@@ -178,11 +177,10 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 }
 
 /**
- * Replace the content of an {@link EdDSAPCDArgs} converting strings to BigInt values.
- *
- * @param key - indicate the PCD argument name to convert.
- * @param value - indicate the PCD argument value to convert.
- * @returns the converted value as strings.
+ * Replaces the content of an {@link EdDSAPCDArgs} converting strings to big integers.
+ * @param key The PCD argument name to convert.
+ * @param value The PCD argument value to convert.
+ * @returns The converted value as strings.
  */
 function replacer(key: any, value: any): any {
   if (key === "message") {
@@ -193,11 +191,10 @@ function replacer(key: any, value: any): any {
 }
 
 /**
- * Replace the content of an {@link EdDSAPCDArgs} converting BigInt values to strings.
- * 
- * @param key - indicate the PCD argument name to convert.
- * @param value - indicate the PCD argument value to convert.
- * @returns the converted value as BigInt values.
+ * Replaces the content of an {@link EdDSAPCDArgs} converting big integers to strings.
+ * @param key The PCD argument name to be converted.
+ * @param value The PCD argument value to be converted.
+ * @returns The converted value as BigInt values.
  */
 function reviver(key: any, value: any): any {
   if (key === "message") {
@@ -209,9 +206,8 @@ function reviver(key: any, value: any): any {
 
 /**
  * Serialize an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
- * 
- * @param pcd - the EdDSA PCD to be serialized. 
- * @returns the serialized version of the EdDSA PCD.
+ * @param pcd The EdDSA PCD to be serialized. 
+ * @returns The serialized version of the EdDSA PCD.
  */
 export async function serialize(
   pcd: EdDSAPCD
@@ -224,9 +220,8 @@ export async function serialize(
 
 /**
  * Deserialize a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
- * 
- * @param serialized - the serialized PCD to deserialize. 
- * @returns the deserialized version of the EdDSA PCD.
+ * @param serialized The serialized PCD to deserialize. 
+ * @returns The deserialized version of the EdDSA PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
   const { id, claim, proof } = JSON.parse(serialized, reviver);
@@ -239,11 +234,10 @@ export async function deserialize(serialized: string): Promise<EdDSAPCD> {
 }
 
 /**
- * Return the information on how the {@link EdDSAPCD} should be displayed 
- * to the user within the PCD passport.
- * 
- * @param pcd - the EdDSA PCD from which to show the information. 
- * @returns the information to display for an {@link EdDSAPCD}.
+ * Provides the information about the {@link EdDSAPCD} that will be displayed
+ * to users on Zupass.
+ * @param pcd The EdDSA PCD instance. 
+ * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
   return {
@@ -272,11 +266,10 @@ export const EdDSAPCDPackage: PCDPackage<
 };
 
 /**
- * Return an {@link EDdSAPublicKey} extracted from the given 32-bytes 
- * EdDSA private key as hexadecimal string.
- * 
- * @param privateKey - the 32-bytes EdDSA private key as hexadecimal string.
- * @returns the extracted {@link EDdSAPublicKey} from the given private key.
+ * Returns an {@link EDdSAPublicKey} extracted from a 32-byte EdDSA private key.
+ * The private key must be a hexadecimal string.
+ * @param privateKey The 32-byte EdDSA private key.
+ * @returns The {@link EDdSAPublicKey} extracted from the private key.
  */
 export async function getEdDSAPublicKey(
   privateKey: string
