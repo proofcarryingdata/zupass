@@ -34,8 +34,7 @@ import {
   generateSnarkMessageHash,
   numberToBigInt,
   uuidToBigInt,
-  requireDefinedParameter,
-  hexToBigInt
+  requireDefinedParameter
 } from "@pcd/util";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -108,7 +107,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
 export interface ZKEdDSAEventTicketPCDClaim {
   partialTicket: Partial<ITicketData>;
   watermark: string;
-  signer: EDdSAPublicKey;
+  signer: EDdSAPublicKey; // in montgomery form. must use F.toObject() from ffjavascript to convert to raw coords
 
   // only if requested in PCDArgs
   validEventIds?: string[];
@@ -297,8 +296,12 @@ function snarkInputForProof(
     revealReservedSignedField3: "0",
 
     // Ticket signature fields
-    ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
-    ticketSignerPubkeyAy: hexToBigInt(pubKey[1]).toString(),
+    ticketSignerPubkeyAx: babyJub.F.toObject(
+      fromHexString(pubKey[0])
+    ).toString(),
+    ticketSignerPubkeyAy: babyJub.F.toObject(
+      fromHexString(pubKey[1])
+    ).toString(),
     ticketSignatureR8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
     ticketSignatureR8y: babyJub.F.toObject(rawSig.R8[1]).toString(),
     ticketSignatureS: rawSig.S.toString(),
@@ -474,8 +477,8 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
   ret.push(claim.nullifierHash || negOne);
 
   // Public inputs appear in public signals in declaration order
-  ret.push(hexToBigInt(claim.signer[0]).toString());
-  ret.push(hexToBigInt(claim.signer[1]).toString());
+  ret.push(babyJub.F.toObject(fromHexString(claim.signer[0])).toString());
+  ret.push(babyJub.F.toObject(fromHexString(claim.signer[1])).toString());
 
   for (const eventId of snarkInputForValidEventIds(claim.validEventIds)) {
     ret.push(eventId);
@@ -499,6 +502,10 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // verify() requires dependencies but not artifacts (verification key
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
+  // TODO: after eddsa keys are represented in normal form and not montgomery
+  // form, we can remove this call too, since it's only needed for the
+  // use of babyJub in publicSignalsFromClaim().
+  await ensureDepsInitialized();
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
   return groth16.verify(vkey, publicSignals, pcd.proof);
