@@ -34,7 +34,7 @@ import {
   dynamicEvents,
   getSessionKey,
   senderIsAdmin
-} from "../util/telegramMenu";
+} from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
@@ -132,9 +132,10 @@ export class TelegramService {
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
     this.bot.on("chat_join_request", async (ctx) => {
+      const userId = ctx.chatJoinRequest.user_chat_id;
+
       try {
         const chatId = ctx.chatJoinRequest.chat.id;
-        const userId = ctx.chatJoinRequest.user_chat_id;
 
         logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
         // Check if this user is verified for the chat in question
@@ -147,6 +148,11 @@ export class TelegramService {
         if (isVerified) {
           logger(
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
+          );
+          await this.bot.api.sendMessage(
+            userId,
+            `<i>Verifying and inviting...</i>`,
+            { parse_mode: "HTML" }
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
           const chat = (await this.bot.api.getChat(
@@ -167,6 +173,7 @@ export class TelegramService {
           await this.bot.api.sendMessage(userId, `Congrats!`);
         }
       } catch (e) {
+        await this.bot.api.sendMessage(userId, `Error joining: ${e}`);
         logger("[TELEGRAM] chat_join_request error", e);
         this.rollbarService?.reportError(e);
       }
