@@ -1,0 +1,8 @@
+Hi there,
+
+Welcome to Zupass.
+
+Here's the code to verify your email:
+{{token}}
+
+We look forward to seeing you soon.

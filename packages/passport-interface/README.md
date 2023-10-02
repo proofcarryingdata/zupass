@@ -23,8 +23,7 @@
 </p>
 
 | This package contains code that defines the API of the passport server and client, and enables developers (both us, and third party developers) to communicate with those two applications. For example, this package contains code that enables you to construct a URL that requests a particular PCD from the passport webapp. |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 ## 🛠 Install
 
@@ -75,14 +74,14 @@ export default function Popup() {
 Then the [`usePassportPopupMessages`](https://docs.pcd.team/functions/_pcd_passport_interface.usePassportPopupMessages.html) React hook can be used to process the results of the requests. It listens for incoming [messages](https://developer.mozilla.org/en-US/docs/Web/API/Window/message_event) from the other browsing context (i.e. the popup) and store them in a state variable.
 
 ```typescript
-import { usePassportPopupMessages } from "@pcd/passport-interface"
+import { usePassportPopupMessages } from "@pcd/passport-interface";
 
 export default function App() {
-    const [passportPCDString] = usePassportPopupMessages()
+  const [passportPCDString] = usePassportPopupMessages();
 
-     useEffect(() => {
-        console.log(passportPCDString)
-    }, [passportPCDString])
+  useEffect(() => {
+    console.log(passportPCDString);
+  }, [passportPCDString]);
 }
 ```
 
@@ -96,7 +95,7 @@ import { constructPassportPcdProveAndAddRequestUrl, openPassportPopup } from "@p
 import { ArgumentTypeName } from "@pcd/pcd-types"
 
 const url = constructPassportPcdProveAndAddRequestUrl<typeof EdDSAPCDPackage>(
-    "https://pcdpass.xyz",
+    "https://zupass.org",
     window.location.origin + "/popup",
     EdDSAPCDPackage.name,
     {
@@ -141,7 +140,7 @@ const pcd = await prove({
 const serializedPCD = await serialize(pcd)
 
 const url = constructPassportPcdAddRequestUrl(
-    "https://pcdpass.xyz",
+    "https://zupass.org",
     window.location.origin + "/popup",
     serializedPCD
 )
@@ -154,45 +153,51 @@ openPassportPopup("/popup", url)
 You can get a PCD from the passport that already exists in the user's local storage with [`getWithoutProvingUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.getWithoutProvingUrl.html).
 
 ```typescript
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
-import { getWithoutProvingUrl, openPassportPopup } from "@pcd/passport-interface"
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import {
+  getWithoutProvingUrl,
+  openPassportPopup
+} from "@pcd/passport-interface";
 
 const url = getWithoutProvingUrl(
-  "https://pcdpass.xyz",
+  "https://zupass.org",
   window.location.origin + "/popup",
   EdDSAPCDPackage.name
-)
+);
 
-openPassportPopup("/popup", url)
+openPassportPopup("/popup", url);
 ```
 
 Or you can prove a claim and get its PCD with [`constructPassportPcdGetRequestUrl`](https://docs.pcd.team/functions/_pcd_passport_interface.constructPassportPcdGetRequestUrl.html).
 
 ```typescript
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
-import { constructPassportPcdGetRequestUrl, openPassportPopup } from "@pcd/passport-interface"
-import { ArgumentTypeName } from "@pcd/pcd-types"
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import {
+  constructPassportPcdGetRequestUrl,
+  openPassportPopup
+} from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 
 const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
-    "https://pcdpass.xyz",
-    window.location.origin + "/popup",
-    EdDSAPCDPackage.name,
-    {
-        id: {
-            argumentType: ArgumentTypeName.String
-        },
-        message: {
-            argumentType: ArgumentTypeName.StringArray,
-            value: ["0x32"]
-        },
-        privateKey: {
-            argumentType: ArgumentTypeName.String,
-            userProvided: true
-        }
+  "https://zupass.org",
+  window.location.origin + "/popup",
+  EdDSAPCDPackage.name,
+  {
+    id: {
+      argumentType: ArgumentTypeName.String
+    },
+    message: {
+      argumentType: ArgumentTypeName.StringArray,
+      value: ["0x32"]
+    },
+    privateKey: {
+      argumentType: ArgumentTypeName.String,
+      userProvided: true
     }
-)
+  }
+);
 
-openPassportPopup("/popup", url)
+openPassportPopup("/popup", url);
 ```
 
 ### Interacting with the passport webapp directly without popup
@@ -200,30 +205,31 @@ openPassportPopup("/popup", url)
 If you wish to add or get a PCD from the passport webapp without relying on a popup interface but instead managing the outcome of the request on your server, you can achieve this by specifying an alternative return URL. This return URL could be a designated endpoint on your server, responsible for processing the request and its subsequent actions.
 
 ```typescript
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd"
-import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface"
-import { ArgumentTypeName } from "@pcd/pcd-types"
-  
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+
 const url = constructPassportPcdGetRequestUrl<typeof EdDSAPCDPackage>(
-    "https://pcdpass.xyz",
-    "https://your-server.org/verify", // This endpoint will handle the request's results.
-    EdDSAPCDPackage.name,
-    {
-        id: {
-            argumentType: ArgumentTypeName.String
-        },
-        message: {
-            argumentType: ArgumentTypeName.StringArray,
-            value: ["0x32"]
-        },
-        privateKey: {
-            argumentType: ArgumentTypeName.String,
-            userProvided: true
-        }
-    }, { 
-        genericProveScreen: true
+  "https://zupass.org",
+  "https://your-server.org/verify", // This endpoint will handle the request's results.
+  EdDSAPCDPackage.name,
+  {
+    id: {
+      argumentType: ArgumentTypeName.String
+    },
+    message: {
+      argumentType: ArgumentTypeName.StringArray,
+      value: ["0x32"]
+    },
+    privateKey: {
+      argumentType: ArgumentTypeName.String,
+      userProvided: true
     }
-); 
+  },
+  {
+    genericProveScreen: true
+  }
+);
 ```
 
 A real use case could be a Telegram bot that redirects users to the passport webapp to allow them to enter their private key to sign a message and create a EdDSA PCD. The return URL in this case will be an endpoint in the bot's server that adds the user to a Telegram group after verifying the PCD.

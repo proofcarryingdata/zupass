@@ -8,18 +8,18 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks to upload an e2ee encrypted blob to the PCDpass server. The server
+ * Asks to upload an e2ee encrypted blob to the Zupass server. The server
  * never learns the user's encryption key.
  *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestUploadEncryptedStorage(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   blobKey: string,
   encryptedStorage: EncryptedPacket
 ): Promise<UploadEncryptedStorageResult> {
   return httpPostSimple(
-    urlJoin(passportServerUrl, `/sync/save`),
+    urlJoin(zupassServerUrl, `/sync/save`),
     async () => ({ value: undefined, success: true }),
     {
       blobKey,

@@ -6,7 +6,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Dispatcher, StateContext } from "./dispatch";
-import { AppError, AppState, PendingAction } from "./state";
+import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 
 export function usePCDCollectionWithHash(): {
@@ -69,8 +69,8 @@ export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }
 
-export function usePendingAction(): PendingAction | undefined {
-  return useSelector<PendingAction | undefined>((s) => s.pendingAction, []);
+export function useSalt(): string | undefined {
+  return useSelector<string | undefined>((s) => s.self?.salt, []);
 }
 
 export function useAppError(): AppError | undefined {

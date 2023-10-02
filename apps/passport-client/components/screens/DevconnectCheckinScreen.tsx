@@ -92,7 +92,7 @@ function TicketError({
         <>
           <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
           <Spacer h={8} />
-          <span>This ticket was not issued by PCDpass.</span>
+          <span>This ticket was not issued by Zupass.</span>
         </>
       );
       break;
@@ -216,7 +216,7 @@ function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
       }
 
       const checkTicketResult = await requestCheckTicket(
-        appConfig.passportServer,
+        appConfig.zupassServer,
         {
           ticket: await EdDSATicketPCDPackage.serialize(ticket)
         }
@@ -247,7 +247,7 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
 
     setInProgress(true);
     const checkinResult = await checkinTicket(
-      appConfig.passportServer,
+      appConfig.zupassServer,
       ticket,
       identity
     );

@@ -1,44 +1,54 @@
+import { requestVerifyToken } from "@pcd/passport-interface";
 import { useCallback, useLayoutEffect, useState } from "react";
-import { useDispatch, useQuery } from "../../src/appHooks";
+import { appConfig } from "../../src/appConfig";
+import { useQuery } from "../../src/appHooks";
 import {
-  BackgroundGlow,
   BigInput,
   Button,
   CenterColumn,
-  H1,
+  H2,
+  HR,
   Spacer,
   TextCenter
 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { InlineError } from "../shared/InlineError";
+import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 export function EnterConfirmationCodeScreen() {
-  const dispatch = useDispatch();
   const query = useQuery();
   const email = query?.get("email");
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
+  const [error, setError] = useState<string | undefined>();
 
   const onCreateClick = useCallback(async () => {
     const token = input;
 
     if (token === "") {
-      dispatch({
-        type: "error",
-        error: {
-          title: "Enter Token",
-          message:
-            "Check your email for an access token from passport@0xparc.org",
-          dismissToCurrentPage: true
-        }
-      });
-      return;
+      return setError(
+        "Check your email for an access token from passport@0xparc.org, and enter it here."
+      );
     }
+
     setVerifyingCode(true);
-    await dispatch({ type: "verify-token", email, token });
+    const verifyTokenResult = await requestVerifyToken(
+      appConfig.zupassServer,
+      email,
+      token
+    );
     setVerifyingCode(false);
-  }, [dispatch, email, input]);
+
+    if (verifyTokenResult.success) {
+      window.location.hash = `#/create-password?email=${encodeURIComponent(
+        email
+      )}&token=${encodeURIComponent(token)}`;
+    } else {
+      setError("The code you entered is incorrect");
+    }
+  }, [email, input]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
@@ -49,50 +59,57 @@ export function EnterConfirmationCodeScreen() {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
+  let content = null;
+
+  if (verifyingCode) {
+    content = (
+      <>
+        <Spacer h={128} />
+        <RippleLoader />
+        <Spacer h={24} />
+        <TextCenter>Verifying code...</TextCenter>
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <Spacer h={64} />
+        <TextCenter>
+          <H2>Enter Confirmation Code</H2>
+          <Spacer h={24} />
+          Check your inbox for an email from <span>passport@0xparc.org</span>.
+          Use the most recent code you received to continue.
+        </TextCenter>
+        <Spacer h={24} />
+        <CenterColumn>
+          <BigInput value={email} disabled />
+          <Spacer h={8} />
+          <BigInput
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="confirmation code"
+            disabled={verifyingCode}
+          />
+          <InlineError error={error} />
+          <Spacer h={8} />
+          <Button onClick={onCreateClick}>Continue</Button>
+          <Spacer h={24} />
+          <HR />
+          <Spacer h={24} />
+          <ResendCodeButton email={email} />
+          <Spacer h={8} />
+          <Button onClick={onCancelClick} style="secondary">
+            Cancel
+          </Button>
+        </CenterColumn>
+      </>
+    );
+  }
+
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="primary">
-        <BackgroundGlow
-          y={224}
-          from="var(--bg-lite-primary)"
-          to="var(--bg-dark-primary)"
-        >
-          <Spacer h={64} />
-          <TextCenter>
-            <H1>PCDPASS</H1>
-          </TextCenter>
-          <Spacer h={32} />
-          <TextCenter>
-            We've sent you a confirmation code, please enter it below to set up
-            your account.
-          </TextCenter>
-          <Spacer h={24} />
-          <CenterColumn w={280}>
-            <BigInput value={email} disabled />
-            <Spacer h={8} />
-            <BigInput
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="confirmation code"
-              disabled={verifyingCode}
-            />
-            {verifyingCode ? (
-              <>
-                <Spacer h={16} />
-                <RippleLoader />
-              </>
-            ) : (
-              <>
-                <Spacer h={8} />
-                <Button onClick={onCreateClick}>Continue</Button>
-                <Spacer h={8} />
-                <Button onClick={onCancelClick}>Cancel</Button>
-              </>
-            )}
-          </CenterColumn>
-        </BackgroundGlow>
-      </AppContainer>
+      <AppContainer bg="primary">{content}</AppContainer>
     </>
   );
 }

@@ -14,12 +14,6 @@ import {
   setCacheValue
 } from "../src/database/queries/cache";
 import {
-  fetchAllCommitments,
-  fetchCommitment,
-  fetchCommitmentByPublicCommitment,
-  removeCommitment
-} from "../src/database/queries/commitments";
-import {
   fetchEncryptedStorage,
   insertEncryptedStorage
 } from "../src/database/queries/e2ee";
@@ -27,8 +21,14 @@ import {
   fetchEmailToken,
   insertEmailToken
 } from "../src/database/queries/emailToken";
-import { insertCommitment } from "../src/database/queries/saveCommitment";
-import { deleteZuzaluUser } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
+import { upsertUser } from "../src/database/queries/saveUser";
+import {
+  deleteUserByEmail,
+  fetchAllUsers,
+  fetchUserByCommitment,
+  fetchUserByEmail
+} from "../src/database/queries/users";
+import { deleteZuzaluTicket } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
   fetchAllLoggedInZuzaluUsers,
   fetchLoggedInZuzaluUser,
@@ -38,7 +38,7 @@ import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_
 import { updateZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { randomEmailToken } from "../src/util/util";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { overrideEnvironment, testingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
 
 describe("database reads and writes", function () {
@@ -49,7 +49,7 @@ describe("database reads and writes", function () {
   let otherRole: ZuzaluUserRole;
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     db = await getDB();
   });
 
@@ -108,7 +108,7 @@ describe("database reads and writes", function () {
     async function () {
       const newIdentity = new Identity();
       const newCommitment = newIdentity.commitment.toString();
-      const newUuid = await insertCommitment(db, {
+      const newUuid = await upsertUser(db, {
         email: testTicket.email,
         commitment: newCommitment
       });
@@ -142,7 +142,7 @@ describe("database reads and writes", function () {
     "able to fetch commitment separately from logged in user",
     async function () {
       const loggedinUser = await fetchZuzaluUser(db, testTicket.email);
-      const commitment = await fetchCommitment(db, testTicket.email);
+      const commitment = await fetchUserByEmail(db, testTicket.email);
 
       if (!loggedinUser || !commitment) {
         throw new Error("couldn't find user or commitment");
@@ -151,8 +151,8 @@ describe("database reads and writes", function () {
       expect(loggedinUser.commitment).to.eq(commitment.commitment);
       expect(loggedinUser.email).to.eq(commitment.email);
 
-      const allCommitments = await fetchAllCommitments(db);
-      expect(allCommitments).to.deep.eq([commitment]);
+      const allUsers = await fetchAllUsers(db);
+      expect(allUsers).to.deep.eq([commitment]);
     }
   );
 
@@ -187,18 +187,17 @@ describe("database reads and writes", function () {
     if (!loggedinUser || !loggedinUser.uuid) {
       throw new Error("expected there to be a logged in user");
     }
-    await deleteZuzaluUser(db, testTicket.email);
+    await deleteZuzaluTicket(db, testTicket.email);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
     expect(
       await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
     ).to.eq(null);
-    expect(await fetchCommitment(db, testTicket.email)).to.eq(null);
   });
 
   step("deleting a non logged in user should work", async function () {
     await insertZuzaluPretixTicket(db, testTicket);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.not.eq(null);
-    await deleteZuzaluUser(db, testTicket.email);
+    await deleteZuzaluTicket(db, testTicket.email);
     expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
   });
 
@@ -241,14 +240,14 @@ describe("database reads and writes", function () {
   step("pcdpass user representation should work", async function () {
     const email = "pcdpassuser@test.com";
     const commitment = new Identity().commitment.toString();
-    const uuid = await insertCommitment(db, {
+    const uuid = await upsertUser(db, {
       commitment,
       email
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
     }
-    const insertedCommitment = await fetchCommitment(db, email);
+    const insertedCommitment = await fetchUserByEmail(db, email);
     if (!insertedCommitment) {
       throw new Error("expected to be able to fetch an inserted commitment");
     }
@@ -256,12 +255,12 @@ describe("database reads and writes", function () {
     expect(insertedCommitment.email).to.eq(email);
     expect(insertedCommitment.uuid).to.eq(uuid);
 
-    expect(await fetchCommitmentByPublicCommitment(db, commitment)).to.deep.eq(
+    expect(await fetchUserByCommitment(db, commitment)).to.deep.eq(
       insertedCommitment
     );
 
-    await removeCommitment(db, email);
-    const deletedCommitment = await fetchCommitment(db, email);
+    await deleteUserByEmail(db, email);
+    const deletedCommitment = await fetchUserByEmail(db, email);
     expect(deletedCommitment).to.eq(null);
   });
 

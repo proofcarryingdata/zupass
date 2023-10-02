@@ -11,11 +11,11 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestProveOnServer(
-  passportServer: string,
+  zupassServerUrl: string,
   serverReq: ServerProofRequest
 ): Promise<ProveOnServerResult> {
   return httpPostSimple(
-    urlJoin(passportServer, `/pcds/prove`),
+    urlJoin(zupassServerUrl, `/pcds/prove`),
     async (resText) => ({
       value: JSON.parse(resText) as PendingPCD,
       success: true

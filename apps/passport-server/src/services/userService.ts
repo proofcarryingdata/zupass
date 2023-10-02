@@ -1,30 +1,18 @@
 import {
   ConfirmEmailResponseValue,
-  PCDpassUserJson,
-  ZupassUserJson,
-  ZuzaluUserRole
+  ZupassUserJson
 } from "@pcd/passport-interface";
 import { Response } from "express";
-import {
-  CommitmentRow,
-  LoggedinPCDpassUser,
-  LoggedInZuzaluUser,
-  ZuzaluUser
-} from "../database/models";
-import { fetchCommitment } from "../database/queries/commitments";
+import { LoggedInUser, UserRow } from "../database/models";
 import {
   fetchDevconnectDeviceLoginTicket,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
-  insertCommitment,
-  updateCommitmentResetList
-} from "../database/queries/saveCommitment";
-import {
-  fetchAllZuzaluUsers,
-  fetchZuzaluUser
-} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
+  updateUserAccountRestTimestamps,
+  upsertUser
+} from "../database/queries/saveUser";
+import { fetchUserByEmail, fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -58,18 +46,8 @@ export class UserService {
       process.env.NODE_ENV !== "production";
   }
 
-  public async getZuzaluPassportHolder(
-    email: string
-  ): Promise<ZuzaluUser | null> {
-    return fetchZuzaluUser(this.context.dbPool, email);
-  }
-
-  public async getZuzaluTicketHolders(): Promise<Array<ZuzaluUser>> {
-    return fetchAllZuzaluUsers(this.context.dbPool);
-  }
-
   public async getSaltByEmail(email: string): Promise<string | null> {
-    const user = await this.semaphoreService.getUserByEmail(email);
+    const user = await this.getUserByEmail(email);
 
     if (!user) {
       throw new PCDHTTPError(404, `user ${email} does not exist`);
@@ -78,155 +56,14 @@ export class UserService {
     return user.salt;
   }
 
-  public async handleSendZuzaluEmail(
+  public async handleSendTokenEmail(
     email: string,
     commitment: string,
     force: boolean,
     res: Response
   ): Promise<void> {
     logger(
-      `[ZUID] send-login-email ${JSON.stringify({
-        email,
-        commitment,
-        force
-      })}`
-    );
-
-    if (!validateEmail(email)) {
-      throw new PCDHTTPError(400, `'${email}' is not a valid email`);
-    }
-
-    const token = await this.emailTokenService.saveNewTokenForEmail(email);
-
-    if (this.bypassEmail) {
-      await insertZuzaluPretixTicket(this.context.dbPool, {
-        email: email,
-        name: "Test User",
-        order_id: "",
-        role: ZuzaluUserRole.Resident,
-        visitor_date_ranges: undefined
-      });
-    }
-
-    const user = await fetchZuzaluUser(this.context.dbPool, email);
-
-    if (user == null) {
-      throw new PCDHTTPError(403, `${email} doesn't have a ticket.`);
-    }
-
-    if (user.commitment != null && !force) {
-      throw new PCDHTTPError(403, `${email} already registered.`);
-    }
-
-    logger(
-      `Saved login token for ${
-        user.commitment == null ? "NEW" : "EXISTING"
-      } email=${email} commitment=${commitment}`
-    );
-
-    if (this.bypassEmail) {
-      logger("[DEV] Bypassing email, returning token");
-      res
-        .status(200)
-        .json({ devToken: token } satisfies ConfirmEmailResponseValue);
-      return;
-    }
-
-    logger(`[ZUID] Sending token=${token} to email=${email} name=${user.name}`);
-    await this.emailService.sendPretixEmail(email, user.name, token);
-
-    res.sendStatus(200);
-  }
-
-  public async handleNewZuzaluUser(
-    emailToken: string,
-    email: string,
-    commitment: string,
-    res: Response
-  ): Promise<void> {
-    logger(
-      `[ZUID] new-user ${JSON.stringify({
-        emailToken,
-        email,
-        commitment
-      })}`
-    );
-
-    const user = await fetchZuzaluUser(this.context.dbPool, email);
-
-    if (user == null) {
-      throw new PCDHTTPError(403, `${email} doesn't have a ticket`);
-    }
-
-    if (!(await this.emailTokenService.checkTokenCorrect(email, emailToken))) {
-      throw new PCDHTTPError(
-        403,
-        `Wrong token. If you got more than one email, use the latest one.`
-      );
-    }
-
-    if (user.email !== email) {
-      throw new PCDHTTPError(403, `Email mismatch.`);
-    }
-
-    const existingUser = await fetchCommitment(this.context.dbPool, email);
-    if (existingUser) {
-      await this.checkAndIncrementAccountRateLimit(existingUser);
-    }
-
-    // Save commitment to DB.
-    logger(`[ZUID] Saving new commitment: ${commitment}`);
-    const uuid = await insertCommitment(this.context.dbPool, {
-      email,
-      commitment
-    });
-
-    // Reload Merkle trees
-    await this.semaphoreService.reload();
-
-    const newUser = (await this.semaphoreService.getUserByUUID(
-      uuid
-    )) as LoggedInZuzaluUser;
-
-    if (newUser == null) {
-      throw new PCDHTTPError(404, `user with id '${uuid}' not found`);
-    }
-
-    if (newUser.commitment !== commitment) {
-      throw new PCDHTTPError(403, `commitment mismatch`);
-    }
-
-    logger(`[ZUID] Added new Zuzalu user`, newUser);
-    res.status(200).json(newUser satisfies ZupassUserJson);
-  }
-
-  /**
-   * If the service is not ready, returns a 500 server error.
-   * If the user does not exist, returns a 404.
-   * Otherwise returns the user.
-   */
-  public async handleGetZuzaluUser(uuid: string, res: Response): Promise<void> {
-    logger(`[ZUID] Fetching user ${uuid}`);
-
-    const user = (await this.semaphoreService.getUserByUUID(
-      uuid
-    )) as LoggedInZuzaluUser;
-
-    if (!user) {
-      throw new PCDHTTPError(404, `no user with id '${uuid}' found`);
-    }
-
-    res.status(200).json(user satisfies ZupassUserJson);
-  }
-
-  public async handleSendPCDpassEmail(
-    email: string,
-    commitment: string,
-    force: boolean,
-    res: Response
-  ): Promise<void> {
-    logger(
-      `[PCDPASS] send-login-email ${JSON.stringify({
+      `[USER_SERVICE] send-token-email ${JSON.stringify({
         email,
         commitment,
         force
@@ -240,7 +77,7 @@ export class UserService {
     const newEmailToken =
       await this.emailTokenService.saveNewTokenForEmail(email);
 
-    const existingCommitment = await fetchCommitment(
+    const existingCommitment = await fetchUserByEmail(
       this.context.dbPool,
       email
     );
@@ -263,8 +100,8 @@ export class UserService {
       return;
     }
 
-    logger(`[PCDPASS] Sending token=${newEmailToken} to email=${email}`);
-    await this.emailService.sendPCDpassEmail(email, newEmailToken);
+    logger(`[USER_SERVICE] Sending token=${newEmailToken} to email=${email}`);
+    await this.emailService.sendTokenEmail(email, newEmailToken);
 
     res.sendStatus(200);
   }
@@ -277,10 +114,10 @@ export class UserService {
    * already created an account.
    */
   private async checkAndIncrementAccountRateLimit(
-    user: CommitmentRow
+    user: UserRow
   ): Promise<void> {
     if (process.env.ACCOUNT_RESET_RATE_LIMIT_DISABLED === "true") {
-      logger("[PCDPASS] account rate limit disabled");
+      logger("[USER_SERVICE] account rate limit disabled");
       return;
     }
 
@@ -322,14 +159,14 @@ export class UserService {
       );
     }
 
-    await updateCommitmentResetList(
+    await updateUserAccountRestTimestamps(
       this.context.dbPool,
       user.email,
       resetsNewerThanMaxAge.map((t) => new Date(t).toISOString())
     );
   }
 
-  public async handleNewPCDpassUser(
+  public async handleNewUser(
     token: string,
     email: string,
     commitment: string,
@@ -337,7 +174,7 @@ export class UserService {
     res: Response
   ): Promise<void> {
     logger(
-      `[PCDPASS] new-user ${JSON.stringify({
+      `[USER_SERVICE] new-user ${JSON.stringify({
         token,
         email,
         commitment
@@ -351,36 +188,26 @@ export class UserService {
       );
     }
 
-    const existingUser = await fetchCommitment(this.context.dbPool, email);
+    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
     if (existingUser) {
       await this.checkAndIncrementAccountRateLimit(existingUser);
     }
 
-    logger(`[PCDPASS] Saving commitment: ${commitment}`);
-    await insertCommitment(this.context.dbPool, { email, commitment, salt });
+    logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
+    await upsertUser(this.context.dbPool, { email, commitment, salt });
 
     // Reload Merkle trees
-    await this.semaphoreService.reload();
+    this.semaphoreService.scheduleReload();
 
-    const commitmentRow = await fetchCommitment(this.context.dbPool, email);
-    if (!commitmentRow) {
+    const user = await fetchUserByEmail(this.context.dbPool, email);
+    if (!user) {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
-    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-      this.context.dbPool,
-      commitmentRow.email
-    );
+    const fullUser = await this.userToLoggedInUser(user);
 
-    const pcdpassUser: LoggedinPCDpassUser = {
-      ...commitmentRow,
-      superuserEventConfigIds: superuserPrivilages.map(
-        (s) => s.pretix_events_config_id
-      )
-    };
-
-    logger(`[PCDPASS] logged in a PCDpass user`, pcdpassUser);
-    res.status(200).json(pcdpassUser satisfies PCDpassUserJson);
+    logger(`[USER_SERVICE] logged in a user`, fullUser);
+    res.status(200).json(fullUser satisfies ZupassUserJson);
   }
 
   /**
@@ -388,21 +215,16 @@ export class UserService {
    * If the user does not exist, returns a 404.
    * Otherwise returns the user.
    */
-  public async handleGetPCDpassUser(
-    uuid: string,
-    res: Response
-  ): Promise<void> {
-    logger(`[PCDPASS] Fetching user ${uuid}`);
+  public async handleGetUser(uuid: string, res: Response): Promise<void> {
+    logger(`[USER_SERVICE] Fetching user ${uuid}`);
 
-    const user = (await this.semaphoreService.getUserByUUID(
-      uuid
-    )) as LoggedinPCDpassUser;
+    const user = await this.getUserByUUID(uuid);
 
     if (!user) {
-      throw new PCDHTTPError(404, `no user with uuid '${uuid}'`);
+      throw new PCDHTTPError(410, `no user with uuid '${uuid}'`);
     }
 
-    res.status(200).json(user satisfies PCDpassUserJson);
+    res.status(200).json(user satisfies ZupassUserJson);
   }
 
   public async handleNewDeviceLogin(
@@ -424,29 +246,63 @@ export class UserService {
       );
     }
 
-    logger(`[PCDPASS] Saving new commitment: ${commitment}`);
-    await insertCommitment(this.context.dbPool, { email, commitment });
-    await this.semaphoreService.reload();
+    logger(`[USER_SERVICE] Saving new commitment: ${commitment}`);
+    await upsertUser(this.context.dbPool, { email, commitment });
+    this.semaphoreService.scheduleReload();
 
-    const commitmentRow = await fetchCommitment(this.context.dbPool, email);
-    if (!commitmentRow) {
+    const user = await fetchUserByEmail(this.context.dbPool, email);
+    if (!user) {
       throw new PCDHTTPError(403, `no user with email '${email}' exists`);
     }
 
+    const fullUser = await this.userToLoggedInUser(user);
+
+    logger(`[USER_SERVICE] logged in a device login user`, fullUser);
+    res.status(200).json(fullUser satisfies ZupassUserJson);
+  }
+
+  /**
+   * Returns either the user, or null if no user with the given uuid can be found.
+   */
+  public async getUserByUUID(uuid: string): Promise<LoggedInUser | null> {
+    const user = await fetchUserByUUID(this.context.dbPool, uuid);
+
+    if (!user) {
+      logger("[SEMA] no user with that email exists");
+      return null;
+    }
+
+    return this.userToLoggedInUser(user);
+  }
+
+  /**
+   * Gets a user by email address, or null if no user with that email exists.
+   */
+  public async getUserByEmail(email: string): Promise<LoggedInUser | null> {
+    const user = await fetchUserByEmail(this.context.dbPool, email);
+
+    if (!user) {
+      logger("[SEMA] no user with that email exists");
+      return null;
+    }
+
+    return this.userToLoggedInUser(user);
+  }
+
+  private async userToLoggedInUser(user: UserRow): Promise<LoggedInUser> {
     const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
       this.context.dbPool,
-      commitmentRow.email
+      user.email
     );
 
-    const pcdpassUser: LoggedinPCDpassUser = {
-      ...commitmentRow,
+    const fullUser: LoggedInUser = {
+      ...user,
       superuserEventConfigIds: superuserPrivilages.map(
         (s) => s.pretix_events_config_id
       )
     };
 
-    logger(`[PCDPASS] logged in a device login user`, pcdpassUser);
-    res.status(200).json(pcdpassUser satisfies PCDpassUserJson);
+    return fullUser;
   }
 }
 

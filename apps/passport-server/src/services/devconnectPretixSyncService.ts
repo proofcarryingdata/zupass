@@ -69,7 +69,7 @@ export class DevconnectPretixSyncService {
 
         logger("[DEVCONNECT PRETIX] Sync start");
         await this.sync();
-        await this.semaphoreService.reload();
+        this.semaphoreService.scheduleReload();
         this._hasCompletedSyncSinceStarting = true;
         logger("[DEVCONNECT PRETIX] Sync successful");
       } catch (e) {
@@ -191,7 +191,7 @@ export class DevconnectPretixSyncService {
 }
 
 /**
- * Kick off a period sync from Pretix into PCDpass
+ * Kick off a periodic sync from Pretix into Zupass
  */
 export async function startDevconnectPretixSyncService(
   context: ApplicationContext,

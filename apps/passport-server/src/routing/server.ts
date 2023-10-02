@@ -4,23 +4,23 @@ import * as fs from "fs";
 import * as http from "http";
 import * as https from "https";
 import morgan from "morgan";
+import nocache from "nocache";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext, GlobalServices, PCDpass } from "../types";
+import { ApplicationContext, GlobalServices, Zupass } from "../types";
 import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { respondWithError } from "./pcdHttpError";
+import { initAccountRoutes } from "./routes/accountRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
-import { initPCDpassRoutes } from "./routes/pcdpassRoutes";
 import { initProvingRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
 import { initTelegramRoutes } from "./routes/telegramRoutes";
-import { initZuzaluRoutes } from "./routes/zuzaluRoutes";
 
 export async function startHttpServer(
   context: ApplicationContext,
@@ -38,6 +38,8 @@ export async function startHttpServer(
     }
 
     const app = express();
+    app.use(nocache());
+    app.set("etag", false);
 
     if (process.env.SUPPRESS_LOGGING !== "true") {
       app.use(morgan("tiny"));
@@ -108,12 +110,11 @@ function initAllRoutes(
   context: ApplicationContext,
   globalServices: GlobalServices
 ): void {
-  initStatusRoutes(app, context, globalServices);
+  initStatusRoutes(app, globalServices);
   initHealthcheckRoutes(app, context);
   initSemaphoreRoutes(app, context, globalServices);
   initE2EERoutes(app, context, globalServices);
-  initZuzaluRoutes(app, context, globalServices);
-  initPCDpassRoutes(app, context, globalServices);
+  initAccountRoutes(app, context, globalServices);
   initProvingRoutes(app, context, globalServices);
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
@@ -121,7 +122,7 @@ function initAllRoutes(
   initLogRoutes(app);
 }
 
-export function stopHttpServer(app: PCDpass): Promise<void> {
+export function stopHttpServer(app: Zupass): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     app.expressContext.server.close((err) => {
       if (err) {

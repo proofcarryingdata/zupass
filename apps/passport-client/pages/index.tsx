@@ -4,35 +4,40 @@ import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
-import { AlreadyRegisteredScreen } from "../components/screens/AlreadyRegisteredScreen";
-import { CreatePasswordScreen } from "../components/screens/CreatePasswordScreen";
+import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
-import { DeviceLoginScreen } from "../components/screens/DeviceLoginScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
-import { LoginInterstitialScreen } from "../components/screens/LoginInterstitialScreen";
-import { LoginScreen } from "../components/screens/LoginScreen";
+import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
+import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
+import { DeviceLoginScreen } from "../components/screens/LoginScreens/DeviceLoginScreen";
+import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
+import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
+import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
-import { NewPassportScreen } from "../components/screens/NewPassportScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
-import { SyncExistingScreen } from "../components/screens/SyncExistingScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
-import { appConfig } from "../src/appConfig";
+import {
+  closeBroadcastChannel,
+  setupBroadcastChannel
+} from "../src/broadcastChannel";
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadAnotherDeviceChangedPassword,
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
@@ -57,6 +62,10 @@ class App extends React.Component<object, AppState> {
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    setupBroadcastChannel(this.dispatch);
+  }
+  componentWillUnmount(): void {
+    closeBroadcastChannel();
   }
   stateContextState: StateContextState = {
     getState: () => this.state,
@@ -114,7 +123,7 @@ class App extends React.Component<object, AppState> {
       console.log(e);
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60 * 5);
+    setTimeout(this.jobPollUser, 1000 * 60);
   };
 }
 
@@ -135,9 +144,9 @@ function RouterImpl() {
             path="already-registered"
             element={<AlreadyRegisteredScreen />}
           />
-          {!appConfig.isZuzalu && (
-            <Route path="create-password" element={<CreatePasswordScreen />} />
-          )}
+          <Route path="sync-existing" element={<SyncExistingScreen />} />
+          <Route path="create-password" element={<CreatePasswordScreen />} />
+          <Route path="change-password" element={<ChangePasswordScreen />} />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
@@ -151,18 +160,10 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {appConfig.isZuzalu && (
-            <Route path="sync-existing" element={<SyncExistingScreen />} />
-          )}
+          <Route path="verify-zupass" element={<VerifyScreen />} />
           <Route
-            path="verify"
-            element={
-              appConfig.isZuzalu ? (
-                <VerifyScreen />
-              ) : (
-                <DevconnectCheckinScreen />
-              )
-            }
+            path="verify-devconnect"
+            element={<DevconnectCheckinScreen />}
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
@@ -176,6 +177,7 @@ function RouterImpl() {
 
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
+
   if (identity == null) {
     console.log("Generating a new Semaphore identity...");
     identity = new Identity();
@@ -184,8 +186,10 @@ async function loadInitialState(): Promise<AppState> {
 
   const self = loadSelf();
   const pcds = await loadPCDs();
-  const encryptionKey = await loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey();
+
   const userInvalid = loadUserInvalid();
+  const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
@@ -199,13 +203,12 @@ async function loadInitialState(): Promise<AppState> {
   if (userInvalid) {
     modal = "invalid-participant";
   } else if (
-    // If on Zupass legacy login, ask user to save their Sync Key
-    appConfig.isZuzalu &&
+    // If on Zupass legacy login, ask user to set passwrod
     self != null &&
-    !localStorage["savedSyncKey"]
+    self.salt == null
   ) {
-    console.log("Asking existing user to save their Sync Key...");
-    modal = "save-sync";
+    console.log("Asking existing user to set a password");
+    modal = "upgrade-account-modal";
   }
 
   return {
@@ -215,6 +218,7 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     userInvalid: userInvalid,
+    anotherDeviceChangedPassword,
     subscriptions,
     resolvingSubscriptionId: undefined
   };

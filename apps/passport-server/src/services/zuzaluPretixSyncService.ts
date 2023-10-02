@@ -6,7 +6,7 @@ import {
   ZuzaluPretixSubevent
 } from "../apis/zuzaluPretixAPI";
 import { ZuzaluPretixTicket } from "../database/models";
-import { deleteZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
+import { deleteZuzaluTicket } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
@@ -190,7 +190,7 @@ export class ZuzaluPretixSyncService {
       logger(`[PRETIX] Deleting ${removedTickets.length} users`);
       for (const removedTicket of removedTickets) {
         logger(`[PRETIX] Deleting ${JSON.stringify(removedTicket)}`);
-        await deleteZuzaluUser(dbClient, removedTicket.email);
+        await deleteZuzaluTicket(dbClient, removedTicket.email);
       }
 
       span?.setAttribute("ticketsInserted", newTickets.length);
@@ -346,7 +346,7 @@ export class ZuzaluPretixSyncService {
 
   /**
    * Some visitors have multiple orders. These orders need to be merged
-   * into a single pretix ticket passport-side, so that a single user
+   * into a single pretix ticket Zupass-side, so that a single user
    * on our end contains all the dates they have a visitor ticket to.
    */
   private deduplicateVisitorTickets(

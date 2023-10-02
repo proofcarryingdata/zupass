@@ -32,6 +32,16 @@ export class PCDCrypto {
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 
+  /**
+   * Combines generateSalt and argon2 function, returns both a random salt
+   * and the resulting 32-byte encryption key.
+   */
+  public generateSaltAndEncryptionKey(password: Utf8String) {
+    const salt = this.generateSalt();
+    const key = this.argon2(password, salt, 32);
+    return { key, salt };
+  }
+
   public generateSalt(
     length: number = this.sodium.crypto_pwhash_SALTBYTES
   ): HexString {
@@ -44,18 +54,14 @@ export class PCDCrypto {
     return utils.arrayBufferToHexString(buffer);
   }
 
-  public argon2(
-    password: Utf8String,
-    salt: HexString,
-    length: number
-  ): HexString {
+  public argon2(password: Utf8String, salt: HexString, length = 32): HexString {
     const result = this.sodium.crypto_pwhash(
       length,
       utils.stringToArrayBuffer(password),
       utils.hexStringToArrayBuffer(salt),
       // `oplimit` represents the maximum amount of computations to perform
       // for generating a key. `crypto_pwhash_OPSLIMIT_INTERACTIVE` is recommended
-      // for intereactive, online applications such as PCDPass.
+      // for intereactive, online applications such as Zupass.
       // Source: https://libsodium.gitbook.io/doc/password_hashing/default_phf
       this.sodium.crypto_pwhash_OPSLIMIT_INTERACTIVE,
       // `memlimit` represents the maximum amount of RAM in bytes thet function

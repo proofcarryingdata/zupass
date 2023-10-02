@@ -1,32 +1,23 @@
 import {
-  constructPassportPcdGetRequestUrl,
-  usePassportPopupMessages,
+  openSemaphoreSignaturePopup,
   usePCDMultiplexer,
   usePendingPCD,
-  useSemaphoreSignatureProof
+  useSemaphoreSignatureProof,
+  useZupassPopupMessages
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../constants";
-import { sendPassportRequest } from "../../util";
 
-/**
- * Example page which shows how to use the generic prove screen to
- * request a Semaphore Signature PCD as a third party developer.
- */
 export default function Page() {
-  // Populate PCD from either client-side or server-side proving using passport popup
-  const [passportPCDStr, passportPendingPCDStr] = usePassportPopupMessages();
+  const [zupassPCDStr, zupassPendingPCDStr] = useZupassPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
-    passportPendingPCDStr,
+    zupassPendingPCDStr,
     ZUPASS_SERVER_URL
   );
-  const pcdStr = usePCDMultiplexer(passportPCDStr, serverPCDStr);
+  const pcdStr = usePCDMultiplexer(zupassPCDStr, serverPCDStr);
 
   const [signatureProofValid, setSignatureProofValid] = useState<
     boolean | undefined
@@ -34,31 +25,43 @@ export default function Page() {
   const onProofVerified = (valid: boolean) => {
     setSignatureProofValid(valid);
   };
+
   const { signatureProof } = useSemaphoreSignatureProof(
     pcdStr,
     onProofVerified
   );
 
+  const [messageToSign, setMessageToSign] = useState<string>("");
   const [serverProving, setServerProving] = useState(false);
 
   return (
     <>
       <HomeLink />
-      <h2>Generic Semaphore Signature Proof</h2>
+      <h2>Semaphore Signature Proof</h2>
       <p>
-        This page shows a working example of an integration with the Zuzalu
-        Passport application which requests and verifies that a particular user
-        is a member of the Zuzalu Residents Semaphore Group. Although the data
-        that is returned is not specific for Zuzalu, this specific request shows
-        a specific screen within the passport which was specifically designed
-        for Zuzalu.
+        This page shows a working example of an integration with Zupass which
+        requests and verifies a semaphore signature from a holder of Zupass.
       </p>
       <ExampleContainer>
+        <input
+          style={{ marginBottom: "8px" }}
+          placeholder="Message to sign"
+          type="text"
+          value={messageToSign}
+          onChange={(e) => setMessageToSign(e.target.value)}
+        />
+        <br />
         <button
           disabled={signatureProofValid}
           onClick={useCallback(
-            () => requestSemaphoreSignature(serverProving),
-            [serverProving]
+            () =>
+              openSemaphoreSignaturePopup(
+                ZUPASS_URL,
+                window.location.origin + "#/popup",
+                messageToSign,
+                serverProving
+              ),
+            [messageToSign, serverProving]
           )}
         >
           Request Semaphore Signature
@@ -73,7 +76,7 @@ export default function Page() {
           />
           server-side proof
         </label>
-        {passportPendingPCDStr && (
+        {zupassPendingPCDStr && (
           <>
             <PendingPCDStatusDisplay
               status={pendingPCDStatus}
@@ -83,7 +86,7 @@ export default function Page() {
         )}
         {signatureProof != null && (
           <>
-            <p>Got Semaphore Signature Proof from Passport</p>
+            <p>Got Semaphore Signature Proof from Zupass</p>
 
             <p>{`Message signed: ${signatureProof.claim.signedMessage}`}</p>
             {signatureProofValid === undefined && <p>❓ Proof verifying</p>}
@@ -98,38 +101,4 @@ export default function Page() {
       </ExampleContainer>
     </>
   );
-}
-
-function requestSemaphoreSignature(proveOnServer: boolean) {
-  const popupUrl = window.location.origin + "#/popup";
-  const proofUrl = constructPassportPcdGetRequestUrl<
-    typeof SemaphoreSignaturePCDPackage
-  >(
-    ZUPASS_URL,
-    popupUrl,
-    SemaphoreSignaturePCDPackage.name,
-    {
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        pcdType: SemaphoreIdentityPCDPackage.name,
-        value: undefined,
-        userProvided: true,
-        description: "The identity with which to sign a message."
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: "1",
-        userProvided: true,
-        description: "The message you want to sign."
-      }
-    },
-    {
-      genericProveScreen: true,
-      title: "Semaphore Signature Proof",
-      description: "Sign any message with your Semaphore identity.",
-      proveOnServer: proveOnServer
-    }
-  );
-
-  sendPassportRequest(proofUrl);
 }

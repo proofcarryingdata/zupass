@@ -51,7 +51,7 @@ export interface DevconnectPretixTicket {
 export interface DevconnectPretixTicketWithCheckin
   extends DevconnectPretixTicket {
   checker: string | null;
-  pcdpass_checkin_timestamp: Date | null;
+  zupass_checkin_timestamp: Date | null;
 }
 
 export interface DevconnectPretixTicketDB
@@ -90,7 +90,7 @@ export interface DevconnectSuperuser {
 }
 
 /**
- * A zuzalu pretix-ticket-holder that has logged in to the passport.
+ * A zuzalu pretix-ticket-holder that has logged into Zupass.
  */
 export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
@@ -98,15 +98,17 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   salt: null; // Zupass users never have a password salt
 }
 
-export interface LoggedinPCDpassUser extends CommitmentRow {
+export interface LoggedInUser extends UserRow {
   superuserEventConfigIds: string[];
 }
 
-export interface CommitmentRow {
+export interface UserRow {
   uuid: string;
   commitment: string;
   email: string;
+  // @todo: make this private to the user
   salt: string | null;
+  // @todo: make this private to the user
   account_reset_timestamps: string[];
 }
 

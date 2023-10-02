@@ -26,7 +26,6 @@ import {
 } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
-  fetchPretixEventInfoByName,
   insertPretixEventsInfo
 } from "../src/database/queries/pretixEventInfo";
 import { insertPretixItemsInfo } from "../src/database/queries/pretixItemInfo";
@@ -36,7 +35,7 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { overrideEnvironment, testingEnv } from "./util/env";
 
 export interface ITestOrganizer {
   dbId: string;
@@ -74,7 +73,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   let db: Pool;
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     db = await getDB();
   });
 
@@ -188,7 +187,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 0,
       secret: "a1b2c3d4",
       checker: "",
-      pcdpass_checkin_timestamp: null,
+      zupass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -201,7 +200,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 3,
       secret: "qwertyuiop",
       checker: "",
-      pcdpass_checkin_timestamp: null,
+      zupass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -214,7 +213,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 4,
       secret: "0xdeadbeef",
       checker: "",
-      pcdpass_checkin_timestamp: null,
+      zupass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     },
     {
@@ -227,7 +226,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       _itemIdx: 5,
       secret: "asdfghjkl",
       checker: "",
-      pcdpass_checkin_timestamp: null,
+      zupass_checkin_timestamp: null,
       pretix_checkin_timestamp: null
     }
   ];
@@ -294,21 +293,6 @@ describe("database reads and writes for devconnect ticket features", function ()
         event.dbEventConfigId
       );
       expect(eventInfoFromDb?.id).to.eq(dbEventInfoId);
-    }
-  });
-
-  step("should be able to fetch pretix_event_info by name", async function () {
-    for (let i = 0; i < testEvents.length; i++) {
-      const event = testEvents[i];
-
-      const eventInfoFromDb = await fetchPretixEventInfoByName(
-        db,
-        event.eventName
-      );
-      expect(eventInfoFromDb?.event_name).to.eq(event.eventName);
-      expect(eventInfoFromDb?.pretix_events_config_id).to.eq(
-        event.dbEventConfigId
-      );
     }
   });
 

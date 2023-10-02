@@ -8,16 +8,8 @@ import { useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useQuery } from "../../src/appHooks";
 import { QRPayload } from "../../src/createQRProof";
-import { getVisitorStatus, VisitorStatus } from "../../src/user";
 import { bigintToUuid } from "../../src/util";
-import {
-  BackgroundGlow,
-  CenterColumn,
-  H4,
-  Placeholder,
-  Spacer,
-  TextCenter
-} from "../core";
+import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
@@ -68,10 +60,7 @@ export function VerifyScreen() {
       });
   }, [encodedQRPayload, setVerifyResult, dispatch]);
 
-  const [from, to, bg]: [string, string, "primary" | "gray"] =
-    verifyResult?.valid
-      ? ["var(--bg-lite-primary)", "var(--bg-dark-primary)", "primary"]
-      : ["var(--bg-lite-gray)", "var(--bg-dark-gray)", "gray"];
+  const bg = verifyResult?.valid ? "primary" : "gray";
 
   const icon = {
     true: icons.verifyValid,
@@ -81,34 +70,32 @@ export function VerifyScreen() {
 
   return (
     <AppContainer bg={bg}>
-      <BackgroundGlow y={96} {...{ from, to }}>
-        <Spacer h={48} />
-        <TextCenter>
-          <img draggable="false" width="90" height="90" src={icon} />
-          <Spacer h={24} />
-          {verifyResult == null && <H4>VERIFYING PROOF...</H4>}
-          {verifyResult?.valid && (
-            <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
-          )}
-          {verifyResult?.valid === false && <H4>PROOF INVALID.</H4>}
-        </TextCenter>
-        <Spacer h={48} />
-        <Placeholder minH={160}>
-          {verifyResult?.valid === false && (
-            <TextCenter>{verifyResult.message}</TextCenter>
-          )}
-          {verifyResult && verifyResult.valid && getCard(verifyResult)}
-        </Placeholder>
-        <Spacer h={64} />
-        {verifyResult != null && (
-          <CenterColumn w={280}>
-            <LinkButton to="/scan">Verify another</LinkButton>
-            <Spacer h={8} />
-            <LinkButton to="/">Back to Passport</LinkButton>
-            <Spacer h={24} />
-          </CenterColumn>
+      <Spacer h={48} />
+      <TextCenter>
+        <img draggable="false" width="90" height="90" src={icon} />
+        <Spacer h={24} />
+        {verifyResult == null && <H4>VERIFYING PROOF...</H4>}
+        {verifyResult?.valid && (
+          <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
         )}
-      </BackgroundGlow>
+        {verifyResult?.valid === false && <H4>PROOF INVALID.</H4>}
+      </TextCenter>
+      <Spacer h={48} />
+      <Placeholder minH={160}>
+        {verifyResult?.valid === false && (
+          <TextCenter>{verifyResult.message}</TextCenter>
+        )}
+        {verifyResult && verifyResult.valid && getCard(verifyResult)}
+      </Placeholder>
+      <Spacer h={64} />
+      {verifyResult != null && (
+        <CenterColumn>
+          <LinkButton to="/scan">Verify another</LinkButton>
+          <Spacer h={8} />
+          <LinkButton to="/">Back to Zupass</LinkButton>
+          <Spacer h={24} />
+        </CenterColumn>
+      )}
     </AppContainer>
   );
 }
@@ -120,9 +107,7 @@ function getCard(result: VerifyResult) {
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>
-        <CardHeader col="var(--accent-lite)">
-          VERIFIED ZUZALU PASSPORT
-        </CardHeader>
+        <CardHeader col="var(--accent-lite)">VERIFIED ZUPASS</CardHeader>
         <MainIdentityCard user={result.user} />
       </CardOutlineExpanded>
     </CardContainerExpanded>
@@ -152,7 +137,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   // Verify identity proof
   const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const userResult = await requestUser(appConfig.passportServer, true, uuid);
+  const userResult = await requestUser(appConfig.zupassServer, uuid);
 
   if (userResult.error?.userMissing) {
     return {
@@ -188,20 +173,6 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
       valid: false,
       type: "identity-proof",
       message: "Proof expired"
-    };
-  }
-
-  const visitorStatus = getVisitorStatus(userResult.value);
-
-  if (
-    visitorStatus !== undefined &&
-    visitorStatus.isVisitor &&
-    visitorStatus.status !== VisitorStatus.Current
-  ) {
-    return {
-      valid: false,
-      type: "identity-proof",
-      message: "Expired visitor."
     };
   }
 

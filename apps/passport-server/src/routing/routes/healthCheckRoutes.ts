@@ -18,6 +18,6 @@ export function initHealthcheckRoutes(
    * when necessary.
    */
   app.get("/", async (req: Request, res: Response) => {
-    res.status(200).send("PCD Passport Server - OK!");
+    res.status(200).send("Zupass Server - OK!");
   });
 }

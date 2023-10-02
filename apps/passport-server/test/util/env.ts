@@ -4,9 +4,8 @@ import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
-export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
+export const testingEnv: EnvironmentVariables = Object.freeze({
   NODE_ENV: "production",
-  IS_ZUZALU: "true",
   MAILGUN_API_KEY: undefined,
   DATABASE_USERNAME: "admin",
   DATABASE_PASSWORD: "password",
@@ -30,11 +29,6 @@ export const zuzaluTestingEnv: EnvironmentVariables = Object.freeze({
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   ACCOUNT_RESET_LIMIT_QUANTITY: "3",
   ACCOUNT_RESET_LIMIT_DURATION_MS: "3000"
-});
-
-export const pcdpassTestingEnv: EnvironmentVariables = Object.freeze({
-  ...zuzaluTestingEnv,
-  IS_ZUZALU: "false"
 });
 
 export async function overrideEnvironment(

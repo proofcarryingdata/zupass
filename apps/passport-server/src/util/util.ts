@@ -6,17 +6,6 @@ import { logger } from "./logger";
 export const execAsync = promisify(exec);
 
 /**
- * Returns a promise that resolves after `ms` milliseconds.
- */
-export async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
-}
-
-/**
  * Ensures a given environment variable exists by throwing an error
  * if it doesn't.
  */
@@ -59,6 +48,19 @@ export async function getCommitHash(): Promise<string> {
   }
 
   return "unknown commit hash";
+}
+
+export async function getCommitMessage(): Promise<string> {
+  try {
+    const result = await execAsync('git show -s --format="%s"', {
+      cwd: process.cwd()
+    });
+    return result.stdout.trim();
+  } catch (e) {
+    logger("couldn't get commit message", e);
+  }
+
+  return "unknown commit message";
 }
 
 export function isLocalServer(): boolean {

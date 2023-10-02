@@ -5,10 +5,10 @@ import { sqlQuery } from "../../sqlQuery";
 /**
  * Fetch the list of Telegram conversations from the database.
  */
-export async function fetchTelegramEventsByEventId(
+export async function fetchTelegramEventByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent[]> {
+): Promise<TelegramEvent> {
   const result = await sqlQuery(
     client,
     `\
@@ -18,7 +18,7 @@ export async function fetchTelegramEventsByEventId(
     [eventId]
   );
 
-  return result.rows;
+  return result.rows[0] ?? null;
 }
 
 export async function fetchTelegramEventsByChatId(
@@ -37,19 +37,26 @@ export async function fetchTelegramEventsByChatId(
   return result.rows;
 }
 
-export async function fetchTelegramEvent(
-  client: Pool,
-  ticketEventId: string,
-  telegramChatId: number
-): Promise<TelegramEvent | null> {
+export interface LinkedPretixTelegramEvent {
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
+}
+
+export async function fetchLinkedPretixAndTelegramEvents(
+  client: Pool
+): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_bot_events
-    where ticket_event_id = $1 and telegram_chat_id = $2
-    `,
-    [ticketEventId, telegramChatId]
+    SELECT
+      tbe.telegram_chat_id AS "telegramChatID",
+      dpe.event_name AS "eventName",
+      dpe.pretix_events_config_id AS "configEventID" 
+    FROM devconnect_pretix_events_info dpe 
+    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+    `
   );
 
-  return result.rows[0] ?? null;
+  return result.rows;
 }

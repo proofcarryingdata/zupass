@@ -1,4 +1,7 @@
-import { UploadEncryptedStorageRequest } from "@pcd/passport-interface";
+import {
+  ChangeBlobKeyRequest,
+  UploadEncryptedStorageRequest
+} from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -10,6 +13,11 @@ export function initE2EERoutes(
   { e2eeService }: GlobalServices
 ): void {
   logger("[INIT] initializing e2ee routes");
+
+  app.post("/sync/changeBlobKey", async (req: Request, res: Response) => {
+    const request = req.body as ChangeBlobKeyRequest;
+    await e2eeService.handleChangeBlobKey(request, res);
+  });
 
   /**
    * Given a `blobKey`, which is a hash of the user's encryption key (which

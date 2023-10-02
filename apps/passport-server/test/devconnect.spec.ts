@@ -6,21 +6,24 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  ISSUANCE_STRING,
-  PCDPassFeedIds,
-  PollFeedResponseValue,
   checkinTicket,
+  ISSUANCE_STRING,
   pollFeed,
+  PollFeedResponseValue,
   requestServerEdDSAPublicKey,
-  requestServerRSAPublicKey
+  requestServerRSAPublicKey,
+  User,
+  ZupassFeedIds,
+  ZuzaluUserRole
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
+  isReplaceInFolderAction,
   PCDActionType,
-  ReplaceInFolderAction,
-  isReplaceInFolderAction
+  ReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import _ from "lodash";
@@ -45,7 +48,8 @@ import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
-  DevconnectPretixTicketWithCheckin
+  DevconnectPretixTicketWithCheckin,
+  LoggedInZuzaluUser
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
@@ -63,14 +67,17 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
+  fetchAllZuzaluUsers,
+  fetchZuzaluUser
+} from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import {
   OrganizerSync,
   PRETIX_CHECKER,
   SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
-import { PCDpass } from "../src/types";
-import { sleep } from "../src/util/util";
-
+import { PretixSyncStatus } from "../src/services/types";
+import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
 import {
   DevconnectPretixDataMocker,
@@ -79,10 +86,14 @@ import {
 } from "./pretix/devconnectPretixDataMocker";
 import { expectIssuanceServiceToBeRunning } from "./pretix/issuance";
 import { getDevconnectMockPretixAPIServer } from "./pretix/mockDevconnectPretixApi";
-import { getMockPretixAPI } from "./pretix/mockPretixApi";
+import {
+  getMockPretixAPI,
+  newMockZuzaluPretixAPI
+} from "./pretix/mockPretixApi";
 import {
   expectDevconnectPretixToHaveSynced,
-  expectZuzaluPretixToHaveSynced
+  expectZuzaluPretixToHaveSynced,
+  waitForPretixSyncStatus
 } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import {
@@ -90,16 +101,16 @@ import {
   testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
-import { testLoginPCDpass } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLoginPCDPass";
 import { testUserSync } from "./user/testUserSync";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 // @todo: merge this with zupass.spec.ts, and delete this file, after completely deprecating pcdpass
 describe("devconnect functionality", function () {
   this.timeout(30_000);
 
-  let application: PCDpass;
+  let application: Zupass;
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
   let devconnectPretixSyncService: DevconnectPretixSyncService;
@@ -113,6 +124,18 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
 
+  let residentUser: User | undefined;
+  let visitorUser: User | undefined;
+  let organizerUser: User | undefined;
+  let updatedToOrganizerUser: User | undefined;
+
+  let identity: Identity;
+  let publicKeyRSA: NodeRSA;
+  let publicKeyEdDSA: EDdSAPublicKey;
+
+  let ticket: EdDSATicketPCD;
+  let checkerIdentity: Identity;
+
   this.beforeEach(async () => {
     backupData = mocker.backup();
   });
@@ -123,7 +146,7 @@ describe("devconnect functionality", function () {
   });
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     db = await getDB();
 
     mocker = new DevconnectPretixDataMocker();
@@ -242,6 +265,142 @@ describe("devconnect functionality", function () {
     await expectZuzaluPretixToHaveSynced(application);
   });
 
+  step(
+    "since nobody has logged in yet, all the semaphore groups should be empty",
+    async function () {
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: []
+      });
+    }
+  );
+
+  step(
+    "after pretix sync, semaphore should have synced too," +
+      " and saved historic semaphore groups",
+    async function () {
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step("logging in as a zuzalu resident should work", async function () {
+    const ticketHolders = await fetchAllZuzaluUsers(db);
+    const resident = ticketHolders.find(
+      (t) => t.role === ZuzaluUserRole.Resident
+    );
+
+    if (!resident) {
+      // this shouldn't happen as we've inserted a resident via mock data
+      throw new Error("couldn't find a resident to test with");
+    }
+
+    const result = await testLogin(application, resident.email, {
+      force: false,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false
+    });
+
+    residentUser = result?.user;
+
+    expect(emailAPI.send).to.have.been.called.exactly(1);
+  });
+
+  step(
+    "after a zuzalu resident logs in, they should show up in the resident semaphore group and no other groups",
+    async function () {
+      if (!residentUser) {
+        throw new Error("expected user");
+      }
+
+      await sleep(100);
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [residentUser.commitment],
+        r: [residentUser.commitment],
+        v: [],
+        o: [],
+        g: [residentUser.commitment]
+      });
+    }
+  );
+
+  step(
+    "after a user logs in, historic semaphore groups also get updated",
+    async function () {
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step(
+    "logging in with the remaining two users should work",
+    async function () {
+      const ticketHolders = await fetchAllZuzaluUsers(db);
+      const visitor = ticketHolders.find(
+        (t) => t.role === ZuzaluUserRole.Visitor
+      );
+      const organizer = ticketHolders.find(
+        (t) => t.role === ZuzaluUserRole.Organizer
+      );
+
+      if (!visitor || !organizer) {
+        // this shouldn't happen as we've inserted a resident via mock data
+        throw new Error("couldn't find a visitor or organizer to test with");
+      }
+
+      const visitorResult = await testLogin(application, visitor.email, {
+        force: false,
+        expectUserAlreadyLoggedIn: false,
+        expectEmailIncorrect: false
+      });
+      visitorUser = visitorResult?.user;
+
+      expect(emailAPI.send).to.have.been.called.exactly(2);
+
+      const organizerResult = await testLogin(application, organizer.email, {
+        force: false,
+        expectUserAlreadyLoggedIn: false,
+        expectEmailIncorrect: false
+      });
+      organizerUser = organizerResult?.user;
+      expect(emailAPI.send).to.have.been.called.exactly(3);
+    }
+  );
+
+  step(
+    "after all three users log in, the semaphore groups should reflect their existence",
+    async function () {
+      if (!residentUser || !visitorUser || !organizerUser) {
+        throw new Error("expected user");
+      }
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          residentUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ],
+        r: [residentUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment],
+        g: [
+          residentUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
+      });
+    }
+  );
+
+  step(
+    "after more users log in, historic semaphore groups also get updated",
+    async function () {
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
   step("devconnect pretix status should sync to completion", async function () {
     await expectDevconnectPretixToHaveSynced(application);
   });
@@ -332,6 +491,249 @@ describe("devconnect functionality", function () {
           itemInfoID: item1EventAInfoID
         }
       ]);
+    }
+  );
+
+  step(
+    "updating a ticket's name should update the corresponding user",
+    async function () {
+      const participants = pretixMocker.getResidentsAndOrganizers();
+      const firstParticipant = participants[0];
+      if (!firstParticipant) {
+        throw new Error("expected there to be at least one mocked user");
+      }
+      const newName = "new random_name";
+      expect(newName).to.not.eq(firstParticipant.positions[0].attendee_name);
+
+      pretixMocker.updateResidentOrOrganizer(firstParticipant.code, (p) => {
+        p.positions[0].attendee_name = newName;
+      });
+      const pretixService = application.services.zuzaluPretixSyncService;
+      if (!pretixService) {
+        throw new Error("expected to have a pretix service");
+      }
+      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
+      await pretixService.trySync();
+      const user = await application.services.userService.getUserByEmail(
+        firstParticipant.email
+      );
+
+      if (!user) {
+        throw new Error("expected to be able to get user");
+      }
+    }
+  );
+
+  step(
+    "updating a ticket from resident to organizer should" +
+      " update them in zupass as well",
+    async function () {
+      const residents = pretixMocker.getResidentsOrOrganizers(false);
+      const firstResident = residents[0];
+      const userBefore = await fetchZuzaluUser(db, firstResident.email);
+      if (!firstResident || !userBefore) {
+        throw new Error("expected there to be at least one mocked user");
+      }
+      expect(userBefore.role).to.eq(ZuzaluUserRole.Resident);
+      pretixMocker.removeResidentOrOrganizer(firstResident.code);
+      const newOrganizer = pretixMocker.addResidentOrOrganizer(true);
+      pretixMocker.updateResidentOrOrganizer(newOrganizer.code, (o) => {
+        o.email = firstResident.email;
+        o.positions[0].attendee_email = firstResident.email;
+        o.positions[0].attendee_name = firstResident.positions[0].attendee_name;
+      });
+      const pretixService = application.services.zuzaluPretixSyncService;
+      if (!pretixService) {
+        throw new Error("expected to have a pretix service");
+      }
+      pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
+      await pretixService.trySync();
+      const userAfter = await fetchZuzaluUser(db, firstResident.email);
+      if (!userAfter) {
+        throw new Error("expected to be able to get user");
+      }
+      expect(userAfter.role).to.eq(ZuzaluUserRole.Organizer);
+      updatedToOrganizerUser = userAfter as LoggedInZuzaluUser;
+    }
+  );
+
+  step(
+    "after pretix causes a user to update its role " +
+      "they should be moved to the correct semaphore group",
+    async function () {
+      if (
+        !residentUser ||
+        !visitorUser ||
+        !organizerUser ||
+        !updatedToOrganizerUser
+      ) {
+        throw new Error("expected user");
+      }
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step(
+    "an error fetching orders via the PretixAPI should stop the sync from completing",
+    async () => {
+      const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
+        throwOnFetchOrders: true
+      });
+      const pretixSyncService = application.services.zuzaluPretixSyncService;
+
+      if (!pretixSyncService) {
+        throw new Error("expected there to be a pretix sync service running");
+      }
+
+      pretixSyncService.stop();
+      pretixSyncService.replaceApi(newAPI);
+      const successfulSync = await pretixSyncService.trySync();
+
+      expect(successfulSync).to.eq(false);
+    }
+  );
+
+  step(
+    "after a failed sync, the set of users should remain unchanged",
+    async () => {
+      if (
+        !residentUser ||
+        !visitorUser ||
+        !organizerUser ||
+        !updatedToOrganizerUser
+      ) {
+        throw new Error("expected user");
+      }
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step(
+    "an error fetching subevents via the PretixAPI should stop the sync from completing",
+    async () => {
+      const newAPI = getMockPretixAPI(pretixMocker.getMockData(), {
+        throwOnFetchSubevents: true
+      });
+      const pretixSyncService = application.services.zuzaluPretixSyncService;
+
+      if (!pretixSyncService) {
+        throw new Error("expected there to be a pretix sync service running");
+      }
+
+      pretixSyncService.stop();
+      pretixSyncService.replaceApi(newAPI);
+      const successfulSync = await pretixSyncService.trySync();
+
+      expect(successfulSync).to.eq(false);
+    }
+  );
+
+  step(
+    "after a failed sync, the set of users should remain unchanged",
+    async () => {
+      if (
+        !residentUser ||
+        !visitorUser ||
+        !organizerUser ||
+        !updatedToOrganizerUser
+      ) {
+        throw new Error("expected user");
+      }
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ],
+        r: [updatedToOrganizerUser.commitment, organizerUser.commitment],
+        v: [visitorUser.commitment],
+        o: [organizerUser.commitment, updatedToOrganizerUser.commitment],
+        g: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step(
+    "replace zuzalu pretix api and sync should cause all users to be removed from " +
+      "their role-specific semaphore groups, but they should remain signed in",
+    async function () {
+      const oldTicketHolders = await fetchAllZuzaluUsers(db);
+
+      const newAPI = newMockZuzaluPretixAPI();
+      if (!newAPI) {
+        throw new Error("couldn't instantiate a new pretix api");
+      }
+      application.services.zuzaluPretixSyncService?.replaceApi(newAPI);
+      const syncStatus = await waitForPretixSyncStatus(application, true);
+      expect(syncStatus).to.eq(PretixSyncStatus.Synced);
+
+      await sleep(100);
+
+      const newTicketHolders = await fetchAllZuzaluUsers(db);
+
+      const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
+      const newEmails = new Set(...newTicketHolders.map((t) => t.email));
+
+      expect(oldEmails).to.not.eq(newEmails);
+
+      if (
+        !residentUser ||
+        !visitorUser ||
+        !organizerUser ||
+        !updatedToOrganizerUser
+      ) {
+        throw new Error("expected user");
+      }
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: [
+          updatedToOrganizerUser.commitment,
+          visitorUser.commitment,
+          organizerUser.commitment
+        ]
+      });
     }
   );
 
@@ -818,7 +1220,7 @@ describe("devconnect functionality", function () {
 
       // The same ticket should now be consumed
       expect(consumedTicket?.is_consumed).to.be.true;
-      expect(consumedTicket?.pcdpass_checkin_timestamp).to.be.not.null;
+      expect(consumedTicket?.zupass_checkin_timestamp).to.be.not.null;
 
       const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
         db,
@@ -880,9 +1282,7 @@ describe("devconnect functionality", function () {
       // it is indicated that Pretix will use the timestamp provided.
       expect(
         consumedTicketAfterSync?.pretix_checkin_timestamp?.toISOString()
-      ).to.eq(
-        consumedTicketAfterSync?.pcdpass_checkin_timestamp?.toISOString()
-      );
+      ).to.eq(consumedTicketAfterSync?.zupass_checkin_timestamp?.toISOString());
     }
   );
 
@@ -1052,10 +1452,6 @@ describe("devconnect functionality", function () {
     }
   );
 
-  let identity: Identity;
-  let publicKeyRSA: NodeRSA;
-  let publicKeyEdDSA: EDdSAPublicKey;
-
   step(
     "anyone should be able to request the server's RSA public key",
     async function () {
@@ -1103,7 +1499,7 @@ describe("devconnect functionality", function () {
     "should not be able to login with invalid email address",
     async function () {
       expect(
-        await testLoginPCDpass(application, "test", {
+        await testLogin(application, "test", {
           force: false,
           expectUserAlreadyLoggedIn: false,
           expectEmailIncorrect: true
@@ -1113,7 +1509,7 @@ describe("devconnect functionality", function () {
   );
 
   step("should be able to log in", async function () {
-    const result = await testLoginPCDpass(
+    const result = await testLogin(
       application,
       mocker.get().organizer1.EMAIL_1,
       {
@@ -1127,7 +1523,7 @@ describe("devconnect functionality", function () {
       throw new Error("failed to log in");
     }
 
-    expect(emailAPI.send).to.have.been.called.exactly(1);
+    expect(emailAPI.send).to.have.been.called.exactly(4);
     identity = result.identity;
   });
 
@@ -1146,14 +1542,14 @@ describe("devconnect functionality", function () {
     "should not be able to log in a 2nd time without force option",
     async function () {
       expect(
-        await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+        await testLogin(application, mocker.get().organizer1.EMAIL_1, {
           force: false,
           expectUserAlreadyLoggedIn: true,
           expectEmailIncorrect: false
         })
       ).to.eq(undefined);
 
-      const result = await testLoginPCDpass(
+      const result = await testLogin(
         application,
         mocker.get().organizer1.EMAIL_1,
         {
@@ -1169,7 +1565,7 @@ describe("devconnect functionality", function () {
 
       identity = result.identity;
 
-      expect(emailAPI.send).to.have.been.called.exactly(2);
+      expect(emailAPI.send).to.have.been.called.exactly(5);
     }
   );
 
@@ -1177,21 +1573,21 @@ describe("devconnect functionality", function () {
     await sleep(4000);
 
     // 1st reset
-    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
       expectEmailIncorrect: false
     });
 
     // 2nd reset
-    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
       expectEmailIncorrect: false
     });
 
     // 3rd reset
-    await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
       expectEmailIncorrect: false
@@ -1199,7 +1595,7 @@ describe("devconnect functionality", function () {
 
     let threw = false;
     try {
-      await testLoginPCDpass(application, mocker.get().organizer1.EMAIL_1, {
+      await testLogin(application, mocker.get().organizer1.EMAIL_1, {
         force: true,
         expectUserAlreadyLoggedIn: true,
         expectEmailIncorrect: false
@@ -1215,7 +1611,7 @@ describe("devconnect functionality", function () {
     await sleep(4000); // see env.ts for where this number comes from
 
     // 4th reset should succeed
-    const result = await testLoginPCDpass(
+    const result = await testLogin(
       application,
       mocker.get().organizer1.EMAIL_1,
       {
@@ -1262,7 +1658,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
 
       if (response.error) {
@@ -1298,13 +1694,13 @@ describe("devconnect functionality", function () {
       application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
-      PCDPassFeedIds.Devconnect
+      ZupassFeedIds.Devconnect
     );
     const expressResponse2 = await pollFeed(
       application.expressContext.localEndpoint,
       identity,
       ISSUANCE_STRING,
-      PCDPassFeedIds.Devconnect
+      ZupassFeedIds.Devconnect
     );
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
@@ -1353,7 +1749,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
@@ -1400,7 +1796,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
@@ -1422,9 +1818,8 @@ describe("devconnect functionality", function () {
     }
   );
 
-  let checkerIdentity: Identity;
   step("event 'superuser' should be able to log in", async function () {
-    const result = await testLoginPCDpass(
+    const result = await testLogin(
       application,
       mocker.get().organizer1.EMAIL_2,
       {
@@ -1441,7 +1836,6 @@ describe("devconnect functionality", function () {
     checkerIdentity = result.identity;
   });
 
-  let ticket: EdDSATicketPCD;
   step(
     "event 'superuser' should be able to checkin a valid ticket",
     async function () {
@@ -1449,7 +1843,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
       const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
@@ -1548,7 +1942,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         "asdf",
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
 
       const response = expressResponse.value as PollFeedResponseValue;
@@ -1569,7 +1963,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         new Identity(),
         ISSUANCE_STRING,
-        PCDPassFeedIds.Devconnect
+        ZupassFeedIds.Devconnect
       );
 
       const response = expressResponse.value as PollFeedResponseValue;
@@ -1657,7 +2051,7 @@ describe("devconnect functionality", function () {
     }
   );
 
-  step("should be rate-limited by a low limit", async function () {
+  step("pretix - should be rate-limited by a low limit", async function () {
     const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
@@ -1693,35 +2087,39 @@ describe("devconnect functionality", function () {
     server.events.removeListener("response:mocked", listener);
   });
 
-  step("should not be rate-limited by a high limit", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    if (!devconnectPretixAPIConfigFromDB) {
-      throw new Error("Could not load API configuration");
+  step(
+    "pretix - should not be rate-limited by a high limit",
+    async function () {
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
+      if (!devconnectPretixAPIConfigFromDB) {
+        throw new Error("Could not load API configuration");
+      }
+
+      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
+
+      // Set up a sync manager for a single organizer
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.context.dbPool
+      );
+
+      let requests = 0;
+
+      const listener = (): void => {
+        requests++;
+      };
+      // Count each request
+      server.events.on("response:mocked", listener);
+
+      os.run();
+      await sleep(100);
+
+      expect(requests).to.be.greaterThan(3);
+      server.events.removeListener("response:mocked", listener);
     }
-
-    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-
-    // Set up a sync manager for a single organizer
-    const os = new OrganizerSync(
-      organizer,
-      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool
-    );
-
-    let requests = 0;
-
-    const listener = (): void => {
-      requests++;
-    };
-    // Count each request
-    server.events.on("response:mocked", listener);
-
-    os.run();
-    await sleep(100);
-
-    expect(requests).to.be.greaterThan(3);
-    server.events.removeListener("response:mocked", listener);
-  });
+  );
 
   step(
     "should fail to sync if an event we're tracking is deleted",

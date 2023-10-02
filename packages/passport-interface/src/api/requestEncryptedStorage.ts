@@ -14,11 +14,11 @@ import { httpGetSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestEncryptedStorage(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   blobKey: string
 ): Promise<EncryptedStorageResult> {
   return httpGetSimple(
-    urlJoin(passportServerUrl, "/sync/load"),
+    urlJoin(zupassServerUrl, "/sync/load"),
     async (resText) => ({
       value: JSON.parse(resText) as EncryptedStorageResultValue,
       success: true

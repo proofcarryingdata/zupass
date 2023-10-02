@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node build.ts dev",
-    "build": "rm -rf public/js/* && tsc --noEmit && ts-node build.ts build",
+    "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",

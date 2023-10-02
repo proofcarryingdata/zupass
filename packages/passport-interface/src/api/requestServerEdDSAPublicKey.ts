@@ -4,16 +4,16 @@ import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
 /**
- * Asks the PCDpass server for its EdDSA public key, which can be
- * used to verify PCDpass-issued attestations.
+ * Asks the Zupass server for its EdDSA public key, which can be
+ * used to verify Zupass-issued attestations.
  *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestServerEdDSAPublicKey(
-  passportServer: string
+  zupassServerUrl: string
 ): Promise<ServerEdDSAPublicKeyResult> {
   return httpGetSimple(
-    urlJoin(passportServer, `/issue/eddsa-public-key`),
+    urlJoin(zupassServerUrl, `/issue/eddsa-public-key`),
     async (resText) => ({
       value: JSON.parse(resText) as EDdSAPublicKey,
       success: true

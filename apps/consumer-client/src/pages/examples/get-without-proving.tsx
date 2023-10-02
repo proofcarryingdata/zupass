@@ -1,36 +1,32 @@
 import {
   getWithoutProvingUrl,
-  usePassportPopupMessages
+  useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useMemo } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
-import { sendPassportRequest } from "../../util";
+import { sendZupassRequest } from "../../util";
 
-/**
- * Example page which shows how to get a PCD from the passport without
- * proving it first.
- */
 export default function Page() {
-  const [passportPCDStr] = usePassportPopupMessages();
+  const [zupassPCDStr] = useZupassPopupMessages();
 
   const formatted = useMemo(() => {
     try {
-      return JSON.stringify(JSON.parse(passportPCDStr), null, 2);
+      return JSON.stringify(JSON.parse(zupassPCDStr), null, 2);
     } catch (e) {
       return null;
     }
-  }, [passportPCDStr]);
+  }, [zupassPCDStr]);
 
   return (
     <>
       <HomeLink />
       <h2>Get Without Proving</h2>
       <p>
-        This page shows a working example of how to request a PCD from the
-        passport without proving it first.
+        This page shows a working example of how to request a PCD from Zupass
+        without proving it first.
       </p>
       <ExampleContainer>
         <button onClick={getProofWithoutProving}>
@@ -48,5 +44,5 @@ function getProofWithoutProving() {
     window.location.origin + "#/popup",
     SemaphoreSignaturePCDPackage.name
   );
-  sendPassportRequest(url);
+  sendZupassRequest(url);
 }

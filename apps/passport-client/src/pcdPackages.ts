@@ -29,7 +29,7 @@ export async function getPackages(): Promise<PCDPackage[]> {
 }
 
 async function loadPackages(): Promise<PCDPackage[]> {
-  const SERVER_STATIC_URL = appConfig.passportServer + "/static/";
+  const SERVER_STATIC_URL = appConfig.zupassServer + "/static/";
 
   await SemaphoreGroupPCDPackage.init({
     wasmFilePath: "/semaphore-artifacts/16.wasm",

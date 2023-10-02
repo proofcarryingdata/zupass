@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
 import { requestUser } from "./api/requestUser";
-import {
-  PCDpassUserJson,
-  UserResponseValue,
-  ZupassUserJson
-} from "./RequestTypes";
 import { User } from "./zuzalu";
 
 export function useFetchUser(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   isZuzalu: boolean,
   uuid?: string
 ) {
@@ -26,7 +21,7 @@ export function useFetchUser(
       }
 
       setLoading(true);
-      const userResult = await requestUser(passportServerUrl, isZuzalu, uuid);
+      const userResult = await requestUser(zupassServerUrl, uuid);
       setLoading(false);
 
       if (userResult.success) {
@@ -41,15 +36,7 @@ export function useFetchUser(
     };
 
     doLoad();
-  }, [isZuzalu, passportServerUrl, uuid]);
+  }, [isZuzalu, zupassServerUrl, uuid]);
 
   return { user, error, loading };
-}
-
-export function toPCDpassUser(user: UserResponseValue) {
-  return user as PCDpassUserJson;
-}
-
-export function toZupassUser(user: UserResponseValue) {
-  return user as ZupassUserJson;
 }

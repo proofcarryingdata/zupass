@@ -4,10 +4,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 import { Emitter } from "./emitter";
 
-export type PendingAction =
-  | { type: "new-passport"; email: string }
-  | { type: "save-sync-key" };
-
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -19,13 +15,14 @@ export interface AppState {
   encryptionKey?: string;
 
   // View state
-  pendingAction?: PendingAction;
   modal:
     | "info"
     | "settings"
-    | "save-sync"
     | "invalid-participant"
+    | "changed-password"
+    | "another-device-changed-password"
     | "resolve-subscription-error"
+    | "upgrade-account-modal"
     | "";
 
   // User metadata.
@@ -39,6 +36,8 @@ export interface AppState {
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;
+  // If set, the user has had their password changed from a different device
+  anotherDeviceChangedPassword?: boolean;
 
   uploadedUploadId?: string;
   uploadingUploadId?: string;

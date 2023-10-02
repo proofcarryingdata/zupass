@@ -108,7 +108,7 @@ export function AddHaloScreen({
           <Spacer h={16} />
           <TextCenter>
             <p>
-              To add this stamp, login to your passport or copy this link into a
+              To add this stamp, login to your Zupass or copy this link into a
               logged in device.
             </p>
           </TextCenter>

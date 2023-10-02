@@ -1,8 +1,0 @@
-Hi {{name}},
-
-Welcome to the Zuzalu Passport.
-
-Here's the code to verify your email:
-{{token}}
-
-We look forward to seeing you soon.

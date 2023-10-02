@@ -8,13 +8,11 @@ export interface User {
   /** Email address they used to register */
   email: string;
 
-  /** PCDpass-specific user metadata */
-  superuserEventConfigIds?: string[];
+  /** Salt used to secure user's password */
+  salt: string | null;
 
-  /** Zuzalu-specific user metadata */
-  name?: string;
-  role?: ZuzaluUserRole | undefined;
-  visitor_date_ranges?: DateRange[] | null;
+  /** Devconnect-specific user metadata */
+  superuserEventConfigIds?: string[];
 }
 
 export interface DateRange {

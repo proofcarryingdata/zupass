@@ -6,7 +6,7 @@ export function initLogRoutes(app: express.Application): void {
   logger("[INIT] initializing log routes");
 
   /**
-   * Lets the passport client log stuff to honeycomb.
+   * Lets the Zupass client log stuff to honeycomb.
    *
    * @todo rate limit this.
    */

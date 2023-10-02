@@ -35,14 +35,16 @@ import {
   pendingAddSubscriptionRequestKey,
   setPendingAddSubscriptionRequest
 } from "../../src/sessionStorage";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, Button, H2, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { Spinner } from "../shared/Spinner";
 import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 
-const DEFAULT_FEEDS_URL = appConfig.passportServer + "/feeds";
+const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
 export function AddSubscriptionScreen() {
+  useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
   const [providerUrl, setProviderUrl] = useState(
@@ -237,7 +239,6 @@ export function SubscriptionInfoRow({
       )}
       {alreadySubscribed ? (
         <AlreadySubscribed
-          subscriptions={subscriptions}
           existingSubscription={existingSubscriptions[0]}
         />
       ) : (
@@ -265,6 +266,7 @@ function SubscribeSection({
 }) {
   const identity = useIdentity();
   const pcds = usePCDCollection();
+  const dispatch = useDispatch();
   const [subscribing, setSubscribing] = useState<boolean>(false);
 
   // Only two types of credential can be requested
@@ -293,11 +295,8 @@ function SubscribeSection({
         const matchingPcds = pcds.getPCDsByType(info.credentialType);
         if (matchingPcds.length > 0) {
           setSubscribing(true);
-          subscriptions.subscribe(
-            providerUrl,
-            info,
-            await pcds.serialize(matchingPcds[0])
-          );
+          const credential = await pcds.serialize(matchingPcds[0]);
+          dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
         } else {
           // We shouldn't get here as the UI should not allow us to attempt
           // this
@@ -322,10 +321,10 @@ function SubscribeSection({
           })
         );
 
-        subscriptions.subscribe(providerUrl, info, credential);
+        dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
       }
     })();
-  }, [subscriptions, identity, providerUrl, providerName, info, pcds]);
+  }, [subscriptions, providerUrl, info, providerName, pcds, identity, dispatch]);
 
   const credentialHumanReadableName =
     requiredCredentialType === EmailPCDTypeName
@@ -398,21 +397,20 @@ function SinglePermission({ permission }: { permission: PCDPermission }) {
 }
 
 function AlreadySubscribed({
-  subscriptions,
   existingSubscription
 }: {
   existingSubscription: Subscription;
-  subscriptions: FeedSubscriptionManager;
 }) {
+  const dispatch = useDispatch();
   const onUnsubscribeClick = useCallback(() => {
     if (
       window.confirm(
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
       )
     ) {
-      subscriptions.unsubscribe(existingSubscription.id);
+      dispatch({ type: "remove-subscription", subscriptionId: existingSubscription.id });
     }
-  }, [existingSubscription.id, existingSubscription.feed.name, subscriptions]);
+  }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long",

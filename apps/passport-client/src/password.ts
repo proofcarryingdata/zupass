@@ -7,3 +7,5 @@ export const checkPasswordStrength = (password: string): boolean => {
   const { score } = zxcvbn(password);
   return score >= MINIMUM_PASSWORD_STRENGTH;
 };
+
+export const PASSWORD_MINIMUM_LENGTH = 8;

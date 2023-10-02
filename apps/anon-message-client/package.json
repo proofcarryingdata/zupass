@@ -1,0 +1,32 @@
+{
+  "name": "anon-message-client",
+  "version": "0.1.1",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon dev.ts",
+    "build": "next build",
+    "export": "next export",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@pcd/passport-interface": "^0.7.0",
+    "@types/node": "20.4.10",
+    "@types/react": "18.2.20",
+    "@types/react-dom": "18.2.7",
+    "autoprefixer": "10.4.14",
+    "js-sha256": "^0.10.1",
+    "next": "13.4.13",
+    "postcss": "8.4.27",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tailwindcss": "3.3.3",
+    "typescript": "5.1.6"
+  },
+  "devDependencies": {
+    "eslint": "8.47.0",
+    "eslint-config-next": "13.4.13",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.1"
+  }
+}

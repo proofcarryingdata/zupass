@@ -6,10 +6,10 @@ import {
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import {
-  constructPassportPcdAddRequestUrl,
-  constructPassportPcdProveAndAddRequestUrl,
+  constructZupassPcdAddRequestUrl,
+  constructZupassPcdProveAndAddRequestUrl,
   openSignedZuzaluSignInPopup,
-  usePassportPopupMessages
+  useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -29,13 +29,9 @@ import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL, ZUZALU_SEMAPHORE_GROUP_URL } from "../../constants";
-import { sendPassportRequest } from "../../util";
+import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
+import { sendZupassRequest } from "../../util";
 
-/**
- * Example 3rd party application page which shows how to add
- * PCDs into the passport.
- */
 export default function Page() {
   const [signedMessage, setSignedMessage] = useState("1");
 
@@ -44,8 +40,8 @@ export default function Page() {
       <HomeLink />
       <h2>Prove and Add</h2>
       <p>
-        This page contains several examples of how to add PCDs to the passport.
-        You can add a PCD to the passport in one of two ways:
+        This page contains several examples of how to add PCDs to Zupass. You
+        can add a PCD to Zupass in one of two ways:
       </p>
       <ul>
         <li>
@@ -54,9 +50,9 @@ export default function Page() {
           Identity).
         </li>
         <li>
-          Prove, and <i>then</i> add the PCD to the passport. The application
-          that initiates this does not get a copy of the PCD back, it just adds
-          it to the passport.
+          Prove, and <i>then</i> add the PCD to Zupass. The application that
+          initiates this does not get a copy of the PCD back, it just adds it to
+          Zupass.
         </li>
       </ul>
       <ExampleContainer>
@@ -81,12 +77,12 @@ export default function Page() {
         <br />
         <br />
         <button onClick={addIdentityPCD}>
-          add a new semaphore identity to the passport
+          add a new semaphore identity to Zupass
         </button>
         <br />
         <br />
         <button onClick={addWebAuthnPCD}>
-          add a new webauthn credential to the passport
+          add a new webauthn credential to Zupass
         </button>
         <br />
         <br />
@@ -103,7 +99,7 @@ export default function Page() {
 }
 
 function AddEthAddrPCDButton() {
-  const [pcdStr] = usePassportPopupMessages();
+  const [pcdStr] = useZupassPopupMessages();
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
@@ -127,7 +123,7 @@ function AddEthAddrPCDButton() {
 
       const popupUrl = window.location.origin + "#/popup";
 
-      const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+      const proofUrl = constructZupassPcdProveAndAddRequestUrl<
         typeof EthereumOwnershipPCDPackage
       >(ZUPASS_URL, popupUrl, EthereumOwnershipPCDPackage.name, {
         identity: {
@@ -148,7 +144,7 @@ function AddEthAddrPCDButton() {
         }
       });
 
-      sendPassportRequest(proofUrl);
+      sendZupassRequest(proofUrl);
     })();
 
     setIsActive(false);
@@ -161,7 +157,7 @@ function AddEthAddrPCDButton() {
         zupassSignIn("eth-pcd");
       }}
     >
-      add a new Ethereum address to the passport
+      add a new Ethereum address to Zupass
     </button>
   );
 }
@@ -175,7 +171,7 @@ async function zupassSignIn(originalSiteName: string) {
 }
 
 function AddEthGroupPCDButton() {
-  const [pcdStr] = usePassportPopupMessages();
+  const [pcdStr] = useZupassPopupMessages();
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
@@ -227,7 +223,7 @@ function AddEthGroupPCDButton() {
       const merkleProof = pubKeyTree.createProof(pubKeyIndex);
 
       const popupUrl = window.location.origin + "#/popup";
-      const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+      const proofUrl = constructZupassPcdProveAndAddRequestUrl<
         typeof EthereumGroupPCDPackage
       >(ZUPASS_URL, popupUrl, EthereumGroupPCDPackage.name, {
         identity: {
@@ -252,7 +248,7 @@ function AddEthGroupPCDButton() {
         }
       });
 
-      sendPassportRequest(proofUrl);
+      sendZupassRequest(proofUrl);
     })();
 
     setIsActive(false);
@@ -265,13 +261,13 @@ function AddEthGroupPCDButton() {
         zupassSignIn("eth-group-pcd");
       }}
     >
-      add a new Ethereum Group Membership to the passport
+      add a new Ethereum Group Membership to Zupass
     </button>
   );
 }
 
 async function addGroupMembershipProofPCD() {
-  const url = constructPassportPcdProveAndAddRequestUrl<
+  const url = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
     ZUPASS_URL,
@@ -288,7 +284,7 @@ async function addGroupMembershipProofPCD() {
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: ZUZALU_SEMAPHORE_GROUP_URL,
+        remoteUrl: EVERYONE_SEMAPHORE_GROUP_URL,
         description: "The Semaphore group which you are proving you belong to."
       },
       identity: {
@@ -309,16 +305,16 @@ async function addGroupMembershipProofPCD() {
     {
       genericProveScreen: true,
       description:
-        "Generate a group membership proof using your passport's Semaphore Identity.",
+        "Generate a group membership proof using your Zupass Semaphore Identity.",
       title: "Group Membership Proof"
     }
   );
 
-  sendPassportRequest(url);
+  sendZupassRequest(url);
 }
 
 async function addEdDSAPCD() {
-  const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+  const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof EdDSAPCDPackage
   >(
     ZUPASS_URL,
@@ -346,11 +342,11 @@ async function addEdDSAPCD() {
     { title: "EdDSA Signature Proof" }
   );
 
-  sendPassportRequest(proofUrl);
+  sendZupassRequest(proofUrl);
 }
 
 async function addSignatureProofPCD(messageToSign: string) {
-  const proofUrl = constructPassportPcdProveAndAddRequestUrl<
+  const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
     ZUPASS_URL,
@@ -374,7 +370,7 @@ async function addSignatureProofPCD(messageToSign: string) {
     }
   );
 
-  sendPassportRequest(proofUrl);
+  sendZupassRequest(proofUrl);
 }
 
 async function addIdentityPCD() {
@@ -385,13 +381,13 @@ async function addIdentityPCD() {
   const serializedNewIdentity =
     await SemaphoreIdentityPCDPackage.serialize(newIdentity);
 
-  const url = constructPassportPcdAddRequestUrl(
+  const url = constructZupassPcdAddRequestUrl(
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedNewIdentity
   );
 
-  sendPassportRequest(url);
+  sendZupassRequest(url);
 }
 
 async function addWebAuthnPCD() {
@@ -440,12 +436,12 @@ async function addWebAuthnPCD() {
   const serializedNewCredential =
     await WebAuthnPCDPackage.serialize(newCredential);
 
-  // Add new WebAuthn PCD to Passport.
-  const url = constructPassportPcdAddRequestUrl(
+  // Add new WebAuthn PCD to Zupass.
+  const url = constructZupassPcdAddRequestUrl(
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedNewCredential
   );
 
-  sendPassportRequest(url);
+  sendZupassRequest(url);
 }

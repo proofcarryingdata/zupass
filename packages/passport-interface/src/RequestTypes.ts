@@ -5,7 +5,6 @@ import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
-import { DateRange, ZuzaluUserRole } from "./zuzalu";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -79,6 +78,48 @@ export interface DownloadEncryptedStorageRequest {
 }
 
 /**
+ * Ask the server to change the salt, delete the storage at the old blob key,
+ * and add a new encrypted storage entry encrypted with the new blob key.
+ */
+export interface ChangeBlobKeyRequest {
+  /**
+   * The original hashed encryption key to be deleted.
+   */
+  oldBlobKey: string;
+  /**
+   * The new hashed encryption key to be added.
+   */
+  newBlobKey: string;
+  /**
+   * UUID of the user making the request.
+   */
+  uuid: string;
+  /**
+   * The salt used in generating the new blob key.
+   */
+  newSalt: string;
+  /**
+   * The encrypted and stringified version of {@link EncryptedStorage} to save
+   */
+  encryptedBlob: string;
+}
+
+/**
+ * Response to {@link ChangeBlobKeyRequest}
+ */
+export type ChangeBlobKeyResponseValue = undefined;
+
+/**
+ * A {@link ChangeBlobKeyRequest} can fail for a number of reasons.
+ */
+export type ChangeBlobKeyError = { detailedMessage?: string } & (
+  | { name: "PasswordIncorrect" }
+  | { name: "UserNotFound" }
+  | { name: "RequiresNewSalt" }
+  | { name: "ServerError" }
+);
+
+/**
  * Ask the server to check whether this ticket is still eligible to be checked in.
  */
 export interface CheckTicketRequest {
@@ -138,7 +179,7 @@ export type CheckTicketInResponseValue = undefined;
 export type CheckTicketInError = TicketError;
 
 /**
- * Ask the PCDpass server, or a 3rd party server to return the list of feeds
+ * Ask the Zupass server, or a 3rd party server to return the list of feeds
  * that it is hosting.
  */
 export type ListFeedsRequest = unknown;
@@ -157,7 +198,7 @@ export interface ListSingleFeedRequest {
 }
 
 /**
- * Ask the PCDpass server, or a 3rd party server, to give the user
+ * Ask the Zupass server, or a 3rd party server, to give the user
  * some PCDs, given the particular feed and credential that the
  * user supplies.
  */
@@ -174,40 +215,29 @@ export interface PollFeedResponseValue {
 }
 
 /**
- * The PCDpass server returns this datastructure to users
- * to represent PCDpass users.
- */
-export interface PCDpassUserJson {
-  superuserEventConfigIds: string[];
-  // @todo - our uuids need to be more unique
-  uuid: string;
-  commitment: string;
-  email: string;
-  salt: string | null;
-}
-
-/**
- * The Zupass server returns this datastructure to users
+ * The Zupass server returns this data structure to users
  * to represent Zupass users.
  */
 export interface ZupassUserJson {
-  email: string;
-  name: string;
-  role: ZuzaluUserRole;
-  visitor_date_ranges?: DateRange[] | null;
-  // @todo - our uuids need to be more unique
   uuid: string;
   commitment: string;
-  salt: null; // Zupass users never have a password salt
+  // @todo: make this private to the user
+  email: string;
+  // @todo: make this private to the user
+  salt: string | null;
+  // @todo: make this private to the user
+  account_reset_timestamps: string[];
+  // @todo: make this private to the user
+  superuserEventConfigIds: string[];
 }
 
 /**
- * Ask the PCDpass server to send a confirmation email with a
+ * Ask the Zupass server to send a confirmation email with a
  * log-in token to the given email.
  */
 export type ConfirmEmailRequest = {
   /**
-   * Each email can have one account on Zupass/PCDpass.
+   * Each email can have one account on Zupass.
    */
   email: string;
 
@@ -241,7 +271,7 @@ export type ConfirmEmailResponseValue =
   | undefined;
 
 /**
- * Ask the PCDpass server for the salt of a particular user.
+ * Ask the Zupass server for the salt of a particular user.
  */
 export type SaltRequest = { email: string };
 
@@ -276,7 +306,7 @@ export type DeviceLoginRequest = {
 };
 
 /**
- * Ask the PCDpass and Zupass server to create a new account with
+ * Ask the Zupass server to create a new account with
  * the given details, overwriting an existing account if one is
  * present.
  */
@@ -291,25 +321,25 @@ export type CreateNewUserRequest = {
 };
 
 /**
- * PCDpass responds with this when you ask to load an end-to-end
+ * Zupass responds with this when you ask to load an end-to-end
  * encrypted blob.
  */
 export type EncryptedStorageResultValue = EncryptedPacket;
 
 /**
- * PCDpass responds with this when you ask it if it is able to
+ * Zupass responds with this when you ask it if it is able to
  * issue tickets. Used primarily for testing.
  */
 export type IssuanceEnabledResponseValue = boolean;
 
 /**
- * PCDpass responds with this when you ask it whether it has
+ * Zupass responds with this when you ask it whether it has
  * synced the Zuzalu users yet.
  */
 export type PretixSyncStatusResponseValue = string;
 
 /**
- * In the case that loading an existing PCDpass or Zupass user fails,
+ * In the case that loading an existing Zupass user fails,
  * we can determine if it failed because the user does not exist,
  * or due to some other error, such as intermittent network error,
  * or the backend being down.
@@ -319,13 +349,12 @@ export type LoadUserError =
   | { userMissing?: never; errorMessage: string };
 
 /**
- * When you ask PCDpass for a user, it will respond with either
- * a Zupass or PCDpass user.
+ * When you ask Zupass for a user, it will respond with this type.
  */
-export type UserResponseValue = PCDpassUserJson | ZupassUserJson;
+export type UserResponseValue = ZupassUserJson;
 
 /**
- * PCDpass responds with this when you ask it if it knows of a given
+ * Zupass responds with this when you ask it if it knows of a given
  * (id, rootHash) tuple.
  */
 export type SemaphoreValidRootResponseValue = { valid: boolean };
