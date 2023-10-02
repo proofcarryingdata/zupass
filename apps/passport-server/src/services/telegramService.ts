@@ -209,7 +209,6 @@ export class TelegramService {
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("manage", async (ctx) => {
       try {
-        logger(`msg`, ctx.message);
         const messageThreadId = ctx?.message?.message_thread_id;
         const admins = await ctx.getChatAdministrators();
 
@@ -225,21 +224,15 @@ export class TelegramService {
           );
         }
 
-        const topicName =
-          ctx.message?.reply_to_message?.forum_topic_created?.name;
+        if (messageThreadId)
+          return ctx.reply(`Must be in ${adminBotChannel}.`, {
+            message_thread_id: messageThreadId
+          });
 
-        if (topicName !== adminBotChannel || !ctx?.message?.is_topic_message)
-          return ctx.reply(
-            `Must be in topic ${adminBotChannel}. Create the topic if it doesn't exist and close it for additional security.`,
-            {
-              message_thread_id: messageThreadId
-            }
-          );
-
-        const isAdmin = admins.some(
+        const botIsAdmin = admins.some(
           (admin) => admin.user.id === this.bot.botInfo.id
         );
-        if (!isAdmin) {
+        if (!botIsAdmin) {
           await ctx.reply(
             "Please add me as an admin to the telegram channel associated with your event.",
             { message_thread_id: messageThreadId }
