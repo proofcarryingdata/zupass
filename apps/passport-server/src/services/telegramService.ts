@@ -329,7 +329,7 @@ export class TelegramService {
     
         <b>Admins</b>
         <b>/manage</b> - Gate / Ungate this group with a ticketed event
-        <b>/setup</b> - For when the chat is freshly created,
+        <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.
         <b>/incognito</b> - Mark a topic as anonymous
       `,
         { parse_mode: "HTML", reply_to_message_id: messageThreadId }
@@ -637,7 +637,7 @@ export class TelegramService {
       `You've proved that you have at ticket to <b>${event.event_name}</b>!\nPress this button to send your proof to <b>${chat.title}</b>`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Send Proof ✈️`,
+          `Send ZK Proof ✈️`,
           inviteLink.invite_link
         ),
         parse_mode: "HTML"
