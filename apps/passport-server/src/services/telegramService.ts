@@ -33,6 +33,8 @@ import {
   SessionData,
   dynamicEvents,
   getSessionKey,
+  isDirectMessage,
+  isGroupWithTopics,
   senderIsAdmin
 } from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
@@ -204,7 +206,7 @@ export class TelegramService {
     this.bot.command("start", async (ctx) => {
       try {
         // Only process the command if it comes as a private message.
-        if (ctx.message && ctx.chat.type === "private") {
+        if (isDirectMessage(ctx)) {
           const username = ctx?.from?.username;
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
@@ -236,7 +238,7 @@ export class TelegramService {
 
         if (!(await senderIsAdmin(ctx, admins))) return;
 
-        if (ctx.chat?.type !== "supergroup") {
+        if (!isGroupWithTopics(ctx)) {
           await ctx.reply(
             "This command only works in a group with Topics enabled.",
             { message_thread_id: messageThreadId }
@@ -276,7 +278,7 @@ export class TelegramService {
     this.bot.command("setup", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
       try {
-        if (ctx.chat?.type !== "supergroup") {
+        if (!isGroupWithTopics(ctx)) {
           throw new Error("Pleae enable topics and try again");
         }
 
@@ -311,7 +313,7 @@ export class TelegramService {
     });
 
     this.bot.command("anonsend", async (ctx) => {
-      if (ctx.chat?.type !== "private") {
+      if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
         const chatId = ctx.chat.id;
 
@@ -343,21 +345,14 @@ export class TelegramService {
         return;
       }
 
-      if (ctx.chat?.type !== "supergroup") {
+      if (!isGroupWithTopics(ctx)) {
         await ctx.reply(
           "This command only works in a group with Topics enabled.",
           { message_thread_id: messageThreadId }
         );
       }
-      const admins = await ctx.getChatAdministrators();
-      const isAdmin = admins.some((admin) => admin.user.id === ctx.from?.id);
-      if (!isAdmin) {
-        await ctx.reply(
-          "Must be an admin to convert a channel to Incognito mode.",
-          { message_thread_id: messageThreadId }
-        );
-        return;
-      }
+
+      if (!(await senderIsAdmin(ctx))) return;
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(

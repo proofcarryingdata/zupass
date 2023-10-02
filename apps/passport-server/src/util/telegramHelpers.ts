@@ -38,6 +38,10 @@ export const getSessionKey = (ctx: Context): string | undefined => {
     : `${ctx.from.id}/${ctx.chat.id}`;
 };
 
+export const isDirectMessage = (ctx: Context): boolean => {
+  return !!(ctx.chat?.type && ctx.chat?.type === "private");
+};
+
 const checkDeleteMessage = (ctx: BotContext): void => {
   if (ctx.chat?.id && ctx.session?.lastMessageId) {
     ctx.api.deleteMessage(ctx.chat.id, ctx.session.lastMessageId);
