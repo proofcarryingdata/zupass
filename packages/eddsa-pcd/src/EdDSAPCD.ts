@@ -84,11 +84,6 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
   public claim: EdDSAPCDClaim;
   public proof: EdDSAPCDProof;
 
-  /**
-   * @param id - the unique identifier of the PCD.
-   * @param claim - the object containing the EdDSA PCD claim.
-   * @param proof - the object containing the EdDSA PCD proof.
-   */
   public constructor(id: string, claim: EdDSAPCDClaim, proof: EdDSAPCDProof) {
     this.id = id;
     this.claim = claim;
@@ -128,7 +123,6 @@ async function ensureInitialized() {
  * @param args - the set of arguments to make a new {@link EdDSAPCD}.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
-  /** init & input sanity check */
   await ensureInitialized();
 
   let message;
@@ -150,7 +144,6 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
   const prvKey = fromHexString(args.privateKey.value);
 
-  // Make the Poseidon hash of the message.
   const hashedMessage = poseidon(message);
 
   // Extract the corresponding EdDSA public key from the given EdDSA private key.
@@ -163,7 +156,6 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
 
-  // Return the PCD by creating the claim and the proof.
   return new EdDSAPCD(id, { message, publicKey }, { signature });
 }
 
@@ -174,19 +166,14 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
  * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}; otherwise false.
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
-  /** init */
   await ensureInitialized();
 
-  // Unpack the signature.
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
 
-  // Get the public key.
   const pubKey = pcd.claim.publicKey.map(fromHexString) as unknown as Point;
 
-  // Make the Poseidon hash of the message.
   const hashedMessage = poseidon(pcd.claim.message);
 
-  // Verify the signature.
   return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
 }
 
