@@ -16,7 +16,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
-    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\"",
+    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\"",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test --concurrency=1",
@@ -27,8 +27,8 @@
     "knip": "knip --no-gitignore"
   },
   "devDependencies": {
-    "@types/circomlibjs": "^0.1.1",
-    "@types/snarkjs": "^0.7.1",
+    "@types/circomlibjs": "0.1.2",
+    "@types/snarkjs": "0.7.1",
     "concurrently": "^8.2.0",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
