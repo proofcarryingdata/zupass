@@ -53,6 +53,14 @@ const ALLOWED_EVENTS = [
   // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
+const ALLOWED_TICKET_MANAGERS = [
+  "cha0sg0d",
+  "notdavidhuang",
+  "richardyliu",
+  "gubsheep",
+  "chubivan"
+];
+
 const adminBotChannel = "Admin Central";
 const eventIdsAreValid = (eventIds?: string[]): boolean => {
   const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
@@ -208,9 +216,16 @@ export class TelegramService {
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("manage", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
+
       try {
-        const messageThreadId = ctx?.message?.message_thread_id;
         const admins = await ctx.getChatAdministrators();
+        const username = ctx?.from?.username;
+        if (!username) throw new Error(`Username not found`);
+        if (!ALLOWED_TICKET_MANAGERS.includes(username))
+          throw new Error(
+            `Only Zupass team members are allowed to run this command.`
+          );
 
         if (!(await senderIsAdmin(ctx, admins))) return;
 
@@ -246,7 +261,7 @@ export class TelegramService {
           }
         );
       } catch (error) {
-        await ctx.reply(`Error linking. Check server logs for details`);
+        await ctx.reply(`${error}`, { message_thread_id: messageThreadId });
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
