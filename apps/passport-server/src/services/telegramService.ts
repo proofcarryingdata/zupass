@@ -19,6 +19,7 @@ import { fetchPretixEventInfo } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
+  fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -204,18 +205,40 @@ export class TelegramService {
 
     // The "start" command initiates the process of invitation and approval.
     this.bot.command("start", async (ctx) => {
+      const userId = ctx?.from?.id;
       try {
         // Only process the command if it comes as a private message.
-        if (isDirectMessage(ctx)) {
+        if (isDirectMessage(ctx) && userId) {
           const username = ctx?.from?.username;
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!`,
-            {
-              reply_markup: zupassMenu
-            }
+            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!\n\nYou must have one of the following tickets in your Zupass account to join successfully.\n\nSee you soon 😽`
           );
+          const msg = await ctx.reply(`Loading tickets and events..`);
+          const events = await fetchLinkedPretixAndTelegramEvents(
+            this.context.dbPool
+          );
+          const eventsWithChatsRequests = events.map(async (e) => {
+            return {
+              ...e,
+              chat: e.telegramChatID
+                ? await this.bot.api.getChat(e.telegramChatID)
+                : null
+            };
+          });
+          const eventsWithChats = await Promise.all(eventsWithChatsRequests);
+          let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
+          for (const event of eventsWithChats) {
+            // @ts-expect-error chat title
+            eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat?.title}</i>\n`;
+          }
+          await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
+            parse_mode: "HTML"
+          });
+          await ctx.reply(`Click here ⬇`, {
+            reply_markup: zupassMenu
+          });
         }
       } catch (e) {
         logger("[TELEGRAM] start error", e);
