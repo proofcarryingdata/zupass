@@ -92,7 +92,7 @@ const BtnSecondary = styled(BtnBase)`
 export const LinkButton = styled(Link)`
   ${buttonStyle}
 
-  ${({ primary }: { primary?: boolean }) => css`
+  ${({ primary }: { primary?: number }) => css`
     color: var(--bg-dark-primary) !important;
     display: block;
     width: 100%;
