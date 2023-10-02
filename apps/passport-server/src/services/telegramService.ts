@@ -212,10 +212,7 @@ export class TelegramService {
         const messageThreadId = ctx?.message?.message_thread_id;
         const admins = await ctx.getChatAdministrators();
 
-        if (!(await senderIsAdmin(ctx, admins)))
-          return ctx.reply("Only admins can call this command", {
-            message_thread_id: messageThreadId
-          });
+        if (!(await senderIsAdmin(ctx, admins))) return;
 
         if (ctx.chat?.type !== "supergroup") {
           await ctx.reply(
@@ -255,9 +252,10 @@ export class TelegramService {
     });
 
     this.bot.command("setup", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
       try {
         if (ctx.chat?.type !== "supergroup") {
-          await ctx.reply("Pleae enable topics and try again");
+          throw new Error("Pleae enable topics and try again");
         }
 
         if (ctx?.message?.is_topic_message)
@@ -266,27 +264,14 @@ export class TelegramService {
         await ctx.editGeneralForumTopic(adminBotChannel);
         await ctx.hideGeneralForumTopic();
         const topic = await ctx.createForumTopic(`Announcements`, {
-          icon_custom_emoji_id: "5309984423003823246"
+          icon_custom_emoji_id: "5309984423003823246" // 📢
         });
         await ctx.api.closeForumTopic(ctx.chat.id, topic.message_thread_id);
       } catch (error) {
-        await ctx.reply(`Error running setup: ${error}`);
+        await ctx.reply(`❌ ${error}`, {
+          reply_to_message_id: messageThreadId
+        });
       }
-    });
-
-    this.bot.command("help", async (ctx) => {
-      await ctx.reply(
-        `<b>Help</b>
-    
-        <b>Users</b>
-        <b>/start</b> - join a group with a ZK proof of a ticket
-    
-        <b>Admins</b>
-        <b>/manage</b> - Gate / Ungate this group with a ticketed event
-        <b>/setup</b> - For when the chat is freshly created
-      `,
-        { parse_mode: "HTML" }
-      );
     });
 
     this.bot.command("anonsend", async (ctx) => {
