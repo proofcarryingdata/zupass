@@ -1,8 +1,8 @@
 "use client";
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
+import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   ZKEdDSAEventTicketPCDArgs,
@@ -14,6 +14,31 @@ import { useCallback, useState } from "react";
 function getMessageWatermark(message: string): bigint {
   const hashed = sha256.sha256(message).substring(0, 16);
   return BigInt("0x" + hashed);
+}
+
+ enum PCDRequestType {
+  Get = "Get",
+  GetWithoutProving = "GetWithoutProving",
+  Add = "Add",
+  ProveAndAdd = "ProveAndAdd"
+}
+
+function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
+  zupassClientUrl: string,
+  returnUrl: string,
+  pcdType: T["name"],
+  args: ArgsOf<T>,
+  options?: ProveOptions
+) {
+  const req: PCDGetRequest<T> = {
+    type: PCDRequestType.Get,
+    returnUrl: returnUrl,
+    args: args,
+    pcdType,
+    options
+  };
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${zupassClientUrl}#/prove?request=${encReq}`;
 }
 
 function requestProof(message: string) {
