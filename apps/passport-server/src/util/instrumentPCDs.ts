@@ -30,7 +30,7 @@ function instrumentPackage(pcdPackage: PCDPackage): void {
 }
 
 function instrumentSingleFunction(
-  pcdPackage: PCDPackage<unknown, unknown, unknown, unknown>,
+  pcdPackage: PCDPackage<unknown, unknown, any, unknown>,
   functionName: string
 ): void {
   logger(`[INIT] instrumenting ${pcdPackage.name}.${functionName}`);

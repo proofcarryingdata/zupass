@@ -1,17 +1,14 @@
-import assert from "assert";
-import * as path from "path";
-
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-
+import assert from "assert";
+import "mocha";
+import * as path from "path";
 import {
   SemaphoreSignaturePCDArgs,
-  SemaphoreSignaturePCDPackage
+  SemaphoreSignaturePCDPackage,
 } from "../src/SemaphoreSignaturePCD";
-
-import "mocha";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -25,29 +22,24 @@ describe("semaphore signature PCD should work", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreSignaturePCDPackage.init!({
       zkeyFilePath,
-      wasmFilePath
+      wasmFilePath,
     });
 
     const identity = new Identity();
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.Identity,
-          value: identity
-        }
-      })
+      await SemaphoreIdentityPCDPackage.prove({ identity })
     );
 
     args = {
       identity: {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
-        value: identityPCD
+        value: identityPCD,
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: "Test message"
-      }
+        value: "Test message",
+      },
     };
   });
 

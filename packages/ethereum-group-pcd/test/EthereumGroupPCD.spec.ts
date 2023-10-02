@@ -1,8 +1,3 @@
-import assert from "assert";
-import { ethers } from "ethers";
-import JSONBig from "json-bigint";
-import * as path from "path";
-
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
@@ -12,15 +7,17 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
 import { Identity } from "@semaphore-protocol/identity";
-
+import assert from "assert";
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import "mocha";
+import * as path from "path";
 import {
   EthereumGroupPCD,
   EthereumGroupPCDPackage,
   getRawPubKeyBuffer,
   GroupType
 } from "../src/EthereumGroupPCD";
-
-import "mocha";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -93,13 +90,11 @@ async function groupProof(
 
 async function happyPathEthGroupPCD(groupType: GroupType) {
   const identity = await SemaphoreIdentityPCDPackage.prove({
-    identity: {
-      argumentType: ArgumentTypeName.Identity,
-      value: new Identity()
-    }
+    identity: new Identity()
   });
-  const serializedIdentity =
-    await SemaphoreIdentityPCDPackage.serialize(identity);
+  const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
+    identity
+  );
   const wallet = ethers.Wallet.createRandom();
   const { signatureOfIdentityCommitment, merkleProof } = await groupProof(
     identity,
@@ -237,10 +232,7 @@ describe("Ethereum Group PCD", function () {
 
   it("should not be able create a PCD with a different identity", async function () {
     const identity1 = await SemaphoreIdentityPCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.Identity,
-        value: new Identity()
-      }
+      identity: new Identity()
     });
     const wallet = ethers.Wallet.createRandom();
     const { signatureOfIdentityCommitment, merkleProof } = await groupProof(
@@ -249,13 +241,11 @@ describe("Ethereum Group PCD", function () {
     );
 
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.Identity,
-        value: new Identity()
-      }
+      identity: new Identity()
     });
-    const serializedIdentity2 =
-      await SemaphoreIdentityPCDPackage.serialize(identity2);
+    const serializedIdentity2 = await SemaphoreIdentityPCDPackage.serialize(
+      identity2
+    );
 
     await assert.rejects(
       async () =>
@@ -285,13 +275,11 @@ describe("Ethereum Group PCD", function () {
 
   it("should not be able to create a PCD with tampered merkle root", async function () {
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.Identity,
-        value: new Identity()
-      }
+      identity: new Identity()
     });
-    const serializedIdentity =
-      await SemaphoreIdentityPCDPackage.serialize(identity);
+    const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
+      identity
+    );
     const wallet = ethers.Wallet.createRandom();
     const { merkleProof, signatureOfIdentityCommitment } = await groupProof(
       identity,

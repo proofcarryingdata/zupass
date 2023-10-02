@@ -177,10 +177,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     identity: Identity
   ): Promise<SerializedPCD<SemaphoreIdentityPCD>> {
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.Identity,
-        value: identity
-      }
+      identity: identity
     });
 
     return await SemaphoreIdentityPCDPackage.serialize(identityPCD);

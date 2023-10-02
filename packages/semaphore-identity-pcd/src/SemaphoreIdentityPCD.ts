@@ -1,22 +1,14 @@
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
-import {
-  DisplayOptions,
-  IdentityArgument,
-  PCD,
-  PCDPackage,
-  SerializedPCD
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { SemaphoreIdentityCardBody } from "./CardBody";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
 export type SemaphoreIdentityPCDArgs = {
-  identity: IdentityArgument;
+  identity: Identity;
 };
 
 export interface SemaphoreIdentityPCDClaim {
@@ -43,12 +35,7 @@ export class SemaphoreIdentityPCD
 export async function prove(
   args: SemaphoreIdentityPCDArgs
 ): Promise<SemaphoreIdentityPCD> {
-  if (!args.identity.value) {
-    throw new Error(
-      "cannot make semaphore identity proof: identity is not set"
-    );
-  }
-  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity.value });
+  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity });
 }
 
 export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
@@ -96,6 +83,7 @@ export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
 export const SemaphoreIdentityPCDPackage: PCDPackage<
   SemaphoreIdentityPCDClaim,
   SemaphoreIdentityPCDProof,
+  // @ts-expect-error https://github.com/proofcarryingdata/zupass/issues/830
   SemaphoreIdentityPCDArgs
 > = {
   name: SemaphoreIdentityPCDTypeName,

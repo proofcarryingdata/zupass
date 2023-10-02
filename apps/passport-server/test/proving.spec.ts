@@ -1,6 +1,3 @@
-import { expect } from "chai";
-import { step } from "mocha-steps";
-
 import {
   PendingPCDStatus,
   ProofStatusResponseValue,
@@ -10,14 +7,14 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-
+import { expect } from "chai";
+import "mocha";
+import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
 import { submitAndWaitForPendingPCD } from "./proving/proving";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-
-import "mocha";
 
 describe("server-side proving functionality", function () {
   this.timeout(15_000);
@@ -62,10 +59,7 @@ describe("server-side proving functionality", function () {
             pcdType: SemaphoreIdentityPCDPackage.name,
             value: await SemaphoreIdentityPCDPackage.serialize(
               await SemaphoreIdentityPCDPackage.prove({
-                identity: {
-                  argumentType: ArgumentTypeName.Identity,
-                  value: new Identity()
-                }
+                identity: new Identity()
               })
             )
           },

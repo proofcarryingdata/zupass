@@ -1,6 +1,3 @@
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
 import {
   BigIntArgument,
   DisplayOptions,
@@ -18,15 +15,16 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import {
   FullProof,
-  generateProof,
   Proof,
+  generateProof,
   verifyProof
 } from "@semaphore-protocol/proof";
-
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { SemaphoreGroupCardBody } from "./CardBody";
 import {
-  deserializeSemaphoreGroup,
-  SerializedSemaphoreGroup
+  SerializedSemaphoreGroup,
+  deserializeSemaphoreGroup
 } from "./SerializedSemaphoreGroup";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;

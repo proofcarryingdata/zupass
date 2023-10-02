@@ -1,6 +1,3 @@
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
 import {
   DisplayOptions,
   PCD,
@@ -10,7 +7,8 @@ import {
   StringArgument
 } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
-
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { RSATicketCardBody } from "./CardBody";
 import { getTicketData } from "./utils";
 

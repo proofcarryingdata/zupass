@@ -88,7 +88,12 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {options?.description && <Description>{options.description}</Description>}
 
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
-      <PCDArgs args={args} setArgs={setArgs} pcdCollection={pcds} />
+
+      <PCDArgs
+        args={args}
+        setArgs={setArgs}
+        options={pcdPackage.getProveDisplayOptions?.()?.defaultArgs}
+      />
 
       {error && <ErrorContainer>{error}</ErrorContainer>}
 

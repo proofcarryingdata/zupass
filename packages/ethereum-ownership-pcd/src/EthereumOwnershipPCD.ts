@@ -1,7 +1,3 @@
-import { ethers } from "ethers";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
 import {
   ArgumentTypeName,
   DisplayOptions,
@@ -21,7 +17,9 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
-
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { EthereumOwnershipCardBody } from "./CardBody";
 
 export const EthereumOwnershipPCDTypeName = "ethereum-ownership-pcd";

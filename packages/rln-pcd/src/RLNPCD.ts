@@ -1,7 +1,3 @@
-import JSONBig from "json-bigint";
-import { Proof, RLN, RLNFullProof } from "rlnjs";
-import { v4 as uuid } from "uuid";
-
 import {
   BigIntArgument,
   ObjectArgument,
@@ -21,7 +17,9 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-
+import JSONBig from "json-bigint";
+import { Proof, RLN, RLNFullProof } from "rlnjs";
+import { v4 as uuid } from "uuid";
 import verificationKeyJSON from "../artifacts/16.json";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;

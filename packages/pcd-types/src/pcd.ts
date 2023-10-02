@@ -67,7 +67,12 @@ export interface PCD<C = unknown, P = unknown> {
  * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the
  *   init function is present to instantiate a new {@link PCD}
  */
-export interface PCDPackage<C = any, P = any, A = any, I = any> {
+export interface PCDPackage<
+  C = any,
+  P = any,
+  A extends Record<string, Argument<any>> = any,
+  I = any
+> {
   /**
    * The unique name identifying the type of {@link PCD} this package encapsulates.
    */
@@ -100,6 +105,12 @@ export interface PCDPackage<C = any, P = any, A = any, I = any> {
    * This is an optional field, because not all packages need to be initialized.
    */
   init?: (initArgs: I) => Promise<void>;
+
+  /**
+   * Given the arguments passed into {@link PCDPackage#prove}, returns options on how
+   * to render the Prove Screen for this {@link PCDPackage}.
+   */
+  getProveDisplayOptions?: () => ProveDisplayOptions<A>;
 
   /**
    * This is effectively a factory for instances of the {@link PCD} that this {@link PCDPackage}
@@ -186,13 +197,41 @@ export interface ArgumentType<T extends ArgumentTypeName, U = unknown> {
 
 export interface Argument<
   TypeName extends ArgumentTypeName,
-  ValueType = unknown
+  ValueType = unknown,
+  /**
+   * This is the type of the params that are passed into the validator function
+   * of the argument. It is important that this type is serializable and
+   * deserializable using {@code JSON.stringify} and {@code JSON.parse}, because
+   * these arguments should be able to be passed over the wire trivially.
+   */
+  ValidatorParams = Record<string, unknown>
 > {
   argumentType: TypeName;
   value?: ValueType;
-  remoteUrl?: string;
   userProvided?: boolean;
+  /**
+   * Display name for the argument. If not provided, the {@link Argument} key is displayed in title case.
+   */
+  displayName?: string;
+  /**
+   * Tooltip text for the argument. If {@link displayName} is set to empty string, the tooltip text is displayed in line.
+   */
   description?: string;
+  /**
+   * Can be used to hide certain advanced arguments from the UI by default.
+   * Users can still reveal them by clicking the "show more" button. Defaults
+   * to true.
+   */
+  defaultVisible?: boolean;
+  /**
+   * Whether to hide the icon left to the argument. Defaults to false.
+   */
+  hideIcon?: boolean;
+  /**
+   * Can be used to validate user input before proof generation as well as
+   * proactive filtering of options, such as PCDs, in the UI.
+   */
+  validatorParams?: ValidatorParams;
 }
 
 /**
@@ -240,7 +279,9 @@ export function isBooleanArgument(
   return arg.argumentType === ArgumentTypeName.Boolean;
 }
 
-export type ObjectArgument<T> = Argument<ArgumentTypeName.Object, T>;
+export type ObjectArgument<T> = Argument<ArgumentTypeName.Object, T> & {
+  remoteUrl?: string;
+};
 export function isObjectArgument(
   arg: Argument<any, unknown>
 ): arg is ObjectArgument<unknown> {
@@ -257,10 +298,12 @@ export function isStringArrayArgument(
   return arg.argumentType === ArgumentTypeName.StringArray;
 }
 
-export type PCDArgument<T extends PCD = PCD> = Argument<
-  ArgumentTypeName.PCD,
-  SerializedPCD<T>
-> & {
+export type PCDArgument<
+  T extends PCD = PCD,
+  ValidatorParams extends { notFoundMessage?: string } = {
+    notFoundMessage?: string;
+  }
+> = Argument<ArgumentTypeName.PCD, SerializedPCD<T>, ValidatorParams> & {
   pcdType?: string;
 };
 export function isPCDArgument(arg: Argument<any, unknown>): arg is PCDArgument {
@@ -297,3 +340,34 @@ export function isRevealListArgument(
     Object.keys(arg.value).every((k) => k.startsWith("reveal"))
   );
 }
+
+export interface ProveDisplayOptions<
+  Args extends Record<PropertyKey, Argument<any>>
+> {
+  defaultArgs?: ArgsDisplayOptions<Args>;
+}
+
+export type ArgsDisplayOptions<
+  Args extends Record<PropertyKey, Argument<any>>
+> = {
+  [Property in keyof Args]: DisplayArg<Args[Property]>;
+};
+
+export type RawValueType<T extends Argument<any, unknown>> =
+  T extends PCDArgument<infer U, any>
+    ? U
+    : T extends Argument<any, infer U>
+    ? U
+    : T;
+
+export type ArgumentValidator<T extends Argument<any, unknown>> = (
+  value: RawValueType<T>,
+  params: T["validatorParams"]
+) => boolean;
+
+/**
+ * Enriched Argument for display purposes
+ */
+export type DisplayArg<Arg extends Argument<any, unknown>> = Arg & {
+  validate?: ArgumentValidator<Arg>;
+};

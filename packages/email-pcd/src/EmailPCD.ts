@@ -1,7 +1,3 @@
-import JSONBig from "json-bigint";
-import _ from "lodash";
-import { v4 as uuid } from "uuid";
-
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
@@ -12,7 +8,9 @@ import {
   StringArgument
 } from "@pcd/pcd-types";
 import { generateSnarkMessageHash } from "@pcd/util";
-
+import JSONBig from "json-bigint";
+import _ from "lodash";
+import { v4 as uuid } from "uuid";
 import { EmailCardBody } from "./CardBody";
 
 export const EmailPCDTypeName = "email-pcd";

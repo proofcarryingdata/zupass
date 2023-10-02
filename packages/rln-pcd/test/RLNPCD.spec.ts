@@ -8,8 +8,6 @@ import assert from "assert";
 import "mocha";
 import * as path from "path";
 
-import "mocha";
-
 const TREE_DEPTH = 16;
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.zkey`);
@@ -22,7 +20,7 @@ describe("rln-pcd should work", function () {
     if (!RLNPCDPackage.init) return;
     await RLNPCDPackage.init({
       zkeyFilePath,
-      wasmFilePath
+      wasmFilePath,
     });
   });
 
@@ -37,36 +35,31 @@ describe("rln-pcd should work", function () {
     const epoch = BigInt(42);
 
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.Identity,
-          value: identity
-        }
-      })
+      await SemaphoreIdentityPCDPackage.prove({ identity })
     );
 
     // Arguments required for proving
     args = {
       rlnIdentifier: {
         argumentType: ArgumentTypeName.BigInt,
-        value: String(rlnIdentifier)
+        value: String(rlnIdentifier),
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
-        value: identityPCD
+        value: identityPCD,
       },
       group: {
         argumentType: ArgumentTypeName.Object,
-        value: serializeSemaphoreGroup(group, "test name")
+        value: serializeSemaphoreGroup(group, "test name"),
       },
       signal: {
         argumentType: ArgumentTypeName.String,
-        value: signal
+        value: signal,
       },
       epoch: {
         argumentType: ArgumentTypeName.BigInt,
-        value: String(epoch)
-      }
+        value: String(epoch),
+      },
     };
   });
 

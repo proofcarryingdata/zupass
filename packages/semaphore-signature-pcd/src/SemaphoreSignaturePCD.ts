@@ -1,6 +1,3 @@
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
 import {
   DisplayOptions,
   PCD,
@@ -21,7 +18,8 @@ import {
   generateProof,
   verifyProof
 } from "@semaphore-protocol/proof";
-
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { SemaphoreIdentityCardBody } from "./CardBody";
 
 /**

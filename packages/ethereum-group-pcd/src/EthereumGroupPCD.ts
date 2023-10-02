@@ -1,7 +1,3 @@
-import { ethers } from "ethers";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-
 import {
   ArgumentTypeName,
   DisplayOptions,
@@ -28,7 +24,9 @@ import {
   ProverConfig,
   PublicInput
 } from "@personaelabs/spartan-ecdsa";
-
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
 import { EthereumGroupCardBody } from "./CardBody";
 
 export const EthereumGroupPCDTypeName = "ethereum-group-pcd";

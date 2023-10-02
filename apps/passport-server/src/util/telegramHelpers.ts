@@ -1,3 +1,7 @@
+import { Context, SessionFlavor } from "grammy";
+import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Pool } from "postgres-pool";
+
 import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
@@ -8,17 +12,15 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Context, SessionFlavor } from "grammy";
-import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
-import { Pool } from "postgres-pool";
+
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   ChatIDWithEventIDs,
-  LinkedPretixTelegramEvent,
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId
+  fetchTelegramEventsByChatId,
+  LinkedPretixTelegramEvent
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -194,7 +196,13 @@ const generateProofUrl = (
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      displayName: "Your Tikcet",
+      description: "",
+      validatorParams: {
+        eventIds: validEventIds
+      },
+      hideIcon: true
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -205,7 +213,8 @@ const generateProofUrl = (
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: fieldsToReveal,
-      userProvided: false
+      userProvided: false,
+      hideIcon: true
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
@@ -220,7 +229,8 @@ const generateProofUrl = (
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
       value: telegramUserId.toString(),
-      userProvided: false
+      userProvided: false,
+      description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
     }
   };
 
@@ -235,9 +245,9 @@ const generateProofUrl = (
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK Ticket Proof",
+    title: "",
     description:
-      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+      "Zucat would like to invite you to a Telegram group and requested a zero-knowledge proof."
   });
   return proofUrl;
 };

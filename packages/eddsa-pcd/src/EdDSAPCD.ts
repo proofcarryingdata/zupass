@@ -1,6 +1,3 @@
-import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
-import { v4 as uuid } from "uuid";
-
 import {
   DisplayOptions,
   PCD,
@@ -10,6 +7,9 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
+import { Eddsa, Point, Poseidon, buildEddsa, buildPoseidon } from "circomlibjs";
+import { v4 as uuid } from "uuid";
+import { EdDSACardBody } from "./CardBody";
 
 /**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being
