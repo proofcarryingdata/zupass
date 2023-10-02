@@ -5,7 +5,7 @@ import {
   SubscriptionPermissionError
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { PCDPermission, matchActionToPermission } from "@pcd/pcd-collection";
+import { matchActionToPermission, PCDPermission } from "@pcd/pcd-collection";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
@@ -31,7 +31,7 @@ export function ResolveSubscriptionErrorModal() {
   return (
     <ErrorContainer>
       <H2>{error ? "Subscription error" : "Subscription updated"}</H2>
-      <Spacer h={16} />
+      <Spacer h={24} />
       {error && error.type === SubscriptionErrorType.FetchError && (
         <FetchError subscription={subscription} subscriptions={subscriptions} />
       )}

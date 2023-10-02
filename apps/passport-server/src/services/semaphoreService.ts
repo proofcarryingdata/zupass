@@ -2,23 +2,13 @@ import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Pool } from "postgres-pool";
-import {
-  CommitmentRow,
-  HistoricSemaphoreGroup,
-  LoggedinPCDpassUser,
-  LoggedInZuzaluUser
-} from "../database/models";
-import {
-  fetchAllCommitments,
-  fetchCommitment,
-  fetchCommitmentByUuid
-} from "../database/queries/commitments";
-import { fetchDevconnectSuperusersForEmail } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { HistoricSemaphoreGroup, LoggedInZuzaluUser } from "../database/models";
 import {
   fetchHistoricGroupByRoot,
   fetchLatestHistoricSemaphoreGroups,
   insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
+import { fetchAllUsers } from "../database/queries/users";
 import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -27,36 +17,35 @@ import { traced } from "./telemetryService";
 
 /**
  * Responsible for maintaining semaphore groups for all the categories of users
- * that PCDpass/Zupass is aware of.
+ * that Zupass is aware of.
  */
 export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
   private groups: NamedGroup[];
   private dbPool: Pool;
-  private isZuzalu: boolean;
-  private loaded = false;
-
-  public constructor(config: ApplicationContext) {
-    this.dbPool = config.dbPool;
-    this.isZuzalu = config.isZuzalu;
-    this.groups = SemaphoreService.createGroups();
-  }
-
-  private static createGroups(): NamedGroup[] {
-    return [
-      { name: "Zuzalu Participants", group: new Group("1", 16) },
-      { name: "Zuzalu Residents", group: new Group("2", 16) },
-      { name: "Zuzalu Visitors", group: new Group("3", 16) },
-      { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "PCDpass Users", group: new Group("5", 16) }
-    ];
-  }
 
   public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
   public groupVisitors = (): NamedGroup => this.getNamedGroup("3");
   public groupOrganizers = (): NamedGroup => this.getNamedGroup("4");
-  public groupPCDpass = (): NamedGroup => this.getNamedGroup("5");
+  public groupEveryone = (): NamedGroup => this.getNamedGroup("5");
+
+  public constructor(config: ApplicationContext) {
+    this.dbPool = config.dbPool;
+    this.groups = SemaphoreService.createGroups();
+  }
+
+  private static createGroups(): NamedGroup[] {
+    return [
+      // @todo: deprecate groups 1-4
+      // Blocked on Zupoll, Zucast, and zuzalu.city
+      { name: "Zuzalu Participants", group: new Group("1", 16) },
+      { name: "Zuzalu Residents", group: new Group("2", 16) },
+      { name: "Zuzalu Visitors", group: new Group("3", 16) },
+      { name: "Zuzalu Organizers", group: new Group("4", 16) },
+      { name: "Everyone", group: new Group("5", 16) }
+    ];
+  }
 
   public getNamedGroup(id: string): NamedGroup {
     const ret = this.groups.find((g) => g.group.id === id);
@@ -64,94 +53,10 @@ export class SemaphoreService {
     return ret;
   }
 
-  private zuzaluUsersByUUID = {} as Record<string, LoggedInZuzaluUser>;
-  private zuzaluUsersByEmail = {} as Record<string, LoggedInZuzaluUser>;
-  private pcdPassUsersbyUUID = {} as Record<string, CommitmentRow>;
-  private pcdPassUsersByEmail = {} as Record<string, CommitmentRow>;
-
-  /**
-   * If the service has not loaded all the users into memory yet, throws an error.
-   * Otherwise, if this is a Zuzalu server, returns the user, or `null` if the user does not exist.
-   * Otherwise, if this is a PCDpass server, returns the user, or `null` if the user does not exist.
-   */
-  public async getUserByUUID(
-    uuid: string
-  ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
-    if (!this.loaded) {
-      // prevents client from thinking the user has been logged out
-      // if semaphore service hasn't been initialized yet
-      throw new PCDHTTPError(503, "Semaphore service not loaded");
-    }
-
-    if (this.isZuzalu) {
-      return this.zuzaluUsersByUUID[uuid] || null;
-    }
-
-    const commitment = await fetchCommitmentByUuid(this.dbPool, uuid);
-
-    if (!commitment) {
-      logger("[SEMA] no user with that email exists");
-      return null;
-    }
-
-    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-      this.dbPool,
-      commitment.email
-    );
-
-    const pcdpassUser: LoggedinPCDpassUser = {
-      ...commitment,
-      superuserEventConfigIds: superuserPrivilages.map(
-        (s) => s.pretix_events_config_id
-      )
-    };
-
-    return pcdpassUser;
-  }
-
-  /**
-   * Gets a user by unique identitifier. Only retrieves users that have logged in
-   * (which makes sense because only those users even have a uuid).
-   */
-  public async getUserByEmail(
-    email: string
-  ): Promise<LoggedInZuzaluUser | LoggedinPCDpassUser | null> {
-    if (!this.loaded) {
-      // prevents client from thinking the user has been logged out
-      // if semaphore service hasn't been initialized yet
-      throw new PCDHTTPError(503, "Semaphore service not loaded");
-    }
-
-    if (this.isZuzalu) {
-      return this.zuzaluUsersByEmail[email] || null;
-    }
-
-    const commitment = await fetchCommitment(this.dbPool, email);
-
-    if (!commitment) {
-      logger("[SEMA] no user with that email exists");
-      return null;
-    }
-
-    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-      this.dbPool,
-      commitment.email
-    );
-
-    const pcdpassUser: LoggedinPCDpassUser = {
-      ...commitment,
-      superuserEventConfigIds: superuserPrivilages.map(
-        (s) => s.pretix_events_config_id
-      )
-    };
-
-    return pcdpassUser;
-  }
-
   public start(): void {
     this.interval = setInterval(() => {
       // Reload every minute
-      this.reload();
+      this.scheduleReload();
     }, 60 * 1000);
   }
 
@@ -161,6 +66,14 @@ export class SemaphoreService {
     }
   }
 
+  public scheduleReload(): void {
+    setTimeout(() => {
+      this.reload().catch((e) => {
+        logger("[SEMA] failed to reload", e);
+      });
+    }, 1);
+  }
+
   /**
    * Load users from DB, rebuild semaphore groups
    */
@@ -168,38 +81,27 @@ export class SemaphoreService {
     return traced("Semaphore", "reload", async () => {
       logger(`[SEMA] Reloading semaphore service...`);
 
-      if (this.isZuzalu) {
-        await this.reloadZuzaluGroups();
-      } else {
-        await this.reloadZuzaluGroups();
-        await this.reloadGenericGroup();
-      }
-
-      this.loaded = true;
-
+      await this.reloadZuzaluGroups();
+      await this.reloadGenericGroup();
       await this.saveHistoricSemaphoreGroups();
+
       logger(`[SEMA] Semaphore service reloaded.`);
     });
   }
 
   private async reloadGenericGroup(): Promise<void> {
     return traced("Semaphore", "reloadGenericGroup", async (span) => {
-      const allCommitments = await fetchAllCommitments(this.dbPool);
-      span?.setAttribute("users", allCommitments.length);
-      logger(`[SEMA] Rebuilding groups, ${allCommitments.length} total users.`);
+      const allUsers = await fetchAllUsers(this.dbPool);
+      span?.setAttribute("users", allUsers.length);
+      logger(`[SEMA] Rebuilding groups, ${allUsers.length} total users.`);
 
       const namedGroup = this.getNamedGroup("5");
       const newGroup = new Group(
         namedGroup.group.id,
         namedGroup.group.depth,
-        allCommitments.map((c) => c.commitment)
+        allUsers.map((c) => c.commitment)
       );
       namedGroup.group = newGroup;
-      this.pcdPassUsersbyUUID = {};
-      allCommitments.forEach((c) => {
-        this.pcdPassUsersbyUUID[c.uuid] = c;
-        this.pcdPassUsersByEmail[c.email] = c;
-      });
     });
   }
 
@@ -271,9 +173,6 @@ export class SemaphoreService {
       span?.setAttribute("users", users.length);
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
-      // reset user state
-      this.zuzaluUsersByUUID = {};
-      this.zuzaluUsersByEmail = {};
       this.groups = SemaphoreService.createGroups();
 
       const groupIdsToUsers: Map<string, LoggedInZuzaluUser[]> = new Map();
@@ -288,8 +187,6 @@ export class SemaphoreService {
 
       // calculate which users go into which groups
       for (const p of users) {
-        this.zuzaluUsersByUUID[p.uuid] = p;
-        this.zuzaluUsersByEmail[p.email] = p;
         const groupsOfThisUser = this.getZuzaluGroupsForRole(p.role);
         for (const namedGroup of groupsOfThisUser) {
           logger(
@@ -347,7 +244,7 @@ export function startSemaphoreService(
 ): SemaphoreService {
   const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
-  semaphoreService.reload();
+  semaphoreService.scheduleReload();
   return semaphoreService;
 }
 

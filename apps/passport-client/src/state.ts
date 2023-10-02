@@ -4,10 +4,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
 import { Emitter } from "./emitter";
 
-export type PendingAction =
-  | { type: "new-passport"; email: string }
-  | { type: "save-sync-key" };
-
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -19,11 +15,10 @@ export interface AppState {
   encryptionKey?: string;
 
   // View state
-  pendingAction?: PendingAction;
   modal:
     | { modalType: "info" }
     | { modalType: "settings" }
-    | { modalType: "save-sync" }
+    | { modalType: "upgrade-account-modal" }
     | { modalType: "invalid-participant" }
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }

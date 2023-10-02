@@ -61,8 +61,8 @@ export const HR = styled.hr`
   margin: 0 16px;
 `;
 
-export const CenterColumn = styled.div<{ w: number }>`
-  width: ${(p) => p.w + "px"};
+export const CenterColumn = styled.div<{ w?: number }>`
+  width: ${(p) => (p.w ?? 280) + "px"};
   margin: 0 auto;
 `;
 
@@ -88,20 +88,6 @@ export const TextSecondary = styled.div`
 export const PreWrap = styled.pre`
   white-space: pre-wrap;
   overflow: hidden;
-`;
-
-export const BackgroundGlow = styled.div<{
-  y: number;
-  from: string;
-  to: string;
-}>`
-  width: 100%;
-  min-height: 100vh;
-  background: radial-gradient(
-    circle 160px at center ${(p) => p.y}px,
-    ${(p) => p.from},
-    ${(p) => p.to}
-  );
 `;
 
 export function ZuLogo() {

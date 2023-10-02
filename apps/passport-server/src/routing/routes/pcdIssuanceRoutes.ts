@@ -68,7 +68,7 @@ export function initPCDIssuanceRoutes(
   });
 
   /**
-   * Lets the PCDpass client and 3rd parties inspect what feeds are available
+   * Lets the Zupass client and 3rd parties inspect what feeds are available
    * for polling on this server.
    */
   app.get("/feeds", async (req: Request, res: Response) => {
@@ -80,7 +80,7 @@ export function initPCDIssuanceRoutes(
   });
 
   /**
-   * Lets a PCDpass client (or even a 3rd-party-developed client get PCDs from a
+   * Lets a Zupass client (or even a 3rd-party-developed client get PCDs from a
    * particular feed that this server is hosting.
    */
   app.post("/feeds", async (req, res) => {

@@ -13,8 +13,7 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveSection } from "../ProveScreen/GenericProveSection";
 
 /**
- * Screen that allows the user to prove a new PCD, and then add it to the
- * passport.
+ * Screen that allows the user to prove a new PCD, and then add it to Zupass.
  */
 export function ProveAndAddScreen({
   request

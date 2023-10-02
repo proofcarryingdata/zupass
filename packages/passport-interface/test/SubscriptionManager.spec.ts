@@ -57,6 +57,12 @@ describe("Subscription Manager", async function () {
     const subs = manager.getSubscriptionsForProvider(providerUrl);
     expect(subs).to.deep.eq([sub]);
 
+    // Replacing an existing feed with an updated version
+    feed.name = "changed name";
+    const sameSub = manager.subscribe(providerUrl, feed, undefined, true);
+    expect(sub).to.eq(sameSub);
+    expect(manager.getActiveSubscriptions().length).to.eq(1);
+
     manager.unsubscribe(sub.id);
     expect(manager.getActiveSubscriptions().length).to.eq(0);
     expect(manager.getProviders().length).to.eq(0);

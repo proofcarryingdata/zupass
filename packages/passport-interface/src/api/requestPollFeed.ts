@@ -26,12 +26,12 @@ export async function requestPollFeed(
 }
 
 export async function pollFeed(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   identity: Identity,
   signedMessage: string,
   feedId: string
 ): Promise<PollFeedResult> {
-  return requestPollFeed(`${passportServerUrl}/feeds`, {
+  return requestPollFeed(`${zupassServerUrl}/feeds`, {
     feedId,
     pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({

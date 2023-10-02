@@ -10,7 +10,7 @@ import { MainIdentityCard } from "./MainIdentityCard";
 export const PCDCard = React.memo(PCDCardImpl);
 
 /**
- * Shows a card in the Passport wallet. If expanded, the full card, otherwise
+ * Shows a card representing a PCD in Zupass. If expanded, the full card, otherwise
  * just the top of the card to allow stacking.
  */
 function PCDCardImpl({

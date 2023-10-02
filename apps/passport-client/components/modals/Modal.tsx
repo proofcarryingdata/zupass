@@ -12,8 +12,8 @@ import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
-import { SaveSyncModal } from "./SaveSyncModal";
 import { SettingsModal } from "./SettingsModal";
+import { UpgradeAccountModal } from "./UpgradeAccountModal";
 
 export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const dispatch = useDispatch();
@@ -53,10 +53,10 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
 
 function isModalDismissable(modal: AppState["modal"]) {
   return ![
-    "save-sync",
     "invalid-participant",
     "changed-password",
-    "another-device-changed-password"
+    "another-device-changed-password",
+    "upgrade-account-modal"
   ].includes(modal.modalType);
 }
 
@@ -66,8 +66,6 @@ function getModalBody(modal: AppState["modal"]) {
       return <InfoModal />;
     case "settings":
       return <SettingsModal />;
-    case "save-sync":
-      return <SaveSyncModal />;
     case "invalid-participant":
       return <InvalidUserModal />;
     case "another-device-changed-password":
@@ -78,6 +76,8 @@ function getModalBody(modal: AppState["modal"]) {
       return <ResolveSubscriptionErrorModal />;
     case "confirm-setup-later":
       return <ConfirmSkipSetupModal onConfirm={modal.onConfirm} />;
+    case "upgrade-account-modal":
+      return <UpgradeAccountModal />;
     case "none":
       return null;
     default:

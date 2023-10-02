@@ -49,7 +49,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
     if (options?.proveOnServer === true) {
       const pendingPCDResult = await requestProveOnServer(
-        appConfig.passportServer,
+        appConfig.zupassServer,
         {
           pcdType: pcdType,
           args: args

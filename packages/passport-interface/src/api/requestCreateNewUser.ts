@@ -1,10 +1,6 @@
 import { HexString } from "@pcd/passport-crypto";
 import urlJoin from "url-join";
-import {
-  CreateNewUserRequest,
-  PCDpassUserJson,
-  UserResponseValue
-} from "../RequestTypes";
+import { CreateNewUserRequest, UserResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -15,38 +11,17 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestCreateNewUser(
-  passportServerUrl: string,
-  isZuzalu: boolean,
+  zupassServerUrl: string,
   email: string,
   token: string,
   commitment: string,
   salt: HexString | undefined,
   encryptionKey: HexString | undefined
 ): Promise<NewUserResult> {
-  return requestCreateNewUserWithPath(
-    passportServerUrl,
-    email,
-    token,
-    commitment,
-    salt,
-    encryptionKey,
-    isZuzalu ? "/zuzalu/new-participant" : "/pcdpass/new-participant"
-  );
-}
-
-async function requestCreateNewUserWithPath(
-  passportServerUrl: string,
-  email: string,
-  token: string,
-  commitment: string,
-  salt: HexString | undefined,
-  encryptionKey: HexString | undefined,
-  urlPath: string
-): Promise<NewUserResult> {
   return httpPostSimple(
-    urlJoin(passportServerUrl, urlPath),
+    urlJoin(zupassServerUrl, "/account/new-participant"),
     async (resText) => ({
-      value: JSON.parse(resText) as PCDpassUserJson,
+      value: JSON.parse(resText) as UserResponseValue,
       success: true
     }),
     {

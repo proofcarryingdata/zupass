@@ -1,8 +1,8 @@
 import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
   ISSUANCE_STRING,
-  PCDPassFeedIds,
-  pollFeed
+  pollFeed,
+  ZupassFeedIds
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -10,20 +10,20 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { stopApplication } from "../src/application";
-import { PCDpass } from "../src/types";
-import { testLoginPCDpass } from "./user/testLoginPCDPass";
-import { overrideEnvironment, pcdpassTestingEnv } from "./util/env";
+import { Zupass } from "../src/types";
+import { testLogin } from "./user/testLoginPCDPass";
+import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
 describe("attested email feed functionality", function () {
   this.timeout(30_000);
-  let application: PCDpass;
+  let application: Zupass;
   let identity: Identity;
   const testEmail = randomEmail();
 
   this.beforeAll(async () => {
-    await overrideEnvironment(pcdpassTestingEnv);
+    await overrideEnvironment(testingEnv);
     application = await startTestingApp();
   });
 
@@ -32,7 +32,7 @@ describe("attested email feed functionality", function () {
   });
 
   step("should be able to log in", async function () {
-    const loginResult = await testLoginPCDpass(application, testEmail, {
+    const loginResult = await testLogin(application, testEmail, {
       force: true,
       expectUserAlreadyLoggedIn: false,
       expectEmailIncorrect: false
@@ -49,7 +49,7 @@ describe("attested email feed functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         ISSUANCE_STRING,
-        PCDPassFeedIds.Email
+        ZupassFeedIds.Email
       );
 
       if (!pollFeedResult.success) {

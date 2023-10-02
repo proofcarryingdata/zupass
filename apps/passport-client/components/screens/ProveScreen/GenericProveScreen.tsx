@@ -18,7 +18,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "./GenericProveSection";
 
 /**
- * Renders a UI in response to a request from the passport to calculate
+ * Renders a UI in response to a request from Zupass to calculate
  * a particular PCD. For arguments which are filled in by the requester
  * of the PCD, displays those hardcoded values. For arguments that the
  * user must fill in, like numbers, strings, and other PCDs, displays

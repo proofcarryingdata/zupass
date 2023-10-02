@@ -1,11 +1,11 @@
 import { requestPretixSyncStatus } from "@pcd/passport-interface";
+import { sleep } from "@pcd/util";
 import { expect } from "chai";
 import { PretixSyncStatus } from "../../src/services/types";
-import { PCDpass } from "../../src/types";
-import { sleep } from "../../src/util/util";
+import { Zupass } from "../../src/types";
 
 export async function waitForPretixSyncStatus(
-  application: PCDpass,
+  application: Zupass,
   isZuzalu: boolean
 ): Promise<PretixSyncStatus> {
   // eslint-disable-next-line no-constant-condition
@@ -27,7 +27,7 @@ export async function waitForPretixSyncStatus(
 }
 
 export async function expectZuzaluPretixToHaveSynced(
-  application: PCDpass
+  application: Zupass
 ): Promise<void> {
   const pretixSyncStatus = await waitForPretixSyncStatus(application, true);
   expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);
@@ -35,7 +35,7 @@ export async function expectZuzaluPretixToHaveSynced(
 }
 
 export async function expectDevconnectPretixToHaveSynced(
-  application: PCDpass
+  application: Zupass
 ): Promise<void> {
   const pretixSyncStatus = await waitForPretixSyncStatus(application, false);
   expect(pretixSyncStatus).to.eq(PretixSyncStatus.Synced);

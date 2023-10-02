@@ -1,7 +1,7 @@
 import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { expect } from "chai";
 import { fetchLatestHistoricSemaphoreGroups } from "../../src/database/queries/historicSemaphore";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 
 export interface SemaphoreGroups {
   p: string[]; // participants
@@ -23,7 +23,7 @@ export function expectGroupsEqual(
 }
 
 export function expectCurrentSemaphoreToBe(
-  application: PCDpass,
+  application: Zupass,
   expected: SemaphoreGroups
 ): void {
   const currentSemaphore = getCurrentSemaphoreServiceGroups(application);
@@ -31,7 +31,7 @@ export function expectCurrentSemaphoreToBe(
 }
 
 export async function testLatestHistoricSemaphoreGroups(
-  application: PCDpass
+  application: Zupass
 ): Promise<void> {
   const currentSemaphoreGroups = getCurrentSemaphoreServiceGroups(application);
 
@@ -42,11 +42,11 @@ export async function testLatestHistoricSemaphoreGroups(
 }
 
 function getCurrentSemaphoreServiceGroups(
-  application: PCDpass
+  application: Zupass
 ): SemaphoreGroups {
   return {
     g: application.services.semaphoreService
-      .groupPCDpass()
+      .groupEveryone()
       .group.members.map((m) => m.toString()),
     v: application.services.semaphoreService
       .groupVisitors()
@@ -64,7 +64,7 @@ function getCurrentSemaphoreServiceGroups(
 }
 
 async function getLatestHistoricalSemaphoreGroups(
-  application: PCDpass
+  application: Zupass
 ): Promise<SemaphoreGroups> {
   const latestGroups = await fetchLatestHistoricSemaphoreGroups(
     application.context.dbPool

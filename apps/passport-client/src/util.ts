@@ -1,3 +1,4 @@
+import { sleep } from "@pcd/util";
 import validator from "email-validator";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
@@ -14,14 +15,6 @@ export function getHost(returnURL: string) {
 export function getOrigin(returnURL: string) {
   const url = new URL(returnURL);
   return url.origin;
-}
-
-export async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, ms);
-  });
 }
 
 export async function nextFrame() {

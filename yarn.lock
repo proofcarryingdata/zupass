@@ -4056,10 +4056,10 @@
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.3.6.tgz#7b489e8baf393d5dd1266fb203ddd4ea941259e6"
   integrity sha512-VOVRLM1mBxIRxydiViqPcKn6MIxZytrbMpd6RJLIWKxUNr3zux8no0Oc7kJx0WAPIitgZ0gkrDS+btlqQpubpw==
 
-"@types/circomlibjs@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.1.tgz#f25748b7cf391fda065fe7456b4f7425f7087b62"
-  integrity sha512-1B44LKMFJ5ul1IXWULfr8VsI/M5YxOT1IZFGLGlR4lkE3nvhUoQ+4Ex/XcDNhQNuCqB2bPaNmXScA5rqgz3tsw==
+"@types/circomlibjs@0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.2.tgz#2d6021ea0680973f4b522dbb4f82401c81872f1f"
+  integrity sha512-frsB+ZOIRA3I76hcoOIdkKO9kO+ZE9hNVT/Z27Cw6/gv6X3dGzWnSbRZkwCQ9NwGUzFtQugL4AfBBWKU3Uv0bg==
 
 "@types/connect@*":
   version "3.4.36"
@@ -4600,7 +4600,7 @@
   resolved "https://registry.yarnpkg.com/@types/shimmer/-/shimmer-1.0.2.tgz#93eb2c243c351f3f17d5c580c7467ae5d686b65f"
   integrity sha512-dKkr1bTxbEsFlh2ARpKzcaAmsYixqt9UyCdoEZk8rHyE4iQYcDCyvSjDSf7JUWJHlJiTtbIoQjxKh6ViywqDAg==
 
-"@types/snarkjs@^0.7.1":
+"@types/snarkjs@0.7.1":
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.1.tgz#f19957c3d98c590b344a9c67636d49e5a1d66ddd"
   integrity sha512-V7OBbC8GSUax/VKT0qSrFlckhj3jqi6hUs+EKnxkMWjWKzKWipib5LR61hhfLDePx7AMoK8fKfnPUTExv+iNMQ==
@@ -10762,6 +10762,11 @@ next@13.4.13:
     "@next/swc-win32-arm64-msvc" "13.4.13"
     "@next/swc-win32-ia32-msvc" "13.4.13"
     "@next/swc-win32-x64-msvc" "13.4.13"
+
+nocache@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/nocache/-/nocache-4.0.0.tgz#d6c6f34bee4600f63f852dccfeb29c9a96cf85c0"
+  integrity sha512-AntnTbmKZvNYIsTVPPwv7dfZdAfo/6H/2ZlZACK66NAOQtIApxkB/6pf/c+s+ACW8vemGJzUCyVTssrzNUK6yQ==
 
 node-addon-api@^2.0.0:
   version "2.0.2"

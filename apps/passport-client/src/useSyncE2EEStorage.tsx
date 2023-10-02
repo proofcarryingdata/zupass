@@ -1,14 +1,18 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyResult,
+  FeedSubscriptionManager,
   SyncedEncryptedStorageV2,
+  SyncedEncryptedStorageV3,
   isSyncedEncryptedStorageV2,
+  isSyncedEncryptedStorageV3,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
   requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
+import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { appConfig } from "./appConfig";
 import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
@@ -16,7 +20,9 @@ import {
   loadEncryptionKey,
   loadPCDs,
   loadSelf,
-  savePCDs
+  loadSubscriptions,
+  savePCDs,
+  saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
@@ -42,7 +48,7 @@ export async function updateBlobKeyForEncryptedStorage(
   const newBlobKey = await getHash(newEncryptionKey);
 
   return requestChangeBlobKey(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     oldBlobKey,
     newBlobKey,
     user.uuid,
@@ -58,6 +64,7 @@ export async function updateBlobKeyForEncryptedStorage(
 export async function uploadStorage(): Promise<void> {
   const user = loadSelf();
   const pcds = await loadPCDs();
+  const subscriptions = await loadSubscriptions();
 
   const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
@@ -66,13 +73,14 @@ export async function uploadStorage(): Promise<void> {
     JSON.stringify({
       pcds: await pcds.serializeCollection(),
       self: user,
-      _storage_version: "v2"
-    } satisfies SyncedEncryptedStorageV2),
+      subscriptions: subscriptions.serialize(),
+      _storage_version: "v3"
+    } satisfies SyncedEncryptedStorageV3),
     encryptionKey
   );
 
   const uploadResult = await requestUploadEncryptedStorage(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     blobKey,
     encryptedStorage
   );
@@ -88,12 +96,12 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage(): Promise<PCDCollection | null> {
+export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, subscriptions: FeedSubscriptionManager | null }> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = loadEncryptionKey();
   const storageResult = await requestDownloadAndDecryptStorage(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     encryptionKey
   );
 
@@ -104,8 +112,17 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
 
   try {
     let pcds: PCDCollection;
+    let subscriptions: FeedSubscriptionManager | null = null;
 
-    if (isSyncedEncryptedStorageV2(storageResult.value)) {
+    if (isSyncedEncryptedStorageV3(storageResult.value)) {
+      pcds = await PCDCollection.deserialize(
+        await getPackages(),
+        storageResult.value.pcds
+      );
+
+      subscriptions = FeedSubscriptionManager.deserialize(new NetworkFeedApi(), storageResult.value.subscriptions);
+
+    } else if (isSyncedEncryptedStorageV2(storageResult.value)) {
       pcds = await PCDCollection.deserialize(
         await getPackages(),
         storageResult.value.pcds
@@ -115,8 +132,12 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
       await pcds.deserializeAllAndAdd(storageResult.value.pcds);
     }
 
+    if (subscriptions) {
+      await saveSubscriptions(subscriptions);
+    }
+
     await savePCDs(pcds);
-    return pcds;
+    return { pcds, subscriptions };
   } catch (e) {
     console.error("[SYNC] uploaded storage is corrupted - ignoring it", e);
     return null;
@@ -126,9 +147,17 @@ export async function downloadStorage(): Promise<PCDCollection | null> {
 export function useSyncE2EEStorage() {
   const { dispatch } = useContext(StateContext);
 
-  useOnStateChange(() => {
+  const load = useCallback(() => {
     dispatch({ type: "sync" });
   }, [dispatch]);
+
+  useOnStateChange(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 }
 
 export function useHasUploaded() {

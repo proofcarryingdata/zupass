@@ -27,7 +27,7 @@ import { PCDCard } from "../shared/PCDCard";
 export const HomeScreen = React.memo(HomeScreenImpl);
 
 /**
- * Show the user their passport, an overview of cards / PCDs.
+ * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function HomeScreenImpl() {
   useSyncE2EEStorage();

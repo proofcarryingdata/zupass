@@ -17,7 +17,7 @@ import { httpPost } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestChangeBlobKey(
-  passportServerUrl: string,
+  zupassServerUrl: string,
   oldBlobKey: string,
   newBlobKey: string,
   uuid: string,
@@ -25,7 +25,7 @@ export async function requestChangeBlobKey(
   encryptedStorage: EncryptedPacket
 ): Promise<ChangeBlobKeyResult> {
   return httpPost(
-    urlJoin(passportServerUrl, `/sync/changeBlobKey`),
+    urlJoin(zupassServerUrl, `/sync/changeBlobKey`),
     {
       onValue: async () => ({ value: undefined, success: true }),
       onError: async (resText) => JSON.parse(resText)

@@ -1,0 +1,1 @@
+alter table commitments rename to users;

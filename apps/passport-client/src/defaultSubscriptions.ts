@@ -2,15 +2,15 @@ import {
   Feed,
   FeedSubscriptionManager,
   ISSUANCE_STRING,
-  PCDPassFeedIds,
-  Subscription
+  Subscription,
+  ZupassFeedIds
 } from "@pcd/passport-interface";
 import {
   AppendToFolderPermission,
   PCDPermissionType,
   ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCDPackage,
@@ -19,12 +19,12 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "../src/appConfig";
 
-const DEFAULT_FEED_URL = `${appConfig.passportServer}/feeds`;
-const DEFAULT_FEED_PROVIDER_NAME = "PCDPass";
+const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
+const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
 
 const DEFAULT_FEEDS: Feed[] = [
   {
-    id: PCDPassFeedIds.Devconnect,
+    id: ZupassFeedIds.Devconnect,
     name: "Devconnect",
     description: "Devconnect Tickets",
     permissions: [
@@ -48,9 +48,9 @@ const DEFAULT_FEEDS: Feed[] = [
     credentialType: SemaphoreSignaturePCDTypeName
   },
   {
-    id: PCDPassFeedIds.Email,
-    name: "PCDPass Verified Email",
-    description: "Emails verified with PCDPass",
+    id: ZupassFeedIds.Email,
+    name: "Zupass Verified Email",
+    description: "Emails verified with Zupass",
     permissions: [
       {
         type: PCDPermissionType.AppendToFolder,
@@ -64,7 +64,7 @@ const DEFAULT_FEEDS: Feed[] = [
     credentialType: SemaphoreSignaturePCDTypeName
   },
   {
-    id: PCDPassFeedIds.Zuzalu_1,
+    id: ZupassFeedIds.Zuzalu_1,
     name: "Zuzalu",
     description: "Zuzalu Tickets",
     permissions: [
@@ -93,27 +93,42 @@ export async function addDefaultSubscriptions(
   subscriptions: FeedSubscriptionManager
 ) {
   if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await SemaphoreIdentityPCDPackage.serialize(
-          await SemaphoreIdentityPCDPackage.prove({
-            identity: identity
-          })
-        )
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: ISSUANCE_STRING
-      }
-    });
-    const serializedSignaturePCD =
-      await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
-
     subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
+  }
 
-    for (const feed of DEFAULT_FEEDS) {
-      subscriptions.subscribe(DEFAULT_FEED_URL, feed, serializedSignaturePCD);
+  // We don't want to create a proof unless we have to
+  let serializedSignaturePCD: null | SerializedPCD = null;
+
+  for (const feed of DEFAULT_FEEDS) {
+    // Does this exact feed already exist?
+    const existingSub = subscriptions.findSubscription(DEFAULT_FEED_URL, feed);
+    if (!existingSub) {
+      if (!serializedSignaturePCD) {
+        const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity: identity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: ISSUANCE_STRING
+          }
+        });
+        serializedSignaturePCD =
+          await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+      }
+
+      // Add or replace a feed with the given feed ID
+      subscriptions.subscribe(
+        DEFAULT_FEED_URL,
+        feed,
+        serializedSignaturePCD,
+        true
+      );
     }
   }
 }

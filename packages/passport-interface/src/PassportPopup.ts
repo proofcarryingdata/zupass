@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 
 /**
- * React hook that listens for PCDs and PendingPCDs from a passport popup window
+ * React hook that listens for PCDs and PendingPCDs from a Zupass popup window
  * using message passing and event listeners.
  */
-export function usePassportPopupMessages() {
+export function useZupassPopupMessages() {
   const [pcdStr, setPCDStr] = useState("");
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 
-  // Listen for PCDs coming back from the Passport popup
+  // Listen for PCDs coming back from the Zupass popup
   useEffect(() => {
     function receiveMessage(ev: MessageEvent<any>) {
       // Extensions including Metamask apparently send messages to every page. Ignore those.
@@ -28,14 +28,14 @@ export function usePassportPopupMessages() {
 }
 
 /**
- * A react hook that sets up necessary passport popup logic on a specific route.
- * A popup page must be hosted on the website using the passport, as data can't
+ * A react hook that sets up necessary Zupass popup logic on a specific route.
+ * A popup page must be hosted on the website that integrates with Zupass, as data can't
  * be passed between a website and a popup on a different origin like zupass.org.
  * This hook sends messages with a full client-side PCD or a server-side PendingPCD
- * that can be processed by the `usePassportPopupMessages` hook. PendingPCD requests
+ * that can be processed by the `useZupassPopupMessages` hook. PendingPCD requests
  * can further be processed by `usePendingPCD` and `usePCDMultiplexer`.
  */
-export function usePassportPopupSetup() {
+export function useZupassPopupSetup() {
   // Usually this page redirects immediately. If not, show an error.
   const [error, setError] = useState("");
 
@@ -65,11 +65,11 @@ export function usePassportPopupSetup() {
     const paramsEncodingPendingPCD = params.get("encodedPendingPCD");
     const finished = params.get("finished");
 
-    // First, this page is window.open()-ed. Redirect to the Passport app.
+    // First, this page is window.open()-ed. Redirect to Zupass.
     if (paramsProofUrl != null) {
       window.location.href = paramsProofUrl;
     } else if (finished) {
-      // Later, the Passport redirects back with a result. Send it to our parent.
+      // Later, Zupass redirects back with a result. Send it to our parent.
       if (paramsProof != null) {
         window.opener.postMessage({ encodedPCD: paramsProof }, "*");
       }
@@ -79,7 +79,7 @@ export function usePassportPopupSetup() {
         setError("Finished. Please close this window.");
       }, 1000 * 3);
     } else if (paramsEncodingPendingPCD != null) {
-      // Later, the Passport redirects back with a encodedPendingPCD. Send it to our parent.
+      // Later, Zupass redirects back with a encodedPendingPCD. Send it to our parent.
       window.opener.postMessage(
         { encodedPendingPCD: paramsEncodingPendingPCD },
         "*"
@@ -95,11 +95,11 @@ export function usePassportPopupSetup() {
 }
 
 /**
- * Open up a passport popup window using proofUrl from specific PCD integrations
- * and popupUrl, which is the route where the usePassportPopupSetup hook is being
+ * Open up a Zupass popup window using proofUrl from specific PCD integrations
+ * and popupUrl, which is the route where the useZupassPopupSetup hook is being
  * served from.
  */
-export function openPassportPopup(popupUrl: string, proofUrl: string) {
+export function openZupassPopup(popupUrl: string, proofUrl: string) {
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
   window.open(url, "_blank", "width=450,height=600,top=100,popup");
 }

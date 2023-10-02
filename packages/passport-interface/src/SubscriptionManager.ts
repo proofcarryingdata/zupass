@@ -1,4 +1,5 @@
 import { Emitter } from "@pcd/emitter";
+import { getHash } from "@pcd/passport-crypto";
 import {
   matchActionToPermission,
   PCDAction,
@@ -13,11 +14,12 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import { isFulfilled } from "@pcd/util";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { IFeedApi } from "./FeedAPI";
 import { ListFeedsResponseValue } from "./RequestTypes";
 
-export const enum PCDPassFeedIds {
+export const enum ZupassFeedIds {
   Devconnect = "1",
   Frogs = "2",
   Email = "3",
@@ -235,10 +237,20 @@ export class FeedSubscriptionManager {
     );
   }
 
+  public findSubscription(
+    providerUrl: string,
+    feed: Feed
+  ): Subscription | undefined {
+    return this.activeSubscriptions.find((sub) => {
+      sub.providerUrl === providerUrl && _.isEqual(sub.feed, feed);
+    });
+  }
+
   public subscribe(
     providerUrl: string,
     info: Feed,
-    credential?: SerializedPCD
+    credential?: SerializedPCD,
+    replace?: boolean
   ): Subscription {
     if (!this.hasProvider(providerUrl)) {
       throw new Error(`provider ${providerUrl} does not exist`);
@@ -248,10 +260,10 @@ export class FeedSubscriptionManager {
     // to the same feed with different credentials (e.g. multiple email
     // PCDs). For now the UI does not allow multiple subs to the same feed.
     const providerSubs = this.getSubscriptionsByProvider().get(providerUrl);
-    const hasExistingSubscription =
+    const existingSubscription =
       providerSubs && providerSubs.find((sub) => sub.feed.id === info.id);
 
-    if (hasExistingSubscription) {
+    if (existingSubscription && !replace) {
       throw new Error(
         `already subscribed on provider ${providerUrl} to feed ${info.id} `
       );
@@ -275,17 +287,24 @@ export class FeedSubscriptionManager {
           : `missing credential of type "${info.credentialType} on ${providerUrl} feed ${info.id}`
       );
     }
+    let sub;
 
-    const sub = {
-      id: uuid(),
-      credential,
-      feed: info,
-      providerUrl: providerUrl,
-      subscribedTimestamp: Date.now()
-    };
+    if (existingSubscription) {
+      sub = existingSubscription;
+      sub.credential = credential;
+      sub.feed = { ...info };
+      sub.providerUrl = providerUrl;
+    } else {
+      sub = {
+        id: uuid(),
+        credential,
+        feed: { ...info },
+        providerUrl: providerUrl,
+        subscribedTimestamp: Date.now()
+      };
 
-    this.activeSubscriptions.push(sub);
-
+      this.activeSubscriptions.push(sub);
+    }
     this.updatedEmitter.emit();
 
     return sub;
@@ -395,6 +414,10 @@ export class FeedSubscriptionManager {
 
   public getAllErrors(): Map<string, SubscriptionError> {
     return this.errors;
+  }
+
+  public async getHash(): Promise<string> {
+    return await getHash(this.serialize());
   }
 }
 

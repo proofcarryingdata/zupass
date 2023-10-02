@@ -3,16 +3,15 @@ import {
   requestConfirmationEmail,
   requestCreateNewUser,
   requestUser,
-  toPCDpassUser,
   User
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
-import { PCDpass } from "../../src/types";
+import { Zupass } from "../../src/types";
 
-export async function testLoginPCDpass(
-  application: PCDpass,
+export async function testLogin(
+  application: Zupass,
   email: string,
   {
     force,
@@ -30,7 +29,6 @@ export async function testLoginPCDpass(
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
-    false,
     email,
     commitment,
     force
@@ -76,7 +74,6 @@ export async function testLoginPCDpass(
 
   const newUserResult = await requestCreateNewUser(
     application.expressContext.localEndpoint,
-    false,
     email,
     token,
     commitment,
@@ -97,7 +94,6 @@ export async function testLoginPCDpass(
 
   const getUserResponse = await requestUser(
     application.expressContext.localEndpoint,
-    false,
     newUserResult.value.uuid
   );
 
@@ -107,5 +103,5 @@ export async function testLoginPCDpass(
 
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
 
-  return { user: toPCDpassUser(getUserResponse.value), identity };
+  return { user: getUserResponse.value, identity };
 }

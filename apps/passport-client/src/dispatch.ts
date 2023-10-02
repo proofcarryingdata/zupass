@@ -1,15 +1,17 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  Feed,
+  FeedSubscriptionManager,
   SyncedEncryptedStorage,
   User,
   applyActions,
   isSyncedEncryptedStorageV2,
+  isSyncedEncryptedStorageV3,
   requestCreateNewUser,
   requestDeviceLogin,
-  requestDownloadAndDecryptStorage,
-  requestLogToServer,
-  requestVerifyToken
+  requestLogToServer
 } from "@pcd/passport-interface";
+import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -17,6 +19,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
+import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
@@ -30,13 +33,13 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
+  saveSubscriptions,
   saveUserInvalid
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
-import { sanitizeDateRanges } from "./user";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -55,11 +58,6 @@ export type Action =
       type: "login";
       email: string;
       password: string;
-      token: string;
-    }
-  | {
-      type: "verify-token";
-      email: string;
       token: string;
     }
   | {
@@ -97,7 +95,14 @@ export type Action =
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
   | { type: "sync" }
-  | { type: "resolve-subscription-error"; subscriptionId: string };
+  | { type: "resolve-subscription-error"; subscriptionId: string }
+  | {
+      type: "add-subscription";
+      providerUrl: string;
+      feed: Feed;
+      credential: SerializedPCD;
+    }
+  | { type: "remove-subscription"; subscriptionId: string };
 
 export type StateContextState = {
   getState: GetState;
@@ -131,8 +136,6 @@ export async function dispatch(
         state,
         update
       );
-    case "verify-token":
-      return verifyToken(action.email, action.token, state, update);
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -170,6 +173,16 @@ export async function dispatch(
       return sync(state, update);
     case "resolve-subscription-error":
       return resolveSubscriptionError(state, update, action.subscriptionId);
+    case "add-subscription":
+      return addSubscription(
+        state,
+        update,
+        action.providerUrl,
+        action.feed,
+        action.credential
+      );
+    case "remove-subscription":
+      return removeSubscription(state, update, action.subscriptionId);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -181,79 +194,14 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ) {
-  // Show the NewPassportScreen.
-  // This will save the sema identity & request email verification.
-  update({ pendingAction: { type: "new-passport", email } });
-  window.location.hash = "#/new-passport";
-
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
 
-  update({
-    pcds,
-    pendingAction: { type: "new-passport", email }
-  });
-}
+  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
 
-async function verifyToken(
-  email: string,
-  token: string,
-  state: AppState,
-  update: ZuUpdate
-) {
-  // For Zupass, skip directly to login as we don't let users set their password
-  if (appConfig.isZuzalu) {
-    // Password can be empty string for the argon2 KDF. Random salt ensures that
-    // this generated key is not less secure than generating a random key.
-    return createNewUserWithPassword(email, token, "", state, update);
-  }
-
-  const verifyTokenResult = await requestVerifyToken(
-    appConfig.passportServer,
-    email,
-    token
-  );
-
-  console.log({ verifyTokenResult });
-
-  if (!verifyTokenResult.success) {
-    update({
-      error: {
-        title: "Login failed",
-        message: verifyTokenResult.error,
-        dismissToCurrentPage: true
-      }
-    });
-    return;
-  }
-
-  // If we have an encryption key stored on the server,
-  // save that on the client and log in
-  const { encryptionKey } = verifyTokenResult.value;
-  if (encryptionKey) {
-    const storageResult = await requestDownloadAndDecryptStorage(
-      appConfig.passportServer,
-      encryptionKey
-    );
-
-    if (!storageResult.success) {
-      return update({
-        error: {
-          title: "An error occurred while downloading storage",
-          message: storageResult.error,
-          dismissToCurrentPage: true
-        }
-      });
-    }
-
-    loadFromSync(encryptionKey, storageResult.value, state, update);
-  }
-
-  window.location.hash = `#/create-password?email=${encodeURIComponent(
-    email
-  )}&token=${encodeURIComponent(token)}`;
+  update({ pcds });
 }
 
 /**
@@ -291,8 +239,7 @@ async function createNewUserSkipPassword(
   });
 
   const newUserResult = await requestCreateNewUser(
-    appConfig.passportServer,
-    appConfig.isZuzalu,
+    appConfig.zupassServer,
     email,
     token,
     state.identity.commitment.toString(),
@@ -331,8 +278,7 @@ async function createNewUserWithPassword(
   });
 
   const newUserResult = await requestCreateNewUser(
-    appConfig.passportServer,
-    appConfig.isZuzalu,
+    appConfig.zupassServer,
     email,
     token,
     state.identity.commitment.toString(),
@@ -360,7 +306,7 @@ async function deviceLogin(
   update: ZuUpdate
 ) {
   const deviceLoginResult = await requestDeviceLogin(
-    appConfig.passportServer,
+    appConfig.zupassServer,
     email,
     secret,
     state.identity.commitment.toString()
@@ -385,12 +331,14 @@ async function deviceLogin(
 async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   // Verify that the identity is correct.
   const { identity } = state;
+
   console.log("Save self", identity, user);
+
   if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
         title: "Invalid identity",
-        message: "Something went wrong saving your passport. Contact support."
+        message: "Something went wrong saving your Zupass. Contact support."
       }
     });
   }
@@ -411,11 +359,6 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   // Close any existing modal, if it exists
   update({ modal: { modalType: "none" } });
-
-  // If on Zupass legacy login, ask user to save their Sync Key
-  if (appConfig.isZuzalu) {
-    update({ modal: { modalType: "save-sync" } });
-  }
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
@@ -423,12 +366,12 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  if (state.self && self.salt !== state.self.salt) {
+  if (state.self && self.salt != state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
     requestLogToServer(
-      appConfig.passportServer,
+      appConfig.zupassServer,
       "another-device-changed-password",
       {
         oldSalt: state.self.salt,
@@ -441,14 +384,14 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
+    requestLogToServer(appConfig.zupassServer, "invalid-user", {
       oldCommitment: state.identity.commitment.toString(),
       newCommitment: self.commitment.toString()
     });
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.passportServer, "invalid-user", {
+    requestLogToServer(appConfig.zupassServer, "invalid-user", {
       oldUUID: state.self.uuid,
       newUUID: self.uuid
     });
@@ -464,10 +407,6 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
     return;
   }
 
-  if (self.visitor_date_ranges) {
-    self.visitor_date_ranges = sanitizeDateRanges(self.visitor_date_ranges);
-  }
-
   saveSelf(self); // Save to local storage.
   update({ self }); // Update in-memory state.
 }
@@ -480,7 +419,7 @@ function clearError(state: AppState, update: ZuUpdate) {
 }
 
 async function resetPassport(state: AppState) {
-  await requestLogToServer(appConfig.passportServer, "logout", {
+  await requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
     commitment: state.self?.commitment
@@ -516,22 +455,41 @@ async function loadFromSync(
   update: ZuUpdate
 ) {
   let pcds: PCDCollection;
+  let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV2(storage)) {
+  if (isSyncedEncryptedStorageV3(storage)) {
+    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      storage.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV2(storage)) {
     pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
   } else {
     pcds = await new PCDCollection(await getPackages());
     await pcds.deserializeAllAndAdd(storage.pcds);
   }
 
-  // assumes that we only have one semaphore identity in the passport.
+  // assumes that we only have one semaphore identity in Zupass.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
 
+  let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {
     // TODO: handle error gracefully
     throw new Error("no identity found in encrypted storage");
+  } else if (
+    // If on Zupass legacy login, ask user to set passwrod
+    self != null &&
+    storage.self.salt == null
+  ) {
+    console.log("Asking existing user to set a password");
+    modal = { modalType: "upgrade-account-modal" };
+  }
+
+  if (subscriptions) {
+    await saveSubscriptions(subscriptions);
   }
 
   await savePCDs(pcds);
@@ -543,8 +501,11 @@ async function loadFromSync(
     encryptionKey,
     pcds,
     identity: identityPCD.claim.identity,
-    self: storage.self
+    self: storage.self,
+    modal
   });
+
+  await sleep(1);
 
   console.log("Loaded from sync key, redirecting to home screen...");
   window.localStorage["savedSyncKey"] = "true";
@@ -597,6 +558,13 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
   });
 }
 
+async function makeUploadId(
+  pcds: PCDCollection,
+  subscriptions: FeedSubscriptionManager
+): Promise<string> {
+  return `${await pcds.getHash()}-${await subscriptions.getHash()}`;
+}
+
 /**
  * This sync function can be called any amount of times, and it will
  * function properly. It does the following:
@@ -606,8 +574,8 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
  *   them from e2ee.
  *
  * - if the PCDs have been downloaded, and the current set of PCDs
- *   in the passport does not equal the downloaded set, and if the
- *   passport is not currently uploading the current set of PCDs
+ *   in Zupass does not equal the downloaded set, and if
+ *   Zupass is not currently uploading the current set of PCDs
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {
@@ -616,20 +584,44 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
+  // If we haven't downloaded from storage, do that first
   if (!state.downloadedPCDs && !state.downloadingPCDs) {
     console.log("[SYNC] sync action: download");
     update({
       downloadingPCDs: true
     });
 
-    const pcds = await downloadStorage();
+    /**
+     * Get both PCDs and subscriptions
+     * Subscriptions might be null even if we got PCDs, if we were
+     * downloading from a pre-v3 version of encrypted storage
+     * {@link SyncedEncryptedStorageV3}
+     * */
+    const { pcds, subscriptions } = await downloadStorage();
+
+    if (subscriptions) {
+      addDefaultSubscriptions(state.identity, subscriptions);
+    }
 
     if (pcds != null) {
       update({
         downloadedPCDs: true,
         downloadingPCDs: false,
         pcds: pcds,
-        uploadedUploadId: await pcds.getHash()
+        // If we got subscriptions, add them and generate an upload ID.
+        // The upload ID is a combination of hashes of the states of the PCDs
+        // and subscriptions.
+        // If later subscription-polling doesn't change the PCD set, we can
+        // avoid having to do an upload.
+        // If we didn't get subscriptions, it's because we downloaded from a
+        // pre-v3 version of encrypted storage and therefore we definitely
+        // want to do an upload.
+        ...(subscriptions !== null
+          ? {
+              uploadedUploadId: await makeUploadId(pcds, subscriptions),
+              subscriptions
+            }
+          : {})
       });
     } else {
       console.log(`[SYNC] skipping download`);
@@ -678,8 +670,11 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
-  const uploadId = await state.pcds.getHash();
+  // Generate an upload ID from the state of PCDs and subscriptions
+  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
 
+  // If it matches what we downloaded or uploaded already, there's nothing
+  // to do
   if (
     state.uploadedUploadId === uploadId ||
     state.uploadingUploadId === uploadId
@@ -707,5 +702,31 @@ async function resolveSubscriptionError(
   update({
     resolvingSubscriptionId: subscriptionId,
     modal: { modalType: "resolve-subscription-error" }
+  });
+}
+
+async function addSubscription(
+  state: AppState,
+  update: ZuUpdate,
+  providerUrl: string,
+  feed: Feed,
+  credential: SerializedPCD
+) {
+  state.subscriptions.subscribe(providerUrl, feed, credential);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions
+  });
+}
+
+async function removeSubscription(
+  state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string
+) {
+  state.subscriptions.unsubscribe(subscriptionId);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions
   });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructPassportPcdGetRequestUrl } from "@pcd/passport-interface";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -62,7 +62,7 @@ function requestProof(message: string) {
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
   }/telegram/message?message=${encodeURIComponent(message)}`;
 
-  const proofUrl = constructPassportPcdGetRequestUrl<
+  const proofUrl = constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
