@@ -21,7 +21,7 @@ export async function startServices(
   apis: APIs
 ): Promise<GlobalServices> {
   await startTelemetry(context);
-  await instrumentPCDs(context);
+  instrumentPCDs();
 
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
