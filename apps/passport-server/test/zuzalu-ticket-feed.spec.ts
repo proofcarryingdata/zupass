@@ -91,7 +91,7 @@ describe("zuzalu pcdpass functionality", function () {
       const action = response.value.actions[1] as ReplaceInFolderAction;
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-      expect(action.folder).to.eq("Zuzalu");
+      expect(action.folder).to.eq("Zuzalu '23");
 
       expect(Array.isArray(action.pcds)).to.eq(true);
       expect(action.pcds.length).to.eq(1);
