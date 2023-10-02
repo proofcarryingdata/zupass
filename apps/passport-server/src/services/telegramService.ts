@@ -239,7 +239,7 @@ export class TelegramService {
             return ctx.api.editMessageText(
               userId,
               msg.message_id,
-              `No chats found to link with. Try again soon!`,
+              `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
               {
                 parse_mode: "HTML"
               }
