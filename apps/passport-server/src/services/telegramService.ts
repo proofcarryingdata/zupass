@@ -15,9 +15,11 @@ import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 import _ from "lodash";
+import { fetchPretixEventInfo } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
+  fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -29,10 +31,13 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
+  SessionData,
   dynamicEvents,
   getSessionKey,
-  SessionData
-} from "../util/telegramMenu";
+  isDirectMessage,
+  isGroupWithTopics,
+  senderIsAdmin
+} from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
@@ -51,6 +56,15 @@ const ALLOWED_EVENTS = [
   // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
+const ALLOWED_TICKET_MANAGERS = [
+  "cha0sg0d",
+  "notdavidhuang",
+  "richardyliu",
+  "gubsheep",
+  "chubivan"
+];
+
+const adminBotChannel = "Admin Central";
 const eventIdsAreValid = (eventIds?: string[]): boolean => {
   const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
     !!(subset && subset.length && _.difference(subset, superset).length === 0);
@@ -76,10 +90,12 @@ export class TelegramService {
     this.bot = bot;
 
     this.bot.api.setMyDescription(
-      "I'm the ZK Auth Bot! I'm managing fun events with ZKPs. Press START to get started!"
+      "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
     );
 
-    this.bot.api.setMyShortDescription("ZK Auth Bot manages events using ZKPs");
+    this.bot.api.setMyShortDescription(
+      "Zucat manages events and groups with zero-knowledge proofs"
+    );
 
     const zupassMenu = new Menu("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -119,12 +135,12 @@ export class TelegramService {
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
     this.bot.on("chat_join_request", async (ctx) => {
+      const userId = ctx.chatJoinRequest.user_chat_id;
+
       try {
         const chatId = ctx.chatJoinRequest.chat.id;
-        const userId = ctx.chatJoinRequest.user_chat_id;
 
         logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
-
         // Check if this user is verified for the chat in question
         const isVerified = await fetchTelegramVerificationStatus(
           this.context.dbPool,
@@ -136,17 +152,31 @@ export class TelegramService {
           logger(
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
+          await this.bot.api.sendMessage(
+            userId,
+            `<i>Verifying and inviting...</i>`,
+            { parse_mode: "HTML" }
+          );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
+          const chat = (await this.bot.api.getChat(
+            chatId
+          )) as Chat.GroupGetChat;
           const inviteLink = await ctx.createChatInviteLink();
-          await this.bot.api.sendMessage(userId, `You're approved.`, {
-            reply_markup: new InlineKeyboard().url(
-              `Join`,
-              inviteLink.invite_link
-            )
-          });
+          await this.bot.api.sendMessage(
+            userId,
+            `You're approved for <b>${chat.title}</b>`,
+            {
+              reply_markup: new InlineKeyboard().url(
+                `Join 🤝`,
+                inviteLink.invite_link
+              ),
+              parse_mode: "HTML"
+            }
+          );
           await this.bot.api.sendMessage(userId, `Congrats!`);
         }
       } catch (e) {
+        await this.bot.api.sendMessage(userId, `Error joining: ${e}`);
         logger("[TELEGRAM] chat_join_request error", e);
         this.rollbarService?.reportError(e);
       }
@@ -175,18 +205,40 @@ export class TelegramService {
 
     // The "start" command initiates the process of invitation and approval.
     this.bot.command("start", async (ctx) => {
+      const userId = ctx?.from?.id;
       try {
         // Only process the command if it comes as a private message.
-        if (ctx.message && ctx.chat.type === "private") {
+        if (isDirectMessage(ctx) && userId) {
           const username = ctx?.from?.username;
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!`,
-            {
-              reply_markup: zupassMenu
-            }
+            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!\n\nYou must have one of the following tickets in your Zupass account to join successfully.\n\nSee you soon 😽`
           );
+          const msg = await ctx.reply(`Loading tickets and events..`);
+          const events = await fetchLinkedPretixAndTelegramEvents(
+            this.context.dbPool
+          );
+          const eventsWithChatsRequests = events.map(async (e) => {
+            return {
+              ...e,
+              chat: e.telegramChatID
+                ? await this.bot.api.getChat(e.telegramChatID)
+                : null
+            };
+          });
+          const eventsWithChats = await Promise.all(eventsWithChatsRequests);
+          let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
+          for (const event of eventsWithChats) {
+            // @ts-expect-error chat title
+            eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat?.title}</i>\n`;
+          }
+          await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
+            parse_mode: "HTML"
+          });
+          await ctx.reply(`Click here ⬇`, {
+            reply_markup: zupassMenu
+          });
         }
       } catch (e) {
         logger("[TELEGRAM] start error", e);
@@ -196,22 +248,39 @@ export class TelegramService {
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("manage", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
+
       try {
-        await ctx.reply(`Checking you have permission...`);
-        if (ctx.chat?.type === "private") {
-          await ctx.reply(
-            "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+        const admins = await ctx.getChatAdministrators();
+        const username = ctx?.from?.username;
+        if (!username) throw new Error(`Username not found`);
+
+        if (!(await senderIsAdmin(ctx, admins)))
+          throw new Error(`Only admins can run this command`);
+        if (!ALLOWED_TICKET_MANAGERS.includes(username))
+          throw new Error(
+            `Only Zupass team members are allowed to run this command.`
           );
-          return;
+
+        if (!isGroupWithTopics(ctx)) {
+          await ctx.reply(
+            "This command only works in a group with Topics enabled.",
+            { message_thread_id: messageThreadId }
+          );
         }
 
-        const admins = await ctx.getChatAdministrators();
-        const isAdmin = admins.some(
+        if (messageThreadId)
+          return ctx.reply(`Must be in ${adminBotChannel}.`, {
+            message_thread_id: messageThreadId
+          });
+
+        const botIsAdmin = admins.some(
           (admin) => admin.user.id === this.bot.botInfo.id
         );
-        if (!isAdmin) {
+        if (!botIsAdmin) {
           await ctx.reply(
-            "Please add me as an admin to the telegram channel associated with your event."
+            "Please add me as an admin to the telegram channel associated with your event.",
+            { message_thread_id: messageThreadId }
           );
           return;
         }
@@ -220,31 +289,55 @@ export class TelegramService {
           `Choose an event to manage.\n\n <i>✅ = this chat is gated by event.</i>`,
           {
             reply_markup: eventsMenu,
-            parse_mode: "HTML"
+            parse_mode: "HTML",
+            message_thread_id: messageThreadId
           }
         );
       } catch (error) {
-        await ctx.reply(`Error linking. Check server logs for details`);
+        await ctx.reply(`${error}`, { message_thread_id: messageThreadId });
         logger(`[TELEGRAM] ERROR`, error);
       }
     });
 
-    this.bot.command("help", async (ctx) => {
+    this.bot.command("setup", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
+      try {
+        if (!isGroupWithTopics(ctx)) {
+          throw new Error("Please enable topics for this group and try again");
+        }
+
+        if (ctx?.message?.is_topic_message)
+          throw new Error(`Cannot run setup from an existing topic`);
+
+        await ctx.editGeneralForumTopic(adminBotChannel);
+        await ctx.hideGeneralForumTopic();
+        const topic = await ctx.createForumTopic(`Announcements`, {
+          icon_custom_emoji_id: "5309984423003823246" // 📢
+        });
+        await ctx.api.closeForumTopic(ctx.chat.id, topic.message_thread_id);
+      } catch (error) {
+        await ctx.reply(`❌ ${error}`, {
+          reply_to_message_id: messageThreadId
+        });
+      }
+    });
+
+    this.bot.command("adminhelp", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
       await ctx.reply(
         `<b>Help</b>
     
-        <b>Users</b>
-        <b>/start</b> - join a group with a ZK proof of a ticket
-    
         <b>Admins</b>
         <b>/manage</b> - Gate / Ungate this group with a ticketed event
+        <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.
+        <b>/incognito</b> - Mark a topic as anonymous
       `,
-        { parse_mode: "HTML" }
+        { parse_mode: "HTML", reply_to_message_id: messageThreadId }
       );
     });
 
     this.bot.command("anonsend", async (ctx) => {
-      if (ctx.chat?.type !== "private") {
+      if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
         const chatId = ctx.chat.id;
 
@@ -276,21 +369,15 @@ export class TelegramService {
         return;
       }
 
-      if (ctx.chat?.type !== "supergroup") {
+      if (!isGroupWithTopics(ctx)) {
         await ctx.reply(
           "This command only works in a group with Topics enabled.",
           { message_thread_id: messageThreadId }
         );
       }
-      const admins = await ctx.getChatAdministrators();
-      const isAdmin = admins.some((admin) => admin.user.id === ctx.from?.id);
-      if (!isAdmin) {
-        await ctx.reply(
-          "Must be an admin to convert a channel to Incognito mode.",
-          { message_thread_id: messageThreadId }
-        );
-        return;
-      }
+
+      if (!(await senderIsAdmin(ctx)))
+        return ctx.reply(`Only admins can run this command`);
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(
@@ -523,25 +610,37 @@ export class TelegramService {
 
   private async sendInviteLink(
     userId: number,
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
+    eventConfigID: string
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
+    const event = await fetchPretixEventInfo(
+      this.context.dbPool,
+      eventConfigID
+    );
+    if (!event) {
+      throw new Error(
+        `User used a ticket with no corresponding event confg id: ${eventConfigID}`
+      );
+    }
+
     logger(
       `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
     );
     const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
-      name: "test invite link"
+      name: "bot invite link"
     });
     await this.bot.api.sendMessage(
       userId,
-      `You've generated a ZK proof! Press this button to send your proof to ${chat.title}`,
+      `You've proved that you have at ticket to <b>${event.event_name}</b>!\nPress this button to send your proof to <b>${chat.title}</b>`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Send ZKP`,
+          `Send ZK Proof ✈️`,
           inviteLink.invite_link
-        )
+        ),
+        parse_mode: "HTML"
       }
     );
   }
@@ -615,7 +714,7 @@ export class TelegramService {
     );
 
     // Send invite link
-    await this.sendInviteLink(telegramUserId, chat);
+    await this.sendInviteLink(telegramUserId, chat, eventId);
   }
 
   public async handleSendAnonymousMessage(
