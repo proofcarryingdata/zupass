@@ -187,5 +187,7 @@ export async function getEdDSAPublicKey(
 
   return eddsa
     .prv2pub(privateKey)
-    .map((p) => eddsa.F.toObject(p).toString(16)) as EDdSAPublicKey;
+    .map((p) =>
+      eddsa.F.toObject(p).toString(16).padStart(64, "0")
+    ) as EDdSAPublicKey;
 }
