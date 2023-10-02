@@ -1,5 +1,6 @@
 import { MenuRange } from "@grammyjs/menu";
 import { Context, SessionFlavor } from "grammy";
+import { ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
@@ -17,11 +18,14 @@ export interface SessionData {
 
 export type BotContext = Context & SessionFlavor<SessionData>;
 
-const isAdmin = async (ctx: Context): Promise<boolean> => {
-  const admins = await ctx.getChatAdministrators();
+export const senderIsAdmin = async (
+  ctx: Context,
+  admins?: (ChatMemberOwner | ChatMemberAdministrator)[]
+): Promise<boolean> => {
+  const adminList = admins || (await ctx.getChatAdministrators());
   const username = ctx.from?.username;
   const admin =
-    !!username && !!admins.find((a) => a.user.username === username);
+    !!username && !!adminList.find((a) => a.user.username === username);
   if (!admin) logger("[TELEGRAM]", username, `is not an admin`);
   return admin;
 };
@@ -85,7 +89,7 @@ export const dynamicEvents = async (
     range
       .text(`Yes, ${event.isLinked ? "remove" : "add"}`, async (ctx) => {
         let replyText = "";
-        if (!(await isAdmin(ctx))) return;
+        if (!(await senderIsAdmin(ctx))) return;
 
         if (!ctx.chat?.id) {
           await editOrSendMessage(ctx, `Chat Id not found`);
@@ -106,7 +110,7 @@ export const dynamicEvents = async (
       .row();
 
     range.text(`Go back`, async (ctx) => {
-      if (!(await isAdmin(ctx))) return;
+      if (!(await senderIsAdmin(ctx))) return;
       checkDeleteMessage(ctx);
       ctx.session.selectedEvent = undefined;
       await ctx.menu.update({ immediate: true });
@@ -123,7 +127,7 @@ export const dynamicEvents = async (
         .text(
           `${event.isLinked ? "✅" : ""} ${event.eventName}`,
           async (ctx) => {
-            if (!(await isAdmin(ctx))) return;
+            if (!(await senderIsAdmin(ctx))) return;
             if (ctx.session) {
               ctx.session.selectedEvent = event;
               await ctx.menu.update({ immediate: true });

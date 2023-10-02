@@ -32,7 +32,8 @@ import {
   BotContext,
   SessionData,
   dynamicEvents,
-  getSessionKey
+  getSessionKey,
+  senderIsAdmin
 } from "../util/telegramMenu";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -52,6 +53,7 @@ const ALLOWED_EVENTS = [
   // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
+const adminBotChannel = "Admin Central";
 const eventIdsAreValid = (eventIds?: string[]): boolean => {
   const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
     !!(subset && subset.length && _.difference(subset, superset).length === 0);
@@ -207,21 +209,40 @@ export class TelegramService {
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
     this.bot.command("manage", async (ctx) => {
       try {
-        await ctx.reply(`Checking you have permission...`);
-        if (ctx.chat?.type === "private") {
+        logger(`msg`, ctx.message);
+        const messageThreadId = ctx?.message?.message_thread_id;
+        const admins = await ctx.getChatAdministrators();
+
+        if (!(await senderIsAdmin(ctx, admins)))
+          return ctx.reply("Only admins can call this command", {
+            message_thread_id: messageThreadId
+          });
+
+        if (ctx.chat?.type !== "supergroup") {
           await ctx.reply(
-            "To get you started, can you please add me as an admin to the telegram channel associated with your event? Once you are done, please ping me again with /setup in the channel."
+            "This command only works in a group with Topics enabled.",
+            { message_thread_id: messageThreadId }
           );
-          return;
         }
 
-        const admins = await ctx.getChatAdministrators();
+        const topicName =
+          ctx.message?.reply_to_message?.forum_topic_created?.name;
+
+        if (topicName !== adminBotChannel || !ctx?.message?.is_topic_message)
+          return ctx.reply(
+            `Must be in topic ${adminBotChannel}. Create the topic if it doesn't exist and close it for additional security.`,
+            {
+              message_thread_id: messageThreadId
+            }
+          );
+
         const isAdmin = admins.some(
           (admin) => admin.user.id === this.bot.botInfo.id
         );
         if (!isAdmin) {
           await ctx.reply(
-            "Please add me as an admin to the telegram channel associated with your event."
+            "Please add me as an admin to the telegram channel associated with your event.",
+            { message_thread_id: messageThreadId }
           );
           return;
         }
@@ -230,12 +251,33 @@ export class TelegramService {
           `Choose an event to manage.\n\n <i>✅ = this chat is gated by event.</i>`,
           {
             reply_markup: eventsMenu,
-            parse_mode: "HTML"
+            parse_mode: "HTML",
+            message_thread_id: messageThreadId
           }
         );
       } catch (error) {
         await ctx.reply(`Error linking. Check server logs for details`);
         logger(`[TELEGRAM] ERROR`, error);
+      }
+    });
+
+    this.bot.command("setup", async (ctx) => {
+      try {
+        if (ctx.chat?.type !== "supergroup") {
+          await ctx.reply("Pleae enable topics and try again");
+        }
+
+        if (ctx?.message?.is_topic_message)
+          throw new Error(`Cannot run setup from an existing topic`);
+
+        await ctx.editGeneralForumTopic(adminBotChannel);
+        await ctx.hideGeneralForumTopic();
+        const topic = await ctx.createForumTopic(`Announcements`, {
+          icon_custom_emoji_id: "5309984423003823246"
+        });
+        await ctx.api.closeForumTopic(ctx.chat.id, topic.message_thread_id);
+      } catch (error) {
+        await ctx.reply(`Error running setup: ${error}`);
       }
     });
 
@@ -248,6 +290,7 @@ export class TelegramService {
     
         <b>Admins</b>
         <b>/manage</b> - Gate / Ungate this group with a ticketed event
+        <b>/setup</b> - For when the chat is freshly created
       `,
         { parse_mode: "HTML" }
       );
