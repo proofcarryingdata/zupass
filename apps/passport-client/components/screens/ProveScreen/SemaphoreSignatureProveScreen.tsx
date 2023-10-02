@@ -1,3 +1,8 @@
+import { ReactNode, useCallback, useState } from "react";
+
+import { cloneDeep } from "lodash";
+import styled from "styled-components";
+
 import {
   PCDGetRequest,
   ProveOptions,
@@ -11,9 +16,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { cloneDeep } from "lodash";
-import { ReactNode, useCallback, useState } from "react";
-import styled from "styled-components";
+
 import { appConfig } from "../../../src/appConfig";
 import { useIdentity, useSelf } from "../../../src/appHooks";
 import {
@@ -142,7 +145,12 @@ async function fillArgs(
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({ identity })
+        await SemaphoreIdentityPCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.Identity,
+            value: identity
+          }
+        })
       )
     }
   };

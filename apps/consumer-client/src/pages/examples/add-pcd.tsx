@@ -1,3 +1,9 @@
+import { useEffect, useState } from "react";
+
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   EthereumGroupPCDPackage,
@@ -23,10 +29,7 @@ import {
   generateRegistrationOptions,
   verifyRegistrationResponse
 } from "@simplewebauthn/server";
-import { ethers } from "ethers";
-import JSONBig from "json-bigint";
-import { useEffect, useState } from "react";
-import { v4 as uuid } from "uuid";
+
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
@@ -375,7 +378,10 @@ async function addSignatureProofPCD(messageToSign: string) {
 
 async function addIdentityPCD() {
   const newIdentity = await SemaphoreIdentityPCDPackage.prove({
-    identity: new Identity()
+    identity: {
+      argumentType: ArgumentTypeName.Identity,
+      value: new Identity()
+    }
   });
 
   const serializedNewIdentity =

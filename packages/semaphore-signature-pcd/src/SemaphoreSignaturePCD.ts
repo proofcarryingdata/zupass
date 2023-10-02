@@ -1,3 +1,6 @@
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+
 import {
   DisplayOptions,
   PCD,
@@ -18,8 +21,7 @@ import {
   generateProof,
   verifyProof
 } from "@semaphore-protocol/proof";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
+
 import { SemaphoreIdentityCardBody } from "./CardBody";
 
 /**
@@ -49,10 +51,10 @@ let initArgs: SemaphoreSignaturePCDInitArgs | undefined = undefined;
 // We hardcode the externalNullifer to also be your identityCommitment
 // so that your nullifier for specific groups is not revealed when
 // a SemaphoreSignaturePCD is requested from a consumer application.
-export interface SemaphoreSignaturePCDArgs {
+export type SemaphoreSignaturePCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   signedMessage: StringArgument;
-}
+};
 
 export interface SemaphoreSignaturePCDClaim {
   /**

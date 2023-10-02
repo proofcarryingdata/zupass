@@ -2,6 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+
 import { PollFeedRequest, PollFeedResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -39,7 +40,10 @@ export async function pollFeed(
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity
+              identity: {
+                argumentType: ArgumentTypeName.Identity,
+                value: identity
+              }
             })
           )
         },

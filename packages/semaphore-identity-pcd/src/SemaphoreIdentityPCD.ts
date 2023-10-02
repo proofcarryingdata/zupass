@@ -1,15 +1,23 @@
-import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { requireDefinedParameter } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+
+import {
+  DisplayOptions,
+  IdentityArgument,
+  PCD,
+  PCDPackage,
+  SerializedPCD
+} from "@pcd/pcd-types";
+import { requireDefinedParameter } from "@pcd/util";
+import { Identity } from "@semaphore-protocol/identity";
+
 import { SemaphoreIdentityCardBody } from "./CardBody";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
-export interface SemaphoreIdentityPCDArgs {
-  identity: Identity;
-}
+export type SemaphoreIdentityPCDArgs = {
+  identity: IdentityArgument;
+};
 
 export interface SemaphoreIdentityPCDClaim {
   identity: Identity;
@@ -35,7 +43,12 @@ export class SemaphoreIdentityPCD
 export async function prove(
   args: SemaphoreIdentityPCDArgs
 ): Promise<SemaphoreIdentityPCD> {
-  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity });
+  if (!args.identity.value) {
+    throw new Error(
+      "cannot make semaphore identity proof: identity is not set"
+    );
+  }
+  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity.value });
 }
 
 export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {

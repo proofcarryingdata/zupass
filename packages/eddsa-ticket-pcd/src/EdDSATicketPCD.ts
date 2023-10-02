@@ -1,3 +1,7 @@
+import JSONBig from "json-bigint";
+import _ from "lodash";
+import { v4 as uuid } from "uuid";
+
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
@@ -8,9 +12,7 @@ import {
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
-import JSONBig from "json-bigint";
-import _ from "lodash";
-import { v4 as uuid } from "uuid";
+
 import { EdDSATicketCardBody } from "./CardBody";
 import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
@@ -54,14 +56,14 @@ async function init(args: EdDSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
-export interface EdDSATicketPCDArgs {
+export type EdDSATicketPCDArgs = {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
   // ticket information that is encoded into this pcd
   ticket: ObjectArgument<ITicketData>;
   // A unique string identifying the PCD
   id: StringArgument;
-}
+};
 
 export interface EdDSATicketPCDClaim {
   ticket: ITicketData;

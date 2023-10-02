@@ -1,3 +1,7 @@
+import { ec } from "elliptic";
+import { sha256 } from "js-sha256";
+import { v4 as uuid } from "uuid";
+
 import {
   DisplayOptions,
   PCD,
@@ -6,9 +10,7 @@ import {
   StringArgument
 } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
-import { ec } from "elliptic";
-import { sha256 } from "js-sha256";
-import { v4 as uuid } from "uuid";
+
 import { HaLoNonceCardBody } from "./CardBody";
 
 const secp256k1 = new ec("secp256k1");
@@ -17,7 +19,7 @@ export const HaLoNoncePCDTypeName = "halo-nonce-pcd";
 
 // Arguments taken from the URL produced by the HaLo tags, the definition is at
 // https://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random
-export interface HaLoNoncePCDArgs {
+export type HaLoNoncePCDArgs = {
   /**
    * The uncompressed hex string of the signing public key
    */
@@ -32,7 +34,7 @@ export interface HaLoNoncePCDArgs {
    * The signature of the nonce + random string
    */
   rndsig: StringArgument;
-}
+};
 
 export interface HaLoNoncePCDClaim {
   /**

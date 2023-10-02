@@ -1,3 +1,7 @@
+import { ethers } from "ethers";
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+
 import {
   ArgumentTypeName,
   DisplayOptions,
@@ -24,9 +28,7 @@ import {
   ProverConfig,
   PublicInput
 } from "@personaelabs/spartan-ecdsa";
-import { ethers } from "ethers";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
+
 import { EthereumGroupCardBody } from "./CardBody";
 
 export const EthereumGroupPCDTypeName = "ethereum-group-pcd";
@@ -45,12 +47,12 @@ export interface EthereumGroupPCDInitArgs {
   pubkeyMembershipConfig: ProverConfig;
 }
 
-export interface EthereumGroupPCDArgs {
+export type EthereumGroupPCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   signatureOfIdentityCommitment: StringArgument;
   merkleProof: StringArgument;
   groupType: StringArgument;
-}
+};
 
 export interface EthereumGroupPCDClaim {
   publicInput: PublicInput;

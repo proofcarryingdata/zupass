@@ -1,10 +1,11 @@
-import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+
 export const InputTestPCDTypeName = "input-test-pcd";
 
-export interface InputTestPCDArgs {}
+export type InputTestPCDArgs = Record<string, never>;
 
 export interface InputTestPCDClaim {}
 
@@ -38,8 +39,8 @@ export async function serialize(
     type: InputTestPCDTypeName,
     pcd: JSONBig.stringify({
       type: pcd.type,
-      id: pcd.id,
-    }),
+      id: pcd.id
+    })
   } as SerializedPCD<InputTestPCD>;
 }
 
@@ -61,5 +62,5 @@ export const SemaphoreIdentityPCDPackage: PCDPackage<
   prove,
   verify,
   serialize,
-  deserialize,
+  deserialize
 };

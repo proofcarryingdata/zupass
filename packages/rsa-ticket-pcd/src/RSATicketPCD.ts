@@ -1,3 +1,6 @@
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+
 import {
   DisplayOptions,
   PCD,
@@ -7,8 +10,7 @@ import {
   StringArgument
 } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
+
 import { RSATicketCardBody } from "./CardBody";
 import { getTicketData } from "./utils";
 
@@ -35,10 +37,10 @@ async function init(args: RSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
-export interface RSATicketPCDArgs {
+export type RSATicketPCDArgs = {
   id: StringArgument;
   rsaPCD: PCDArgument<RSATicketPCD>;
-}
+};
 
 export interface RSATicketPCDClaim {}
 

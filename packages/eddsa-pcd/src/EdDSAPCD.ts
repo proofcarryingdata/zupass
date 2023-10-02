@@ -1,3 +1,6 @@
+import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
+import { v4 as uuid } from "uuid";
+
 import {
   DisplayOptions,
   PCD,
@@ -7,9 +10,6 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
-import { v4 as uuid } from "uuid";
-import { EdDSACardBody } from "./CardBody";
 
 /**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being
@@ -18,7 +18,7 @@ import { EdDSACardBody } from "./CardBody";
  */
 export type EdDSAPublicKey = [string, string];
 
-/** 
+/**
  * The globally unique type name of the {@link EdDSAPCD}.
  */
 export const EdDSAPCDTypeName = "eddsa-pcd";
@@ -33,46 +33,46 @@ export interface EdDSAInitArgs {}
 /**
  * Defines the essential parameters required for creating an {@link EdDSAPCD}.
  */
-export interface EdDSAPCDArgs {
+export type EdDSAPCDArgs = {
   /**
    * The EdDSA private key is a 32-byte value used to sign the message.
    * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
    */
   privateKey: StringArgument;
-  
+
   /**
    * The message is composed of a list of stringified big integers so that both `proof` and `claim`
-   * can also be used within SNARK circuits, which operate on fields that are themselves big integers. 
+   * can also be used within SNARK circuits, which operate on fields that are themselves big integers.
    */
   message: StringArrayArgument;
- 
+
   /**
    * A string that uniquely identifies an {@link EdDSAPCD}. If this argument is not specified a random
    * id will be generated.
    */
   id: StringArgument;
-}
+};
 
 /**
- * Defines the EdDSA PCD claim. The claim contains a message signed 
+ * Defines the EdDSA PCD claim. The claim contains a message signed
  * with the private key corresponding to the given public key.
  */
 export interface EdDSAPCDClaim {
   /**
-   * An EdDSA public key corresponding to the EdDSA private key used 
+   * An EdDSA public key corresponding to the EdDSA private key used
    * for signing the message.
    */
   publicKey: EdDSAPublicKey;
-  
-  /** 
+
+  /**
    * A list of big integers that were signed with the corresponding private key.
    */
   message: Array<bigint>;
 }
 
 /**
- * Defines the EdDSA PCD proof. The proof is the signature that proves 
- * that the private key corresponding to the public key in the claim has been successfully 
+ * Defines the EdDSA PCD proof. The proof is the signature that proves
+ * that the private key corresponding to the public key in the claim has been successfully
  * used to sign the message.
  */
 export interface EdDSAPCDProof {
@@ -105,7 +105,7 @@ let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;
 let poseidon: Poseidon;
 
-/** 
+/**
  * A promise designed to make sure that the EdDSA and the Poseidon algorithms
  * of the `circomlibjs` package have been properly initialized.
  * It only initializes them once.
@@ -130,12 +130,10 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 
   let message;
 
-  if (!args.privateKey.value)
-    throw new Error("No private key value provided");
+  if (!args.privateKey.value) throw new Error("No private key value provided");
 
-  if (!args.message.value)
-    throw new Error("No message value provided");
-  
+  if (!args.message.value) throw new Error("No message value provided");
+
   try {
     // Converts the list of stringified big integers of the message to a list of big integers.
     // The reason there is a try/catch around it is to prevent users from passing in
@@ -213,7 +211,7 @@ function reviver(key: any, value: any): any {
 
 /**
  * Serializes an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
- * @param pcd The EdDSA PCD to be serialized. 
+ * @param pcd The EdDSA PCD to be serialized.
  * @returns The serialized version of the EdDSA PCD.
  */
 export async function serialize(
@@ -227,7 +225,7 @@ export async function serialize(
 
 /**
  * Deserializes a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
- * @param serialized The serialized PCD to deserialize. 
+ * @param serialized The serialized PCD to deserialize.
  * @returns The deserialized version of the EdDSA PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSAPCD> {
@@ -243,7 +241,7 @@ export async function deserialize(serialized: string): Promise<EdDSAPCD> {
 /**
  * Provides the information about the {@link EdDSAPCD} that will be displayed
  * to users on Zupass.
- * @param pcd The EdDSA PCD instance. 
+ * @param pcd The EdDSA PCD instance.
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
@@ -253,7 +251,7 @@ export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
   };
 }
 
-/** 
+/**
  * The PCD package of the EdDSA PCD. It exports an object containing
  * the code necessary to operate on this PCD's data.
  */
@@ -287,10 +285,8 @@ export async function getEdDSAPublicKey(
     privateKey = fromHexString(privateKey);
   }
 
-  return eddsa
-    .prv2pub(privateKey)
-    .map((p) =>
-      // `F.toObject` converts a point from Montgomery format to a standard one.
-      eddsa.F.toObject(p).toString(16).padStart(64, "0")
-    ) as EdDSAPublicKey;
+  return eddsa.prv2pub(privateKey).map((p) =>
+    // `F.toObject` converts a point from Montgomery format to a standard one.
+    eddsa.F.toObject(p).toString(16).padStart(64, "0")
+  ) as EdDSAPublicKey;
 }

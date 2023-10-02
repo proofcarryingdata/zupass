@@ -1,15 +1,18 @@
+import assert from "assert";
+import * as path from "path";
+
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
-import assert from "assert";
-import "mocha";
-import * as path from "path";
+
 import {
   SemaphoreGroupPCDArgs,
-  SemaphoreGroupPCDPackage,
+  SemaphoreGroupPCDPackage
 } from "../src/SemaphoreGroupPCD";
 import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup";
+
+import "mocha";
 
 const zkeyFilePath = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");
@@ -23,7 +26,7 @@ describe("semaphore group identity should work", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreGroupPCDPackage.init!({
       zkeyFilePath,
-      wasmFilePath,
+      wasmFilePath
     });
 
     const identity = new Identity();
@@ -33,27 +36,32 @@ describe("semaphore group identity should work", function () {
     const signal = 1;
 
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({ identity })
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.Identity,
+          value: identity
+        }
+      })
     );
 
     args = {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
-        value: externalNullifier + "",
+        value: externalNullifier + ""
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
-        value: signal + "",
+        value: signal + ""
       },
       group: {
         argumentType: ArgumentTypeName.Object,
-        value: serializeSemaphoreGroup(group, "test name"),
+        value: serializeSemaphoreGroup(group, "test name")
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
-        value: identityPCD,
-      },
+        value: identityPCD
+      }
     };
   });
 

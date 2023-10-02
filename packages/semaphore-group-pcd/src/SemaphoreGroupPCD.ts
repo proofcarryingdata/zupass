@@ -1,3 +1,6 @@
+import JSONBig from "json-bigint";
+import { v4 as uuid } from "uuid";
+
 import {
   BigIntArgument,
   DisplayOptions,
@@ -15,16 +18,15 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import {
   FullProof,
-  Proof,
   generateProof,
+  Proof,
   verifyProof
 } from "@semaphore-protocol/proof";
-import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
+
 import { SemaphoreGroupCardBody } from "./CardBody";
 import {
-  SerializedSemaphoreGroup,
-  deserializeSemaphoreGroup
+  deserializeSemaphoreGroup,
+  SerializedSemaphoreGroup
 } from "./SerializedSemaphoreGroup";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
@@ -42,12 +44,12 @@ export interface SempahoreGroupPCDInitArgs {
   wasmFilePath: string;
 }
 
-export interface SemaphoreGroupPCDArgs {
+export type SemaphoreGroupPCDArgs = {
   group: ObjectArgument<SerializedSemaphoreGroup>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
   externalNullifier: BigIntArgument;
   signal: BigIntArgument;
-}
+};
 
 export interface SemaphoreGroupPCDClaim {
   /**

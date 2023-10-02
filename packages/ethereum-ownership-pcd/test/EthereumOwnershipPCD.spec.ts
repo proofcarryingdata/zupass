@@ -1,3 +1,7 @@
+import assert from "assert";
+import { ethers } from "ethers";
+import * as path from "path";
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
@@ -5,11 +9,10 @@ import {
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import assert from "assert";
-import { ethers } from "ethers";
-import "mocha";
-import * as path from "path";
+
 import { EthereumOwnershipPCDPackage } from "../src/EthereumOwnershipPCD";
+
+import "mocha";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -27,7 +30,10 @@ describe("Ethereum ownership PCD", function () {
   it("should work", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identity: {
+        argumentType: ArgumentTypeName.Identity,
+        value: new Identity()
+      }
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
@@ -62,7 +68,10 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able create a PCD from an invalid signature", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identity: {
+        argumentType: ArgumentTypeName.Identity,
+        value: new Identity()
+      }
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
@@ -97,14 +106,20 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able create a PCD where identity does not match identity pcd", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identity: {
+        argumentType: ArgumentTypeName.Identity,
+        value: new Identity()
+      }
     });
     const signatureOfIdentityCommitment = await wallet.signMessage(
       identity.claim.identity.commitment.toString()
     );
 
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identity: {
+        argumentType: ArgumentTypeName.Identity,
+        value: new Identity()
+      }
     });
     const serializedIdentity2 =
       await SemaphoreIdentityPCDPackage.serialize(identity2);
@@ -133,7 +148,10 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able verify a PCD whose Ethereum address was tampered with", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identity: {
+        argumentType: ArgumentTypeName.Identity,
+        value: new Identity()
+      }
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
@@ -156,7 +174,9 @@ describe("Ethereum ownership PCD", function () {
         value: serializedIdentity
       }
     });
-    const finalCharacter = pcd.claim.ethereumAddress.substring(pcd.claim.ethereumAddress.length - 1);
+    const finalCharacter = pcd.claim.ethereumAddress.substring(
+      pcd.claim.ethereumAddress.length - 1
+    );
     const replacementCharacter = finalCharacter === "0" ? "1" : "0";
     const mangledAddress =
       pcd.claim.ethereumAddress.substring(

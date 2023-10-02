@@ -1,9 +1,11 @@
+import urlJoin from "url-join";
+
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import urlJoin from "url-join";
+
 import {
   CheckTicketInError,
   CheckTicketInRequest,
@@ -53,7 +55,10 @@ export async function checkinTicket(
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity: checkerIdentity
+              identity: {
+                argumentType: ArgumentTypeName.Identity,
+                value: checkerIdentity
+              }
             })
           )
         },
