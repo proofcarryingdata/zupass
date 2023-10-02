@@ -231,12 +231,13 @@ export class TelegramService {
         const admins = await ctx.getChatAdministrators();
         const username = ctx?.from?.username;
         if (!username) throw new Error(`Username not found`);
+
+        if (!(await senderIsAdmin(ctx, admins)))
+          throw new Error(`Only admins can run this command`);
         if (!ALLOWED_TICKET_MANAGERS.includes(username))
           throw new Error(
             `Only Zupass team members are allowed to run this command.`
           );
-
-        if (!(await senderIsAdmin(ctx, admins))) return;
 
         if (!isGroupWithTopics(ctx)) {
           await ctx.reply(
@@ -352,7 +353,8 @@ export class TelegramService {
         );
       }
 
-      if (!(await senderIsAdmin(ctx))) return;
+      if (!(await senderIsAdmin(ctx)))
+        return ctx.reply(`Only admins can run this command`);
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(
