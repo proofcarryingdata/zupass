@@ -42,6 +42,10 @@ export const isDirectMessage = (ctx: Context): boolean => {
   return !!(ctx.chat?.type && ctx.chat?.type === "private");
 };
 
+export const isGroupWithTopics = (ctx: Context): boolean => {
+  return !!(ctx.chat?.type && ctx.chat?.type === "supergroup");
+};
+
 const checkDeleteMessage = (ctx: BotContext): void => {
   if (ctx.chat?.id && ctx.session?.lastMessageId) {
     ctx.api.deleteMessage(ctx.chat.id, ctx.session.lastMessageId);

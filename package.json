@@ -16,7 +16,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
-    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\"",
+    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\"",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
     "test": "turbo run test --concurrency=1",
