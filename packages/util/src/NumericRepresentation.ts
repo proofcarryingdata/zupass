@@ -43,6 +43,17 @@ export function numberToBigInt(v: number): bigint {
 }
 
 /**
+ * Converts a hex number to a bigint.
+ */
+export function hexToBigInt(v: string): bigint {
+  if (!v.startsWith("0x")) {
+    v = "0x" + v;
+  }
+
+  return BigInt(v);
+}
+
+/**
  * Converts a boolean to a bigint value of 0 or 1.
  */
 export function booleanToBigInt(v: boolean): bigint {
