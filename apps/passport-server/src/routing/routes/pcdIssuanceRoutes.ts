@@ -91,13 +91,6 @@ export function initPCDIssuanceRoutes(
     res.json(result satisfies PollFeedResponseValue);
   });
 
-  /**
-   * Checks whether the given ticket is eligible for being checked in.
-   * Each reason that a ticket *wouldn't* be able to be checked in for
-   * is encapuslated in the response we generate here, via {@link CheckTicketError}.
-   *
-   * @todo - this should probably live in a different service.
-   */
   app.get("/feeds/:feedId", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const feedId = checkUrlParam(req, "feedId");
@@ -107,6 +100,13 @@ export function initPCDIssuanceRoutes(
     res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
   });
 
+  /**
+   * Checks whether the given ticket is eligible for being checked in.
+   * Each reason that a ticket *wouldn't* be able to be checked in for
+   * is encapuslated in the response we generate here, via {@link CheckTicketError}.
+   *
+   * @todo - this should probably live in a different service.
+   */
   app.post("/issue/check-ticket", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleCheckTicketRequest(

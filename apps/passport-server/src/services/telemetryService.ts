@@ -105,6 +105,8 @@ export async function traced<T>(
   }
 
   return tracer.startActiveSpan(service + "." + method, async (span) => {
+    span.setAttribute("trace_service_name", service);
+
     if (process.env.ROLLBAR_ENV_NAME) {
       span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
     }
