@@ -90,7 +90,7 @@ export class TelegramService {
     this.bot = bot;
 
     this.bot.api.setMyDescription(
-      "I'm Zucat 😻! I manage fun events with zero-knowledge proofs. Press START to get started!"
+      "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
     );
 
     this.bot.api.setMyShortDescription(
@@ -303,7 +303,7 @@ export class TelegramService {
       const messageThreadId = ctx?.message?.message_thread_id;
       try {
         if (!isGroupWithTopics(ctx)) {
-          throw new Error("Pleae enable topics and try again");
+          throw new Error("Please enable topics for this group and try again");
         }
 
         if (ctx?.message?.is_topic_message)
