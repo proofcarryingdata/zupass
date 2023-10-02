@@ -274,6 +274,20 @@ export class TelegramService {
       }
     });
 
+    this.bot.command("adminhelp", async (ctx) => {
+      const messageThreadId = ctx?.message?.message_thread_id;
+      await ctx.reply(
+        `<b>Help</b>
+    
+        <b>Admins</b>
+        <b>/manage</b> - Gate / Ungate this group with a ticketed event
+        <b>/setup</b> - For when the chat is freshly created,
+        <b>/incognito</b> - Mark a topic as anonymous
+      `,
+        { parse_mode: "HTML", reply_to_message_id: messageThreadId }
+      );
+    });
+
     this.bot.command("anonsend", async (ctx) => {
       if (ctx.chat?.type !== "private") {
         const messageThreadId = ctx.message?.message_thread_id;
