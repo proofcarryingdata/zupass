@@ -12,8 +12,9 @@ import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
 /**
- * The representation of an EdDSA public key as a pair of points (hexadecimal strings)
- * on the elliptic curve.
+ * An EdDSA public key is represented as a point on the elliptic curve, with each point being
+ * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
+ * format and is internally converted to and from the Montgomery format as needed.
  */
 export type EDdSAPublicKey = [string, string];
 
@@ -23,8 +24,9 @@ export type EDdSAPublicKey = [string, string];
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
 /**
- * Defines the arguments required to initialize a PCD.
- * It is currently empty but new arguments may be added in the future.
+ * Interface containing the arguments that 3rd parties use to
+ * initialize this PCD package.
+ * It is empty because this package does not implement the `init` function.
  */
 export interface EdDSAInitArgs {}
 
@@ -34,18 +36,19 @@ export interface EdDSAInitArgs {}
 export interface EdDSAPCDArgs {
   /**
    * The EdDSA private key is a 32-byte value used to sign the message.
-   * {@link newEdDSAPrivateKey} is a recommended choice for generating highly secure private keys.
+   * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
    */
   privateKey: StringArgument;
   
   /**
-   * The message is composed of a list of stringified big integer so that both `proof` and `claim`
-   * can also be utilized within SNARK circuits, which operate on fields that are themselves big integers. 
+   * The message is composed of a list of stringified big integers so that both `proof` and `claim`
+   * can also be used within SNARK circuits, which operate on fields that are themselves big integers. 
    */
   message: StringArrayArgument;
  
   /**
-   * A string that uniquely identifies a PCD. 
+   * A string that uniquely identifies a PCD. If this argument is not specified a random
+   * id will be generated.
    */
   id: StringArgument;
 }
@@ -61,13 +64,15 @@ export interface EdDSAPCDClaim {
    */
   publicKey: EDdSAPublicKey;
   
-  /** An array of signed contents (BigInts) with the corresponding private key. */
+  /** 
+   * A list of big integers to be signed with the corresponding private key.
+   */
   message: Array<bigint>;
 }
 
 /**
- * This interface defines the EdDSA PCD proof. The proof is the signature which proves 
- * that the private key corresponding to the public key in the claim, has been successfully 
+ * Defines the EdDSA PCD proof. The proof is the signature that proves 
+ * that the private key corresponding to the public key in the claim has been successfully 
  * used to sign the message.
  */
 export interface EdDSAPCDProof {
@@ -134,13 +139,15 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
     throw new Error("No message value provided");
   
   try {
-    // Converts to BigInt the stringified message content.
+    // Converts the list of stringified big integers of the message to a list of big integers.
+    // The reason there is a try/catch around it is to prevent users from passing in
+    // anything other than stringified big integers to sign.
     message = args.message.value.map((fieldStr: string) => BigInt(fieldStr));
   } catch (e) {
     throw new Error("Could not convert message contents to bigint type");
   }
 
-  // Recover or create a new PCD unique identifier.
+  // Retrieves the id from the arguments or creates a new random id.
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
   const prvKey = fromHexString(args.privateKey.value);
 
@@ -156,7 +163,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 }
 
 /**
- * Verifies if a given {@link EdDSAPCDClaim} corresponds to a given {@link EdDSAPCDProof}.
+ * Verifies an EdDSA PCD by checking that its {@link EdDSAPCDClaim} corresponds to its {@link EdDSAPCDProof}.
  * @param pcd The {@link EdDSAPCD} to be verified.
  * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}, otherwise false.
  */
@@ -165,6 +172,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 
   const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
 
+  // `F.fromObject` converts a point from standard format to Montgomery.
   const pubKey = pcd.claim.publicKey.map((p) => eddsa.F.fromObject(p)) as Point;
 
   const hashedMessage = poseidon(pcd.claim.message);
@@ -173,10 +181,13 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 }
 
 /**
- * Replaces the content of an {@link EdDSAPCDArgs} converting strings to big integers.
- * @param key The PCD argument name to convert.
- * @param value The PCD argument value to convert.
- * @returns The converted value as strings.
+ * The replacer is used by `JSON.stringify` and, in this package, it is used within the
+ * PCD's `serialize` function. It is called for each property on the JSON object and
+ * converts the value of the property from a list of big integers to a list of hexadecimal
+ * strings when the property's key name equals "message".
+ * @param key The object property key.
+ * @param value The object property value.
+ * @returns The original value of the property or the converted one.
  */
 function replacer(key: any, value: any): any {
   if (key === "message") {
@@ -187,10 +198,13 @@ function replacer(key: any, value: any): any {
 }
 
 /**
- * Replaces the content of an {@link EdDSAPCDArgs} converting big integers to strings.
- * @param key The PCD argument name to be converted.
- * @param value The PCD argument value to be converted.
- * @returns The converted value as BigInt values.
+ * The reviver is used by `JSON.parse` and, in this package, it is used within the
+ * PCD's `deserialize` function. It is called for each property on the JSON object and
+ * converts the value of the property from a list of hexadecimal strings to a list of
+ * big integers when the property's key name equals "message".
+ * @param key The object property key.
+ * @param value The object property value.
+ * @returns The original value of the property or the converted one.
  */
 function reviver(key: any, value: any): any {
   if (key === "message") {
@@ -243,8 +257,8 @@ export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
 }
 
 /** 
- * A PCD-conforming wrapper to sign (and prove) messages (signed) 
- * using an EdDSA key(pair).
+ * The PCD package of the EdDSA PCD. It exports an object containing
+ * the code necessary to operate on this PCD's data.
  */
 export const EdDSAPCDPackage: PCDPackage<
   EdDSAPCDClaim,
@@ -279,6 +293,7 @@ export async function getEdDSAPublicKey(
   return eddsa
     .prv2pub(privateKey)
     .map((p) =>
+      // `F.toObject` converts a point from Montgomery format to a standard one.
       eddsa.F.toObject(p).toString(16).padStart(64, "0")
     ) as EDdSAPublicKey;
 }
