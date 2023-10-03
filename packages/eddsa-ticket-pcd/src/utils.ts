@@ -1,4 +1,4 @@
-import { EDdSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
@@ -50,7 +50,7 @@ export function getEdDSATicketData(
   return pcd?.claim?.ticket;
 }
 
-export function getPublicKey(pcd?: EdDSATicketPCD): EDdSAPublicKey | undefined {
+export function getPublicKey(pcd?: EdDSATicketPCD): EdDSAPublicKey | undefined {
   return pcd?.proof?.eddsaPCD?.claim?.publicKey;
 }
 

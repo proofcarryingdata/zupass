@@ -6,7 +6,7 @@ import {
   StringArgument,
   StringArrayArgument
 } from "@pcd/pcd-types";
-import { fromHexString, toHexString, requireDefinedParameter } from "@pcd/util";
+import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
 import { buildEddsa, buildPoseidon, Eddsa, Point, Poseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
@@ -16,7 +16,7 @@ import { EdDSACardBody } from "./CardBody";
  * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
  * format and is internally converted to and from the Montgomery format as needed.
  */
-export type EDdSAPublicKey = [string, string];
+export type EdDSAPublicKey = [string, string];
 
 /** 
  * The globally unique type name of the {@link EdDSAPCD}.
@@ -62,7 +62,7 @@ export interface EdDSAPCDClaim {
    * An EdDSA public key corresponding to the EdDSA private key used 
    * for signing the message.
    */
-  publicKey: EDdSAPublicKey;
+  publicKey: EdDSAPublicKey;
   
   /** 
    * A list of big integers that were signed with the corresponding private key.
@@ -280,7 +280,7 @@ export const EdDSAPCDPackage: PCDPackage<
  */
 export async function getEdDSAPublicKey(
   privateKey: string | Uint8Array
-): Promise<EDdSAPublicKey> {
+): Promise<EdDSAPublicKey> {
   await ensureInitialized();
 
   if (typeof privateKey === "string") {
@@ -292,5 +292,5 @@ export async function getEdDSAPublicKey(
     .map((p) =>
       // `F.toObject` converts a point from Montgomery format to a standard one.
       eddsa.F.toObject(p).toString(16).padStart(64, "0")
-    ) as EDdSAPublicKey;
+    ) as EdDSAPublicKey;
 }
