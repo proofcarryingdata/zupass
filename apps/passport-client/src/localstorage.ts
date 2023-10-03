@@ -90,10 +90,10 @@ export function loadAnotherDeviceChangedPassword(): boolean {
   );
 }
 
-export function saveJWT(key: string): void {
-  window.localStorage["jwt"] = key;
+export function saveJWT(jwt: string): void {
+  window.localStorage.setItem("jwt", jwt);
 }
 
 export function loadJWT(): string | undefined {
-  return window.localStorage["jwt"];
+  return window.localStorage.getItem("jwt");
 }

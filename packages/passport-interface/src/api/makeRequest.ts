@@ -105,14 +105,16 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
     };
   }
 
+  const headers = new Headers();
+  headers.append("a", "B");
   if (jwt != null) {
-    requestOptions = {
-      ...requestOptions,
-      headers: {
-        authorization: jwt
-      }
-    };
+    headers.append("authorization", jwt);
   }
+
+  requestOptions = {
+    ...requestOptions,
+    headers
+  };
 
   try {
     // @todo - prevent logspam in the same way we prevent it

@@ -23,7 +23,9 @@ export class AuthService {
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    const jwt = this.getJWT(req);
+    if (req.method.toLowerCase() !== "OPTIONS") {
+      req.jwt = this.getJWT(req);
+    }
 
     next();
   };
@@ -46,16 +48,16 @@ export class AuthService {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      logger("[JWT] no auth header");
+      logger(req.path, "[JWT] no auth header");
       return null;
     }
 
     try {
       const value = jwt.verify(authHeader, secret) as JWTContents;
-      logger("[JWT] valid jwt", value);
+      logger(req.path, "[JWT] valid jwt", value);
       return value;
     } catch (e) {
-      logger("[JWT] invalid jwt", e);
+      logger(req.path, "[JWT] invalid jwt", e);
       return null;
     }
   }
