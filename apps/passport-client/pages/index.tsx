@@ -31,15 +31,16 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
   loadAnotherDeviceChangedPassword,
   loadEncryptionKey,
   loadIdentity,
+  loadJWT,
   loadPCDs,
   loadSelf,
   loadSubscriptions,
@@ -187,6 +188,7 @@ async function loadInitialState(): Promise<AppState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
+  const jwt = loadJWT();
 
   const userInvalid = loadUserInvalid();
   const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
@@ -220,7 +222,8 @@ async function loadInitialState(): Promise<AppState> {
     userInvalid: userInvalid,
     anotherDeviceChangedPassword,
     subscriptions,
-    resolvingSubscriptionId: undefined
+    resolvingSubscriptionId: undefined,
+    jwt
   };
 }
 

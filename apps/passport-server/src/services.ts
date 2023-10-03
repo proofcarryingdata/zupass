@@ -24,7 +24,7 @@ export async function startServices(
   await startTelemetry(context);
   instrumentPCDs();
 
-  const authService = startAuthService();
+  const authService = startAuthService(context);
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
@@ -48,7 +48,8 @@ export async function startServices(
     context,
     semaphoreService,
     emailTokenService,
-    emailService
+    emailService,
+    authService
   );
   const e2eeService = startE2EEService(context);
   const metricsService = startMetricsService(context, rollbarService);

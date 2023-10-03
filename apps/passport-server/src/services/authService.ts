@@ -1,4 +1,4 @@
-import { expressjwt } from "express-jwt";
+import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { ApplicationContext } from "../types";
 
@@ -17,10 +17,13 @@ export class AuthService {
     this.context = context;
   }
 
-  public jwtParserMiddleware = expressjwt({
-    secret: secret,
-    algorithms: ["HS256"]
-  });
+  public jwtParserMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    next();
+  };
 
   private createJWTContents(email: string): JWTContents {
     return {

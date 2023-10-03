@@ -89,3 +89,11 @@ export function loadAnotherDeviceChangedPassword(): boolean {
     window.localStorage["anotherDeviceChangedPassword"] ?? "false"
   );
 }
+
+export function saveJWT(key: string): void {
+  window.localStorage["jwt"] = key;
+}
+
+export function loadJWT(): string | undefined {
+  return window.localStorage["jwt"];
+}

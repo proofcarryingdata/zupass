@@ -45,6 +45,8 @@ export interface AppState {
   downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
   loadingIssuedPCDs?: boolean;
+
+  jwt?: string;
 }
 
 export interface AppError {

@@ -5,6 +5,7 @@ import {
   FeedSubscriptionManager,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
+  NewUserResponse,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
@@ -31,6 +32,7 @@ import {
   saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
+  saveJWT,
   savePCDs,
   saveSelf,
   saveSubscriptions,
@@ -273,7 +275,13 @@ async function deviceLogin(
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
+async function finishLogin(
+  newUserResponse: NewUserResponse,
+  state: AppState,
+  update: ZuUpdate
+) {
+  const user = newUserResponse.user;
+
   // Verify that the identity is correct.
   const { identity } = state;
 
@@ -298,6 +306,8 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   // Save to local storage.
   setSelf(user, state, update);
+  update({ jwt: newUserResponse.jwt });
+  saveJWT(newUserResponse.jwt);
 
   // Save PCDs to E2EE storage.
   uploadStorage();
