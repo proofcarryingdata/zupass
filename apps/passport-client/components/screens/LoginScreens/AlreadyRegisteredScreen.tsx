@@ -127,13 +127,13 @@ export function AlreadyRegisteredScreen() {
       await sleep();
       const crypto = await PCDCrypto.newInstance();
       const encryptionKey = await crypto.argon2(password, salt, 32);
-      const storageResult = await requestDownloadAndDecryptStorage(
+      const result = await requestDownloadAndDecryptStorage(
         appConfig.zupassServer,
         encryptionKey
       );
       setIsLoggingIn(false);
 
-      if (!storageResult.success) {
+      if (!result.success) {
         return setError(
           "Password incorrect. Double-check your password. " +
             "If you've lost access, you can reset your account below."
@@ -142,7 +142,7 @@ export function AlreadyRegisteredScreen() {
 
       dispatch({
         type: "load-from-sync",
-        storage: storageResult.value,
+        storage: result.value,
         encryptionKey: encryptionKey
       });
     },

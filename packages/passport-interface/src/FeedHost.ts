@@ -7,18 +7,21 @@ import {
 } from "./RequestTypes";
 import { Feed } from "./SubscriptionManager";
 
-export interface HostedFeed {
+export interface HostedFeed<TContext = never> {
   feed: Feed;
-  handleRequest(request: PollFeedRequest): Promise<PollFeedResponseValue>;
+  handleRequest(
+    request: PollFeedRequest,
+    context?: TContext
+  ): Promise<PollFeedResponseValue>;
 }
 
-export class FeedHost {
-  private readonly hostedFeed: HostedFeed[];
+export class FeedHost<TContext = never> {
+  private readonly hostedFeed: HostedFeed<TContext>[];
   private readonly providerUrl: string;
   private readonly providerName: string;
 
   public constructor(
-    feeds: HostedFeed[],
+    feeds: HostedFeed<TContext>[],
     providerUrl: string,
     providerName: string
   ) {
@@ -36,19 +39,21 @@ export class FeedHost {
   }
 
   public async handleFeedRequest(
-    request: PollFeedRequest
+    request: PollFeedRequest,
+    context?: TContext
   ): Promise<PollFeedResponseValue> {
     const feed = this.hostedFeed.find((f) => f.feed.id === request.feedId);
     if (!feed) {
       throw new Error(`couldn't find feed with id ${request.feedId}`);
     }
 
-    const response = await feed.handleRequest(request);
+    const response = await feed.handleRequest(request, context);
     return response;
   }
 
   public async handleListFeedsRequest(
-    _request: ListFeedsRequest
+    _request: ListFeedsRequest,
+    _context?: TContext
   ): Promise<ListFeedsResponseValue> {
     return {
       providerName: this.providerName,
@@ -62,7 +67,8 @@ export class FeedHost {
   }
 
   public async handleListSingleFeedRequest(
-    _request: ListSingleFeedRequest
+    _request: ListSingleFeedRequest,
+    _context?: TContext
   ): Promise<ListFeedsResponseValue> {
     return {
       providerUrl: this.providerUrl,

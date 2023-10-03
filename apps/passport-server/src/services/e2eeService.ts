@@ -1,3 +1,4 @@
+import { EncryptedPacket } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyRequest,
   EncryptedStorageResultValue,
@@ -14,6 +15,7 @@ import { fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { AuthService } from "./authService";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
@@ -21,9 +23,11 @@ import { logger } from "../util/logger";
  */
 export class E2EEService {
   private readonly context: ApplicationContext;
+  private readonly authService: AuthService;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(context: ApplicationContext, authService: AuthService) {
     this.context = context;
+    this.authService = authService;
   }
 
   public async handleLoad(blobKey: string, res: Response): Promise<void> {
@@ -41,9 +45,12 @@ export class E2EEService {
       );
     }
 
-    const result = JSON.parse(storageModel.encrypted_blob);
+    const result = JSON.parse(storageModel.encrypted_blob) as EncryptedPacket;
 
-    res.json(result satisfies EncryptedStorageResultValue);
+    res.json({
+      encrypted: result,
+      jwt: this.authService.createUserJWT()
+    } satisfies EncryptedStorageResultValue);
   }
 
   public async handleSave(

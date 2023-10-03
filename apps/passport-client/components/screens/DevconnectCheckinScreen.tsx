@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useIdentity } from "../../src/appHooks";
+import { useJWT } from "../../src/appHooks";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -204,6 +204,7 @@ function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
   loading: boolean;
   result: CheckTicketResult;
 } {
+  const jwt = useJWT();
   const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<CheckTicketResult | undefined>();
 
@@ -219,12 +220,13 @@ function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
         appConfig.zupassServer,
         {
           ticket: await EdDSATicketPCDPackage.serialize(ticket)
-        }
+        },
+        jwt
       );
       setInProgress(false);
       setResult(checkTicketResult);
     },
-    []
+    [jwt]
   );
 
   useEffect(() => {
@@ -238,7 +240,7 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
-  const identity = useIdentity();
+  const jwt = useJWT();
 
   const onCheckInClick = useCallback(async () => {
     if (inProgress) {
@@ -249,7 +251,7 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
     const checkinResult = await checkinTicket(
       appConfig.zupassServer,
       ticket,
-      identity
+      jwt
     );
     setInProgress(false);
 
@@ -260,7 +262,7 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
       setCheckedIn(true);
       setFinishedCheckinAttempt(true);
     }
-  }, [inProgress, identity, ticket]);
+  }, [inProgress, jwt, ticket]);
 
   return (
     <CheckinSectionContainer>

@@ -1,14 +1,9 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
   CheckTicketInError,
   CheckTicketInRequest,
-  CheckTicketInResponseValue,
-  ISSUANCE_STRING
+  CheckTicketInResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPost } from "./makeRequest";
@@ -22,7 +17,8 @@ import { httpPost } from "./makeRequest";
  */
 export async function requestCheckIn(
   zupassServerUrl: string,
-  postBody: CheckTicketInRequest
+  postBody: CheckTicketInRequest,
+  jwt: string
 ): Promise<CheckTicketInResult> {
   return httpPost<CheckTicketInResult>(
     urlJoin(zupassServerUrl, "/issue/check-in"),
@@ -32,7 +28,8 @@ export async function requestCheckIn(
       onValue: async (resText) => JSON.parse(resText) as CheckTicketInResult,
       onError: async () => ({ error: { name: "ServerError" }, success: false })
     },
-    postBody
+    postBody,
+    jwt
   );
 }
 
@@ -43,27 +40,15 @@ export async function requestCheckIn(
 export async function checkinTicket(
   zupassServerUrl: string,
   ticket: EdDSATicketPCD,
-  checkerIdentity: Identity
+  jwt: string
 ): Promise<CheckTicketInResult> {
-  return requestCheckIn(zupassServerUrl, {
-    ticket: await EdDSATicketPCDPackage.serialize(ticket),
-    checkerProof: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: checkerIdentity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    )
-  });
+  return requestCheckIn(
+    zupassServerUrl,
+    {
+      ticket: await EdDSATicketPCDPackage.serialize(ticket)
+    },
+    jwt
+  );
 }
 
 export type CheckTicketInResult = APIResult<

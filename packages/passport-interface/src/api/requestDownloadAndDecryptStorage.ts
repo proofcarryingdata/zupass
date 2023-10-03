@@ -1,6 +1,7 @@
 import { getHash, passportDecrypt } from "@pcd/passport-crypto";
 import { getErrorMessage } from "@pcd/util";
 import { SyncedEncryptedStorage } from "../EncryptedStorage";
+import { LoadE2EEResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { requestEncryptedStorage } from "./requestEncryptedStorage";
 
@@ -27,9 +28,14 @@ export async function requestDownloadAndDecryptStorage(
       return { error: "couldn't download e2ee data", success: false };
     }
 
-    const decrypted = await passportDecrypt(storageResult.value, encryptionKey);
+    const decrypted = await passportDecrypt(
+      storageResult.value.encrypted,
+      encryptionKey
+    );
+    const parsed = JSON.parse(decrypted) as SyncedEncryptedStorage;
+
     return {
-      value: JSON.parse(decrypted) as SyncedEncryptedStorage,
+      value: { parsed, jwt: storageResult.value.jwt },
       success: true
     };
   } catch (e) {
@@ -38,4 +44,4 @@ export async function requestDownloadAndDecryptStorage(
   }
 }
 
-export type DownloadAndDecryptResult = APIResult<SyncedEncryptedStorage>;
+export type DownloadAndDecryptResult = APIResult<LoadE2EEResponseValue>;

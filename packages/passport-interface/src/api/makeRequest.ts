@@ -9,14 +9,17 @@ import { POST } from "./constants";
 export async function httpGet<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  query?: object
+  query?: object,
+  jwt?: string
 ): Promise<T> {
   return httpRequest<T>(
     urlJoin(
       url,
       "?" + new URLSearchParams((query as Record<string, string>) ?? {})
     ),
-    opts
+    opts,
+    undefined,
+    jwt
   );
 }
 
@@ -26,9 +29,10 @@ export async function httpGet<T extends APIResult<unknown, unknown>>(
 export async function httpPost<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  postBody?: object
+  postBody?: object,
+  jwt?: string
 ): Promise<T> {
-  return httpRequest<T>(url, opts, postBody);
+  return httpRequest<T>(url, opts, postBody, jwt);
 }
 
 /**
@@ -37,7 +41,8 @@ export async function httpPost<T extends APIResult<unknown, unknown>>(
 export async function httpGetSimple<TResult>(
   url: string,
   onValue: GetResultValue<APIResult<TResult, string>>,
-  query?: object
+  query?: object,
+  jwt?: string
 ): Promise<APIResult<TResult, string>> {
   return httpGet<APIResult<TResult, string>>(
     url,
@@ -45,7 +50,8 @@ export async function httpGetSimple<TResult>(
       onValue,
       onError: async (resText) => ({ error: resText, success: false })
     },
-    query
+    query,
+    jwt
   );
 }
 
@@ -55,7 +61,8 @@ export async function httpGetSimple<TResult>(
 export async function httpPostSimple<TResult>(
   url: string,
   onValue: GetResultValue<APIResult<TResult, string>>,
-  postBody?: object
+  postBody?: object,
+  jwt?: string
 ): Promise<APIResult<TResult, string>> {
   return httpPost<APIResult<TResult, string>>(
     url,
@@ -63,7 +70,8 @@ export async function httpPostSimple<TResult>(
       onValue,
       onError: async (resText) => ({ error: resText, success: false })
     },
-    postBody
+    postBody,
+    jwt
   );
 }
 
@@ -75,11 +83,6 @@ export async function httpPostSimple<TResult>(
  */
 const throttleMs = 0;
 
-let jwt: string | undefined = undefined;
-export function setJWT(newJwt: string | undefined): void {
-  jwt = newJwt;
-}
-
 /**
  * Sends a non-blocking HTTP request to the given URL, either a POST
  * or a GET, with the given body, and converts it into a {@link APIResult}.
@@ -89,7 +92,8 @@ export function setJWT(newJwt: string | undefined): void {
 async function httpRequest<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  postBody?: object
+  postBody?: object,
+  jwt?: string
 ): Promise<T> {
   await sleep(throttleMs);
 
@@ -106,8 +110,6 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   }
 
   if (jwt != null) {
-    // todo: make this only apply to zupass server routes,
-    // otherwise we leak the jwt, lol.
     requestOptions.headers = Object.assign(requestOptions.headers ?? {}, {
       authorization: jwt
     });

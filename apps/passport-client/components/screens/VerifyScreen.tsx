@@ -137,7 +137,7 @@ async function deserializeAndVerify(pcdStr: string): Promise<VerifyResult> {
   // Verify identity proof
   const payload = JSON.parse(deserializedPCD.claim.signedMessage) as QRPayload;
   const uuid = bigintToUuid(BigInt(payload.uuid));
-  const userResult = await requestUser(appConfig.zupassServer, uuid);
+  const userResult = await requestUser(appConfig.zupassServer, uuid, ""); // todo: deprecate this
 
   if (userResult.error?.userMissing) {
     return {

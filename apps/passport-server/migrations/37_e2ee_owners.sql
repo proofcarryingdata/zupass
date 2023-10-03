@@ -1,0 +1,1 @@
+alter table e2ee 

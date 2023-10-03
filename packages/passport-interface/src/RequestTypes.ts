@@ -3,6 +3,7 @@ import { EncryptedPacket } from "@pcd/passport-crypto";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { SyncedEncryptedStorage } from "./EncryptedStorage";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 
@@ -165,18 +166,16 @@ export interface GetTokenResponseValue {
   jwt: string;
 }
 
+export interface LoadE2EEResponseValue {
+  parsed: SyncedEncryptedStorage;
+  jwt: string;
+}
+
 /**
  * A particular 'superuser' ticket-holder can request to check in
  * another ticket that belongs to the same event.
  */
 export interface CheckTicketInRequest {
-  /**
-   * A semaphore signature from the checker, used by the server to
-   * determine whether the checker has the required permissions
-   * to check this ticket in.
-   */
-  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
-
   /**
    * The ticket to attempt to check in.
    */
@@ -342,7 +341,10 @@ export type CreateNewUserRequest = {
  * Zupass responds with this when you ask to load an end-to-end
  * encrypted blob.
  */
-export type EncryptedStorageResultValue = EncryptedPacket;
+export type EncryptedStorageResultValue = {
+  jwt: string;
+  encrypted: EncryptedPacket;
+};
 
 /**
  * Zupass responds with this when you ask it if it is able to

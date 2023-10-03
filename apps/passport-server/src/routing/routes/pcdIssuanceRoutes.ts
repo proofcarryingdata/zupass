@@ -86,7 +86,8 @@ export function initPCDIssuanceRoutes(
   app.post("/feeds", async (req, res) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleFeedRequest(
-      req.body as PollFeedRequest
+      req.body as PollFeedRequest,
+      { jwt: req.jwt }
     );
     res.json(result satisfies PollFeedResponseValue);
   });
@@ -128,7 +129,8 @@ export function initPCDIssuanceRoutes(
   app.post("/issue/check-in", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleCheckInRequest(
-      req.body as CheckTicketInRequest
+      req.body as CheckTicketInRequest,
+      req.jwt
     );
     res.json(result satisfies CheckTicketInResult);
   });

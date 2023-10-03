@@ -16,7 +16,8 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestUploadEncryptedStorage(
   zupassServerUrl: string,
   blobKey: string,
-  encryptedStorage: EncryptedPacket
+  encryptedStorage: EncryptedPacket,
+  jwt: string
 ): Promise<UploadEncryptedStorageResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, `/sync/save`),
@@ -24,7 +25,8 @@ export async function requestUploadEncryptedStorage(
     {
       blobKey,
       encryptedBlob: JSON.stringify(encryptedStorage)
-    } satisfies UploadEncryptedStorageRequest
+    } satisfies UploadEncryptedStorageRequest,
+    jwt
   );
 }
 

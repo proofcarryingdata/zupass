@@ -1,4 +1,4 @@
-import { requestJWTUsingIdentity, setJWT } from "@pcd/passport-interface";
+import { requestJWTUsingIdentity } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -120,7 +120,7 @@ class App extends React.Component<object, AppState> {
 
     try {
       if (this.state?.self) {
-        await pollUser(this.state.self, this.dispatch);
+        await pollUser(this.state.self, this.state.jwt, this.dispatch);
       }
     } catch (e) {
       console.log("[JOB] failed poll user");
@@ -213,8 +213,6 @@ async function loadInitialState(): Promise<AppState> {
         saveJWT(jwt);
       }
     }
-
-    setJWT(jwt);
   }
 
   let modal = "" as AppState["modal"];

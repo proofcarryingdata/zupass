@@ -10,12 +10,20 @@ import { POST } from "./constants";
 export async function requestLogToServer(
   zupassServerUrl: string,
   eventName: string,
-  value: object
+  value: object,
+  jwt?: string
 ): Promise<void> {
   try {
     await fetch(urlJoin(zupassServerUrl, "client-log"), {
       ...POST,
-      body: JSON.stringify({ name: eventName, ...value })
+      body: JSON.stringify({ name: eventName, ...value }),
+      ...(jwt
+        ? {
+            headers: {
+              authorization: jwt
+            }
+          }
+        : {})
     });
   } catch (e) {
     console.log("failed to log event to server", e);

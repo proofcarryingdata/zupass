@@ -2,9 +2,9 @@ import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  getEdDSATicketData,
   ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
-  joinPath
+  ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -53,15 +53,23 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
-import { fetchUserByCommitment } from "../database/queries/users";
+import {
+  fetchUserByCommitment,
+  fetchUserByEmail
+} from "../database/queries/users";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
+import { JWTContents } from "./authService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
+
+export interface FeedHostContext {
+  jwt?: JWTContents | null;
+}
 
 // Since Zuzalu did not have event or product UUIDs at the time, we can
 // allocate some constant ones now.
@@ -74,7 +82,7 @@ export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
-  private readonly feedHost: FeedHost;
+  private readonly feedHost: FeedHost<FeedHostContext>;
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
@@ -310,21 +318,24 @@ export class IssuanceService {
   }
 
   public async handleListFeedsRequest(
-    request: ListFeedsRequest
+    request: ListFeedsRequest,
+    context?: FeedHostContext
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListFeedsRequest(request);
+    return this.feedHost.handleListFeedsRequest(request, context);
   }
 
   public async handleListSingleFeedRequest(
-    request: ListSingleFeedRequest
+    request: ListSingleFeedRequest,
+    context?: FeedHostContext
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListSingleFeedRequest(request);
+    return this.feedHost.handleListSingleFeedRequest(request, context);
   }
 
   public async handleFeedRequest(
-    request: PollFeedRequest
+    request: PollFeedRequest,
+    context?: FeedHostContext
   ): Promise<PollFeedResponseValue> {
-    return this.feedHost.handleFeedRequest(request);
+    return this.feedHost.handleFeedRequest(request, context);
   }
 
   public hasFeedWithId(feedId: string): boolean {
@@ -340,9 +351,14 @@ export class IssuanceService {
   }
 
   public async handleCheckInRequest(
-    request: CheckTicketInRequest
+    request: CheckTicketInRequest,
+    checkerJWT?: JWTContents | null
   ): Promise<CheckTicketInResult> {
     try {
+      if (!checkerJWT) {
+        throw new PCDHTTPError(401);
+      }
+
       const ticketPCD = await EdDSATicketPCDPackage.deserialize(
         request.ticket.pcd
       );
@@ -362,7 +378,10 @@ export class IssuanceService {
         };
       }
 
-      const checker = await this.checkUserExists(request.checkerProof);
+      const checker = await fetchUserByEmail(
+        this.context.dbPool,
+        checkerJWT?.data?.email
+      );
 
       if (!checker) {
         return {
@@ -508,8 +527,17 @@ export class IssuanceService {
   }
 
   private async checkUserExists(
-    proof: SerializedPCD<SemaphoreSignaturePCD>
+    proof: SerializedPCD<SemaphoreSignaturePCD>,
+    jwt?: JWTContents | null
   ): Promise<UserRow | null> {
+    if (jwt?.data?.email) {
+      const user = await fetchUserByEmail(this.context.dbPool, jwt.data.email);
+      if (!user) {
+        logger("couldn't find a user");
+      }
+      return user;
+    }
+
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
     const isValid = await SemaphoreSignaturePCDPackage.verify(
@@ -548,13 +576,14 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    jwt?: JWTContents | null
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
-        const commitmentRow = await this.checkUserExists(credential);
+        const commitmentRow = await this.checkUserExists(credential, jwt);
         const email = commitmentRow?.email;
         if (commitmentRow) {
           span?.setAttribute(

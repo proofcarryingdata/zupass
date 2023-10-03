@@ -10,7 +10,8 @@ import { httpGet } from "./makeRequest";
  */
 export async function requestUser(
   zupassServerUrl: string,
-  uuid: string
+  uuid: string,
+  jwt: string
 ): Promise<RequestUserResult> {
   return httpGet<RequestUserResult>(
     urlJoin(zupassServerUrl, "/account/user", uuid),
@@ -23,7 +24,9 @@ export async function requestUser(
         statusCode === 410
           ? { error: { userMissing: true }, success: false }
           : { error: { errorMessage: resText }, success: false }
-    }
+    },
+    undefined,
+    jwt
   );
 }
 

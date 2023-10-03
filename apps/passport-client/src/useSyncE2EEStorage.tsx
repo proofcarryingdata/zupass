@@ -2,13 +2,13 @@ import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyResult,
   FeedSubscriptionManager,
-  SyncedEncryptedStorageV2,
-  SyncedEncryptedStorageV3,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage
+  requestUploadEncryptedStorage,
+  SyncedEncryptedStorageV2,
+  SyncedEncryptedStorageV3
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -18,9 +18,11 @@ import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
+  loadJWT,
   loadPCDs,
   loadSelf,
   loadSubscriptions,
+  saveJWT,
   savePCDs,
   saveSubscriptions
 } from "./localstorage";
@@ -32,6 +34,7 @@ export async function updateBlobKeyForEncryptedStorage(
   newEncryptionKey: string,
   newSalt: string
 ): Promise<ChangeBlobKeyResult> {
+  const jwt = loadJWT();
   const user = loadSelf();
   const pcds = await loadPCDs();
 
@@ -53,7 +56,8 @@ export async function updateBlobKeyForEncryptedStorage(
     newBlobKey,
     user.uuid,
     newSalt,
-    encryptedStorage
+    encryptedStorage,
+    jwt
   );
 }
 
@@ -62,6 +66,7 @@ export async function updateBlobKeyForEncryptedStorage(
  * to the server, end to end encrypted.
  */
 export async function uploadStorage(): Promise<void> {
+  const jwt = loadJWT();
   const user = loadSelf();
   const pcds = await loadPCDs();
   const subscriptions = await loadSubscriptions();
@@ -82,7 +87,8 @@ export async function uploadStorage(): Promise<void> {
   const uploadResult = await requestUploadEncryptedStorage(
     appConfig.zupassServer,
     blobKey,
-    encryptedStorage
+    encryptedStorage,
+    jwt
   );
 
   if (uploadResult.success) {
@@ -96,7 +102,10 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, subscriptions: FeedSubscriptionManager | null }> {
+export async function downloadStorage(): Promise<{
+  pcds: PCDCollection | null;
+  subscriptions: FeedSubscriptionManager | null;
+}> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = loadEncryptionKey();
@@ -110,26 +119,24 @@ export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, s
     return null;
   }
 
+  const storage = storageResult.value.parsed;
+
   try {
     let pcds: PCDCollection;
     let subscriptions: FeedSubscriptionManager | null = null;
 
-    if (isSyncedEncryptedStorageV3(storageResult.value)) {
-      pcds = await PCDCollection.deserialize(
-        await getPackages(),
-        storageResult.value.pcds
-      );
+    if (isSyncedEncryptedStorageV3(storage)) {
+      pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
 
-      subscriptions = FeedSubscriptionManager.deserialize(new NetworkFeedApi(), storageResult.value.subscriptions);
-
-    } else if (isSyncedEncryptedStorageV2(storageResult.value)) {
-      pcds = await PCDCollection.deserialize(
-        await getPackages(),
-        storageResult.value.pcds
+      subscriptions = FeedSubscriptionManager.deserialize(
+        new NetworkFeedApi(),
+        storage.subscriptions
       );
+    } else if (isSyncedEncryptedStorageV2(storage)) {
+      pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
     } else {
       pcds = new PCDCollection(await getPackages());
-      await pcds.deserializeAllAndAdd(storageResult.value.pcds);
+      await pcds.deserializeAllAndAdd(storage.pcds);
     }
 
     if (subscriptions) {
@@ -137,6 +144,7 @@ export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, s
     }
 
     await savePCDs(pcds);
+    await saveJWT(storageResult.value.jwt); // todo also save to state
     return { pcds, subscriptions };
   } catch (e) {
     console.error("[SYNC] uploaded storage is corrupted - ignoring it", e);

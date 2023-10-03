@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { requestUser } from "./api/requestUser";
 import { User } from "./zuzalu";
 
+// @todo: deprecate and delete this
 export function useFetchUser(
   zupassServerUrl: string,
   isZuzalu: boolean,
@@ -21,7 +22,7 @@ export function useFetchUser(
       }
 
       setLoading(true);
-      const userResult = await requestUser(zupassServerUrl, uuid);
+      const userResult = await requestUser(zupassServerUrl, uuid, "");
       setLoading(false);
 
       if (userResult.success) {

@@ -13,7 +13,8 @@ import { httpPostSimple } from "./makeRequest";
  */
 export async function requestPollFeed(
   url: string,
-  req: PollFeedRequest
+  req: PollFeedRequest,
+  jwt?: string
 ): Promise<PollFeedResult> {
   return httpPostSimple(
     url,
@@ -29,27 +30,32 @@ export async function pollFeed(
   zupassServerUrl: string,
   identity: Identity,
   signedMessage: string,
-  feedId: string
+  feedId: string,
+  jwt?: string
 ): Promise<PollFeedResult> {
-  return requestPollFeed(`${zupassServerUrl}/feeds`, {
-    feedId,
-    pcd: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: signedMessage
-        }
-      })
-    )
-  });
+  return requestPollFeed(
+    `${zupassServerUrl}/feeds`,
+    {
+      feedId,
+      pcd: await SemaphoreSignaturePCDPackage.serialize(
+        await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: signedMessage
+          }
+        })
+      )
+    },
+    jwt
+  );
 }
 
 export type PollFeedResult = APIResult<PollFeedResponseValue>;

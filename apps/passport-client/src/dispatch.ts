@@ -5,12 +5,11 @@ import {
   FeedSubscriptionManager,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
+  LoadE2EEResponseValue,
   NewUserResponseValue,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  setJWT,
-  SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
@@ -85,7 +84,7 @@ export type Action =
   | { type: "participant-invalid" }
   | {
       type: "load-from-sync";
-      storage: SyncedEncryptedStorage;
+      storage: LoadE2EEResponseValue;
       encryptionKey: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
@@ -313,7 +312,6 @@ async function finishLogin(
 
   update({ jwt: newUserResponse.jwt });
   saveJWT(newUserResponse.jwt);
-  setJWT(newUserResponse.jwt);
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
@@ -332,24 +330,35 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
         oldSalt: state.self.salt,
         newSalt: self.salt,
         email: self.email
-      }
+      },
+      state.jwt
     );
   } else if (
     BigInt(self.commitment).toString() !== state.identity.commitment.toString()
   ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.zupassServer, "invalid-user", {
-      oldCommitment: state.identity.commitment.toString(),
-      newCommitment: self.commitment.toString()
-    });
+    requestLogToServer(
+      appConfig.zupassServer,
+      "invalid-user",
+      {
+        oldCommitment: state.identity.commitment.toString(),
+        newCommitment: self.commitment.toString()
+      },
+      state.jwt
+    );
   } else if (state.self && state.self.uuid !== self.uuid) {
     console.log("User UUID mismatch");
     userMismatched = true;
-    requestLogToServer(appConfig.zupassServer, "invalid-user", {
-      oldUUID: state.self.uuid,
-      newUUID: self.uuid
-    });
+    requestLogToServer(
+      appConfig.zupassServer,
+      "invalid-user",
+      {
+        oldUUID: state.self.uuid,
+        newUUID: self.uuid
+      },
+      state.jwt
+    );
   }
 
   if (hasChangedPassword) {
@@ -374,11 +383,16 @@ function clearError(state: AppState, update: ZuUpdate) {
 }
 
 async function resetPassport(state: AppState) {
-  await requestLogToServer(appConfig.zupassServer, "logout", {
-    uuid: state.self?.uuid,
-    email: state.self?.email,
-    commitment: state.self?.commitment
-  });
+  await requestLogToServer(
+    appConfig.zupassServer,
+    "logout",
+    {
+      uuid: state.self?.uuid,
+      email: state.self?.email,
+      commitment: state.self?.commitment
+    },
+    state.jwt
+  );
   // Clear saved state.
   window.localStorage.clear();
   // Reload to clear in-memory state.
@@ -405,12 +419,13 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 
 async function loadFromSync(
   encryptionKey: string,
-  storage: SyncedEncryptedStorage,
+  storageResult: LoadE2EEResponseValue,
   currentState: AppState,
   update: ZuUpdate
 ) {
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
+  const storage = storageResult.parsed;
 
   if (isSyncedEncryptedStorageV3(storage)) {
     pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);

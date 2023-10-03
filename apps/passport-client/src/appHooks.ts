@@ -52,6 +52,10 @@ export function useSelf(): User | undefined {
   return useSelector<User | undefined>((s) => s.self, []);
 }
 
+export function useJWT(): string | undefined {
+  return useSelector<string | undefined>((s) => s.jwt, []);
+}
+
 export function useIdentity(): Identity {
   return useSelector<Identity>((s) => s.identity, []);
 }

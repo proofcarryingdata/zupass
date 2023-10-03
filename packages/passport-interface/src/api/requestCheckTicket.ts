@@ -15,7 +15,8 @@ import { httpPost } from "./makeRequest";
  */
 export async function requestCheckTicket(
   zupassServerUrl: string,
-  postBody: CheckTicketRequest
+  postBody: CheckTicketRequest,
+  jwt: string
 ): Promise<CheckTicketResult> {
   return httpPost<CheckTicketResult>(
     urlJoin(zupassServerUrl, "/issue/check-ticket"),
@@ -26,7 +27,8 @@ export async function requestCheckTicket(
         success: false
       })
     },
-    postBody
+    postBody,
+    jwt
   );
 }
 
