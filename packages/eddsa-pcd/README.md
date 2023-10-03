@@ -22,8 +22,8 @@
     </a>
 </p>
 
-| This package defines a PCD representing an EdDSA signature of a list of BigInts with a public-private keypair. |
-| -------------------------------------------------------------------------------------------------------------- |
+| This package defines a PCD designed to verify the authenticity of a message signed using an EdDSA key. |
+| ------------------------------------------------------------------------------------------------------ |
 
 ## 🛠 Install
 
@@ -42,19 +42,21 @@ yarn add @pcd/eddsa-pcd
 ## 📜 Usage
 
 ### Prove
+
 ```javascript
 import { getEdDSAPublicKey, newEdDSAPrivateKey, prove } from "@pcd/eddsa-pcd"
 import { ArgumentTypeName } from "@pcd/pcd-types"
 
 // Generate a new EdDSA private key.
 const privateKey = newEdDSAPrivateKey()
-// Derive the matching public key.
-const publicKey = await getEdDSAPublicKey(privateKey)
-// Prepare the message to sign 
-// nb. it must be an array of bigints in hex string format.
-const message = [BigInt(0).toString(16), BigInt(1).toString(16), BigInt(2).toString(16)]
-// Prepare the input arguments for the PCD.
-const pcdArgs = {
+
+// Prepare the message to sign.
+// It must be a list of hexadicimal strings.
+const message = ["0xc", "0x7a", "0x8f"]
+
+// Create a PCD with the required attributes and their types.
+const pcd = await prove({
+    // The id is optional and if you don't pass it a random value will be automatically created.
     id: {
         argumentType: ArgumentTypeName.String
     },
@@ -66,80 +68,75 @@ const pcdArgs = {
         argumentType: ArgumentTypeName.String,
         value: privateKey
     }
-}
-console.log(`Your private key ${privateKey}\nYour public key ${publicKey}\nYour message ${message}`)
-/*
-    Private key: f04344b3c6d07f5bda3c0ed6ee613c3d20a5e9ff07c1932d8161ae2490789b08
-    Public key: 4366d11e8274843402cb657299b15260581f6a4610fcb0a812abf43a5197d309,7e4dce0c33305d62b36a8cc91327a57f65f3140064d51c82950aef827a3d4514
-    Message: 0,1,2
-    {
-        id: { argumentType: 'String' },
-        message: { argumentType: 'StringArray', value: [ '0', '1', '2' ] },
-        privateKey: {
-            argumentType: 'String',
-            value: 'f04344b3c6d07f5bda3c0ed6ee613c3d20a5e9ff07c1932d8161ae2490789b08'
-        }
-    }
-*/
+})
 
-// Prove that you know a certain EdDSA private key (ie., pcd).
-const pcd = await prove(pcdArgs)
-console.log(`PCD ${pcd.type} #${pcd.id}\nMessage ${pcd.claim.message}\nPublic key ${pcd.claim.publicKey}\nSignature ${pcd.proof.signature}`)
+console.log(pcd)
 /*
-    PCD eddsa-pcd #eecdce73-51fd-408c-a4d0-5f0a37919ec3
-    Message: 0,1,2
-    Public key: 4366d11e8274843402cb657299b15260581f6a4610fcb0a812abf43a5197d309,7e4dce0c33305d62b36a8cc91327a57f65f3140064d51c82950aef827a3d4514
-    Signature: 3b042222f4387f27779e11c04826da586674da827e7d358d753a4e15eec8338f084fe63cbada3184ba33c3cc65c5d08808feef1a938d6b2be0ab0a636faf6900
+EdDSAPCD {
+  type: 'eddsa-pcd',
+  id: '4c80affc-12c3-4d93-8983-cc38295ad31b',
+  claim: {
+    message: [ 12n, 122n, 143n ],
+    publicKey: [
+      '1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2',
+      '1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4'
+    ]
+  },
+  proof: {
+    signature: '39166dd6187378e2ef24d183bffe5bd1b2114344fcd5a56db562a12859c03b9a53b2f98de0b7d4f23dc49979d0e8f919f428a37e736163f7426259c13ecb7000'
+  }
+}
 */
 ```
 
 ### Verify
+
 ```javascript
 import { verify } from "@pcd/eddsa-pcd"
-// ... pcd = prove(args)
 
-const check = await verify(pcd)
-console.log(`${pcd.type} #${pcd.id} is ${check ? `correct` : `invalid`}`)
-// eddsa-pcd #eecdce73-51fd-408c-a4d0-5f0a37919ec3 is correct
+const isValid = await verify(pcd)
 
+console.log(isValid) // true
 ```
 
-### Serialize your PCD
+### Serialize
+
 ```javascript
 import { serialize } from "@pcd/eddsa-pcd"
-// ... pcd = prove(args)
 
 const serialized = await serialize(pcd)
+
 console.log(serialized)
 /*
-    {
-    type: 'eddsa-pcd',
-    pcd: '{"type":"eddsa-pcd","id":"eecdce73-51fd-408c-a4d0-5f0a37919ec3","claim":{"message":["0","1","2"],"publicKey":["4366d11e8274843402cb657299b15260581f6a4610fcb0a812abf43a5197d309","7e4dce0c33305d62b36a8cc91327a57f65f3140064d51c82950aef827a3d4514"]},"proof":{"signature":"3b042222f4387f27779e11c04826da586674da827e7d358d753a4e15eec8338f084fe63cbada3184ba33c3cc65c5d08808feef1a938d6b2be0ab0a636faf6900"}}'
-    }
+{
+  type: 'eddsa-pcd',
+  pcd: '{"type":"eddsa-pcd","id":"15bcc6ec-3482-4772-8a67-27630f8641c5","claim":{"message":["c","7a","8f"],"publicKey":["1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2","1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4"]},"proof":{"signature":"71907bb4a1b5e27b2b9df54ac5cbebb45958f673b97030a79a3799e54ed3779eb499e710bb02231d9f9b6bb621375de7a68ad53bc3e5cef35c6531f9440d8d05"}}'
+}
 */
 ```
 
-### Deserialize your PCD
+### Deserialize
+
 ```javascript
 import { deserialize } from "@pcd/eddsa-pcd"
-// ... pcd = prove(args)
 
 const deserialized = await deserialize(serialized.pcd)
+
 console.log(deserialized)
 /*
-    {
-        type: 'eddsa-pcd',
-        id: 'eecdce73-51fd-408c-a4d0-5f0a37919ec3',
-        claim: {
-            message: [ 0n, 1n, 2n ],
-            publicKey: [
-            '4366d11e8274843402cb657299b15260581f6a4610fcb0a812abf43a5197d309',
-            '7e4dce0c33305d62b36a8cc91327a57f65f3140064d51c82950aef827a3d4514'
-            ]
-        },
-        proof: {
-            signature: '3b042222f4387f27779e11c04826da586674da827e7d358d753a4e15eec8338f084fe63cbada3184ba33c3cc65c5d08808feef1a938d6b2be0ab0a636faf6900'
-        }
-    }
+EdDSAPCD {
+  type: 'eddsa-pcd',
+  id: '4c80affc-12c3-4d93-8983-cc38295ad31b',
+  claim: {
+    message: [ 12n, 122n, 143n ],
+    publicKey: [
+      '1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2',
+      '1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4'
+    ]
+  },
+  proof: {
+    signature: '39166dd6187378e2ef24d183bffe5bd1b2114344fcd5a56db562a12859c03b9a53b2f98de0b7d4f23dc49979d0e8f919f428a37e736163f7426259c13ecb7000'
+  }
+}
 */
 ```
