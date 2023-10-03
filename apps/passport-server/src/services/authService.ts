@@ -24,27 +24,26 @@ export class AuthService {
     next: NextFunction
   ): Promise<void> => {
     if (req.method.toLowerCase() !== "OPTIONS") {
-      req.jwt = this.getJWT(req);
+      req.jwt = this.getJWTFromRequest(req);
     }
 
     next();
   };
 
-  private createJWTContents(email: string): JWTContents {
-    return {
-      data: {
-        email
-      }
-    };
-  }
-
   public createUserJWT(email: string): string {
-    const contents = this.createJWTContents(email);
-    const token = jwt.sign(contents, secret, { algorithm: "HS256" });
+    const token = jwt.sign(
+      {
+        data: {
+          email
+        }
+      } satisfies JWTContents,
+      secret,
+      { algorithm: "HS256" }
+    );
     return token;
   }
 
-  public getJWT(req: Request): JWTContents | null {
+  public getJWTFromRequest(req: Request): JWTContents | null {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
