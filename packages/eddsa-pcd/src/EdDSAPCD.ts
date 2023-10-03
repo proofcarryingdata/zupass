@@ -65,7 +65,7 @@ export interface EdDSAPCDClaim {
   publicKey: EDdSAPublicKey;
   
   /** 
-   * A list of big integers to be signed with the corresponding private key.
+   * A list of big integers that were signed with the corresponding private key.
    */
   message: Array<bigint>;
 }
@@ -124,8 +124,6 @@ async function ensureInitialized() {
 /**
  * Creates a new {@link EdDSAPCD} by generating a {@link EdDSAPCDProof}
  * and deriving a {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
- * @param args The set of arguments to make a new {@link EdDSAPCD}.
- * @returns An instance of the EdDSA PCD.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   await ensureInitialized();
@@ -164,8 +162,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 
 /**
  * Verifies an EdDSA PCD by checking that its {@link EdDSAPCDClaim} corresponds to its {@link EdDSAPCDProof}.
- * @param pcd The {@link EdDSAPCD} to be verified.
- * @returns true if the {@link EdDSAPCDClaim} corresponds to the {@link EdDSAPCDProof}, otherwise false.
+ * If they match, the function returns true, otherwise false.
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   await ensureInitialized();
@@ -276,7 +273,7 @@ export const EdDSAPCDPackage: PCDPackage<
 };
 
 /**
- * Returns an {@link EDdSAPublicKey} extracted from a 32-byte EdDSA private key.
+ * Returns an {@link EDdSAPublicKey} derived from a 32-byte EdDSA private key.
  * The private key must be a hexadecimal string or a Uint8Array typed array.
  * @param privateKey The 32-byte EdDSA private key.
  * @returns The {@link EDdSAPublicKey} extracted from the private key.
