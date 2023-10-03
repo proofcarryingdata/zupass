@@ -1,5 +1,6 @@
 import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
+import assert from "assert";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -15,7 +16,8 @@ import {
 } from "../src/database/queries/cache";
 import {
   fetchEncryptedStorage,
-  insertEncryptedStorage
+  insertEncryptedStorage,
+  rekeyEncryptedStorage
 } from "../src/database/queries/e2ee";
 import {
   fetchEmailToken,
@@ -235,6 +237,52 @@ describe("database reads and writes", function () {
     }
     expect(emptyStorage.blob_key).to.eq(key);
     expect(emptyStorage.encrypted_blob).to.eq(emptyValue);
+  });
+
+  step("e2ee rekeying should work", async function () {
+    const key1 = "key1";
+    const value1 = "value1";
+    const salt1 = "1234";
+
+    const email = "e2ee-rekey-user@test.com";
+    const commitment = new Identity().commitment.toString();
+    const uuid = await upsertUser(db, {
+      commitment,
+      email,
+      salt: salt1
+    });
+    if (!uuid) {
+      throw new Error("expected to be able to insert a commitment");
+    }
+
+    await insertEncryptedStorage(db, key1, value1);
+    const storage1 = await fetchEncryptedStorage(db, key1);
+    if (!storage1) {
+      throw new Error("expected to be able to fetch 1st e2ee blob");
+    }
+    expect(storage1.blob_key).to.eq(key1);
+    expect(storage1.encrypted_blob).to.eq(value1);
+
+    const key2 = "key2";
+    const value2 = "value2";
+    const salt2 = "5678";
+
+    await rekeyEncryptedStorage(db, key1, key2, uuid, salt2, value2);
+    const storage2 = await fetchEncryptedStorage(db, key2);
+    if (!storage2) {
+      throw new Error("expected to be able to fetch 2nd e2ee blob");
+    }
+    expect(storage2.blob_key).to.eq(key2);
+    expect(storage2.encrypted_blob).to.eq(value2);
+    const storageMissing = await fetchEncryptedStorage(db, key1);
+    if (storageMissing) {
+      throw new Error("expected 1st e2ee blob to be gone");
+    }
+
+    // We can't rekey again because key doesn't match.
+    await assert.rejects(async () => {
+      await rekeyEncryptedStorage(db, key1, key2, uuid, salt2, value2);
+    });
   });
 
   step("pcdpass user representation should work", async function () {

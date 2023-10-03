@@ -1,7 +1,6 @@
-import { Pool } from "postgres-pool";
-import { logger } from "../../util/logger";
+import { Pool, PoolClient } from "postgres-pool";
 import { EncryptedStorageModel } from "../models";
-import { sqlQuery } from "../sqlQuery";
+import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
  * Returns the encrypted data stored with a given key.
@@ -44,8 +43,7 @@ export async function insertEncryptedStorage(
  * upserts the encrypted data stored at the new blob key,
  * and then updates the user's salt.
  */
-// TODO: Add retry logic for this query
-export async function updateEncryptedStorage(
+export async function rekeyEncryptedStorage(
   dbPool: Pool,
   oldBlobKey: string,
   newBlobKey: string,
@@ -53,32 +51,30 @@ export async function updateEncryptedStorage(
   newSalt: string,
   encryptedBlob: string
 ): Promise<void> {
-  // Based on recommended transaction flow, where queries are isolated to a particular client.
-  // https://node-postgres.com/features/transactions.
-  const txClient = await dbPool.connect();
-  try {
-    await txClient.query("BEGIN");
-    await txClient.query("DELETE FROM e2ee WHERE blob_key = $1", [oldBlobKey]);
-    await txClient.query(
-      `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
-      ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
-      [newBlobKey, encryptedBlob]
-    );
-    await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
-      uuid,
-      newSalt
-    ]);
-    await txClient.query("COMMIT");
-  } catch (queryError) {
-    try {
-      await txClient.query("ROLLBACK");
-    } catch (rollbackError) {
-      logger(`Rollback for updateEncryptedStorage failed: ${rollbackError}`);
+  return sqlTransaction(
+    dbPool,
+    "rekey encrypted storage",
+    async (txClient: PoolClient) => {
+      const delResult = await txClient.query(
+        "DELETE FROM e2ee WHERE blob_key = $1",
+        [oldBlobKey]
+      );
+      if (0 === delResult.rowCount) {
+        throw new Error(
+          "E2EE entry to be rekeyed missing.  Incorrect password or race?"
+        );
+      }
+      await txClient.query(
+        `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
+        ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
+        [newBlobKey, encryptedBlob]
+      );
+      await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
+        uuid,
+        newSalt
+      ]);
     }
-    throw queryError;
-  } finally {
-    txClient.release();
-  }
+  );
 }
 
 /**

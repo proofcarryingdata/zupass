@@ -8,7 +8,7 @@ import { Response } from "express";
 import {
   fetchEncryptedStorage,
   insertEncryptedStorage,
-  updateEncryptedStorage
+  rekeyEncryptedStorage
 } from "../database/queries/e2ee";
 import { fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -117,7 +117,7 @@ export class E2EEService {
       return;
     }
 
-    await updateEncryptedStorage(
+    await rekeyEncryptedStorage(
       this.context.dbPool,
       request.oldBlobKey,
       request.newBlobKey,
