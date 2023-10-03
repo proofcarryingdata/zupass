@@ -23,6 +23,12 @@ export function initAccountRoutes(
 ): void {
   logger("[INIT] initializing account routes");
 
+  app.get("/account/has-password", async (req: Request, res: Response) => {
+    const email = normalizeEmail(checkQueryParam(req, "email"));
+    const salt = await userService.getSaltByEmail(email);
+    res.json({ hasPassword: salt != null });
+  });
+
   /**
    * Gets the password salt for a given email address.
    *

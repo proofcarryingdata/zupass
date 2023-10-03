@@ -149,6 +149,14 @@ export type TicketError = { detailedMessage?: string } & (
   | { name: "ServerError" }
 );
 
+export interface HasPasswordRequest {
+  email: boolean;
+}
+
+export interface HasPasswordResultValue {
+  hasPassword: boolean;
+}
+
 export interface GetTokenRequest {
   proof: SerializedPCD<SemaphoreSignaturePCD>;
 }
