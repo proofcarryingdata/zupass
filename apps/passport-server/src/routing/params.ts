@@ -45,7 +45,6 @@ export function checkBody<T, U extends keyof T>(
   req: Request,
   name: U
 ): NonNullable<T[U]> {
-  console.log("REQ.BODY", req.body);
   const value = req.body[name];
 
   if (value == null) {
