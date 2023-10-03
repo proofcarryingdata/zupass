@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
@@ -8,6 +9,7 @@ const secret = "shared secret";
 export interface JWTContents {
   data: {
     email: string;
+    uuid: string;
   };
 }
 
@@ -16,6 +18,16 @@ export class AuthService {
 
   public constructor(context: ApplicationContext) {
     this.context = context;
+  }
+
+  public requireJWT(req: Request): JWTContents {
+    const jwt = this.getJWTFromRequest(req);
+
+    if (jwt == null) {
+      throw new PCDHTTPError(401, "Authentication required.");
+    }
+
+    return jwt;
   }
 
   public parseJWTMiddleware = async (
@@ -42,11 +54,12 @@ export class AuthService {
     next(new Error("authorization required for this route"));
   };
 
-  public createUserJWT(email: string): string {
+  public createUserJWT(email: string, uuid: string): string {
     const token = jwt.sign(
       {
         data: {
-          email
+          email,
+          uuid
         }
       } satisfies JWTContents,
       secret,

@@ -9,7 +9,7 @@ import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
-import { checkBody, checkQueryParam, checkUrlParam } from "../params";
+import { checkBody, checkQueryParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
 export function initAccountRoutes(
@@ -169,20 +169,20 @@ export function initAccountRoutes(
    * should we be returning the `salt` here?
    */
   app.get("/account/user/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    await userService.handleGetUser(req, res);
   });
 
   /**
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    await userService.handleGetUser(req, res);
   });
 
   /**
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    await userService.handleGetUser(req, res);
   });
 }

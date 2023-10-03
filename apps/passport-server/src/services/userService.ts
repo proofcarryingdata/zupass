@@ -3,7 +3,7 @@ import {
   NewUserResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { LoggedInUser, UserRow } from "../database/models";
 import {
   fetchDevconnectDeviceLoginTicket,
@@ -14,6 +14,7 @@ import {
   upsertUser
 } from "../database/queries/saveUser";
 import { fetchUserByEmail, fetchUserByUUID } from "../database/queries/users";
+import { checkUrlParam } from "../routing/params";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -213,7 +214,7 @@ export class UserService {
 
     logger(`[USER_SERVICE] logged in a user`, fullUser);
 
-    const jwt = this.authService.createUserJWT(fullUser.email);
+    const jwt = this.authService.createUserJWT(fullUser.email, fullUser.uuid);
 
     res.status(200).json({
       jwt,
@@ -226,8 +227,14 @@ export class UserService {
    * If the user does not exist, returns a 404.
    * Otherwise returns the user.
    */
-  public async handleGetUser(uuid: string, res: Response): Promise<void> {
+  public async handleGetUser(req: Request, res: Response): Promise<void> {
+    const uuid = checkUrlParam(req, "uuid");
     logger(`[USER_SERVICE] Fetching user ${uuid}`);
+
+    const jwt = this.authService.requireJWT(req);
+    if (jwt.data.uuid !== uuid) {
+      throw new PCDHTTPError(401);
+    }
 
     const user = await this.getUserByUUID(uuid);
 
@@ -269,7 +276,7 @@ export class UserService {
     const fullUser = await this.userToLoggedInUser(user);
 
     logger(`[USER_SERVICE] logged in a device login user`, fullUser);
-    const jwt = this.authService.createUserJWT(fullUser.email);
+    const jwt = this.authService.createUserJWT(fullUser.email, fullUser.uuid);
 
     res
       .status(200)
