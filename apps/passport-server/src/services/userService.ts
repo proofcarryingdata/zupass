@@ -79,9 +79,8 @@ export class UserService {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
 
-    const newEmailToken = await this.emailTokenService.saveNewTokenForEmail(
-      email
-    );
+    const newEmailToken =
+      await this.emailTokenService.saveNewTokenForEmail(email);
 
     const existingCommitment = await fetchUserByEmail(
       this.context.dbPool,
@@ -270,7 +269,9 @@ export class UserService {
     const fullUser = await this.userToLoggedInUser(user);
 
     logger(`[USER_SERVICE] logged in a device login user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+    const jwt = this.authService.createUserJWT(fullUser.email);
+
+    res.status(200).json({ jwt, user: fullUser } satisfies NewUserResponse);
   }
 
   /**

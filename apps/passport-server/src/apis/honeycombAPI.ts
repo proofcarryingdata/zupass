@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="../util/declarations/libhoney.d.ts" />
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -11,7 +9,7 @@ export function getHoneycombAPI(): Libhoney | null {
 
     const api = new Libhoney({
       writeKey: honeycombApiKey,
-      dataset: "server-telemetry",
+      dataset: "server-telemetry"
     });
 
     logger("[INIT] Loaded a Honeycomb API");
@@ -27,7 +25,7 @@ export function getHoneycombAPI(): Libhoney | null {
 
 export enum EventName {
   SERVER_START = "SERVER_START",
-  METRIC = "METRIC",
+  METRIC = "METRIC"
 }
 
 export function sendEvent(

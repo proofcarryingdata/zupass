@@ -26,12 +26,12 @@ export async function testDeviceLogin(
   expect(deviceLoginResponse.value).to.haveOwnProperty("commitment");
   expect(deviceLoginResponse.value).to.haveOwnProperty("email");
   expect(deviceLoginResponse.success).to.eq(true);
-  expect(deviceLoginResponse.value?.commitment).to.eq(commitment);
-  expect(deviceLoginResponse.value?.email).to.eq(email);
+  expect(deviceLoginResponse.value?.user?.commitment).to.eq(commitment);
+  expect(deviceLoginResponse.value?.user?.email).to.eq(email);
 
   const getUserResult = await requestUser(
     application.expressContext.localEndpoint,
-    deviceLoginResponse.value?.uuid
+    deviceLoginResponse.value?.user?.uuid
   );
 
   if (!getUserResult.value) {

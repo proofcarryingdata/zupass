@@ -353,7 +353,7 @@ export type LoadUserError =
 /**
  * When you ask Zupass for a user, it will respond with this type.
  */
-export type UserResponseValue = NewUserResponse;
+export type UserResponseValue = ZupassUserJson;
 
 /**
  * Zupass responds with this when you ask it if it knows of a given
