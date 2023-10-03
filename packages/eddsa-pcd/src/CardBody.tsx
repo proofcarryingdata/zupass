@@ -2,6 +2,9 @@ import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { EdDSAPCD } from "./EdDSAPCD";
 
+/**
+ * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
+ */
 export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (
     <Container>
