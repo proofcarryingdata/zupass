@@ -40,6 +40,7 @@ export async function startHttpServer(
     const app = express();
     app.use(nocache());
     app.set("etag", false);
+    app.use(globalServices.authService.jwtParserMiddleware);
 
     if (process.env.SUPPRESS_LOGGING !== "true") {
       app.use(morgan("tiny"));
