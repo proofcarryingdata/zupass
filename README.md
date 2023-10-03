@@ -1,32 +1,32 @@
-# PCDpass (formerly Zupass)
+# Zupass and the Proof-Carrying Data SDK
 
-## What is PCDpass?
+## What is Zupass?
 
-_This README is generally aimed at developers interested in using, building on top of, or contributing to PCDpass._
+_This README is generally aimed at developers interested in using, building on top of, or contributing to Zupass._
 
-[PCDpass](https://pcdpass.xyz) (formerly [Zupass](https://zupass.org)) is software for storing and managing _Proof-Carrying Data_: any data whose well-formedness and validity are cryptographically verifiable. Examples of Proof-Carrying Data include:
+[Zupass](https://zupass.org) is software for storing and managing _Proof-Carrying Data_: any data whose well-formedness and validity are cryptographically verifiable. Examples of Proof-Carrying Data include:
 
 - **Signatures**. Ex: an arbitrarily-structured JSON representing a ticket to Zuzalu, signed by the Zuzalu ticketing authority's public key.
 - **Merkle proofs**. Ex: a Merkle proof that a Semaphore identity belongs to a group of identities representing people in some digital community.
-- **ZK proofs**. Ex: a groth16 proof that I am 4 [degrees of separation](https://ethdos.xyz/) from Vitalik, or that I possess [a valid Zuzalu passport](https://zupoll.org/) (without revealing who I am), or that I [attended a certain Devconnect event](https://consumer-client.onrender.com/pcdpass-examples/zkeddsa-proof).
+- **ZK proofs**. Ex: a groth16 proof that I am 4 [degrees of separation](https://ethdos.xyz/) from Vitalik, or that I possess [a valid Zuzalu passport](https://zupoll.org/) (without revealing who I am), or that I [attended a certain Devconnect event]().
 - **Hash commitments**. Ex: a secret password, and a hash of that password.
 - **Keypairs**. Ex: an Ethereum keypair, or a Semaphore secret and identity commitment.
 
-PCDpass allows users to store and organize PCDs, and to respond to queries from third-party applications about their PCDs. Here are some kinds of queries a third party can ask a user with a PCDpass:
+Zupass allows users to store and organize PCDs, and to respond to queries from third-party applications about their PCDs. Here are some kinds of queries a third party can ask a user with a Zupass:
 
-- A gated Discord server can ask a user with a PCDpass whether they possess a signed "ticket" authorizing them to join the server.
-- A community polling website like [Zupoll](https://zupoll.org/) can ask a user with a PCDpass whether they are someone in a whitelisted set of voters (without the user revealing who they are!).
-- A game leaderboard can ask a user with a PCDpass whether they have completed the necessary in-game requirements to be added to the leaderboard.
+- A gated Discord server can ask a user with a Zupass whether they possess a signed "ticket" authorizing them to join the server.
+- A community polling website like [Zupoll](https://zupoll.org/) can ask a user with a Zupass whether they are someone in a whitelisted set of voters (without the user revealing who they are!).
+- A game leaderboard can ask a user with a Zupass whether they have completed the necessary in-game requirements to be added to the leaderboard.
 - A new social media site could ask a user to import their posts, likes, follower count, and even [usernames](https://zkemail.xyz/) from other social platforms.
-- A financial service provider could ask a user with a PCDpass to prove that they have a recently-signed bank statement, credit card statement, and tax return, and that running a publicly-known financial health formula on these statements results in a certain creditworthiness score.
+- A financial service provider could ask a user with a Zupass to prove that they have a recently-signed bank statement, credit card statement, and tax return, and that running a publicly-known financial health formula on these statements results in a certain creditworthiness score.
 
-Using zkSNARKs, it is theoretically possible for third parties to make _any_ query into a user's PCDpass, so long as they provide a zkSNARK circuit for that query. For example, the last example in the list above could be accomplished by designing a ZK circuit that performs signature verification, JSON parsing / PDF parsing / regex matching, and a forward pass of a financial model.
+Using zkSNARKs, it is theoretically possible for third parties to make _any_ query into a user's Zupass, so long as they provide a zkSNARK circuit for that query. For example, the last example in the list above could be accomplished by designing a ZK circuit that performs signature verification, JSON parsing / PDF parsing / regex matching, and a forward pass of a financial model.
 
-## For Developers: Understanding the PCDpass Model
+## For Developers: Understanding the PCD Model
 
 ### Proof-Carrying Data
 
-As a developer, if you are interested in working with PCDpass, the PCD SDK, or any data compatible with the open PCD interfaces, you'll need to understand the "PCD" abstraction.
+As a developer, if you are interested in working with Zupass, the PCD SDK, or any data compatible with the open PCD interfaces, you'll need to understand the "PCD" abstraction.
 
 "PCD" is short for "Proof-Carrying Data"\*. In this repository, we use this term to refer to any data that is attached to a proof of its own correctness, without the need for external context to verify.
 
@@ -143,11 +143,6 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 - static site is deployed to https://zupass.org/
 - server is deployed to https://api.zupass.com/
 
-### PCDpass
-
-- static site is deployed to https://pcdpass.xyz/
-- server is deployed to https://api.pcdpass.xyz/
-
 ### Example PCD App
 
 - static site is deployed to https://consumer-client.onrender.com/
@@ -157,42 +152,42 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 
 ### `PCDPackage`
 
-PCDpass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by PCDpass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
+Zupass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by Zupass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
 
 https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd-types/src/pcd.ts#L34-L49
 
-Two example implementations of a `PCDPackage` that works with PCDpass are:
+Two example implementations of a `PCDPackage` that works with Zupass are:
 
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/src/RSAPCD.ts
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-identity-pcd/src/SemaphoreIdentityPCD.ts
 
-### Integrating with PCDpass
+### Integrating with Zupass
 
-In order for a new type of PCD to work with PCDpass, its implementation must be added as a dependency of the apps `passport-server` and `passport-client` in the PCDpass repository. This can be done by editing their respective `package.json`s.
+In order for a new type of PCD to work with Zupass, its implementation must be added as a dependency of the apps `passport-server` and `passport-client` in the Zupass repository. This can be done by editing their respective `package.json`s.
 
-Next, the PCD implementation (as represented by its `PCDPackage`) must be added to a few places in the `PCDpass` codebase:
+Next, the PCD implementation (as represented by its `PCDPackage`) must be added to a few places in the `Zupass` codebase:
 
 - on the client: https://github.com/proofcarryingdata/zupass/blob/main/apps/passport-client/src/pcdPackages.ts
 - on the server: https://github.com/proofcarryingdata/zupass/blob/main/apps/passport-server/src/services/provingService.ts
 
-Adding the new `PCDPackage` to the appropriate places is necessary for PCDpass to be able to 'handle' the new type of PCD correctly.
+Adding the new `PCDPackage` to the appropriate places is necessary for Zupass to be able to 'handle' the new type of PCD correctly.
 
-Here are a few example pull requests that integrate a new `PCDPackage` into PCDpass are:
+Here are a few example pull requests that integrate a new `PCDPackage` into Zupass are:
 
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 - https://github.com/proofcarryingdata/zupass/pull/154
 
-The PCDpass team reserves the right to reject any proposed PCD according to our discretion.
+The Zupass team reserves the right to reject any proposed PCD according to our discretion.
 
 ### Internal vs. External
 
-Some `PCDPackage` implementations live inside of the PCDpass repository:
+Some `PCDPackage` implementations live inside of the Zupass repository:
 
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 
-Others live outside off the PCDpass repository:
+Others live outside off the Zupass repository:
 
 - https://github.com/proofcarryingdata/zupass/pull/154
 
