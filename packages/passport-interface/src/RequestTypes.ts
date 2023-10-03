@@ -231,7 +231,7 @@ export interface ZupassUserJson {
   superuserEventConfigIds: string[];
 }
 
-export type NewUserResponse = { user: ZupassUserJson; jwt: string };
+export type NewUserResponseValue = { user: ZupassUserJson; jwt: string };
 
 /**
  * Ask the Zupass server to send a confirmation email with a

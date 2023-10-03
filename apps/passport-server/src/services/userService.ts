@@ -1,6 +1,6 @@
 import {
   ConfirmEmailResponseValue,
-  NewUserResponse,
+  NewUserResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { Response } from "express";
@@ -218,7 +218,7 @@ export class UserService {
     res.status(200).json({
       jwt,
       user: fullUser
-    } satisfies NewUserResponse);
+    } satisfies NewUserResponseValue);
   }
 
   /**
@@ -271,7 +271,9 @@ export class UserService {
     logger(`[USER_SERVICE] logged in a device login user`, fullUser);
     const jwt = this.authService.createUserJWT(fullUser.email);
 
-    res.status(200).json({ jwt, user: fullUser } satisfies NewUserResponse);
+    res
+      .status(200)
+      .json({ jwt, user: fullUser } satisfies NewUserResponseValue);
   }
 
   /**

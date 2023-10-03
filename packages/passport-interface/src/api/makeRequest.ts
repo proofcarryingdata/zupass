@@ -75,6 +75,11 @@ export async function httpPostSimple<TResult>(
  */
 const throttleMs = 0;
 
+let jwt: string | undefined = undefined;
+export function setJWT(newJwt: string | undefined): void {
+  jwt = newJwt;
+}
+
 /**
  * Sends a non-blocking HTTP request to the given URL, either a POST
  * or a GET, with the given body, and converts it into a {@link APIResult}.
@@ -97,6 +102,15 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
       ...requestOptions,
       ...POST,
       body: JSON.stringify(postBody)
+    };
+  }
+
+  if (jwt != null) {
+    requestOptions = {
+      ...requestOptions,
+      headers: {
+        authorization: jwt
+      }
     };
   }
 

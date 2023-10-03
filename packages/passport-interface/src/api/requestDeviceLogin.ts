@@ -1,5 +1,5 @@
 import urlJoin from "url-join";
-import { DeviceLoginRequest, UserResponseValue } from "../RequestTypes";
+import { DeviceLoginRequest, NewUserResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -18,7 +18,7 @@ export async function requestDeviceLogin(
   return httpPostSimple(
     urlJoin(zupassServerUrl, `/account/device-login`),
     async (resText) => ({
-      value: JSON.parse(resText) as UserResponseValue,
+      value: JSON.parse(resText) as NewUserResponseValue,
       success: true
     }),
     {
@@ -29,4 +29,4 @@ export async function requestDeviceLogin(
   );
 }
 
-export type DeviceLoginResult = APIResult<UserResponseValue>;
+export type DeviceLoginResult = APIResult<NewUserResponseValue>;

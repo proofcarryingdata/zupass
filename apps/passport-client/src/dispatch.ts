@@ -5,10 +5,11 @@ import {
   FeedSubscriptionManager,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
-  NewUserResponse,
+  NewUserResponseValue,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
+  setJWT,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
@@ -276,7 +277,7 @@ async function deviceLogin(
  * Runs the first time the user logs in with their email
  */
 async function finishLogin(
-  newUserResponse: NewUserResponse,
+  newUserResponse: NewUserResponseValue,
   state: AppState,
   update: ZuUpdate
 ) {
@@ -308,6 +309,7 @@ async function finishLogin(
   setSelf(user, state, update);
   update({ jwt: newUserResponse.jwt });
   saveJWT(newUserResponse.jwt);
+  setJWT(newUserResponse.jwt);
 
   // Save PCDs to E2EE storage.
   uploadStorage();
