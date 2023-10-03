@@ -40,6 +40,7 @@
     "discord.js": "14.11.0",
     "email-validator": "^2.0.4",
     "express": "^5.0.0-beta.1",
+    "express-jwt": "^8.4.1",
     "grammy": "^1.18.1",
     "js-sha256": "^0.10.1",
     "libhoney": "^4.0.1",
