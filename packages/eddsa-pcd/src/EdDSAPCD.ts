@@ -19,7 +19,7 @@ import { EdDSACardBody } from "./CardBody";
 export type EDdSAPublicKey = [string, string];
 
 /** 
- * The globally unique type name of the EdDSAPCD.
+ * The globally unique type name of the {@link EdDSAPCD}.
  */
 export const EdDSAPCDTypeName = "eddsa-pcd";
 
@@ -47,7 +47,7 @@ export interface EdDSAPCDArgs {
   message: StringArrayArgument;
  
   /**
-   * A string that uniquely identifies a PCD. If this argument is not specified a random
+   * A string that uniquely identifies an {@link EdDSAPCD}. If this argument is not specified a random
    * id will be generated.
    */
   id: StringArgument;
@@ -77,7 +77,7 @@ export interface EdDSAPCDClaim {
  */
 export interface EdDSAPCDProof {
   /**
-   * The EdDSA signature of the message as hexadecimal string.
+   * The EdDSA signature of the message as a hexadecimal string.
    */
   signature: string;
 }
@@ -106,8 +106,8 @@ let eddsa: Eddsa;
 let poseidon: Poseidon;
 
 /** 
- * A promise designed to make sure that the EdDSA and Poseidon algorithms
- * of the `circomlib` package have been properly initialized.
+ * A promise designed to make sure that the EdDSA and the Poseidon algorithms
+ * of the `circomlibjs` package have been properly initialized.
  * It only initializes them once.
  */
 async function ensureInitialized() {
@@ -212,7 +212,7 @@ function reviver(key: any, value: any): any {
 }
 
 /**
- * Serialize an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
+ * Serializes an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
  * @param pcd The EdDSA PCD to be serialized. 
  * @returns The serialized version of the EdDSA PCD.
  */
@@ -226,7 +226,7 @@ export async function serialize(
 }
 
 /**
- * Deserialize a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
+ * Deserializes a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
  * @param serialized The serialized PCD to deserialize. 
  * @returns The deserialized version of the EdDSA PCD.
  */
