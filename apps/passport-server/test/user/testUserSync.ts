@@ -13,6 +13,8 @@ import "chai-spies";
 import "mocha";
 import { Zupass } from "../../src/types";
 
+// TODO(artwyman): Extend this to test revision and conflict handling.
+
 export async function testUserSync(application: Zupass): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();
