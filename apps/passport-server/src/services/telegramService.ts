@@ -227,11 +227,30 @@ export class TelegramService {
                 : null
             };
           });
-          const eventsWithChats = await Promise.all(eventsWithChatsRequests);
+          const eventsWithChatsSettled = await Promise.allSettled(
+            eventsWithChatsRequests
+          );
+          const eventsWithChats = eventsWithChatsSettled
+            .filter((e) => e.status == "fulfilled")
+            // @ts-expect-error value after filtering for success
+            .map((e) => e.value);
+
+          if (eventsWithChats.length === 0) {
+            return ctx.api.editMessageText(
+              userId,
+              msg.message_id,
+              `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
+              {
+                parse_mode: "HTML"
+              }
+            );
+          }
+
           let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
+
           for (const event of eventsWithChats) {
-            // @ts-expect-error chat title
-            eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat?.title}</i>\n`;
+            if (event.chat?.title)
+              eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
           }
           await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
             parse_mode: "HTML"
