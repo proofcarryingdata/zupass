@@ -89,17 +89,17 @@ const BtnSecondary = styled(BtnBase)`
   }
 `;
 
-export const LinkButton = styled(Link)`
+export const LinkButton = styled(Link)<{ $primary?: boolean }>`
   ${buttonStyle}
 
-  ${({ primary }: { primary?: boolean }) => css`
+  ${({ $primary: $primary }: { $primary?: boolean }) => css`
     color: var(--bg-dark-primary) !important;
     display: block;
     width: 100%;
     text-align: center;
     text-decoration: none;
 
-    ${!primary &&
+    ${!$primary &&
     css`
       color: #fff !important;
       background: #696969;

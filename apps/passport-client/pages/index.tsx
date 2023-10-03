@@ -1,4 +1,4 @@
-import { setJWT } from "@pcd/passport-interface";
+import { requestJWTUsingIdentity, setJWT } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -25,6 +25,7 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -47,6 +48,7 @@ import {
   loadSubscriptions,
   loadUserInvalid,
   saveIdentity,
+  saveJWT,
   saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -178,9 +180,6 @@ function RouterImpl() {
 }
 
 async function loadInitialState(): Promise<AppState> {
-  const jwt = loadJWT();
-  setJWT(jwt);
-
   let identity = loadIdentity();
 
   if (identity == null) {
@@ -199,8 +198,23 @@ async function loadInitialState(): Promise<AppState> {
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
+  let jwt = loadJWT();
+
   if (self) {
     await addDefaultSubscriptions(identity, subscriptions);
+
+    if (!jwt) {
+      const res = await requestJWTUsingIdentity(
+        appConfig.zupassServer,
+        identity
+      );
+      if (res.success) {
+        jwt = res.value.jwt;
+        saveJWT(jwt);
+      }
+    }
+
+    setJWT(jwt);
   }
 
   let modal = "" as AppState["modal"];

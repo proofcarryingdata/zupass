@@ -149,6 +149,14 @@ export type TicketError = { detailedMessage?: string } & (
   | { name: "ServerError" }
 );
 
+export interface GetTokenRequest {
+  proof: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export interface GetTokenResponseValue {
+  jwt: string;
+}
+
 /**
  * A particular 'superuser' ticket-holder can request to check in
  * another ticket that belongs to the same event.

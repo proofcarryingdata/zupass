@@ -2,10 +2,14 @@ import {
   ConfirmEmailRequest,
   CreateNewUserRequest,
   DeviceLoginRequest,
+  GetTokenRequest,
+  GetTokenResponseValue,
   SaltResponseValue,
   VerifyTokenRequest
 } from "@pcd/passport-interface";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import express, { Request, Response } from "express";
+import { fetchUserByCommitment } from "../../database/queries/users";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
@@ -184,5 +188,35 @@ export function initAccountRoutes(
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     await userService.handleGetUser(req, res);
+  });
+
+  /**
+   * Exchanges a semaphore proof of a particular user's private key for
+   * a jwt that authenticates them into Zupass.
+   */
+  app.post("/account/get-token", async (req: Request, res: Response) => {
+    const body = req.body as GetTokenRequest;
+    const proof = await SemaphoreSignaturePCDPackage.deserialize(
+      body.proof.pcd
+    );
+
+    const proofValid = await SemaphoreSignaturePCDPackage.verify(proof);
+
+    if (!proofValid) {
+      throw new PCDHTTPError(401);
+    }
+
+    const user = await fetchUserByCommitment(
+      _context.dbPool,
+      proof.claim.identityCommitment.toString()
+    );
+
+    if (!user) {
+      throw new PCDHTTPError(401);
+    }
+
+    const jwt = authService.createUserJWT(user.email, user.uuid);
+
+    res.json({ jwt } as GetTokenResponseValue);
   });
 }
