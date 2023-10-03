@@ -150,7 +150,7 @@ export type TicketError = { detailedMessage?: string } & (
 );
 
 export interface HasPasswordRequest {
-  email: boolean;
+  email: string;
 }
 
 export interface HasPasswordResultValue {

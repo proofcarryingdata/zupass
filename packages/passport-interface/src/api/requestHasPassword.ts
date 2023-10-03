@@ -13,7 +13,7 @@ export async function requestHasPassword(
   email: string
 ): Promise<RequestJWTResult> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, "/account/get-token"),
+    urlJoin(zupassServerUrl, "/account/has-password"),
     async (resText) => ({
       value: JSON.parse(resText) as HasPasswordResultValue,
       success: true
