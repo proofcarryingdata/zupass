@@ -18,16 +18,28 @@ export class AuthService {
     this.context = context;
   }
 
-  public jwtParserMiddleware = async (
+  public parseJWTMiddleware = async (
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> => {
-    if (req.method.toLowerCase() !== "OPTIONS") {
-      req.jwt = this.getJWTFromRequest(req);
-    }
+    // if (req.method.toLowerCase() !== "OPTIONS") {
+    //   req.jwt = this.getJWTFromRequest(req);
+    // }
 
     next();
+  };
+
+  public requireJWTAuthMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    if (req.jwt != null) {
+      next();
+    }
+
+    next(new Error("authorization required for this route"));
   };
 
   public createUserJWT(email: string): string {
@@ -43,7 +55,7 @@ export class AuthService {
     return token;
   }
 
-  public getJWTFromRequest(req: Request): JWTContents | null {
+  private getJWTFromRequest(req: Request): JWTContents | null {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {

@@ -57,6 +57,7 @@ export function initAccountRoutes(
    * In the case that an email *was* successfully sent, just returns a 200 OK.
    */
   app.post("/account/send-login-email", async (req: Request, res: Response) => {
+    console.log(req.body);
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );

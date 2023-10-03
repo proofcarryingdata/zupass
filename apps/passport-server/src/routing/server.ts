@@ -40,7 +40,7 @@ export async function startHttpServer(
     const app = express();
     app.use(nocache());
     app.set("etag", false);
-    app.use(globalServices.authService.jwtParserMiddleware);
+    app.use(globalServices.authService.parseJWTMiddleware);
 
     if (process.env.SUPPRESS_LOGGING !== "true") {
       app.use(morgan("tiny"));
@@ -120,7 +120,7 @@ function initAllRoutes(
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
-  initLogRoutes(app);
+  initLogRoutes(app, globalServices);
 }
 
 export function stopHttpServer(app: Zupass): Promise<void> {

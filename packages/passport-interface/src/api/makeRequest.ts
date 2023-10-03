@@ -94,27 +94,24 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   await sleep(throttleMs);
 
   let requestOptions: RequestInit = {
-    method: "GET"
+    method: "GET",
+    headers: {}
   };
 
   if (postBody != null) {
     requestOptions = {
-      ...requestOptions,
       ...POST,
       body: JSON.stringify(postBody)
     };
   }
 
-  const headers = new Headers();
-  headers.append("a", "B");
   if (jwt != null) {
-    headers.append("authorization", jwt);
+    // todo: make this only apply to zupass server routes,
+    // otherwise we leak the jwt, lol.
+    requestOptions.headers = Object.assign(requestOptions.headers ?? {}, {
+      authorization: jwt
+    });
   }
-
-  requestOptions = {
-    ...requestOptions,
-    headers
-  };
 
   try {
     // @todo - prevent logspam in the same way we prevent it
