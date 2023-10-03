@@ -15,7 +15,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 export function initAccountRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService, emailTokenService }: GlobalServices
+  { userService, emailTokenService, authService }: GlobalServices
 ): void {
   logger("[INIT] initializing account routes");
 

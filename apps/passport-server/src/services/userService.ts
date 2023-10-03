@@ -1,5 +1,6 @@
 import {
   ConfirmEmailResponseValue,
+  NewUserResponse,
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { Response } from "express";
@@ -17,6 +18,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { validateEmail } from "../util/util";
+import { AuthService } from "./authService";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
@@ -30,12 +32,14 @@ export class UserService {
   private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
+  private readonly authService: AuthService;
 
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
-    emailService: EmailService
+    emailService: EmailService,
+    authService: AuthService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
@@ -44,6 +48,7 @@ export class UserService {
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+    this.authService = authService;
   }
 
   public async getSaltByEmail(email: string): Promise<string | null> {
@@ -74,8 +79,9 @@ export class UserService {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
 
-    const newEmailToken =
-      await this.emailTokenService.saveNewTokenForEmail(email);
+    const newEmailToken = await this.emailTokenService.saveNewTokenForEmail(
+      email
+    );
 
     const existingCommitment = await fetchUserByEmail(
       this.context.dbPool,
@@ -207,7 +213,13 @@ export class UserService {
     const fullUser = await this.userToLoggedInUser(user);
 
     logger(`[USER_SERVICE] logged in a user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+
+    const jwt = this.authService.createUserJWT(fullUser.email);
+
+    res.status(200).json({
+      jwt,
+      user: fullUser
+    } satisfies NewUserResponse);
   }
 
   /**
@@ -310,12 +322,14 @@ export function startUserService(
   context: ApplicationContext,
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
-  emailService: EmailService
+  emailService: EmailService,
+  authService: AuthService
 ): UserService {
   return new UserService(
     context,
     semaphoreService,
     emailTokenService,
-    emailService
+    emailService,
+    authService
   );
 }
