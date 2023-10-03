@@ -2,9 +2,9 @@ import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  getEdDSATicketData,
   ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
-  joinPath
+  ReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -59,6 +59,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
+import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
@@ -79,16 +80,19 @@ export class IssuanceService {
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
+  private readonly multiprocessService: MultiProcessService;
 
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
+    multiprocessService: MultiProcessService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
   ) {
     this.context = context;
     this.cacheService = cacheService;
+    this.multiprocessService = multiprocessService;
     this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
@@ -510,11 +514,13 @@ export class IssuanceService {
   private async checkUserExists(
     proof: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UserRow | null> {
+    const isValid = await this.multiprocessService.verifySignaturePCD(proof);
+    // const isValid = await SemaphoreSignaturePCDPackage.verify(
+    //   await SemaphoreSignaturePCDPackage.deserialize(proof.pcd)
+    // );
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
-    const isValid = await SemaphoreSignaturePCDPackage.verify(
-      deserializedSignature
-    );
+
     if (!isValid) {
       logger(
         `can't issue PCDs for ${deserializedSignature.claim.identityCommitment} because ` +
@@ -877,7 +883,8 @@ export class IssuanceService {
 export function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
-  rollbarService: RollbarService | null
+  rollbarService: RollbarService | null,
+  multiprocessService: MultiProcessService
 ): IssuanceService | null {
   const rsaKey = loadRSAPrivateKey();
   const eddsaKey = loadEdDSAPrivateKey();
@@ -890,6 +897,7 @@ export function startIssuanceService(
   const issuanceService = new IssuanceService(
     context,
     cacheService,
+    multiprocessService,
     rollbarService,
     rsaKey,
     eddsaKey

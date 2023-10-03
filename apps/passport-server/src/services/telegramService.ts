@@ -31,12 +31,12 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
-  SessionData,
   dynamicEvents,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
+  senderIsAdmin,
+  SessionData
 } from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -595,6 +595,7 @@ export class TelegramService {
     }
 
     if (
+      // TODO: wrap in a MultiProcessService?
       (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
       eventIdMatch &&
       signerMatch

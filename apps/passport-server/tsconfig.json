@@ -3,6 +3,10 @@
   "include": ["**/*.ts", "**/*.d.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "outDir": "./build",
+    "noEmit": false,
+    "target": "ES2022",
+    "module": "commonjs",
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",

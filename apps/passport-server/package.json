@@ -4,9 +4,10 @@
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --exit-child -- src/main.ts",
-    "build": "yarn tsc --noEmit",
-    "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
+    "build": "rm -rf ./build && yarn tsc -p ./tsconfig.json",
+    "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development node build/src/main.js",
+    "dev": "yarn build && nodemon -w src -e ts --exec \"yarn build && yarn start:dev\"",
+    "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
@@ -56,7 +57,8 @@
     "rollbar": "^2.26.1",
     "superagent": "^8.0.0",
     "ts-node": "^10.9.1",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "worker-farm": "^1.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
@@ -88,6 +90,7 @@
     "mocha-steps": "^1.3.0",
     "msw": "^1.2.3",
     "node-mocks-http": "^1.12.2",
+    "nodemon": "^3.0.1",
     "pgtools": "^1.0.0",
     "telegram": "^2.18.26",
     "ts-mocha": "^10.0.0",
