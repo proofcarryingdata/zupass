@@ -101,9 +101,10 @@ export function CreatePasswordScreen() {
         <TextCenter>
           <H2>Choose a Password</H2>
           <Spacer h={24} />
-          Choose a secure, unique password. This password will be used to
-          generate an encryption key that secures your data. Save your password
-          somewhere you'll be able to find it later.
+          This password will be used to generate an encryption key that secures
+          your data. Save your password somewhere you'll be able to find it
+          later. If you skip this now, you will be asked to set a password on
+          adding your first PCD.
         </TextCenter>
         <Spacer h={24} />
 
@@ -134,7 +135,7 @@ export function CreatePasswordScreen() {
 
           <TextCenter>
             <SetUpLaterLink onClick={openSkipModal}>
-              Set up later
+              Skip for now
             </SetUpLaterLink>
           </TextCenter>
         </CenterColumn>
