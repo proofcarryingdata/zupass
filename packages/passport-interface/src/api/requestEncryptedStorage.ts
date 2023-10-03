@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
 import {
   DownloadEncryptedStorageRequest,
-  EncryptedStorageResultValue
+  DownloadEncryptedStorageResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
@@ -15,16 +15,18 @@ import { httpGetSimple } from "./makeRequest";
  */
 export async function requestEncryptedStorage(
   zupassServerUrl: string,
-  blobKey: string
+  blobKey: string,
+  knownRevision?: string
 ): Promise<EncryptedStorageResult> {
   return httpGetSimple(
     urlJoin(zupassServerUrl, "/sync/load"),
     async (resText) => ({
-      value: JSON.parse(resText) as EncryptedStorageResultValue,
+      value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
       success: true
     }),
-    { blobKey } satisfies DownloadEncryptedStorageRequest
+    { blobKey, knownRevision } satisfies DownloadEncryptedStorageRequest
   );
 }
 
-export type EncryptedStorageResult = APIResult<EncryptedStorageResultValue>;
+export type EncryptedStorageResult =
+  APIResult<DownloadEncryptedStorageResponseValue>;

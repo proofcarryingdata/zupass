@@ -96,7 +96,10 @@ export async function uploadStorage(): Promise<void> {
  * Given the encryption key in local storage, downloads the e2ee
  * encrypted storage from the server.
  */
-export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, subscriptions: FeedSubscriptionManager | null }> {
+export async function downloadStorage(): Promise<{
+  pcds: PCDCollection | null;
+  subscriptions: FeedSubscriptionManager | null;
+}> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = loadEncryptionKey();
@@ -120,8 +123,10 @@ export async function downloadStorage(): Promise<{ pcds: PCDCollection | null, s
         storageResult.value.pcds
       );
 
-      subscriptions = FeedSubscriptionManager.deserialize(new NetworkFeedApi(), storageResult.value.subscriptions);
-
+      subscriptions = FeedSubscriptionManager.deserialize(
+        new NetworkFeedApi(),
+        storageResult.value.subscriptions
+      );
     } else if (isSyncedEncryptedStorageV2(storageResult.value)) {
       pcds = await PCDCollection.deserialize(
         await getPackages(),

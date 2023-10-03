@@ -216,6 +216,7 @@ describe("database reads and writes", function () {
     }
     expect(insertedStorage.blob_key).to.eq(key);
     expect(insertedStorage.encrypted_blob).to.eq(value);
+    expect(insertedStorage.revision).to.eq("1");
 
     const updatedValue = "value2";
     expect(value).to.not.eq(updatedValue);
@@ -226,6 +227,7 @@ describe("database reads and writes", function () {
     }
     expect(updatedStorage.blob_key).to.eq(key);
     expect(updatedStorage.encrypted_blob).to.eq(updatedValue);
+    expect(updatedStorage.revision).to.eq("2");
 
     // Storing an empty string is valid, and not treated as deletion.
     const emptyValue = "";
@@ -237,6 +239,7 @@ describe("database reads and writes", function () {
     }
     expect(emptyStorage.blob_key).to.eq(key);
     expect(emptyStorage.encrypted_blob).to.eq(emptyValue);
+    expect(emptyStorage.revision).to.eq("3");
   });
 
   step("e2ee rekeying should work", async function () {
@@ -262,18 +265,28 @@ describe("database reads and writes", function () {
     }
     expect(storage1.blob_key).to.eq(key1);
     expect(storage1.encrypted_blob).to.eq(value1);
+    expect(storage1.revision).to.eq("1");
 
     const key2 = "key2";
     const value2 = "value2";
     const salt2 = "5678";
 
-    await rekeyEncryptedStorage(db, key1, key2, uuid, salt2, value2);
+    const rekeyRev = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value2
+    );
+    expect(rekeyRev).to.eq("2");
     const storage2 = await fetchEncryptedStorage(db, key2);
     if (!storage2) {
       throw new Error("expected to be able to fetch 2nd e2ee blob");
     }
     expect(storage2.blob_key).to.eq(key2);
     expect(storage2.encrypted_blob).to.eq(value2);
+    expect(storage2.revision).to.eq("2");
     const storageMissing = await fetchEncryptedStorage(db, key1);
     if (storageMissing) {
       throw new Error("expected 1st e2ee blob to be gone");

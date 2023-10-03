@@ -16,14 +16,19 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestUploadEncryptedStorage(
   zupassServerUrl: string,
   blobKey: string,
-  encryptedStorage: EncryptedPacket
+  encryptedStorage: EncryptedPacket,
+  baseRevision?: string
 ): Promise<UploadEncryptedStorageResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, `/sync/save`),
-    async () => ({ value: undefined, success: true }),
+    async (resText: string) => ({
+      value: JSON.parse(resText) as UploadEncryptedStorageResponseValue,
+      success: true
+    }),
     {
       blobKey,
-      encryptedBlob: JSON.stringify(encryptedStorage)
+      encryptedBlob: JSON.stringify(encryptedStorage),
+      baseRevision
     } satisfies UploadEncryptedStorageRequest
   );
 }

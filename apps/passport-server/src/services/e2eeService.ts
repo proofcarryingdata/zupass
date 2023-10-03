@@ -1,6 +1,7 @@
 import {
   ChangeBlobKeyRequest,
-  EncryptedStorageResultValue,
+  ChangeBlobKeyResponseValue,
+  DownloadEncryptedStorageResponseValue,
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
@@ -26,7 +27,11 @@ export class E2EEService {
     this.context = context;
   }
 
-  public async handleLoad(blobKey: string, res: Response): Promise<void> {
+  public async handleLoad(
+    blobKey: string,
+    knownRevision: string | undefined,
+    res: Response
+  ): Promise<void> {
     logger(`[E2EE] Loading ${blobKey}`);
 
     const storageModel = await fetchEncryptedStorage(
@@ -41,9 +46,14 @@ export class E2EEService {
       );
     }
 
-    const result = JSON.parse(storageModel.encrypted_blob);
-
-    res.json(result satisfies EncryptedStorageResultValue);
+    const foundRevision = storageModel.revision.toString();
+    const result: DownloadEncryptedStorageResponseValue = {
+      revision: storageModel.revision.toString()
+    };
+    if (foundRevision !== knownRevision) {
+      result.encryptedBlob = storageModel.encrypted_blob;
+    }
+    res.json(result);
   }
 
   public async handleSave(
@@ -52,13 +62,23 @@ export class E2EEService {
   ): Promise<void> {
     logger(`[E2EE] Saving ${request.blobKey}`);
 
-    await insertEncryptedStorage(
-      this.context.dbPool,
-      request.blobKey,
-      request.encryptedBlob
-    );
+    if (!request.blobKey || !request.encryptedBlob) {
+      throw new PCDHTTPError(400, "Missing request fields");
+    }
 
-    res.json(undefined satisfies UploadEncryptedStorageResponseValue);
+    let revision = undefined;
+    if (request.baseRevision === undefined) {
+      revision = await insertEncryptedStorage(
+        this.context.dbPool,
+        request.blobKey,
+        request.encryptedBlob
+      );
+    } else {
+      // TODO(artwyman): Implement Update-If-Unchanged
+      throw new Error("ART_IMPL");
+    }
+
+    res.json({ revision } satisfies UploadEncryptedStorageResponseValue);
   }
 
   public async handleChangeBlobKey(
@@ -76,7 +96,7 @@ export class E2EEService {
       !request.uuid ||
       !request.encryptedBlob
     ) {
-      throw new Error("Missing request fields");
+      throw new PCDHTTPError(400, "Missing request fields");
     }
 
     // Ensure that old blob key is correct by checking if the row exists
@@ -117,7 +137,11 @@ export class E2EEService {
       return;
     }
 
-    await rekeyEncryptedStorage(
+    if (request.baseRevision) {
+      // TODO(atwyman): Implement baseRevision
+      throw new Error("ART_IMPL");
+    }
+    const rekeyRevision = await rekeyEncryptedStorage(
       this.context.dbPool,
       request.oldBlobKey,
       request.newBlobKey,
@@ -125,6 +149,7 @@ export class E2EEService {
       request.newSalt,
       request.encryptedBlob
     );
+    res.json({ revision: rekeyRevision } as ChangeBlobKeyResponseValue);
 
     res.sendStatus(200);
   }

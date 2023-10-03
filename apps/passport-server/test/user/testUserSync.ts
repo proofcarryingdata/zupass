@@ -1,4 +1,5 @@
 import {
+  EncryptedPacket,
   passportDecrypt,
   passportEncrypt,
   PCDCrypto
@@ -43,9 +44,12 @@ export async function testUserSync(application: Zupass): Promise<void> {
   if (secondLoadResult.value == null) {
     throw new Error("expected to be able to load e2ee");
   }
+  if (!secondLoadResult.value.encryptedBlob) {
+    throw new Error("expected value from loading e2ee");
+  }
 
   const decrypted: string = await passportDecrypt(
-    secondLoadResult.value,
+    JSON.parse(secondLoadResult.value.encryptedBlob) as EncryptedPacket,
     encryptionKey
   );
 

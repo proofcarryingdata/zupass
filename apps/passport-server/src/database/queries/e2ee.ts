@@ -23,25 +23,30 @@ export async function fetchEncryptedStorage(
 }
 
 /**
- * Replaces the encrypted data stored at a particular encryption key
+ * Inserts or replaces the encrypted data stored at a particular encryption key.
+ * Revision number is updated and returned but not checked.
  */
 export async function insertEncryptedStorage(
   dbPool: Pool,
   blobKey: string,
   encryptedBlob: string
-): Promise<void> {
-  await sqlQuery(
+): Promise<string> {
+  const result = await sqlQuery(
     dbPool,
-    "insert into e2ee(blob_key, encrypted_blob) values " +
-      "($1, $2) on conflict(blob_key) do update set encrypted_blob = $2;",
+    "insert into e2ee(blob_key, encrypted_blob) values ($1, $2) " +
+      "on conflict(blob_key) do update " +
+      "set encrypted_blob = $2, revision = e2ee.revision + 1 " +
+      "returning revision;",
     [blobKey, encryptedBlob]
   );
+  return result.rows[0].revision;
 }
 
 /**
- * Transactionally deletes row at at the old blob key,
- * upserts the encrypted data stored at the new blob key,
- * and then updates the user's salt.
+ * Transactionally performs the changes required to change a user's password
+ * (key) for E2EE storage.  Deletes row at at the old blob key, upserts the
+ * encrypted data stored at the new blob key, and then updates the user's salt.
+ * The return value is the resulting revision
  */
 export async function rekeyEncryptedStorage(
   dbPool: Pool,
@@ -50,29 +55,28 @@ export async function rekeyEncryptedStorage(
   uuid: string,
   newSalt: string,
   encryptedBlob: string
-): Promise<void> {
+): Promise<string> {
   return sqlTransaction(
     dbPool,
     "rekey encrypted storage",
     async (txClient: PoolClient) => {
-      const delResult = await txClient.query(
-        "DELETE FROM e2ee WHERE blob_key = $1",
-        [oldBlobKey]
+      const updateResult = await txClient.query(
+        `UPDATE e2ee
+        SET blob_key = $2, encrypted_blob = $3, revision = revision + 1
+        WHERE blob_key = $1
+        RETURNING revision`,
+        [oldBlobKey, newBlobKey, encryptedBlob]
       );
-      if (0 === delResult.rowCount) {
+      if (0 === updateResult.rowCount) {
         throw new Error(
           "E2EE entry to be rekeyed missing.  Incorrect password or race?"
         );
       }
-      await txClient.query(
-        `INSERT INTO e2ee(blob_key, encrypted_blob) VALUES
-        ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
-        [newBlobKey, encryptedBlob]
-      );
       await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
         uuid,
         newSalt
       ]);
+      return updateResult.rows[0].revision;
     }
   );
 }
