@@ -290,17 +290,17 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
 
   await addDefaultSubscriptions(identity, state.subscriptions);
 
+  // Save to local storage.
+  setSelf(user, state, update);
+
+  // Save PCDs to E2EE storage.
+  await uploadStorage();
+
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
     window.location.hash = "#/";
   }
-
-  // Save to local storage.
-  setSelf(user, state, update);
-
-  // Save PCDs to E2EE storage.
-  uploadStorage();
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
