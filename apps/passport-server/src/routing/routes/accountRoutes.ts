@@ -23,12 +23,6 @@ export function initAccountRoutes(
 ): void {
   logger("[INIT] initializing account routes");
 
-  app.get("/account/has-password", async (req: Request, res: Response) => {
-    const email = normalizeEmail(checkQueryParam(req, "email"));
-    const salt = await userService.getSaltByEmail(email);
-    res.json({ hasPassword: salt != null });
-  });
-
   /**
    * Gets the password salt for a given email address.
    *
@@ -40,11 +34,6 @@ export function initAccountRoutes(
    */
   app.get("/account/salt", async (req: Request, res: Response) => {
     const email = normalizeEmail(checkQueryParam(req, "email"));
-
-    if (!req.jwt || req.jwt.data.email !== email) {
-      throw new PCDHTTPError(401);
-    }
-
     const salt = await userService.getSaltByEmail(email);
     res.send(salt satisfies SaltResponseValue);
   });
