@@ -34,6 +34,11 @@ export function initAccountRoutes(
    */
   app.get("/account/salt", async (req: Request, res: Response) => {
     const email = normalizeEmail(checkQueryParam(req, "email"));
+
+    if (!req.jwt || req.jwt.data.email !== email) {
+      throw new PCDHTTPError(401);
+    }
+
     const salt = await userService.getSaltByEmail(email);
     res.send(salt satisfies SaltResponseValue);
   });
