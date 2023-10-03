@@ -4,6 +4,7 @@ import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import { AuthService } from "./services/authService";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -43,6 +44,7 @@ export interface GlobalServices {
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
   persistentCacheService: PersistentCacheService;
+  authService: AuthService;
 }
 
 export interface Zupass {

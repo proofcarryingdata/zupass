@@ -1,3 +1,4 @@
+import { startAuthService } from "./services/authService";
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
@@ -23,6 +24,7 @@ export async function startServices(
   await startTelemetry(context);
   instrumentPCDs();
 
+  const authService = startAuthService();
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
@@ -72,7 +74,8 @@ export async function startServices(
     issuanceService,
     discordService,
     telegramService,
-    persistentCacheService
+    persistentCacheService,
+    authService
   };
   return services;
 }
