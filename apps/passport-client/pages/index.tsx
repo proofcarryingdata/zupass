@@ -178,6 +178,9 @@ function RouterImpl() {
 }
 
 async function loadInitialState(): Promise<AppState> {
+  const jwt = loadJWT();
+  setJWT(jwt);
+
   let identity = loadIdentity();
 
   if (identity == null) {
@@ -189,8 +192,6 @@ async function loadInitialState(): Promise<AppState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
-  const jwt = loadJWT();
-  setJWT(jwt);
 
   const userInvalid = loadUserInvalid();
   const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
