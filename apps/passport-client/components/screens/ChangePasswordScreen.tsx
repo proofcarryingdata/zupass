@@ -110,7 +110,7 @@ export function ChangePasswordScreen() {
         <Spacer h={24} />
         You've changed your password successfully.
         <Spacer h={24} />
-        <LinkButton to={"/"} primary={true}>
+        <LinkButton to={"/"} $primary={true}>
           Done
         </LinkButton>
       </TextCenter>
