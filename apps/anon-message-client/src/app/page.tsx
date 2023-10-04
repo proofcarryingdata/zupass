@@ -63,7 +63,6 @@ function isLocalServer(): boolean {
   );
 }
 
-
 function requestProof(message: string) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
