@@ -503,7 +503,7 @@ export class TelegramService {
       genericProveScreen: true,
       title: "ZK Ticket Proof",
       description:
-        "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
+        "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
     });
     return proofUrl;
   }

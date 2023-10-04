@@ -68,7 +68,7 @@ function requestProof(message: string) {
     genericProveScreen: true,
     title: "ZK-EdDSA Ticket Request",
     description:
-      "Generate a ZK proof that you have a ticket for the research workshop! Select your ticket from the dropdown below."
+      "Generate a ZK proof that you have a ticket for a conference event! Select your ticket from the dropdown below."
   });
 
   window.location.href = proofUrl;
