@@ -5,7 +5,7 @@ import {
   SubscriptionPermissionError
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { matchActionToPermission, PCDPermission } from "@pcd/pcd-collection";
+import { PCDPermission, matchActionToPermission } from "@pcd/pcd-collection";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
@@ -184,7 +184,6 @@ function PermissionError({
       {!checkingPermissions && newPermissions.length > 0 && (
         <PermissionUpdate
           subscription={subscription}
-          subscriptions={subscriptions}
           newPermissions={newPermissions}
         />
       )}
@@ -213,30 +212,24 @@ function PermissionError({
  * complete updated permissions list and ask them to approve it.
  */
 function PermissionUpdate({
-  subscriptions,
   subscription,
   newPermissions
 }: {
-  subscriptions: FeedSubscriptionManager;
   subscription: Subscription;
   newPermissions: PCDPermission[];
 }) {
   const [outcome, setOutcome] = useState<"fail" | "success" | "">("");
+  const dispatch = useDispatch();
 
   const onUpdateClick = useCallback(async () => {
     try {
-      subscriptions.updateFeedPermissionsForSubscription(
-        subscription.id,
-        newPermissions
-      );
-      subscriptions.resetError(subscription.id);
+      dispatch({ type: "update-subscription-permissions", subscriptionId: subscription.id, permissions: newPermissions });
       setOutcome("success");
     } catch (e) {
       setOutcome("fail");
     }
-  }, [newPermissions, subscription.id, subscriptions]);
+  }, [newPermissions, subscription.id, dispatch]);
 
-  const dispatch = useDispatch();
 
   const finish = useCallback(() => {
     dispatch({ type: "set-modal", modal: "" });
