@@ -16,7 +16,7 @@ function getMessageWatermark(message: string): bigint {
   return BigInt("0x" + hashed);
 }
 
- enum PCDRequestType {
+enum PCDRequestType {
   Get = "Get",
   GetWithoutProving = "GetWithoutProving",
   Add = "Add",
@@ -40,6 +40,29 @@ function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/prove?request=${encReq}`;
 }
+
+const ALLOWED_EVENTS = [
+  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
+  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  {
+    eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
+    name: "ProgCrypto (Internal Test)"
+  },
+  {
+    eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
+    name: "AW (Internal Test)"
+  }
+  // Add this value and set the value field of validEventIds in generateProofUrl
+  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
+];
+
+function isLocalServer(): boolean {
+  return (
+    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
+    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+  );
+}
+
 
 function requestProof(message: string) {
   const watermark = getMessageWatermark(message).toString();
@@ -72,7 +95,10 @@ function requestProof(message: string) {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: undefined,
+      // For local development, we do not validate eventIds
+      // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
+      // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
+      value: isLocalServer() ? undefined : ALLOWED_EVENTS.map((e) => e.eventId),
       userProvided: false
     },
     watermark: {
