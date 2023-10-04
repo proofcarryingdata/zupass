@@ -102,7 +102,12 @@ import {
 } from "./semaphore/checkSemaphore";
 import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLogin } from "./user/testLoginPCDPass";
-import { testUserSync } from "./user/testUserSync";
+import {
+  testUserSyncKeyChangeNoRev,
+  testUserSyncKeyChangeWithRev,
+  testUserSyncNoRev,
+  testUserSyncWithRev
+} from "./user/testUserSync";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
@@ -1644,8 +1649,35 @@ describe("devconnect functionality", function () {
   );
 
   step("user should be able to sync end to end encryption", async function () {
-    await testUserSync(application);
+    await testUserSyncNoRev(application);
   });
+
+  step(
+    "user should be able to avoid sync conflicts in end to end encryption",
+    async function () {
+      await testUserSyncWithRev(application);
+    }
+  );
+
+  step(
+    "user should be able to change their synced storage key",
+    async function () {
+      if (!residentUser) {
+        throw new Error("expected user");
+      }
+      await testUserSyncKeyChangeNoRev(application, residentUser);
+    }
+  );
+
+  step(
+    "user should be able to avoid conflicts changing their synced storage key",
+    async function () {
+      if (!residentUser) {
+        throw new Error("expected user");
+      }
+      await testUserSyncKeyChangeWithRev(application, residentUser);
+    }
+  );
 
   step("should have issuance service running", async function () {
     await expectIssuanceServiceToBeRunning(application);

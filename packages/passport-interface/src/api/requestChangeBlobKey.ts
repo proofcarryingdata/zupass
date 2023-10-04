@@ -22,23 +22,50 @@ export async function requestChangeBlobKey(
   newBlobKey: string,
   uuid: string,
   newSalt: string,
-  encryptedStorage: EncryptedPacket
+  encryptedStorage: EncryptedPacket,
+  baseRevision?: string
 ): Promise<ChangeBlobKeyResult> {
-  return httpPost(
+  return httpPost<ChangeBlobKeyResult>(
     urlJoin(zupassServerUrl, `/sync/changeBlobKey`),
     {
-      onValue: async (resText) => ({
+      onValue: async (resText: string) => ({
         value: JSON.parse(resText) as ChangeBlobKeyResponseValue,
         success: true
       }),
-      onError: async (resText) => JSON.parse(resText)
+      onError: async (resText: string) => {
+        // TODO(atwyman): Clean up this inconsistent client/server error handling pattern.
+        const res = JSON.parse(resText);
+        if (res.error?.name) {
+          return {
+            error: res.error satisfies ChangeBlobKeyError,
+            success: false
+          };
+        } else if (res.error?.detailedMessage) {
+          return {
+            error: {
+              ...res.error,
+              name: "ServerError"
+            },
+            success: false
+          };
+        } else {
+          return {
+            error: {
+              name: "ServerError",
+              detailedMessage: resText
+            },
+            success: false
+          };
+        }
+      }
     },
     {
       oldBlobKey,
       newBlobKey,
       newSalt,
       encryptedBlob: JSON.stringify(encryptedStorage),
-      uuid
+      uuid,
+      baseRevision
     } satisfies ChangeBlobKeyRequest
   );
 }

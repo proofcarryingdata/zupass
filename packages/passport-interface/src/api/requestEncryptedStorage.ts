@@ -3,8 +3,8 @@ import {
   DownloadEncryptedStorageRequest,
   DownloadEncryptedStorageResponseValue
 } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { APIResult, ErrorWithReason } from "./apiResult";
+import { httpGet } from "./makeRequest";
 
 /**
  * Downloads, but does not decrypt, a user's end-to-end encrypted backup
@@ -18,15 +18,26 @@ export async function requestEncryptedStorage(
   blobKey: string,
   knownRevision?: string
 ): Promise<EncryptedStorageResult> {
-  return httpGetSimple(
+  return httpGet<EncryptedStorageResult>(
     urlJoin(zupassServerUrl, "/sync/load"),
-    async (resText) => ({
-      value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
-      success: true
-    }),
+    {
+      onValue: async (resText) => ({
+        value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
+        success: true
+      }),
+      onError: async (resText: string, statusCode: number | undefined) => ({
+        error: {
+          reason: statusCode === 404 ? "notfound" : undefined,
+          errText: resText
+        },
+        success: false
+      })
+    },
     { blobKey, knownRevision } satisfies DownloadEncryptedStorageRequest
   );
 }
 
-export type EncryptedStorageResult =
-  APIResult<DownloadEncryptedStorageResponseValue>;
+export type EncryptedStorageResult = APIResult<
+  DownloadEncryptedStorageResponseValue,
+  ErrorWithReason<"notfound" | undefined>
+>;

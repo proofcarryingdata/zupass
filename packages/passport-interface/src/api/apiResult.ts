@@ -39,3 +39,12 @@ export type ResultMapper<T extends APIResult<unknown, unknown>> = {
   onValue: GetResultValue<T>;
   onError: GetError<T>;
 };
+
+/**
+ * Convenience type for errors which have a reason interpreted by the API
+ * layer, as well as error text.
+ */
+export interface ErrorWithReason<TReason> {
+  reason: TReason;
+  errText: string;
+}

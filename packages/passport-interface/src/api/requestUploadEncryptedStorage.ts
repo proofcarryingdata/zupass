@@ -4,8 +4,8 @@ import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { APIResult, ErrorWithReason } from "./apiResult";
+import { httpPost } from "./makeRequest";
 
 /**
  * Asks to upload an e2ee encrypted blob to the Zupass server. The server
@@ -19,12 +19,26 @@ export async function requestUploadEncryptedStorage(
   encryptedStorage: EncryptedPacket,
   baseRevision?: string
 ): Promise<UploadEncryptedStorageResult> {
-  return httpPostSimple(
+  return httpPost<UploadEncryptedStorageResult>(
     urlJoin(zupassServerUrl, `/sync/save`),
-    async (resText: string) => ({
-      value: JSON.parse(resText) as UploadEncryptedStorageResponseValue,
-      success: true
-    }),
+    {
+      onValue: async (resText: string) => ({
+        value: JSON.parse(resText) as UploadEncryptedStorageResponseValue,
+        success: true
+      }),
+      onError: async (resText: string, statusCode: number | undefined) => ({
+        error: {
+          reason:
+            statusCode === 404
+              ? "notfound"
+              : statusCode === 409
+              ? "conflict"
+              : undefined,
+          errText: resText
+        },
+        success: false
+      })
+    },
     {
       blobKey,
       encryptedBlob: JSON.stringify(encryptedStorage),
@@ -33,5 +47,7 @@ export async function requestUploadEncryptedStorage(
   );
 }
 
-export type UploadEncryptedStorageResult =
-  APIResult<UploadEncryptedStorageResponseValue>;
+export type UploadEncryptedStorageResult = APIResult<
+  UploadEncryptedStorageResponseValue,
+  ErrorWithReason<"notfound" | "conflict" | undefined>
+>;

@@ -130,15 +130,12 @@ export class E2EEService {
           error: {
             name: "Conflict",
             detailedMessage: `Can't rekey e2ee due to conflict: expected 
-              revision ${baseRevision}, found ${updateResult.revision}`,
-            success: false
+              revision ${baseRevision}, found ${updateResult.revision}`
           }
         });
         return undefined;
       case "missing":
-        res
-          .status(401)
-          .json({ error: { name: "PasswordIncorrect" }, success: false });
+        res.status(401).json({ error: { name: "PasswordIncorrect" } });
         return undefined;
     }
   }
@@ -168,8 +165,7 @@ export class E2EEService {
       res.status(404).json({
         error: {
           name: "UserNotFound",
-          detailedMessage: "User with this uuid was not found",
-          success: false
+          detailedMessage: "User with this uuid was not found"
         }
       });
       return;
@@ -180,8 +176,7 @@ export class E2EEService {
       res.status(400).json({
         error: {
           name: "RequiresNewSalt",
-          detailedMessage: "Updated salt must be different than existing salt",
-          success: false
+          detailedMessage: "Updated salt must be different than existing salt"
         }
       });
       return;
