@@ -24,6 +24,7 @@ export interface AppState {
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
     | { modalType: "confirm-setup-later"; onConfirm: () => void }
+    | { modalType: "require-add-password" }
     | { modalType: "none" };
 
   // User metadata.

@@ -11,6 +11,7 @@ import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
 import { UpgradeAccountModal } from "./UpgradeAccountModal";
@@ -56,7 +57,8 @@ function isModalDismissable(modal: AppState["modal"]) {
     "invalid-participant",
     "changed-password",
     "another-device-changed-password",
-    "upgrade-account-modal"
+    "upgrade-account-modal",
+    "require-add-password"
   ].includes(modal.modalType);
 }
 
@@ -78,6 +80,8 @@ function getModalBody(modal: AppState["modal"]) {
       return <ConfirmSkipSetupModal onConfirm={modal.onConfirm} />;
     case "upgrade-account-modal":
       return <UpgradeAccountModal />;
+    case "require-add-password":
+      return <RequireAddPasswordModal />;
     case "none":
       return null;
     default:

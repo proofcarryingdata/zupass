@@ -42,6 +42,7 @@ export async function insertEncryptedStorage(
 /**
  * Transactionally deletes row at at the old blob key,
  * upserts the encrypted data stored at the new blob key,
+ * removes the server-saved encryption key if it exists,
  * and then updates the user's salt.
  */
 // TODO: Add retry logic for this query
@@ -64,10 +65,10 @@ export async function updateEncryptedStorage(
       ($1, $2) ON CONFLICT(blob_key) DO UPDATE SET encrypted_blob = $1`,
       [newBlobKey, encryptedBlob]
     );
-    await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
-      uuid,
-      newSalt
-    ]);
+    await txClient.query(
+      "UPDATE users SET salt = $2, encryption_key = NULL WHERE uuid = $1",
+      [uuid, newSalt]
+    );
     await txClient.query("COMMIT");
   } catch (queryError) {
     try {

@@ -482,6 +482,7 @@ async function loadFromSync(
   } else if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
+    storage.self.encryption_key == null &&
     storage.self.salt == null
   ) {
     console.log("Asking existing user to set a password");

@@ -11,6 +11,9 @@ export interface User {
   /** Salt used to secure user's password */
   salt: string | null;
 
+  /** Encryption key, if stored on server */
+  encryption_key: string | null;
+
   /** Devconnect-specific user metadata */
   superuserEventConfigIds?: string[];
 }
