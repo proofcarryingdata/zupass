@@ -56,7 +56,7 @@ const ALLOWED_EVENTS = [
   // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
 ];
 
-export function isLocalServer(): boolean {
+function isLocalServer(): boolean {
   return (
     process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
     process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
