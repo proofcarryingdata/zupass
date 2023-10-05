@@ -112,7 +112,7 @@ describe("telegram bot functionality", function () {
   step("should be able to record a verified user", async function () {
     // Insert a dummy Telegram user and chat as verified
     expect(
-      await insertTelegramVerification(db, dummyUserId, dummyChatId)
+      await insertTelegramVerification(db, dummyUserId, dummyChatId, "0x123")
     ).to.eq(1);
     // Check that the user is verified for access to the chat
     expect(await fetchTelegramVerificationStatus(db, dummyUserId, dummyChatId))
