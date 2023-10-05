@@ -65,7 +65,7 @@ export async function testUserSyncNoRev(application: Zupass): Promise<void> {
     encryptionKey
   );
   expect(initialLoadResult.success).to.eq(false);
-  expect(initialLoadResult.error?.reason).to.eq("notfound");
+  expect(initialLoadResult.error?.name).to.eq("NotFound");
 
   // Create storage
   const uploadResult1 = await requestUploadEncryptedStorage(
@@ -128,9 +128,9 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
     "0"
   );
   expect(initialLoadResult.success).to.eq(false);
-  expect(initialLoadResult.error?.reason).to.eq("notfound");
+  expect(initialLoadResult.error?.name).to.eq("NotFound");
 
-  // Attempting update with base rev will result in notfound, not a conflict.
+  // Attempting update with base rev will result in NotFound, not a conflict.
   const notfoundUploadResult = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -139,14 +139,14 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
   );
   expect(notfoundUploadResult.value).to.eq(undefined);
   expect(notfoundUploadResult.success).to.eq(false);
-  expect(notfoundUploadResult.error?.reason).to.eq("notfound");
+  expect(notfoundUploadResult.error?.name).to.eq("NotFound");
 
   // Create storage with no base rev (required for first write)
   const uploadResult1 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
     encryptedData1,
-    undefined /* baseRevision */
+    undefined /* knownRevision */
   );
   expect(uploadResult1.error).to.eq(undefined);
   expect(uploadResult1.success).to.eq(true);
@@ -211,7 +211,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
   );
   expect(conflictResult1.success).to.eq(false);
   expect(conflictResult1.value).to.be.undefined;
-  expect(conflictResult1.error?.reason).to.eq("conflict");
+  expect(conflictResult1.error?.name).to.eq("Conflict");
 
   await fetchAndCheckStorage(application, encryptionKey, rev2, plaintextData2);
 
@@ -341,7 +341,7 @@ export async function testUserSyncKeyChangeNoRev(
     encryptionKey1
   );
   expect(oldKeyLoadResult.success).to.eq(false);
-  expect(oldKeyLoadResult.error?.reason).to.eq("notfound");
+  expect(oldKeyLoadResult.error?.name).to.eq("NotFound");
 }
 
 export async function testUserSyncKeyChangeWithRev(
@@ -493,5 +493,5 @@ export async function testUserSyncKeyChangeWithRev(
     encryptionKey1
   );
   expect(oldKeyLoadResult.success).to.eq(false);
-  expect(oldKeyLoadResult.error?.reason).to.eq("notfound");
+  expect(oldKeyLoadResult.error?.name).to.eq("NotFound");
 }

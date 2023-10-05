@@ -5,7 +5,7 @@ import {
   ChangeBlobKeyRequest,
   ChangeBlobKeyResponseValue
 } from "../RequestTypes";
-import { APIResult } from "./apiResult";
+import { APIResult, onNamedAPIError } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
@@ -32,32 +32,7 @@ export async function requestChangeBlobKey(
         value: JSON.parse(resText) as ChangeBlobKeyResponseValue,
         success: true
       }),
-      onError: async (resText: string) => {
-        // TODO(atwyman): Clean up this inconsistent client/server error handling pattern.
-        const res = JSON.parse(resText);
-        if (res.error?.name) {
-          return {
-            error: res.error satisfies ChangeBlobKeyError,
-            success: false
-          };
-        } else if (res.error?.detailedMessage) {
-          return {
-            error: {
-              ...res.error,
-              name: "ServerError"
-            },
-            success: false
-          };
-        } else {
-          return {
-            error: {
-              name: "ServerError",
-              detailedMessage: resText
-            },
-            success: false
-          };
-        }
-      }
+      onError: onNamedAPIError
     },
     {
       oldBlobKey,

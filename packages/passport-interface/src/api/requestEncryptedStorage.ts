@@ -3,7 +3,7 @@ import {
   DownloadEncryptedStorageRequest,
   DownloadEncryptedStorageResponseValue
 } from "../RequestTypes";
-import { APIResult, ErrorWithReason } from "./apiResult";
+import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult";
 import { httpGet } from "./makeRequest";
 
 /**
@@ -25,13 +25,7 @@ export async function requestEncryptedStorage(
         value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
         success: true
       }),
-      onError: async (resText: string, statusCode: number | undefined) => ({
-        error: {
-          reason: statusCode === 404 ? "notfound" : undefined,
-          errText: resText
-        },
-        success: false
-      })
+      onError: onNamedAPIError
     },
     { blobKey, knownRevision } satisfies DownloadEncryptedStorageRequest
   );
@@ -39,5 +33,5 @@ export async function requestEncryptedStorage(
 
 export type EncryptedStorageResult = APIResult<
   DownloadEncryptedStorageResponseValue,
-  ErrorWithReason<"notfound" | undefined>
+  NamedAPIError
 >;

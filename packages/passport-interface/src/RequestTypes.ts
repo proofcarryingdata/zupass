@@ -4,6 +4,7 @@ import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
+import { NamedAPIError } from "./api/apiResult";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -177,15 +178,13 @@ export interface ChangeBlobKeyResponseValue {
 }
 
 /**
- * A {@link ChangeBlobKeyRequest} can fail for a number of reasons.
+ * A {@link ChangeBlobKeyRequest} can fail with a few non-standard named errors:
+ * PasswordIncorrect if there is no blob for the given key
+ * UserNotFound if the user does not exist
+ * RequiresNewSalt if the given salt is the same as the old salt
+ * Conflict if knownRevision is specified and doesn't match
  */
-export type ChangeBlobKeyError = { detailedMessage?: string } & (
-  | { name: "PasswordIncorrect" }
-  | { name: "UserNotFound" }
-  | { name: "RequiresNewSalt" }
-  | { name: "Conflict" }
-  | { name: "ServerError" }
-);
+export type ChangeBlobKeyError = NamedAPIError;
 
 /**
  * Ask the server to check whether this ticket is still eligible to be checked in.

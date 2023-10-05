@@ -4,7 +4,7 @@ import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "../RequestTypes";
-import { APIResult, ErrorWithReason } from "./apiResult";
+import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
@@ -26,18 +26,7 @@ export async function requestUploadEncryptedStorage(
         value: JSON.parse(resText) as UploadEncryptedStorageResponseValue,
         success: true
       }),
-      onError: async (resText: string, statusCode: number | undefined) => ({
-        error: {
-          reason:
-            statusCode === 404
-              ? "notfound"
-              : statusCode === 409
-              ? "conflict"
-              : undefined,
-          errText: resText
-        },
-        success: false
-      })
+      onError: onNamedAPIError
     },
     {
       blobKey,
@@ -49,5 +38,5 @@ export async function requestUploadEncryptedStorage(
 
 export type UploadEncryptedStorageResult = APIResult<
   UploadEncryptedStorageResponseValue,
-  ErrorWithReason<"notfound" | "conflict" | undefined>
+  NamedAPIError
 >;
