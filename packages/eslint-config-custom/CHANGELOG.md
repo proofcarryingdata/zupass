@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.7.1
+
+### Patch Changes
+
+- new package versions.
+
 ## 0.7.0
 
 ### Minor Changes
