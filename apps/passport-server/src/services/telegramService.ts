@@ -215,7 +215,7 @@ export class TelegramService {
           await ctx.reply(
             `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!\n\nYou must have one of the following tickets in your Zupass account to join successfully.\n\nSee you soon 😽`
           );
-          const msg = await ctx.reply(`Loading tickets and events..`);
+          const msg = await ctx.reply(`Loading tickets and events...`);
           const events = await fetchLinkedPretixAndTelegramEvents(
             this.context.dbPool
           );
@@ -694,10 +694,16 @@ export class TelegramService {
       );
     }
 
-    const { eventId } = pcd.claim.partialTicket;
+    const { eventId, attendeeSemaphoreId } = pcd.claim.partialTicket;
     if (!eventId) {
       throw new Error(
         `User ${telegramUserId} returned a ZK-ticket with no eventId.`
+      );
+    }
+
+    if (!attendeeSemaphoreId) {
+      throw new Error(
+        `User ${telegramUserId} did not reveal their semaphore id`
       );
     }
 
@@ -730,7 +736,8 @@ export class TelegramService {
     await insertTelegramVerification(
       this.context.dbPool,
       telegramUserId,
-      event.telegram_chat_id
+      event.telegram_chat_id,
+      attendeeSemaphoreId
     );
 
     // Send invite link
