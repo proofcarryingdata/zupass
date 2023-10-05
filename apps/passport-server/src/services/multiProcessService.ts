@@ -22,6 +22,8 @@ const WORKER_MODULE_PATH = path.join(
   "build/src/multiprocess/worker.js"
 );
 
+const DEFAULT_WORKER_QUANTITY = os.cpus().length;
+
 /**
  * This class contains one function per type of task that can be
  * offloaded to a background process. Under the hood, MultiProcessService
@@ -37,10 +39,24 @@ export class MultiProcessService {
   private workers: WorkerFarm;
 
   public constructor() {
+    const workerQuantityFromEnvironment = parseInt(
+      process.env.WORKER_QUANTITY ?? "",
+      10
+    );
+    const workerQuantity = isNaN(workerQuantityFromEnvironment)
+      ? DEFAULT_WORKER_QUANTITY
+      : workerQuantityFromEnvironment;
+
+    logger(
+      `[MULTIPROCESS] process.env.WORKER_QUANTITY:`,
+      process.env.WORKER_QUANTITY
+    );
+    logger(`[MULTIPROCESS] starting ${workerQuantity} workers`);
+
     this.workers = makeFarm(
       {
         autoStart: true,
-        maxConcurrentWorkers: os.cpus().length,
+        maxConcurrentWorkers: workerQuantity,
         maxRetries: 1
       },
       WORKER_MODULE_PATH
