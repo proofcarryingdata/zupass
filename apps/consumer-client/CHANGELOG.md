@@ -1,5 +1,23 @@
 # consumer-client
 
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eddsa-pcd@0.2.1
+  - @pcd/eddsa-ticket-pcd@0.2.1
+  - @pcd/ethereum-group-pcd@0.1.1
+  - @pcd/ethereum-ownership-pcd@0.7.1
+  - @pcd/passport-interface@0.7.1
+  - @pcd/pcd-types@0.7.1
+  - @pcd/semaphore-group-pcd@0.7.1
+  - @pcd/semaphore-identity-pcd@0.7.1
+  - @pcd/semaphore-signature-pcd@0.7.1
+  - @pcd/util@0.1.1
+  - @pcd/webauthn-pcd@0.7.1
+  - @pcd/zk-eddsa-event-ticket-pcd@0.1.1
+
 ## 0.0.20
 
 Removed deprecated @pcd/zk-eddsa-ticket-pcd.

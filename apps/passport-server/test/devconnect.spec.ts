@@ -6,21 +6,21 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  checkinTicket,
   ISSUANCE_STRING,
-  pollFeed,
   PollFeedResponseValue,
-  requestServerEdDSAPublicKey,
-  requestServerRSAPublicKey,
   User,
   ZupassFeedIds,
-  ZuzaluUserRole
+  ZuzaluUserRole,
+  checkinTicket,
+  pollFeed,
+  requestServerEdDSAPublicKey,
+  requestServerRSAPublicKey
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
-  isReplaceInFolderAction,
   PCDActionType,
-  ReplaceInFolderAction
+  ReplaceInFolderAction,
+  isReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
@@ -1665,16 +1665,28 @@ describe("devconnect functionality", function () {
         throw new Error("expected to be able to get a feed response");
       }
 
-      expect(response.value?.actions?.length).to.eq(3);
-      const action = response.value?.actions?.[2] as ReplaceInFolderAction;
+      expect(response.value?.actions?.length).to.eq(4);
 
-      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-      expect(action.folder).to.eq("Devconnect/Event A");
+      // First action for a subfolder is to clear it
+      const clearAction = response.value?.actions?.[2] as ReplaceInFolderAction;
 
-      expect(Array.isArray(action.pcds)).to.eq(true);
-      expect(action.pcds.length).to.eq(6);
+      expect(clearAction.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(clearAction.folder).to.eq("Devconnect/Event A");
 
-      const ticketPCD = action.pcds[0];
+      expect(Array.isArray(clearAction.pcds)).to.eq(true);
+      expect(clearAction.pcds.length).to.eq(0);
+
+      // Second action is to populate it
+      const populateAction = response.value
+        ?.actions?.[3] as ReplaceInFolderAction;
+
+      expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(populateAction.folder).to.eq("Devconnect/Event A");
+
+      expect(Array.isArray(populateAction.pcds)).to.eq(true);
+      expect(populateAction.pcds.length).to.eq(6);
+
+      const ticketPCD = populateAction.pcds[0];
 
       expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
 
@@ -1752,9 +1764,9 @@ describe("devconnect functionality", function () {
         ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
+      expect(responseBody.actions.length).to.eq(4);
 
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      const devconnectAction = responseBody.actions[3] as ReplaceInFolderAction;
       expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
       expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
@@ -1799,8 +1811,8 @@ describe("devconnect functionality", function () {
         ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      expect(responseBody.actions.length).to.eq(4);
+      const devconnectAction = responseBody.actions[3] as ReplaceInFolderAction;
       expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
       expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
@@ -1846,7 +1858,7 @@ describe("devconnect functionality", function () {
         ZupassFeedIds.Devconnect
       );
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
-      const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+      const action = issueResponseBody.actions[3] as ReplaceInFolderAction;
 
       const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
       ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);

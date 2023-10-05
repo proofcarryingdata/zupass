@@ -12,7 +12,7 @@ import {
   User
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
-import { PCDCollection } from "@pcd/pcd-collection";
+import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -97,7 +97,12 @@ export type Action =
       feed: Feed;
       credential: SerializedPCD;
     }
-  | { type: "remove-subscription"; subscriptionId: string };
+  | { type: "remove-subscription"; subscriptionId: string }
+  | {
+      type: "update-subscription-permissions";
+      subscriptionId: string;
+      permissions: PCDPermission[];
+    };
 
 export type StateContextState = {
   getState: GetState;
@@ -165,6 +170,13 @@ export async function dispatch(
       );
     case "remove-subscription":
       return removeSubscription(state, update, action.subscriptionId);
+    case "update-subscription-permissions":
+      return updateSubscriptionPermissions(
+        state,
+        update,
+        action.subscriptionId,
+        action.permissions
+      );
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -667,6 +679,23 @@ async function removeSubscription(
   subscriptionId: string
 ) {
   state.subscriptions.unsubscribe(subscriptionId);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions
+  });
+}
+
+async function updateSubscriptionPermissions(
+  state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string,
+  permisisons: PCDPermission[]
+) {
+  state.subscriptions.updateFeedPermissionsForSubscription(
+    subscriptionId,
+    permisisons
+  );
+  state.subscriptions.resetError(subscriptionId);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions
