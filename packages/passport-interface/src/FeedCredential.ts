@@ -1,5 +1,9 @@
 import { EmailPCD } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 
 const TIMESTAMP_RESOLUTION = 1000 * 60 * 60;
 
@@ -37,7 +41,39 @@ export function createFeedCredentialPayload(
  * Validates a feed credential timestamp. Ensures that the timestamp was
  * created in the same TIMESTAMP_RESOLUTION period that we are currently in.
  */
-export function validateFeedCredentialTimestamp(timestamp: number): boolean {
+function validateFeedCredentialTimestamp(timestamp: number): boolean {
   const now = Date.now();
   return timestamp === now - (now % TIMESTAMP_RESOLUTION);
+}
+
+async function deserializeAndVerify(
+  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+): Promise<boolean> {
+  const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
+
+  return await SemaphoreSignaturePCDPackage.verify(pcd);
+}
+
+export async function verifyFeedCredential(
+  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+  pcdVerifier?: (pcd: SerializedPCD<SemaphoreSignaturePCD>) => Promise<boolean>
+) {
+  if (pcdVerifier === undefined) {
+    pcdVerifier = deserializeAndVerify;
+  }
+
+  if (!(await pcdVerifier(serializedPCD))) {
+    throw new Error(`Could not verify SemaphoreSignaturePCD`);
+  }
+
+  // pcdVerifier doesn't actually give us the deserialized PCD back
+  const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
+
+  const payload: FeedCredentialPayload = JSON.parse(pcd.claim.signedMessage);
+
+  if (!validateFeedCredentialTimestamp(payload.timestamp)) {
+    throw new Error("Credential timestamp out of bounds");
+  }
+
+  return { pcd, payload };
 }

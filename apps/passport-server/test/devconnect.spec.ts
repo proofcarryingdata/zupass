@@ -6,12 +6,12 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  ISSUANCE_STRING,
   PollFeedResponseValue,
   User,
   ZupassFeedIds,
   ZuzaluUserRole,
   checkinTicket,
+  createFeedCredentialPayload,
   pollFeed,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
@@ -1720,10 +1720,11 @@ describe("devconnect functionality", function () {
   step(
     "user should be able to be issued some PCDs from the server",
     async function () {
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
 
@@ -1768,16 +1769,17 @@ describe("devconnect functionality", function () {
   );
 
   step("issued pcds should have stable ids", async function () {
+    const payload = JSON.stringify(createFeedCredentialPayload());
     const expressResponse1 = await pollFeed(
       application.expressContext.localEndpoint,
       identity,
-      ISSUANCE_STRING,
+      payload,
       ZupassFeedIds.Devconnect
     );
     const expressResponse2 = await pollFeed(
       application.expressContext.localEndpoint,
       identity,
-      ISSUANCE_STRING,
+      payload,
       ZupassFeedIds.Devconnect
     );
     const response1 = expressResponse1.value as PollFeedResponseValue;
@@ -1823,10 +1825,11 @@ describe("devconnect functionality", function () {
       );
 
       await devconnectPretixSyncService.trySync();
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
@@ -1870,10 +1873,11 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
       const responseBody = response.value as PollFeedResponseValue;
@@ -1918,10 +1922,11 @@ describe("devconnect functionality", function () {
   step(
     "event 'superuser' should be able to checkin a valid ticket",
     async function () {
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const issueResponse = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
@@ -2015,7 +2020,7 @@ describe("devconnect functionality", function () {
   );
 
   step(
-    "shouldn't be able to issue pcds for the incorrect 'issuance string'",
+    "shouldn't be able to issue pcds for the incorrect feed credential payload",
     async function () {
       const expressResponse = await pollFeed(
         application.expressContext.localEndpoint,
@@ -2025,23 +2030,18 @@ describe("devconnect functionality", function () {
       );
 
       const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([
-        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
-        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
-      ]);
-
-      const action = response.actions[0] as ReplaceInFolderAction;
-      expect(action.pcds).to.deep.eq([]);
+      expect(response.actions).to.deep.eq([]);
     }
   );
 
   step(
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const expressResponse = await pollFeed(
         application.expressContext.localEndpoint,
         new Identity(),
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
 

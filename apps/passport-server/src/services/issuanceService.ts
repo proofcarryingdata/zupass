@@ -21,7 +21,8 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   ZupassFeedIds,
-  ZuzaluUserRole
+  ZuzaluUserRole,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -111,70 +112,77 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const pcds = await this.issueDevconnectPretixTicketPCDs(
-              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-            );
-            const ticketsByEvent = _.groupBy(
-              pcds,
-              (pcd) => pcd.claim.ticket.eventName
-            );
-
-            const devconnectTickets = Object.entries(ticketsByEvent).filter(
-              ([eventName]) => eventName !== "SBC SRW"
-            );
-
-            const srwTickets = Object.entries(ticketsByEvent).filter(
-              ([eventName]) => eventName === "SBC SRW"
-            );
-
             const actions = [];
 
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "SBC SRW",
-              pcds: []
-            });
+            try {
+              const { pcd } = await verifyFeedCredential(
+                req.pcd,
+                this.cachedVerify.bind(this)
+              );
+              const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
+              const ticketsByEvent = _.groupBy(
+                pcds,
+                (pcd) => pcd.claim.ticket.eventName
+              );
 
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "Devconnect",
-              pcds: []
-            });
+              const devconnectTickets = Object.entries(ticketsByEvent).filter(
+                ([eventName]) => eventName !== "SBC SRW"
+              );
 
-            actions.push(
-              ...(
-                await Promise.all(
-                  devconnectTickets.map(async ([eventName, tickets]) => [
-                    {
-                      type: PCDActionType.ReplaceInFolder,
-                      folder: joinPath("Devconnect", eventName),
-                      pcds: []
-                    },
-                    {
-                      type: PCDActionType.ReplaceInFolder,
-                      folder: joinPath("Devconnect", eventName),
-                      pcds: await Promise.all(
-                        tickets.map((pcd) =>
-                          EdDSATicketPCDPackage.serialize(pcd)
+              const srwTickets = Object.entries(ticketsByEvent).filter(
+                ([eventName]) => eventName === "SBC SRW"
+              );
+
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "SBC SRW",
+                pcds: []
+              });
+
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Devconnect",
+                pcds: []
+              });
+
+              actions.push(
+                ...(
+                  await Promise.all(
+                    devconnectTickets.map(async ([eventName, tickets]) => [
+                      {
+                        type: PCDActionType.ReplaceInFolder,
+                        folder: joinPath("Devconnect", eventName),
+                        pcds: []
+                      },
+                      {
+                        type: PCDActionType.ReplaceInFolder,
+                        folder: joinPath("Devconnect", eventName),
+                        pcds: await Promise.all(
+                          tickets.map((pcd) =>
+                            EdDSATicketPCDPackage.serialize(pcd)
+                          )
                         )
-                      )
-                    }
-                  ])
-                )
-              ).flat()
-            );
-
-            actions.push(
-              ...(await Promise.all(
-                srwTickets.map(async ([_, tickets]) => ({
-                  type: PCDActionType.ReplaceInFolder,
-                  folder: "SBC SRW",
-                  pcds: await Promise.all(
-                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                      }
+                    ])
                   )
-                }))
-              ))
-            );
+                ).flat()
+              );
+
+              actions.push(
+                ...(await Promise.all(
+                  srwTickets.map(async ([_, tickets]) => ({
+                    type: PCDActionType.ReplaceInFolder,
+                    folder: "SBC SRW",
+                    pcds: await Promise.all(
+                      tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                    )
+                  }))
+                ))
+              );
+            } catch (e) {
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
+            }
 
             return { actions };
           },
@@ -207,17 +215,24 @@ export class IssuanceService {
         },
         {
           handleRequest: async (
-            _req: PollFeedRequest
+            req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            return {
-              actions: [
-                {
-                  pcds: await this.issueFrogPCDs(),
-                  folder: "Frogs",
-                  type: PCDActionType.AppendToFolder
-                } as AppendToFolderAction
-              ]
-            };
+            try {
+              await verifyFeedCredential(req.pcd, this.cachedVerify.bind(this));
+              return {
+                actions: [
+                  {
+                    pcds: await this.issueFrogPCDs(),
+                    folder: "Frogs",
+                    type: PCDActionType.AppendToFolder
+                  } as AppendToFolderAction
+                ]
+              };
+            } catch (e) {
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
+            }
+            return { actions: [] };
           },
           feed: {
             id: ZupassFeedIds.Frogs,
@@ -238,25 +253,33 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const pcds = await this.issueEmailPCDs(
-              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-            );
             const actions: PCDAction[] = [];
 
-            // Clear out the folder
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "Email",
-              pcds: []
-            } as ReplaceInFolderAction);
+            try {
+              const { pcd } = await verifyFeedCredential(
+                req.pcd,
+                this.cachedVerify.bind(this)
+              );
+              const pcds = await this.issueEmailPCDs(pcd);
 
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "Email",
-              pcds: await Promise.all(
-                pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
-              )
-            } as ReplaceInFolderAction);
+              // Clear out the folder
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Email",
+                pcds: []
+              } as ReplaceInFolderAction);
+
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Email",
+                pcds: await Promise.all(
+                  pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+                )
+              } as ReplaceInFolderAction);
+            } catch (e) {
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
+            }
 
             return { actions };
           },
@@ -283,25 +306,33 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const pcds = await this.issueZuzaluTicketPCDs(
-              req.pcd as SerializedPCD<SemaphoreSignaturePCD>
-            );
             const actions: PCDAction[] = [];
 
-            // Clear out the folder
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "Zuzalu '23",
-              pcds: []
-            } as ReplaceInFolderAction);
+            try {
+              const { pcd } = await verifyFeedCredential(
+                req.pcd,
+                this.cachedVerify.bind(this)
+              );
+              const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
-            actions.push({
-              type: PCDActionType.ReplaceInFolder,
-              folder: "Zuzalu '23",
-              pcds: await Promise.all(
-                pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-              )
-            } as ReplaceInFolderAction);
+              // Clear out the folder
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Zuzalu '23",
+                pcds: []
+              } as ReplaceInFolderAction);
+
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Zuzalu '23",
+                pcds: await Promise.all(
+                  pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                )
+              } as ReplaceInFolderAction);
+            } catch (e) {
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
+            }
 
             return { actions };
           },
@@ -382,7 +413,21 @@ export class IssuanceService {
         };
       }
 
-      const checker = await this.checkUserExists(request.checkerProof);
+      const signature = await SemaphoreSignaturePCDPackage.deserialize(
+        request.checkerProof.pcd
+      );
+
+      if (
+        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
+        signature.claim.signedMessage !== ISSUANCE_STRING
+      ) {
+        return {
+          error: { name: "NotSuperuser" },
+          success: false
+        };
+      }
+
+      const checker = await this.checkUserExists(signature);
 
       if (!checker) {
         return {
@@ -528,34 +573,16 @@ export class IssuanceService {
   }
 
   private async checkUserExists(
-    proof: SerializedPCD<SemaphoreSignaturePCD>
+    signature: SemaphoreSignaturePCD
   ): Promise<UserRow | null> {
-    const isValid = await this.cachedVerify(proof);
-
-    const deserializedSignature =
-      await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
-
-    if (!isValid) {
-      logger(
-        `can't issue PCDs for ${deserializedSignature.claim.identityCommitment} because ` +
-          `the requester's PCD didn't verify`
-      );
-      return null;
-    }
-
-    if (deserializedSignature.claim.signedMessage !== ISSUANCE_STRING) {
-      logger(`can't issue PCDs, wrong message signed by user`);
-      return null;
-    }
-
     const user = await fetchUserByCommitment(
       this.context.dbPool,
-      deserializedSignature.claim.identityCommitment
+      signature.claim.identityCommitment
     );
 
     if (user == null) {
       logger(
-        `can't issue PCDs for ${deserializedSignature.claim.identityCommitment} because ` +
+        `can't issue PCDs for ${signature.claim.identityCommitment} because ` +
           `we don't have a user with that commitment in the database`
       );
       return null;
@@ -568,7 +595,7 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: SemaphoreSignaturePCD
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
@@ -789,7 +816,7 @@ export class IssuanceService {
    * multiple PCDs if it were possible to verify secondary emails.
    */
   private async issueEmailPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: SemaphoreSignaturePCD
   ): Promise<EmailPCD[]> {
     return traced(
       "IssuanceService",
@@ -838,7 +865,7 @@ export class IssuanceService {
   }
 
   private async issueZuzaluTicketPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: SemaphoreSignaturePCD
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
       const commitmentRow = await this.checkUserExists(credential);
