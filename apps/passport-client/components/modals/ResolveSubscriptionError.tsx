@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
+  useIdentity,
   useResolvingSubscriptionId,
   useSubscriptions
 } from "../../src/appHooks";
@@ -66,10 +67,12 @@ function FetchError({
   const [polling, setPolling] = useState<boolean>(false);
   const [stillFailing, setStillFailing] = useState<boolean>(false);
 
+  const identity = useIdentity();
+
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    await subscriptions.pollSingleSubscription(subscription);
+    await subscriptions.pollSingleSubscription(subscription, identity);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);
     if (error && error.type === SubscriptionErrorType.FetchError) {
@@ -77,7 +80,7 @@ function FetchError({
     } else {
       setStillFailing(false);
     }
-  }, [setPolling, setStillFailing, subscription, subscriptions]);
+  }, [setPolling, setStillFailing, subscription, subscriptions, identity]);
   return (
     <div>
       <div>

@@ -123,7 +123,7 @@ export async function addDefaultSubscriptions(
       }
 
       // Add or replace a feed with the given feed ID
-      subscriptions.subscribe(
+      await subscriptions.subscribe(
         DEFAULT_FEED_URL,
         feed,
         serializedSignaturePCD,

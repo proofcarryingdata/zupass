@@ -109,7 +109,7 @@ export class IssuanceService {
       [
         {
           handleRequest: async (
-            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+            req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueDevconnectPretixTicketPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
@@ -236,7 +236,7 @@ export class IssuanceService {
         },
         {
           handleRequest: async (
-            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+            req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueEmailPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>
@@ -281,7 +281,7 @@ export class IssuanceService {
         },
         {
           handleRequest: async (
-            req: PollFeedRequest<typeof SemaphoreSignaturePCDPackage>
+            req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const pcds = await this.issueZuzaluTicketPCDs(
               req.pcd as SerializedPCD<SemaphoreSignaturePCD>

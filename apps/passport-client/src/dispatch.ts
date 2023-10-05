@@ -682,7 +682,9 @@ async function sync(state: AppState, update: ZuUpdate) {
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
       );
-      const actions = await state.subscriptions.pollSubscriptions();
+      const actions = await state.subscriptions.pollSubscriptions(
+        state.identity
+      );
 
       await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
@@ -745,7 +747,7 @@ async function addSubscription(
   feed: Feed,
   credential: SerializedPCD
 ) {
-  state.subscriptions.subscribe(providerUrl, feed, credential);
+  await state.subscriptions.subscribe(providerUrl, feed, credential);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
