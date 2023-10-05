@@ -26,7 +26,6 @@ export interface TelegramConversation {
 export interface TelegramEvent {
   ticket_event_id: string;
   telegram_chat_id: number;
-  anon_chat_id: number | null | undefined;
 }
 
 /**

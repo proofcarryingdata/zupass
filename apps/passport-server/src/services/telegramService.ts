@@ -7,13 +7,14 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
-import sha256 from "js-sha256";
+import { sha256 } from "js-sha256";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
+  fetchTelegramAnonTopicsByEventId,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -73,22 +74,34 @@ export class TelegramService {
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu("anonsend");
+    const incognitoMenu = new Menu("incognito");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
     zupassMenu.dynamic(chatsToJoin);
 
-    anonSendMenu.dynamic((_, menu) => {
+    incognitoMenu.dynamic((ctx, mmenu) => {
+      const topicName =
+        ctx.message?.reply_to_message?.forum_topic_created?.name;
+      if (!topicName) throw new Error(`No topic name found`);
       const zktgUrl =
-        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
-      menu.webApp("Send anonymous message", zktgUrl);
+        `${process.env.TELEGRAM_ANON_WEBSITE}?topicName=${topicName}&topicId=${ctx.message?.message_thread_id}` ??
+        `https://dev.local:4000?topicName=${topicName}&topicId=${ctx.message?.message_thread_id}`;
+      mmenu.webApp("google", zktgUrl);
+      // return mmenu;
+    });
+
+    anonSendMenu.dynamic((ctx, menu) => {
+      const zktgUrl = `${process.env.TELEGRAM_ANON_WEBSITE}`;
+      menu.webApp("Post anonymous message", zktgUrl);
       return menu;
     });
 
     this.bot.use(eventsMenu);
     this.bot.use(zupassMenu);
     this.bot.use(anonSendMenu);
+    this.bot.use(incognitoMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -419,12 +432,9 @@ export class TelegramService {
           ctx.chat.id
         );
 
-        logger(`[TELEGRAM] chatAnonTopics`, chatAnonTopics);
-
         const currentAnonTopic = chatAnonTopics.find(
           (t) => t.anon_topic_id == messageThreadId
         );
-        logger(`[TELEGRAM] currentAnonTopic`, currentAnonTopic);
 
         if (currentAnonTopic) {
           await ctx.reply(`This topic is already an anonymous channel.`, {
@@ -450,18 +460,11 @@ export class TelegramService {
           message_thread_id: messageThreadId
         });
 
-        const zktgUrl =
-          `${process.env.TELEGRAM_ANON_WEBSITE}?topicName=${topicName}` ??
-          `https://dev.local:4000?topicName=${topicName}`;
-
         await ctx.reply(
           `Click here to anonymously send a message to this topic`,
           {
             message_thread_id: messageThreadId,
-            reply_markup: new InlineKeyboard().url(
-              `Post Anonymous Message️`,
-              zktgUrl
-            )
+            reply_markup: incognitoMenu
           }
         );
       } catch (error) {
@@ -681,7 +684,8 @@ export class TelegramService {
 
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
-    message: string
+    message: string,
+    topicId: number
   ): Promise<void> {
     logger("[TELEGRAM] Verifying anonymous message");
 
@@ -705,7 +709,7 @@ export class TelegramService {
     }
 
     function getMessageWatermark(message: string): bigint {
-      const hashed = sha256.sha256(message).substring(0, 16);
+      const hashed = sha256(message).substring(0, 16);
       return BigInt("0x" + hashed);
     }
 
@@ -717,11 +721,11 @@ export class TelegramService {
       );
     }
 
-    const event = await fetchTelegramEventByEventId(
+    const events = await fetchTelegramAnonTopicsByEventId(
       this.context.dbPool,
       eventId
     );
-    if (!event) {
+    if (!events) {
       throw new Error(
         `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
       );
@@ -731,20 +735,37 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
-    if (event.anon_chat_id == null) {
-      throw new Error(`this group doesn't have an anon channel`);
+    if (events.length == 0) {
+      throw new Error(`this group doesn't have any anon channels`);
+    }
+
+    const chatEvent = await fetchTelegramEventByEventId(
+      this.context.dbPool,
+      eventId
+    );
+    if (!chatEvent) {
+      throw new Error(`Couldn't find chat event for ${eventId}`);
     }
 
     // The event is linked to a chat. Make sure we can access it.
-    const chatId = event.telegram_chat_id;
+    const chatId = chatEvent.telegram_chat_id;
     const chat = await this.bot.api.getChat(chatId);
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Event ${chatEvent.ticket_event_id} is configured with Telegram chat ${chatEvent.telegram_chat_id}, which is of incorrect type "${chat.type}"`
       );
     }
 
-    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, message);
+    const ticketedAnonEvent = events.find((e) => e.anon_topic_id === topicId);
+    if (!ticketedAnonEvent) {
+      throw new Error(`Couldn't find anon event for ${eventId}`);
+    }
+
+    await this.sendToAnonymousChannel(
+      chat.id,
+      ticketedAnonEvent.anon_topic_id,
+      message
+    );
   }
 
   public stop(): void {
