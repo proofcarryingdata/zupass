@@ -43,8 +43,8 @@ function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
 }
 
 const ALLOWED_EVENTS = [
-  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  // { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
+  // { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
   {
     eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
     name: "ProgCrypto (Internal Test)"
@@ -59,12 +59,12 @@ const ALLOWED_EVENTS = [
 
 function isLocalServer(): boolean {
   return (
-    process.env.PASSPORT_SERVER_URL === "http://localhost:3002" ||
-    process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
+    process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL === "http://localhost:3002" ||
+    process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL === "https://dev.local:3002"
   );
 }
 
-function requestProof(message: string) {
+function requestProof(message: string, topicId: string) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
 
@@ -111,7 +111,7 @@ function requestProof(message: string) {
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
-  }/telegram/message?message=${encodeURIComponent(message)}`;
+  }/telegram/message?message=${encodeURIComponent(message)}&topicId=${topicId}`;
 
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
@@ -129,9 +129,11 @@ export default function SubmitMessagePage() {
   const [message, setMessage] = useState("");
   const searchParams = useSearchParams();
   const topicName = searchParams.get("topicName");
+  const topicId = searchParams.get("topicId");
 
   const onClick = useCallback(() => {
-    requestProof(message);
+    if (!topicId) return;
+    requestProof(message, topicId);
   }, [message]);
 
   return (
