@@ -64,14 +64,14 @@ export interface UploadEncryptedStorageRequest {
    * updates.
    *
    * If specified, this is the previous revision of stored data which the
-   * client is aware of and included in its updates.  If this does not match
+   * client is aware of and has included in its updates.  If this does not match
    * the latest revision available on the server, the request will fail without
    * making any changes.
    *
    * If this field is absent, the new blob is always saved, overwriting any
    * existing revision.
    */
-  baseRevision?: string;
+  knownRevision?: string;
 }
 
 /**
@@ -155,14 +155,14 @@ export interface ChangeBlobKeyRequest {
    * updates.
    *
    * If specified, this is the previous revision of stored data which the
-   * client is aware of and included in its updates.  If this does not match
+   * client is aware of and has included in its updates.  If this does not match
    * the latest revision available on the server, the request will fail without
    * making any changes.
    *
    * If this field is absent, the new blob is always saved, overwriting any
    * existing revision.
    */
-  baseRevision?: string;
+  knownRevision?: string;
 }
 
 /**

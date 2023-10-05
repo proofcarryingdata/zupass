@@ -23,7 +23,7 @@ export async function requestChangeBlobKey(
   uuid: string,
   newSalt: string,
   encryptedStorage: EncryptedPacket,
-  baseRevision?: string
+  knownRevision?: string
 ): Promise<ChangeBlobKeyResult> {
   return httpPost<ChangeBlobKeyResult>(
     urlJoin(zupassServerUrl, `/sync/changeBlobKey`),
@@ -65,7 +65,7 @@ export async function requestChangeBlobKey(
       newSalt,
       encryptedBlob: JSON.stringify(encryptedStorage),
       uuid,
-      baseRevision
+      knownRevision
     } satisfies ChangeBlobKeyRequest
   );
 }

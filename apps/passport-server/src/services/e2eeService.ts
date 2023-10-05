@@ -44,7 +44,7 @@ export class E2EEService {
     if (!storageModel) {
       throw new PCDHTTPError(
         404,
-        `can't load e2ee: unknown encryption key ${blobKey}`
+        `can't load e2ee: unknown blob key ${blobKey}`
       );
     }
 
@@ -60,7 +60,7 @@ export class E2EEService {
 
   private checkUpdateResult(
     blobKey: string,
-    baseRevision: string,
+    knownRevision: string,
     updateResult: UpdateEncryptedStorageResult
   ): string {
     switch (updateResult.status) {
@@ -70,12 +70,12 @@ export class E2EEService {
         throw new PCDHTTPError(
           409,
           `can't update e2ee due to conflict: expected revision 
-          ${baseRevision}, found ${updateResult.revision}`
+          ${knownRevision}, found ${updateResult.revision}`
         );
       case "missing":
         throw new PCDHTTPError(
           404,
-          `can't update e2ee: unknown encryption key ${blobKey}`
+          `can't update e2ee: unknown blob key ${blobKey}`
         );
     }
   }
@@ -91,7 +91,7 @@ export class E2EEService {
     }
 
     let resultRevision = undefined;
-    if (request.baseRevision === undefined) {
+    if (request.knownRevision === undefined) {
       resultRevision = await setEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
@@ -102,11 +102,11 @@ export class E2EEService {
         this.context.dbPool,
         request.blobKey,
         request.encryptedBlob,
-        request.baseRevision
+        request.knownRevision
       );
       resultRevision = this.checkUpdateResult(
         request.blobKey,
-        request.baseRevision,
+        request.knownRevision,
         updateResult
       );
     }
@@ -118,7 +118,7 @@ export class E2EEService {
 
   private checkRekeyResult(
     blobKey: string,
-    baseRevision: string | undefined,
+    knownRevision: string | undefined,
     updateResult: UpdateEncryptedStorageResult,
     res: Response
   ): string | undefined {
@@ -130,7 +130,7 @@ export class E2EEService {
           error: {
             name: "Conflict",
             detailedMessage: `Can't rekey e2ee due to conflict: expected 
-              revision ${baseRevision}, found ${updateResult.revision}`
+              revision ${knownRevision}, found ${updateResult.revision}`
           }
         });
         return undefined;
@@ -189,11 +189,11 @@ export class E2EEService {
       request.uuid,
       request.newSalt,
       request.encryptedBlob,
-      request.baseRevision
+      request.knownRevision
     );
     const resultRevision = this.checkRekeyResult(
       request.oldBlobKey,
-      request.baseRevision,
+      request.knownRevision,
       rekeyResult,
       res
     );

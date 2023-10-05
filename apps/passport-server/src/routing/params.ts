@@ -21,7 +21,7 @@ export function checkQueryParam(req: Request, paramName: string): string {
 /**
  * Extracts an optional string value from the query of an Express
  * {@link Request}.  If the value is missing, return undefined.  If the value is
- * the wrong type, throws a {@link PCDHTTPError}.
+ * not a string, throws a {@link PCDHTTPError}.
  */
 export function checkOptionalQueryParam(
   req: Request,
@@ -44,7 +44,7 @@ export function checkOptionalQueryParam(
 
 /**
  * Extracts a string value from the url params of an Express {@link Request}.
- * If the value doesn't exist or has the wrong type, throws a
+ * If the value doesn't exist or is not a string, throws a
  * {@link PCDHTTPError}.
  */
 export function checkUrlParam(req: Request, paramName: string): string {

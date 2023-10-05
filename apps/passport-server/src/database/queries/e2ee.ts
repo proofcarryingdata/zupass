@@ -75,15 +75,15 @@ async function checkAfterUnmatchedUpdate(
 
 /**
  * Updates the encrypted data stored at a particular encryption key and
- * revision.  If baseRevision matches the current revision, the row is
- * updated, and the new revision is returned.  If the baseRevision doesn't match
- * (including if there is no such row), no changes are made
+ * revision.  If knownRevision matches the current revision, the row is
+ * updated, and the new revision is returned.  If the knownRevision doesn't
+ * match (including if there is no such row), no changes are made
  */
 export async function updateEncryptedStorage(
   dbPool: Pool,
   blobKey: string,
   encryptedBlob: string,
-  baseRevision: string
+  knownRevision: string
 ): Promise<UpdateEncryptedStorageResult> {
   // This single-step update is safe even without a transaction.  If two matching
   // updates to the same revision race with each other, the implicit row lock
@@ -96,7 +96,7 @@ export async function updateEncryptedStorage(
     SET encrypted_blob = $2, revision = revision + 1
     WHERE blob_key = $1 AND revision = $3
     RETURNING revision`,
-    [blobKey, encryptedBlob, baseRevision]
+    [blobKey, encryptedBlob, knownRevision]
   );
 
   // Update didn't match, but we need to distinguish the two possible cases.
@@ -111,7 +111,7 @@ export async function updateEncryptedStorage(
  * Transactionally performs the changes required to change a user's password
  * (key) for E2EE storage.  Deletes row at at the old blob key, upserts the
  * encrypted data stored at the new blob key, and then updates the user's salt.
- * If baseRevision is given, the operation will fail with a conflict if it
+ * If knownRevision is given, the operation will fail with a conflict if it
  * doesn't match the latest revision.
  */
 export async function rekeyEncryptedStorage(
@@ -121,14 +121,14 @@ export async function rekeyEncryptedStorage(
   uuid: string,
   newSalt: string,
   encryptedBlob: string,
-  baseRevision?: string
+  knownRevision?: string
 ): Promise<UpdateEncryptedStorageResult> {
   const newRevision = await sqlTransaction<string | undefined>(
     dbPool,
     "rekey encrypted storage",
     async (txClient: PoolClient) => {
       let updateResult = undefined;
-      if (baseRevision) {
+      if (knownRevision) {
         // This single-step update is safe even without a transaction.  If two
         // matching updates to the same revision race with each other, the
         // implicit row lock inside of the UPDATE will cause one of them to
@@ -139,7 +139,7 @@ export async function rekeyEncryptedStorage(
           SET blob_key = $2, encrypted_blob = $3, revision = revision + 1
           WHERE blob_key = $1 AND revision = $4
           RETURNING revision`,
-          [oldBlobKey, newBlobKey, encryptedBlob, baseRevision]
+          [oldBlobKey, newBlobKey, encryptedBlob, knownRevision]
         );
       } else {
         updateResult = await txClient.query(

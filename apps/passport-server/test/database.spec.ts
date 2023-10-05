@@ -368,7 +368,7 @@ describe("database reads and writes", function () {
     expect(rekeyResult2.revision).to.be.undefined;
   });
 
-  step("e2ee rekeying should work with baseRevision", async function () {
+  step("e2ee rekeying should work with knownRevision", async function () {
     const key1 = "rkey1";
     const value1 = "value1";
     const value2 = "value2";
