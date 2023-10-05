@@ -1,11 +1,11 @@
-import { PCDCrypto } from "@pcd/passport-crypto";
+import { HexString, PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
+import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
-import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
@@ -17,7 +17,10 @@ import { PasswordInput } from "../shared/PasswordInput";
 export function ChangePasswordScreen() {
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
-  const [isChangePassword] = useState(hasSetupPassword); // This value should only change on load, not on render
+  // We want the `isChangePassword` state to persist on future renders,
+  // otherwise we may show the invalid copy on the "finished" screen
+  // after a password is set for the first time.
+  const [isChangePassword] = useState(hasSetupPassword);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -38,8 +41,9 @@ export function ChangePasswordScreen() {
     if (loading) return;
     setLoading(true);
     try {
+      let currentEncryptionKey: HexString;
       if (!isChangePassword) {
-        await setPassword(newPassword, dispatch);
+        currentEncryptionKey = loadEncryptionKey();
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
@@ -51,36 +55,12 @@ export function ChangePasswordScreen() {
         }
 
         const crypto = await PCDCrypto.newInstance();
-        const currentEncryptionKey = await crypto.argon2(
+        currentEncryptionKey = await crypto.argon2(
           currentPassword,
           saltResult.value
         );
-        const { salt: newSalt, key: newEncryptionKey } =
-          await crypto.generateSaltAndEncryptionKey(newPassword);
-        const res = await updateBlobKeyForEncryptedStorage(
-          currentEncryptionKey,
-          newEncryptionKey,
-          newSalt
-        );
-        // Meaning password is incorrect, as old row is not found
-        if (!res.success && res.error.name === "PasswordIncorrect") {
-          setError(
-            "Incorrect password. If you've lost your password, reset your account below."
-          );
-          setLoading(false);
-          return;
-        }
-
-        // Handle
-        if (!res.success) {
-          throw new Error(`Request failed with message ${res.error}`);
-        }
-        dispatch({
-          type: "change-password",
-          newEncryptionKey,
-          newSalt
-        });
       }
+      await setPassword(newPassword, currentEncryptionKey, dispatch);
 
       setFinished(true);
 
@@ -88,9 +68,7 @@ export function ChangePasswordScreen() {
     } catch (e) {
       console.log("error changing password", e);
       setLoading(false);
-      setError(
-        `Error while ${isChangePassword ? "changing" : "adding"} password`
-      );
+      setError(e.message);
     }
   }, [
     currentPassword,

@@ -1,9 +1,11 @@
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelf } from "../../src/appHooks";
+import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { BigInput, H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
+import { ScreenLoader } from "../shared/ScreenLoader";
 
 /**
  * This uncloseable modal is shown to users of Zupass who have a sync key,
@@ -23,7 +25,8 @@ export function RequireAddPasswordModal() {
     if (loading) return;
     setLoading(true);
     try {
-      await setPassword(newPassword, dispatch);
+      const currentEncryptionKey = loadEncryptionKey();
+      await setPassword(newPassword, currentEncryptionKey, dispatch);
 
       dispatch({
         type: "set-modal",
@@ -35,6 +38,10 @@ export function RequireAddPasswordModal() {
       setLoading(false);
     }
   }, [loading, newPassword, dispatch]);
+
+  if (loading) {
+    return <ScreenLoader text="Adding your password..." />;
+  }
 
   return (
     <Container>
