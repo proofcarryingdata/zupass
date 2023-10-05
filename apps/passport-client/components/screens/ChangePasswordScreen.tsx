@@ -31,8 +31,6 @@ export function ChangePasswordScreen() {
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
 
-  console.log({ loading, finished });
-
   useEffect(() => {
     if (self == null) {
       navigate("/login", { replace: true });

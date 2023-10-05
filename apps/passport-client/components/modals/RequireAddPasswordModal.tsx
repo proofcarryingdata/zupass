@@ -19,10 +19,7 @@ export function RequireAddPasswordModal() {
   const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
-  // copied from `ChangePasswordScreen`.
-  // @todo - factor this out. I don't forsee us needing to do this anytime soon.
-  // @alternatively, delete this screen after Devconnect.
-  const onChangePassword = useCallback(async () => {
+  const onAddPassword = useCallback(async () => {
     if (loading) return;
     setLoading(true);
     try {
@@ -61,7 +58,7 @@ export function RequireAddPasswordModal() {
         confirmPassword={confirmPassword}
         setPassword={setNewPassword}
         setConfirmPassword={setConfirmPassword}
-        onSuccess={onChangePassword}
+        onSuccess={onAddPassword}
       />
     </Container>
   );
