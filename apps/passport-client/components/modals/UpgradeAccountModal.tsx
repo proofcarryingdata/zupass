@@ -26,7 +26,7 @@ export function UpgradeAccountModal() {
     if (loading) return;
     setLoading(true);
     try {
-      await setPassword(self.email, newPassword, dispatch);
+      await setPassword(newPassword, dispatch);
 
       dispatch({
         type: "set-modal",
@@ -37,7 +37,7 @@ export function UpgradeAccountModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, self.email, newPassword, dispatch]);
+  }, [loading, newPassword, dispatch]);
 
   return (
     <Container>

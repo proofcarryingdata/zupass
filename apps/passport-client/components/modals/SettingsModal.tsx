@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
@@ -7,6 +7,7 @@ import { icons } from "../icons";
 export function SettingsModal() {
   const dispatch = useDispatch();
   const self = useSelf();
+  const hasSetupPassword = useHasSetupPassword();
 
   const close = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
@@ -37,7 +38,7 @@ export function SettingsModal() {
         </LinkButton>
         <Spacer h={16} />
         <LinkButton primary={true} to="/change-password" onClick={close}>
-          Change Password
+          {hasSetupPassword ? "Change" : "Add"} Password
         </LinkButton>
         <Spacer h={16} />
         <LinkButton

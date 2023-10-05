@@ -1,7 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import { requestPasswordSalt } from "@pcd/passport-interface";
 import zxcvbn from "zxcvbn";
-import { appConfig } from "./appConfig";
 import { Dispatcher } from "./dispatch";
 import { loadEncryptionKey } from "./localstorage";
 import {
@@ -20,21 +18,11 @@ export const checkPasswordStrength = (password: string): boolean => {
 export const PASSWORD_MINIMUM_LENGTH = 8;
 
 // For when the user has not set a password yet, and wants to add one
-export const setPassword = async (
-  email: string,
-  newPassword: string,
-  dispatch: Dispatcher
-) => {
-  const saltResult = await requestPasswordSalt(appConfig.zupassServer, email);
-
-  if (!saltResult.success) {
-    throw new Error("Error occurred while fetching salt from server");
-  }
-
+export const setPassword = async (password: string, dispatch: Dispatcher) => {
   const crypto = await PCDCrypto.newInstance();
   const currentEncryptionKey = loadEncryptionKey();
   const { salt: newSalt, key: newEncryptionKey } =
-    await crypto.generateSaltAndEncryptionKey(newPassword);
+    await crypto.generateSaltAndEncryptionKey(password);
   const res = await updateBlobKeyForEncryptedStorage(
     currentEncryptionKey,
     newEncryptionKey,

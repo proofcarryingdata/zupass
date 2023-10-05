@@ -130,11 +130,17 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
   return wrappedSubs;
 }
 
+// Checks whether the user has set a password for their account
+export function useHasSetupPassword() {
+  const self = useSelf();
+  return self != null && self.salt != null;
+}
+
 // Hook that when invoked, requires the user to set a password if they haven't already
 export function useRequirePassword() {
-  const self = useSelf();
+  const hasSetupPassword = useHasSetupPassword();
   const dispatch = useDispatch();
-  if (self != null && self.salt == null) {
+  if (!hasSetupPassword) {
     dispatch({
       type: "set-modal",
       modal: {
