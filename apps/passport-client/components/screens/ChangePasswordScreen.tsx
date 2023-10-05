@@ -129,7 +129,7 @@ export function ChangePasswordScreen() {
         You've {isChangePassword ? "changed" : "added"} your password
         successfully.
         <Spacer h={24} />
-        <LinkButton to={"/"} primary={true}>
+        <LinkButton to={"/"} $primary={true}>
           Done
         </LinkButton>
       </TextCenter>

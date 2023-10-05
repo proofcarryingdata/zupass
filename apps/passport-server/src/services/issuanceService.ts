@@ -1,10 +1,10 @@
-import { EDdSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
-  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission
+  ReplaceInFolderPermission,
+  joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -271,13 +271,13 @@ export class IssuanceService {
             // Clear out the folder
             actions.push({
               type: PCDActionType.ReplaceInFolder,
-              folder: "Zuzalu",
+              folder: "Zuzalu '23",
               pcds: []
             } as ReplaceInFolderAction);
 
             actions.push({
               type: PCDActionType.ReplaceInFolder,
-              folder: "Zuzalu",
+              folder: "Zuzalu '23",
               pcds: await Promise.all(
                 pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
               )
@@ -293,11 +293,11 @@ export class IssuanceService {
             partialArgs: undefined,
             permissions: [
               {
-                folder: "Zuzalu",
+                folder: "Zuzalu '23",
                 type: PCDPermissionType.AppendToFolder
               } as AppendToFolderPermission,
               {
-                folder: "Zuzalu",
+                folder: "Zuzalu '23",
                 type: PCDPermissionType.ReplaceInFolder
               } as ReplaceInFolderPermission
             ]
@@ -335,7 +335,7 @@ export class IssuanceService {
     return this.exportedRSAPublicKey;
   }
 
-  public getEdDSAPublicKey(): Promise<EDdSAPublicKey> {
+  public getEdDSAPublicKey(): Promise<EdDSAPublicKey> {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
