@@ -1,20 +1,13 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { sleep } from "@pcd/util";
 import {
-  EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
-import _ from "lodash";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
@@ -32,40 +25,16 @@ import { logger } from "../util/logger";
 import {
   BotContext,
   SessionData,
+  chatsToJoin,
   dynamicEvents,
   findChatByEventIds,
   getEventsWithChats,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin,
-  userEvents
+  senderIsAdmin
 } from "../util/telegramHelpers";
-import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
-
-const ALLOWED_EVENTS = [
-  // { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  // { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
-  // {
-  //   eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
-  //   name: "ProgCrypto (Internal Test)"
-  // },
-  // {
-  //   eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
-  //   name: "AW (Internal Test)"
-  // },
-  {
-    eventId: "0d2e94f4-5d84-11ee-9ba7-72e337b21332",
-    name: "ProgCrypto (Internal Test)"
-  },
-  {
-    eventId: "593a74b6-5d67-11ee-99ad-72e337b21332",
-    name: "AW (Internal Test)"
-  }
-  // Add this value and set the value field of validEventIds in generateProofUrl
-  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
-];
 
 const ALLOWED_TICKET_MANAGERS = [
   "cha0sg0d",
@@ -76,15 +45,6 @@ const ALLOWED_TICKET_MANAGERS = [
 ];
 
 const adminBotChannel = "Admin Central";
-const eventIdsAreValid = (eventIds?: string[]): boolean => {
-  const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
-    !!(subset && subset.length && _.difference(subset, superset).length === 0);
-
-  return isNonEmptySubset(
-    ALLOWED_EVENTS.map((e) => e.eventId),
-    eventIds
-  );
-};
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -115,19 +75,7 @@ export class TelegramService {
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
-    // zupassMenu.dynamic((ctx, range) => {
-    //   const userId = ctx?.from?.id;
-    //   if (userId) {
-    //     const proofUrl = this.generateProofUrl(userId.toString());
-    //     range.webApp(`Generate proof 🚀`, proofUrl);
-    //   } else {
-    //     ctx.reply(
-    //       `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
-    //     );
-    //   }
-    //   return range;
-    // });
-    zupassMenu.dynamic(userEvents);
+    zupassMenu.dynamic(chatsToJoin);
 
     anonSendMenu.dynamic((_, menu) => {
       const zktgUrl =
@@ -225,41 +173,9 @@ export class TelegramService {
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!\n\nYou must have one of the following tickets in your Zupass account to join successfully.\n\nSee you soon 😽`
+            `Welcome ${name}! 👋\n\nClick below join a TG group via a ZK proof!\n\nYou will sign in to Zupass, then prove you have a ticket for one of the events associated with the group.\n\nSee you soon 😽`,
+            { reply_markup: zupassMenu }
           );
-          const msg = await ctx.reply(`Loading tickets and events...`);
-          const events = await fetchLinkedPretixAndTelegramEvents(
-            this.context.dbPool
-          );
-          const eventsWithChats = await getEventsWithChats(
-            this.context.dbPool,
-            ctx,
-            events
-          );
-
-          if (eventsWithChats.length === 0) {
-            return ctx.api.editMessageText(
-              userId,
-              msg.message_id,
-              `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
-              {
-                parse_mode: "HTML"
-              }
-            );
-          }
-
-          let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
-
-          for (const event of eventsWithChats) {
-            if (event.chat?.title)
-              eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
-          }
-          await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
-            parse_mode: "HTML"
-          });
-          await ctx.reply(`Click here ⬇`, {
-            reply_markup: zupassMenu
-          });
         }
       } catch (e) {
         logger("[TELEGRAM] start error", e);
@@ -355,6 +271,38 @@ export class TelegramService {
       `,
         { parse_mode: "HTML", reply_to_message_id: messageThreadId }
       );
+      const msg = await ctx.reply(`Loading tickets and events...`);
+      const events = await fetchLinkedPretixAndTelegramEvents(
+        this.context.dbPool
+      );
+      const eventsWithChats = await getEventsWithChats(
+        this.context.dbPool,
+        ctx,
+        events
+      );
+
+      const userId = ctx.from?.id;
+      if (!userId) throw new Error(`No user found. Try again...`);
+      if (eventsWithChats.length === 0) {
+        return ctx.api.editMessageText(
+          userId,
+          msg.message_id,
+          `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
+          {
+            parse_mode: "HTML"
+          }
+        );
+      }
+
+      let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
+
+      for (const event of eventsWithChats) {
+        if (event.chat?.title)
+          eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
+      }
+      await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
+        parse_mode: "HTML"
+      });
     });
 
     this.bot.command("anonsend", async (ctx) => {
@@ -440,74 +388,6 @@ export class TelegramService {
     });
   }
 
-  private generateProofUrl(telegramUserId: string): string {
-    const fieldsToReveal: EdDSATicketFieldsToReveal = {
-      revealTicketId: false,
-      revealEventId: true,
-      revealProductId: true,
-      revealTimestampConsumed: false,
-      revealTimestampSigned: false,
-      revealAttendeeSemaphoreId: true,
-      revealIsConsumed: false,
-      revealIsRevoked: false
-    };
-
-    const args: ZKEdDSAEventTicketPCDArgs = {
-      ticket: {
-        argumentType: ArgumentTypeName.PCD,
-        pcdType: EdDSATicketPCDPackage.name,
-        value: undefined,
-        userProvided: true
-      },
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        pcdType: SemaphoreIdentityPCDPackage.name,
-        value: undefined,
-        userProvided: true
-      },
-      fieldsToReveal: {
-        argumentType: ArgumentTypeName.ToggleList,
-        value: fieldsToReveal,
-        userProvided: false
-      },
-      externalNullifier: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: undefined,
-        userProvided: false
-      },
-      validEventIds: {
-        argumentType: ArgumentTypeName.StringArray,
-        // For local development, we do not validate eventIds
-        // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
-        // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
-        value: ALLOWED_EVENTS.map((e) => e.eventId),
-        userProvided: false
-      },
-      watermark: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: telegramUserId.toString(),
-        userProvided: false
-      }
-    };
-
-    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
-    if (passportOrigin === "http://localhost:3000/") {
-      // TG bot doesn't like localhost URLs
-      passportOrigin = "http://127.0.0.1:3000/";
-    }
-    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
-
-    const proofUrl = constructZupassPcdGetRequestUrl<
-      typeof ZKEdDSAEventTicketPCDPackage
-    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-      genericProveScreen: true,
-      title: "ZK Ticket Proof",
-      description:
-        "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
-    });
-    return proofUrl;
-  }
-
   /**
    * Telegram does not allow two instances of a bot to be running at once.
    * During deployment, a new instance of the app will be started before the
@@ -564,10 +444,7 @@ export class TelegramService {
       throw new Error(`Deserialization error, ${e}`);
     }
 
-    // this is very bad but i am very tired
-    // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
-    let eventIdMatch = false;
 
     if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
       throw new Error(`Missing server eddsa private key .env value`);
@@ -577,27 +454,13 @@ export class TelegramService {
       process.env.SERVER_EDDSA_PRIVATE_KEY
     );
 
-    if (isLocalServer()) {
-      eventIdMatch = true;
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    } else {
-      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    }
+    signerMatch =
+      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
     if (
       // TODO: wrap in a MultiProcessService?
       (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
-      eventIdMatch &&
       signerMatch
     ) {
       return pcd;
