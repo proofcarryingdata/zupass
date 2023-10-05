@@ -515,9 +515,7 @@ export class IssuanceService {
     proof: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UserRow | null> {
     const isValid = await this.multiprocessService.verifySignaturePCD(proof);
-    // const isValid = await SemaphoreSignaturePCDPackage.verify(
-    //   await SemaphoreSignaturePCDPackage.deserialize(proof.pcd)
-    // );
+
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
 
