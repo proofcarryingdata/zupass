@@ -2,10 +2,7 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import zxcvbn from "zxcvbn";
 import { Dispatcher } from "./dispatch";
 import { loadEncryptionKey } from "./localstorage";
-import {
-  updateBlobKeyForEncryptedStorage,
-  uploadStorage
-} from "./useSyncE2EEStorage";
+import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 
 // Must not be "too guessable", "very guessable", or "somewhat guessable"
 export const MINIMUM_PASSWORD_STRENGTH = 2;
@@ -38,6 +35,4 @@ export const setPassword = async (password: string, dispatch: Dispatcher) => {
     newEncryptionKey,
     newSalt
   });
-  // to make sure the salt is uploaded properly
-  await uploadStorage();
 };

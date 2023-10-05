@@ -24,8 +24,8 @@ export function ConfirmSkipSetupModal({
       <Spacer h={24} />
       <p>
         You are creating a Zupass without setting a password. This means that
-        your non-ticket PCDs will be encrypted by a key stored on our server.
-        You can always set a password later to reinforce your account with
+        your PCDs will be encrypted by a key stored on our server. You can
+        always set a password later to reinforce your account with
         end-to-end-encryption.
       </p>
       <Spacer h={24} />
