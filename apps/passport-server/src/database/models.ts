@@ -158,3 +158,9 @@ export interface PretixItemInfo {
   devconnect_pretix_events_info_id: string;
   item_name: string;
 }
+
+export interface TelegramAnonChannel {
+  ticket_event_id: string;
+  anon_topic_id: number;
+  anon_topic_name: string;
+}
