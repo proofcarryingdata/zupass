@@ -1,11 +1,12 @@
 import { MenuRange } from "@grammyjs/menu";
 import { Context, SessionFlavor } from "grammy";
-import { ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
-  ChatWithEvents,
+  ChatIDWithEvents,
   LinkedPretixTelegramEvent,
+  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents
 } from "../database/queries/telegram/fetchTelegramEvent";
 import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
@@ -15,19 +16,53 @@ export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent & { isLinked: boolean };
   lastMessageId?: number;
+  selectedChat?: EventWithChat;
+}
+
+export interface EventWithChat {
+  chat: Chat.GroupChat | Chat.SupergroupChat | null;
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
 
+/**
+ * Fetches the chat object for a list contaning a telegram chat id
+ */
+export const getEventsWithChats = async (
+  db: Pool,
+  ctx: BotContext,
+  chats: LinkedPretixTelegramEvent[] | ChatIDWithEvents[]
+): Promise<EventWithChat[]> => {
+  const eventsWithChatsRequests = chats.map(async (e) => {
+    return {
+      ...e,
+      chat: e.telegramChatID ? await ctx.api.getChat(e.telegramChatID) : null
+    };
+  });
+  const eventsWithChatsSettled = await Promise.allSettled(
+    eventsWithChatsRequests
+  );
+
+  const eventsWithChats = eventsWithChatsSettled
+    .filter(
+      (e): e is PromiseFulfilledResult<EventWithChat> =>
+        e.status === "fulfilled"
+    )
+    .map((e) => e.value);
+
+  return eventsWithChats;
+};
+
 export const findChatByEventIds = (
-  chats: ChatWithEvents[],
-  event_ids: string[]
+  chats: ChatIDWithEvents[],
+  eventIds: string[]
 ): string | null => {
   for (const chat of chats) {
-    if (
-      event_ids.every((event_id) => chat.ticket_event_ids.includes(event_id))
-    ) {
-      return chat.telegram_chat_id;
+    if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
+      return chat.telegramChatID;
     }
   }
   return null;
@@ -166,6 +201,55 @@ export const dynamicEvents = async (
             }
           }
         )
+        .row();
+    }
+  }
+};
+
+export const userEvents = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  const db = ctx.session.dbPool;
+  if (!db) {
+    range.text(`Database not connected. Try again...`);
+    return;
+  }
+  // // If an event is selected, display it and its menu options
+  if (ctx.session?.selectedChat) {
+    const chat = ctx.session?.selectedChat;
+
+    range.text(`${chat.chat?.title}`).row();
+    range.webApp(`Join`, "https://google.com").row();
+
+    range.text(`Go back`, async (ctx) => {
+      // checkDeleteMessage(ctx);
+      ctx.session.selectedChat = undefined;
+      await ctx.menu.update({ immediate: true });
+    });
+  }
+  // Otherwise, display all events to manage.
+  else {
+    const events = await fetchEventsPerChat(db);
+    const eventsWithChats = await getEventsWithChats(db, ctx, events);
+    for (const chat of eventsWithChats) {
+      range
+        .text(`${chat.chat?.title}`, async (ctx) => {
+          ctx.session.selectedChat = chat;
+          // if (ctx.session) {
+          //   ctx.session.selectedEvent = event;
+          //   await ctx.menu.update({ immediate: true });
+          //   let initText = "";
+          //   if (event.isLinked) {
+          //     initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
+          //   } else {
+          //     initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
+          //   }
+          //   await editOrSendMessage(ctx, initText);
+          // } else {
+          //   ctx.reply(`No session found`);
+          // }
+        })
         .row();
     }
   }

@@ -61,18 +61,19 @@ export async function fetchLinkedPretixAndTelegramEvents(
   return result.rows;
 }
 
-export interface ChatWithEvents {
-  telegram_chat_id: string;
-  ticket_event_ids: string[];
+export interface ChatIDWithEvents {
+  telegramChatID: string;
+  ticketEventIds: string[];
 }
+
 export async function fetchEventsPerChat(
   client: Pool
-): Promise<ChatWithEvents[]> {
+): Promise<ChatIDWithEvents[]> {
   const result = await sqlQuery(
     client,
     `SELECT 
-      telegram_chat_id,
-      ARRAY_AGG(ticket_event_id) AS ticket_event_ids
+      telegram_chat_id AS "telegramChatID",
+      ARRAY_AGG(ticket_event_id) AS "ticketEventIds"
       FROM 
         telegram_bot_events
       GROUP BY 

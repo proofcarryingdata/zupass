@@ -31,13 +31,15 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
+  SessionData,
   dynamicEvents,
   findChatByEventIds,
+  getEventsWithChats,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
   senderIsAdmin,
-  SessionData
+  userEvents
 } from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -106,25 +108,26 @@ export class TelegramService {
       "Zucat manages events and groups with zero-knowledge proofs"
     );
 
-    const zupassMenu = new Menu("zupass");
+    const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
-    zupassMenu.dynamic((ctx, range) => {
-      const userId = ctx?.from?.id;
-      if (userId) {
-        const proofUrl = this.generateProofUrl(userId.toString());
-        range.webApp(`Generate proof 🚀`, proofUrl);
-      } else {
-        ctx.reply(
-          `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
-        );
-      }
-      return range;
-    });
+    // zupassMenu.dynamic((ctx, range) => {
+    //   const userId = ctx?.from?.id;
+    //   if (userId) {
+    //     const proofUrl = this.generateProofUrl(userId.toString());
+    //     range.webApp(`Generate proof 🚀`, proofUrl);
+    //   } else {
+    //     ctx.reply(
+    //       `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
+    //     );
+    //   }
+    //   return range;
+    // });
+    zupassMenu.dynamic(userEvents);
 
     anonSendMenu.dynamic((_, menu) => {
       const zktgUrl =
@@ -228,21 +231,11 @@ export class TelegramService {
           const events = await fetchLinkedPretixAndTelegramEvents(
             this.context.dbPool
           );
-          const eventsWithChatsRequests = events.map(async (e) => {
-            return {
-              ...e,
-              chat: e.telegramChatID
-                ? await this.bot.api.getChat(e.telegramChatID)
-                : null
-            };
-          });
-          const eventsWithChatsSettled = await Promise.allSettled(
-            eventsWithChatsRequests
+          const eventsWithChats = await getEventsWithChats(
+            this.context.dbPool,
+            ctx,
+            events
           );
-          const eventsWithChats = eventsWithChatsSettled
-            .filter((e) => e.status == "fulfilled")
-            // @ts-expect-error value after filtering for success
-            .map((e) => e.value);
 
           if (eventsWithChats.length === 0) {
             return ctx.api.editMessageText(
