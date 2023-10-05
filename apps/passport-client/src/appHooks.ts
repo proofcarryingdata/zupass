@@ -134,7 +134,7 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
 export function useRequirePassword() {
   const self = useSelf();
   const dispatch = useDispatch();
-  if (self.salt == null) {
+  if (self != null && self.salt == null) {
     dispatch({
       type: "set-modal",
       modal: {

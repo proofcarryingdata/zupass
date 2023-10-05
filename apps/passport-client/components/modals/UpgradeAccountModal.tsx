@@ -1,10 +1,7 @@
-import { PCDCrypto } from "@pcd/passport-crypto";
-import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
-import { useDispatch, useSelf, useSyncKey } from "../../src/appHooks";
-import { updateBlobKeyForEncryptedStorage } from "../../src/useSyncE2EEStorage";
+import { useDispatch, useSelf } from "../../src/appHooks";
+import { setPassword } from "../../src/password";
 import { BigInput, H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 
@@ -16,7 +13,6 @@ export function UpgradeAccountModal() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const self = useSelf();
-  const encryptionKey = useSyncKey();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,45 +26,18 @@ export function UpgradeAccountModal() {
     if (loading) return;
     setLoading(true);
     try {
-      const saltResult = await requestPasswordSalt(
-        appConfig.zupassServer,
-        self.email
-      );
-
-      if (!saltResult.success) {
-        throw new Error("Error occurred while fetching salt from server");
-      }
-
-      const crypto = await PCDCrypto.newInstance();
-      const currentEncryptionKey = encryptionKey;
-      const { salt: newSalt, key: newEncryptionKey } =
-        await crypto.generateSaltAndEncryptionKey(newPassword);
-      const res = await updateBlobKeyForEncryptedStorage(
-        currentEncryptionKey,
-        newEncryptionKey,
-        newSalt
-      );
-
-      if (!res.success) {
-        throw new Error("couldn't set password");
-      }
+      await setPassword(self.email, newPassword, dispatch);
 
       dispatch({
         type: "set-modal",
         modal: { modalType: "changed-password" }
-      });
-
-      dispatch({
-        type: "change-password",
-        newEncryptionKey,
-        newSalt
       });
     } catch (e) {
       setError("Couldn't set a password - try again later");
     } finally {
       setLoading(false);
     }
-  }, [loading, self.email, encryptionKey, newPassword, dispatch]);
+  }, [loading, self.email, newPassword, dispatch]);
 
   return (
     <Container>
