@@ -4,6 +4,7 @@ import { ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
+  ChatWithEvents,
   LinkedPretixTelegramEvent,
   fetchLinkedPretixAndTelegramEvents
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -17,6 +18,20 @@ export interface SessionData {
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+export const findChatByEventIds = (
+  chats: ChatWithEvents[],
+  event_ids: string[]
+): string | null => {
+  for (const chat of chats) {
+    if (
+      event_ids.every((event_id) => chat.ticket_event_ids.includes(event_id))
+    ) {
+      return chat.telegram_chat_id;
+    }
+  }
+  return null;
+};
 
 export const senderIsAdmin = async (
   ctx: Context,

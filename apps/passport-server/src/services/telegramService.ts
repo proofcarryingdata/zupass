@@ -15,10 +15,10 @@ import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
 import _ from "lodash";
-import { fetchPretixEventInfo } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
+  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
@@ -32,6 +32,7 @@ import { logger } from "../util/logger";
 import {
   BotContext,
   dynamicEvents,
+  findChatByEventIds,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
@@ -42,14 +43,22 @@ import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const ALLOWED_EVENTS = [
-  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  // { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
+  // { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  // {
+  //   eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
+  //   name: "ProgCrypto (Internal Test)"
+  // },
+  // {
+  //   eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
+  //   name: "AW (Internal Test)"
+  // },
   {
-    eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
+    eventId: "0d2e94f4-5d84-11ee-9ba7-72e337b21332",
     name: "ProgCrypto (Internal Test)"
   },
   {
-    eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
+    eventId: "593a74b6-5d67-11ee-99ad-72e337b21332",
     name: "AW (Internal Test)"
   }
   // Add this value and set the value field of validEventIds in generateProofUrl
@@ -478,9 +487,7 @@ export class TelegramService {
         // For local development, we do not validate eventIds
         // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
         // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
-        value: isLocalServer()
-          ? undefined
-          : ALLOWED_EVENTS.map((e) => e.eventId),
+        value: ALLOWED_EVENTS.map((e) => e.eventId),
         userProvided: false
       },
       watermark: {
@@ -630,20 +637,10 @@ export class TelegramService {
 
   private async sendInviteLink(
     userId: number,
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
-    eventConfigID: string
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
-    const event = await fetchPretixEventInfo(
-      this.context.dbPool,
-      eventConfigID
-    );
-    if (!event) {
-      throw new Error(
-        `User used a ticket with no corresponding event confg id: ${eventConfigID}`
-      );
-    }
 
     logger(
       `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
@@ -654,7 +651,7 @@ export class TelegramService {
     });
     await this.bot.api.sendMessage(
       userId,
-      `You've proved that you have at ticket to <b>${event.event_name}</b>!\nPress this button to send your proof to <b>${chat.title}</b>`,
+      `You've proved that you have a ticket to <b>${chat.title}</b>!\nPress this button to send your proof and join the group`,
       {
         reply_markup: new InlineKeyboard().url(
           `Send ZK Proof ✈️`,
@@ -694,12 +691,7 @@ export class TelegramService {
       );
     }
 
-    const { eventId, attendeeSemaphoreId } = pcd.claim.partialTicket;
-    if (!eventId) {
-      throw new Error(
-        `User ${telegramUserId} returned a ZK-ticket with no eventId.`
-      );
-    }
+    const { attendeeSemaphoreId } = pcd.claim.partialTicket;
 
     if (!attendeeSemaphoreId) {
       throw new Error(
@@ -707,27 +699,29 @@ export class TelegramService {
       );
     }
 
-    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, event ${eventId}`);
-
-    // Find the event which matches the PCD
-    // For this to work, the `telegram_bot_events` table must be populated.
-
-    const event = await fetchTelegramEventByEventId(
-      this.context.dbPool,
-      eventId
-    );
-    if (!event) {
+    const { validEventIds } = pcd.claim;
+    if (!validEventIds) {
       throw new Error(
-        `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
+        `User ${telegramUserId} did not submit any valid event ids`
       );
     }
 
-    // The event is linked to a chat. Make sure we can access it.
-    const chatId = event.telegram_chat_id;
-    const chat = await this.bot.api.getChat(chatId);
+    const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+    const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+    if (!telegramChatId) {
+      throw new Error(
+        `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
+          ","
+        )}, which have no matching chat`
+      );
+    }
+    const chat = await this.bot.api.getChat(telegramChatId);
+
+    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
+
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Event is configured with Telegram chat ${chat.id}, which is of incorrect type "${chat.type}"`
       );
     }
 
@@ -736,12 +730,12 @@ export class TelegramService {
     await insertTelegramVerification(
       this.context.dbPool,
       telegramUserId,
-      event.telegram_chat_id,
+      parseInt(telegramChatId),
       attendeeSemaphoreId
     );
 
     // Send invite link
-    await this.sendInviteLink(telegramUserId, chat, eventId);
+    await this.sendInviteLink(telegramUserId, chat);
   }
 
   public async handleSendAnonymousMessage(
