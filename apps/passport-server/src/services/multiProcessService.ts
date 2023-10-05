@@ -95,8 +95,7 @@ export class MultiProcessService {
       makeFarm.end(this.workers, (err: Error | null) => {
         if (err) {
           reject(err);
-        }
-        {
+        } else {
           resolve();
         }
       });
