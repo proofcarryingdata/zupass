@@ -57,7 +57,8 @@ export class MultiProcessService {
       {
         autoStart: true,
         maxConcurrentWorkers: workerQuantity,
-        maxRetries: 1
+        maxRetries: 1,
+        maxConcurrentCalls: 1000
       },
       WORKER_MODULE_PATH
     );
