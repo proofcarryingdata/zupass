@@ -133,15 +133,26 @@ export class IssuanceService {
             });
 
             actions.push(
-              ...(await Promise.all(
-                devconnectTickets.map(async ([eventName, tickets]) => ({
-                  type: PCDActionType.ReplaceInFolder,
-                  folder: joinPath("Devconnect", eventName),
-                  pcds: await Promise.all(
-                    tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                  )
-                }))
-              ))
+              ...(
+                await Promise.all(
+                  devconnectTickets.map(async ([eventName, tickets]) => [
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: joinPath("Devconnect", eventName),
+                      pcds: []
+                    },
+                    {
+                      type: PCDActionType.ReplaceInFolder,
+                      folder: joinPath("Devconnect", eventName),
+                      pcds: await Promise.all(
+                        tickets.map((pcd) =>
+                          EdDSATicketPCDPackage.serialize(pcd)
+                        )
+                      )
+                    }
+                  ])
+                )
+              ).flat()
             );
 
             actions.push(
