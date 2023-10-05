@@ -289,7 +289,7 @@ export const dynamicEvents = async (
   }
 };
 
-export const userEvents = async (
+export const chatsToJoin = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
