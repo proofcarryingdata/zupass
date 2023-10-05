@@ -35,6 +35,9 @@ const verify = async (serializedSerializedPCD: string): Promise<boolean> => {
 // the Zupass server and this worker process. I have not done
 // that - we should probably wait until at least the 2nd
 // cpu-bound task needs to run on the server.
+//
+// worth noting that a worker can export multiple named functions,
+// so we don't have to have one worker per function.
 module.exports = function workerVerify(
   serializedSerializedPCD: string,
   callback: (err: Error | null, valid: boolean | null) => void
