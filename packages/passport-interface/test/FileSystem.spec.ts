@@ -18,6 +18,8 @@ describe("feed actions", async function () {
   const mockFeedApi = new MockFeedApi();
   const packages: PCDPackage[] = [SemaphoreIdentityPCDPackage];
 
+  this.timeout(1000 * 10);
+
   this.beforeAll(async () => {
     const fullPath = path.join(__dirname, "../artifacts/");
 

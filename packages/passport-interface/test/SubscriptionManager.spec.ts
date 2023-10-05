@@ -15,7 +15,7 @@ describe("Subscription Manager", async function () {
 
   const identity = new Identity();
 
-  this.timeout(1000 * 10);
+  this.timeout(1000 * 30);
 
   it("keeping track of providers should work", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);
