@@ -29,6 +29,7 @@ import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { rest } from "msw";
 import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
@@ -143,11 +144,15 @@ describe("devconnect functionality", function () {
 
   this.beforeEach(async () => {
     backupData = mocker.backup();
+    // Means that the time won't change during the test, which could cause
+    // spurious issues with timestamps in feed credentials.
+    MockDate.set(new Date());
   });
 
   this.afterEach(async () => {
     server.resetHandlers();
     mocker.restore(backupData);
+    MockDate.reset();
   });
 
   this.beforeAll(async () => {

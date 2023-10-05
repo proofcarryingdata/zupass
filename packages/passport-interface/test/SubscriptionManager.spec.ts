@@ -2,6 +2,7 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import MockDate from "mockdate";
 import {
   Feed,
   FeedSubscriptionManager,
@@ -16,6 +17,16 @@ describe("Subscription Manager", async function () {
   const identity = new Identity();
 
   this.timeout(1000 * 30);
+
+  this.beforeEach(() => {
+    // Means that the time won't change during the test, which could cause
+    // spurious issues with timestamps in feed credentials.
+    MockDate.set(new Date());
+  });
+
+  this.afterEach(() => {
+    MockDate.reset();
+  });
 
   it("keeping track of providers should work", async function () {
     const manager = new FeedSubscriptionManager(mockFeedApi);

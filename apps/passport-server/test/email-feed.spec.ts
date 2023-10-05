@@ -9,6 +9,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
 import { testLogin } from "./user/testLoginPCDPass";
@@ -29,6 +30,16 @@ describe("attested email feed functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+  });
+
+  this.beforeEach(() => {
+    // Means that the time won't change during the test, which could cause
+    // spurious issues with timestamps in feed credentials.
+    MockDate.set(new Date());
+  });
+
+  this.afterEach(() => {
+    MockDate.reset();
   });
 
   step("should be able to log in", async function () {

@@ -4,9 +4,9 @@ import {
   PCDPermissionType
 } from "@pcd/pcd-collection";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import MockDate from "mockdate";
 import {
   FeedHost,
   ListFeedsResult,
@@ -14,14 +14,17 @@ import {
   PollFeedResult
 } from "../src";
 import { IFeedApi } from "../src/FeedAPI";
-import { FeedCredentialPayload } from "../src/FeedCredential";
+import {
+  FeedCredentialPayload,
+  verifyFeedCredential
+} from "../src/FeedCredential";
 
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
   public receivedPayload: FeedCredentialPayload | undefined;
 
-  public constructor() {
+  public constructor(date?: Date) {
     this.feedHosts = new Map<string, FeedHost>([
       [
         "http://localhost:3000/feed",
@@ -44,28 +47,10 @@ export class MockFeedApi implements IFeedApi {
               },
 
               handleRequest: async (req: PollFeedRequest) => {
-                const signaturePCD =
-                  await SemaphoreSignaturePCDPackage.deserialize(req.pcd.pcd);
-
-                const verified =
-                  await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-                if (!verified) {
-                  throw new Error("Invalid feed credential");
+                if (date) {
+                  MockDate.set(date);
                 }
-
-                const payload: FeedCredentialPayload = JSON.parse(
-                  signaturePCD.claim.signedMessage
-                );
-
-                // In the real world, we would call
-                // `validateFeedCredentialTimestamp` here. But since this
-                // has some (very small but still possible) chance of failing
-                // if we happen to run the test close to the end of an hour,
-                // this call is omitted.
-                // @todo return to this when implementing better feed error
-                // codes and retries.
-
+                const { payload } = await verifyFeedCredential(req.pcd);
                 this.receivedPayload = payload;
 
                 return {
@@ -99,7 +84,13 @@ export class MockFeedApi implements IFeedApi {
                 inputPCDType: undefined,
                 partialArgs: undefined
               },
-              handleRequest: async (_req: PollFeedRequest) => {
+              handleRequest: async (req: PollFeedRequest) => {
+                if (date) {
+                  MockDate.set(date);
+                }
+                const { payload } = await verifyFeedCredential(req.pcd);
+                this.receivedPayload = payload;
+
                 return {
                   actions: [
                     {
@@ -129,20 +120,11 @@ export class MockFeedApi implements IFeedApi {
               },
 
               handleRequest: async (req: PollFeedRequest) => {
-                const signaturePCD =
-                  await SemaphoreSignaturePCDPackage.deserialize(req.pcd.pcd);
-
-                const verified =
-                  await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-                if (!verified) {
-                  throw new Error("Invalid feed credential");
+                if (date) {
+                  MockDate.set(date);
                 }
 
-                const payload: FeedCredentialPayload = JSON.parse(
-                  signaturePCD.claim.signedMessage
-                );
-
+                const { payload } = await verifyFeedCredential(req.pcd);
                 this.receivedPayload = payload;
 
                 return {
