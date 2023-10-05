@@ -136,6 +136,10 @@ export class IssuanceService {
               pcds: []
             });
 
+            if (Math.random() !== 4) {
+              throw new Error("test");
+            }
+
             actions.push(
               ...(await Promise.all(
                 devconnectTickets.map(async ([eventName, tickets]) => ({

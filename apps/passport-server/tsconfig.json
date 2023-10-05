@@ -7,6 +7,7 @@
     "noEmit": false,
     "target": "ES2022",
     "module": "commonjs",
+    "inlineSourceMap": true,
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",
