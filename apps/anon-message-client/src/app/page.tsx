@@ -9,6 +9,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import sha256 from "js-sha256";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 
 function getMessageWatermark(message: string): bigint {
@@ -126,6 +127,8 @@ function requestProof(message: string) {
 
 export default function SubmitMessagePage() {
   const [message, setMessage] = useState("");
+  const searchParams = useSearchParams();
+  const topicName = searchParams.get("topicName");
 
   const onClick = useCallback(() => {
     requestProof(message);
@@ -133,7 +136,9 @@ export default function SubmitMessagePage() {
 
   return (
     <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
-      <span className="text-white font-bold my-4">zk-TG</span>
+      <span className="text-white font-bold my-4">
+        {topicName ? `Post to #${topicName}` : "Post with zk-TG "}
+      </span>
       <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
         <textarea
           placeholder="Type your anonymous message here"

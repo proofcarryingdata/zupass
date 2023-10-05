@@ -1,5 +1,5 @@
 import { Pool } from "postgres-pool";
-import { TelegramEvent } from "../../models";
+import { TelegramAnonChannel, TelegramEvent } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -37,6 +37,23 @@ export async function fetchTelegramEventsByChatId(
   return result.rows;
 }
 
+export async function fetchTelegramAnonTopicsByChatId(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramAnonChannel[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select a.anon_topic_id, a.anon_topic_name, a.ticket_event_id, t.telegram_chat_id 
+    from telegram_chat_anon_topics a
+    join telegram_bot_events t on a.ticket_event_id = t.ticket_event_id
+    where t.telegram_chat_id = $1
+    `,
+    [telegramChatId]
+  );
+  return result.rows;
+}
+
 export interface LinkedPretixTelegramEvent {
   telegramChatID: string | null;
   eventName: string;
@@ -67,7 +84,8 @@ export interface ChatIDWithEventIDs {
 }
 
 export async function fetchEventsPerChat(
-  client: Pool
+  client: Pool,
+  eventId: string
 ): Promise<ChatIDWithEventIDs[]> {
   const result = await sqlQuery(
     client,
@@ -77,8 +95,23 @@ export async function fetchEventsPerChat(
       FROM 
         telegram_bot_events
       GROUP BY 
-        telegram_chat_id;`
+        telegram_chat_id;`,
+    [eventId]
   );
+  return result.rows;
+}
 
+export async function fetchTelegramAnonTopicsByEventId(
+  client: Pool,
+  eventId: string
+): Promise<TelegramAnonChannel[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_chat_anon_topics
+    where ticket_event_id = $1
+    `,
+    [eventId]
+  );
   return result.rows;
 }

@@ -13,11 +13,12 @@ import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fe
 import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
-  insertTelegramEvent,
+  insertTelegramAnonTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
@@ -345,6 +346,43 @@ export class TelegramService {
       });
     });
 
+    this.bot.on(":forum_topic_edited", async (ctx) => {
+      //
+      logger(
+        `[TELEGRAM forum topic edited]`,
+        ctx,
+        ctx.update?.message?.forum_topic_edited
+      );
+      const topicName = ctx.update?.message?.forum_topic_edited.name;
+      const messageThreadId = ctx.update.message?.message_thread_id;
+      const chatId = ctx.chat.id;
+      const telegramEvents = await fetchTelegramAnonTopicsByChatId(
+        this.context.dbPool,
+        ctx.chat.id
+      );
+      const ticketEvents = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        ctx.chat.id
+      );
+      if (!chatId || !topicName || !messageThreadId)
+        throw new Error(`Missing chatId or topic name`);
+
+      const topicToUpdate = telegramEvents.find(
+        (e) =>
+          e.anon_topic_id?.toString() === messageThreadId?.toString() &&
+          ticketEvents.find((t) => t.ticket_event_id === e.ticket_event_id)
+      );
+
+      if (!topicToUpdate) throw new Error(`No topic to update found`);
+
+      await insertTelegramAnonTopic(
+        this.context.dbPool,
+        telegramEvents[0].ticket_event_id,
+        messageThreadId,
+        topicName
+      );
+    });
+
     this.bot.command("incognito", async (ctx) => {
       const messageThreadId = ctx.message?.message_thread_id;
       if (!messageThreadId) {
@@ -370,28 +408,61 @@ export class TelegramService {
         const hasLinked = telegramEvents.length > 0;
         if (!hasLinked) {
           await ctx.reply(
-            "This group is not linked to an event. Please use /link to link this group to an event.",
-            { message_thread_id: messageThreadId }
-          );
-          return;
-        } else if (telegramEvents.filter((e) => e.anon_chat_id).length > 0) {
-          await ctx.reply(
-            `This group has already linked an anonymous channel.`,
+            "This group is not linked to an event. If you're an admin, use /manage to link this group to an event.",
             { message_thread_id: messageThreadId }
           );
           return;
         }
 
-        await insertTelegramEvent(
+        const chatAnonTopics = await fetchTelegramAnonTopicsByChatId(
           this.context.dbPool,
-          telegramEvents[0].ticket_event_id,
-          telegramEvents[0].telegram_chat_id,
-          messageThreadId
+          ctx.chat.id
         );
 
+        logger(`[TELEGRAM] chatAnonTopics`, chatAnonTopics);
+
+        const currentAnonTopic = chatAnonTopics.find(
+          (t) => t.anon_topic_id == messageThreadId
+        );
+        logger(`[TELEGRAM] currentAnonTopic`, currentAnonTopic);
+
+        if (currentAnonTopic) {
+          await ctx.reply(`This topic is already an anonymous channel.`, {
+            message_thread_id: messageThreadId
+          });
+          return;
+        }
+
+        const topicName =
+          ctx.message?.reply_to_message?.forum_topic_created?.name;
+        if (!topicName) throw new Error(`No topic name found`);
+
+        for (const event of telegramEvents) {
+          await insertTelegramAnonTopic(
+            this.context.dbPool,
+            event.ticket_event_id,
+            messageThreadId,
+            topicName
+          );
+        }
+
+        await ctx.reply(`Successfully linked anonymous channel.`, {
+          message_thread_id: messageThreadId
+        });
+
+        const zktgUrl =
+          `${process.env.TELEGRAM_ANON_WEBSITE}?topicName=${topicName}` ??
+          `https://dev.local:4000?topicName=${topicName}`;
+
         await ctx.reply(
-          `Successfully linked anonymous channel. DM me with /anonsend to anonymously send a message.`,
-          { message_thread_id: messageThreadId }
+          `Click here to anonymously send a message to this topic`,
+          {
+            message_thread_id: messageThreadId,
+            reply_markup: new InlineKeyboard().url(
+              `Post Anonymous Message️`,
+              zktgUrl
+            )
+          }
         );
       } catch (error) {
         logger(`[ERROR] ${error}`);
