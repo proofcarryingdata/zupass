@@ -31,7 +31,8 @@ export async function requestDownloadAndDecryptStorage(
       return { error: "couldn't download e2ee data", success: false };
     }
 
-    // TODO(artwyman): Add and implement revision handling.
+    // TODO(artwyman): Add and implement revision handling.  Also propagate
+    // different types of errors so they're not all incorrect password.
     if (!storageResult.value.encryptedBlob) {
       console.error("unexpectedly missing e2ee data");
       return { error: "unexpectedly missing e2ee data", success: false };
