@@ -5,6 +5,7 @@ import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startMetricsService } from "./services/metricsService";
+import { startMultiProcessService } from "./services/multiProcessService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
@@ -23,6 +24,7 @@ export async function startServices(
   await startTelemetry(context);
   instrumentPCDs();
 
+  const multiprocessService = startMultiProcessService();
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
@@ -57,7 +59,8 @@ export async function startServices(
   const issuanceService = startIssuanceService(
     context,
     persistentCacheService,
-    rollbarService
+    rollbarService,
+    multiprocessService
   );
   const services: GlobalServices = {
     semaphoreService,
@@ -72,7 +75,8 @@ export async function startServices(
     issuanceService,
     discordService,
     telegramService,
-    persistentCacheService
+    persistentCacheService,
+    multiprocessService
   };
   return services;
 }
@@ -86,4 +90,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
   await services.discordService?.stop();
+  await services.multiprocessService.stop();
 }
