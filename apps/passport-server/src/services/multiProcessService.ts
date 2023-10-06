@@ -25,53 +25,6 @@ const WORKER_MODULE_PATH = path.join(
 const DEFAULT_WORKER_QUANTITY = os.cpus().length;
 
 /**
- * Very simple in-memory Least-Recently-Used cache
- */
-class LruCache<T> {
-  private map: Map<string, T>;
-  private capacity: number;
-
-  public constructor(capacity: number) {
-    this.capacity = capacity;
-    this.map = new Map();
-  }
-
-  public get(key: string): T | undefined {
-    const value = this.map.get(key);
-
-    if (!value) {
-      return undefined;
-    }
-
-    // Since we're using the key, reset it to flag it as having been used
-    this.map.delete(key);
-    this.map.set(key, value);
-
-    return value;
-  }
-
-  public set(key: string, value: T): void {
-    this.map.delete(key);
-
-    if (this.map.size + 1 === this.capacity) {
-      // Map keys are stored in the order they're added, so the first key
-      // is the oldest.
-      this.map.delete(this.map.keys().next().value);
-    }
-
-    this.map.set(key, value);
-  }
-
-  public delete(key: string): void {
-    this.map.delete(key);
-  }
-
-  public has(key: string): boolean {
-    return this.map.has(key);
-  }
-}
-
-/**
  * This class contains one function per type of task that can be
  * offloaded to a background process. Under the hood, MultiProcessService
  * spawns several Node.js processes with the code located in {@link worker.ts}
@@ -84,7 +37,6 @@ export class MultiProcessService {
    * https://www.npmjs.com/package/worker-farm
    */
   private workers: WorkerFarm;
-  private jobs: Record<string, LruCache<any>>;
 
   public constructor() {
     const workerQuantityFromEnvironment = parseInt(
@@ -110,10 +62,6 @@ export class MultiProcessService {
       },
       WORKER_MODULE_PATH
     );
-
-    this.jobs = {
-      verifySignaturePCD: new LruCache<Promise<boolean>>(100)
-    };
   }
 
   /**
@@ -130,14 +78,8 @@ export class MultiProcessService {
     // to the worker farm in a promise.
     return traced(LOG_NAME, "verifySignaturePCD", async () => {
       logger("[MULTIPROCESS] verifying a semaphore signature");
-      const payload = JSON.stringify(pcd);
-      // Are we already processing an identical job?
-      // Using the stringified payload as the cache key
-      if (this.jobs.verifySignaturePCD.has(payload)) {
-        return this.jobs.verifySignaturePCD.get(payload);
-      }
-      const promise = new Promise<boolean>((resolve, reject) => {
-        this.workers(payload, (err: Error, result: boolean) => {
+      return new Promise<boolean>((resolve, reject) => {
+        this.workers(JSON.stringify(pcd), (err: Error, result: boolean) => {
           if (err) {
             reject(err);
           } else {
@@ -145,8 +87,6 @@ export class MultiProcessService {
           }
         });
       });
-      this.jobs.verifySignaturePCD.set(payload, promise);
-      return promise;
     });
   }
 

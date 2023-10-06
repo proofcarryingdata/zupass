@@ -2,9 +2,9 @@ import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,12 +26,12 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
-  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission
+  ReplaceInFolderPermission,
+  joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -42,6 +42,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
+import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import {
   DevconnectPretixTicketDBWithEmailAndItem,
@@ -81,6 +82,8 @@ export class IssuanceService {
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
+  private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
+
 
   public constructor(
     context: ApplicationContext,
@@ -99,6 +102,9 @@ export class IssuanceService {
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
     const FEED_PROVIDER_NAME = "Zupass";
+    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
+      max: 1000
+    });
 
     this.feedHost = new FeedHost(
       [
@@ -525,7 +531,7 @@ export class IssuanceService {
   private async checkUserExists(
     proof: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UserRow | null> {
-    const isValid = await this.multiprocessService.verifySignaturePCD(proof);
+    const isValid = await this.cachedVerify(proof);
 
     const deserializedSignature =
       await SemaphoreSignaturePCDPackage.deserialize(proof.pcd);
@@ -886,6 +892,25 @@ export class IssuanceService {
 
       return tickets;
     });
+  }
+
+  /**
+   * Returns a promised verification of a PCD, either from the cache or,
+   * if there is no cache entry, from the multiprocess service.
+   */
+  private cachedVerify(serializedPCD: SerializedPCD): Promise<boolean> {
+    const key = JSON.stringify(serializedPCD);
+    const cached = this.verificationPromiseCache.get(key);
+    if (cached) {
+      return cached;
+    }
+    else {
+      const promise = this.multiprocessService.verifySignaturePCD(serializedPCD);
+      // If the promise rejects, delete it from the cache
+      promise.catch(() => this.verificationPromiseCache.delete(key));
+      this.verificationPromiseCache.set(key, promise);
+      return promise;
+    }
   }
 }
 
