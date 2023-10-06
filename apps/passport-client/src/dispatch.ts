@@ -28,7 +28,6 @@ import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadSelf,
-  saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
@@ -503,7 +502,6 @@ function userInvalid(update: ZuUpdate) {
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate) {
-  saveAnotherDeviceChangedPassword(true);
   update({
     anotherDeviceChangedPassword: true,
     modal: "another-device-changed-password"

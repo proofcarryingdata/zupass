@@ -68,16 +68,3 @@ export function loadIdentity(): Identity | null {
 export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
-
-export function saveAnotherDeviceChangedPassword(
-  anotherDeviceChangedPassword: boolean
-) {
-  window.localStorage["anotherDeviceChangedPassword"] =
-    anotherDeviceChangedPassword;
-}
-
-export function loadAnotherDeviceChangedPassword(): boolean {
-  return JSON.parse(
-    window.localStorage["anotherDeviceChangedPassword"] ?? "false"
-  );
-}

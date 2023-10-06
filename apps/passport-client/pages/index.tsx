@@ -37,7 +37,6 @@ import {
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
-  loadAnotherDeviceChangedPassword,
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
@@ -186,8 +185,6 @@ async function loadInitialState(): Promise<AppState> {
   const self = loadSelf();
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
-
-  const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
@@ -213,7 +210,6 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    anotherDeviceChangedPassword,
     subscriptions,
     resolvingSubscriptionId: undefined
   };
