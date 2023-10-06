@@ -5,7 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
@@ -40,6 +40,10 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
+
+  useEffect(() => {
+    setError(undefined);
+  }, [args]);
 
   const onProveClick = useCallback(async () => {
     setProving(true);
