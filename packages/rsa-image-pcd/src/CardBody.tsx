@@ -11,12 +11,14 @@ export function RSAImageCardBody({ pcd }: { pcd: RSAImagePCD }) {
   );
 }
 
-const Container = styled.span`
+const Container = styled.div`
   padding: 16px;
   overflow: hidden;
   width: 100%;
 
   img {
-    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 16px;
+    overflow: hidden;
   }
 `;
