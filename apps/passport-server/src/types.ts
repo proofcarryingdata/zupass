@@ -13,6 +13,7 @@ import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
 import { MetricsService } from "./services/metricsService";
+import { MultiProcessService } from "./services/multiProcessService";
 import { PersistentCacheService } from "./services/persistentCacheService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
@@ -43,6 +44,7 @@ export interface GlobalServices {
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
   persistentCacheService: PersistentCacheService;
+  multiprocessService: MultiProcessService;
 }
 
 export interface Zupass {
