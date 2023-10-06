@@ -39,6 +39,7 @@ import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import { hasSetupPassword } from "./user";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -450,6 +451,14 @@ async function addPCDs(
   pcds: SerializedPCD[],
   upsert?: boolean
 ) {
+  // Require user to set up a password before adding PCDs
+  if (!hasSetupPassword(state.self)) {
+    update({
+      modal: {
+        modalType: "require-add-password"
+      }
+    });
+  }
   await state.pcds.deserializeAllAndAdd(pcds, { upsert });
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
