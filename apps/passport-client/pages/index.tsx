@@ -123,7 +123,7 @@ class App extends React.Component<object, AppState> {
       console.log(e);
     }
 
-    setTimeout(this.jobPollUser, 1000 * 1);
+    setTimeout(this.jobPollUser, 1000 * 60);
   };
 }
 
