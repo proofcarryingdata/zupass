@@ -484,10 +484,12 @@ async function loadFromSync(
   }
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
-  // @todo: Remove duplicated fields like salt and encryption_key from the e2ee storage
-  const userResponse = await requestUser(appConfig.zupassServer, storage.self.uuid)
+  const userResponse = await requestUser(
+    appConfig.zupassServer,
+    storage.self.uuid
+  );
   if (!userResponse.success) {
-    throw new Error(userResponse.error.errorMessage)
+    throw new Error(userResponse.error.errorMessage);
   }
 
   // assumes that we only have one semaphore identity in Zupass.
@@ -502,7 +504,7 @@ async function loadFromSync(
   } else if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
-    storage.self.encryption_key == null &&
+    encryptionKey == null &&
     storage.self.salt == null
   ) {
     console.log("Asking existing user to set a password");
@@ -515,7 +517,7 @@ async function loadFromSync(
 
   await savePCDs(pcds);
   saveEncryptionKey(encryptionKey);
-  saveSelf(userResponse.value)
+  saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
 
   update({

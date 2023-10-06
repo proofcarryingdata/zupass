@@ -1,22 +1,6 @@
-export interface User {
-  /** Public UUID */
-  uuid: string;
+import { ZupassUserJson } from "./RequestTypes";
 
-  /** Semaphore public commitment */
-  commitment: string;
-
-  /** Email address they used to register */
-  email: string;
-
-  /** Salt used to secure user's password */
-  salt: string | null;
-
-  /** Encryption key, if stored on server */
-  encryption_key: string | null;
-
-  /** Devconnect-specific user metadata */
-  superuserEventConfigIds?: string[];
-}
+export type User = ZupassUserJson;
 
 export interface DateRange {
   date_from?: string | null;

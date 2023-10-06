@@ -4,11 +4,8 @@ import {
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { Response } from "express";
-import { LoggedInUser, UserRow } from "../database/models";
-import {
-  fetchDevconnectDeviceLoginTicket,
-  fetchDevconnectSuperusersForEmail
-} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { UserRow } from "../database/models";
+import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
@@ -185,6 +182,15 @@ export class UserService {
     );
   }
 
+  private userRowToZupassUserJson(user: UserRow): ZupassUserJson {
+    return {
+      uuid: user.uuid,
+      commitment: user.commitment,
+      email: user.email,
+      salt: user.salt
+    };
+  }
+
   public async handleNewUser(
     token: string,
     email: string,
@@ -236,10 +242,10 @@ export class UserService {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
-    const fullUser = await this.userToLoggedInUser(user);
+    const userJson = await this.userRowToZupassUserJson(user);
 
-    logger(`[USER_SERVICE] logged in a user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+    logger(`[USER_SERVICE] logged in a user`, userJson);
+    res.status(200).json(userJson satisfies ZupassUserJson);
   }
 
   /**
@@ -287,30 +293,29 @@ export class UserService {
       throw new PCDHTTPError(403, `no user with email '${email}' exists`);
     }
 
-    const fullUser = await this.userToLoggedInUser(user);
+    const userJson = await this.userRowToZupassUserJson(user);
 
-    logger(`[USER_SERVICE] logged in a device login user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+    logger(`[USER_SERVICE] logged in a device login user`, userJson);
+    res.status(200).json(userJson satisfies ZupassUserJson);
   }
 
   /**
    * Returns either the user, or null if no user with the given uuid can be found.
    */
-  public async getUserByUUID(uuid: string): Promise<LoggedInUser | null> {
+  public async getUserByUUID(uuid: string): Promise<UserRow | null> {
     const user = await fetchUserByUUID(this.context.dbPool, uuid);
 
     if (!user) {
       logger("[SEMA] no user with that email exists");
       return null;
     }
-
-    return this.userToLoggedInUser(user);
+    return user;
   }
 
   /**
    * Gets a user by email address, or null if no user with that email exists.
    */
-  public async getUserByEmail(email: string): Promise<LoggedInUser | null> {
+  public async getUserByEmail(email: string): Promise<UserRow | null> {
     const user = await fetchUserByEmail(this.context.dbPool, email);
 
     if (!user) {
@@ -318,23 +323,7 @@ export class UserService {
       return null;
     }
 
-    return this.userToLoggedInUser(user);
-  }
-
-  private async userToLoggedInUser(user: UserRow): Promise<LoggedInUser> {
-    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-      this.context.dbPool,
-      user.email
-    );
-
-    const fullUser: LoggedInUser = {
-      ...user,
-      superuserEventConfigIds: superuserPrivilages.map(
-        (s) => s.pretix_events_config_id
-      )
-    };
-
-    return fullUser;
+    return user;
   }
 }
 

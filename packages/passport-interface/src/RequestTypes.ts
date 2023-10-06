@@ -288,16 +288,8 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  // @todo: make this private to the user
   email: string;
-  // @todo: make this private to the user
   salt: string | null;
-  // @todo: make this private to the user
-  encryption_key: string | null;
-  // @todo: make this private to the user
-  account_reset_timestamps: string[];
-  // @todo: make this private to the user
-  superuserEventConfigIds: string[];
 }
 
 /**

@@ -99,18 +99,12 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   encryption_key: string | null;
 }
 
-export interface LoggedInUser extends UserRow {
-  superuserEventConfigIds: string[];
-}
-
 export interface UserRow {
   uuid: string;
   commitment: string;
   email: string;
-  // @todo: make this private to the user
   salt: string | null;
   encryption_key: string | null;
-  // @todo: make this private to the user
   account_reset_timestamps: string[];
 }
 

@@ -198,7 +198,7 @@ async function loadInitialState(): Promise<AppState> {
   if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
-    self.encryption_key == null &&
+    encryptionKey == null &&
     self.salt == null
   ) {
     console.log("Asking existing user to set a password");
