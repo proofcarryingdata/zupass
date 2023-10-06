@@ -31,12 +31,12 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
-  SessionData,
   dynamicEvents,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
+  senderIsAdmin,
+  SessionData
 } from "../util/telegramHelpers";
 import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -503,7 +503,7 @@ export class TelegramService {
       genericProveScreen: true,
       title: "ZK Ticket Proof",
       description:
-        "Generate a zero-knowledge proof that you have a ZK-EdDSA ticket for the research workshop! Select your ticket from the dropdown below."
+        "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
     });
     return proofUrl;
   }
@@ -595,6 +595,7 @@ export class TelegramService {
     }
 
     if (
+      // TODO: wrap in a MultiProcessService?
       (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
       eventIdMatch &&
       signerMatch

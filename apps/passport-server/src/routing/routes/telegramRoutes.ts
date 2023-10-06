@@ -58,8 +58,7 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to verify", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.sendFile(path.resolve("resources/telegram/error.html"));
-        res.sendStatus(500);
+        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);

@@ -15,7 +15,9 @@ import {
 } from "../src/database/queries/cache";
 import {
   fetchEncryptedStorage,
-  insertEncryptedStorage
+  rekeyEncryptedStorage,
+  setEncryptedStorage,
+  updateEncryptedStorage
 } from "../src/database/queries/e2ee";
 import {
   fetchEmailToken,
@@ -207,34 +209,258 @@ describe("database reads and writes", function () {
     expect(initialStorage).to.be.undefined;
 
     const value = "value";
-    await insertEncryptedStorage(db, key, value);
+    await setEncryptedStorage(db, key, value);
     const insertedStorage = await fetchEncryptedStorage(db, key);
     if (!insertedStorage) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
     expect(insertedStorage.blob_key).to.eq(key);
     expect(insertedStorage.encrypted_blob).to.eq(value);
+    expect(insertedStorage.revision).to.eq("1");
 
     const updatedValue = "value2";
     expect(value).to.not.eq(updatedValue);
-    await insertEncryptedStorage(db, key, updatedValue);
+    await setEncryptedStorage(db, key, updatedValue);
     const updatedStorage = await fetchEncryptedStorage(db, key);
     if (!updatedStorage) {
       throw new Error("expected to be able to fetch updated e2ee blog");
     }
     expect(updatedStorage.blob_key).to.eq(key);
     expect(updatedStorage.encrypted_blob).to.eq(updatedValue);
+    expect(updatedStorage.revision).to.eq("2");
 
     // Storing an empty string is valid, and not treated as deletion.
     const emptyValue = "";
     expect(updatedValue).to.not.eq(emptyValue);
-    await insertEncryptedStorage(db, key, emptyValue);
+    await setEncryptedStorage(db, key, emptyValue);
     const emptyStorage = await fetchEncryptedStorage(db, key);
     if (!emptyStorage) {
       throw new Error("expected to be able to fetch updated e2ee blog");
     }
     expect(emptyStorage.blob_key).to.eq(key);
     expect(emptyStorage.encrypted_blob).to.eq(emptyValue);
+    expect(emptyStorage.revision).to.eq("3");
+  });
+
+  step("e2ee update conflict detection should work", async function () {
+    const key = "ckey1";
+    const initialStorage = await fetchEncryptedStorage(db, key);
+    expect(initialStorage).to.be.undefined;
+
+    // Can't use "update" to set initial state.
+    const value1 = "value1";
+    const missingResult = await updateEncryptedStorage(db, key, value1, "0");
+    expect(missingResult.status).to.eq("missing");
+    expect(missingResult.revision).to.be.undefined;
+
+    // Use "set" to create rev1.
+    const rev1 = await setEncryptedStorage(db, key, value1);
+    expect(rev1).to.eq("1");
+    const insertedStorage = await fetchEncryptedStorage(db, key);
+    if (!insertedStorage) {
+      throw new Error("expected to be able to fetch a e2ee blob");
+    }
+    expect(insertedStorage.blob_key).to.eq(key);
+    expect(insertedStorage.encrypted_blob).to.eq(value1);
+    expect(insertedStorage.revision).to.eq("1");
+
+    // Can update to rev2.
+    const value2 = "value2";
+    const updateResult2 = await updateEncryptedStorage(db, key, value2, rev1);
+    expect(updateResult2.status).to.eq("updated");
+    expect(updateResult2.revision).to.eq("2");
+    const storage2 = await fetchEncryptedStorage(db, key);
+    if (!storage2) {
+      throw new Error("expected to be able to fetch a e2ee blob");
+    }
+    expect(storage2.blob_key).to.eq(key);
+    expect(storage2.encrypted_blob).to.eq(value2);
+    expect(storage2.revision).to.eq("2");
+    const rev2 = storage2.revision;
+
+    // Updating based on rev1 is a conflict, leaving storage unchanged.
+    const value3 = "value3";
+    const conflictResult = await updateEncryptedStorage(db, key, value3, rev1);
+    expect(conflictResult.status).to.eq("conflict");
+    expect(conflictResult.revision).to.eq("2");
+    const conflictStorage = await fetchEncryptedStorage(db, key);
+    if (!conflictStorage) {
+      throw new Error("expected to be able to fetch a e2ee blob");
+    }
+    expect(conflictStorage.blob_key).to.eq(key);
+    expect(conflictStorage.encrypted_blob).to.eq(value2);
+    expect(conflictStorage.revision).to.eq("2");
+
+    // Updating based on rev2 can succeed regardless of the previous conflict.
+    const updateResult3 = await updateEncryptedStorage(db, key, value2, rev2);
+    expect(updateResult3.status).to.eq("updated");
+    expect(updateResult3.revision).to.eq("3");
+    const storage3 = await fetchEncryptedStorage(db, key);
+    if (!storage3) {
+      throw new Error("expected to be able to fetch a e2ee blob");
+    }
+    expect(storage3.blob_key).to.eq(key);
+    expect(storage3.encrypted_blob).to.eq(value2);
+    expect(storage3.revision).to.eq("3");
+  });
+
+  step("e2ee rekeying should work", async function () {
+    const key1 = "key1";
+    const value1 = "value1";
+    const salt1 = "1234";
+
+    const email = "e2ee-rekey-user@test.com";
+    const commitment = new Identity().commitment.toString();
+    const uuid = await upsertUser(db, {
+      commitment,
+      email,
+      salt: salt1
+    });
+    if (!uuid) {
+      throw new Error("expected to be able to insert a commitment");
+    }
+
+    await setEncryptedStorage(db, key1, value1);
+    const storage1 = await fetchEncryptedStorage(db, key1);
+    if (!storage1) {
+      throw new Error("expected to be able to fetch 1st e2ee blob");
+    }
+    expect(storage1.blob_key).to.eq(key1);
+    expect(storage1.encrypted_blob).to.eq(value1);
+    expect(storage1.revision).to.eq("1");
+
+    const key2 = "key2";
+    const value2 = "value2";
+    const salt2 = "5678";
+
+    const rekeyResult = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value2
+    );
+    expect(rekeyResult.status).to.eq("updated");
+    expect(rekeyResult.revision).to.eq("2");
+    const storage2 = await fetchEncryptedStorage(db, key2);
+    if (!storage2) {
+      throw new Error("expected to be able to fetch 2nd e2ee blob");
+    }
+    expect(storage2.blob_key).to.eq(key2);
+    expect(storage2.encrypted_blob).to.eq(value2);
+    expect(storage2.revision).to.eq("2");
+    const storageMissing = await fetchEncryptedStorage(db, key1);
+    if (storageMissing) {
+      throw new Error("expected 1st e2ee blob to be gone");
+    }
+
+    // We can't rekey again because key doesn't match.
+    const rekeyResult2 = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value2
+    );
+    expect(rekeyResult2.status).to.eq("missing");
+    expect(rekeyResult2.revision).to.be.undefined;
+  });
+
+  step("e2ee rekeying should work with knownRevision", async function () {
+    const key1 = "rkey1";
+    const value1 = "value1";
+    const value2 = "value2";
+    const salt1 = "1234";
+
+    const email = "e2ee-rekey-user@test.com";
+    const commitment = new Identity().commitment.toString();
+    const uuid = await upsertUser(db, {
+      commitment,
+      email,
+      salt: salt1
+    });
+    if (!uuid) {
+      throw new Error("expected to be able to insert a commitment");
+    }
+
+    // Set storage rev1
+    const rev1 = await setEncryptedStorage(db, key1, value1);
+    expect(rev1).to.eq("1");
+    const storage1 = await fetchEncryptedStorage(db, key1);
+    if (!storage1) {
+      throw new Error("expected to be able to fetch 1st e2ee blob");
+    }
+    expect(storage1.blob_key).to.eq(key1);
+    expect(storage1.encrypted_blob).to.eq(value1);
+    expect(storage1.revision).to.eq("1");
+
+    // Set storage rev2
+    const rev2 = await setEncryptedStorage(db, key1, value2);
+    expect(rev2).to.eq("2");
+    const storage2 = await fetchEncryptedStorage(db, key1);
+    if (!storage2) {
+      throw new Error("expected to be able to fetch 1st e2ee blob");
+    }
+    expect(storage2.blob_key).to.eq(key1);
+    expect(storage2.encrypted_blob).to.eq(value2);
+    expect(storage2.revision).to.eq("2");
+
+    const key2 = "rkey2";
+    const value3 = "value3";
+    const salt2 = "5678";
+
+    // Attempt to rekey based on rev1, causing conflict without changing rev
+    const rekeyResult1 = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value3,
+      rev1
+    );
+    expect(rekeyResult1.status).to.eq("conflict");
+    expect(rekeyResult1.revision).to.eq("2");
+
+    // Rekey successfully based on rev2
+    const rekeyResult2 = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value3,
+      rev2
+    );
+    expect(rekeyResult2.status).to.eq("updated");
+    expect(rekeyResult2.revision).to.eq("3");
+    const rev3 = rekeyResult2.revision;
+    const storageRekeyed = await fetchEncryptedStorage(db, key2);
+    if (!storageRekeyed) {
+      throw new Error("expected to be able to fetch 2nd e2ee blob");
+    }
+    expect(storageRekeyed.blob_key).to.eq(key2);
+    expect(storageRekeyed.encrypted_blob).to.eq(value3);
+    expect(storageRekeyed.revision).to.eq("3");
+    const storageMissing = await fetchEncryptedStorage(db, key1);
+    if (storageMissing) {
+      throw new Error("expected 1st e2ee blob to be gone");
+    }
+
+    // We can't rekey again because key doesn't match.
+    const rekeyResult3 = await rekeyEncryptedStorage(
+      db,
+      key1,
+      key2,
+      uuid,
+      salt2,
+      value2,
+      rev3
+    );
+    expect(rekeyResult3.status).to.eq("missing");
+    expect(rekeyResult3.revision).to.be.undefined;
   });
 
   step("pcdpass user representation should work", async function () {

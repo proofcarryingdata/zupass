@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../../src/appHooks";
+import { useDispatch, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
@@ -20,6 +20,9 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
   );
   const openInfo = useCallback(() => setModal("info"), [setModal]);
   const openSettings = useCallback(() => setModal("settings"), [setModal]);
+  const openSubscriptions = useCallback(() => window.location.hash = "subscriptions", []);
+
+  const subscriptions = useSubscriptions();
 
   return (
     <AppHeaderWrap>
@@ -27,6 +30,16 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
         <img draggable="false" src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
       {children}
+      <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
+        {subscriptions.value.getAllErrors().size > 0 &&
+          <ErrorDotContainer><ErrorDot /></ErrorDotContainer>}
+        <img
+          title="Subscriptions"
+          draggable="false"
+          src={icons.subscription}
+          width={34}
+          height={34} />
+      </CircleButton>
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <img
           draggable="false"
@@ -47,3 +60,18 @@ const AppHeaderWrap = styled.div`
   align-items: center;
   gap: 16px;
 `;
+
+const ErrorDot = styled.div`
+  position: absolute;
+  background: var(--danger);
+  right: 0px;
+  width: 8px;
+  height: 8px;
+  border-radius: 8px;
+}
+`
+
+const ErrorDotContainer = styled.div`
+  position: relative;
+  pointer-events: none;
+`

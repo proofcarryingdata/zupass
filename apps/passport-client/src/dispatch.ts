@@ -12,7 +12,7 @@ import {
   User
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
-import { PCDCollection } from "@pcd/pcd-collection";
+import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -28,13 +28,11 @@ import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadSelf,
-  saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
   saveSelf,
-  saveSubscriptions,
-  saveUserInvalid
+  saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
@@ -97,7 +95,12 @@ export type Action =
       feed: Feed;
       credential: SerializedPCD;
     }
-  | { type: "remove-subscription"; subscriptionId: string };
+  | { type: "remove-subscription"; subscriptionId: string }
+  | {
+      type: "update-subscription-permissions";
+      subscriptionId: string;
+      permissions: PCDPermission[];
+    };
 
 export type StateContextState = {
   getState: GetState;
@@ -165,6 +168,13 @@ export async function dispatch(
       );
     case "remove-subscription":
       return removeSubscription(state, update, action.subscriptionId);
+    case "update-subscription-permissions":
+      return updateSubscriptionPermissions(
+        state,
+        update,
+        action.subscriptionId,
+        action.permissions
+      );
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -485,7 +495,6 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate) {
-  saveUserInvalid(true);
   update({
     userInvalid: true,
     modal: "invalid-participant"
@@ -493,7 +502,6 @@ function userInvalid(update: ZuUpdate) {
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate) {
-  saveAnotherDeviceChangedPassword(true);
   update({
     anotherDeviceChangedPassword: true,
     modal: "another-device-changed-password"
@@ -657,7 +665,9 @@ async function addSubscription(
   state.subscriptions.subscribe(providerUrl, feed, credential);
   await saveSubscriptions(state.subscriptions);
   update({
-    subscriptions: state.subscriptions
+    subscriptions: state.subscriptions,
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false
   });
 }
 
@@ -670,5 +680,24 @@ async function removeSubscription(
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions
+  });
+}
+
+async function updateSubscriptionPermissions(
+  state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string,
+  permisisons: PCDPermission[]
+) {
+  state.subscriptions.updateFeedPermissionsForSubscription(
+    subscriptionId,
+    permisisons
+  );
+  state.subscriptions.resetError(subscriptionId);
+  await saveSubscriptions(state.subscriptions);
+  update({
+    subscriptions: state.subscriptions,
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false
   });
 }

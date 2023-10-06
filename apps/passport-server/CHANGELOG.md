@@ -1,5 +1,26 @@
 # passport-server
 
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eddsa-pcd@0.2.1
+  - @pcd/eddsa-ticket-pcd@0.2.1
+  - @pcd/email-pcd@0.2.1
+  - @pcd/passport-crypto@0.7.1
+  - @pcd/passport-interface@0.7.1
+  - @pcd/pcd-collection@0.7.1
+  - @pcd/pcd-types@0.7.1
+  - @pcd/rln-pcd@0.6.1
+  - @pcd/rsa-image-pcd@0.1.1
+  - @pcd/rsa-pcd@0.2.1
+  - @pcd/rsa-ticket-pcd@0.2.1
+  - @pcd/semaphore-group-pcd@0.7.1
+  - @pcd/semaphore-identity-pcd@0.7.1
+  - @pcd/semaphore-signature-pcd@0.7.1
+  - @pcd/zk-eddsa-event-ticket-pcd@0.1.1
+
 ## 0.0.20
 
 Removed deprecated @pcd/zk-eddsa-ticket-pcd.

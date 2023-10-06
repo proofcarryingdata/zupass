@@ -5,7 +5,7 @@ import {
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { checkQueryParam } from "../params";
+import { checkOptionalQueryParam, checkQueryParam } from "../params";
 
 export function initE2EERoutes(
   app: express.Application,
@@ -14,6 +14,12 @@ export function initE2EERoutes(
 ): void {
   logger("[INIT] initializing e2ee routes");
 
+  /**
+   * Given a ChangeBlobKeyRequest in the request body, performs the steps
+   * necessary to change the user's storage key: deleting old encrypted
+   * storage, storing the new encrypted storage, and updating the user's
+   * salt so they can re-derive their key.
+   */
   app.post("/sync/changeBlobKey", async (req: Request, res: Response) => {
     const request = req.body as ChangeBlobKeyRequest;
     await e2eeService.handleChangeBlobKey(request, res);
@@ -22,14 +28,19 @@ export function initE2EERoutes(
   /**
    * Given a `blobKey`, which is a hash of the user's encryption key (which
    * itself is a function of their password and salt), returns the encrypted
-   * blob stored in the e2ee db table, encoded in an {@link EncryptedStorageResultValue}
+   * blob stored in the e2ee db table, encoded in a
+   * {@link DownloadEncryptedStorageResponseValue}.
    *
    * If no e2ee entry exists for the given `blobKey`, returns a 404.
    *
    * @todo - restrict the calling of this api somehow? at least a rate limit.
    */
   app.get("/sync/load/", async (req: Request, res: Response) => {
-    await e2eeService.handleLoad(checkQueryParam(req, "blobKey"), res);
+    await e2eeService.handleLoad(
+      checkQueryParam(req, "blobKey"),
+      checkOptionalQueryParam(req, "knownRevision"),
+      res
+    );
   });
 
   /**

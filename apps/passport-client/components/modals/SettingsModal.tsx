@@ -40,14 +40,6 @@ export function SettingsModal() {
           Change Password
         </LinkButton>
         <Spacer h={16} />
-        <LinkButton
-          $primary={true}
-          to="/subscriptions"
-          onClick={() => dispatch({ type: "set-modal", modal: "" })}
-        >
-          Manage Subscriptions
-        </LinkButton>
-        <Spacer h={16} />
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
