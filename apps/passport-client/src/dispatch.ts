@@ -33,8 +33,7 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
-  saveSubscriptions,
-  saveUserInvalid
+  saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
@@ -497,7 +496,6 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate) {
-  saveUserInvalid(true);
   update({
     userInvalid: true,
     modal: "invalid-participant"

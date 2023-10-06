@@ -31,9 +31,9 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -43,7 +43,6 @@ import {
   loadPCDs,
   loadSelf,
   loadSubscriptions,
-  loadUserInvalid,
   saveIdentity,
   saveSubscriptions
 } from "../src/localstorage";
@@ -188,7 +187,6 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
 
-  const userInvalid = loadUserInvalid();
   const anotherDeviceChangedPassword = loadAnotherDeviceChangedPassword();
   const subscriptions = await loadSubscriptions();
 
@@ -200,9 +198,7 @@ async function loadInitialState(): Promise<AppState> {
 
   let modal = "" as AppState["modal"];
 
-  if (userInvalid) {
-    modal = "invalid-participant";
-  } else if (
+  if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
     self.salt == null
@@ -217,7 +213,6 @@ async function loadInitialState(): Promise<AppState> {
     pcds,
     identity,
     modal,
-    userInvalid: userInvalid,
     anotherDeviceChangedPassword,
     subscriptions,
     resolvingSubscriptionId: undefined

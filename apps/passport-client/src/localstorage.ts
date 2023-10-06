@@ -69,19 +69,11 @@ export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
 
-export function saveUserInvalid(userInvalid: boolean) {
-  window.localStorage["participantInvalid"] = userInvalid;
-}
-
 export function saveAnotherDeviceChangedPassword(
   anotherDeviceChangedPassword: boolean
 ) {
   window.localStorage["anotherDeviceChangedPassword"] =
     anotherDeviceChangedPassword;
-}
-
-export function loadUserInvalid(): boolean {
-  return JSON.parse(window.localStorage["participantInvalid"] ?? "false");
 }
 
 export function loadAnotherDeviceChangedPassword(): boolean {
