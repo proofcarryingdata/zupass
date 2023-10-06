@@ -64,7 +64,74 @@ describe("feed host", async function () {
     await manager.pollSubscriptions(identity);
     // Request should now succeed
     expect(manager.getAllErrors().size).to.eq(0);
+  });
+
+  it("grace period for expired credentials should apply", async function () {
+    // October 5th 2023, 14:59:00
+    const clientDate = new Date(2023, 10, 5, 14, 59, 0, 0);
+    // October 5th 2023, 15:00:00, one minute later
+    const serverDate = new Date(2023, 10, 5, 15, 0, 0, 0);
+  
+    MockDate.set(clientDate);
+   
+    const futureFeedApi = new MockFeedApi(serverDate);
+
+    const manager = new FeedSubscriptionManager(futureFeedApi);
     
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const response = await manager.listFeeds(firstProviderUrl);
+    const feedThatVerifiesCredential = response.feeds[0];
+
+    await manager.subscribe(firstProviderUrl, feedThatVerifiesCredential);
+    await manager.pollSubscriptions(identity);
+    // Request should succeed
+    expect(manager.getAllErrors().size).to.eq(0);
+
+    // Reset client to original date
+    MockDate.set(clientDate);
+    // Move the server forward one minute and one second
+    serverDate.setMinutes(1);
+    serverDate.setSeconds(1);
+
+    await manager.pollSubscriptions(identity);
+    // Request should fail
+    expect(manager.getAllErrors().size).to.eq(1);
+  });
+
+  it("grace period for premature credentials should apply", async function () {
+    // October 5th 2023, 15:00:00
+    const clientDate = new Date(2023, 10, 5, 15, 0, 0, 0);
+    // October 5th 2023, 14:59:00, one minute behind
+    const serverDate = new Date(2023, 10, 5, 14, 59, 0, 0);
+  
+    MockDate.set(clientDate);
+   
+    const futureFeedApi = new MockFeedApi(serverDate);
+
+    const manager = new FeedSubscriptionManager(futureFeedApi);
     
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const response = await manager.listFeeds(firstProviderUrl);
+    const feedThatVerifiesCredential = response.feeds[0];
+
+    await manager.subscribe(firstProviderUrl, feedThatVerifiesCredential);
+
+    // This is the equivalent of generating a credential at 15:00, but making
+    // a request to a server whose clock is set to 14:59
+    await manager.pollSubscriptions(identity);
+    // Request should succeed
+    expect(manager.getAllErrors().size).to.eq(0);
+
+    // Reset client to original date
+    MockDate.set(clientDate);
+    // Move the server back one minute, so the client has a timestamp of 15:00
+    // and the server has 14:58
+    serverDate.setMinutes(58);
+
+    await manager.pollSubscriptions(identity);
+    // Request should fail
+    expect(manager.getAllErrors().size).to.eq(1);
   });
 });

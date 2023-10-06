@@ -5,7 +5,12 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 
+// Timestamps last for one hour
 const TIMESTAMP_RESOLUTION = 1000 * 60 * 60;
+
+// Timestamps have a grace period of one minute to prevent hard cut-offs
+// around the hour mark.
+const TIMESTAMP_GRACE_PERIOD = 1000 * 60 * 1;
 
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
@@ -43,7 +48,27 @@ export function createFeedCredentialPayload(
  */
 function validateFeedCredentialTimestamp(timestamp: number): boolean {
   const now = Date.now();
-  return timestamp === now - (now % TIMESTAMP_RESOLUTION);
+  // How far we are into the current TIMESTAMP_RESOLUTION period
+  const offset = now % TIMESTAMP_RESOLUTION;
+
+  const thisTimestampPeriod = now - offset;
+
+  // A timestamp matched to the start of the current period is always valid
+  const validTimestamps = [thisTimestampPeriod];
+
+  // If we are close to the start of a new period, a credential from the
+  // previous period is also acceptable
+  if (offset <= TIMESTAMP_GRACE_PERIOD) {
+    validTimestamps.push(thisTimestampPeriod - TIMESTAMP_RESOLUTION);
+  }
+
+  // If we are close to the end of a period, accept a credential whose
+  // timestamp is in the next period, to allow for some clock skew
+  if (TIMESTAMP_RESOLUTION - offset <= TIMESTAMP_GRACE_PERIOD) {
+    validTimestamps.push(thisTimestampPeriod + TIMESTAMP_RESOLUTION);
+  }
+
+  return validTimestamps.includes(timestamp);
 }
 
 async function deserializeAndVerify(
