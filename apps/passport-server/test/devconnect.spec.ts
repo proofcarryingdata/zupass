@@ -2051,11 +2051,11 @@ describe("devconnect functionality", function () {
     "shouldn't be able to issue pcds for an expired credential payload",
     async function () {
       // Generate credential payload at given time
-      MockDate.set(new Date(2023, 10, 5, 14, 0, 0));
+      MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
       const payload = JSON.stringify(createFeedCredentialPayload());
 
       // Attempt to use credential payload one hour later
-      MockDate.set(new Date(2023, 10, 5, 15, 0, 0));
+      MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
       const expressResponse = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
