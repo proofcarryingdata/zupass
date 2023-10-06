@@ -37,6 +37,7 @@ export class MultiProcessService {
    * https://www.npmjs.com/package/worker-farm
    */
   private workers: WorkerFarm;
+  private jobs: Record<string, Map<string, Promise<any>>>;
 
   public constructor() {
     const workerQuantityFromEnvironment = parseInt(
@@ -62,6 +63,10 @@ export class MultiProcessService {
       },
       WORKER_MODULE_PATH
     );
+
+    this.jobs = {
+      verifySignaturePCD: new Map<string, Promise<boolean>>()
+    };
   }
 
   /**
@@ -78,7 +83,16 @@ export class MultiProcessService {
     // to the worker farm in a promise.
     return traced(LOG_NAME, "verifySignaturePCD", async () => {
       logger("[MULTIPROCESS] verifying a semaphore signature");
-      return new Promise<boolean>((resolve, reject) => {
+      // Are we already processing an identical job?
+      if (this.jobs.verifySignaturePCD.has(pcd.pcd)) {
+        return this.jobs.verifySignaturePCD.get(pcd.pcd);
+      }
+      const promise = new Promise<boolean>((resolve, reject) => {
+        // We could also implement a poor man's cache here by deleting the job
+        // after a timeout, so that any attempt to verify the same PCD again
+        // would be returned an already-resolved promise. Would also save a
+        // round-trip to the DB or other cache backend.
+        this.jobs.verifySignaturePCD.delete(pcd.pcd);
         this.workers(JSON.stringify(pcd), (err: Error, result: boolean) => {
           if (err) {
             reject(err);
@@ -87,6 +101,10 @@ export class MultiProcessService {
           }
         });
       });
+      // The Map class can probably figure out how to turn the serialized PCD
+      // string into a good map key hash better than we can
+      this.jobs.verifySignaturePCD.set(pcd.pcd, promise);
+      return promise;
     });
   }
 
