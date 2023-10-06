@@ -483,6 +483,8 @@ async function loadFromSync(
     await pcds.deserializeAllAndAdd(storage.pcds);
   }
 
+  // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
+  // @todo: Remove duplicated fields like salt and encryption_key from the e2ee storage
   const userResponse = await requestUser(appConfig.zupassServer, storage.self.uuid)
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage)
