@@ -1,4 +1,4 @@
-import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
+import { EmailPCD } from "@pcd/email-pcd";
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -18,8 +18,7 @@ import {
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage,
-  SemaphoreSignaturePCDTypeName
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { isFulfilled } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -177,7 +176,7 @@ export class FeedSubscriptionManager {
     identity: Identity
   ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
     const payload = createFeedCredentialPayload(
-      sub.credential?.type === EmailPCDTypeName ? sub.credential : undefined
+      sub.credential?.type === "email-pcd" ? sub.credential : undefined
     );
 
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
@@ -315,8 +314,8 @@ export class FeedSubscriptionManager {
 
     if (
       info.credentialType &&
-      info.credentialType !== EmailPCDTypeName &&
-      info.credentialType !== SemaphoreSignaturePCDTypeName
+      info.credentialType !== "email-pcd" &&
+      info.credentialType !== "semaphore-signature-pcd"
     ) {
       throw new Error(
         `non-supported credential requested on ${providerUrl} feed ${info.id}`
@@ -335,9 +334,9 @@ export class FeedSubscriptionManager {
     // must *not* receive a credential parameter here, since we will always
     // generate a new semaphore signature
     if (
-      info.credentialType === SemaphoreSignaturePCDTypeName &&
+      info.credentialType === "semaphore-signature-pcd" &&
       credential &&
-      credential.type !== SemaphoreSignaturePCDTypeName
+      credential.type !== "semaphore-signature-pcd"
     ) {
       throw new Error(
         `semaphore-signature-pcd required but received a different credential type: ${credential.type}`
