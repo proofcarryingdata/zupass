@@ -63,7 +63,8 @@ describe("zuzalu pcdpass functionality", function () {
     const result = await testLogin(application, order.email, {
       expectEmailIncorrect: false,
       expectUserAlreadyLoggedIn: false,
-      force: false
+      force: false,
+      skipSetupPassword: false
     });
 
     if (!result) {

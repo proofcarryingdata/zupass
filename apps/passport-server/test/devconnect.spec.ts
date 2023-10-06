@@ -6,21 +6,21 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  checkinTicket,
   ISSUANCE_STRING,
-  pollFeed,
   PollFeedResponseValue,
-  requestServerEdDSAPublicKey,
-  requestServerRSAPublicKey,
   User,
   ZupassFeedIds,
-  ZuzaluUserRole
+  ZuzaluUserRole,
+  checkinTicket,
+  pollFeed,
+  requestServerEdDSAPublicKey,
+  requestServerRSAPublicKey
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
-  isReplaceInFolderAction,
   PCDActionType,
-  ReplaceInFolderAction
+  ReplaceInFolderAction,
+  isReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
@@ -300,7 +300,8 @@ describe("devconnect functionality", function () {
     const result = await testLogin(application, resident.email, {
       force: false,
       expectUserAlreadyLoggedIn: false,
-      expectEmailIncorrect: false
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
     });
 
     residentUser = result?.user;
@@ -353,7 +354,8 @@ describe("devconnect functionality", function () {
       const visitorResult = await testLogin(application, visitor.email, {
         force: false,
         expectUserAlreadyLoggedIn: false,
-        expectEmailIncorrect: false
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
       });
       visitorUser = visitorResult?.user;
 
@@ -362,7 +364,8 @@ describe("devconnect functionality", function () {
       const organizerResult = await testLogin(application, organizer.email, {
         force: false,
         expectUserAlreadyLoggedIn: false,
-        expectEmailIncorrect: false
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
       });
       organizerUser = organizerResult?.user;
       expect(emailAPI.send).to.have.been.called.exactly(3);
@@ -1502,7 +1505,8 @@ describe("devconnect functionality", function () {
         await testLogin(application, "test", {
           force: false,
           expectUserAlreadyLoggedIn: false,
-          expectEmailIncorrect: true
+          expectEmailIncorrect: true,
+          skipSetupPassword: false
         })
       ).to.eq(undefined);
     }
@@ -1515,7 +1519,8 @@ describe("devconnect functionality", function () {
       {
         expectEmailIncorrect: false,
         expectUserAlreadyLoggedIn: false,
-        force: false
+        force: false,
+        skipSetupPassword: false
       }
     );
 
@@ -1526,6 +1531,28 @@ describe("devconnect functionality", function () {
     expect(emailAPI.send).to.have.been.called.exactly(4);
     identity = result.identity;
   });
+
+  step(
+    "should be able to log in without setting up a password and uploading encryption key",
+    async function () {
+      const result = await testLogin(
+        application,
+        mocker.get().organizer1.EMAIL_4,
+        {
+          expectEmailIncorrect: false,
+          expectUserAlreadyLoggedIn: false,
+          force: false,
+          skipSetupPassword: true
+        }
+      );
+
+      if (!result) {
+        throw new Error("failed to log in");
+      }
+
+      expect(emailAPI.send).to.have.been.called.exactly(5);
+    }
+  );
 
   step("semaphore service should reflect correct state", async function () {
     expectCurrentSemaphoreToBe(application, {
@@ -1545,7 +1572,8 @@ describe("devconnect functionality", function () {
         await testLogin(application, mocker.get().organizer1.EMAIL_1, {
           force: false,
           expectUserAlreadyLoggedIn: true,
-          expectEmailIncorrect: false
+          expectEmailIncorrect: false,
+          skipSetupPassword: false
         })
       ).to.eq(undefined);
 
@@ -1555,7 +1583,8 @@ describe("devconnect functionality", function () {
         {
           force: true,
           expectUserAlreadyLoggedIn: true,
-          expectEmailIncorrect: false
+          expectEmailIncorrect: false,
+          skipSetupPassword: false
         }
       );
 
@@ -1565,7 +1594,7 @@ describe("devconnect functionality", function () {
 
       identity = result.identity;
 
-      expect(emailAPI.send).to.have.been.called.exactly(5);
+      expect(emailAPI.send).to.have.been.called.exactly(6);
     }
   );
 
@@ -1576,21 +1605,24 @@ describe("devconnect functionality", function () {
     await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
     });
 
     // 2nd reset
     await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
     });
 
     // 3rd reset
     await testLogin(application, mocker.get().organizer1.EMAIL_1, {
       force: true,
       expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
     });
 
     let threw = false;
@@ -1598,7 +1630,8 @@ describe("devconnect functionality", function () {
       await testLogin(application, mocker.get().organizer1.EMAIL_1, {
         force: true,
         expectUserAlreadyLoggedIn: true,
-        expectEmailIncorrect: false
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
       });
     } catch (e) {
       threw = true;
@@ -1617,7 +1650,8 @@ describe("devconnect functionality", function () {
       {
         force: true,
         expectUserAlreadyLoggedIn: true,
-        expectEmailIncorrect: false
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
       }
     );
 
@@ -1825,7 +1859,8 @@ describe("devconnect functionality", function () {
       {
         expectEmailIncorrect: false,
         expectUserAlreadyLoggedIn: false,
-        force: false
+        force: false,
+        skipSetupPassword: false
       }
     );
 
