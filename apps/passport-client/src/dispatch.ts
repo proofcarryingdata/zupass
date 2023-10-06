@@ -9,7 +9,8 @@ import {
   isSyncedEncryptedStorageV3,
   requestCreateNewUser,
   requestDeviceLogin,
-  requestLogToServer
+  requestLogToServer,
+  requestUser
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
@@ -358,7 +359,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   await addDefaultSubscriptions(identity, state.subscriptions);
 
   // Save to local storage.
-  setSelf(user, state, update);
+  await setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
@@ -378,8 +379,10 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  if (state.self && self.salt != state.self.salt) {
+  if (state.self?.salt != null && self.salt != state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
+    // However, skip if the salt was undefined previously, as that means we just added
+    // a new password to an acount that didn't have a password previously.
     console.log("User salt mismatch");
     hasChangedPassword = true;
     requestLogToServer(
@@ -482,6 +485,11 @@ async function loadFromSync(
     await pcds.deserializeAllAndAdd(storage.pcds);
   }
 
+  const userResponse = await requestUser(appConfig.zupassServer, storage.self.uuid)
+  if (!userResponse.success) {
+    throw new Error(userResponse.error.errorMessage)
+  }
+
   // assumes that we only have one semaphore identity in Zupass.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
@@ -507,14 +515,14 @@ async function loadFromSync(
 
   await savePCDs(pcds);
   saveEncryptionKey(encryptionKey);
-  saveSelf(storage.self);
+  saveSelf(userResponse.value)
   saveIdentity(identityPCD.claim.identity);
 
   update({
     encryptionKey,
     pcds,
     identity: identityPCD.claim.identity,
-    self: storage.self,
+    self: userResponse.value,
     modal
   });
 
