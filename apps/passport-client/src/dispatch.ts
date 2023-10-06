@@ -29,13 +29,11 @@ import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadSelf,
-  saveAnotherDeviceChangedPassword,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
   saveSelf,
-  saveSubscriptions,
-  saveUserInvalid
+  saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
@@ -564,7 +562,6 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate) {
-  saveUserInvalid(true);
   update({
     userInvalid: true,
     modal: { modalType: "invalid-participant" }
@@ -572,7 +569,6 @@ function userInvalid(update: ZuUpdate) {
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate) {
-  saveAnotherDeviceChangedPassword(true);
   update({
     anotherDeviceChangedPassword: true,
     modal: { modalType: "another-device-changed-password" }
@@ -618,13 +614,15 @@ async function sync(state: AppState, update: ZuUpdate) {
      * downloading from a pre-v3 version of encrypted storage
      * {@link SyncedEncryptedStorageV3}
      * */
-    const { pcds, subscriptions } = await downloadStorage();
+    const downloaded = await downloadStorage();
 
-    if (subscriptions) {
-      addDefaultSubscriptions(state.identity, subscriptions);
-    }
+    if (downloaded != null && downloaded.pcds != null) {
+      const { pcds, subscriptions } = downloaded;
 
-    if (pcds != null) {
+      if (subscriptions) {
+        addDefaultSubscriptions(state.identity, subscriptions);
+      }
+
       update({
         downloadedPCDs: true,
         downloadingPCDs: false,
