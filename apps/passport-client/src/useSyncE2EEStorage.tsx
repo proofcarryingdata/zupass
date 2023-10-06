@@ -2,13 +2,13 @@ import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyResult,
   FeedSubscriptionManager,
-  SyncedEncryptedStorageV2,
-  SyncedEncryptedStorageV3,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage
+  requestUploadEncryptedStorage,
+  SyncedEncryptedStorageV2,
+  SyncedEncryptedStorageV3
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -99,7 +99,7 @@ export async function uploadStorage(): Promise<void> {
 export async function downloadStorage(): Promise<{
   pcds: PCDCollection | null;
   subscriptions: FeedSubscriptionManager | null;
-}> {
+} | null> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = loadEncryptionKey();
