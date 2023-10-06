@@ -549,7 +549,7 @@ async function sync(state: AppState, update: ZuUpdate) {
      * */
     const downloaded = await downloadStorage();
 
-    if (downloaded != null) {
+    if (downloaded != null && downloaded.pcds != null) {
       const { pcds, subscriptions } = downloaded;
 
       if (subscriptions) {
