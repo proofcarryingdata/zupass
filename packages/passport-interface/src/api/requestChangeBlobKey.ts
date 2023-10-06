@@ -5,7 +5,7 @@ import {
   ChangeBlobKeyRequest,
   ChangeBlobKeyResponseValue
 } from "../RequestTypes";
-import { APIResult } from "./apiResult";
+import { APIResult, onNamedAPIError } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
@@ -22,20 +22,25 @@ export async function requestChangeBlobKey(
   newBlobKey: string,
   uuid: string,
   newSalt: string,
-  encryptedStorage: EncryptedPacket
+  encryptedStorage: EncryptedPacket,
+  knownRevision?: string
 ): Promise<ChangeBlobKeyResult> {
-  return httpPost(
+  return httpPost<ChangeBlobKeyResult>(
     urlJoin(zupassServerUrl, `/sync/changeBlobKey`),
     {
-      onValue: async () => ({ value: undefined, success: true }),
-      onError: async (resText) => JSON.parse(resText)
+      onValue: async (resText: string) => ({
+        value: JSON.parse(resText) as ChangeBlobKeyResponseValue,
+        success: true
+      }),
+      onError: onNamedAPIError
     },
     {
       oldBlobKey,
       newBlobKey,
       newSalt,
       encryptedBlob: JSON.stringify(encryptedStorage),
-      uuid
+      uuid,
+      knownRevision
     } satisfies ChangeBlobKeyRequest
   );
 }

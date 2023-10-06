@@ -1,10 +1,10 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { EncryptedPacket } from "@pcd/passport-crypto";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
+import { NamedAPIError } from "./api/apiResult";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -59,12 +59,32 @@ export interface UploadEncryptedStorageRequest {
    * An encrypted and stringified version of {@link EncryptedStorage}
    */
   encryptedBlob: string;
+
+  /**
+   * Optional field allowing the client to detect and avoid conflicting
+   * updates.
+   *
+   * If specified, this is the previous revision of stored data which the
+   * client is aware of and has included in its updates.  If this does not match
+   * the latest revision available on the server, the request will fail without
+   * making any changes.
+   *
+   * If this field is absent, the new blob is always saved, overwriting any
+   * existing revision.
+   */
+  knownRevision?: string;
 }
 
 /**
  * Response to {@link UploadEncryptedStorageRequest}
  */
-export type UploadEncryptedStorageResponseValue = undefined;
+export interface UploadEncryptedStorageResponseValue {
+  /**
+   * The revision assigned to identify the stored blob.  Revision is assigned by
+   * the server and can be used later to identify this blob and avoid conflicts.
+   */
+  revision: string;
+}
 
 /**
  * Ask the server for an e2ee backup of a user's data given a `blobKey`.
@@ -75,6 +95,30 @@ export interface DownloadEncryptedStorageRequest {
    * the encryption key.
    */
   blobKey: string;
+
+  /**
+   * Optional field indicating the revision of the latest blob already known to
+   * the client.  If this matches the latest blob stored on the server, the
+   * request will succeed, but the result will not contain any blob.
+   */
+  knownRevision?: string;
+}
+
+/**
+ * Response to {@link DownloadEncryptedStorageRequest}
+ */
+export interface DownloadEncryptedStorageResponseValue {
+  /**
+   * The retrieved blob for the given key.  This will be absent if the request
+   * included a `knownRevision` which matched the latest revision.
+   */
+  encryptedBlob?: string;
+
+  /**
+   * The revision identifying this blob on the server.  Revision is assigned by
+   * the server and can be used later to identify this blob and avoid conflicts.
+   */
+  revision: string;
 }
 
 /**
@@ -86,38 +130,61 @@ export interface ChangeBlobKeyRequest {
    * The original hashed encryption key to be deleted.
    */
   oldBlobKey: string;
+
   /**
    * The new hashed encryption key to be added.
    */
   newBlobKey: string;
+
   /**
    * UUID of the user making the request.
    */
   uuid: string;
+
   /**
    * The salt used in generating the new blob key.
    */
   newSalt: string;
+
   /**
    * The encrypted and stringified version of {@link EncryptedStorage} to save
    */
   encryptedBlob: string;
+
+  /**
+   * Optional field allowing the client to detect and avoid conflicting
+   * updates.
+   *
+   * If specified, this is the previous revision of stored data which the
+   * client is aware of and has included in its updates.  If this does not match
+   * the latest revision available on the server, the request will fail without
+   * making any changes.
+   *
+   * If this field is absent, the new blob is always saved, overwriting any
+   * existing revision.
+   */
+  knownRevision?: string;
 }
 
 /**
  * Response to {@link ChangeBlobKeyRequest}
  */
-export type ChangeBlobKeyResponseValue = undefined;
+export interface ChangeBlobKeyResponseValue {
+  /**
+   * The revision assigned to identify the stored blob.  Revision is assigned by
+   * the server and can be used later to identify this blob and avoid conflicts.
+   */
+  revision: string;
+}
 
 /**
- * A {@link ChangeBlobKeyRequest} can fail for a number of reasons.
+ * A {@link ChangeBlobKeyRequest} can fail with a few non-standard named errors:
+ * PasswordIncorrect if there is no blob for the given key
+ * UserNotFound if the user does not exist
+ * RequiresNewSalt if the given salt is the same as the old salt
+ * Conflict if knownRevision is specified and doesn't match
  */
-export type ChangeBlobKeyError = { detailedMessage?: string } & (
-  | { name: "PasswordIncorrect" }
-  | { name: "UserNotFound" }
-  | { name: "RequiresNewSalt" }
-  | { name: "ServerError" }
-);
+export type ChangeBlobKeyError = NamedAPIError;
 
 /**
  * Ask the server to check whether this ticket is still eligible to be checked in.
@@ -319,12 +386,6 @@ export type CreateNewUserRequest = {
    */
   salt: string | null;
 };
-
-/**
- * Zupass responds with this when you ask to load an end-to-end
- * encrypted blob.
- */
-export type EncryptedStorageResultValue = EncryptedPacket;
 
 /**
  * Zupass responds with this when you ask it if it is able to

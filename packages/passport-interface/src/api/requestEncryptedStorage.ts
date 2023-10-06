@@ -1,10 +1,10 @@
 import urlJoin from "url-join";
 import {
   DownloadEncryptedStorageRequest,
-  EncryptedStorageResultValue
+  DownloadEncryptedStorageResponseValue
 } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult";
+import { httpGet } from "./makeRequest";
 
 /**
  * Downloads, but does not decrypt, a user's end-to-end encrypted backup
@@ -15,16 +15,23 @@ import { httpGetSimple } from "./makeRequest";
  */
 export async function requestEncryptedStorage(
   zupassServerUrl: string,
-  blobKey: string
+  blobKey: string,
+  knownRevision?: string
 ): Promise<EncryptedStorageResult> {
-  return httpGetSimple(
+  return httpGet<EncryptedStorageResult>(
     urlJoin(zupassServerUrl, "/sync/load"),
-    async (resText) => ({
-      value: JSON.parse(resText) as EncryptedStorageResultValue,
-      success: true
-    }),
-    { blobKey } satisfies DownloadEncryptedStorageRequest
+    {
+      onValue: async (resText) => ({
+        value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
+        success: true
+      }),
+      onError: onNamedAPIError
+    },
+    { blobKey, knownRevision } satisfies DownloadEncryptedStorageRequest
   );
 }
 
-export type EncryptedStorageResult = APIResult<EncryptedStorageResultValue>;
+export type EncryptedStorageResult = APIResult<
+  DownloadEncryptedStorageResponseValue,
+  NamedAPIError
+>;
