@@ -4,7 +4,8 @@ import {
   requestProveOnServer
 } from "@pcd/passport-interface";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { useCallback, useState } from "react";
+import { getErrorMessage } from "@pcd/util";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
@@ -40,8 +41,13 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
 
+  useEffect(() => {
+    setError(undefined);
+  }, [args]);
+
   const onProveClick = useCallback(async () => {
     setProving(true);
+    setError(undefined);
 
     // Give the UI has a chance to update to the 'loading' state before the
     // potentially blocking proving operation kicks off
@@ -65,9 +71,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
       onProve(undefined, undefined, pendingPCDResult.value);
     } else {
-      const pcd = await pcdPackage.prove(args);
-      const serializedPCD = await pcdPackage.serialize(pcd);
-      onProve(pcd as any, serializedPCD, undefined);
+      try {
+        const pcd = await pcdPackage.prove(args);
+        const serializedPCD = await pcdPackage.serialize(pcd);
+        onProve(pcd as any, serializedPCD, undefined);
+      } catch (e) {
+        setError(getErrorMessage(e));
+      } finally {
+        setProving(false);
+      }
     }
   }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage, rollbar]);
 
