@@ -117,6 +117,7 @@ export interface UserRow {
 export interface EncryptedStorageModel {
   blob_key: string;
   encrypted_blob: string;
+  revision: string; // bigint in database returned to JavaScript as string
 }
 
 export interface HistoricSemaphoreGroup {

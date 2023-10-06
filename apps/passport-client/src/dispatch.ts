@@ -728,7 +728,9 @@ async function addSubscription(
   state.subscriptions.subscribe(providerUrl, feed, credential);
   await saveSubscriptions(state.subscriptions);
   update({
-    subscriptions: state.subscriptions
+    subscriptions: state.subscriptions,
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false
   });
 }
 
@@ -757,6 +759,8 @@ async function updateSubscriptionPermissions(
   state.subscriptions.resetError(subscriptionId);
   await saveSubscriptions(state.subscriptions);
   update({
-    subscriptions: state.subscriptions
+    subscriptions: state.subscriptions,
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false
   });
 }

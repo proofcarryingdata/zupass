@@ -18,6 +18,7 @@ import question from "./question.svg";
 import settingsAccent from "./settings-accent.svg";
 import settingsPrimary from "./settings-primary.svg";
 import spinner from "./spinner.svg";
+import subscription from "./subscription.svg";
 import upArrow from "./up-arrow.svg";
 import verifyInProgress from "./verify-in-progress.svg";
 import verifyInvalid from "./verify-invalid.svg";
@@ -43,6 +44,7 @@ export const icons = {
   question,
   settingsAccent,
   settingsPrimary,
+  subscription,
   spinner,
   upArrow,
   verifyInProgress,

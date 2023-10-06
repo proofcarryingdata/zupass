@@ -1,4 +1,8 @@
-import { getHash, passportDecrypt } from "@pcd/passport-crypto";
+import {
+  EncryptedPacket,
+  getHash,
+  passportDecrypt
+} from "@pcd/passport-crypto";
 import { getErrorMessage } from "@pcd/util";
 import { SyncedEncryptedStorage } from "../EncryptedStorage";
 import { APIResult } from "./apiResult";
@@ -27,7 +31,17 @@ export async function requestDownloadAndDecryptStorage(
       return { error: "couldn't download e2ee data", success: false };
     }
 
-    const decrypted = await passportDecrypt(storageResult.value, encryptionKey);
+    // TODO(artwyman): Add and implement revision handling.  Also propagate
+    // different types of errors so they're not all incorrect password.
+    if (!storageResult.value.encryptedBlob) {
+      console.error("unexpectedly missing e2ee data");
+      return { error: "unexpectedly missing e2ee data", success: false };
+    }
+    const encryptedStorage = JSON.parse(
+      storageResult.value.encryptedBlob
+    ) as EncryptedPacket;
+
+    const decrypted = await passportDecrypt(encryptedStorage, encryptionKey);
     return {
       value: JSON.parse(decrypted) as SyncedEncryptedStorage,
       success: true

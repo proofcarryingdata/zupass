@@ -1,5 +1,16 @@
 # @pcd/rln-pcd
 
+## 0.6.1
+
+### Patch Changes
+
+- new package versions.
+- Updated dependencies
+  - @pcd/pcd-types@0.7.1
+  - @pcd/semaphore-group-pcd@0.7.1
+  - @pcd/semaphore-identity-pcd@0.7.1
+  - @pcd/util@0.1.1
+
 ## 0.6.0
 
 ### Minor Changes
