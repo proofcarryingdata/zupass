@@ -1,2 +1,0 @@
-ALTER TABLE telegram_bot_conversations
-ADD column semaphore_id VARCHAR NOT NULL
