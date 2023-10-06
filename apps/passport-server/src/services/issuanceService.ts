@@ -84,7 +84,6 @@ export class IssuanceService {
   private readonly multiprocessService: MultiProcessService;
   private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
 
-
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
@@ -903,12 +902,12 @@ export class IssuanceService {
     const cached = this.verificationPromiseCache.get(key);
     if (cached) {
       return cached;
-    }
-    else {
-      const promise = this.multiprocessService.verifySignaturePCD(serializedPCD);
+    } else {
+      const promise =
+        this.multiprocessService.verifySignaturePCD(serializedPCD);
+      this.verificationPromiseCache.set(key, promise);
       // If the promise rejects, delete it from the cache
       promise.catch(() => this.verificationPromiseCache.delete(key));
-      this.verificationPromiseCache.set(key, promise);
       return promise;
     }
   }
