@@ -116,15 +116,18 @@ export class E2EEService {
     } satisfies UploadEncryptedStorageResponseValue);
   }
 
-  private checkRekeyResult(
+  private setRekeyResult(
     blobKey: string,
     knownRevision: string | undefined,
     updateResult: UpdateEncryptedStorageResult,
     res: Response
-  ): string | undefined {
+  ): void {
     switch (updateResult.status) {
       case "updated":
-        return updateResult.revision;
+        res.json({
+          revision: updateResult.revision
+        } as ChangeBlobKeyResponseValue);
+        break;
       case "conflict":
         res.status(409).json({
           error: {
@@ -133,10 +136,10 @@ export class E2EEService {
               revision ${knownRevision}, found ${updateResult.revision}`
           }
         });
-        return undefined;
+        break;
       case "missing":
         res.status(401).json({ error: { name: "PasswordIncorrect" } });
-        return undefined;
+        break;
     }
   }
 
@@ -191,16 +194,12 @@ export class E2EEService {
       request.encryptedBlob,
       request.knownRevision
     );
-    const resultRevision = this.checkRekeyResult(
+    this.setRekeyResult(
       request.oldBlobKey,
       request.knownRevision,
       rekeyResult,
       res
     );
-    if (!resultRevision) {
-      return;
-    }
-    res.json({ revision: resultRevision } as ChangeBlobKeyResponseValue);
   }
 }
 

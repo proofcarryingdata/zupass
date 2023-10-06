@@ -130,7 +130,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
   expect(initialLoadResult.success).to.eq(false);
   expect(initialLoadResult.error?.name).to.eq("NotFound");
 
-  // Attempting update with base rev will result in NotFound, not a conflict.
+  // Attempting update with rev will still result in NotFound, not a conflict.
   const notfoundUploadResult = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -141,7 +141,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
   expect(notfoundUploadResult.success).to.eq(false);
   expect(notfoundUploadResult.error?.name).to.eq("NotFound");
 
-  // Create storage with no base rev (required for first write)
+  // Create storage with no rev (required for first write)
   const uploadResult1 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -176,7 +176,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
     encryptionKey
   );
 
-  // Update storage with base rev
+  // Update storage with rev
   const uploadResult2 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -202,7 +202,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
     encryptionKey
   );
 
-  // Attempt update with earlier base rev, receiving conflict with no changes
+  // Attempt update with earlier rev, receiving conflict with no changes
   const conflictResult1 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -215,7 +215,7 @@ export async function testUserSyncWithRev(application: Zupass): Promise<void> {
 
   await fetchAndCheckStorage(application, encryptionKey, rev2, plaintextData2);
 
-  // Attempt update with proper base rev, which should work after conflict
+  // Attempt update with proper rev, which should work after conflict
   const uploadResult3 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey,
@@ -411,7 +411,7 @@ export async function testUserSyncKeyChangeWithRev(
 
   await fetchAndCheckStorage(application, encryptionKey1, rev1, plaintextData1);
 
-  // Update storage with base rev to create rev2
+  // Update storage with rev to create rev2
   const uploadResult2 = await requestUploadEncryptedStorage(
     application.expressContext.localEndpoint,
     encryptionKey1,

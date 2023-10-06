@@ -94,9 +94,7 @@ async function execTransactionWithRetry<T>(
         try {
           await txClient.query("ROLLBACK");
         } catch (rollbackError) {
-          logger(
-            `Rollback for updateEncryptedStorage failed: ${rollbackError}`
-          );
+          logger(`Rollback failed: ${rollbackError}`);
         }
         throw queryError;
       } finally {
