@@ -547,13 +547,15 @@ async function sync(state: AppState, update: ZuUpdate) {
      * downloading from a pre-v3 version of encrypted storage
      * {@link SyncedEncryptedStorageV3}
      * */
-    const { pcds, subscriptions } = await downloadStorage();
+    const downloaded = await downloadStorage();
 
-    if (subscriptions) {
-      addDefaultSubscriptions(state.identity, subscriptions);
-    }
+    if (downloaded != null && downloaded.pcds != null) {
+      const { pcds, subscriptions } = downloaded;
 
-    if (pcds != null) {
+      if (subscriptions) {
+        addDefaultSubscriptions(state.identity, subscriptions);
+      }
+
       update({
         downloadedPCDs: true,
         downloadingPCDs: false,
