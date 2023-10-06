@@ -26,16 +26,16 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
-  BABY_JUB_NEGATIVE_ONE,
   babyJubIsNegativeOne,
+  BABY_JUB_NEGATIVE_ONE,
   booleanToBigInt,
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
+  hexToBigInt,
   numberToBigInt,
-  uuidToBigInt,
   requireDefinedParameter,
-  hexToBigInt
+  uuidToBigInt
 } from "@pcd/util";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
