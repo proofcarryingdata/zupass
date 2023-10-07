@@ -21,7 +21,7 @@ import {
 import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
-type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
+export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
 
 type EventWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEvents> =
   T & {

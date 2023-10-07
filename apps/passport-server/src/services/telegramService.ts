@@ -25,6 +25,7 @@ import { logger } from "../util/logger";
 import {
   BotContext,
   SessionData,
+  TopicChat,
   chatsToJoin,
   dynamicEvents,
   findChatByEventIds,
@@ -112,28 +113,22 @@ export class TelegramService {
           logger(
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
+          const chat = (await ctx.api.getChat(chatId)) as TopicChat;
           await this.bot.api.sendMessage(
             userId,
             `<i>Verifying and inviting...</i>`,
             { parse_mode: "HTML" }
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
-          const chat = (await this.bot.api.getChat(
-            chatId
-          )) as Chat.GroupGetChat;
-          const inviteLink = await ctx.createChatInviteLink();
           await this.bot.api.sendMessage(
             userId,
-            `You're approved for <b>${chat.title}</b>`,
-            {
-              reply_markup: new InlineKeyboard().url(
-                `Join 🤝`,
-                inviteLink.invite_link
-              ),
-              parse_mode: "HTML"
-            }
+            `Congrats! ${chat?.title} should now appear at the top of your list of Chats.\nYou can also click the above button.`
           );
-          await this.bot.api.sendMessage(userId, `Congrats!`);
+        } else {
+          await this.bot.api.sendMessage(
+            userId,
+            `You are not verified. Try again with the /start command.`
+          );
         }
       } catch (e) {
         await this.bot.api.sendMessage(userId, `Error joining: ${e}`);
@@ -147,9 +142,9 @@ export class TelegramService {
     this.bot.on("chat_member", async (ctx) => {
       try {
         const newMember = ctx.update.chat_member.new_chat_member;
-        if (newMember.status === "member") {
+        if (newMember.status === "left") {
           logger(
-            `[TELEGRAM] Deleting verification for user ${newMember.user.id} in chat ${ctx.chat.id}`
+            `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
           );
           await deleteTelegramVerification(
             this.context.dbPool,
@@ -503,7 +498,7 @@ export class TelegramService {
     );
     const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
-      name: "bot invite link"
+      name: `${Date.now().toLocaleString()}`
     });
     await this.bot.api.sendMessage(
       userId,
