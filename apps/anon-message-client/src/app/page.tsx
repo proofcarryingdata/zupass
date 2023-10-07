@@ -10,11 +10,16 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import sha256 from "js-sha256";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 function getMessageWatermark(message: string): bigint {
   const hashed = sha256.sha256(message).substring(0, 16);
   return BigInt("0x" + hashed);
+}
+
+interface TopicData {
+  topicName: string;
+  topicId: string;
 }
 
 enum PCDRequestType {
@@ -43,8 +48,8 @@ function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
 }
 
 const ALLOWED_EVENTS = [
-  // { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  // { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
+  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
+  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
   {
     eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
     name: "ProgCrypto (Internal Test)"
@@ -127,19 +132,26 @@ function requestProof(message: string, topicId: string) {
 
 export default function SubmitMessagePage() {
   const [message, setMessage] = useState("");
+  const [topicData, setTopicData] = useState<TopicData | undefined>();
   const searchParams = useSearchParams();
-  const topicName = searchParams.get("topicName");
-  const topicId = searchParams.get("topicId");
+  const topicDataRaw = searchParams.get("tgWebAppStartParam");
+
+  useEffect(() => {
+    if (!topicDataRaw) return;
+    const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
+    const topicData = JSON.parse(topicDataEncoded.toString("utf-8"));
+    setTopicData(topicData);
+  }, [topicDataRaw]);
 
   const onClick = useCallback(() => {
-    if (!topicId) return;
-    requestProof(message, topicId);
+    if (!topicData || !topicData.topicId) return;
+    requestProof(message, topicData.topicId);
   }, [message]);
 
   return (
     <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
       <span className="text-white font-bold my-4">
-        {topicName ? `Post to #${topicName}` : "Post with zk-TG "}
+        {topicData ? `Post to #${topicData.topicName}` : "Post with zk-TG "}
       </span>
       <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
         <textarea
