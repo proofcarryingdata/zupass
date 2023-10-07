@@ -75,6 +75,7 @@ export const findChatByEventIds = (
   chats: ChatIDWithEvents[],
   eventIds: string[]
 ): string | null => {
+  if (eventIds.length === 0) return null;
   for (const chat of chats) {
     if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
       return chat.telegramChatID;

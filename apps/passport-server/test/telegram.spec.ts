@@ -1,3 +1,4 @@
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -9,13 +10,18 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
+import { upsertUser } from "../src/database/queries/saveUser";
 import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
-import { fetchTelegramEventByEventId } from "../src/database/queries/telegram/fetchTelegramEvent";
+import {
+  ChatIDWithEvents,
+  fetchTelegramEventByEventId
+} from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramEvent,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
+import { findChatByEventIds } from "../src/util/telegramHelpers";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
@@ -110,9 +116,25 @@ describe("telegram bot functionality", function () {
   );
 
   step("should be able to record a verified user", async function () {
+    // Insert a dummy user
+    const newIdentity = new Identity();
+    const newCommitment = newIdentity.commitment.toString();
+    const uuid = await upsertUser(db, {
+      email: "ivan@0xparc.org",
+      commitment: newCommitment
+    });
+    if (!uuid) {
+      throw new Error("expected to be able to insert a commitment");
+    }
+
     // Insert a dummy Telegram user and chat as verified
     expect(
-      await insertTelegramVerification(db, dummyUserId, dummyChatId, "0x123")
+      await insertTelegramVerification(
+        db,
+        dummyUserId,
+        dummyChatId,
+        newCommitment
+      )
     ).to.eq(1);
     // Check that the user is verified for access to the chat
     expect(await fetchTelegramVerificationStatus(db, dummyUserId, dummyChatId))
@@ -217,6 +239,56 @@ describe("telegram bot functionality", function () {
       expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
       expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
       expect(insertedEvent?.anon_chat_id).to.eq(anonChannelID_1.toString());
+    }
+  );
+
+  step(
+    "fetching a telegram chat via a list of eventIds should work",
+    async () => {
+      const sampleChats: ChatIDWithEvents[] = [
+        {
+          telegramChatID: "chat1",
+          ticketEventIds: ["event1", "event2", "event3"]
+        },
+        {
+          telegramChatID: "chat2",
+          ticketEventIds: ["event2", "event3", "event4"]
+        },
+        { telegramChatID: "chat3", ticketEventIds: ["event5"] }
+      ];
+
+      const testCases = [
+        {
+          name: "Finds chat with matching single event ID",
+          input: ["event5"],
+          expected: "chat3"
+        },
+        {
+          name: "Finds chat with matching multiple event IDs",
+          input: ["event2", "event3", "event4"],
+          expected: "chat2"
+        },
+        {
+          name: "Returns null if no chat matches the event IDs",
+          input: ["event6"],
+          expected: null
+        },
+        {
+          name: "Handles empty event ID list (should return null)",
+          input: [],
+          expected: null
+        },
+        {
+          name: "Handles event IDs that partially match (should return null)",
+          input: ["event1", "event6"],
+          expected: null
+        }
+      ];
+
+      testCases.forEach((test) => {
+        const result = findChatByEventIds(sampleChats, test.input);
+        expect(result).to.eq(test.expected);
+      });
     }
   );
 });
