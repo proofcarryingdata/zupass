@@ -50,13 +50,26 @@ export function CreatePasswordScreen() {
     }
   }, [email, redirectToLoginPageWithError, token]);
 
+  const onSkipPassword = useCallback(async () => {
+    try {
+      setSettingPassword(true);
+      await sleep();
+      await dispatch({
+        type: "create-user-skip-password",
+        email,
+        token
+      });
+    } finally {
+      setSettingPassword(false);
+    }
+  }, [dispatch, email, token]);
+
   const openSkipModal = () =>
     dispatch({
       type: "set-modal",
       modal: {
         modalType: "confirm-setup-later",
-        onConfirm: () =>
-          dispatch({ type: "create-user-skip-password", email, token })
+        onConfirm: onSkipPassword
       }
     });
 

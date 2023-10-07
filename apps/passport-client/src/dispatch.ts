@@ -242,6 +242,9 @@ async function createNewUserSkipPassword(
   state: AppState,
   update: ZuUpdate
 ) {
+  update({
+    modal: { modalType: "none" }
+  });
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();
   await saveEncryptionKey(encryptionKey);
@@ -265,8 +268,8 @@ async function createNewUserSkipPassword(
 
   update({
     error: {
-      title: "Login failed",
-      message: "Couldn't log in. " + newUserResult.error,
+      title: "Account creation failed",
+      message: "Couldn't create an account. " + newUserResult.error,
       dismissToCurrentPage: true
     }
   });
