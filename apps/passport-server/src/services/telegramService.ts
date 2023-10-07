@@ -114,16 +114,28 @@ export class TelegramService {
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
           const chat = (await ctx.api.getChat(chatId)) as TopicChat;
+
           await this.bot.api.sendMessage(
             userId,
             `<i>Verifying and inviting...</i>`,
             { parse_mode: "HTML" }
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
-          await this.bot.api.sendMessage(
-            userId,
-            `Congrats! ${chat?.title} should now appear at the top of your list of Chats.\nYou can also click the above button.`
-          );
+          if (ctx.chatJoinRequest?.invite_link?.invite_link) {
+            await this.bot.api.sendMessage(userId, `Congrats!`, {
+              reply_markup: new InlineKeyboard().url(
+                `Go to ${chat?.title} `,
+                ctx.chatJoinRequest.invite_link.invite_link
+              ),
+              parse_mode: "HTML"
+            });
+          } else {
+            await this.bot.api.sendMessage(
+              userId,
+              `Congrats! ${chat?.title} should now appear at the top of your list
+               of Chats.\nYou can also click the above button.`
+            );
+          }
         } else {
           await this.bot.api.sendMessage(
             userId,
@@ -150,6 +162,13 @@ export class TelegramService {
             this.context.dbPool,
             newMember.user.id,
             ctx.chat.id
+          );
+          const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+          const userId = newMember.user.id;
+          await this.bot.api.sendMessage(
+            userId,
+            `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
+            { parse_mode: "HTML" }
           );
         }
       } catch (e) {
