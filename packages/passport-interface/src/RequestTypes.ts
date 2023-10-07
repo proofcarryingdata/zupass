@@ -351,7 +351,8 @@ export type VerifyTokenRequest = {
 };
 
 /**
- * Returns the encryption_key of the account, if stored on our server.
+ * Returns the encryption_key of the account, if the user has opted to not set
+ * a password and store their encryption key on our server.
  * {@link VerifyTokenRequest}.
  */
 export type VerifyTokenResponseValue = { encryptionKey: string | null };

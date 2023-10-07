@@ -15,6 +15,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { validateEmail } from "../util/util";
+import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
@@ -182,15 +183,6 @@ export class UserService {
     );
   }
 
-  private userRowToZupassUserJson(user: UserRow): ZupassUserJson {
-    return {
-      uuid: user.uuid,
-      commitment: user.commitment,
-      email: user.email,
-      salt: user.salt
-    };
-  }
-
   public async handleNewUser(
     token: string,
     email: string,
@@ -242,7 +234,7 @@ export class UserService {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
-    const userJson = await this.userRowToZupassUserJson(user);
+    const userJson = userRowToZupassUserJson(user);
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
     res.status(200).json(userJson satisfies ZupassUserJson);
@@ -262,7 +254,9 @@ export class UserService {
       throw new PCDHTTPError(410, `no user with uuid '${uuid}'`);
     }
 
-    res.status(200).json(user satisfies ZupassUserJson);
+    const userJson = userRowToZupassUserJson(user);
+
+    res.status(200).json(userJson);
   }
 
   public async handleNewDeviceLogin(
@@ -293,7 +287,7 @@ export class UserService {
       throw new PCDHTTPError(403, `no user with email '${email}' exists`);
     }
 
-    const userJson = await this.userRowToZupassUserJson(user);
+    const userJson = userRowToZupassUserJson(user);
 
     logger(`[USER_SERVICE] logged in a device login user`, userJson);
     res.status(200).json(userJson satisfies ZupassUserJson);

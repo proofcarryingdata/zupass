@@ -1,5 +1,6 @@
+import { ZupassUserJson } from "@pcd/passport-interface";
 import _ from "lodash";
-import { ZuzaluPretixTicket } from "../database/models";
+import { UserRow, ZuzaluPretixTicket } from "../database/models";
 
 /**
  * Sometimes the ticket we load from pretix is updated.
@@ -33,4 +34,16 @@ export function ticketsToMapByEmail(
   users: ZuzaluPretixTicket[]
 ): Map<string, ZuzaluPretixTicket> {
   return new Map(users.map((user) => [user.email, user]));
+}
+
+/**
+ * Converts UserRow from database into ZupassUserJson to be returned from API.
+ */
+export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
+  return {
+    uuid: user.uuid,
+    commitment: user.commitment,
+    email: user.email,
+    salt: user.salt
+  };
 }
