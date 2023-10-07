@@ -218,6 +218,8 @@ export class UserService {
       await this.checkAndIncrementAccountRateLimit(existingUser);
     }
 
+    await this.emailTokenService.saveNewTokenForEmail(email);
+
     logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
     await upsertUser(this.context.dbPool, {
       email,

@@ -95,6 +95,11 @@ export function initAccountRoutes(
     }
 
     const encryptionKey = await userService.getEncryptionKeyForUser(email);
+    // If we return the user's encryption key, change the token so this request
+    // can't be replayed.
+    if (encryptionKey) {
+      emailTokenService.saveNewTokenForEmail(email);
+    }
 
     res.status(200).json({ encryptionKey } satisfies VerifyTokenResponseValue);
   });
