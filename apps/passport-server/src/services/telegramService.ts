@@ -154,7 +154,7 @@ export class TelegramService {
     this.bot.on("chat_member", async (ctx) => {
       try {
         const newMember = ctx.update.chat_member.new_chat_member;
-        if (newMember.status === "left") {
+        if (newMember.status === "left" || newMember.status === "kicked") {
           logger(
             `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
           );
