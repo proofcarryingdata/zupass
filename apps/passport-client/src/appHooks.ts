@@ -139,9 +139,10 @@ export function useHasSetupPassword() {
 
 // Hook that when invoked, requires the user to set a password if they haven't already
 export function useRequirePassword() {
+  const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
   const dispatch = useDispatch();
-  if (!hasSetupPassword) {
+  if (self && !hasSetupPassword) {
     dispatch({
       type: "set-modal",
       modal: {

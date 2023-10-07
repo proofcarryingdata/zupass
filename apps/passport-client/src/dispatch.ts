@@ -453,7 +453,7 @@ async function addPCDs(
   upsert?: boolean
 ) {
   // Require user to set up a password before adding PCDs
-  if (!hasSetupPassword(state.self)) {
+  if (state.self && !hasSetupPassword(state.self)) {
     update({
       modal: {
         modalType: "require-add-password"
