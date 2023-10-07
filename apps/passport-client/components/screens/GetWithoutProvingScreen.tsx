@@ -95,38 +95,40 @@ export function GetWithoutProvingScreen() {
   }
 
   return (
-    <AppContainer bg="gray">
+    <>
       <MaybeModal fullScreen />
-      <Container>
-        <Spacer h={16} />
-        <AppHeader />
-        <Spacer h={16} />
-        <H1>Get {request.pcdType}</H1>
-        <p>
-          This website is requesting a pcd of type {request.pcdType} from your
-          Zupass. Choose the one you want to return, and click 'Send' below to
-          give it to the website.
-        </p>
-        <Spacer h={16} />
-        <select
-          style={{ width: "100%" }}
-          value={selectedPCDID}
-          onChange={(e) => setSelectedPCDID(e.target.value)}
-        >
-          <option value="none">select</option>
-          {filteredPCDs.map((pcd) => {
-            const pcdPackage = pcds.getPackage(pcd.type);
-            return (
-              <option key={pcd.id} value={pcd.id}>
-                {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
-              </option>
-            );
-          })}
-        </select>
-        <Spacer h={16} />
-        <Button onClick={onSendClick}>Send</Button>
-      </Container>
-    </AppContainer>
+      <AppContainer bg="gray">
+        <Container>
+          <Spacer h={16} />
+          <AppHeader />
+          <Spacer h={16} />
+          <H1>Get {request.pcdType}</H1>
+          <p>
+            This website is requesting a pcd of type {request.pcdType} from your
+            Zupass. Choose the one you want to return, and click 'Send' below to
+            give it to the website.
+          </p>
+          <Spacer h={16} />
+          <select
+            style={{ width: "100%" }}
+            value={selectedPCDID}
+            onChange={(e) => setSelectedPCDID(e.target.value)}
+          >
+            <option value="none">select</option>
+            {filteredPCDs.map((pcd) => {
+              const pcdPackage = pcds.getPackage(pcd.type);
+              return (
+                <option key={pcd.id} value={pcd.id}>
+                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
+                </option>
+              );
+            })}
+          </select>
+          <Spacer h={16} />
+          <Button onClick={onSendClick}>Send</Button>
+        </Container>
+      </AppContainer>
+    </>
   );
 }
 

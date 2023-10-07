@@ -3,7 +3,8 @@ import {
   CreateNewUserRequest,
   DeviceLoginRequest,
   SaltResponseValue,
-  VerifyTokenRequest
+  VerifyTokenRequest,
+  VerifyTokenResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
@@ -93,7 +94,9 @@ export function initAccountRoutes(
       );
     }
 
-    res.sendStatus(200);
+    const encryptionKey = await userService.getEncryptionKeyForUser(email);
+
+    res.status(200).json({ encryptionKey } satisfies VerifyTokenResponseValue);
   });
 
   /**
@@ -121,14 +124,22 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<CreateNewUserRequest, "email">(req, "email")
     );
-    const salt = checkBody<CreateNewUserRequest, "salt">(req, "salt");
+    const { salt, encryptionKey } =
+      req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"
     );
 
-    await userService.handleNewUser(token, email, commitment, salt, res);
+    await userService.handleNewUser(
+      token,
+      email,
+      commitment,
+      salt,
+      encryptionKey,
+      res
+    );
   });
 
   /**

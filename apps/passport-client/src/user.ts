@@ -31,3 +31,8 @@ export async function pollUser(self: User, dispatch: Dispatcher) {
     console.error("[USER_POLL] Error polling user", e);
   }
 }
+
+// Function that checks whether the user has set a password for their account
+export function hasSetupPassword(user: User) {
+  return user != null && user.salt != null;
+}

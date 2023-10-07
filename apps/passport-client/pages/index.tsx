@@ -31,9 +31,9 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
-  dispatch,
   StateContext,
-  StateContextState
+  StateContextState,
+  dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -193,15 +193,16 @@ async function loadInitialState(): Promise<AppState> {
     await addDefaultSubscriptions(identity, subscriptions);
   }
 
-  let modal = "" as AppState["modal"];
+  let modal = { modalType: "none" } as AppState["modal"];
 
   if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
+    encryptionKey == null &&
     self.salt == null
   ) {
     console.log("Asking existing user to set a password");
-    modal = "upgrade-account-modal";
+    modal = { modalType: "upgrade-account-modal" };
   }
 
   return {

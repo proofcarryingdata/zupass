@@ -15,10 +15,12 @@ export async function testLogin(
   email: string,
   {
     force,
+    skipSetupPassword,
     expectUserAlreadyLoggedIn,
     expectEmailIncorrect
   }: {
     force: boolean;
+    skipSetupPassword: boolean;
     expectUserAlreadyLoggedIn: boolean;
     expectEmailIncorrect: boolean;
   }
@@ -71,13 +73,18 @@ export async function testLogin(
   }
 
   const salt = arrayBufferToHexString(randomBytes(32));
+  let encryptionKey: string | undefined = undefined;
+  if (skipSetupPassword) {
+    encryptionKey = arrayBufferToHexString(randomBytes(32));
+  }
 
   const newUserResult = await requestCreateNewUser(
     application.expressContext.localEndpoint,
     email,
     token,
     commitment,
-    salt
+    skipSetupPassword ? undefined : salt,
+    encryptionKey
   );
 
   if (!newUserResult.value) {

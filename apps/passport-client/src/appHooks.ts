@@ -8,6 +8,7 @@ import { useLocation } from "react-router-dom";
 import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
+import { hasSetupPassword } from "./user";
 
 export function usePCDCollectionWithHash(): {
   pcds: PCDCollection;
@@ -128,4 +129,25 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
   }, [subs]);
 
   return wrappedSubs;
+}
+
+// Hook that checks whether the user has set a password for their account
+export function useHasSetupPassword() {
+  const self = useSelf();
+  return hasSetupPassword(self);
+}
+
+// Hook that when invoked, requires the user to set a password if they haven't already
+export function useRequirePassword() {
+  const self = useSelf();
+  const hasSetupPassword = useHasSetupPassword();
+  const dispatch = useDispatch();
+  if (self && !hasSetupPassword) {
+    dispatch({
+      type: "set-modal",
+      modal: {
+        modalType: "require-add-password"
+      }
+    });
+  }
 }

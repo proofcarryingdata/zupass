@@ -1,13 +1,11 @@
+import { HexString } from "@pcd/passport-crypto";
 import {
   ConfirmEmailResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { Response } from "express";
-import { LoggedInUser, UserRow } from "../database/models";
-import {
-  fetchDevconnectDeviceLoginTicket,
-  fetchDevconnectSuperusersForEmail
-} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { UserRow } from "../database/models";
+import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
@@ -17,6 +15,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { validateEmail } from "../util/util";
+import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
@@ -56,6 +55,18 @@ export class UserService {
     return user.salt;
   }
 
+  /**
+   * Returns the encryption key for a given user, if it is stored on
+   * our server. Returns null if the user does not exist, or if
+   * the user does not have an encryption key stored on the server.
+   */
+  public async getEncryptionKeyForUser(
+    email: string
+  ): Promise<HexString | null> {
+    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    return existingUser?.encryption_key ?? null;
+  }
+
   public async handleSendTokenEmail(
     email: string,
     commitment: string,
@@ -82,7 +93,13 @@ export class UserService {
       email
     );
 
-    if (existingCommitment != null && !force) {
+    if (
+      existingCommitment != null &&
+      !force &&
+      // Users with an `encryption_key` do not have a password,
+      // so we will need to verify email ownership with code.
+      !existingCommitment.encryption_key
+    ) {
       throw new PCDHTTPError(403, `'${email}' already registered`);
     }
 
@@ -170,7 +187,8 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
-    salt: string,
+    salt: string | undefined,
+    encryptionKey: string | undefined,
     res: Response
   ): Promise<void> {
     logger(
@@ -180,6 +198,13 @@ export class UserService {
         commitment
       })}`
     );
+
+    if ((!salt && !encryptionKey) || (salt && encryptionKey)) {
+      throw new PCDHTTPError(
+        400,
+        "Must have exactly either salt or encryptionKey, but not both or none."
+      );
+    }
 
     if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
       throw new PCDHTTPError(
@@ -194,7 +219,12 @@ export class UserService {
     }
 
     logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
-    await upsertUser(this.context.dbPool, { email, commitment, salt });
+    await upsertUser(this.context.dbPool, {
+      email,
+      commitment,
+      salt,
+      encryptionKey
+    });
 
     // Reload Merkle trees
     this.semaphoreService.scheduleReload();
@@ -204,10 +234,10 @@ export class UserService {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
-    const fullUser = await this.userToLoggedInUser(user);
+    const userJson = userRowToZupassUserJson(user);
 
-    logger(`[USER_SERVICE] logged in a user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+    logger(`[USER_SERVICE] logged in a user`, userJson);
+    res.status(200).json(userJson satisfies ZupassUserJson);
   }
 
   /**
@@ -224,7 +254,9 @@ export class UserService {
       throw new PCDHTTPError(410, `no user with uuid '${uuid}'`);
     }
 
-    res.status(200).json(user satisfies ZupassUserJson);
+    const userJson = userRowToZupassUserJson(user);
+
+    res.status(200).json(userJson);
   }
 
   public async handleNewDeviceLogin(
@@ -255,30 +287,29 @@ export class UserService {
       throw new PCDHTTPError(403, `no user with email '${email}' exists`);
     }
 
-    const fullUser = await this.userToLoggedInUser(user);
+    const userJson = userRowToZupassUserJson(user);
 
-    logger(`[USER_SERVICE] logged in a device login user`, fullUser);
-    res.status(200).json(fullUser satisfies ZupassUserJson);
+    logger(`[USER_SERVICE] logged in a device login user`, userJson);
+    res.status(200).json(userJson satisfies ZupassUserJson);
   }
 
   /**
    * Returns either the user, or null if no user with the given uuid can be found.
    */
-  public async getUserByUUID(uuid: string): Promise<LoggedInUser | null> {
+  public async getUserByUUID(uuid: string): Promise<UserRow | null> {
     const user = await fetchUserByUUID(this.context.dbPool, uuid);
 
     if (!user) {
       logger("[SEMA] no user with that email exists");
       return null;
     }
-
-    return this.userToLoggedInUser(user);
+    return user;
   }
 
   /**
    * Gets a user by email address, or null if no user with that email exists.
    */
-  public async getUserByEmail(email: string): Promise<LoggedInUser | null> {
+  public async getUserByEmail(email: string): Promise<UserRow | null> {
     const user = await fetchUserByEmail(this.context.dbPool, email);
 
     if (!user) {
@@ -286,23 +317,7 @@ export class UserService {
       return null;
     }
 
-    return this.userToLoggedInUser(user);
-  }
-
-  private async userToLoggedInUser(user: UserRow): Promise<LoggedInUser> {
-    const superuserPrivilages = await fetchDevconnectSuperusersForEmail(
-      this.context.dbPool,
-      user.email
-    );
-
-    const fullUser: LoggedInUser = {
-      ...user,
-      superuserEventConfigIds: superuserPrivilages.map(
-        (s) => s.pretix_events_config_id
-      )
-    };
-
-    return fullUser;
+    return user;
   }
 }
 

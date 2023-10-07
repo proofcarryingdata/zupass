@@ -95,20 +95,16 @@ export interface DevconnectSuperuser {
 export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
   commitment: string;
-  salt: null; // Zupass users never have a password salt
-}
-
-export interface LoggedInUser extends UserRow {
-  superuserEventConfigIds: string[];
+  salt: string | null;
+  encryption_key: string | null;
 }
 
 export interface UserRow {
   uuid: string;
   commitment: string;
   email: string;
-  // @todo: make this private to the user
   salt: string | null;
-  // @todo: make this private to the user
+  encryption_key: string | null;
   account_reset_timestamps: string[];
 }
 

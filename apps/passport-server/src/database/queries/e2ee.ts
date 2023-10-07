@@ -1,3 +1,4 @@
+import { QueryResult } from "pg";
 import { Pool, PoolClient } from "postgres-pool";
 import { EncryptedStorageModel } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
@@ -75,7 +76,7 @@ async function checkAfterUnmatchedUpdate(
 
 /**
  * Updates the encrypted data stored at a particular encryption key and
- * revision.  If knownRevision matches the current revision, the row is
+ * revision. If knownRevision matches the current revision, the row is
  * updated, and the new revision is returned.  If the knownRevision doesn't
  * match (including if there is no such row), no changes are made
  */
@@ -110,7 +111,8 @@ export async function updateEncryptedStorage(
 /**
  * Transactionally performs the changes required to change a user's password
  * (key) for E2EE storage.  Deletes row at at the old blob key, upserts the
- * encrypted data stored at the new blob key, and then updates the user's salt.
+ * encrypted data stored at the new blob key, removes the server-saved
+ * encryption key if it exists and then updates the user's salt.
  * If knownRevision is given, the operation will fail with a conflict if it
  * doesn't match the latest revision.
  */
@@ -127,7 +129,7 @@ export async function rekeyEncryptedStorage(
     dbPool,
     "rekey encrypted storage",
     async (txClient: PoolClient) => {
-      let updateResult = undefined;
+      let updateResult: QueryResult;
       if (knownRevision) {
         // This single-step update is safe even without a transaction.  If two
         // matching updates to the same revision race with each other, the
@@ -158,7 +160,7 @@ export async function rekeyEncryptedStorage(
       }
 
       // Blob update succeeded.  Update the user's salt within the transaction.
-      await txClient.query("UPDATE users SET salt = $2 WHERE uuid = $1", [
+      await txClient.query("UPDATE users SET salt = $2, encryption_key = NULL WHERE uuid = $1", [
         uuid,
         newSalt
       ]);

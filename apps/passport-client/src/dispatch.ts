@@ -1,15 +1,16 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
-  applyActions,
   Feed,
   FeedSubscriptionManager,
+  SyncedEncryptedStorage,
+  User,
+  applyActions,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  SyncedEncryptedStorage,
-  User
+  requestUser
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
@@ -38,6 +39,7 @@ import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import { hasSetupPassword } from "./user";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -46,6 +48,11 @@ export type Action =
   | {
       type: "new-passport";
       email: string;
+    }
+  | {
+      type: "create-user-skip-password";
+      email: string;
+      token: string;
     }
   | {
       type: "login";
@@ -119,8 +126,21 @@ export async function dispatch(
   switch (action.type) {
     case "new-passport":
       return genPassport(state.identity, action.email, update);
+    case "create-user-skip-password":
+      return createNewUserSkipPassword(
+        action.email,
+        action.token,
+        state,
+        update
+      );
     case "login":
-      return login(action.email, action.token, action.password, state, update);
+      return createNewUserWithPassword(
+        action.email,
+        action.token,
+        action.password,
+        state,
+        update
+      );
     case "device-login":
       return deviceLogin(action.email, action.secret, state, update);
     case "new-device-login-passport":
@@ -216,7 +236,46 @@ async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
   });
 }
 
-async function login(
+async function createNewUserSkipPassword(
+  email: string,
+  token: string,
+  state: AppState,
+  update: ZuUpdate
+) {
+  update({
+    modal: { modalType: "none" }
+  });
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = await crypto.generateRandomKey();
+  await saveEncryptionKey(encryptionKey);
+
+  update({
+    encryptionKey
+  });
+
+  const newUserResult = await requestCreateNewUser(
+    appConfig.zupassServer,
+    email,
+    token,
+    state.identity.commitment.toString(),
+    undefined,
+    encryptionKey
+  );
+
+  if (newUserResult.success) {
+    return finishLogin(newUserResult.value, state, update);
+  }
+
+  update({
+    error: {
+      title: "Account creation failed",
+      message: "Couldn't create an account. " + newUserResult.error,
+      dismissToCurrentPage: true
+    }
+  });
+}
+
+async function createNewUserWithPassword(
   email: string,
   token: string,
   password: string,
@@ -238,7 +297,8 @@ async function login(
     email,
     token,
     state.identity.commitment.toString(),
-    newSalt
+    newSalt,
+    undefined
   );
 
   if (newUserResult.success) {
@@ -301,10 +361,13 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   await addDefaultSubscriptions(identity, state.subscriptions);
 
   // Save to local storage.
-  setSelf(user, state, update);
+  await setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
   await uploadStorage();
+
+  // Close any existing modal, if it exists
+  update({ modal: { modalType: "none" } });
 
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
@@ -389,6 +452,14 @@ async function addPCDs(
   pcds: SerializedPCD[],
   upsert?: boolean
 ) {
+  // Require user to set up a password before adding PCDs
+  if (state.self && !hasSetupPassword(state.self)) {
+    update({
+      modal: {
+        modalType: "require-add-password"
+      }
+    });
+  }
   await state.pcds.deserializeAllAndAdd(pcds, { upsert });
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
@@ -422,22 +493,32 @@ async function loadFromSync(
     await pcds.deserializeAllAndAdd(storage.pcds);
   }
 
+  // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
+  const userResponse = await requestUser(
+    appConfig.zupassServer,
+    storage.self.uuid
+  );
+  if (!userResponse.success) {
+    throw new Error(userResponse.error.errorMessage);
+  }
+
   // assumes that we only have one semaphore identity in Zupass.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
 
-  let modal: AppState["modal"] = "";
+  let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {
     // TODO: handle error gracefully
     throw new Error("no identity found in encrypted storage");
   } else if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
+    encryptionKey == null &&
     storage.self.salt == null
   ) {
     console.log("Asking existing user to set a password");
-    modal = "upgrade-account-modal";
+    modal = { modalType: "upgrade-account-modal" };
   }
 
   if (subscriptions) {
@@ -446,14 +527,14 @@ async function loadFromSync(
 
   await savePCDs(pcds);
   saveEncryptionKey(encryptionKey);
-  saveSelf(storage.self);
+  saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
 
   update({
     encryptionKey,
     pcds,
     identity: identityPCD.claim.identity,
-    self: storage.self,
+    self: userResponse.value,
     modal
   });
 
@@ -497,14 +578,14 @@ async function saveNewPasswordAndBroadcast(
 function userInvalid(update: ZuUpdate) {
   update({
     userInvalid: true,
-    modal: "invalid-participant"
+    modal: { modalType: "invalid-participant" }
   });
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate) {
   update({
     anotherDeviceChangedPassword: true,
-    modal: "another-device-changed-password"
+    modal: { modalType: "another-device-changed-password" }
   });
 }
 
@@ -653,7 +734,7 @@ async function resolveSubscriptionError(
 ) {
   update({
     resolvingSubscriptionId: subscriptionId,
-    modal: "resolve-subscription-error"
+    modal: { modalType: "resolve-subscription-error" }
   });
 }
 

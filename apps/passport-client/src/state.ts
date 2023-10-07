@@ -16,14 +16,16 @@ export interface AppState {
 
   // View state
   modal:
-    | "info"
-    | "settings"
-    | "invalid-participant"
-    | "changed-password"
-    | "another-device-changed-password"
-    | "resolve-subscription-error"
-    | "upgrade-account-modal"
-    | "";
+    | { modalType: "info" }
+    | { modalType: "settings" }
+    | { modalType: "upgrade-account-modal" }
+    | { modalType: "invalid-participant" }
+    | { modalType: "changed-password" }
+    | { modalType: "another-device-changed-password" }
+    | { modalType: "resolve-subscription-error" }
+    | { modalType: "confirm-setup-later"; onConfirm: () => void }
+    | { modalType: "require-add-password" }
+    | { modalType: "none" };
 
   // User metadata.
   self?: User;

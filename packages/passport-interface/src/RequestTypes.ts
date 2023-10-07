@@ -288,14 +288,8 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  // @todo: make this private to the user
   email: string;
-  // @todo: make this private to the user
   salt: string | null;
-  // @todo: make this private to the user
-  account_reset_timestamps: string[];
-  // @todo: make this private to the user
-  superuserEventConfigIds: string[];
 }
 
 /**
@@ -357,10 +351,11 @@ export type VerifyTokenRequest = {
 };
 
 /**
- * On the happy path, we don't need to say anything in response to
+ * Returns the encryption_key of the account, if the user has opted to not set
+ * a password and store their encryption key on our server.
  * {@link VerifyTokenRequest}.
  */
-export type VerifyTokenResponseValue = undefined;
+export type VerifyTokenResponseValue = { encryptionKey: string | null };
 
 /**
  * Ask the server to log us in using a special login flow designed
@@ -384,7 +379,8 @@ export type CreateNewUserRequest = {
   /**
    * Zupass users don't have a salt.
    */
-  salt: string | null;
+  salt: string | undefined;
+  encryptionKey: string | undefined;
 };
 
 /**
