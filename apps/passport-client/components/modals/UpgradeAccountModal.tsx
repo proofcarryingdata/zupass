@@ -1,3 +1,4 @@
+import { sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useSelf } from "../../src/appHooks";
@@ -24,6 +25,7 @@ export function UpgradeAccountModal() {
   const onAddPassword = useCallback(async () => {
     if (loading) return;
     setLoading(true);
+    await sleep();
     try {
       const currentEncryptionKey = loadEncryptionKey();
       await setPassword(newPassword, currentEncryptionKey, dispatch);

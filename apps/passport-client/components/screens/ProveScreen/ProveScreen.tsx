@@ -108,7 +108,7 @@ function getScreen(request: PCDGetRequest) {
 
   return (
     <>
-      <MaybeModal fullScreen={true} />
+      <MaybeModal fullScreen />
       <AppContainer bg="gray">
         <Spacer h={24} />
         <H2>{title.toUpperCase()}</H2>

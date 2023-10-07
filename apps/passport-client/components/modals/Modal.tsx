@@ -98,7 +98,7 @@ export function Modal(props: {
   return (
     <>
       <NoScroll />
-      <ModalBg onClick={props.onClose}>
+      <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
         <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
           {props.onClose && (
             <CircleButton diameter={20} padding={16} onClick={props.onClose}>
@@ -125,7 +125,7 @@ const NoScroll = createGlobalStyle`
   }
 `;
 
-const ModalBg = styled.div`
+const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -135,7 +135,7 @@ const ModalBg = styled.div`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
-  padding: 0px 12px;
+  padding: ${(props) => (props.$fullScreen ? "0" : "0 12px")};
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
