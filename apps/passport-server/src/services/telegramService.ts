@@ -26,10 +26,10 @@ import {
   BotContext,
   SessionData,
   TopicChat,
+  chatIDsToChats,
   chatsToJoin,
   dynamicEvents,
   findChatByEventIds,
-  getEventsWithChats,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
@@ -289,7 +289,7 @@ export class TelegramService {
       const events = await fetchLinkedPretixAndTelegramEvents(
         this.context.dbPool
       );
-      const eventsWithChats = await getEventsWithChats(
+      const eventsWithChats = await chatIDsToChats(
         this.context.dbPool,
         ctx,
         events

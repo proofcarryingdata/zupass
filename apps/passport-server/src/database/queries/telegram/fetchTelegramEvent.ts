@@ -61,14 +61,14 @@ export async function fetchLinkedPretixAndTelegramEvents(
   return result.rows;
 }
 
-export interface ChatIDWithEvents {
+export interface ChatIDWithEventIDs {
   telegramChatID: string;
   ticketEventIds: string[];
 }
 
 export async function fetchEventsPerChat(
   client: Pool
-): Promise<ChatIDWithEvents[]> {
+): Promise<ChatIDWithEventIDs[]> {
   const result = await sqlQuery(
     client,
     `SELECT 
