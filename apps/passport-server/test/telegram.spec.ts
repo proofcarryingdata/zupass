@@ -14,7 +14,7 @@ import { upsertUser } from "../src/database/queries/saveUser";
 import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
 import {
-  ChatIDWithEvents,
+  ChatIDWithEventIDs,
   fetchTelegramEventByEventId
 } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
@@ -245,28 +245,29 @@ describe("telegram bot functionality", function () {
   step(
     "fetching a telegram chat via a list of eventIds should work",
     async () => {
-      const sampleChats: ChatIDWithEvents[] = [
+      const sampleChats: ChatIDWithEventIDs[] = [
         {
           telegramChatID: "chat1",
           ticketEventIds: ["event1", "event2", "event3"]
         },
-        {
-          telegramChatID: "chat2",
-          ticketEventIds: ["event2", "event3", "event4"]
-        },
-        { telegramChatID: "chat3", ticketEventIds: ["event5"] }
+        { telegramChatID: "chat2", ticketEventIds: ["event4", "event5"] }
       ];
 
       const testCases = [
         {
           name: "Finds chat with matching single event ID",
           input: ["event5"],
-          expected: "chat3"
+          expected: "chat2"
         },
         {
           name: "Finds chat with matching multiple event IDs",
-          input: ["event2", "event3", "event4"],
-          expected: "chat2"
+          input: ["event1", "event2", "event3"],
+          expected: "chat1"
+        },
+        {
+          name: "Handles event IDs that match different chats (should return null)",
+          input: ["event3", "event4"],
+          expected: null
         },
         {
           name: "Returns null if no chat matches the event IDs",

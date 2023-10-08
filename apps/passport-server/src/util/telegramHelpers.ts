@@ -13,7 +13,7 @@ import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
-  ChatIDWithEvents,
+  ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents
@@ -23,7 +23,7 @@ import { logger } from "./logger";
 
 export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
 
-type EventWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEvents> =
+type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
   T & {
     chat: TopicChat;
   };
@@ -45,14 +45,14 @@ function isFulfilled<T>(
 /**
  * Fetches the chat object for a list contaning a telegram chat id
  */
-export const getEventsWithChats = async <
-  T extends LinkedPretixTelegramEvent | ChatIDWithEvents
+export const chatIDsToChats = async <
+  T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
 >(
   db: Pool,
   ctx: BotContext,
   chats: T[]
-): Promise<EventWithChat<T>[]> => {
-  const eventsWithChatsRequests = chats.map(async (e) => {
+): Promise<ChatIDWithChat<T>[]> => {
+  const chatIDsToChatRequests = chats.map(async (e) => {
     return {
       ...e,
       chat: e.telegramChatID
@@ -61,7 +61,7 @@ export const getEventsWithChats = async <
     };
   });
   const eventsWithChatsSettled = await Promise.allSettled(
-    eventsWithChatsRequests
+    chatIDsToChatRequests
   );
 
   const eventsWithChats = eventsWithChatsSettled
@@ -72,7 +72,7 @@ export const getEventsWithChats = async <
 };
 
 export const findChatByEventIds = (
-  chats: ChatIDWithEvents[],
+  chats: ChatIDWithEventIDs[],
   eventIds: string[]
 ): string | null => {
   if (eventIds.length === 0) return null;
@@ -306,7 +306,7 @@ export const chatsToJoin = async (
   }
 
   const events = await fetchEventsPerChat(db);
-  const eventsWithChats = await getEventsWithChats(db, ctx, events);
+  const eventsWithChats = await chatIDsToChats(db, ctx, events);
   if (eventsWithChats && eventsWithChats.length === 0) {
     range.text(`No groups to join at this time`);
     return;
