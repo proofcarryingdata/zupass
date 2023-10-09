@@ -14,7 +14,6 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramAnonTopicsByEventId,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -346,10 +345,7 @@ export class TelegramService {
       });
     });
 
-    // TODO: see if you can handle forum topics being deleted
-
     this.bot.on(":forum_topic_edited", async (ctx) => {
-      //
       logger(
         `[TELEGRAM forum topic edited]`,
         ctx,
@@ -358,28 +354,23 @@ export class TelegramService {
       const topicName = ctx.update?.message?.forum_topic_edited.name;
       const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
-      const telegramEvents = await fetchTelegramAnonTopicsByChatId(
-        this.context.dbPool,
-        ctx.chat.id
-      );
-      const ticketEvents = await fetchTelegramEventsByChatId(
+      const anonTopicsForChat = await fetchTelegramAnonTopicsByChatId(
         this.context.dbPool,
         ctx.chat.id
       );
       if (!chatId || !topicName || !messageThreadId)
         throw new Error(`Missing chatId or topic name`);
 
-      const topicToUpdate = telegramEvents.find(
-        (e) =>
-          e.anon_topic_id?.toString() === messageThreadId?.toString() &&
-          ticketEvents.find((t) => t.ticket_event_id === e.ticket_event_id)
-      );
+      const anonTopicExists =
+        anonTopicsForChat.filter(
+          (e) => e.anon_topic_id?.toString() === messageThreadId?.toString()
+        ).length > 0;
 
-      if (!topicToUpdate) throw new Error(`No topic to update found`);
+      if (!anonTopicExists) throw new Error(`No topic to update found`);
 
       await insertTelegramAnonTopic(
         this.context.dbPool,
-        telegramEvents[0].ticket_event_id,
+        chatId,
         messageThreadId,
         topicName
       );
@@ -436,14 +427,12 @@ export class TelegramService {
           ctx.message?.reply_to_message?.forum_topic_created?.name;
         if (!topicName) throw new Error(`No topic name found`);
 
-        for (const event of telegramEvents) {
-          await insertTelegramAnonTopic(
-            this.context.dbPool,
-            event.ticket_event_id,
-            messageThreadId,
-            topicName
-          );
-        }
+        await insertTelegramAnonTopic(
+          this.context.dbPool,
+          ctx.chat.id,
+          messageThreadId,
+          topicName
+        );
 
         await ctx.reply(`Successfully linked anonymous channel.`, {
           message_thread_id: messageThreadId
@@ -459,7 +448,7 @@ export class TelegramService {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
-            `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startApp=${encodedTopicData}` // TODO: make env var
+            `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startApp=${encodedTopicData}`
           )
         });
       } catch (error) {
@@ -716,13 +705,13 @@ export class TelegramService {
       );
     }
 
-    const topicsForEvent = await fetchTelegramAnonTopicsByEventId(
+    const chatForEvent = await fetchTelegramEventByEventId(
       this.context.dbPool,
       eventId
     );
-    if (!topicsForEvent) {
+    if (!chatForEvent) {
       throw new Error(
-        `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
+        `Attempted to use a PCD to send anonymous message for event ${eventId}, which does not have a Telegram group`
       );
     }
 
@@ -730,32 +719,29 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
-    if (topicsForEvent.length == 0) {
+    const anonTopicsForEvent = await fetchTelegramAnonTopicsByChatId(
+      this.context.dbPool,
+      chatForEvent.telegram_chat_id
+    );
+
+    if (anonTopicsForEvent.length == 0) {
       throw new Error(`this group doesn't have any anon topics`);
     }
 
-    const eventGroup = await fetchTelegramEventByEventId(
-      this.context.dbPool,
-      eventId
-    );
-    if (!eventGroup) {
-      throw new Error(`Couldn't find Telegram group for ${eventId}`);
-    }
-
     // The event is linked to a chat. Make sure we can access it.
-    const chat = await this.bot.api.getChat(eventGroup.telegram_chat_id);
+    const chat = await this.bot.api.getChat(chatForEvent.telegram_chat_id);
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${eventGroup.ticket_event_id} is configured with Telegram chat ${eventGroup.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Event ${chatForEvent.ticket_event_id} is configured with Telegram chat ${chatForEvent.telegram_chat_id}, which is of incorrect type "${chat.type}"`
       );
     }
 
-    const ticketedAnonEvent = topicsForEvent.find(
+    const ticketedAnonEvent = anonTopicsForEvent.find(
       (topicForEvent) => topicForEvent.anon_topic_id == topicId
     );
     if (!ticketedAnonEvent) {
       throw new Error(
-        `Couldn't find anon event for ${eventId} with topic Id: ${topicId}`
+        `Couldn't find anon topic for event: ${eventId} with requested topic_id: ${topicId}`
       );
     }
 

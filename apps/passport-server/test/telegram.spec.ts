@@ -16,11 +16,12 @@ import { fetchTelegramVerificationStatus } from "../src/database/queries/telegra
 import {
   ChatIDWithEventIDs,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramAnonTopicsByEventId,
+  fetchTelegramChat,
   fetchTelegramEventByEventId
 } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramAnonTopic,
+  insertTelegramChat,
   insertTelegramEvent,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
@@ -118,6 +119,12 @@ describe("telegram bot functionality", function () {
     }
   );
 
+  step("should be able to add a new telegram chat", async function () {
+    expect(await insertTelegramChat(db, dummyChatId)).to.eq(1);
+    const insertedChat = await fetchTelegramChat(db, dummyChatId);
+    expect(insertedChat?.telegram_chat_id).to.eq(dummyChatId.toString());
+  });
+
   step("should be able to record a verified user", async function () {
     // Insert a dummy user
     const newIdentity = new Identity();
@@ -151,6 +158,45 @@ describe("telegram bot functionality", function () {
       .to.be.false;
   });
 
+  step("should be able to link an event and tg chat", async function () {
+    const eventConfigId = testEvents[0].dbEventConfigId;
+    await insertTelegramEvent(db, eventConfigId, dummyChatId);
+    const insertedEvent = await fetchTelegramEventByEventId(db, eventConfigId);
+    expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+    // Note: Grammy allows chatIds to be numbers or strings
+    expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
+  });
+
+  step(
+    "should be able to connect a new ticketed event with an existing chat",
+    async function () {
+      const newEventConfigId = testEvents[1].dbEventConfigId;
+
+      await insertTelegramEvent(db, newEventConfigId, dummyChatId);
+      const insertedEvent = await fetchTelegramEventByEventId(
+        db,
+        newEventConfigId
+      );
+      expect(insertedEvent?.ticket_event_id).to.eq(newEventConfigId);
+      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
+    }
+  );
+
+  step(
+    "should be able to connect an existing ticketed event to a new chat",
+    async function () {
+      const eventConfigId = testEvents[0].dbEventConfigId;
+      await insertTelegramChat(db, dummyChatId_1);
+      await insertTelegramEvent(db, eventConfigId, dummyChatId_1);
+      const insertedEvent = await fetchTelegramEventByEventId(
+        db,
+        eventConfigId
+      );
+      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
+      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId_1.toString());
+    }
+  );
+
   step(
     "should be able to update the chat a ticket refers to",
     async function () {
@@ -172,44 +218,6 @@ describe("telegram bot functionality", function () {
       expect(insertedEventsByEventId?.telegram_chat_id).to.eq(
         dummyChatId_1.toString()
       );
-    }
-  );
-
-  step("should be able to link an event and tg chat", async function () {
-    const eventConfigId = testEvents[0].dbEventConfigId;
-    await insertTelegramEvent(db, eventConfigId, dummyChatId);
-    const insertedEvent = await fetchTelegramEventByEventId(db, eventConfigId);
-    expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
-    // Note: Grammy allows chatIds to be numbers or strings
-    expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
-  });
-
-  step(
-    "should be able to connect a chat to a new ticketed event",
-    async function () {
-      const eventConfigId = testEvents[1].dbEventConfigId;
-
-      await insertTelegramEvent(db, eventConfigId, dummyChatId);
-      const insertedEvent = await fetchTelegramEventByEventId(
-        db,
-        eventConfigId
-      );
-      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
-      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
-    }
-  );
-
-  step(
-    "should be able to connect a ticketed event to a new chat",
-    async function () {
-      const eventConfigId = testEvents[0].dbEventConfigId;
-      await insertTelegramEvent(db, eventConfigId, dummyChatId_1);
-      const insertedEvent = await fetchTelegramEventByEventId(
-        db,
-        eventConfigId
-      );
-      expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
-      expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId_1.toString());
     }
   );
 
@@ -263,43 +271,30 @@ describe("telegram bot functionality", function () {
       });
     }
   );
-
-  step("should be able to add a multiple anon channels", async function () {
-    const eventConfigId = testEvents[0].dbEventConfigId;
-    await insertTelegramEvent(db, eventConfigId, dummyChatId);
-    const insertedEvent = await fetchTelegramEventByEventId(db, eventConfigId);
-    expect(insertedEvent?.ticket_event_id).to.eq(eventConfigId);
-    expect(insertedEvent?.telegram_chat_id).to.eq(dummyChatId.toString());
-    await insertTelegramAnonTopic(db, eventConfigId, anonChannelID, "test");
-    const insertedAnonTopic = await fetchTelegramAnonTopicsByEventId(
+  step("should be able to add multiple anon channels", async function () {
+    await insertTelegramAnonTopic(db, dummyChatId, anonChannelID, "test");
+    const insertedAnonTopic = await fetchTelegramAnonTopicsByChatId(
       db,
-      eventConfigId
+      dummyChatId
     );
-    expect(insertedAnonTopic[0]?.ticket_event_id).to.eq(eventConfigId);
+    expect(insertedAnonTopic[0]?.telegram_chat_id).to.eq(
+      dummyChatId.toString()
+    );
     expect(insertedAnonTopic[0]?.anon_topic_id).to.eq(anonChannelID.toString());
     expect(insertedAnonTopic[0]?.anon_topic_name).to.eq("test");
-    await insertTelegramAnonTopic(db, eventConfigId, anonChannelID_1, "test1");
-    const insertedAnonTopic_1 = await fetchTelegramAnonTopicsByEventId(
+    await insertTelegramAnonTopic(db, dummyChatId, anonChannelID_1, "test1");
+
+    const insertedAnonTopic_1 = await fetchTelegramAnonTopicsByChatId(
       db,
-      eventConfigId
+      dummyChatId
     );
     expect(insertedAnonTopic_1.length).to.eq(2);
-    expect(insertedAnonTopic_1[1]?.ticket_event_id).to.eq(eventConfigId);
+    expect(insertedAnonTopic_1[1]?.telegram_chat_id).to.eq(
+      dummyChatId.toString()
+    );
     expect(insertedAnonTopic_1[1]?.anon_topic_id).to.eq(
       anonChannelID_1.toString()
     );
     expect(insertedAnonTopic_1[1]?.anon_topic_name).to.eq("test1");
-
-    const fetchByChatId = await fetchTelegramAnonTopicsByChatId(
-      db,
-      dummyChatId
-    );
-    expect(fetchByChatId.length).to.eq(2);
-    expect(fetchByChatId[0]?.ticket_event_id).to.eq(eventConfigId);
-    expect(fetchByChatId[0]?.anon_topic_id).to.eq(anonChannelID.toString());
-    expect(fetchByChatId[0]?.anon_topic_name).to.eq("test");
-    expect(fetchByChatId[1]?.ticket_event_id).to.eq(eventConfigId);
-    expect(fetchByChatId[1]?.anon_topic_id).to.eq(anonChannelID_1.toString());
-    expect(fetchByChatId[1]?.anon_topic_name).to.eq("test1");
   });
 });

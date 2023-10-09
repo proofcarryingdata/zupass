@@ -18,7 +18,10 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents
 } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
+import {
+  insertTelegramChat,
+  insertTelegramEvent
+} from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
@@ -238,10 +241,12 @@ export const dynamicEvents = async (
         } else {
           if (!event.isLinked) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
+            await insertTelegramChat(db, ctx.chat.id);
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
             replyText = `<i>Removed ${event.eventName} to chat</i>`;
+            await deleteTelegramEvent(db, event.configEventID);
             await deleteTelegramEvent(db, event.configEventID);
           }
         }

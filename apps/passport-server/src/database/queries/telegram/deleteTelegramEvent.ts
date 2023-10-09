@@ -18,6 +18,20 @@ export async function deleteTelegramEvent(
   );
 }
 
+export async function deleteTelegramChag(
+  client: Pool,
+  telegramChatId: number
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `\
+    delete from telegram_chats
+    where telegram_chat_id = $1
+    `,
+    [telegramChatId]
+  );
+}
+
 export async function deleteTelegramAnonTopic(
   client: Pool,
   ticketEventId: string,

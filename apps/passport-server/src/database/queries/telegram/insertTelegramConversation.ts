@@ -20,6 +20,22 @@ values ($1, $2, true, $3);`,
   return result.rowCount;
 }
 
+export async function insertTelegramChat(
+  client: Pool,
+  telegramChatId: number
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `\
+    insert into telegram_chats(telegram_chat_id)
+    values ($1)
+    on conflict (telegram_chat_id) do update 
+    set telegram_chat_id = $1`,
+    [telegramChatId]
+  );
+  return result.rowCount;
+}
+
 export async function insertTelegramEvent(
   client: Pool,
   ticketEventId: string,
@@ -39,18 +55,18 @@ set telegram_chat_id = $2;`,
 
 export async function insertTelegramAnonTopic(
   client: Pool,
-  ticketEventId: string,
+  telegramChatId: number,
   anonTopicId: number,
   topicName: string
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_chat_anon_topics (ticket_event_id, anon_topic_id, anon_topic_name)
+insert into telegram_chat_anon_topics (telegram_chat_id, anon_topic_id, anon_topic_name)
 values ($1, $2, $3)
-on conflict (ticket_event_id, anon_topic_id) do update 
+on conflict (telegram_chat_id, anon_topic_id) do update 
 set anon_topic_name = $3;`,
-    [ticketEventId, anonTopicId, topicName]
+    [telegramChatId, anonTopicId, topicName]
   );
   return result.rowCount;
 }
