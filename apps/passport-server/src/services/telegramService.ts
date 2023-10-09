@@ -458,7 +458,7 @@ export class TelegramService {
             message_thread_id: messageThreadId,
             reply_markup: new InlineKeyboard().url(
               "Post Anonymously",
-              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startApp=${encodedTopicData}`
+              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startapp=${encodedTopicData}&startApp=${encodedTopicData}`
             )
           }
         );

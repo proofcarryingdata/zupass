@@ -12,6 +12,8 @@ import sha256 from "js-sha256";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+const MAX_HEADER_SIZE = 8192; // max header size (8kb) for nodejs
+
 function getMessageWatermark(message: string): bigint {
   const hashed = sha256.sha256(message).substring(0, 16);
   return BigInt("0x" + hashed);
@@ -112,6 +114,7 @@ function requestProof(
 
 export default function () {
   const [message, setMessage] = useState("");
+  const [messageInvalid, setMessageInvalid] = useState(false);
   const [topicData, setTopicData] = useState<TopicData | undefined>();
   const searchParams = useSearchParams();
   const topicDataRaw = searchParams.get("tgWebAppStartParam");
@@ -122,6 +125,15 @@ export default function () {
     const topicData = JSON.parse(topicDataEncoded.toString("utf-8"));
     setTopicData(topicData);
   }, [topicDataRaw]);
+
+  useEffect(() => {
+    const headerSize = Buffer.byteLength(message);
+    if (headerSize > MAX_HEADER_SIZE) {
+      setMessageInvalid(true);
+    } else if (messageInvalid) {
+      setMessageInvalid(false);
+    }
+  }, [message]);
 
   const onClick = useCallback(() => {
     if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
@@ -138,14 +150,17 @@ export default function () {
           placeholder="Type your anonymous message here"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          className="border-2 text-2xl rounded-lg text-black resize-none p-2 h-[30vh]"
+          className={`border-2 ${
+            messageInvalid ? "border-red-500" : ""
+          } text-2xl rounded-lg text-black resize-none p-2 h-[30vh]`}
         />
       </div>
       <div className="mt-8 text-center flex flex-col w-full">
         <span className="text-white pb-2">🔒 Anonymous posting</span>
         <button
           onClick={onClick}
-          className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4"
+          className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
+          disabled={messageInvalid}
         >
           Send to channel
         </button>
