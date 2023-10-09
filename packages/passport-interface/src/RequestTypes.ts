@@ -1,6 +1,6 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
-import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
@@ -269,9 +269,9 @@ export interface ListSingleFeedRequest {
  * some PCDs, given the particular feed and credential that the
  * user supplies.
  */
-export interface PollFeedRequest {
+export interface PollFeedRequest<T extends PCDPackage = PCDPackage> {
   feedId: string;
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: SerializedPCD<PCDOf<T>>;
 }
 
 /**
