@@ -28,6 +28,11 @@ export interface TelegramEvent {
   telegram_chat_id: number;
 }
 
+export interface TelegramChat {
+  uuid: string | null;
+  telegram_chat_id: number;
+}
+
 /**
  * A zuzalu pretix-ticket-holder that may or may not have logged in yet.
  */
@@ -159,7 +164,7 @@ export interface PretixItemInfo {
 }
 
 export interface TelegramAnonChannel {
-  ticket_event_id: string;
+  telegram_chat_id: number;
   anon_topic_id: number;
   anon_topic_name: string;
 }
