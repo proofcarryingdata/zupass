@@ -45,18 +45,20 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
   }
 
   return (
-    <AppContainer bg="gray">
+    <>
       <MaybeModal fullScreen />
-      <AppHeader>
-        <H2>{req.options?.title ?? "Prove " + req.pcdType}</H2>
-      </AppHeader>
-      <GenericProveSection
-        initialArgs={req.args}
-        onProve={onProve}
-        pcdType={req.pcdType}
-        options={req.options}
-      />
-      <Spacer h={64} />
-    </AppContainer>
+      <AppContainer bg="gray">
+        <AppHeader>
+          <H2>{req.options?.title ?? "Prove " + req.pcdType}</H2>
+        </AppHeader>
+        <GenericProveSection
+          initialArgs={req.args}
+          onProve={onProve}
+          pcdType={req.pcdType}
+          options={req.options}
+        />
+        <Spacer h={64} />
+      </AppContainer>
+    </>
   );
 }

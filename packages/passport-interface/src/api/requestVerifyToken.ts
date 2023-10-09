@@ -15,7 +15,11 @@ export async function requestVerifyToken(
 ): Promise<VerifyTokenResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, `/account/verify-token`),
-    async () => ({ value: undefined, success: true }),
+    async (resText) =>
+      ({
+        value: JSON.parse(resText),
+        success: true
+      }) as VerifyTokenResult,
     { email, token } satisfies VerifyTokenRequest
   );
 }

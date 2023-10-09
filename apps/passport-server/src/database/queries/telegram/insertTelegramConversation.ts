@@ -7,15 +7,15 @@ import { sqlQuery } from "../../sqlQuery";
 export async function insertTelegramVerification(
   client: Pool,
   telegramUserId: number,
-  telegramChatId: number
+  telegramChatId: number,
+  semaphoreId: string
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id, verified)
-values ($1, $2, true)
-on conflict do nothing;`,
-    [telegramUserId, telegramChatId]
+insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id, verified, semaphore_id)
+values ($1, $2, true, $3);`,
+    [telegramUserId, telegramChatId, semaphoreId]
   );
   return result.rowCount;
 }

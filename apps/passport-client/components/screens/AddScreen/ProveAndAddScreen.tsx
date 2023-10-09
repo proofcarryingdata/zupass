@@ -63,17 +63,21 @@ export function ProveAndAddScreen({
   }
 
   return (
-    <AppContainer bg="gray">
+    <>
       <MaybeModal fullScreen />
-      <Container>
-        <Spacer h={24} />
-        <AppHeader>
-          <H2>{request.options.title || `Add and Prove ${request.pcdType}`}</H2>
-        </AppHeader>
-        <Spacer h={16} />
-        {content}
-      </Container>
-    </AppContainer>
+      <AppContainer bg="gray">
+        <Container>
+          <Spacer h={24} />
+          <AppHeader>
+            <H2>
+              {request.options.title || `Add and Prove ${request.pcdType}`}
+            </H2>
+          </AppHeader>
+          <Spacer h={16} />
+          {content}
+        </Container>
+      </AppContainer>
+    </>
   );
 }
 

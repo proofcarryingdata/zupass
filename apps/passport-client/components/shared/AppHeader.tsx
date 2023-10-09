@@ -18,10 +18,15 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
       }),
     [dispatch]
   );
-  const openInfo = useCallback(() => setModal("info"), [setModal]);
-  const openSettings = useCallback(() => setModal("settings"), [setModal]);
+  const openInfo = useCallback(
+    () => setModal({ modalType: "info" }),
+    [setModal]
+  );
+  const openSettings = useCallback(
+    () => setModal({ modalType: "settings" }),
+    [setModal]
+  );
   const openSubscriptions = useCallback(() => window.location.hash = "subscriptions", []);
-
   const subscriptions = useSubscriptions();
 
   return (
@@ -68,10 +73,9 @@ const ErrorDot = styled.div`
   width: 8px;
   height: 8px;
   border-radius: 8px;
-}
-`
+`;
 
 const ErrorDotContainer = styled.div`
   position: relative;
   pointer-events: none;
-`
+`;

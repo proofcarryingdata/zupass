@@ -70,11 +70,11 @@ const DEFAULT_FEEDS: Feed[] = [
     permissions: [
       {
         type: PCDPermissionType.AppendToFolder,
-        folder: "Zuzalu"
+        folder: "Zuzalu '23"
       } as AppendToFolderPermission,
       {
         type: PCDPermissionType.ReplaceInFolder,
-        folder: "Zuzalu"
+        folder: "Zuzalu '23"
       } as ReplaceInFolderPermission
     ],
     credentialType: SemaphoreSignaturePCDTypeName

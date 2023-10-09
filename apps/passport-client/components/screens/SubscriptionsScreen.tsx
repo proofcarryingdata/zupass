@@ -35,20 +35,22 @@ export function SubscriptionsScreen() {
   }, []);
 
   return (
-    <AppContainer bg="gray">
+    <>
       <MaybeModal />
-      <SubscriptionNavigation label={"Home"} to="/"></SubscriptionNavigation>
-      <Container>
-        <H2>Your Subscriptions</H2>
-        <Spacer h={32} />
-        <Button onClick={onAddNewClicked}>Add a new subscription</Button>
-        <Spacer h={16} />
-        {subs.getActiveSubscriptions().length === 0 && (
-          <div>You have no subscriptions.</div>
-        )}
-        <SubscriptionTree subscriptions={subs} />
-      </Container>
-    </AppContainer>
+      <AppContainer bg="gray">
+        <SubscriptionNavigation label={"Home"} to="/"></SubscriptionNavigation>
+        <Container>
+          <H2>Your Subscriptions</H2>
+          <Spacer h={32} />
+          <Button onClick={onAddNewClicked}>Add a new subscription</Button>
+          <Spacer h={16} />
+          {subs.getActiveSubscriptions().length === 0 && (
+            <div>You have no subscriptions.</div>
+          )}
+          <SubscriptionTree subscriptions={subs} />
+        </Container>
+      </AppContainer>
+    </>
   );
 }
 

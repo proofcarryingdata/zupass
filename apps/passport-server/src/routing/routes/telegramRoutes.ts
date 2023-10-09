@@ -2,7 +2,10 @@ import express, { Request, Response } from "express";
 import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { closeWebviewHtml } from "../../util/telegramWebApp";
+import {
+  closeWebviewHtml,
+  errorHtmlWithDetails
+} from "../../util/telegramWebApp";
 import { checkQueryParam, checkUrlParam } from "../params";
 
 export function initTelegramRoutes(
@@ -58,7 +61,7 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to verify", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
+        res.status(500).send(errorHtmlWithDetails(e as string));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);

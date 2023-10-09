@@ -12,7 +12,7 @@ import { ScreenLoader } from "../shared/ScreenLoader";
  * This uncloseable modal is shown to users of Zupass who have a sync key,
  * and have never created a password. It asks them to create a password.
  */
-export function UpgradeAccountModal() {
+export function RequireAddPasswordModal() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const self = useSelf();
@@ -32,7 +32,7 @@ export function UpgradeAccountModal() {
 
       dispatch({
         type: "set-modal",
-        modal: { modalType: "changed-password" }
+        modal: { modalType: "none" }
       });
     } catch (e) {
       setError("Couldn't set a password - try again later");
@@ -47,11 +47,11 @@ export function UpgradeAccountModal() {
 
   return (
     <Container>
-      <H2>Upgrade Your Account</H2>
+      <H2>Reinforce Your Account</H2>
       <Spacer h={24} />
-      Zupass now supports logging in with a password! To continue to use Zupass,
-      you must choose a password. Make sure to remember it, otherwise you will
-      lose access to all your PCDs.
+      Before adding this PCD, you will need to upgrade to an
+      end-to-end-encrypted Zupass. To upgrade, please choose a password. Make
+      sure to remember it, otherwise you will lose access to all your PCDs.
       <Spacer h={24} />
       <BigInput value={self.email} disabled={true} />
       <Spacer h={8} />

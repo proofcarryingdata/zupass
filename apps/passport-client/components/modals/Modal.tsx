@@ -8,8 +8,10 @@ import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
+import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
 import { UpgradeAccountModal } from "./UpgradeAccountModal";
@@ -19,7 +21,7 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
   const modal = useModal();
 
   const close = useCallback(
-    () => dispatch({ type: "set-modal", modal: "" }),
+    () => dispatch({ type: "set-modal", modal: { modalType: "none" } }),
     [dispatch]
   );
   const dismissable = isModalDismissable(modal);
@@ -55,12 +57,13 @@ function isModalDismissable(modal: AppState["modal"]) {
     "invalid-participant",
     "changed-password",
     "another-device-changed-password",
-    "upgrade-account-modal"
-  ].includes(modal);
+    "upgrade-account-modal",
+    "require-add-password"
+  ].includes(modal.modalType);
 }
 
 function getModalBody(modal: AppState["modal"]) {
-  switch (modal) {
+  switch (modal.modalType) {
     case "info":
       return <InfoModal />;
     case "settings":
@@ -73,9 +76,13 @@ function getModalBody(modal: AppState["modal"]) {
       return <ChangedPasswordModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
+    case "confirm-setup-later":
+      return <ConfirmSkipSetupModal onConfirm={modal.onConfirm} />;
     case "upgrade-account-modal":
       return <UpgradeAccountModal />;
-    case "":
+    case "require-add-password":
+      return <RequireAddPasswordModal />;
+    case "none":
       return null;
     default:
       assertUnreachable(modal);
@@ -91,7 +98,7 @@ export function Modal(props: {
   return (
     <>
       <NoScroll />
-      <ModalBg onClick={props.onClose}>
+      <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
         <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
           {props.onClose && (
             <CircleButton diameter={20} padding={16} onClick={props.onClose}>
@@ -118,7 +125,7 @@ const NoScroll = createGlobalStyle`
   }
 `;
 
-const ModalBg = styled.div`
+const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
   top: 0;
   left: 0;
@@ -128,7 +135,7 @@ const ModalBg = styled.div`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
-  padding: 0px 12px;
+  padding: ${(props) => (props.$fullScreen ? "0" : "0 12px")};
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`

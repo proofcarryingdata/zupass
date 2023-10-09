@@ -1,6 +1,7 @@
 import {
   ConfirmEmailResult,
   requestConfirmationEmail,
+  requestDownloadAndDecryptStorage,
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
@@ -63,15 +64,32 @@ function SendEmailVerification({ email }: { email: string }) {
       );
       setVerifyingCode(false);
       if (verifyTokenResult.success) {
-        window.location.hash = `#/create-password?email=${encodeURIComponent(
-          email
-        )}&token=${encodeURIComponent(token)}`;
-        return;
+        const encryptionKey = verifyTokenResult.value?.encryptionKey;
+        if (encryptionKey) {
+          const storageResult = await requestDownloadAndDecryptStorage(
+            appConfig.zupassServer,
+            encryptionKey
+          );
+
+          if (!storageResult.success) {
+            setError("An error occurred while downloading storage");
+          }
+
+          dispatch({
+            type: "load-from-sync",
+            storage: storageResult.value,
+            encryptionKey
+          });
+        } else {
+          window.location.hash = `#/create-password?email=${encodeURIComponent(
+            email
+          )}&token=${encodeURIComponent(token)}`;
+        }
       } else {
         setError("Invalid confirmation code");
       }
     },
-    [email, verifyingCode]
+    [email, verifyingCode, dispatch]
   );
 
   const handleConfirmationEmailResult = useCallback(

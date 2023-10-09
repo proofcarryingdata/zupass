@@ -1,8 +1,8 @@
 import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
   ISSUANCE_STRING,
-  pollFeed,
-  ZupassFeedIds
+  ZupassFeedIds,
+  pollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -35,7 +35,8 @@ describe("attested email feed functionality", function () {
     const loginResult = await testLogin(application, testEmail, {
       force: true,
       expectUserAlreadyLoggedIn: false,
-      expectEmailIncorrect: false
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
     });
 
     expect(loginResult?.identity).to.not.be.empty;

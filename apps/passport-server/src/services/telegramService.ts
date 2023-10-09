@@ -1,24 +1,17 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { sleep } from "@pcd/util";
 import {
-  EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import sha256 from "js-sha256";
-import _ from "lodash";
-import { fetchPretixEventInfo } from "../database/queries/pretixEventInfo";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
+  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
@@ -31,30 +24,18 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
+  SessionData,
+  TopicChat,
+  chatIDsToChats,
+  chatsToJoin,
   dynamicEvents,
+  findChatByEventIds,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin,
-  SessionData
+  senderIsAdmin
 } from "../util/telegramHelpers";
-import { isLocalServer } from "../util/util";
 import { RollbarService } from "./rollbarService";
-
-const ALLOWED_EVENTS = [
-  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
-  {
-    eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
-    name: "ProgCrypto (Internal Test)"
-  },
-  {
-    eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
-    name: "AW (Internal Test)"
-  }
-  // Add this value and set the value field of validEventIds in generateProofUrl
-  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
-];
 
 const ALLOWED_TICKET_MANAGERS = [
   "cha0sg0d",
@@ -65,15 +46,6 @@ const ALLOWED_TICKET_MANAGERS = [
 ];
 
 const adminBotChannel = "Admin Central";
-const eventIdsAreValid = (eventIds?: string[]): boolean => {
-  const isNonEmptySubset = (superset: string[], subset?: string[]): boolean =>
-    !!(subset && subset.length && _.difference(subset, superset).length === 0);
-
-  return isNonEmptySubset(
-    ALLOWED_EVENTS.map((e) => e.eventId),
-    eventIds
-  );
-};
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -97,25 +69,14 @@ export class TelegramService {
       "Zucat manages events and groups with zero-knowledge proofs"
     );
 
-    const zupassMenu = new Menu("zupass");
+    const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
-    zupassMenu.dynamic((ctx, range) => {
-      const userId = ctx?.from?.id;
-      if (userId) {
-        const proofUrl = this.generateProofUrl(userId.toString());
-        range.webApp(`Generate proof 🚀`, proofUrl);
-      } else {
-        ctx.reply(
-          `Unable to locate your Telegram account. Please try again, or contact passport@0xparc.org`
-        );
-      }
-      return range;
-    });
+    zupassMenu.dynamic(chatsToJoin);
 
     anonSendMenu.dynamic((_, menu) => {
       const zktgUrl =
@@ -152,28 +113,34 @@ export class TelegramService {
           logger(
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
+          const chat = (await ctx.api.getChat(chatId)) as TopicChat;
+
           await this.bot.api.sendMessage(
             userId,
             `<i>Verifying and inviting...</i>`,
             { parse_mode: "HTML" }
           );
           await this.bot.api.approveChatJoinRequest(chatId, userId);
-          const chat = (await this.bot.api.getChat(
-            chatId
-          )) as Chat.GroupGetChat;
-          const inviteLink = await ctx.createChatInviteLink();
-          await this.bot.api.sendMessage(
-            userId,
-            `You're approved for <b>${chat.title}</b>`,
-            {
+          if (ctx.chatJoinRequest?.invite_link?.invite_link) {
+            await this.bot.api.sendMessage(userId, `Congrats!`, {
               reply_markup: new InlineKeyboard().url(
-                `Join 🤝`,
-                inviteLink.invite_link
+                `Go to ${chat?.title} `,
+                ctx.chatJoinRequest.invite_link.invite_link
               ),
               parse_mode: "HTML"
-            }
+            });
+          } else {
+            await this.bot.api.sendMessage(
+              userId,
+              `Congrats! ${chat?.title} should now appear at the top of your list
+               of Chats.\nYou can also click the above button.`
+            );
+          }
+        } else {
+          await this.bot.api.sendMessage(
+            userId,
+            `You are not verified. Try again with the /start command.`
           );
-          await this.bot.api.sendMessage(userId, `Congrats!`);
         }
       } catch (e) {
         await this.bot.api.sendMessage(userId, `Error joining: ${e}`);
@@ -187,14 +154,21 @@ export class TelegramService {
     this.bot.on("chat_member", async (ctx) => {
       try {
         const newMember = ctx.update.chat_member.new_chat_member;
-        if (newMember.status === "member") {
+        if (newMember.status === "left" || newMember.status === "kicked") {
           logger(
-            `[TELEGRAM] Deleting verification for user ${newMember.user.id} in chat ${ctx.chat.id}`
+            `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
           );
           await deleteTelegramVerification(
             this.context.dbPool,
             newMember.user.id,
             ctx.chat.id
+          );
+          const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+          const userId = newMember.user.id;
+          await this.bot.api.sendMessage(
+            userId,
+            `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
+            { parse_mode: "HTML" }
           );
         }
       } catch (e) {
@@ -213,51 +187,9 @@ export class TelegramService {
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below to ZK prove that you have a ticket to an event, so I can add you to the attendee Telegram group!\n\nYou must have one of the following tickets in your Zupass account to join successfully.\n\nSee you soon 😽`
+            `Welcome ${name}! 👋\n\nClick below join a TG group via a ZK proof!\n\nYou will sign in to Zupass, then prove you have a ticket for one of the events associated with the group.\n\nSee you soon 😽`,
+            { reply_markup: zupassMenu }
           );
-          const msg = await ctx.reply(`Loading tickets and events..`);
-          const events = await fetchLinkedPretixAndTelegramEvents(
-            this.context.dbPool
-          );
-          const eventsWithChatsRequests = events.map(async (e) => {
-            return {
-              ...e,
-              chat: e.telegramChatID
-                ? await this.bot.api.getChat(e.telegramChatID)
-                : null
-            };
-          });
-          const eventsWithChatsSettled = await Promise.allSettled(
-            eventsWithChatsRequests
-          );
-          const eventsWithChats = eventsWithChatsSettled
-            .filter((e) => e.status == "fulfilled")
-            // @ts-expect-error value after filtering for success
-            .map((e) => e.value);
-
-          if (eventsWithChats.length === 0) {
-            return ctx.api.editMessageText(
-              userId,
-              msg.message_id,
-              `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
-              {
-                parse_mode: "HTML"
-              }
-            );
-          }
-
-          let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
-
-          for (const event of eventsWithChats) {
-            if (event.chat?.title)
-              eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
-          }
-          await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
-            parse_mode: "HTML"
-          });
-          await ctx.reply(`Click here ⬇`, {
-            reply_markup: zupassMenu
-          });
         }
       } catch (e) {
         logger("[TELEGRAM] start error", e);
@@ -353,6 +285,38 @@ export class TelegramService {
       `,
         { parse_mode: "HTML", reply_to_message_id: messageThreadId }
       );
+      const msg = await ctx.reply(`Loading tickets and events...`);
+      const events = await fetchLinkedPretixAndTelegramEvents(
+        this.context.dbPool
+      );
+      const eventsWithChats = await chatIDsToChats(
+        this.context.dbPool,
+        ctx,
+        events
+      );
+
+      const userId = ctx.from?.id;
+      if (!userId) throw new Error(`No user found. Try again...`);
+      if (eventsWithChats.length === 0) {
+        return ctx.api.editMessageText(
+          userId,
+          msg.message_id,
+          `No chats found to join. If you are an admin of a group, you can add me and type /manage to link an event.`,
+          {
+            parse_mode: "HTML"
+          }
+        );
+      }
+
+      let eventsHtml = `<b> Current Chats with Events </b>\n\n`;
+
+      for (const event of eventsWithChats) {
+        if (event.chat?.title)
+          eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
+      }
+      await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
+        parse_mode: "HTML"
+      });
     });
 
     this.bot.command("anonsend", async (ctx) => {
@@ -438,76 +402,6 @@ export class TelegramService {
     });
   }
 
-  private generateProofUrl(telegramUserId: string): string {
-    const fieldsToReveal: EdDSATicketFieldsToReveal = {
-      revealTicketId: false,
-      revealEventId: true,
-      revealProductId: true,
-      revealTimestampConsumed: false,
-      revealTimestampSigned: false,
-      revealAttendeeSemaphoreId: true,
-      revealIsConsumed: false,
-      revealIsRevoked: false
-    };
-
-    const args: ZKEdDSAEventTicketPCDArgs = {
-      ticket: {
-        argumentType: ArgumentTypeName.PCD,
-        pcdType: EdDSATicketPCDPackage.name,
-        value: undefined,
-        userProvided: true
-      },
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        pcdType: SemaphoreIdentityPCDPackage.name,
-        value: undefined,
-        userProvided: true
-      },
-      fieldsToReveal: {
-        argumentType: ArgumentTypeName.ToggleList,
-        value: fieldsToReveal,
-        userProvided: false
-      },
-      externalNullifier: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: undefined,
-        userProvided: false
-      },
-      validEventIds: {
-        argumentType: ArgumentTypeName.StringArray,
-        // For local development, we do not validate eventIds
-        // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
-        // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
-        value: isLocalServer()
-          ? undefined
-          : ALLOWED_EVENTS.map((e) => e.eventId),
-        userProvided: false
-      },
-      watermark: {
-        argumentType: ArgumentTypeName.BigInt,
-        value: telegramUserId.toString(),
-        userProvided: false
-      }
-    };
-
-    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
-    if (passportOrigin === "http://localhost:3000/") {
-      // TG bot doesn't like localhost URLs
-      passportOrigin = "http://127.0.0.1:3000/";
-    }
-    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
-
-    const proofUrl = constructZupassPcdGetRequestUrl<
-      typeof ZKEdDSAEventTicketPCDPackage
-    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-      genericProveScreen: true,
-      title: "ZK Ticket Proof",
-      description:
-        "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
-    });
-    return proofUrl;
-  }
-
   /**
    * Telegram does not allow two instances of a bot to be running at once.
    * During deployment, a new instance of the app will be started before the
@@ -564,10 +458,7 @@ export class TelegramService {
       throw new Error(`Deserialization error, ${e}`);
     }
 
-    // this is very bad but i am very tired
-    // hardcoded eventIDs and signing keys for SRW
     let signerMatch = false;
-    let eventIdMatch = false;
 
     if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
       throw new Error(`Missing server eddsa private key .env value`);
@@ -577,27 +468,13 @@ export class TelegramService {
       process.env.SERVER_EDDSA_PRIVATE_KEY
     );
 
-    if (isLocalServer()) {
-      eventIdMatch = true;
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    } else if (process.env.PASSPORT_SERVER_URL?.includes("staging")) {
-      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    } else {
-      eventIdMatch = eventIdsAreValid(pcd.claim.validEventIds);
-      signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-    }
+    signerMatch =
+      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
     if (
       // TODO: wrap in a MultiProcessService?
       (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
-      eventIdMatch &&
       signerMatch
     ) {
       return pcd;
@@ -630,31 +507,21 @@ export class TelegramService {
 
   private async sendInviteLink(
     userId: number,
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat,
-    eventConfigID: string
+    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
-    const event = await fetchPretixEventInfo(
-      this.context.dbPool,
-      eventConfigID
-    );
-    if (!event) {
-      throw new Error(
-        `User used a ticket with no corresponding event confg id: ${eventConfigID}`
-      );
-    }
 
     logger(
       `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
     );
     const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
-      name: "bot invite link"
+      name: `${Date.now().toLocaleString()}`
     });
     await this.bot.api.sendMessage(
       userId,
-      `You've proved that you have at ticket to <b>${event.event_name}</b>!\nPress this button to send your proof to <b>${chat.title}</b>`,
+      `You've proved that you have a ticket to <b>${chat.title}</b>!\nPress this button to send your proof and join the group`,
       {
         reply_markup: new InlineKeyboard().url(
           `Send ZK Proof ✈️`,
@@ -694,34 +561,37 @@ export class TelegramService {
       );
     }
 
-    const { eventId } = pcd.claim.partialTicket;
-    if (!eventId) {
+    const { attendeeSemaphoreId } = pcd.claim.partialTicket;
+
+    if (!attendeeSemaphoreId) {
       throw new Error(
-        `User ${telegramUserId} returned a ZK-ticket with no eventId.`
+        `User ${telegramUserId} did not reveal their semaphore id`
       );
     }
 
-    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, event ${eventId}`);
-
-    // Find the event which matches the PCD
-    // For this to work, the `telegram_bot_events` table must be populated.
-
-    const event = await fetchTelegramEventByEventId(
-      this.context.dbPool,
-      eventId
-    );
-    if (!event) {
+    const { validEventIds } = pcd.claim;
+    if (!validEventIds) {
       throw new Error(
-        `User ${telegramUserId} attempted to use a ticket for event ${eventId}, which has no matching chat`
+        `User ${telegramUserId} did not submit any valid event ids`
       );
     }
 
-    // The event is linked to a chat. Make sure we can access it.
-    const chatId = event.telegram_chat_id;
-    const chat = await this.bot.api.getChat(chatId);
+    const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+    const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+    if (!telegramChatId) {
+      throw new Error(
+        `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
+          ","
+        )}, which have no matching chat`
+      );
+    }
+    const chat = await this.bot.api.getChat(telegramChatId);
+
+    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
+
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Event is configured with Telegram chat ${chat.id}, which is of incorrect type "${chat.type}"`
       );
     }
 
@@ -730,11 +600,12 @@ export class TelegramService {
     await insertTelegramVerification(
       this.context.dbPool,
       telegramUserId,
-      event.telegram_chat_id
+      parseInt(telegramChatId),
+      attendeeSemaphoreId
     );
 
     // Send invite link
-    await this.sendInviteLink(telegramUserId, chat, eventId);
+    await this.sendInviteLink(telegramUserId, chat);
   }
 
   public async handleSendAnonymousMessage(
