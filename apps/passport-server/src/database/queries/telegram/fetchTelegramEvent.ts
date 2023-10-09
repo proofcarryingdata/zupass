@@ -106,7 +106,23 @@ export async function fetchTelegramAnonTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_anon_topics
+    select * from telegram_chat_topics
+    where telegram_chat_id = $1 and is_anon_topic = $2
+    `,
+    // true refers to the is_anon_topic boolean
+    [telegramChatId, true]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramTopicsByChatId(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramAnonChannel[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_chat_topics
     where telegram_chat_id = $1
     `,
     [telegramChatId]

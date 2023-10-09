@@ -20,9 +20,9 @@ import {
   fetchTelegramEventByEventId
 } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
-  insertTelegramAnonTopic,
   insertTelegramChat,
   insertTelegramEvent,
+  insertTelegramTopic,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { findChatByEventIds } from "../src/util/telegramHelpers";
@@ -272,7 +272,7 @@ describe("telegram bot functionality", function () {
     }
   );
   step("should be able to add multiple anon channels", async function () {
-    await insertTelegramAnonTopic(db, dummyChatId, anonChannelID, "test");
+    await insertTelegramTopic(db, dummyChatId, anonChannelID, "test", true);
     const insertedAnonTopic = await fetchTelegramAnonTopicsByChatId(
       db,
       dummyChatId
@@ -280,9 +280,9 @@ describe("telegram bot functionality", function () {
     expect(insertedAnonTopic[0]?.telegram_chat_id).to.eq(
       dummyChatId.toString()
     );
-    expect(insertedAnonTopic[0]?.anon_topic_id).to.eq(anonChannelID.toString());
-    expect(insertedAnonTopic[0]?.anon_topic_name).to.eq("test");
-    await insertTelegramAnonTopic(db, dummyChatId, anonChannelID_1, "test1");
+    expect(insertedAnonTopic[0]?.topic_id).to.eq(anonChannelID.toString());
+    expect(insertedAnonTopic[0]?.topic_name).to.eq("test");
+    await insertTelegramTopic(db, dummyChatId, anonChannelID_1, "test1", true);
 
     const insertedAnonTopic_1 = await fetchTelegramAnonTopicsByChatId(
       db,
@@ -292,9 +292,7 @@ describe("telegram bot functionality", function () {
     expect(insertedAnonTopic_1[1]?.telegram_chat_id).to.eq(
       dummyChatId.toString()
     );
-    expect(insertedAnonTopic_1[1]?.anon_topic_id).to.eq(
-      anonChannelID_1.toString()
-    );
-    expect(insertedAnonTopic_1[1]?.anon_topic_name).to.eq("test1");
+    expect(insertedAnonTopic_1[1]?.topic_id).to.eq(anonChannelID_1.toString());
+    expect(insertedAnonTopic_1[1]?.topic_name).to.eq("test1");
   });
 });

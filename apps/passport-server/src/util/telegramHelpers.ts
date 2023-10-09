@@ -374,13 +374,13 @@ export const chatsToPostIn = async (
       range.text(`Choose a topic ⬇`).row();
       for (const topic of topics) {
         const encodedTopicData = base64EncodeTopicData(
-          topic.anon_topic_name,
-          topic.anon_topic_id,
+          topic.topic_name,
+          topic.topic_id,
           validEventIds
         );
         range
           .webApp(
-            `${topic.anon_topic_name}`,
+            `${topic.topic_name}`,
             `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
           )
           .row();
