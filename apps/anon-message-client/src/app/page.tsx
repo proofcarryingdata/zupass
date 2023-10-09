@@ -156,6 +156,11 @@ export default function () {
         />
       </div>
       <div className="mt-8 text-center flex flex-col w-full">
+        {messageInvalid && (
+          <div className="p-2 bg-red-500 rounded-md mb-2">
+            <span className="text-white pb-2">Message is too long!</span>
+          </div>
+        )}
         <span className="text-white pb-2">🔒 Anonymous posting</span>
         <button
           onClick={onClick}
