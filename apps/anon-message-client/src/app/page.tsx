@@ -4,6 +4,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
 import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
@@ -95,6 +96,8 @@ async function requestProof(
     }
   };
 
+  await sleep(1000);
+
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
@@ -183,18 +186,7 @@ export default function () {
             className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
             disabled={messageInvalid}
           >
-            {loadingProofUrl ? (
-              <div
-                className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                role="status"
-              >
-                <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                  Loading...
-                </span>
-              </div>
-            ) : (
-              `Send to ${topicData.topicName}`
-            )}
+            {loadingProofUrl ? `Loading...` : `Send to ${topicData.topicName}`}
           </button>
         </div>
       </div>
