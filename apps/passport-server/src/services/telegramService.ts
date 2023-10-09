@@ -452,13 +452,17 @@ export class TelegramService {
           message_thread_id: messageThreadId
         });
 
-        await ctx.reply("Click here to post to this topic", {
-          message_thread_id: messageThreadId,
-          reply_markup: new InlineKeyboard().url(
-            "Post Anonymously",
-            `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startApp=${encodedTopicData}`
-          )
-        });
+        const messageToPin = await ctx.reply(
+          "Click here to post to this topic",
+          {
+            message_thread_id: messageThreadId,
+            reply_markup: new InlineKeyboard().url(
+              "Post Anonymously",
+              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startApp=${encodedTopicData}`
+            )
+          }
+        );
+        ctx.pinChatMessage(messageToPin.message_id);
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
