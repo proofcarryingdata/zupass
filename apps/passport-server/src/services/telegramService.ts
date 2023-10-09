@@ -27,8 +27,10 @@ import {
   BotContext,
   SessionData,
   TopicChat,
+  base64EncodeTopicData,
   chatIDsToChats,
   chatsToJoin,
+  chatsToPostIn,
   dynamicEvents,
   findChatByEventIds,
   getSessionKey,
@@ -72,18 +74,13 @@ export class TelegramService {
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
-    const anonSendMenu = new Menu("anonsend");
+    const anonSendMenu = new Menu<BotContext>("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
     zupassMenu.dynamic(chatsToJoin);
-
-    anonSendMenu.dynamic((ctx, menu) => {
-      const zktgUrl = `${process.env.TELEGRAM_ANON_WEBSITE}`;
-      menu.webApp("Post anonymous message", zktgUrl);
-      return menu;
-    });
+    anonSendMenu.dynamic(chatsToPostIn);
 
     this.bot.use(eventsMenu);
     this.bot.use(zupassMenu);
@@ -340,9 +337,12 @@ export class TelegramService {
         return;
       }
 
-      await ctx.reply("Click below to anonymously send a message.", {
-        reply_markup: anonSendMenu
-      });
+      await ctx.reply(
+        "Choose a group. You can only post if you are a ticketed member.",
+        {
+          reply_markup: anonSendMenu
+        }
+      );
     });
 
     this.bot.on(":forum_topic_edited", async (ctx) => {
@@ -435,25 +435,18 @@ export class TelegramService {
         );
 
         const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-
-        const topicData = Buffer.from(
-          JSON.stringify({
-            topicName,
-            topicId: messageThreadId,
-            validEventIds
-          }),
-          "utf-8"
+        const encodedTopicData = base64EncodeTopicData(
+          topicName,
+          messageThreadId,
+          validEventIds
         );
-        const encodedTopicData = topicData.toString("base64");
-        if (encodedTopicData.length > 512)
-          throw new Error("Topic data too big for telegram startApp parameter");
 
         await ctx.reply(`Successfully linked anonymous channel.`, {
           message_thread_id: messageThreadId
         });
 
         const messageToPin = await ctx.reply(
-          "Click here to post to this topic",
+          "Click here to post to this topic. Or send me a DM with /anonsend",
           {
             message_thread_id: messageThreadId,
             reply_markup: new InlineKeyboard().url(
