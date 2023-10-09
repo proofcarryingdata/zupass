@@ -64,7 +64,7 @@ function SendEmailVerification({ email }: { email: string }) {
       );
       setVerifyingCode(false);
       if (verifyTokenResult.success) {
-        const { encryptionKey } = verifyTokenResult.value;
+        const encryptionKey = verifyTokenResult.value?.encryptionKey;
         if (encryptionKey) {
           const storageResult = await requestDownloadAndDecryptStorage(
             appConfig.zupassServer,
