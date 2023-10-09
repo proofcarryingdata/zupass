@@ -53,20 +53,21 @@ set telegram_chat_id = $2;`,
   return result.rowCount;
 }
 
-export async function insertTelegramAnonTopic(
+export async function insertTelegramTopic(
   client: Pool,
   telegramChatId: number,
   anonTopicId: number,
-  topicName: string
+  topicName: string,
+  isAnon: boolean
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_chat_anon_topics (telegram_chat_id, anon_topic_id, anon_topic_name)
-values ($1, $2, $3)
-on conflict (telegram_chat_id, anon_topic_id) do update 
-set anon_topic_name = $3;`,
-    [telegramChatId, anonTopicId, topicName]
+insert into telegram_chat_topics (telegram_chat_id, topic_id, topic_name, is_anon_topic)
+values ($1, $2, $3, $4)
+on conflict (telegram_chat_id, topic_id) do update 
+set topic_name = $3, is_anon_topic = $4;`,
+    [telegramChatId, anonTopicId, topicName, isAnon]
   );
   return result.rowCount;
 }
