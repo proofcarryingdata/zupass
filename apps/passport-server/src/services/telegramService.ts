@@ -7,17 +7,18 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
-import sha256 from "js-sha256";
+import { sha256 } from "js-sha256";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
-  insertTelegramEvent,
+  insertTelegramAnonTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
@@ -26,8 +27,10 @@ import {
   BotContext,
   SessionData,
   TopicChat,
+  base64EncodeTopicData,
   chatIDsToChats,
   chatsToJoin,
+  chatsToPostIn,
   dynamicEvents,
   findChatByEventIds,
   getSessionKey,
@@ -71,19 +74,13 @@ export class TelegramService {
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
-    const anonSendMenu = new Menu("anonsend");
+    const anonSendMenu = new Menu<BotContext>("anonsend");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(dynamicEvents);
     zupassMenu.dynamic(chatsToJoin);
-
-    anonSendMenu.dynamic((_, menu) => {
-      const zktgUrl =
-        process.env.TELEGRAM_ANON_WEBSITE ?? "https://dev.local:4000/";
-      menu.webApp("Send anonymous message", zktgUrl);
-      return menu;
-    });
+    anonSendMenu.dynamic(chatsToPostIn);
 
     this.bot.use(eventsMenu);
     this.bot.use(zupassMenu);
@@ -340,9 +337,43 @@ export class TelegramService {
         return;
       }
 
-      await ctx.reply("Click below to anonymously send a message.", {
-        reply_markup: anonSendMenu
-      });
+      await ctx.reply(
+        "Choose a group. You can only post if you are a ticketed member.",
+        {
+          reply_markup: anonSendMenu
+        }
+      );
+    });
+
+    this.bot.on(":forum_topic_edited", async (ctx) => {
+      logger(
+        `[TELEGRAM forum topic edited]`,
+        ctx,
+        ctx.update?.message?.forum_topic_edited
+      );
+      const topicName = ctx.update?.message?.forum_topic_edited.name;
+      const messageThreadId = ctx.update.message?.message_thread_id;
+      const chatId = ctx.chat.id;
+      const anonTopicsForChat = await fetchTelegramAnonTopicsByChatId(
+        this.context.dbPool,
+        ctx.chat.id
+      );
+      if (!chatId || !topicName || !messageThreadId)
+        throw new Error(`Missing chatId or topic name`);
+
+      const anonTopicExists =
+        anonTopicsForChat.filter(
+          (e) => e.anon_topic_id?.toString() === messageThreadId?.toString()
+        ).length > 0;
+
+      if (!anonTopicExists) throw new Error(`No topic to update found`);
+
+      await insertTelegramAnonTopic(
+        this.context.dbPool,
+        chatId,
+        messageThreadId,
+        topicName
+      );
     });
 
     this.bot.command("incognito", async (ctx) => {
@@ -370,29 +401,61 @@ export class TelegramService {
         const hasLinked = telegramEvents.length > 0;
         if (!hasLinked) {
           await ctx.reply(
-            "This group is not linked to an event. Please use /link to link this group to an event.",
-            { message_thread_id: messageThreadId }
-          );
-          return;
-        } else if (telegramEvents.filter((e) => e.anon_chat_id).length > 0) {
-          await ctx.reply(
-            `This group has already linked an anonymous channel.`,
+            "This group is not linked to an event. If you're an admin, use /manage to link this group to an event.",
             { message_thread_id: messageThreadId }
           );
           return;
         }
 
-        await insertTelegramEvent(
+        const chatAnonTopics = await fetchTelegramAnonTopicsByChatId(
           this.context.dbPool,
-          telegramEvents[0].ticket_event_id,
-          telegramEvents[0].telegram_chat_id,
-          messageThreadId
+          ctx.chat.id
         );
 
-        await ctx.reply(
-          `Successfully linked anonymous channel. DM me with /anonsend to anonymously send a message.`,
-          { message_thread_id: messageThreadId }
+        const currentAnonTopic = chatAnonTopics.find(
+          (t) => t.anon_topic_id == messageThreadId
         );
+
+        if (currentAnonTopic) {
+          await ctx.reply(`This topic is already an anonymous channel.`, {
+            message_thread_id: messageThreadId
+          });
+          return;
+        }
+
+        const topicName =
+          ctx.message?.reply_to_message?.forum_topic_created?.name;
+        if (!topicName) throw new Error(`No topic name found`);
+
+        await insertTelegramAnonTopic(
+          this.context.dbPool,
+          ctx.chat.id,
+          messageThreadId,
+          topicName
+        );
+
+        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+        const encodedTopicData = base64EncodeTopicData(
+          topicName,
+          messageThreadId,
+          validEventIds
+        );
+
+        await ctx.reply(`Successfully linked anonymous channel.`, {
+          message_thread_id: messageThreadId
+        });
+
+        const messageToPin = await ctx.reply(
+          "Click here to post to this topic. Or send me a DM with /anonsend",
+          {
+            message_thread_id: messageThreadId,
+            reply_markup: new InlineKeyboard().url(
+              "Post Anonymously",
+              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startapp=${encodedTopicData}&startApp=${encodedTopicData}`
+            )
+          }
+        );
+        ctx.pinChatMessage(messageToPin.message_id);
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
@@ -610,7 +673,8 @@ export class TelegramService {
 
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
-    message: string
+    message: string,
+    topicId: number
   ): Promise<void> {
     logger("[TELEGRAM] Verifying anonymous message");
 
@@ -634,7 +698,7 @@ export class TelegramService {
     }
 
     function getMessageWatermark(message: string): bigint {
-      const hashed = sha256.sha256(message).substring(0, 16);
+      const hashed = sha256(message).substring(0, 16);
       return BigInt("0x" + hashed);
     }
 
@@ -646,13 +710,13 @@ export class TelegramService {
       );
     }
 
-    const event = await fetchTelegramEventByEventId(
+    const chatForEvent = await fetchTelegramEventByEventId(
       this.context.dbPool,
       eventId
     );
-    if (!event) {
+    if (!chatForEvent) {
       throw new Error(
-        `Attempted to use a PCD to send anonymous message for event ${eventId}, which is not available`
+        `Attempted to use a PCD to send anonymous message for event ${eventId}, which does not have a Telegram group`
       );
     }
 
@@ -660,20 +724,37 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
     );
 
-    if (event.anon_chat_id == null) {
-      throw new Error(`this group doesn't have an anon channel`);
+    const anonTopicsForEvent = await fetchTelegramAnonTopicsByChatId(
+      this.context.dbPool,
+      chatForEvent.telegram_chat_id
+    );
+
+    if (anonTopicsForEvent.length == 0) {
+      throw new Error(`this group doesn't have any anon topics`);
     }
 
     // The event is linked to a chat. Make sure we can access it.
-    const chatId = event.telegram_chat_id;
-    const chat = await this.bot.api.getChat(chatId);
+    const chat = await this.bot.api.getChat(chatForEvent.telegram_chat_id);
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${event.ticket_event_id} is configured with Telegram chat ${event.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Event ${chatForEvent.ticket_event_id} is configured with Telegram chat ${chatForEvent.telegram_chat_id}, which is of incorrect type "${chat.type}"`
       );
     }
 
-    await this.sendToAnonymousChannel(chat.id, event.anon_chat_id, message);
+    const ticketedAnonEvent = anonTopicsForEvent.find(
+      (topicForEvent) => topicForEvent.anon_topic_id == topicId
+    );
+    if (!ticketedAnonEvent) {
+      throw new Error(
+        `Couldn't find anon topic for event: ${eventId} with requested topic_id: ${topicId}`
+      );
+    }
+
+    await this.sendToAnonymousChannel(
+      chat.id,
+      ticketedAnonEvent.anon_topic_id,
+      message
+    );
   }
 
   public stop(): void {

@@ -16,9 +16,14 @@ import {
   ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
   fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents
+  fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramAnonTopicsByChatId,
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
+import {
+  insertTelegramChat,
+  insertTelegramEvent
+} from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
@@ -32,9 +37,30 @@ export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent & { isLinked: boolean };
   lastMessageId?: number;
+  selectedChat?: TopicChat;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+export const base64EncodeTopicData = (
+  topicName: string,
+  topicId: number | string,
+  validEventIds: string[]
+): string => {
+  const topicData = Buffer.from(
+    JSON.stringify({
+      topicName,
+      topicId,
+      validEventIds
+    }),
+    "utf-8"
+  );
+  const encodedTopicData = topicData.toString("base64");
+  if (encodedTopicData.length > 512)
+    throw new Error("Topic data too big for telegram startApp parameter");
+
+  return encodedTopicData;
+};
 
 function isFulfilled<T>(
   promiseSettledResult: PromiseSettledResult<T>
@@ -238,6 +264,7 @@ export const dynamicEvents = async (
         } else {
           if (!event.isLinked) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
+            await insertTelegramChat(db, ctx.chat.id);
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
@@ -314,5 +341,73 @@ export const chatsToJoin = async (
   for (const chat of eventsWithChats) {
     const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
     range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  }
+};
+
+export const chatsToPostIn = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  const db = ctx.session.dbPool;
+  if (!db) {
+    range.text(`Database not connected. Try again...`);
+    return;
+  }
+  const userId = ctx.from?.id;
+  if (!userId) {
+    range.text(`User not found. Try again...`);
+    return;
+  }
+  try {
+    if (ctx.session.selectedChat) {
+      const chat = ctx.session.selectedChat;
+      const topics = await fetchTelegramAnonTopicsByChatId(
+        ctx.session.dbPool,
+        chat.id
+      );
+      const telegramEvents = await fetchTelegramEventsByChatId(
+        ctx.session.dbPool,
+        chat.id
+      );
+      const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+      range.text(`Choose a topic ⬇`).row();
+      for (const topic of topics) {
+        const encodedTopicData = base64EncodeTopicData(
+          topic.anon_topic_name,
+          topic.anon_topic_id,
+          validEventIds
+        );
+        range
+          .webApp(
+            `${topic.anon_topic_name}`,
+            `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+          )
+          .row();
+      }
+
+      range.text(`Go back`, async (ctx) => {
+        ctx.session.selectedChat = undefined;
+        await ctx.menu.update({ immediate: true });
+      });
+    } else {
+      const events = await fetchEventsPerChat(db);
+      const eventsWithChats = await chatIDsToChats(db, ctx, events);
+      if (eventsWithChats && eventsWithChats.length === 0) {
+        range.text(`No groups to join at this time`);
+        return;
+      }
+      for (const chat of eventsWithChats) {
+        range
+          .text(`${chat.chat?.title}`, async (ctx) => {
+            ctx.session.selectedChat = chat.chat;
+            await ctx.menu.update({ immediate: true });
+          })
+          .row();
+      }
+    }
+  } catch (error) {
+    range.text(`Action failed ${error}`);
+    return;
   }
 };

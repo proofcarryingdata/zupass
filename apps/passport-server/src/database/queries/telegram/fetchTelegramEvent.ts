@@ -1,5 +1,5 @@
 import { Pool } from "postgres-pool";
-import { TelegramEvent } from "../../models";
+import { TelegramAnonChannel, TelegramChat, TelegramEvent } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -16,6 +16,22 @@ export async function fetchTelegramEventByEventId(
     where ticket_event_id = $1
     `,
     [eventId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+export async function fetchTelegramChat(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramChat> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_chats
+    where telegram_chat_id = $1
+    `,
+    [telegramChatId]
   );
 
   return result.rows[0] ?? null;
@@ -80,5 +96,20 @@ export async function fetchEventsPerChat(
         telegram_chat_id;`
   );
 
+  return result.rows;
+}
+
+export async function fetchTelegramAnonTopicsByChatId(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramAnonChannel[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_chat_anon_topics
+    where telegram_chat_id = $1
+    `,
+    [telegramChatId]
+  );
   return result.rows;
 }

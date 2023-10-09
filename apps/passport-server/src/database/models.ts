@@ -26,7 +26,11 @@ export interface TelegramConversation {
 export interface TelegramEvent {
   ticket_event_id: string;
   telegram_chat_id: number;
-  anon_chat_id: number | null | undefined;
+}
+
+export interface TelegramChat {
+  uuid: string | null;
+  telegram_chat_id: number;
 }
 
 /**
@@ -157,4 +161,10 @@ export interface PretixItemInfo {
   item_id: string;
   devconnect_pretix_events_info_id: string;
   item_name: string;
+}
+
+export interface TelegramAnonChannel {
+  telegram_chat_id: number;
+  anon_topic_id: number;
+  anon_topic_name: string;
 }
