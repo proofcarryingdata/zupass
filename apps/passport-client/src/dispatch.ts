@@ -1,5 +1,6 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  CredentialManager,
   Feed,
   FeedSubscriptionManager,
   SyncedEncryptedStorage,
@@ -99,8 +100,8 @@ export type Action =
   | {
       type: "add-subscription";
       providerUrl: string;
+      providerName: string;
       feed: Feed;
-      credential: SerializedPCD;
     }
   | { type: "remove-subscription"; subscriptionId: string }
   | {
@@ -183,8 +184,8 @@ export async function dispatch(
         state,
         update,
         action.providerUrl,
-        action.feed,
-        action.credential
+        action.providerName,
+        action.feed
       );
     case "remove-subscription":
       return removeSubscription(state, update, action.subscriptionId);
@@ -358,7 +359,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
     });
   }
 
-  await addDefaultSubscriptions(identity, state.subscriptions);
+  await addDefaultSubscriptions(state.subscriptions);
 
   // Save to local storage.
   await setSelf(user, state, update);
@@ -634,7 +635,7 @@ async function sync(state: AppState, update: ZuUpdate) {
       const { pcds, subscriptions } = downloaded;
 
       if (subscriptions) {
-        addDefaultSubscriptions(state.identity, subscriptions);
+        addDefaultSubscriptions(subscriptions);
       }
 
       update({
@@ -682,9 +683,12 @@ async function sync(state: AppState, update: ZuUpdate) {
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
       );
-      const actions = await state.subscriptions.pollSubscriptions(
-        state.identity
+      const credentialManager = new CredentialManager(
+        state.identity,
+        state.pcds
       );
+      const actions =
+        await state.subscriptions.pollSubscriptions(credentialManager);
 
       await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
@@ -744,10 +748,11 @@ async function addSubscription(
   state: AppState,
   update: ZuUpdate,
   providerUrl: string,
-  feed: Feed,
-  credential: SerializedPCD
+  providerName: string,
+  feed: Feed
 ) {
-  await state.subscriptions.subscribe(providerUrl, feed, credential);
+  state.subscriptions.addProvider(providerUrl, providerName);
+  await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,

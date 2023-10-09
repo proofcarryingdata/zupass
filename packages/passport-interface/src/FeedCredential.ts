@@ -32,7 +32,7 @@ export interface FeedCredentialPayload {
  * credentials expire quickly enough that long-term re-use is prevented.
  */
 export function createFeedCredentialPayload(
-  pcd?: SerializedPCD<EmailPCD>
+  pcd?: SerializedPCD
 ): FeedCredentialPayload {
   const now = Date.now();
   return {

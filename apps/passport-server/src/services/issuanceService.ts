@@ -38,8 +38,7 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage,
-  SemaphoreSignaturePCDTypeName
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
@@ -209,8 +208,7 @@ export class IssuanceService {
                 folder: "SBC SRW",
                 type: PCDPermissionType.ReplaceInFolder
               } as ReplaceInFolderPermission
-            ],
-            credentialType: SemaphoreSignaturePCDTypeName
+            ]
           }
         },
         {
@@ -245,8 +243,7 @@ export class IssuanceService {
                 folder: "Frogs",
                 type: PCDPermissionType.AppendToFolder
               } as AppendToFolderPermission
-            ],
-            credentialType: SemaphoreSignaturePCDTypeName
+            ]
           }
         },
         {
@@ -298,8 +295,7 @@ export class IssuanceService {
                 folder: "Email",
                 type: PCDPermissionType.ReplaceInFolder
               } as ReplaceInFolderPermission
-            ],
-            credentialType: SemaphoreSignaturePCDTypeName
+            ]
           }
         },
         {

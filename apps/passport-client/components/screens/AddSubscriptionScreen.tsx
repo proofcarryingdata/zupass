@@ -1,8 +1,8 @@
-import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import {
+  CredentialManager,
   Feed,
   FeedSubscriptionManager,
-  ISSUANCE_STRING,
   Subscription
 } from "@pcd/passport-interface";
 import {
@@ -10,15 +10,7 @@ import {
   isAppendToFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
-import {
-  ArgumentTypeName,
-  PCD,
-  PCDPackage,
-  SerializedPCD
-} from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd/";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
@@ -143,7 +135,6 @@ export function AddSubscriptionScreen() {
                   providerName={fetchedProviderName}
                   info={info}
                   key={i}
-                  credential={undefined}
                   showErrors={false}
                 />
               </React.Fragment>
@@ -159,14 +150,12 @@ export function SubscriptionInfoRow({
   providerUrl,
   providerName,
   info,
-  credential,
   showErrors
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   providerName: string;
   info: Feed;
-  credential: SerializedPCD | undefined;
   showErrors: boolean;
 }) {
   const existingSubscriptions =
@@ -177,24 +166,6 @@ export function SubscriptionInfoRow({
     ? subscriptions.getError(subscription.id)
     : null;
 
-  const [credentialPCD, setCredentialPCD] = useState<PCD | undefined>(
-    undefined
-  );
-
-  const pcds = usePCDCollection();
-
-  useEffect(() => {
-    let pcdPackage: PCDPackage;
-    async function deserialize() {
-      setCredentialPCD(await pcdPackage.deserialize(credential.pcd));
-    }
-
-    if (credential && alreadySubscribed) {
-      pcdPackage = pcds.getPackage(credential.type);
-      deserialize();
-    }
-  }, [credential, alreadySubscribed, pcds, setCredentialPCD]);
-
   const dispatch = useDispatch();
 
   const openResolveErrorModal = useCallback(() => {
@@ -204,24 +175,12 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
-  const credentialDisplayOptions = credentialPCD
-    ? pcds.getPackage(credential.type).getDisplayOptions(credentialPCD)
-    : null;
 
   return (
     <InfoRowContainer>
       <FeedName>{info.name}</FeedName>
       <Spacer h={8} />
       <Description>{info.description}</Description>
-      {alreadySubscribed && credentialDisplayOptions && (
-        <>
-          <Spacer h={8} />
-          <div>
-            Authenticated using{" "}
-            <strong>{credentialDisplayOptions.header}</strong>
-          </div>
-        </>
-      )}
       <Spacer h={8} />
       <hr />
       <Spacer h={8} />
@@ -269,77 +228,47 @@ function SubscribeSection({
   const dispatch = useDispatch();
   const [subscribing, setSubscribing] = useState<boolean>(false);
 
-  // Only two types of credential can be requested
-  // If none is specified, default to SemaphoreSignaturePCD
-  const requiredCredentialType =
-    info.credentialType === EmailPCDPackage.name
-      ? EmailPCDPackage.name
-      : SemaphoreSignaturePCDPackage.name;
+  const credentialManager = useMemo(() => new CredentialManager(identity, pcds), [identity, pcds]);
 
-  // If feed asked for email PCD, make sure we have one
-  const missingCredential =
-    requiredCredentialType === EmailPCDPackage.name &&
-    pcds.getPCDsByType(requiredCredentialType).length === 0;
+  // If feed asked for PCD, make sure we have one
+  const missingCredentialPCD = !credentialManager.canGenerateCredential({ signatureType: "sempahore-signature-pcd", pcdType: info.credentialType });
 
   const onSubscribeClick = useCallback(() => {
     (async () => {
-      if (!subscriptions.getProvider(providerUrl)) {
-        subscriptions.addProvider(providerUrl, providerName);
-      }
+      setSubscribing(true);
+      try {
+        // Poll the feed
+        // This ensures that errors are populated
+        const sub = await subscriptions.subscribe(providerUrl, info);
+        await subscriptions.pollSingleSubscription(sub, credentialManager);
 
-      // If we have a credential type specified, and it's not a
-      // SemaphoreSignaturePCD, then look it up from PCDCollection.
-      // We can't do this with SemaphoreSignaturePCD because it's generated
-      // dynamically rather than stored in the collection.
-      if (info.credentialType === EmailPCDPackage.name) {
-        const matchingPcds = pcds.getPCDsByType(info.credentialType);
-        if (matchingPcds.length > 0) {
-          setSubscribing(true);
-          const credential = await pcds.serialize(matchingPcds[0]);
-          dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
-        } else {
-          // We shouldn't get here as the UI should not allow us to attempt
-          // this
-          console.log("No credential PCD found");
-        }
-      } else {
-        setSubscribing(true);
-        const credential = await SemaphoreSignaturePCDPackage.serialize(
-          await SemaphoreSignaturePCDPackage.prove({
-            identity: {
-              argumentType: ArgumentTypeName.PCD,
-              value: await SemaphoreIdentityPCDPackage.serialize(
-                await SemaphoreIdentityPCDPackage.prove({
-                  identity: identity
-                })
-              )
-            },
-            signedMessage: {
-              argumentType: ArgumentTypeName.String,
-              value: ISSUANCE_STRING
-            }
-          })
-        );
-
-        dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
+        dispatch({ type: "add-subscription", providerUrl, providerName, feed: info });
+      } catch (e) {
+        console.log("Error subscribing to feed:", e);
       }
+      setSubscribing(false);
     })();
-  }, [subscriptions, providerUrl, info, providerName, pcds, identity, dispatch]);
+  }, [subscriptions, providerUrl, info, credentialManager, dispatch, providerName]);
 
   const credentialHumanReadableName =
-    requiredCredentialType === EmailPCDTypeName
+    info.credentialType === EmailPCDTypeName
       ? "Verified Email"
-      : "Semaphore Signature";
+      : "";
+
+  // This UI should probably resemble the proving screen much more, giving
+  // the user more information about what information will be disclosed in
+  // the credential, and/or allowing configuration of the preferred
+  // credential.
 
   return (
     <>
-      {missingCredential && (
+      {missingCredentialPCD && (
         <div>
           This feed requires a {credentialHumanReadableName} PCD, which you do
           not have.
         </div>
       )}
-      {!missingCredential && (
+      {!missingCredentialPCD && (
         <div>
           This will send <strong>{providerName}</strong> your{" "}
           <strong>{credentialHumanReadableName}</strong> as a credential.
@@ -350,7 +279,7 @@ function SubscribeSection({
       <PermissionsView permissions={info.permissions} />
       <Spacer h={16} />
       <Button
-        disabled={missingCredential || subscribing}
+        disabled={missingCredentialPCD || subscribing}
         onClick={onSubscribeClick}
         size="small"
       >

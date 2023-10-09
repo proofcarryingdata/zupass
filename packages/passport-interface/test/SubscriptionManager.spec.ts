@@ -1,8 +1,10 @@
 import { EmailPCDPackage } from "@pcd/email-pcd";
+import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import MockDate from "mockdate";
+import { CredentialManager } from "../src/CredentialManager";
 import {
   Feed,
   FeedSubscriptionManager,
@@ -61,7 +63,6 @@ describe("Subscription Manager", async function () {
     expect(manager.getActiveSubscriptions().length).to.eq(1);
     expect(manager.getSubscription(sub.id)).to.deep.eq(sub);
 
-    expect(sub?.credential).to.eq(undefined);
     expect(sub?.providerUrl).to.eq(providerUrl);
     expect(sub?.subscribedTimestamp).to.not.eq(undefined);
 
@@ -77,7 +78,7 @@ describe("Subscription Manager", async function () {
 
     // Replacing an existing feed with an updated version
     feed.name = "changed name";
-    const sameSub = await manager.subscribe(providerUrl, feed, undefined, true);
+    const sameSub = await manager.subscribe(providerUrl, feed, true);
     expect(sub).to.eq(sameSub);
     expect(manager.getActiveSubscriptions().length).to.eq(1);
 
@@ -124,7 +125,6 @@ describe("Subscription Manager", async function () {
       expect(l.feed.permissions).to.deep.eq(r.feed.permissions);
       expect(l.providerUrl).to.eq(r.providerUrl);
       expect(l.subscribedTimestamp).to.eq(r.subscribedTimestamp);
-      expect(l.credential).to.eq(r.credential);
     }
   });
 
@@ -142,8 +142,11 @@ describe("Subscription Manager", async function () {
     const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
     const firstFeed = feeds[0];
 
+    const collection = new PCDCollection([]);
+    const credentialManager = new CredentialManager(identity, collection);
+
     await manager.subscribe(firstProviderUrl, firstFeed);
-    const actions = await manager.pollSubscriptions(identity);
+    const actions = await manager.pollSubscriptions(credentialManager);
     expect(actions.length).to.eq(1);
     expect(mockFeedApi.receivedPayload?.pcd).to.be.undefined;
     expect(mockFeedApi.receivedPayload?.timestamp).to.not.be.undefined;
@@ -180,17 +183,19 @@ describe("Subscription Manager", async function () {
 
     const serializedPCD = await EmailPCDPackage.serialize(emailPCD);
 
+    const collection = new PCDCollection([EmailPCDPackage], [emailPCD]);
+    const credentialManager = new CredentialManager(identity, collection);
+
     // In passport-client we would be persisting this serialized PCD to
     // local and e2ee storage
-    const sub = await manager.subscribe(
-      firstProviderUrl,
-      credentialFeed,
-      serializedPCD
-    );
+    const sub = await manager.subscribe(firstProviderUrl, credentialFeed);
 
     // When polling a subscription, the serialized PCD will be encoded in the
     // signed message of a SemaphoreSignaturePCD
-    const actions = await manager.pollSingleSubscription(sub, identity);
+    const actions = await manager.pollSingleSubscription(
+      sub,
+      credentialManager
+    );
     expect(actions.length).to.eq(1);
     // Make sure that the feed was able to decode the EmailPCD
     expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(serializedPCD);
@@ -204,8 +209,11 @@ describe("Subscription Manager", async function () {
     const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
     const badFeed = feeds[1];
 
+    const collection = new PCDCollection([]);
+    const credentialManager = new CredentialManager(identity, collection);
+
     const { id } = await manager.subscribe(firstProviderUrl, badFeed);
-    const actions = await manager.pollSubscriptions(identity);
+    const actions = await manager.pollSubscriptions(credentialManager);
     expect(actions.length).to.eq(1);
     const error = manager.getError(id);
     expect(error).to.deep.contain({

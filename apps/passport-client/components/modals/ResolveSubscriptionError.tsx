@@ -1,4 +1,5 @@
 import {
+  CredentialManager,
   FeedSubscriptionManager,
   Subscription,
   SubscriptionErrorType,
@@ -11,6 +12,7 @@ import styled from "styled-components";
 import {
   useDispatch,
   useIdentity,
+  usePCDCollection,
   useResolvingSubscriptionId,
   useSubscriptions
 } from "../../src/appHooks";
@@ -68,11 +70,13 @@ function FetchError({
   const [stillFailing, setStillFailing] = useState<boolean>(false);
 
   const identity = useIdentity();
+  const pcds = usePCDCollection();
 
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    await subscriptions.pollSingleSubscription(subscription, identity);
+    const credentialManager = new CredentialManager(identity, pcds);
+    await subscriptions.pollSingleSubscription(subscription, credentialManager);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);
     if (error && error.type === SubscriptionErrorType.FetchError) {
@@ -80,7 +84,7 @@ function FetchError({
     } else {
       setStillFailing(false);
     }
-  }, [setPolling, setStillFailing, subscription, subscriptions, identity]);
+  }, [identity, pcds, subscriptions, subscription]);
   return (
     <div>
       <div>

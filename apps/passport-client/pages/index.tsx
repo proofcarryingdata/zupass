@@ -57,6 +57,7 @@ class App extends React.Component<object, AppState> {
       this.stateEmitter.emit(this.state);
     });
   };
+
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
@@ -190,7 +191,7 @@ async function loadInitialState(): Promise<AppState> {
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   if (self) {
-    await addDefaultSubscriptions(identity, subscriptions);
+    await addDefaultSubscriptions(subscriptions);
   }
 
   let modal = { modalType: "none" } as AppState["modal"];

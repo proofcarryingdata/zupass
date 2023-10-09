@@ -1,4 +1,3 @@
-import { EmailPCD } from "@pcd/email-pcd";
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -7,25 +6,11 @@ import {
   PCDPermission,
   matchActionToPermission
 } from "@pcd/pcd-collection";
-import {
-  ArgsOf,
-  ArgumentTypeName,
-  PCDOf,
-  PCDPackage,
-  PCDTypeNameOf,
-  SerializedPCD
-} from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { ArgsOf, PCDPackage, PCDTypeNameOf } from "@pcd/pcd-types";
 import { isFulfilled } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
-import _ from "lodash";
 import { v4 as uuid } from "uuid";
+import { CredentialManagerAPI } from "./CredentialManager";
 import { IFeedApi } from "./FeedAPI";
-import { createFeedCredentialPayload } from "./FeedCredential";
 import { ListFeedsResponseValue } from "./RequestTypes";
 
 export const enum ZupassFeedIds {
@@ -101,13 +86,13 @@ export class FeedSubscriptionManager {
    * `this.errors` for display to the user.
    */
   public async pollSubscriptions(
-    identity: Identity
+    credentialManager: CredentialManagerAPI
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
-        this.fetchSingleSubscription(subscription, identity)
+        this.fetchSingleSubscription(subscription, credentialManager)
       );
     }
 
@@ -126,9 +111,12 @@ export class FeedSubscriptionManager {
    */
   public async pollSingleSubscription(
     subscription: Subscription,
-    identity: Identity
+    credentialManager: CredentialManagerAPI
   ) {
-    const actions = await this.fetchSingleSubscription(subscription, identity);
+    const actions = await this.fetchSingleSubscription(
+      subscription,
+      credentialManager
+    );
     this.updatedEmitter.emit();
     return actions;
   }
@@ -140,14 +128,17 @@ export class FeedSubscriptionManager {
    */
   private async fetchSingleSubscription(
     subscription: Subscription,
-    identity: Identity
+    credentialManager: CredentialManagerAPI
   ): Promise<SubscriptionActions[]> {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
-        pcd: await this.generateCredential(subscription, identity)
+        pcd: await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd",
+          pcdType: subscription.feed.credentialType
+        })
       });
 
       if (!result.success) {
@@ -169,32 +160,6 @@ export class FeedSubscriptionManager {
     }
 
     return responses;
-  }
-
-  private async generateCredential(
-    sub: Subscription,
-    identity: Identity
-  ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-    const payload = createFeedCredentialPayload(
-      sub.credential?.type === "email-pcd" ? sub.credential : undefined
-    );
-
-    const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await SemaphoreIdentityPCDPackage.serialize(
-          await SemaphoreIdentityPCDPackage.prove({
-            identity: identity
-          })
-        )
-      },
-      signedMessage: {
-        argumentType: ArgumentTypeName.String,
-        value: JSON.stringify(payload)
-      }
-    });
-
-    return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
   }
 
   /**
@@ -282,17 +247,16 @@ export class FeedSubscriptionManager {
 
   public findSubscription(
     providerUrl: string,
-    feed: Feed
+    feedId: string
   ): Subscription | undefined {
     return this.activeSubscriptions.find((sub) => {
-      sub.providerUrl === providerUrl && _.isEqual(sub.feed, feed);
+      sub.providerUrl === providerUrl && sub.id === feedId;
     });
   }
 
   public async subscribe(
     providerUrl: string,
     info: Feed,
-    credential?: SerializedPCD<EmailPCD>,
     replace?: boolean
   ): Promise<Subscription> {
     if (!this.hasProvider(providerUrl)) {
@@ -312,34 +276,9 @@ export class FeedSubscriptionManager {
       );
     }
 
-    if (
-      info.credentialType &&
-      info.credentialType !== "email-pcd" &&
-      info.credentialType !== "semaphore-signature-pcd"
-    ) {
+    if (info.credentialType && info.credentialType !== "email-pcd") {
       throw new Error(
-        `non-supported credential requested on ${providerUrl} feed ${info.id}`
-      );
-    }
-
-    // If the required credential type is "email-pcd" then we *must* receive
-    // an email-pcd as a parameter
-    if (info.credentialType === "email-pcd" && credential === undefined) {
-      throw new Error(
-        `email-pcd credential required but did not receive an email-pcd`
-      );
-    }
-
-    // If the required credential type is semaphore-signature-pcd, then we
-    // must *not* receive a credential parameter here, since we will always
-    // generate a new semaphore signature
-    if (
-      info.credentialType === "semaphore-signature-pcd" &&
-      credential &&
-      credential.type !== "semaphore-signature-pcd"
-    ) {
-      throw new Error(
-        `semaphore-signature-pcd required but received a different credential type: ${credential.type}`
+        `non-supported credential PCD requested on ${providerUrl} feed ${info.id}`
       );
     }
 
@@ -347,13 +286,11 @@ export class FeedSubscriptionManager {
 
     if (existingSubscription) {
       sub = existingSubscription;
-      sub.credential = credential ? credential : undefined;
       sub.feed = { ...info };
       sub.providerUrl = providerUrl;
     } else {
       sub = {
         id: uuid(),
-        credential,
         feed: { ...info },
         providerUrl: providerUrl,
         subscribedTimestamp: Date.now()
@@ -513,6 +450,16 @@ export interface SubscriptionProvider {
   timestampAdded: number;
 }
 
+// The configuration of the credential required by a feed server
+export interface CredentialRequest {
+  // Can be extended as more signature types are supported
+  signatureType: "sempahore-signature-pcd";
+  // Can be extended as more PCD types are supported
+  // Including a PCD in the credential is optional. We might also want to
+  // query on more than just type of PCD in future.
+  pcdType?: "email-pcd";
+}
+
 export interface Feed<T extends PCDPackage = PCDPackage> {
   id: string;
   name: string;
@@ -520,17 +467,16 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   inputPCDType?: PCDTypeNameOf<T>;
   partialArgs?: ArgsOf<T>;
   permissions: PCDPermission[];
-  credentialType?: "email-pcd" | "semaphore-signature-pcd";
+  credentialType?: "email-pcd";
 }
 
-export interface Subscription<T extends PCDPackage = PCDPackage> {
+export interface Subscription {
   // A UUID which identifies the subscription locally
   id: string;
   // The URL of the provider of the feed
   providerUrl: string;
   // The feed object as fetched when subscribing
   feed: Feed;
-  // The credential selected for authentication to the feed
-  credential: SerializedPCD<PCDOf<T>> | undefined;
+  // Timestamp of when subscription was created
   subscribedTimestamp: number;
 }
