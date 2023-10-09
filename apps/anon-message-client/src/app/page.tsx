@@ -20,6 +20,7 @@ function getMessageWatermark(message: string): bigint {
 interface TopicData {
   topicName: string;
   topicId: string;
+  validEventIds: string[];
 }
 
 enum PCDRequestType {
@@ -47,29 +48,11 @@ function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
   return `${zupassClientUrl}#/prove?request=${encReq}`;
 }
 
-const ALLOWED_EVENTS = [
-  { eventId: "3fa6164c-4785-11ee-8178-763dbf30819c", name: "SRW Staging" },
-  { eventId: "264b2536-479c-11ee-8153-de1f187f7393", name: "SRW Prod" },
-  {
-    eventId: "b03bca82-2d63-11ee-9929-0e084c48e15f",
-    name: "ProgCrypto (Internal Test)"
-  },
-  {
-    eventId: "ae23e4b4-2d63-11ee-9929-0e084c48e15f",
-    name: "AW (Internal Test)"
-  }
-  // Add this value and set the value field of validEventIds in generateProofUrl
-  // { eventId: "<copy from id field of pretix_events_config", name: "<Your Local Event>" }
-];
-
-function isLocalServer(): boolean {
-  return (
-    process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL === "http://localhost:3002" ||
-    process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL === "https://dev.local:3002"
-  );
-}
-
-function requestProof(message: string, topicId: string) {
+function requestProof(
+  message: string,
+  topicId: string,
+  validEventIds: string[]
+) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
 
@@ -100,10 +83,7 @@ function requestProof(message: string, topicId: string) {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      // For local development, we do not validate eventIds
-      // If you want to test eventId validation locally, copy the `id` field from `pretix_events_config`
-      // and add it to ALLOWED_EVENTS. Then set value: ALLOWED_EVENTS.map((e) => e.eventId)
-      value: isLocalServer() ? undefined : ALLOWED_EVENTS.map((e) => e.eventId),
+      value: validEventIds,
       userProvided: false
     },
     watermark: {
@@ -122,15 +102,15 @@ function requestProof(message: string, topicId: string) {
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK-EdDSA Ticket Request",
+    title: "ZK Ticket Proof",
     description:
-      "Generate a ZK proof that you have a ticket for a conference event! Select your ticket from the dropdown below."
+      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
   });
 
   window.location.href = proofUrl;
 }
 
-export default function SubmitMessagePage() {
+export default function () {
   const [message, setMessage] = useState("");
   const [topicData, setTopicData] = useState<TopicData | undefined>();
   const searchParams = useSearchParams();
@@ -144,8 +124,8 @@ export default function SubmitMessagePage() {
   }, [topicDataRaw]);
 
   const onClick = useCallback(() => {
-    if (!topicData || !topicData.topicId) return;
-    requestProof(message, topicData.topicId);
+    if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
+    requestProof(message, topicData.topicId, topicData.validEventIds);
   }, [message]);
 
   return (

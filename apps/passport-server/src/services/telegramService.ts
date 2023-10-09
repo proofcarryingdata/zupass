@@ -434,15 +434,23 @@ export class TelegramService {
           topicName
         );
 
-        await ctx.reply(`Successfully linked anonymous channel.`, {
-          message_thread_id: messageThreadId
-        });
+        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
         const topicData = Buffer.from(
-          JSON.stringify({ topicName, topicId: messageThreadId }),
+          JSON.stringify({
+            topicName,
+            topicId: messageThreadId,
+            validEventIds
+          }),
           "utf-8"
         );
         const encodedTopicData = topicData.toString("base64");
+        if (encodedTopicData.length > 512)
+          throw new Error("Topic data too big for telegram startApp parameter");
+
+        await ctx.reply(`Successfully linked anonymous channel.`, {
+          message_thread_id: messageThreadId
+        });
 
         await ctx.reply("Click here to post to this topic", {
           message_thread_id: messageThreadId,
