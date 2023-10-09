@@ -1,14 +1,32 @@
 import { MenuRange } from "@grammyjs/menu";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  EdDSATicketFieldsToReveal,
+  ZKEdDSAEventTicketPCDArgs,
+  ZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Context, SessionFlavor } from "grammy";
-import { ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
+  ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
+  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents
 } from "../database/queries/telegram/fetchTelegramEvent";
 import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
+
+export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
+
+type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
+  T & {
+    chat: TopicChat;
+  };
 
 export interface SessionData {
   dbPool: Pool;
@@ -17,6 +35,54 @@ export interface SessionData {
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+function isFulfilled<T>(
+  promiseSettledResult: PromiseSettledResult<T>
+): promiseSettledResult is PromiseFulfilledResult<T> {
+  return promiseSettledResult.status === "fulfilled";
+}
+
+/**
+ * Fetches the chat object for a list contaning a telegram chat id
+ */
+export const chatIDsToChats = async <
+  T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
+>(
+  db: Pool,
+  ctx: BotContext,
+  chats: T[]
+): Promise<ChatIDWithChat<T>[]> => {
+  const chatIDsToChatRequests = chats.map(async (e) => {
+    return {
+      ...e,
+      chat: e.telegramChatID
+        ? ((await ctx.api.getChat(e.telegramChatID)) as TopicChat)
+        : null
+    };
+  });
+  const eventsWithChatsSettled = await Promise.allSettled(
+    chatIDsToChatRequests
+  );
+
+  const eventsWithChats = eventsWithChatsSettled
+    .filter(isFulfilled)
+    .map((e) => e.value);
+
+  return eventsWithChats;
+};
+
+export const findChatByEventIds = (
+  chats: ChatIDWithEventIDs[],
+  eventIds: string[]
+): string | null => {
+  if (eventIds.length === 0) return null;
+  for (const chat of chats) {
+    if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
+      return chat.telegramChatID;
+    }
+  }
+  return null;
+};
 
 export const senderIsAdmin = async (
   ctx: Context,
@@ -78,6 +144,74 @@ const editOrSendMessage = async (
     const msg = await ctx.reply(replyText, { parse_mode: "HTML" });
     ctx.session.lastMessageId = msg.message_id;
   }
+};
+
+const generateProofUrl = (
+  telegramUserId: string,
+  validEventIds: string[]
+): string => {
+  const fieldsToReveal: EdDSATicketFieldsToReveal = {
+    revealTicketId: false,
+    revealEventId: true,
+    revealProductId: true,
+    revealTimestampConsumed: false,
+    revealTimestampSigned: false,
+    revealAttendeeSemaphoreId: true,
+    revealIsConsumed: false,
+    revealIsRevoked: false
+  };
+
+  const args: ZKEdDSAEventTicketPCDArgs = {
+    ticket: {
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: EdDSATicketPCDPackage.name,
+      value: undefined,
+      userProvided: true
+    },
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      pcdType: SemaphoreIdentityPCDPackage.name,
+      value: undefined,
+      userProvided: true
+    },
+    fieldsToReveal: {
+      argumentType: ArgumentTypeName.ToggleList,
+      value: fieldsToReveal,
+      userProvided: false
+    },
+    externalNullifier: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: undefined,
+      userProvided: false
+    },
+    validEventIds: {
+      argumentType: ArgumentTypeName.StringArray,
+      value: validEventIds,
+      userProvided: false
+    },
+    watermark: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: telegramUserId.toString(),
+      userProvided: false
+    }
+  };
+
+  let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+  if (passportOrigin === "http://localhost:3000/") {
+    // TG bot doesn't like localhost URLs
+    passportOrigin = "http://127.0.0.1:3000/";
+  }
+  const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+
+  const proofUrl = constructZupassPcdGetRequestUrl<
+    typeof ZKEdDSAEventTicketPCDPackage
+  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+    genericProveScreen: true,
+    title: "ZK Ticket Proof",
+    description:
+      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+  });
+  return proofUrl;
 };
 
 export const dynamicEvents = async (
@@ -153,5 +287,32 @@ export const dynamicEvents = async (
         )
         .row();
     }
+  }
+};
+
+export const chatsToJoin = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  const db = ctx.session.dbPool;
+  if (!db) {
+    range.text(`Database not connected. Try again...`);
+    return;
+  }
+  const userId = ctx.from?.id;
+  if (!userId) {
+    range.text(`User not found. Try again...`);
+    return;
+  }
+
+  const events = await fetchEventsPerChat(db);
+  const eventsWithChats = await chatIDsToChats(db, ctx, events);
+  if (eventsWithChats && eventsWithChats.length === 0) {
+    range.text(`No groups to join at this time`);
+    return;
+  }
+  for (const chat of eventsWithChats) {
+    const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+    range.webApp(`${chat.chat?.title}`, proofUrl).row();
   }
 };
