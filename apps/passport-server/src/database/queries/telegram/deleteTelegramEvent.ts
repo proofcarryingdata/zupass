@@ -18,7 +18,7 @@ export async function deleteTelegramEvent(
   );
 }
 
-export async function deleteTelegramChag(
+export async function deleteTelegramChat(
   client: Pool,
   telegramChatId: number
 ): Promise<void> {
@@ -29,21 +29,5 @@ export async function deleteTelegramChag(
     where telegram_chat_id = $1
     `,
     [telegramChatId]
-  );
-}
-
-export async function deleteTelegramAnonTopic(
-  client: Pool,
-  ticketEventId: string,
-  anonTopicId: number
-): Promise<void> {
-  await sqlQuery(
-    client,
-    `\
-    delete from telegram_bot_anon_topics
-    where ticket_event_id = $1
-    and anon_topic_id = $2
-    `,
-    [ticketEventId, anonTopicId]
   );
 }
