@@ -114,6 +114,9 @@ export class IssuanceService {
             const actions = [];
 
             try {
+              if (req.pcd === undefined) {
+                throw new Error(`Missing credential`);
+              }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
                 this.cachedVerify.bind(this)
@@ -219,6 +222,9 @@ export class IssuanceService {
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             try {
+              if (req.pcd === undefined) {
+                throw new Error(`Missing credential`);
+              }
               await verifyFeedCredential(req.pcd, this.cachedVerify.bind(this));
               return {
                 actions: [
@@ -259,6 +265,9 @@ export class IssuanceService {
             const actions: PCDAction[] = [];
 
             try {
+              if (req.pcd === undefined) {
+                throw new Error(`Missing credential`);
+              }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
                 this.cachedVerify.bind(this)
@@ -312,7 +321,9 @@ export class IssuanceService {
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const actions: PCDAction[] = [];
-
+            if (req.pcd === undefined) {
+              throw new Error(`Missing credential`);
+            }
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
