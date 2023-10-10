@@ -49,7 +49,7 @@ export const base64EncodeTopicData = (
 ): string => {
   const topicData = Buffer.from(
     JSON.stringify({
-      topicName,
+      topicName: encodeURIComponent(topicName),
       topicId,
       validEventIds
     }),
