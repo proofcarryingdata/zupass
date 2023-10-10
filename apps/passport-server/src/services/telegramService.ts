@@ -185,7 +185,7 @@ export class TelegramService {
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below join a TG group via a ZK proof!\n\nYou will sign in to Zupass, then prove you have a ticket for one of the events associated with the group.\n\nSee you soon 😽`,
+            `Welcome ${name}! 👋\n\nClick below join a group via a ZK proof!\n\nYou will sign in to Zupass, then prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
             { reply_markup: zupassMenu }
           );
         }
