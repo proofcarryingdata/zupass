@@ -86,6 +86,15 @@ export function useIsDownloaded(): boolean | undefined {
   return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
 }
 
+export function useUserForcedToLogout(): boolean {
+  const userForcedToLogout = useSelector<boolean>(
+    (s) => !!s.userInvalid || !!s.anotherDeviceChangedPassword,
+    []
+  );
+
+  return userForcedToLogout;
+}
+
 export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();

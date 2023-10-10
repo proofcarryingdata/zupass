@@ -9,7 +9,8 @@ import { useLocation } from "react-router-dom";
 import {
   useDispatch,
   useRequirePassword,
-  useSelf
+  useSelf,
+  useUserForcedToLogout
 } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
 import {
@@ -37,6 +38,7 @@ export function AddScreen() {
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
   const screen = getScreen(request);
+  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
     if (screen === null) {
@@ -45,15 +47,17 @@ export function AddScreen() {
   }, [dispatch, screen]);
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingAddRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [request, self]);
+  }, [request, self, userForcedToLogout]);
 
   if (self == null) {
     return null;

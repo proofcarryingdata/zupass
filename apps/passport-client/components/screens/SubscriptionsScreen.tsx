@@ -1,7 +1,11 @@
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
 import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
-import { useSelf, useSubscriptions } from "../../src/appHooks";
+import {
+  useSelf,
+  useSubscriptions,
+  useUserForcedToLogout
+} from "../../src/appHooks";
 import {
   clearAllPendingRequests,
   pendingViewSubscriptionsRequestKey,
@@ -18,17 +22,20 @@ export function SubscriptionsScreen() {
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
   const self = useSelf();
+  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify("");
       setPendingViewSubscriptionsRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [self]);
+  }, [self, userForcedToLogout]);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";

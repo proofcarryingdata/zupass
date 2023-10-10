@@ -27,7 +27,8 @@ import {
   usePCDCollection,
   useQuery,
   useSelf,
-  useSubscriptions
+  useSubscriptions,
+  useUserForcedToLogout
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
 import {
@@ -62,17 +63,20 @@ export function AddSubscriptionScreen() {
   const { value: subs } = useSubscriptions();
   const self = useSelf();
   const dispatch = useDispatch();
+  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(url ?? "");
       setPendingAddSubscriptionRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [self, dispatch, url]);
+  }, [self, dispatch, url, userForcedToLogout]);
 
   const onFetchFeedsClick = useCallback(() => {
     if (fetching) {
@@ -238,9 +242,7 @@ export function SubscriptionInfoRow({
         </>
       )}
       {alreadySubscribed ? (
-        <AlreadySubscribed
-          existingSubscription={existingSubscriptions[0]}
-        />
+        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
       ) : (
         <SubscribeSection
           subscriptions={subscriptions}
@@ -296,7 +298,12 @@ function SubscribeSection({
         if (matchingPcds.length > 0) {
           setSubscribing(true);
           const credential = await pcds.serialize(matchingPcds[0]);
-          dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
+          dispatch({
+            type: "add-subscription",
+            providerUrl,
+            feed: info,
+            credential
+          });
         } else {
           // We shouldn't get here as the UI should not allow us to attempt
           // this
@@ -321,10 +328,23 @@ function SubscribeSection({
           })
         );
 
-        dispatch({ type: "add-subscription", providerUrl, feed: info, credential });
+        dispatch({
+          type: "add-subscription",
+          providerUrl,
+          feed: info,
+          credential
+        });
       }
     })();
-  }, [subscriptions, providerUrl, info, providerName, pcds, identity, dispatch]);
+  }, [
+    subscriptions,
+    providerUrl,
+    info,
+    providerName,
+    pcds,
+    identity,
+    dispatch
+  ]);
 
   const credentialHumanReadableName =
     requiredCredentialType === EmailPCDTypeName
@@ -408,7 +428,10 @@ function AlreadySubscribed({
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
       )
     ) {
-      dispatch({ type: "remove-subscription", subscriptionId: existingSubscription.id });
+      dispatch({
+        type: "remove-subscription",
+        subscriptionId: existingSubscription.id
+      });
     }
   }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 
