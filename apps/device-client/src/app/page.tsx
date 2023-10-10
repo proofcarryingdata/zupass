@@ -4,8 +4,31 @@ import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
   const [message, setMessage] = useState("");
+  const [serviceWorkerStatus, setServiceWorkerStatus] = useState("Loading...");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const serviceWorkerPath = "/service-worker.js";
+
+    if (!("serviceWorker" in navigator)) {
+      setServiceWorkerStatus("serviceWorker not in navigator");
+      return;
+    }
+
+    try {
+      navigator.serviceWorker
+        .register(serviceWorkerPath, {
+          scope: "/"
+        })
+        .then(() => setServiceWorkerStatus("service worker registered"));
+    } catch (e) {
+      setServiceWorkerStatus(
+        `error registering service worker:
+        ${e}`
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
@@ -29,6 +52,9 @@ export default function Home() {
       className="w-screen h-screen flex flex-col items-center bg-[#19473f] p-4"
     >
       <span className="text-white font-bold my-4">Device Scanner</span>
+      <span className="text-white font-bold my-4">
+        Service worker status: {serviceWorkerStatus}
+      </span>
       <div className="flex flex-col gap-2 bg-[#206b5e] rounded-lg w-full p-2">
         <textarea
           ref={textareaRef}
