@@ -74,9 +74,7 @@ async function requestProof(
     },
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
-      value: {
-        revealEventId: true
-      },
+      value: {},
       userProvided: false
     },
     externalNullifier: {
