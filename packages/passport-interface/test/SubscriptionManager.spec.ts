@@ -4,7 +4,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import MockDate from "mockdate";
-import { CredentialManager } from "../src/CredentialManager";
+import {
+  CredentialManager,
+  createCredentialCache
+} from "../src/CredentialManager";
 import {
   Feed,
   FeedSubscriptionManager,
@@ -149,7 +152,12 @@ describe("Subscription Manager", async function () {
     const firstFeed = feeds[0];
 
     const collection = new PCDCollection([]);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     await manager.subscribe(firstProviderUrl, firstFeed);
     const actions = await manager.pollSubscriptions(credentialManager);
@@ -190,7 +198,12 @@ describe("Subscription Manager", async function () {
     const serializedPCD = await EmailPCDPackage.serialize(emailPCD);
 
     const collection = new PCDCollection([EmailPCDPackage], [emailPCD]);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     // In passport-client we would be persisting this serialized PCD to
     // local and e2ee storage
@@ -216,7 +229,12 @@ describe("Subscription Manager", async function () {
     const badFeed = feeds[1];
 
     const collection = new PCDCollection([]);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     const { id } = await manager.subscribe(firstProviderUrl, badFeed);
     const actions = await manager.pollSubscriptions(credentialManager);
@@ -241,7 +259,12 @@ describe("Subscription Manager", async function () {
     MockDate.set(firstDate);
 
     const collection = new PCDCollection([]);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     await manager.subscribe(firstProviderUrl, firstFeed);
     await manager.pollSubscriptions(credentialManager);

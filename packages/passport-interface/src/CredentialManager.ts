@@ -2,8 +2,8 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { MemoryCache } from "cache-manager";
 import {
   FeedCredentialPayload,
   createFeedCredentialPayload
@@ -15,15 +15,33 @@ export interface CredentialManagerAPI {
   requestCredential(req: CredentialRequest): Promise<SerializedPCD>;
 }
 
+export type CredentialCache = Map<string, CacheEntry>;
+
+interface CacheEntry {
+  timestamp: number;
+  value: SerializedPCD;
+}
+
+const CACHE_TTL = ONE_HOUR_MS;
+
+// Creates an in-memory cache with a TTL of one hour.
+export function createCredentialCache(): CredentialCache {
+  return new Map();
+}
+
 /**
  * Handles generation of credentials for feeds.
  */
 export class CredentialManager implements CredentialManagerAPI {
   private readonly identity: Identity;
   private readonly pcds: PCDCollection;
-  private readonly cache: MemoryCache;
+  private readonly cache: CredentialCache;
 
-  public constructor(identity: Identity, pcds: PCDCollection, cache: MemoryCache) {
+  public constructor(
+    identity: Identity,
+    pcds: PCDCollection,
+    cache: CredentialCache
+  ) {
     this.identity = identity;
     this.pcds = pcds;
     this.cache = cache;
@@ -42,9 +60,18 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Get a credential from the local cache, if it exists
-  private async getCachedCredential(type?: string): Promise<SerializedPCD | undefined> {
+  private getCachedCredential(type?: string): SerializedPCD | undefined {
     const cacheKey = type ?? "none";
-    return await this.cache.get<SerializedPCD>(cacheKey);
+    const res = this.cache.get(cacheKey);
+    if (res) {
+      if (Date.now() - res.timestamp < CACHE_TTL) {
+        return res.value;
+      } else {
+        this.cache.delete(cacheKey);
+      }
+    }
+
+    return undefined;
   }
 
   private setCachedCredential(
@@ -52,7 +79,7 @@ export class CredentialManager implements CredentialManagerAPI {
     value: SerializedPCD
   ): void {
     const cacheKey = type ?? "none";
-    this.cache.set(cacheKey, value);
+    this.cache.set(cacheKey, { value, timestamp: Date.now() });
   }
 
   /**

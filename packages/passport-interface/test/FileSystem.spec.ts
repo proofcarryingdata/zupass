@@ -7,7 +7,10 @@ import { expect } from "chai";
 import "mocha";
 import MockDate from "mockdate";
 import path from "path";
-import { CredentialManager } from "../src/CredentialManager";
+import {
+  CredentialManager,
+  createCredentialCache
+} from "../src/CredentialManager";
 import {
   FeedSubscriptionManager,
   applyActions
@@ -49,7 +52,12 @@ describe("feed actions", async function () {
     const firstFeed = response.feeds[0];
 
     const collection = new PCDCollection(packages);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     await manager.subscribe(firstProviderUrl, firstFeed);
     const actions = await manager.pollSubscriptions(credentialManager);

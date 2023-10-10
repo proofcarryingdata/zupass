@@ -5,7 +5,10 @@ import { expect } from "chai";
 import "mocha";
 import MockDate from "mockdate";
 import path from "path";
-import { CredentialManager } from "../src/CredentialManager";
+import {
+  CredentialManager,
+  createCredentialCache
+} from "../src/CredentialManager";
 import { FeedSubscriptionManager } from "../src/SubscriptionManager";
 import { MockFeedApi } from "./MockFeedApi";
 
@@ -53,7 +56,12 @@ describe("feed host", async function () {
     const feedThatVerifiesCredential = response.feeds[0];
 
     const collection = new PCDCollection([]);
-    const credentialManager = new CredentialManager(identity, collection);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
 
     const sub = await manager.subscribe(
       firstProviderUrl,
