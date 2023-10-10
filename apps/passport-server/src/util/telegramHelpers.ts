@@ -48,11 +48,13 @@ export const base64EncodeTopicData = (
   validEventIds: string[]
 ): string => {
   const topicData = Buffer.from(
-    JSON.stringify({
-      topicName,
-      topicId,
-      validEventIds
-    }),
+    encodeURIComponent(
+      JSON.stringify({
+        topicName: topicName,
+        topicId,
+        validEventIds
+      })
+    ),
     "utf-8"
   );
   const encodedTopicData = topicData.toString("base64");
