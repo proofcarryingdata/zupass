@@ -20,7 +20,6 @@ export interface FeedCredentialPayload {
 
 /**
  * Creates a feed credential payload with timestamp.
- *
  */
 export function createFeedCredentialPayload(
   pcd?: SerializedPCD
