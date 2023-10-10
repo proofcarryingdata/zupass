@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
+import { hasPendingRequest } from "../../../src/sessionStorage";
 import { validateEmail } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button } from "../../core/Button";
@@ -80,7 +81,11 @@ export function CreatePasswordScreen() {
   useEffect(() => {
     // Redirect to home if already logged in
     if (self != null) {
-      window.location.hash = "#/";
+      if (hasPendingRequest()) {
+        window.location.hash = "#/login-interstitial";
+      } else {
+        window.location.hash = "#/";
+      }
     }
   }, [self]);
 
