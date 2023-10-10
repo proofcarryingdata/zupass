@@ -420,7 +420,6 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
     defaultArgs: {
       ticket: {
         argumentType: ArgumentTypeName.PCD,
-        displayName: "",
         description: "Generate a proof for the selected ticket",
         validate(value, params) {
           if (value.type !== EdDSAPCDTypeName || !value.claim) {

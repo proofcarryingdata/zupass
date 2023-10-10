@@ -1,7 +1,3 @@
-import { Bot, InlineKeyboard, session } from "grammy";
-import { Chat, ChatFromGetChat } from "grammy/types";
-import { sha256 } from "js-sha256";
-
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { sleep } from "@pcd/util";
@@ -9,7 +5,9 @@ import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-
+import { Bot, InlineKeyboard, session } from "grammy";
+import { Chat, ChatFromGetChat } from "grammy/types";
+import { sha256 } from "js-sha256";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {

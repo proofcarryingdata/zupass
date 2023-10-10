@@ -69,14 +69,14 @@ export function PCDArgs<T extends PCDPackage>({
       ))}
       {hidden.length > 0 && (
         <>
-          <ShowMoreButton
-            showAll={showAll}
-            onClick={() => setShowAll((showAll) => !showAll)}
-            size="sm"
-          >
-            {showAll ? "▼ Hide" : "► Show"} {hidden.length} more inputs
+          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+            {showAll ? "▼ Hide" : "▶ Show"} {hidden.length} more inputs
           </ShowMoreButton>
-          {showAll &&
+          {
+            /**
+             * NB: we have to render all the hidden inputs so that the
+             * any default value can be automatically set.
+             */
             hidden.map(([key, value]) => (
               <ArgInput
                 key={key}
@@ -84,8 +84,10 @@ export function PCDArgs<T extends PCDPackage>({
                 arg={value as any}
                 setArgs={setArgs}
                 defaultArg={options?.[key]}
+                hidden={!showAll}
               />
-            ))}
+            ))
+          }
         </>
       )}
     </ArgsContainer>
@@ -96,12 +98,14 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   arg,
   argName,
   setArgs,
-  defaultArg
+  defaultArg,
+  hidden
 }: {
   arg: ArgsOf<T>[ArgName];
   argName: string;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
+  hidden?: boolean;
 }) {
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
@@ -130,9 +134,10 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
       arg: { displayName: _.startCase(argName), ...(defaultArg || {}), ...arg },
       argName,
       setArg,
-      isValid
+      isValid,
+      hidden
     }),
-    [defaultArg, arg, argName, setArg, isValid]
+    [defaultArg, arg, argName, setArg, isValid, hidden]
   );
 
   if (isStringArgument(arg)) {
@@ -159,7 +164,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
 /**
  * Common props for all {@link ArgInput} components
  */
-interface ArgInputProps<A extends Argument<any, any>> {
+interface ArgInputProps<A extends Argument<any, unknown>> {
   arg: A;
   argName: string;
   setArg: (value: A["value"]) => void;
@@ -401,12 +406,8 @@ function ToggleListArgInput({
       arg={arg}
       {...rest}
       end={
-        <ShowMoreButton
-          showAll={showAll}
-          onClick={() => setShowAll((showAll) => !showAll)}
-          size="lg"
-        >
-          {showAll ? "-" : "+"}
+        <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+          {showAll ? "▲" : "▼"}
         </ShowMoreButton>
       }
     >
@@ -502,18 +503,20 @@ export function PCDArgInput({
 
 function ArgContainer({
   arg: { argumentType, displayName, description, hideIcon },
+  hidden,
   error,
   children,
   end
 }: {
   arg: Argument<any, any>;
+  hidden?: boolean;
   error?: string;
   children?: React.ReactNode;
   /* optional element place at the end */
   end?: React.ReactNode;
 }) {
   return (
-    <ArgItemContainer>
+    <ArgItemContainer hidden={hidden}>
       {!hideIcon && (
         <ArgItemIcon
           src={argTypeIcons[argumentType]}
@@ -586,14 +589,14 @@ const End = styled.div`
   margin-right: 8px;
 `;
 
-const ArgItemContainer = styled.div`
+const ArgItemContainer = styled.div<{ hidden: boolean }>`
   border-radius: 16px;
   border: 1px solid var(--bg-lite-gray);
   background-color: rgba(var(--white-rgb), 0.01);
-  display: flex;
   align-items: center;
   padding: 8px 16px;
   gap: 16px;
+  display: ${({ hidden }) => (hidden ? "none" : "flex")};
 `;
 
 const ArgItemIcon = styled.img`
@@ -692,11 +695,10 @@ const TextareaInput = styled.textarea`
   }
 `;
 
-const ShowMoreButton = styled.a<{ showAll: boolean; size: "sm" | "lg" }>`
+const ShowMoreButton = styled.a`
   flex: 1;
   color: var(--white);
-  font-size: ${({ size }) => (size === "sm" ? "14px" : "18px")};
-  font-weight: ${({ size }) => (size === "sm" ? "normal" : "bold")};
+  font-size: 14px;
   cursor: pointer;
   text-decoration: none;
 `;

@@ -1,7 +1,3 @@
-import { Context, SessionFlavor } from "grammy";
-import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
-import { Pool } from "postgres-pool";
-
 import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
@@ -12,15 +8,17 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-
+import { Context, SessionFlavor } from "grammy";
+import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   ChatIDWithEventIDs,
+  LinkedPretixTelegramEvent,
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId,
-  LinkedPretixTelegramEvent
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -197,10 +195,12 @@ const generateProofUrl = (
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
       userProvided: true,
-      displayName: "Your Tikcet",
+      displayName: "Your Ticket",
       description: "",
       validatorParams: {
-        eventIds: validEventIds
+        eventIds: validEventIds,
+        // TODO: surface which event ticket we are looking for
+        notFoundMessage: "You don't have a ticket to this event."
       },
       hideIcon: true
     },

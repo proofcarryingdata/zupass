@@ -35,7 +35,7 @@ export default function Page() {
     useState(false);
   const [revealIsConsumed, setRevealIsConsumed] = useState(false);
   const [revealIsRevoked, setRevealIsRevoked] = useState(false);
-  const [revleaFieldsUserProvided, setRevealFieldsUserProvided] =
+  const [revealFieldsUserProvided, setRevealFieldsUserProvided] =
     useState(false);
   const [validEventIdsInput, setValidEventIdsInput] = useState("");
   const [validDisplayEventIdsInput, setDisplayValidEventIdsInput] =
@@ -120,7 +120,7 @@ export default function Page() {
               ZUPASS_URL,
               window.location.origin + "#/popup",
               fieldsToReveal,
-              revleaFieldsUserProvided,
+              revealFieldsUserProvided,
               watermark,
               validEventIds,
               displayValidEventIds,
@@ -234,7 +234,7 @@ export default function Page() {
         <label>
           <input
             type="checkbox"
-            checked={revleaFieldsUserProvided}
+            checked={revealFieldsUserProvided}
             onChange={() => {
               setRevealFieldsUserProvided((checked) => !checked);
             }}
