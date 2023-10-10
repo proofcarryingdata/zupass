@@ -77,7 +77,11 @@ function FetchError({
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    const credentialManager = new CredentialManager(identity, pcds, credentialCache);
+    const credentialManager = new CredentialManager(
+      identity,
+      pcds,
+      credentialCache
+    );
     await subscriptions.pollSingleSubscription(subscription, credentialManager);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);

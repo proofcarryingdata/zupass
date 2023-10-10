@@ -26,7 +26,10 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
     () => setModal({ modalType: "settings" }),
     [setModal]
   );
-  const openSubscriptions = useCallback(() => window.location.href = "/#/subscriptions", []);
+  const openSubscriptions = useCallback(
+    () => (window.location.href = "/#/subscriptions"),
+    []
+  );
   const subscriptions = useSubscriptions();
 
   return (

@@ -1,4 +1,7 @@
-import { createCredentialCache, requestKnownTicketTypes } from "@pcd/passport-interface";
+import {
+  createCredentialCache,
+  requestKnownTicketTypes
+} from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
