@@ -202,7 +202,6 @@ export function SubscriptionInfoRow({
         />
       ) : (
         <SubscribeSection
-          subscriptions={subscriptions}
           providerUrl={providerUrl}
           providerName={providerName}
           info={info}
@@ -213,12 +212,10 @@ export function SubscriptionInfoRow({
 }
 
 function SubscribeSection({
-  subscriptions,
   providerUrl,
   providerName,
   info
 }: {
-  subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   providerName: string;
   info: Feed;
@@ -226,29 +223,17 @@ function SubscribeSection({
   const identity = useIdentity();
   const pcds = usePCDCollection();
   const dispatch = useDispatch();
-  const [subscribing, setSubscribing] = useState<boolean>(false);
 
   const credentialManager = useMemo(() => new CredentialManager(identity, pcds), [identity, pcds]);
 
-  // If feed asked for PCD, make sure we have one
+  // Check that we can actually generate the credential that the feed wants
   const missingCredentialPCD = !credentialManager.canGenerateCredential({ signatureType: "sempahore-signature-pcd", pcdType: info.credentialType });
 
   const onSubscribeClick = useCallback(() => {
     (async () => {
-      setSubscribing(true);
-      try {
-        // Poll the feed
-        // This ensures that errors are populated
-        const sub = await subscriptions.subscribe(providerUrl, info);
-        await subscriptions.pollSingleSubscription(sub, credentialManager);
-
-        dispatch({ type: "add-subscription", providerUrl, providerName, feed: info });
-      } catch (e) {
-        console.log("Error subscribing to feed:", e);
-      }
-      setSubscribing(false);
+      dispatch({ type: "add-subscription", providerUrl, providerName, feed: info });
     })();
-  }, [subscriptions, providerUrl, info, credentialManager, dispatch, providerName]);
+  }, [providerUrl, info, dispatch, providerName]);
 
   const credentialHumanReadableName =
     info.credentialType === EmailPCDTypeName
@@ -278,12 +263,8 @@ function SubscribeSection({
       <div>This feed requires the following permissions:</div>
       <PermissionsView permissions={info.permissions} />
       <Spacer h={16} />
-      <Button
-        disabled={missingCredentialPCD || subscribing}
-        onClick={onSubscribeClick}
-        size="small"
-      >
-        <Spinner show={subscribing} text="Subscribe" />
+      <Button disabled={missingCredentialPCD} onClick={onSubscribeClick} size="small">
+        Subscribe
       </Button>
     </>
   );
