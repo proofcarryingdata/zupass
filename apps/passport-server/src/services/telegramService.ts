@@ -15,7 +15,6 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventByEventId,
   fetchTelegramEventsByChatId,
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
@@ -727,8 +726,19 @@ export class TelegramService {
       partialTicket: { eventId }
     } = pcd.claim;
 
-    if (!eventId) {
-      throw new Error("Anonymous message PCD did not contain eventId");
+    const { validEventIds } = pcd.claim;
+    if (!validEventIds) {
+      throw new Error(`User did not submit any valid event ids`);
+    }
+
+    const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+    const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+    if (!telegramChatId) {
+      throw new Error(
+        `User attempted to use a ticket for events ${validEventIds.join(
+          ","
+        )}, which have no matching chat`
+      );
     }
 
     if (!watermark) {
@@ -748,23 +758,13 @@ export class TelegramService {
       );
     }
 
-    const chatForEvent = await fetchTelegramEventByEventId(
-      this.context.dbPool,
-      eventId
-    );
-    if (!chatForEvent) {
-      throw new Error(
-        `Attempted to use a PCD to send anonymous message for event ${eventId}, which does not have a Telegram group`
-      );
-    }
-
     logger(
-      `[TELEGRAM] Verified PCD for anonynmous message with event ${eventId}`
+      `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
     );
 
     const anonTopicsForEvent = await fetchTelegramAnonTopicsByChatId(
       this.context.dbPool,
-      chatForEvent.telegram_chat_id
+      parseInt(telegramChatId)
     );
 
     if (anonTopicsForEvent.length == 0) {
@@ -772,10 +772,10 @@ export class TelegramService {
     }
 
     // The event is linked to a chat. Make sure we can access it.
-    const chat = await this.bot.api.getChat(chatForEvent.telegram_chat_id);
+    const chat = await this.bot.api.getChat(telegramChatId);
     if (!this.chatIsGroup(chat)) {
       throw new Error(
-        `Event ${chatForEvent.ticket_event_id} is configured with Telegram chat ${chatForEvent.telegram_chat_id}, which is of incorrect type "${chat.type}"`
+        `Events ${validEventIds} is configured with Telegram chat ${telegramChatId}, which is of incorrect type "${chat.type}"`
       );
     }
 
