@@ -1,7 +1,7 @@
 import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
-  ISSUANCE_STRING,
   ZupassFeedIds,
+  createFeedCredentialPayload,
   pollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
@@ -9,6 +9,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
 import { testLogin } from "./user/testLoginPCDPass";
@@ -31,6 +32,16 @@ describe("attested email feed functionality", function () {
     await stopApplication(application);
   });
 
+  this.beforeEach(() => {
+    // Means that the time won't change during the test, which could cause
+    // spurious issues with timestamps in feed credentials.
+    MockDate.set(new Date());
+  });
+
+  this.afterEach(() => {
+    MockDate.reset();
+  });
+
   step("should be able to log in", async function () {
     const loginResult = await testLogin(application, testEmail, {
       force: true,
@@ -46,10 +57,11 @@ describe("attested email feed functionality", function () {
   step(
     "user should be able to be issued an attested email PCD from the server",
     async function () {
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const pollFeedResult = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Email
       );
 

@@ -3,6 +3,7 @@ import {
   ConfirmEmailResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
+import { ONE_HOUR_MS } from "@pcd/util";
 import { Response } from "express";
 import { UserRow } from "../database/models";
 import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -147,7 +148,7 @@ export class UserService {
       process.env.ACCOUNT_RESET_LIMIT_QUANTITY ?? "",
       10
     );
-    const defaultRateLimitDurationMs = 1000 * 60 * 60 * 24; // default 24 hours
+    const defaultRateLimitDurationMs = ONE_HOUR_MS * 24; // default 24 hours
     const defaultRateLimitQuantity = 5; // default max 5 resets (not including 1st time account creation) in 24 hours
     const rateLimitDurationMs = isNaN(configuredRateLimitDurationMs)
       ? defaultRateLimitDurationMs

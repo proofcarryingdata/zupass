@@ -126,7 +126,9 @@ export default function () {
   useEffect(() => {
     if (!topicDataRaw) return;
     const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
-    const topicData = JSON.parse(topicDataEncoded.toString("utf-8"));
+    const topicData = JSON.parse(
+      decodeURIComponent(topicDataEncoded.toString("utf-8"))
+    );
     setTopicData(topicData);
   }, [topicDataRaw]);
 

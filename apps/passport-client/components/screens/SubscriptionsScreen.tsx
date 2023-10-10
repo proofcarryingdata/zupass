@@ -107,7 +107,6 @@ function SingleProvider({
             providerUrl={providerUrl}
             providerName={providerName}
             info={s.feed}
-            credential={s.credential}
             subscriptions={subscriptions}
             showErrors={true}
           />

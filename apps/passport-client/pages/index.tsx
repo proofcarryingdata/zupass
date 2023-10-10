@@ -1,3 +1,4 @@
+import { createCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -57,6 +58,7 @@ class App extends React.Component<object, AppState> {
       this.stateEmitter.emit(this.state);
     });
   };
+
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
@@ -190,7 +192,7 @@ async function loadInitialState(): Promise<AppState> {
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   if (self) {
-    await addDefaultSubscriptions(identity, subscriptions);
+    await addDefaultSubscriptions(subscriptions);
   }
 
   let modal = { modalType: "none" } as AppState["modal"];
@@ -205,6 +207,8 @@ async function loadInitialState(): Promise<AppState> {
     modal = { modalType: "upgrade-account-modal" };
   }
 
+  const credentialCache = createCredentialCache();
+
   return {
     self,
     encryptionKey,
@@ -212,7 +216,8 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     subscriptions,
-    resolvingSubscriptionId: undefined
+    resolvingSubscriptionId: undefined,
+    credentialCache
   };
 }
 
