@@ -77,7 +77,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         onProve(pcd as any, serializedPCD, undefined);
       } catch (e) {
         setError(getErrorMessage(e));
-      } finally {
+        // NB: Only re-enable the 'Prove' button if there was an error. If
+        // the proving operation succeeded, we want to leave the button
+        // disabled while onProve redirects user.
         setProving(false);
       }
     }
