@@ -444,7 +444,7 @@ export class TelegramService {
         );
 
         const currentAnonTopic = chatAnonTopics.find(
-          (t) => t.topic_id == messageThreadId
+          (t) => t.topic_id == messageThreadId.toString()
         );
 
         if (currentAnonTopic && currentAnonTopic.is_anon_topic) {
@@ -459,10 +459,9 @@ export class TelegramService {
           ctx.chat.id
         );
         const topicToUpdate = topicsForChat.find(
-          (t) => t.topic_id === messageThreadId
+          (t) => t.topic_id === messageThreadId.toString()
         );
 
-        const topicId = topicToUpdate?.topic_id || messageThreadId;
         const topicName =
           topicToUpdate?.topic_name ||
           ctx.message?.reply_to_message?.forum_topic_created?.name;
@@ -471,7 +470,7 @@ export class TelegramService {
         await insertTelegramTopic(
           this.context.dbPool,
           ctx.chat.id,
-          topicId,
+          messageThreadId,
           topicName,
           true
         );
@@ -479,12 +478,12 @@ export class TelegramService {
         const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
         const encodedTopicData = base64EncodeTopicData(
           topicName,
-          topicId,
+          messageThreadId,
           validEventIds
         );
 
         await ctx.reply(
-          `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update the db`,
+          `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
           {
             message_thread_id: messageThreadId,
             parse_mode: "HTML"
@@ -736,7 +735,7 @@ export class TelegramService {
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
     message: string,
-    topicId: number
+    topicId: string
   ): Promise<void> {
     logger("[TELEGRAM] Verifying anonymous message");
 
@@ -815,7 +814,7 @@ export class TelegramService {
 
     await this.sendToAnonymousChannel(
       chat.id,
-      ticketedAnonEvent.topic_id,
+      parseInt(ticketedAnonEvent.topic_id),
       message
     );
   }

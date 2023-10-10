@@ -164,8 +164,8 @@ export interface PretixItemInfo {
 }
 
 export interface TelegramAnonChannel {
-  telegram_chat_id: number;
-  topic_id: number;
+  telegram_chat_id: string;
+  topic_id: string;
   topic_name: string;
   is_anon_topic: boolean;
 }

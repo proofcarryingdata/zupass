@@ -108,7 +108,7 @@ export function initTelegramRoutes(
         await telegramService.handleSendAnonymousMessage(
           proof,
           message,
-          parseInt(topicId)
+          topicId
         );
         logger(`[TELEGRAM] Posted anonymous message: ${message}`);
         res.setHeader("Content-Type", "text/html");
