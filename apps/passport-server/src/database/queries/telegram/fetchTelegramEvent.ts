@@ -81,6 +81,10 @@ export interface ChatIDWithEventIDs {
   telegramChatID: string;
   ticketEventIds: string[];
 }
+export interface UserIDWithChatIDs {
+  telegramUserID: string;
+  telegramChatIDs: string[];
+}
 
 export async function fetchEventsPerChat(
   client: Pool
@@ -128,4 +132,26 @@ export async function fetchTelegramTopicsByChatId(
     [telegramChatId]
   );
   return result.rows;
+}
+
+export async function fetchUserTelegramChats(
+  client: Pool,
+  telegramUserID: number
+): Promise<UserIDWithChatIDs | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT 
+      telegram_user_id AS "telegramUserID",
+      ARRAY_AGG(telegram_chat_id) AS "telegramChatIDs"
+    FROM 
+      telegram_bot_conversations
+    WHERE
+      telegram_user_id = $1
+    GROUP BY 
+      telegram_user_id
+    `,
+    [telegramUserID]
+  );
+  return result.rows[0] ?? null;
 }
