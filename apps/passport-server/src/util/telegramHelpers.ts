@@ -398,7 +398,10 @@ export const chatsToPostIn = async (
       if (topics.length === 0) {
         range.text(`No topics found`).row();
       } else {
-        range.text(`Choose a topic ⬇`).row();
+        range
+          .text(`${chat.title} Topics`)
+
+          .row();
         for (const topic of topics) {
           const encodedTopicData = base64EncodeTopicData(
             topic.topic_name,
@@ -413,7 +416,7 @@ export const chatsToPostIn = async (
             .row();
         }
       }
-      range.text(`Go back`, async (ctx) => {
+      range.text(`↰  Back`, async (ctx) => {
         ctx.session.selectedChat = undefined;
         await ctx.menu.update({ immediate: true });
       });
@@ -426,34 +429,20 @@ export const chatsToPostIn = async (
       }
       const userChats = await fetchUserTelegramChats(db, userId);
 
-      const finalChats = eventsWithChats.map((e) => {
-        return {
-          ...e,
-          userIsChatMember: userChats
-            ? userChats.telegramChatIDs.includes(e.telegramChatID)
-            : false
-        };
-      });
-      const sortedChats = finalChats.sort(
-        (a, b) => +b.userIsChatMember - +a.userIsChatMember
+      const finalChats = eventsWithChats.filter(
+        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
       );
-      for (const chat of sortedChats) {
-        if (chat.userIsChatMember) {
+      if (finalChats?.length > 0) {
+        for (const chat of finalChats) {
           range
-            .text(`${chat.chat?.title}`, (ctx) =>
-              ctx.reply(
-                `You must join ${chat.chat?.title} to post! Type /start.`
-              )
-            )
-            .row();
-        } else {
-          range
-            .text(`${chat.chat?.title} (Joined)`, async (ctx) => {
+            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
               ctx.session.selectedChat = chat.chat;
               await ctx.menu.update({ immediate: true });
             })
             .row();
         }
+      } else {
+        ctx.reply(`No chats found to post in. Type /start to join one!`);
       }
     }
   } catch (error) {

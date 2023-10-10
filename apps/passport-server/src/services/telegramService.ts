@@ -339,12 +339,9 @@ export class TelegramService {
         return;
       }
 
-      await ctx.reply(
-        "Choose a group. You can only post if you are a ticketed member.",
-        {
-          reply_markup: anonSendMenu
-        }
-      );
+      await ctx.reply("Choose a chat to post in anonymously ⬇", {
+        reply_markup: anonSendMenu
+      });
     });
 
     this.bot.on(":forum_topic_created", async (ctx) => {
