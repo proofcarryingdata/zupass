@@ -83,7 +83,7 @@ export function PCDArgs<T extends PCDPackage>({
                 argName={key}
                 arg={value as any}
                 setArgs={setArgs}
-                defaultArg={options[key]}
+                defaultArg={options?.[key]}
               />
             ))}
         </>
