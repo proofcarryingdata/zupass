@@ -18,7 +18,8 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId
+  fetchTelegramEventsByChatId,
+  fetchUserTelegramChats
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -334,13 +335,34 @@ export const chatsToJoin = async (
 
   const events = await fetchEventsPerChat(db);
   const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  if (eventsWithChats && eventsWithChats.length === 0) {
+  const userChats = await fetchUserTelegramChats(db, userId);
+
+  const finalEvents = eventsWithChats.map((e) => {
+    return {
+      ...e,
+      userIsChatMember: userChats
+        ? userChats.telegramChatIDs.includes(e.telegramChatID)
+        : false
+    };
+  });
+  if (finalEvents && finalEvents.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
-  for (const chat of eventsWithChats) {
-    const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
-    range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  const sortedChats = finalEvents.sort(
+    (a, b) => +a.userIsChatMember - +b.userIsChatMember
+  );
+  for (const chat of sortedChats) {
+    if (chat.userIsChatMember) {
+      range
+        .text(`${chat.chat?.title} (Joined)`, (ctx) =>
+          ctx.reply(`You've already joined ${chat.chat?.title}!`)
+        )
+        .row();
+    } else {
+      const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+      range.webApp(`${chat.chat?.title}`, proofUrl).row();
+    }
   }
 };
 
