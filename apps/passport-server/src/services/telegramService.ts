@@ -344,11 +344,6 @@ export class TelegramService {
     });
 
     this.bot.on(":forum_topic_created", async (ctx) => {
-      logger(
-        `[TELEGRAM forum topic created]`,
-        ctx,
-        ctx.update?.message?.forum_topic_created
-      );
       const topicName = ctx.update?.message?.forum_topic_created.name;
       const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
@@ -363,37 +358,51 @@ export class TelegramService {
         topicName,
         false
       );
+      ctx.reply(`<i>[ADMIN]: Created topic ${topicName} in the db</i>`, {
+        message_thread_id: messageThreadId,
+        parse_mode: "HTML"
+      });
     });
 
     this.bot.on(":forum_topic_edited", async (ctx) => {
-      logger(
-        `[TELEGRAM forum topic edited]`,
-        ctx,
-        ctx.update?.message?.forum_topic_edited
-      );
       const topicName = ctx.update?.message?.forum_topic_edited.name;
       const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
-      const topicsForChat = await fetchTelegramTopicsByChatId(
-        this.context.dbPool,
-        ctx.chat.id
-      );
       if (!chatId || !topicName || !messageThreadId)
         throw new Error(`Missing chatId or topic name`);
+
+      const topicsForChat = await fetchTelegramTopicsByChatId(
+        this.context.dbPool,
+        chatId
+      );
 
       const topic = topicsForChat.find(
         (e) => e.topic_id?.toString() === messageThreadId?.toString()
       );
 
-      if (!topic) throw new Error(`No topic to update found`);
-
-      await insertTelegramTopic(
-        this.context.dbPool,
-        chatId,
-        messageThreadId,
-        topicName,
-        topic.is_anon_topic
-      );
+      if (!topic) {
+        logger(`[TELEGRAM] editing topic and adding to db`);
+        await insertTelegramTopic(
+          this.context.dbPool,
+          chatId,
+          messageThreadId,
+          topicName,
+          false
+        );
+      } else {
+        logger(`[TELEGRAM] editing topic and updating db`);
+        await insertTelegramTopic(
+          this.context.dbPool,
+          chatId,
+          messageThreadId,
+          topicName,
+          topic.is_anon_topic
+        );
+      }
+      ctx.reply(`<i>[ADMIN]: Updated topic ${topicName} in the db</i>`, {
+        message_thread_id: messageThreadId,
+        parse_mode: "HTML"
+      });
     });
 
     this.bot.command("incognito", async (ctx) => {
@@ -443,14 +452,24 @@ export class TelegramService {
           return;
         }
 
+        const topicsForChat = await fetchTelegramTopicsByChatId(
+          this.context.dbPool,
+          ctx.chat.id
+        );
+        const topicToUpdate = topicsForChat.find(
+          (t) => t.topic_id === messageThreadId
+        );
+
+        const topicId = topicToUpdate?.topic_id || messageThreadId;
         const topicName =
+          topicToUpdate?.topic_name ||
           ctx.message?.reply_to_message?.forum_topic_created?.name;
         if (!topicName) throw new Error(`No topic name found`);
 
         await insertTelegramTopic(
           this.context.dbPool,
           ctx.chat.id,
-          messageThreadId,
+          topicId,
           topicName,
           true
         );
@@ -458,13 +477,17 @@ export class TelegramService {
         const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
         const encodedTopicData = base64EncodeTopicData(
           topicName,
-          messageThreadId,
+          topicId,
           validEventIds
         );
 
-        await ctx.reply(`Successfully linked anonymous channel.`, {
-          message_thread_id: messageThreadId
-        });
+        await ctx.reply(
+          `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update the db`,
+          {
+            message_thread_id: messageThreadId,
+            parse_mode: "HTML"
+          }
+        );
 
         const messageToPin = await ctx.reply(
           "Click here to post to this topic. Or send me a DM with /anonsend",
