@@ -37,19 +37,7 @@ import {
   saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
-import {
-  getPendingAddRequest,
-  getPendingAddSubscriptionPageRequest,
-  getPendingGetWithoutProvingRequest,
-  getPendingProofRequest,
-  getPendingViewSubscriptionsPageRequest,
-  hasPendingRequest,
-  pendingAddRequestKey,
-  pendingAddSubscriptionRequestKey,
-  pendingGetWithoutProvingRequestKey,
-  pendingProofRequestKey,
-  pendingViewSubscriptionsRequestKey
-} from "./sessionStorage";
+import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { hasSetupPassword } from "./user";
@@ -461,40 +449,6 @@ async function resetPassport(state: AppState, update: ZuUpdate) {
       modalType: "none"
     }
   });
-
-  // Ensure that we put pending request witihn session storage in query params
-  // when we log out. This ensures that the pending request is saved even when
-  // opened on a different browser, e.g. opening the in-app browser on Safari.
-
-  let redirectedFromAction = true;
-  const searchParams = new URLSearchParams();
-  if (getPendingGetWithoutProvingRequest() != null) {
-    searchParams.append(
-      pendingGetWithoutProvingRequestKey,
-      getPendingGetWithoutProvingRequest()
-    );
-  } else if (getPendingAddRequest() != null) {
-    searchParams.append(pendingAddRequestKey, getPendingAddRequest());
-  } else if (getPendingProofRequest() != null) {
-    searchParams.append(pendingProofRequestKey, getPendingProofRequest());
-  } else if (getPendingViewSubscriptionsPageRequest() != null) {
-    searchParams.append(
-      pendingViewSubscriptionsRequestKey,
-      getPendingViewSubscriptionsPageRequest()
-    );
-  } else if (getPendingAddSubscriptionPageRequest() != null) {
-    searchParams.append(
-      pendingAddSubscriptionRequestKey,
-      getPendingAddSubscriptionPageRequest()
-    );
-  } else {
-    redirectedFromAction = false;
-  }
-
-  if (redirectedFromAction) searchParams.append("redirectedFromAction", "true");
-
-  window.location.href = `/#/login?${searchParams.toString()}`;
-  window.location.reload();
 }
 
 async function addPCDs(
