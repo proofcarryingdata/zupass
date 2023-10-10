@@ -220,4 +220,36 @@ describe("Subscription Manager", async function () {
       type: SubscriptionErrorType.PermissionError
     });
   });
+
+  it("credential generation caching should work", async () => {
+    const manager = new FeedSubscriptionManager(mockFeedApi);
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
+    const firstFeed = feeds[0];
+
+    // October 9th, 2023, 15:00:00
+    const firstDate = new Date(2023, 10, 9, 15, 0, 0, 0);
+    const secondDate = new Date(2023, 10, 9, 15, 30, 0, 0);
+    const thirdDate = new Date(2023, 10, 9, 16, 0, 0, 0);
+    MockDate.set(firstDate);
+
+    const collection = new PCDCollection([]);
+    const credentialManager = new CredentialManager(identity, collection);
+
+    await manager.subscribe(firstProviderUrl, firstFeed);
+    await manager.pollSubscriptions(credentialManager);
+    expect(mockFeedApi.receivedPayload?.timestamp).to.eq(firstDate.getTime());
+
+    MockDate.set(secondDate);
+    await manager.pollSubscriptions(credentialManager);
+    // Most recent payload timestamp should not have changed, due to cached
+    // credential
+    expect(mockFeedApi.receivedPayload?.timestamp).to.eq(firstDate.getTime());
+
+    MockDate.set(thirdDate);
+    await manager.pollSubscriptions(credentialManager);
+    // But now it should have happened, as the original credential expired
+    expect(mockFeedApi.receivedPayload?.timestamp).to.eq(thirdDate.getTime());
+  });
 });

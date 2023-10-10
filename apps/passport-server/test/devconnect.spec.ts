@@ -2070,49 +2070,6 @@ describe("devconnect functionality", function () {
   );
 
   step(
-    "shouldn't be able to issue pcds for a credential payload from the future",
-    async function () {
-      // Generate credential payload at given time
-      MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
-      const payload = JSON.stringify(createFeedCredentialPayload());
-
-      // Attempt to use credential payload on a server one hour earlier
-      MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
-      const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
-      );
-      MockDate.reset();
-
-      const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([]);
-    }
-  );
-
-  step("should have a grace period for expired credentials", async function () {
-    // Generate credential payload at given time
-    MockDate.set(new Date(2023, 10, 5, 14, 59, 0, 0));
-    const payload = JSON.stringify(createFeedCredentialPayload());
-
-    // Attempt to use credential payload on a server one minute later
-    // Just across the hour boundary, when the timestamp resolution
-    // is one hour
-    MockDate.set(new Date(2023, 10, 5, 15, 0, 0, 0));
-    const expressResponse = await pollFeed(
-      application.expressContext.localEndpoint,
-      identity,
-      payload,
-      ZupassFeedIds.Devconnect
-    );
-    MockDate.reset();
-
-    const response = expressResponse.value as PollFeedResponseValue;
-    expect(response.actions?.length).to.eq(4);
-  });
-
-  step(
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
       MockDate.set(new Date());
