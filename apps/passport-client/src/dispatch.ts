@@ -751,7 +751,9 @@ async function addSubscription(
   providerName: string,
   feed: Feed
 ) {
-  state.subscriptions.addProvider(providerUrl, providerName);
+  if (!state.subscriptions.getProvider(providerUrl)) {
+    state.subscriptions.addProvider(providerUrl, providerName);
+  }
   await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
