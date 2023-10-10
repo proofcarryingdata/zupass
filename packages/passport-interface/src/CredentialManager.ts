@@ -1,7 +1,10 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import {
@@ -74,12 +77,27 @@ export class CredentialManager implements CredentialManagerAPI {
     return undefined;
   }
 
+  // Adds a credential to the cache
   private setCachedCredential(
     type: string | undefined,
     value: SerializedPCD
   ): void {
     const cacheKey = type ?? "none";
     this.cache.set(cacheKey, { value, timestamp: Date.now() });
+    // This can happen asynchronously, so don't await on the promise
+    this.purgeExpiredCredentials();
+  }
+
+  // Purges expired items from the cache
+  private async purgeExpiredCredentials(): Promise<void> {
+    const keysToRemove: string[] = [];
+    this.cache.forEach((v, k) => {
+      if (Date.now() - v.timestamp >= CACHE_TTL) {
+        keysToRemove.push(k);
+      }
+    });
+
+    keysToRemove.forEach((key) => this.cache.delete(key));
   }
 
   /**
@@ -115,13 +133,15 @@ export class CredentialManager implements CredentialManagerAPI {
       // works for now
       const pcd = pcds[0];
       const serializedPCD = await this.pcds.serialize(pcd);
-      const result = await this.signPayload(
+      const result = await this.semaphoreSignPayload(
         createFeedCredentialPayload(serializedPCD)
       );
       this.setCachedCredential(req.pcdType, result);
       return result;
     } else if (req.pcdType === undefined) {
-      const result = await this.signPayload(createFeedCredentialPayload());
+      const result = await this.semaphoreSignPayload(
+        createFeedCredentialPayload()
+      );
       this.setCachedCredential(req.pcdType, result);
       return result;
     } else {
@@ -132,9 +152,9 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Takes a payload and wraps it in a signature PCD.
-  private async signPayload(
+  private async semaphoreSignPayload(
     payload: FeedCredentialPayload
-  ): Promise<SerializedPCD> {
+  ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {
