@@ -399,24 +399,26 @@ export class TelegramService {
           topic.is_anon_topic
         );
       }
-      ctx.reply(`<i>[ADMIN]: Updated topic ${topicName} in the db</i>`, {
-        message_thread_id: messageThreadId,
-        parse_mode: "HTML"
-      });
+      logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
     });
 
     this.bot.command("incognito", async (ctx) => {
       const messageThreadId = ctx.message?.message_thread_id;
-      if (!messageThreadId) {
-        logger("[TELEGRAM] message thread id not found");
-        return;
-      }
 
       if (!isGroupWithTopics(ctx)) {
         await ctx.reply(
           "This command only works in a group with Topics enabled.",
           { message_thread_id: messageThreadId }
         );
+        return;
+      }
+
+      if (!messageThreadId) {
+        await ctx.reply("This command only works in a topic", {
+          message_thread_id: messageThreadId
+        });
+        logger("[TELEGRAM] message thread id not found");
+        return;
       }
 
       if (!(await senderIsAdmin(ctx)))
