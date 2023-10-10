@@ -108,7 +108,7 @@ export function initTelegramRoutes(
         await telegramService.handleSendAnonymousMessage(
           proof,
           message,
-          parseInt(topicId)
+          topicId
         );
         logger(`[TELEGRAM] Posted anonymous message: ${message}`);
         res.setHeader("Content-Type", "text/html");
@@ -117,7 +117,7 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to send anonymous message", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
+        res.status(500).send(errorHtmlWithDetails(e as string));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to send anonymous message", e);

@@ -174,9 +174,10 @@ export interface PretixItemInfo {
 }
 
 export interface TelegramAnonChannel {
-  telegram_chat_id: number;
-  anon_topic_id: number;
-  anon_topic_name: string;
+  telegram_chat_id: string;
+  topic_id: string;
+  topic_name: string;
+  is_anon_topic: boolean;
 }
 
 // Representation of a "known public key" as fetched from the DB
