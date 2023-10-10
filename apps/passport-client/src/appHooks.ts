@@ -1,9 +1,12 @@
 import { wrap, Wrapper } from "@pcd/emitter";
-import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
+import {
+  CredentialCache,
+  FeedSubscriptionManager,
+  User
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
-import { MemoryCache } from "cache-manager";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Dispatcher, StateContext } from "./dispatch";
@@ -106,8 +109,8 @@ export function useResolvingSubscriptionId(): string | undefined {
   return useSelector<string | undefined>((s) => s.resolvingSubscriptionId);
 }
 
-export function useCredentialCache(): MemoryCache {
-  return useSelector<MemoryCache>((s) => s.credentialCache);
+export function useCredentialCache(): CredentialCache {
+  return useSelector<CredentialCache>((s) => s.credentialCache);
 }
 
 export function useQuery(): URLSearchParams | undefined {
