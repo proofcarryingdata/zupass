@@ -3,6 +3,7 @@ import {
   PCDPermission,
   PCDPermissionType
 } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -53,7 +54,9 @@ export class MockFeedApi implements IFeedApi {
                 if (date) {
                   MockDate.set(date);
                 }
-                const { payload } = await verifyFeedCredential(req.pcd);
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
                 this.receivedPayload = payload;
 
                 return {
@@ -94,7 +97,9 @@ export class MockFeedApi implements IFeedApi {
                 if (date) {
                   MockDate.set(date);
                 }
-                const { payload } = await verifyFeedCredential(req.pcd);
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
                 this.receivedPayload = payload;
 
                 return {
@@ -133,7 +138,9 @@ export class MockFeedApi implements IFeedApi {
                   MockDate.set(date);
                 }
 
-                const { payload } = await verifyFeedCredential(req.pcd);
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
                 this.receivedPayload = payload;
 
                 return {
