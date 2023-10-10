@@ -421,13 +421,36 @@ export const chatsToPostIn = async (
         range.text(`No groups to join at this time`);
         return;
       }
-      for (const chat of eventsWithChats) {
-        range
-          .text(`${chat.chat?.title}`, async (ctx) => {
-            ctx.session.selectedChat = chat.chat;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
+      const userChats = await fetchUserTelegramChats(db, userId);
+
+      const finalChats = eventsWithChats.map((e) => {
+        return {
+          ...e,
+          userIsChatMember: userChats
+            ? userChats.telegramChatIDs.includes(e.telegramChatID)
+            : false
+        };
+      });
+      const sortedChats = finalChats.sort(
+        (a, b) => +b.userIsChatMember - +a.userIsChatMember
+      );
+      for (const chat of sortedChats) {
+        if (chat.userIsChatMember) {
+          range
+            .text(`${chat.chat?.title}`, (ctx) =>
+              ctx.reply(
+                `You must join ${chat.chat?.title} to post! Type /start.`
+              )
+            )
+            .row();
+        } else {
+          range
+            .text(`${chat.chat?.title} (Joined)`, async (ctx) => {
+              ctx.session.selectedChat = chat.chat;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+        }
       }
     }
   } catch (error) {
