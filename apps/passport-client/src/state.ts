@@ -1,4 +1,4 @@
-import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
+import { CredentialCache, FeedSubscriptionManager, User } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
@@ -13,6 +13,7 @@ export interface AppState {
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
   encryptionKey?: string;
+  credentialCache: CredentialCache;
 
   // View state
   modal:

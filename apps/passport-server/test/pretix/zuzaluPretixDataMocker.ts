@@ -1,3 +1,4 @@
+import { ONE_HOUR_MS } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
@@ -151,7 +152,7 @@ export class ZuzaluPretixDataMocker {
     return {
       id: this.nextId(),
       date_from: new Date(Date.now()).toString(),
-      date_to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toString()
+      date_to: new Date(Date.now() + ONE_HOUR_MS * 24 * 7).toString()
     };
   }
 

@@ -1,5 +1,9 @@
 import { wrap, Wrapper } from "@pcd/emitter";
-import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
+import {
+  CredentialCache,
+  FeedSubscriptionManager,
+  User
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
@@ -103,6 +107,10 @@ export function useUploadedId(): string | undefined {
 
 export function useResolvingSubscriptionId(): string | undefined {
   return useSelector<string | undefined>((s) => s.resolvingSubscriptionId);
+}
+
+export function useCredentialCache(): CredentialCache {
+  return useSelector<CredentialCache>((s) => s.credentialCache);
 }
 
 export function useQuery(): URLSearchParams | undefined {

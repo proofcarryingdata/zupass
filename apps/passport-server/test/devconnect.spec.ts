@@ -6,12 +6,12 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  ISSUANCE_STRING,
   PollFeedResponseValue,
   User,
   ZupassFeedIds,
   ZuzaluUserRole,
   checkinTicket,
+  createFeedCredentialPayload,
   pollFeed,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey
@@ -29,6 +29,7 @@ import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { rest } from "msw";
 import { SetupServer } from "msw/lib/node";
 import NodeRSA from "node-rsa";
@@ -1720,12 +1721,15 @@ describe("devconnect functionality", function () {
   step(
     "user should be able to be issued some PCDs from the server",
     async function () {
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
 
       if (response.error) {
         throw new Error("expected to be able to get a feed response");
@@ -1768,18 +1772,21 @@ describe("devconnect functionality", function () {
   );
 
   step("issued pcds should have stable ids", async function () {
+    MockDate.set(new Date());
+    const payload = JSON.stringify(createFeedCredentialPayload());
     const expressResponse1 = await pollFeed(
       application.expressContext.localEndpoint,
       identity,
-      ISSUANCE_STRING,
+      payload,
       ZupassFeedIds.Devconnect
     );
     const expressResponse2 = await pollFeed(
       application.expressContext.localEndpoint,
       identity,
-      ISSUANCE_STRING,
+      payload,
       ZupassFeedIds.Devconnect
     );
+    MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
     const action1 = response1.actions[0] as AppendToFolderAction;
@@ -1823,12 +1830,15 @@ describe("devconnect functionality", function () {
       );
 
       await devconnectPretixSyncService.trySync();
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(4);
 
@@ -1870,12 +1880,15 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(4);
       const devconnectAction = responseBody.actions[3] as ReplaceInFolderAction;
@@ -1918,12 +1931,15 @@ describe("devconnect functionality", function () {
   step(
     "event 'superuser' should be able to checkin a valid ticket",
     async function () {
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const issueResponse = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
       const action = issueResponseBody.actions[3] as ReplaceInFolderAction;
 
@@ -2015,35 +2031,56 @@ describe("devconnect functionality", function () {
   );
 
   step(
-    "shouldn't be able to issue pcds for the incorrect 'issuance string'",
+    "shouldn't be able to issue pcds for the incorrect feed credential payload",
     async function () {
+      MockDate.set(new Date());
       const expressResponse = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
         "asdf",
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
 
       const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([
-        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
-        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
-      ]);
+      expect(response.actions).to.deep.eq([]);
+    }
+  );
 
-      const action = response.actions[0] as ReplaceInFolderAction;
-      expect(action.pcds).to.deep.eq([]);
+  step(
+    "shouldn't be able to issue pcds for an expired credential payload",
+    async function () {
+      // Generate credential payload at given time
+      MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
+      const payload = JSON.stringify(createFeedCredentialPayload());
+
+      // Attempt to use credential payload one hour later
+      MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
+      const expressResponse = await pollFeed(
+        application.expressContext.localEndpoint,
+        identity,
+        payload,
+        ZupassFeedIds.Devconnect
+      );
+      MockDate.reset();
+
+      const response = expressResponse.value as PollFeedResponseValue;
+      expect(response.actions).to.deep.eq([]);
     }
   );
 
   step(
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const expressResponse = await pollFeed(
         application.expressContext.localEndpoint,
         new Identity(),
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
 
       const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([

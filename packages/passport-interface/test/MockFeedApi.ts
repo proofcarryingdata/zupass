@@ -3,9 +3,11 @@ import {
   PCDPermission,
   PCDPermissionType
 } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import MockDate from "mockdate";
 import {
   FeedHost,
   ListFeedsResult,
@@ -13,11 +15,17 @@ import {
   PollFeedResult
 } from "../src";
 import { IFeedApi } from "../src/FeedAPI";
+import {
+  FeedCredentialPayload,
+  verifyFeedCredential
+} from "../src/FeedCredential";
 
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
-  public constructor() {
+  public receivedPayload: FeedCredentialPayload | undefined;
+
+  public constructor(date?: Date) {
     this.feedHosts = new Map<string, FeedHost>([
       [
         "http://localhost:3000/feed",
@@ -36,10 +44,21 @@ export class MockFeedApi implements IFeedApi {
                   } as PCDPermission
                 ],
                 inputPCDType: undefined,
-                partialArgs: undefined
+                partialArgs: undefined,
+                credentialRequest: {
+                  signatureType: "sempahore-signature-pcd"
+                }
               },
 
-              handleRequest: async (_req: PollFeedRequest) => {
+              handleRequest: async (req: PollFeedRequest) => {
+                if (date) {
+                  MockDate.set(date);
+                }
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
+                this.receivedPayload = payload;
+
                 return {
                   actions: [
                     {
@@ -69,9 +88,20 @@ export class MockFeedApi implements IFeedApi {
                   } as PCDPermission
                 ],
                 inputPCDType: undefined,
-                partialArgs: undefined
+                partialArgs: undefined,
+                credentialRequest: {
+                  signatureType: "sempahore-signature-pcd"
+                }
               },
-              handleRequest: async (_req: PollFeedRequest) => {
+              handleRequest: async (req: PollFeedRequest) => {
+                if (date) {
+                  MockDate.set(date);
+                }
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
+                this.receivedPayload = payload;
+
                 return {
                   actions: [
                     {
@@ -86,6 +116,35 @@ export class MockFeedApi implements IFeedApi {
                       ]
                     }
                   ]
+                };
+              }
+            },
+            {
+              feed: {
+                description: "returns nothing, but does require a credential",
+                id: "3",
+                name: "credential test",
+                permissions: [],
+                inputPCDType: undefined,
+                partialArgs: undefined,
+                credentialRequest: {
+                  pcdType: "email-pcd",
+                  signatureType: "sempahore-signature-pcd"
+                }
+              },
+
+              handleRequest: async (req: PollFeedRequest) => {
+                if (date) {
+                  MockDate.set(date);
+                }
+
+                const { payload } = await verifyFeedCredential(
+                  req.pcd as SerializedPCD
+                );
+                this.receivedPayload = payload;
+
+                return {
+                  actions: []
                 };
               }
             }
