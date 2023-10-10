@@ -4,9 +4,10 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { ONE_HOUR_MS } from "@pcd/util";
 
 // Timestamps last for one hour
-const TIMESTAMP_MAX_AGE = 1000 * 60 * 60;
+const TIMESTAMP_MAX_AGE = ONE_HOUR_MS;
 
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed

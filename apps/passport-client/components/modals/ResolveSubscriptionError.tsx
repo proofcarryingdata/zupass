@@ -10,6 +10,7 @@ import { PCDPermission, matchActionToPermission } from "@pcd/pcd-collection";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
+  useCredentialCache,
   useDispatch,
   useIdentity,
   usePCDCollection,
@@ -68,6 +69,7 @@ function FetchError({
 }) {
   const [polling, setPolling] = useState<boolean>(false);
   const [stillFailing, setStillFailing] = useState<boolean>(false);
+  const credentialCache = useCredentialCache();
 
   const identity = useIdentity();
   const pcds = usePCDCollection();
@@ -75,7 +77,7 @@ function FetchError({
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    const credentialManager = new CredentialManager(identity, pcds);
+    const credentialManager = new CredentialManager(identity, pcds, credentialCache);
     await subscriptions.pollSingleSubscription(subscription, credentialManager);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);
@@ -84,7 +86,7 @@ function FetchError({
     } else {
       setStillFailing(false);
     }
-  }, [identity, pcds, subscriptions, subscription]);
+  }, [identity, pcds, credentialCache, subscriptions, subscription]);
   return (
     <div>
       <div>

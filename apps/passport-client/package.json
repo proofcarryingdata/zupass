@@ -37,6 +37,7 @@
     "@semaphore-protocol/identity": "^3.11.0",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
+    "cache-manager": "^5.2.4",
     "dotenv": "^16.0.3",
     "email-validator": "^2.0.4",
     "handlebars": "^4.7.7",

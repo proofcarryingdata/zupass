@@ -1,4 +1,6 @@
+import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { caching } from "cache-manager";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -206,6 +208,10 @@ async function loadInitialState(): Promise<AppState> {
     modal = { modalType: "upgrade-account-modal" };
   }
 
+  const credentialCache = await caching('memory', {
+    ttl: ONE_HOUR_MS
+  });
+
   return {
     self,
     encryptionKey,
@@ -213,7 +219,8 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     subscriptions,
-    resolvingSubscriptionId: undefined
+    resolvingSubscriptionId: undefined,
+    credentialCache
   };
 }
 

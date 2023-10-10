@@ -3,6 +3,7 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { MemoryCache } from "cache-manager";
 import {
   FeedCredentialPayload,
   createFeedCredentialPayload
@@ -14,25 +15,18 @@ export interface CredentialManagerAPI {
   requestCredential(req: CredentialRequest): Promise<SerializedPCD>;
 }
 
-const CREDENTIAL_CACHE_MAX_AGE = 1000 * 60 * 60;
-
-interface CredentialCacheEntry {
-  value: SerializedPCD;
-  timestamp: number;
-}
-
 /**
  * Handles generation of credentials for feeds.
  */
 export class CredentialManager implements CredentialManagerAPI {
   private readonly identity: Identity;
   private readonly pcds: PCDCollection;
-  private readonly cache: Map<string, CredentialCacheEntry>;
+  private readonly cache: MemoryCache;
 
-  public constructor(identity: Identity, pcds: PCDCollection) {
+  public constructor(identity: Identity, pcds: PCDCollection, cache: MemoryCache) {
     this.identity = identity;
     this.pcds = pcds;
-    this.cache = new Map();
+    this.cache = cache;
   }
 
   // Can we get a credential containing a given PCD type?
@@ -48,18 +42,9 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Get a credential from the local cache, if it exists
-  private getCachedCredential(type?: string): SerializedPCD | null {
+  private async getCachedCredential(type?: string): Promise<SerializedPCD | undefined> {
     const cacheKey = type ?? "none";
-    const entry = this.cache.get(cacheKey);
-    if (entry) {
-      if (Date.now() - entry.timestamp < CREDENTIAL_CACHE_MAX_AGE) {
-        return entry.value;
-      } else {
-        this.cache.delete(cacheKey);
-      }
-    }
-
-    return null;
+    return await this.cache.get<SerializedPCD>(cacheKey);
   }
 
   private setCachedCredential(
@@ -67,8 +52,7 @@ export class CredentialManager implements CredentialManagerAPI {
     value: SerializedPCD
   ): void {
     const cacheKey = type ?? "none";
-
-    this.cache.set(cacheKey, { value, timestamp: Date.now() });
+    this.cache.set(cacheKey, value);
   }
 
   /**
@@ -82,14 +66,14 @@ export class CredentialManager implements CredentialManagerAPI {
   public async requestCredential(
     req: CredentialRequest
   ): Promise<SerializedPCD> {
-    const cachedCredential = this.getCachedCredential(req.pcdType);
+    const cachedCredential = await this.getCachedCredential(req.pcdType);
     if (cachedCredential) {
       return cachedCredential;
     }
 
     // This is currently the only supported PCD for credential embedding
     if (req.pcdType === "email-pcd") {
-      const cachedCredential = this.getCachedCredential(req.pcdType);
+      const cachedCredential = await this.getCachedCredential(req.pcdType);
       if (cachedCredential) {
         return cachedCredential;
       }
@@ -107,7 +91,7 @@ export class CredentialManager implements CredentialManagerAPI {
       const result = await this.signPayload(
         createFeedCredentialPayload(serializedPCD)
       );
-      this.cache.set(req.pcdType, { value: result, timestamp: Date.now() });
+      this.setCachedCredential(req.pcdType, result);
       return result;
     } else if (req.pcdType === undefined) {
       const result = await this.signPayload(createFeedCredentialPayload());

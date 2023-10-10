@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
+  useCredentialCache,
   useDispatch,
   useIdentity,
   usePCDCollection,
@@ -223,11 +224,17 @@ function SubscribeSection({
   const identity = useIdentity();
   const pcds = usePCDCollection();
   const dispatch = useDispatch();
+  const credentialCache = useCredentialCache();
 
-  const credentialManager = useMemo(() => new CredentialManager(identity, pcds), [identity, pcds]);
+  const credentialManager = useMemo(
+    () => new CredentialManager(identity, pcds, credentialCache),
+    [credentialCache, identity, pcds]);
 
   // Check that we can actually generate the credential that the feed wants
-  const missingCredentialPCD = !credentialManager.canGenerateCredential({ signatureType: "sempahore-signature-pcd", pcdType: info.credentialRequest.pcdType });
+  const missingCredentialPCD = !credentialManager.canGenerateCredential({
+    signatureType: "sempahore-signature-pcd",
+    pcdType: info.credentialRequest.pcdType
+  });
 
   const onSubscribeClick = useCallback(() => {
     (async () => {

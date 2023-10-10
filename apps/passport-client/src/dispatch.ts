@@ -685,7 +685,8 @@ async function sync(state: AppState, update: ZuUpdate) {
       );
       const credentialManager = new CredentialManager(
         state.identity,
-        state.pcds
+        state.pcds,
+        state.credentialCache
       );
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);

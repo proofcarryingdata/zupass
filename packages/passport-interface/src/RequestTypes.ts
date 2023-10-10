@@ -271,7 +271,7 @@ export interface ListSingleFeedRequest {
  */
 export interface PollFeedRequest<T extends PCDPackage = PCDPackage> {
   feedId: string;
-  pcd: SerializedPCD<PCDOf<T>>;
+  pcd?: SerializedPCD<PCDOf<T>>;
 }
 
 /**
