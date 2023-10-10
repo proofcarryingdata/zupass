@@ -7,10 +7,16 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Provides two levels of verification for tickets. The first simply ensures
- * that the ticket PCD is valid. The second compares the ticket against a
- * list of known ticket types and public keys, allowing a more detailed
- * response for tickets of a recognized type.
+ * By default, the EdDSATicketPCD card contains a QR code which links to a
+ * verification screen in the front end. That screen makes this request.
+ *
+ * Does not apply for Devconnect tickets, which have a custom QR code. This
+ * API should not be used for Devconnect tickets.
+ *
+ * Returns a result which says whether the ticket is verified, and in order
+ * to be verified it must be a valid PCD and the ticket must match criteria
+ * associated with Zuconnect '23 or Zuzalu '23 tickets. All other ticket
+ * types, including Devconnect, will be returned as unverified.
  *
  * Never rejects. All information encoded in the resolved response.
  */

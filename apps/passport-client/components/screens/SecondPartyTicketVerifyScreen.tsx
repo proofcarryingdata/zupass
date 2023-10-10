@@ -3,29 +3,17 @@ import { KnownTicketGroup, requestVerifyTicket } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useEffect, useState } from "react";
-import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useQuery } from "../../src/appHooks";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
-import {
-  CardContainerExpanded,
-  CardHeader,
-  CardOutlineExpanded
-} from "../shared/PCDCard";
 import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
 import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
 
-// There are three possible outcomes of an attempt to verify a ticket
 enum VerifyOutcome {
-  // If the PCD verify() call succeeds, meaning that is is an EdDSATicketPCD
-  // and has a proof that matches the claim, but is not otherwise a "known"
-  // ticket type
-  VerifiedPCDOnly,
-  // As above, *and* If the ticket's public key, event ID and product ID
-  // combination matches one that we know of
+  // We recognize this ticket
   KnownTicketType,
   // If verification failed for any reason
   NotVerified
@@ -33,22 +21,16 @@ enum VerifyOutcome {
 
 type VerifyResult =
   | {
-      outcome: VerifyOutcome.VerifiedPCDOnly;
-      // For "unknown" but verified tickets, we get a ticket PCD
-      pcd: EdDSATicketPCD;
-    }
+    outcome: VerifyOutcome.KnownTicketType;
+    pcd: EdDSATicketPCD;
+    group: KnownTicketGroup.Zuconnect23 | KnownTicketGroup.Zuzalu23;
+    publicKeyName: string;
+  }
   | {
-      outcome: VerifyOutcome.KnownTicketType;
-      pcd: EdDSATicketPCD;
-      // For known tickets, we also have a "group" and public key name
-      group: KnownTicketGroup;
-      publicKeyName: string;
-    }
-  | {
-      outcome: VerifyOutcome.NotVerified;
-      // For unverified tickets there is an error message
-      message: string;
-    };
+    outcome: VerifyOutcome.NotVerified;
+    // For unverified tickets there is an error message
+    message: string;
+  };
 
 // Shows whether a ticket can be verified, and whether it is a known ticket
 // about which we can show extra information. "Known tickets" are tickets such
@@ -57,8 +39,7 @@ type VerifyResult =
 // truth of the claim being made, e.g. that a ticket is a Zuzalu ticket,
 // since the presented ticket does not match any known pattern of event ID,
 // product ID and signing key.
-// Known tickets are those that are present in passport-server's database.
-export function VerifyScreen() {
+export function SecondPartyTicketVerifyScreen() {
   const query = useQuery();
   const encodedQRPayload = query.get("pcd");
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
@@ -79,8 +60,7 @@ export function VerifyScreen() {
   let icon = icons.verifyInProgress;
   if (verifyResult) {
     if (
-      verifyResult.outcome === VerifyOutcome.NotVerified ||
-      verifyResult.outcome === VerifyOutcome.VerifiedPCDOnly
+      verifyResult.outcome === VerifyOutcome.NotVerified
     ) {
       // The "invalid" icon is used for PCDs which are formally valid but
       // unknown
@@ -104,10 +84,6 @@ export function VerifyScreen() {
               <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
             </>
           )}
-        {verifyResult &&
-          verifyResult.outcome === VerifyOutcome.VerifiedPCDOnly && (
-            <H4 col="var(--accent-dark)">UNKNOWN TICKET.</H4>
-          )}
         {verifyResult && verifyResult.outcome === VerifyOutcome.NotVerified && (
           <H4>PROOF INVALID.</H4>
         )}
@@ -117,10 +93,6 @@ export function VerifyScreen() {
         {verifyResult && verifyResult.outcome === VerifyOutcome.NotVerified && (
           <TextCenter>{verifyResult.message}</TextCenter>
         )}
-        {verifyResult &&
-          verifyResult.outcome === VerifyOutcome.VerifiedPCDOnly && (
-            <VerifiedPCDOnly pcd={verifyResult.pcd} />
-          )}
         {verifyResult &&
           verifyResult.outcome === VerifyOutcome.KnownTicketType && (
             <VerifiedAndKnownTicket
@@ -144,30 +116,8 @@ export function VerifyScreen() {
 }
 
 /**
- * If we can verify the PCD as an EdDSATicketPCD, but we can't match it
- * against a known ticket type, show a message informing the user that the
- * ticket is of unknown provenance.
- */
-function VerifiedPCDOnly({ pcd }: { pcd: EdDSATicketPCD }) {
-  return (
-    <CardContainerExpanded>
-      <CardOutlineExpanded>
-        <CardHeader col="var(--accent-lite)">
-          <div>
-            The ticket is described as being for{" "}
-            <EventName>"{pcd.claim.ticket.eventName}"</EventName>, but Zupass
-            either does not recognize that event or cannot verify that the
-            ticket is authentic.
-          </div>
-        </CardHeader>
-      </CardOutlineExpanded>
-    </CardContainerExpanded>
-  );
-}
-
-/**
- * If the ticket is verified and is a known ticket, display a ticket-specific
- * message to the user.
+ * If the ticket is verified and is a known Zuzalu '23 or Zuconnect '23
+ * ticket, display a ticket-specific message to the user.
  */
 function VerifiedAndKnownTicket({
   pcd,
@@ -187,19 +137,6 @@ function VerifiedAndKnownTicket({
       <ZuconnectKnownTicketDetails pcd={pcd} publicKeyName={publicKeyName} />
     );
   }
-  // It's possible that we add other ticket types to passport-server's list
-  // of known tickets, but that they do not belong to the above groups.
-  // In that case, show a generic "VERIFIED" message indicating that the
-  // ticket is good.
-  return (
-    <CardContainerExpanded>
-      <CardOutlineExpanded>
-        <CardHeader col="var(--accent-lite)">
-          <div>VERIFIED</div>
-        </CardHeader>
-      </CardOutlineExpanded>
-    </CardContainerExpanded>
-  );
 }
 
 /**
@@ -228,17 +165,12 @@ async function deserializeAndVerify(
     // If requestVerifyTicket() succeeded then the PCD type must be
     // EdDSATicketPCD
     if (isEdDSATicketPCD(pcd)) {
-      if (result.value.knownTicketType) {
+      if (result.value.verified) {
         return {
           outcome: VerifyOutcome.KnownTicketType,
           pcd,
           publicKeyName: result.value.publicKeyName,
           group: result.value.group
-        };
-      } else {
-        return {
-          outcome: VerifyOutcome.VerifiedPCDOnly,
-          pcd
         };
       }
     }
@@ -252,7 +184,3 @@ async function deserializeAndVerify(
         : null) ?? "Could not verify PCD"
   };
 }
-
-const EventName = styled.span`
-  color: var(--white);
-`;

@@ -1162,9 +1162,11 @@ export class IssuanceService {
    *    or Zuconnect tickets
    *
    * Not used for Devconnect tickets, which have a separate check-in flow.
-   * Used for all other ticket types.
+   * This is the default verification flow for ticket PCDs, based on the
+   * standard QR code, but only Zuconnect/Zuzalu '23 tickets will be returned
+   * as verified.
    */
-  private async verifyTicket(
+  private async verifyZuconnect23OrZuzalu23Ticket(
     serializedPCD: SerializedPCD
   ): Promise<VerifyTicketResult> {
     if (!serializedPCD.type) {
@@ -1199,6 +1201,8 @@ export class IssuanceService {
     // If we found a known ticket type, compare public keys
     if (
       knownTicketType &&
+      (knownTicketType.ticket_group === KnownTicketGroup.Zuconnect23 ||
+        knownTicketType.ticket_group === KnownTicketGroup.Zuzalu23) &&
       isEqualEdDSAPublicKey(
         JSON.parse(knownTicketType.public_key),
         pcd.proof.eddsaPCD.claim.publicKey
@@ -1210,20 +1214,19 @@ export class IssuanceService {
         success: true,
         value: {
           verified: true,
-          knownTicketType: true,
           publicKeyName: knownTicketType.known_public_key_name,
           group: knownTicketType.ticket_group
         }
       };
+    } else {
+      return {
+        success: true,
+        value: {
+          verified: false,
+          message: "Not a valid ticket"
+        }
+      };
     }
-
-    return {
-      success: true,
-      value: {
-        verified: true,
-        knownTicketType: false
-      }
-    };
   }
 
   public async handleVerifyTicketRequest(
@@ -1232,7 +1235,7 @@ export class IssuanceService {
     const pcdStr = req.pcd;
 
     try {
-      return this.verifyTicket(JSON.parse(pcdStr));
+      return this.verifyZuconnect23OrZuzalu23Ticket(JSON.parse(pcdStr));
     } catch (e) {
       throw new PCDHTTPError(500, "The ticket could not be verified", {
         cause: e

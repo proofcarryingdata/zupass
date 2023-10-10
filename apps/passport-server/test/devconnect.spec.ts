@@ -10,7 +10,6 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  ISSUANCE_STRING,
   KnownTicketGroup,
   KnownTicketTypesResult,
   PollFeedResponseValue,
@@ -1976,13 +1975,17 @@ describe("devconnect functionality", function () {
   step(
     "event 'superuser' should be able to checkin a valid ticket by ID",
     async function () {
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const issueResponse = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Devconnect
       );
+      MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
+
       const action = issueResponseBody.actions[3] as ReplaceInFolderAction;
       const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
       ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
@@ -2442,33 +2445,39 @@ describe("devconnect functionality", function () {
 
   let knownTicketTypesAndKeys: KnownTicketTypesResult | undefined;
 
-  step("known ticket types should include our public key", async function () {
-    knownTicketTypesAndKeys = await requestKnownTicketTypes(
-      application.expressContext.localEndpoint
-    );
+  step(
+    "known ticket types should include Zupass public key",
+    async function () {
+      knownTicketTypesAndKeys = await requestKnownTicketTypes(
+        application.expressContext.localEndpoint
+      );
 
-    const eddsaPubKey = await getEdDSAPublicKey(
-      testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
-    );
+      const eddsaPubKey = await getEdDSAPublicKey(
+        testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+      );
 
-    expect(knownTicketTypesAndKeys.success).to.be.true;
-    expect(knownTicketTypesAndKeys.value?.publicKeys).to.deep.eq([
-      {
-        publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-        publicKeyType: "eddsa",
-        publicKey: eddsaPubKey
-      }
-    ]);
-  });
+      expect(knownTicketTypesAndKeys.success).to.be.true;
+      expect(knownTicketTypesAndKeys.value?.publicKeys).to.deep.eq([
+        {
+          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+          publicKeyType: "eddsa",
+          publicKey: eddsaPubKey
+        }
+      ]);
+    }
+  );
 
-  step("known ticket types should include Zuzalu tickets", async function () {
-    const knownTicketTypes = knownTicketTypesAndKeys?.value?.knownTicketTypes;
-    const zuzaluTicketTypes = knownTicketTypes?.filter(
-      (tt) => tt.ticketGroup === KnownTicketGroup.Zuzalu23
-    );
+  step(
+    "known ticket types should include Zuzalu '23 tickets",
+    async function () {
+      const knownTicketTypes = knownTicketTypesAndKeys?.value?.knownTicketTypes;
+      const zuzaluTicketTypes = knownTicketTypes?.filter(
+        (tt) => tt.ticketGroup === KnownTicketGroup.Zuzalu23
+      );
 
-    expect(zuzaluTicketTypes?.length).to.eq(3);
-  });
+      expect(zuzaluTicketTypes?.length).to.eq(3);
+    }
+  );
 
   step(
     "known ticket types should include Devconnect tickets",
@@ -2533,80 +2542,68 @@ describe("devconnect functionality", function () {
         expect(result.value?.verified).to.be.true;
 
         if (result.value.verified === true) {
-          expect(result.value.knownTicketType).to.be.true;
-
-          if (result.value.knownTicketType === true) {
-            // Should match the Zupass public key name, since we used the Zupass
-            // private key to sign the ticket.
-            expect(result.value.publicKeyName).to.eq(
-              ZUPASS_TICKET_PUBLIC_KEY_NAME
-            );
-            expect(result.value.group).to.eq(KnownTicketGroup.Zuzalu23);
-          }
+          // Should match the Zupass public key name, since we used the Zupass
+          // private key to sign the ticket.
+          expect(result.value.publicKeyName).to.eq(
+            ZUPASS_TICKET_PUBLIC_KEY_NAME
+          );
+          expect(result.value.group).to.eq(KnownTicketGroup.Zuzalu23);
         }
       }
     }
   );
 
-  step(
-    "should verify an unknown ticket type but not report it as known",
-    async function () {
-      const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
+  step("should not verify an unknown ticket", async function () {
+    const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
 
-      // create a Zuzalu resident ticket
-      const ticketData: ITicketData = {
-        attendeeName: "test name",
-        attendeeEmail: "user@test.com",
-        eventName: "event",
-        ticketName: "ticket",
-        checkerEmail: "checker@test.com",
-        ticketId: uuid(),
-        // Random UUIDs mean that this will not be a known ticket type
-        eventId: uuid(),
-        productId: uuid(),
-        timestampConsumed: Date.now(),
-        timestampSigned: Date.now(),
-        attendeeSemaphoreId: "12345",
-        isConsumed: false,
-        isRevoked: false,
-        // Category is claimed to be Zuzalu but this is not trustworthy
-        ticketCategory: TicketCategory.Zuzalu
-      };
+    // create a Zuzalu resident ticket
+    const ticketData: ITicketData = {
+      attendeeName: "test name",
+      attendeeEmail: "user@test.com",
+      eventName: "event",
+      ticketName: "ticket",
+      checkerEmail: "checker@test.com",
+      ticketId: uuid(),
+      // Random UUIDs mean that this will not be a known ticket type
+      eventId: uuid(),
+      productId: uuid(),
+      timestampConsumed: Date.now(),
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId: "12345",
+      isConsumed: false,
+      isRevoked: false,
+      // Category is claimed to be Zuzalu but this is not trustworthy
+      ticketCategory: TicketCategory.Zuzalu
+    };
 
-      ticketPCD = await EdDSATicketPCDPackage.prove({
-        ticket: {
-          value: ticketData,
-          argumentType: ArgumentTypeName.Object
-        },
-        privateKey: {
-          value: prvKey,
-          argumentType: ArgumentTypeName.String
-        },
-        id: {
-          value: undefined,
-          argumentType: ArgumentTypeName.String
-        }
-      });
-
-      const result = await requestVerifyTicket(
-        application.expressContext.localEndpoint,
-        {
-          pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
-        }
-      );
-
-      expect(result.success).to.be.true;
-      // The type-checker wants to know about this too
-      if (result.success === true) {
-        expect(result.value?.verified).to.be.true;
-
-        if (result.value.verified === true) {
-          // This is NOT a known ticket type
-          expect(result.value.knownTicketType).to.be.false;
-        }
+    ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: prvKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: undefined,
+        argumentType: ArgumentTypeName.String
       }
+    });
+
+    const result = await requestVerifyTicket(
+      application.expressContext.localEndpoint,
+      {
+        pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
+      }
+    );
+
+    expect(result.success).to.be.true;
+    // The type-checker wants to know about this too
+    if (result.success === true) {
+      expect(result.value?.verified).to.be.false;
     }
-  );
+  });
 
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.

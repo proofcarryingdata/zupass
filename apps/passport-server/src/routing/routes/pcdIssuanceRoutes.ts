@@ -160,6 +160,12 @@ export function initPCDIssuanceRoutes(
     res.json(result satisfies CheckTicketInByIdResult);
   });
 
+  /**
+   * For non-Devconnect ticket PCDs, the standard QR code generates a link
+   * to a verification screen in passport-client, which calls this endpoint
+   * to verify the ticket. Tickets are only verified if they match criteria
+   * known to belong to Zuconnect '23 or Zuzalu '23 tickets.
+   */
   app.post("/issue/verify-ticket", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleVerifyTicketRequest(

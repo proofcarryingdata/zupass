@@ -323,13 +323,8 @@ export const enum KnownTicketGroup {
 export type VerifyTicketResponseValue =
   | {
       verified: true;
-      knownTicketType: false;
-    }
-  | {
-      verified: true;
-      knownTicketType: true;
       publicKeyName: string;
-      group: KnownTicketGroup;
+      group: KnownTicketGroup.Zuconnect23 | KnownTicketGroup.Zuzalu23;
     }
   | {
       verified: false;

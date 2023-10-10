@@ -25,8 +25,8 @@ import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExist
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
+import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
-import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { appConfig } from "../src/appConfig";
@@ -189,7 +189,7 @@ function RouterImpl() {
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
           {/* This route is used by non-Devconnect tickets */}
-          <Route path="verify" element={<VerifyScreen />} />
+          <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
           {/* This route is used to check in a Devconnect ticket with the
               full PCD in the parameters */}
           <Route path="checkin" element={<DevconnectCheckinScreen />} />
