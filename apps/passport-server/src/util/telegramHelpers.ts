@@ -395,21 +395,24 @@ export const chatsToPostIn = async (
       );
       const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
-      range.text(`Choose a topic ⬇`).row();
-      for (const topic of topics) {
-        const encodedTopicData = base64EncodeTopicData(
-          topic.topic_name,
-          topic.topic_id,
-          validEventIds
-        );
-        range
-          .webApp(
-            `${topic.topic_name}`,
-            `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-          )
-          .row();
+      if (topics.length === 0) {
+        range.text(`No topics found`).row();
+      } else {
+        range.text(`Choose a topic ⬇`).row();
+        for (const topic of topics) {
+          const encodedTopicData = base64EncodeTopicData(
+            topic.topic_name,
+            topic.topic_id,
+            validEventIds
+          );
+          range
+            .webApp(
+              `${topic.topic_name}`,
+              `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+            )
+            .row();
+        }
       }
-
       range.text(`Go back`, async (ctx) => {
         ctx.session.selectedChat = undefined;
         await ctx.menu.update({ immediate: true });

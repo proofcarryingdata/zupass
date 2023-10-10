@@ -23,12 +23,12 @@ export const errorHtmlWithDetails = (error: string): string => {
     <style></style>
   </head>
   <body>
-  <p>The group could not be joined.</p>
+  <h3>Action failed</h3>
   ${
     error
       ? `
       <p>Here is the error we received:</p>
-      <p>${error}</p>
+      <p><b>${error}</b></p>
       `
       : ""
   }

@@ -8,6 +8,7 @@ import {
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import { sha256 } from "js-sha256";
+import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
 import {
@@ -588,9 +589,24 @@ export class TelegramService {
     anonChatId: number,
     message: string
   ): Promise<void> {
-    await this.bot.api.sendMessage(groupId, message, {
-      message_thread_id: anonChatId
-    });
+    try {
+      await this.bot.api.sendMessage(groupId, message, {
+        message_thread_id: anonChatId
+      });
+    } catch (error: { error_code: number; description: string } & any) {
+      const isDeletedThread =
+        error.error_code === 400 &&
+        error.description === "Bad Request: message thread not found";
+      if (isDeletedThread) {
+        logger(
+          `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
+        );
+        await deleteTelegramChatTopic(this.context.dbPool, groupId, anonChatId);
+        throw new Error(`Topic has been deleted. Choose a different one!`);
+      } else {
+        throw new Error(error);
+      }
+    }
   }
 
   private async sendInviteLink(
