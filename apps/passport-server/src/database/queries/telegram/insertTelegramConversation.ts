@@ -67,7 +67,7 @@ insert into telegram_chat_topics (telegram_chat_id, topic_id, topic_name, is_ano
 values ($1, $2, $3, $4)
 on conflict (telegram_chat_id, topic_id) do update 
 set topic_name = $3, is_anon_topic = $4;`,
-    [telegramChatId, anonTopicId, topicName, isAnon]
+    [telegramChatId, topicId, topicName, isAnon]
   );
   return result.rowCount;
 }

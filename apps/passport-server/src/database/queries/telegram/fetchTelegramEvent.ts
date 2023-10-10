@@ -111,10 +111,9 @@ export async function fetchTelegramAnonTopicsByChatId(
     client,
     `\
     select * from telegram_chat_topics
-    where telegram_chat_id = $1 and is_anon_topic = $2
+    where telegram_chat_id = $1 and is_anon_topic is true
     `,
-    // true refers to the is_anon_topic boolean
-    [telegramChatId, true]
+    [telegramChatId]
   );
   return result.rows;
 }
