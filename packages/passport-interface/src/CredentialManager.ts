@@ -21,6 +21,9 @@ interface CredentialCacheEntry {
   timestamp: number;
 }
 
+/**
+ * Handles generation of credentials for feeds.
+ */
 export class CredentialManager implements CredentialManagerAPI {
   private readonly identity: Identity;
   private readonly pcds: PCDCollection;
@@ -44,6 +47,7 @@ export class CredentialManager implements CredentialManagerAPI {
     }
   }
 
+  // Get a credential from the local cache, if it exists
   private getCachedCredential(type?: string): SerializedPCD | null {
     const cacheKey = type ?? "none";
     const entry = this.cache.get(cacheKey);
@@ -67,6 +71,14 @@ export class CredentialManager implements CredentialManagerAPI {
     this.cache.set(cacheKey, { value, timestamp: Date.now() });
   }
 
+  /**
+   * Generates the requested credential, if possible.
+   * Takes a {@link CredentialRequest} and produces a serialized PCD which
+   * consists of a signature PCD (e.g. a semaphore signature PCD) which wraps
+   * a {@link FeedCredentialPayload}. This payload contains a timestamp, and
+   * may contain a PCD if a) the feed requests one and b) CredentialManager
+   * can find a matching PCD.
+   */
   public async requestCredential(
     req: CredentialRequest
   ): Promise<SerializedPCD> {
@@ -108,6 +120,7 @@ export class CredentialManager implements CredentialManagerAPI {
     }
   }
 
+  // Takes a payload and wraps it in a signature PCD.
   private async signPayload(
     payload: FeedCredentialPayload
   ): Promise<SerializedPCD> {

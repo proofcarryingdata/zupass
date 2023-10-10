@@ -47,6 +47,10 @@ async function deserializeAndVerify(
   return await SemaphoreSignaturePCDPackage.verify(pcd);
 }
 
+/**
+ * For use on the server-side, verifies a PCD and checks that the timestamp
+ * is within bounds.
+ */
 export async function verifyFeedCredential(
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
   pcdVerifier?: (pcd: SerializedPCD<SemaphoreSignaturePCD>) => Promise<boolean>
