@@ -137,7 +137,7 @@ export class FeedSubscriptionManager {
         feedId: subscription.feed.id,
         pcd: await credentialManager.requestCredential({
           signatureType: "sempahore-signature-pcd",
-          pcdType: subscription.feed.credentialType
+          pcdType: subscription.feed.credentialRequest.pcdType
         })
       });
 
@@ -276,7 +276,10 @@ export class FeedSubscriptionManager {
       );
     }
 
-    if (info.credentialType && info.credentialType !== "email-pcd") {
+    if (
+      info.credentialRequest.pcdType &&
+      info.credentialRequest.pcdType !== "email-pcd"
+    ) {
       throw new Error(
         `non-supported credential PCD requested on ${providerUrl} feed ${info.id}`
       );
@@ -376,15 +379,50 @@ export class FeedSubscriptionManager {
   public serialize(): string {
     return JSON.stringify({
       providers: this.providers,
-      subscribedFeeds: this.activeSubscriptions
+      subscribedFeeds: this.activeSubscriptions,
+      _storage_version: "v1"
     } satisfies SerializedSubscriptionManager);
   }
 
+  /**
+   * Create a FeedSubscriptionManager from serialized data.
+   * Upgrades from serialized data based on version number.
+   */
   public static deserialize(
     api: IFeedApi,
     serialized: string
   ): FeedSubscriptionManager {
     const parsed = JSON.parse(serialized) as SerializedSubscriptionManager;
+    if (parsed._storage_version === undefined) {
+      const providers = parsed.providers ?? [];
+      const subscribedFeeds = (parsed.subscribedFeeds ?? []).map(
+        (
+          sub: Subscription & { feed: { credentialType?: string } }
+        ): Subscription => {
+          const feed: Feed = {
+            id: sub.feed.id,
+            name: sub.feed.name,
+            description: sub.feed.description,
+            permissions: sub.feed.permissions,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd",
+              ...(sub.feed.credentialType === "email-pcd"
+                ? { pcdType: sub.feed.credentialType }
+                : {})
+            }
+          };
+
+          return {
+            id: sub.id,
+            feed,
+            providerUrl: sub.providerUrl,
+            subscribedTimestamp: sub.subscribedTimestamp
+          };
+        }
+      );
+      return new FeedSubscriptionManager(api, providers, subscribedFeeds);
+    }
+
     return new FeedSubscriptionManager(
       api,
       parsed.providers ?? [],
@@ -439,10 +477,13 @@ export interface SubscriptionActions {
   subscription: Subscription;
 }
 
-export interface SerializedSubscriptionManager {
+interface SerializedSubscriptionManagerV1 {
   providers: SubscriptionProvider[];
   subscribedFeeds: Subscription[];
+  _storage_version: "v1";
 }
+
+export type SerializedSubscriptionManager = SerializedSubscriptionManagerV1;
 
 export interface SubscriptionProvider {
   providerUrl: string;
@@ -467,7 +508,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   inputPCDType?: PCDTypeNameOf<T>;
   partialArgs?: ArgsOf<T>;
   permissions: PCDPermission[];
-  credentialType?: "email-pcd";
+  credentialRequest: CredentialRequest;
 }
 
 export interface Subscription {

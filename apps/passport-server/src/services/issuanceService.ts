@@ -191,6 +191,9 @@ export class IssuanceService {
             description: "Get your Devconnect tickets here!",
             inputPCDType: EdDSATicketPCDPackage.name,
             partialArgs: undefined,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd"
+            },
             permissions: [
               {
                 folder: "Devconnect",
@@ -238,6 +241,9 @@ export class IssuanceService {
             description: "Get your Frogs here!",
             inputPCDType: undefined,
             partialArgs: undefined,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd"
+            },
             permissions: [
               {
                 folder: "Frogs",
@@ -286,6 +292,9 @@ export class IssuanceService {
             description: "Emails verified by Zupass",
             inputPCDType: EmailPCDPackage.name,
             partialArgs: undefined,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd"
+            },
             permissions: [
               {
                 folder: "Email",
@@ -338,6 +347,9 @@ export class IssuanceService {
             description: "Your Zuzalu Tickets",
             inputPCDType: EdDSATicketPCD.name,
             partialArgs: undefined,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd"
+            },
             permissions: [
               {
                 folder: "Zuzalu '23",

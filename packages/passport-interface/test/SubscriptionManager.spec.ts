@@ -55,7 +55,10 @@ describe("Subscription Manager", async function () {
       name: "test feed",
       permissions: [],
       inputPCDType: undefined,
-      partialArgs: undefined
+      partialArgs: undefined,
+      credentialRequest: {
+        signatureType: "sempahore-signature-pcd"
+      }
     };
 
     const sub = await manager.subscribe(providerUrl, feed, undefined);
@@ -99,7 +102,10 @@ describe("Subscription Manager", async function () {
       name: "test feed",
       permissions: [],
       inputPCDType: undefined,
-      partialArgs: undefined
+      partialArgs: undefined,
+      credentialRequest: {
+        signatureType: "sempahore-signature-pcd"
+      }
     };
 
     await manager.subscribe(providerUrl, feed, undefined);

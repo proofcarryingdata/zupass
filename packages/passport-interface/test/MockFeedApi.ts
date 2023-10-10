@@ -43,7 +43,10 @@ export class MockFeedApi implements IFeedApi {
                   } as PCDPermission
                 ],
                 inputPCDType: undefined,
-                partialArgs: undefined
+                partialArgs: undefined,
+                credentialRequest: {
+                  signatureType: "sempahore-signature-pcd"
+                }
               },
 
               handleRequest: async (req: PollFeedRequest) => {
@@ -82,7 +85,10 @@ export class MockFeedApi implements IFeedApi {
                   } as PCDPermission
                 ],
                 inputPCDType: undefined,
-                partialArgs: undefined
+                partialArgs: undefined,
+                credentialRequest: {
+                  signatureType: "sempahore-signature-pcd"
+                }
               },
               handleRequest: async (req: PollFeedRequest) => {
                 if (date) {
@@ -116,7 +122,10 @@ export class MockFeedApi implements IFeedApi {
                 permissions: [],
                 inputPCDType: undefined,
                 partialArgs: undefined,
-                credentialType: "email-pcd"
+                credentialRequest: {
+                  pcdType: "email-pcd",
+                  signatureType: "sempahore-signature-pcd"
+                }
               },
 
               handleRequest: async (req: PollFeedRequest) => {

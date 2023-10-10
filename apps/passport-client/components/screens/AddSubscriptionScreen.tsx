@@ -227,7 +227,7 @@ function SubscribeSection({
   const credentialManager = useMemo(() => new CredentialManager(identity, pcds), [identity, pcds]);
 
   // Check that we can actually generate the credential that the feed wants
-  const missingCredentialPCD = !credentialManager.canGenerateCredential({ signatureType: "sempahore-signature-pcd", pcdType: info.credentialType });
+  const missingCredentialPCD = !credentialManager.canGenerateCredential({ signatureType: "sempahore-signature-pcd", pcdType: info.credentialRequest.pcdType });
 
   const onSubscribeClick = useCallback(() => {
     (async () => {
@@ -236,7 +236,7 @@ function SubscribeSection({
   }, [providerUrl, info, dispatch, providerName]);
 
   const credentialHumanReadableName =
-    info.credentialType === EmailPCDTypeName
+    info.credentialRequest.pcdType === EmailPCDTypeName
       ? "Verified Email"
       : "";
 
