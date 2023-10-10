@@ -1,5 +1,6 @@
 // Note: refactoring to @pcd/passport-interface in the future, especially if
 // cross-browser interaction starts to exist outside of passport-client
+import { BroadcastChannel } from "broadcast-channel";
 import { Action } from "./dispatch";
 
 const CHANNEL_NAME = "zupass_broadcast_channel";
