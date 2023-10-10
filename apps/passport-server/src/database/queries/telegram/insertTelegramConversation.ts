@@ -56,7 +56,7 @@ set telegram_chat_id = $2;`,
 export async function insertTelegramTopic(
   client: Pool,
   telegramChatId: number,
-  anonTopicId: number,
+  topicId: number,
   topicName: string,
   isAnon: boolean
 ): Promise<number> {
