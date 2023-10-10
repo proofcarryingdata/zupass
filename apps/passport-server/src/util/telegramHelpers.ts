@@ -356,11 +356,11 @@ export const chatsToJoin = async (
   );
   for (const chat of sortedChats) {
     if (chat.userIsChatMember) {
-      range
-        .text(`${chat.chat?.title} (Joined)`, (ctx) =>
-          ctx.reply(`You've already joined ${chat.chat?.title}!`)
-        )
-        .row();
+      const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
+        creates_join_request: true
+      });
+      range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+      range.row();
     } else {
       const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
       range.webApp(`${chat.chat?.title}`, proofUrl).row();
