@@ -1,7 +1,6 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
-import { EthereumGroupPCDPackage } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
@@ -45,26 +44,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
-  await EthereumGroupPCDPackage.init({
-    wasmFilePath: "/semaphore-artifacts/16.wasm",
-    zkeyFilePath: "/semaphore-artifacts/16.zkey",
-
-    // TODO: update these to point to pcd pass' static server
-    addrMembershipConfig: {
-      circuit:
-        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.circuit",
-      witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/addr_membership.wasm"
-    },
-
-    pubkeyMembershipConfig: {
-      circuit:
-        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.circuit",
-      witnessGenWasm:
-        "https://storage.googleapis.com/personae-proving-keys/membership/pubkey_membership.wasm"
-    }
-  });
-
   await RLNPCDPackage.init({
     wasmFilePath: SERVER_STATIC_URL + "rln-artifacts/16.wasm",
     zkeyFilePath: SERVER_STATIC_URL + "rln-artifacts/16.zkey"
@@ -88,7 +67,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     SemaphoreIdentityPCDPackage,
     SemaphoreSignaturePCDPackage,
     EthereumOwnershipPCDPackage,
-    EthereumGroupPCDPackage,
     RLNPCDPackage,
     HaLoNoncePCDPackage,
     RSAPCDPackage,

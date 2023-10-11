@@ -261,7 +261,7 @@ function AddEthGroupPCDButton() {
         zupassSignIn("eth-group-pcd");
       }}
     >
-      add a new Ethereum Group Membership to Zupass
+      add a new Ethereum Group Membership to Zupass [REMOVED FOR DEVCONNECT]
     </button>
   );
 }

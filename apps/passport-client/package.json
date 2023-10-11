@@ -16,7 +16,6 @@
     "@pcd/eddsa-ticket-pcd": "0.2.1",
     "@pcd/email-pcd": "0.2.1",
     "@pcd/emitter": "0.1.1",
-    "@pcd/ethereum-group-pcd": "0.1.1",
     "@pcd/ethereum-ownership-pcd": "0.7.1",
     "@pcd/halo-nonce-pcd": "0.3.1",
     "@pcd/passport-crypto": "0.7.1",
