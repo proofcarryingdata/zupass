@@ -822,7 +822,7 @@ export class TelegramService {
         new Date(t).getTime()
       );
       const maxDailyPostsPerTopic = parseInt(
-        process.env.MAX_DAILY_POSTS_PER_TOPIC_PER_USER ?? "3"
+        process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
       );
       const rlDuration = ONE_HOUR_MS * 24;
       const { rateLimitExceeded, newTimestamps } = checkSlidingWindowRateLimit(
