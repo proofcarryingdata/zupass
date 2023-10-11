@@ -21,6 +21,7 @@ function getMessageWatermark(message: string): bigint {
 }
 
 interface TopicData {
+  chatId: string;
   topicName: string;
   topicId: string;
   validEventIds: string[];
@@ -53,6 +54,7 @@ function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
 
 async function requestProof(
   message: string,
+  chatId: string,
   topicId: string,
   validEventIds: string[]
 ) {
@@ -86,7 +88,10 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: topicId,
+      value: BigInt(
+        "0x" +
+          sha256.sha256(JSON.stringify({ chatId, topicId })).substring(0, 16)
+      ).toString(),
       userProvided: false
     },
     validEventIds: {
@@ -148,7 +153,12 @@ export default function () {
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
     if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
-    await requestProof(message, topicData.topicId, topicData.validEventIds);
+    await requestProof(
+      message,
+      topicData.chatId,
+      topicData.topicId,
+      topicData.validEventIds
+    );
     setLoadingProofUrl(false);
   }, [message]);
 

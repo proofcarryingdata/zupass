@@ -811,7 +811,13 @@ export class TelegramService {
       this.context.dbPool,
       nullifierHash
     );
-    if (nullifierData) {
+    if (!nullifierData) {
+      await insertOrUpdateTelegramNullifier(
+        this.context.dbPool,
+        nullifierHash,
+        [new Date().toISOString()]
+      );
+    } else {
       const timestamps = nullifierData.message_timestamps.map((t) =>
         new Date(t).getTime()
       );
@@ -835,12 +841,6 @@ export class TelegramService {
           `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
         );
       }
-    } else {
-      await insertOrUpdateTelegramNullifier(
-        this.context.dbPool,
-        nullifierHash,
-        [new Date().toISOString()]
-      );
     }
 
     await this.sendToAnonymousChannel(
