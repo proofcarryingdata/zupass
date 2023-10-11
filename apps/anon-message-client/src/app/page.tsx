@@ -64,7 +64,14 @@ async function requestProof(
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      displayName: "Ticket",
+      description: "",
+      validatorParams: {
+        eventIds: validEventIds,
+        notFoundMessage: `We don't have a ticket for this event`
+      },
+      hideIcon: true
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -75,7 +82,8 @@ async function requestProof(
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: {},
-      userProvided: false
+      userProvided: false,
+      hideIcon: true
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
