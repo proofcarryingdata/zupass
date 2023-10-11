@@ -90,11 +90,13 @@ export class FeedSubscriptionManager {
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
+    await credentialManager.prepareCredentials(
+      this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
+    );
+
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
-        Promise.resolve(
-          await this.fetchSingleSubscription(subscription, credentialManager)
-        )
+        this.fetchSingleSubscription(subscription, credentialManager)
       );
     }
 

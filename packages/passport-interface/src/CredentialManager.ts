@@ -16,6 +16,7 @@ import { CredentialRequest } from "./SubscriptionManager";
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
   requestCredential(req: CredentialRequest): Promise<SerializedPCD>;
+  prepareCredentials(reqs: CredentialRequest[]): Promise<void>;
 }
 
 export type CredentialCache = Map<string, CacheEntry>;
@@ -62,6 +63,21 @@ export class CredentialManager implements CredentialManagerAPI {
     }
   }
 
+  /**
+   * Before doing a parallel fetching of subscriptions, it can be helpful to
+   * prepare the credentials to avoid race conditions.
+   */
+  public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
+    for (const req of reqs) {
+      if (!this.getCachedCredential(req.pcdType)) {
+        this.setCachedCredential(
+          req.pcdType,
+          await this.generateCredential(req)
+        );
+      }
+    }
+  }
+
   // Get a credential from the local cache, if it exists
   private getCachedCredential(type?: string): SerializedPCD | undefined {
     const cacheKey = type ?? "none";
@@ -101,6 +117,23 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   /**
+   * Returns a requested credential, either from the cache or by generating it.
+   */
+  public async requestCredential(
+    req: CredentialRequest
+  ): Promise<SerializedPCD> {
+    const cachedCredential = this.getCachedCredential(req.pcdType);
+    if (cachedCredential) {
+      return cachedCredential;
+    }
+
+    const credential = await this.generateCredential(req);
+    this.setCachedCredential(req.pcdType, credential);
+
+    return credential;
+  }
+
+  /**
    * Generates the requested credential, if possible.
    * Takes a {@link CredentialRequest} and produces a serialized PCD which
    * consists of a signature PCD (e.g. a semaphore signature PCD) which wraps
@@ -108,21 +141,10 @@ export class CredentialManager implements CredentialManagerAPI {
    * may contain a PCD if a) the feed requests one and b) CredentialManager
    * can find a matching PCD.
    */
-  public async requestCredential(
+  private async generateCredential(
     req: CredentialRequest
   ): Promise<SerializedPCD> {
-    const cachedCredential = await this.getCachedCredential(req.pcdType);
-    if (cachedCredential) {
-      return cachedCredential;
-    }
-
-    // This is currently the only supported PCD for credential embedding
     if (req.pcdType === "email-pcd") {
-      const cachedCredential = await this.getCachedCredential(req.pcdType);
-      if (cachedCredential) {
-        return cachedCredential;
-      }
-
       const pcds = this.pcds.getPCDsByType(req.pcdType);
       if (pcds.length === 0) {
         throw new Error(
@@ -133,17 +155,11 @@ export class CredentialManager implements CredentialManagerAPI {
       // works for now
       const pcd = pcds[0];
       const serializedPCD = await this.pcds.serialize(pcd);
-      const result = await this.semaphoreSignPayload(
+      return this.semaphoreSignPayload(
         createFeedCredentialPayload(serializedPCD)
       );
-      this.setCachedCredential(req.pcdType, result);
-      return result;
     } else if (req.pcdType === undefined) {
-      const result = await this.semaphoreSignPayload(
-        createFeedCredentialPayload()
-      );
-      this.setCachedCredential(req.pcdType, result);
-      return result;
+      return this.semaphoreSignPayload(createFeedCredentialPayload());
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
