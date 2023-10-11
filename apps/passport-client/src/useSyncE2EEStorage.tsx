@@ -153,7 +153,9 @@ export function useSyncE2EEStorage() {
   const { dispatch } = useContext(StateContext);
 
   const load = useCallback(() => {
-    dispatch({ type: "sync" });
+    setTimeout(() => {
+      dispatch({ type: "sync" });
+    }, 1);
   }, [dispatch]);
 
   useOnStateChange(() => {
