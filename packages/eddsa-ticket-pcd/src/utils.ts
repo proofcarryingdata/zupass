@@ -3,7 +3,7 @@ import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
- * One big int for each signed field in {@link ITicketData}
+ * A serialized ticket is a list of big integers, where each one is a signed field in {@link ITicketData}.
  */
 export type SerializedTicket = [
   bigint,
@@ -27,6 +27,10 @@ export function semaphoreIdToBigInt(v: string): bigint {
   return BigInt(v);
 }
 
+/**
+ * Converts the property values of the {@link ITicketData} object to
+ * a list of big integers ({@link SerializedTicket}).
+ */
 export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
   return [
     uuidToBigInt(data.ticketId),
@@ -60,9 +64,11 @@ export function getQRCodeColorOverride(
   pcd: EdDSATicketPCD
 ): string | undefined {
   const ticketData = getEdDSATicketData(pcd);
+
   if (!ticketData || ticketData.isConsumed || ticketData.isRevoked) {
     return INVALID_TICKET_QR_CODE_COLOR;
   }
-  // otherwise, don't override and use default
+
+  // Otherwise, don't override and use default.
   return undefined;
 }

@@ -14,8 +14,14 @@ import { v4 as uuid } from "uuid";
 import { EdDSATicketCardBody } from "./CardBody";
 import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
+/**
+ * The globally unique type name of the {@link EdDSATicketPCD}.
+ */
 export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
 
+/**
+ * Assigns each currently supported category a unique value.
+ */
 export enum TicketCategory {
   ZuConnect = 0,
   Devconnect = 1,
@@ -46,53 +52,87 @@ export enum TicketCategory {
  * when verifying tickets.
  */
 export interface ITicketData {
-  // the fields below are not signed and are used for display purposes
-
+  // The fields below are not signed and are used for display purposes.
   attendeeName: string;
   attendeeEmail: string;
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
 
-  // the fields below are signed using the server's private eddsa key
+  // The fields below are signed using the server's private eddsa key.
 
-  ticketId: string; // primary key uuid of the ticket's `devconnect_pretix_tickets` entry
-  eventId: string; // primary key uuid of the event's `pretix_events_config` entry
-  productId: string; // primary key uuid of the ticket's `devconnect_pretix_items_info` entry
+  ticketId: string; // Primary key uuid of the ticket's `devconnect_pretix_tickets` entry.
+  eventId: string; // Primary key uuid of the event's `pretix_events_config` entry.
+  productId: string; // Primary key uuid of the ticket's `devconnect_pretix_items_info` entry.
   timestampConsumed: number;
   timestampSigned: number;
-  attendeeSemaphoreId: string; // stringified big int
+  attendeeSemaphoreId: string;
   isConsumed: boolean;
   isRevoked: boolean;
   ticketCategory: TicketCategory;
 }
 
+/**
+ * Interface containing the arguments that 3rd parties use to
+ * initialize this PCD package.
+ */
 export interface EdDSATicketPCDInitArgs {
   makeEncodedVerifyLink?: (encodedPCD: string) => string;
 }
 
+// The variable used for the init arguments.
 export let initArgs: EdDSATicketPCDInitArgs;
+
+/**
+ * Initializes this {@link EdDSATicketPCDPackage}.
+ */
 async function init(args: EdDSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
+/**
+ * Defines the essential parameters required for creating an {@link EdDSATicketPCD}.
+ */
 export type EdDSATicketPCDArgs = {
-  // The EdDSA private key to sign the message with, as a hex string
+  /**
+   * The EdDSA private key is a 32-byte value used to sign the message.
+   * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
+   */
   privateKey: StringArgument;
-  // ticket information that is encoded into this pcd
+
+  /**
+   * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
+   */
   ticket: ObjectArgument<ITicketData>;
-  // A unique string identifying the PCD
+
+  /**
+   * A string that uniquely identifies an {@link EdDSATicketPCD}. If this argument is not specified a random
+   * id will be generated.
+   */
   id: StringArgument;
 };
 
+/**
+ * Defines the EdDSA Ticket PCD claim. The claim contains a ticket signed
+ * with the private key corresponding to the given public key.
+ */
 export interface EdDSATicketPCDClaim {
   ticket: ITicketData;
 }
 
+/**
+ * Defines the EdDSA Ticket PCD proof. The proof is a EdDSA PCD whose message
+ * is the encoded ticket.
+ */
 export interface EdDSATicketPCDProof {
-  eddsaPCD: EdDSAPCD; // eddsa signature of {@link EdDSATicketPCDClaim.ticket}
+  eddsaPCD: EdDSAPCD;
 }
 
+/**
+ * The EdDSA Ticket PCD enables the verification that a specific ticket ({@link EdDSATicketPCDClaim})
+ * has been signed with an EdDSA private key. The {@link EdDSATicketPCDProof} contains a EdDSA
+ * PCD and serves as the signature.
+ */
 export class EdDSATicketPCD
   implements PCD<EdDSATicketPCDClaim, EdDSATicketPCDProof>
 {
@@ -112,6 +152,10 @@ export class EdDSATicketPCD
   }
 }
 
+/**
+ * Creates a new {@link EdDSATicketPCD} by generating an {@link EdDSATicketPCDProof}
+ * and deriving an {@link EdDSATicketPCDClaim} from the given {@link EdDSATicketPCDArgs}.
+ */
 export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
   if (!initArgs) {
     throw new Error("package not initialized");
@@ -127,6 +171,7 @@ export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
 
   const serializedTicket = ticketDataToBigInts(args.ticket.value);
 
+  // Creates an EdDSA PCD where the message is a serialized ticket,
   const eddsaPCD = await EdDSAPCDPackage.prove({
     message: {
       value: serializedTicket.map((b) => b.toString()),
@@ -147,6 +192,10 @@ export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
   return new EdDSATicketPCD(id, { ticket: args.ticket.value }, { eddsaPCD });
 }
 
+/**
+ * Verifies an EdDSA Ticket PCD by checking that its {@link EdDSATicketPCDClaim} corresponds to
+ * its {@link EdDSATicketPCDProof}. If they match, the function returns true, otherwise false.
+ */
 export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   if (!initArgs) {
     throw new Error("package not initialized");
@@ -161,6 +210,11 @@ export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   return EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
 }
 
+/**
+ * Serializes an {@link EdDSATicketPCD}.
+ * @param pcd The EdDSA Ticket PCD to be serialized.
+ * @returns The serialized version of the EdDSA Ticket PCD.
+ */
 export async function serialize(
   pcd: EdDSATicketPCD
 ): Promise<SerializedPCD<EdDSATicketPCD>> {
@@ -182,6 +236,11 @@ export async function serialize(
   } as SerializedPCD<EdDSATicketPCD>;
 }
 
+/**
+ * Deserializes a serialized {@link EdDSATicketPCD}.
+ * @param serialized The serialized PCD to deserialize.
+ * @returns The deserialized version of the EdDSA Ticket PCD.
+ */
 export async function deserialize(serialized: string): Promise<EdDSATicketPCD> {
   if (!initArgs) {
     throw new Error("package not initialized");
@@ -198,6 +257,12 @@ export async function deserialize(serialized: string): Promise<EdDSATicketPCD> {
   );
 }
 
+/**
+ * Provides the information about the {@link EdDSATicketPCD} that will be displayed
+ * to users on Zupass.
+ * @param pcd The EdDSA Ticket PCD instance.
+ * @returns The information to be displayed, specifically `header` and `displayName`.
+ */
 export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
   if (!initArgs) {
     throw new Error("package not initialized");
@@ -227,13 +292,16 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
   };
 }
 
+/**
+ * Returns true if a pcd is an EdDSA Ticket PCD, or false otherwise.
+ */
 export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
   return pcd.type === EdDSAPCDTypeName;
 }
 
 /**
- * PCD-conforming wrapper to sign messages using an EdDSA keypair,
- * representing a Devconnect ticket.
+ * The PCD package of the EdDSA Ticket PCD. It exports an object containing
+ * the code necessary to operate on this PCD data.
  */
 export const EdDSATicketPCDPackage: PCDPackage<
   EdDSATicketPCDClaim,

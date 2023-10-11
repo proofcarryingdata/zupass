@@ -65,9 +65,11 @@ describe("EdDSA ticket should work", function () {
 
   it("should be possible to serialize and deserialize the pcd", async function () {
     const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    console.log(serialized);
     const deserialized = await EdDSATicketPCDPackage.deserialize(
       serialized.pcd
     );
+    console.log(deserialized);
     expect(deserialized).to.deep.eq(ticket);
   });
 });
