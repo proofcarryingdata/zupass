@@ -157,17 +157,21 @@ img {
   user-drag: none;
 }
 
-/* This replicates the functionality in RippleLoader.tsx 
- * We need to do this because the loader animation needs to render
- * before the JS bundle loads, so we can't use the React component.
+/*
+ * Source: https://loading.io/css/
+ * Usage:
+ * <div className="loaderWrapper">
+ *  <div className="loader">
+ *     <div></div>
+ *     <div></div>
+ *  </div>
+ * <div/>
  */
 
 .loaderWrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  width: 100vw;
 }
 
 .loader {
