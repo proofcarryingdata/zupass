@@ -9,10 +9,10 @@ export const AppHeader = React.memo(AppHeaderImpl);
 
 function AppHeaderImpl({
   children,
-  isProveScreen = false
+  hideSubscriptionsButton = false
 }: {
   children?: React.ReactNode;
-  isProveScreen?: boolean;
+  hideSubscriptionsButton?: boolean;
 }) {
   const dispatch = useDispatch();
 
@@ -44,7 +44,7 @@ function AppHeaderImpl({
         <img draggable="false" src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
       {children}
-      {!isProveScreen && (
+      {!hideSubscriptionsButton && (
         <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
           {subscriptions.value.getAllErrors().size > 0 && (
             <ErrorDotContainer>
