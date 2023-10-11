@@ -69,7 +69,7 @@ async function requestProof(
       description: "",
       validatorParams: {
         eventIds: validEventIds,
-        notFoundMessage: `We don't have a ticket for this event`
+        notFoundMessage: `You don't have a ticket for this event`
       },
       hideIcon: true
     },
