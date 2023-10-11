@@ -13,7 +13,8 @@ import {
   PCDCollection,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission
+  ReplaceInFolderPermission,
+  isFolderAncestor
 } from "../src";
 
 async function newPCD(id?: string) {
@@ -342,6 +343,105 @@ describe("Permissions", async function () {
       )
     ).to.be.true;
 
+    expect(collection.getSize()).to.eq(0);
+  });
+
+  it("recursive deleting should succeed with right permission", async function () {
+    const collection = new PCDCollection(packages);
+
+    const subfolderPCD = await newPCD();
+    const serializedSubfolderPCD = await RSAPCDPackage.serialize(subfolderPCD);
+
+    // Set up a folder structure with a parent and a subfolder
+
+    const action: AppendToFolderAction = {
+      type: PCDActionType.AppendToFolder,
+      folder: "test",
+      pcds: [serializedPcd]
+    };
+
+    const subfolderAppendAction: AppendToFolderAction = {
+      type: PCDActionType.AppendToFolder,
+      folder: "test/subfolder",
+      pcds: [serializedSubfolderPCD]
+    };
+
+    const permission: AppendToFolderPermission = {
+      type: PCDPermissionType.AppendToFolder,
+      folder: "test"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(action, permission)
+    ).to.be.true;
+
+    expect(
+      await collection.tryExecutingActionWithPermission(
+        subfolderAppendAction,
+        permission
+      )
+    ).to.be.true;
+
+    // Just to be sure, the subfolder really is a subfolder of the parent
+    expect(
+      isFolderAncestor(
+        collection.getFolderOfPCD(subfolderPCD.id) as string,
+        collection.getFolderOfPCD(pcd.id) as string
+      )
+    ).to.be.true;
+
+    expect(collection.getSize()).to.eq(2);
+
+    // First let's see what happens *without* deleting recursively
+    const deleteAction: DeleteFolderAction = {
+      type: PCDActionType.DeleteFolder,
+      folder: "test",
+      // Don't delete recursively
+      recursive: false
+    };
+
+    const deletePermission: DeleteFolderPermission = {
+      type: PCDPermissionType.DeleteFolder,
+      folder: "test"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(
+        deleteAction,
+        deletePermission
+      )
+    ).to.be.true;
+
+    // Only the PCD in the parent folder gets removed
+    expect(collection.getSize()).to.eq(1);
+    // Deleting the test folder should not have deleted the subfolder
+    // Check to confirm that the remaining PCD is still in the subfolder
+    expect(collection.getFolderOfPCD(collection.getAll()[0].id)).to.eq(
+      "test/subfolder"
+    );
+
+    // Add the parent folder PCD back
+    expect(
+      await collection.tryExecutingActionWithPermission(action, permission)
+    ).to.be.true;
+
+    expect(collection.getSize()).to.eq(2);
+
+    const recursiveDeleteAction: DeleteFolderAction = {
+      type: PCDActionType.DeleteFolder,
+      folder: "test",
+      // Delete recursively
+      recursive: true
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(
+        recursiveDeleteAction,
+        deletePermission
+      )
+    ).to.be.true;
+
+    // Now all PCDs are gone
     expect(collection.getSize()).to.eq(0);
   });
 
