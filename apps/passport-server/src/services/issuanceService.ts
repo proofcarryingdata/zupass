@@ -164,22 +164,20 @@ export class IssuanceService {
 
               actions.push({
                 type: PCDActionType.DeleteFolder,
-                folder: "SBC SRW"
+                folder: "SBC SRW",
+                recursive: false
               });
 
               actions.push({
                 type: PCDActionType.DeleteFolder,
-                folder: "Devconnect"
+                folder: "Devconnect",
+                recursive: true
               });
 
               actions.push(
                 ...(
                   await Promise.all(
                     devconnectTickets.map(async ([eventName, tickets]) => [
-                      {
-                        type: PCDActionType.DeleteFolder,
-                        folder: joinPath("Devconnect", eventName)
-                      },
                       {
                         type: PCDActionType.ReplaceInFolder,
                         folder: joinPath("Devconnect", eventName),
@@ -277,7 +275,8 @@ export class IssuanceService {
               // Clear out the folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
-                folder: "Email"
+                folder: "Email",
+                recursive: false
               } as DeleteFolderAction);
 
               actions.push({
@@ -314,7 +313,8 @@ export class IssuanceService {
               // Clear out the folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
-                folder: "Zuzalu '23"
+                folder: "Zuzalu '23",
+                recursive: false
               } as DeleteFolderAction);
 
               actions.push({

@@ -1,6 +1,7 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import _ from "lodash";
 import {
   AppendToFolderAction,
   DeleteFolderAction,
@@ -204,7 +205,7 @@ export class PCDCollection {
         return false;
       }
 
-      this.deleteFolder(action.folder);
+      this.deleteFolder(action.folder, action.recursive);
 
       return true;
     }
@@ -279,8 +280,23 @@ export class PCDCollection {
     pcds.forEach((pcd) => this.setPCDFolder(pcd.id, folder));
   }
 
-  private deleteFolder(folder: string): void {
-    this.removeAllPCDsInFolder(folder);
+  /**
+   * Removes all PCDs within a given folder, and optionally within all
+   * subfolders.
+   */
+  private deleteFolder(folder: string, recursive: boolean): void {
+    const folders = [folder];
+
+    if (recursive) {
+      const subFolders = Object.values(this.folders).filter((folderPath) => {
+        return isFolderAncestor(folderPath, folder);
+      });
+      folders.push(..._.uniq(subFolders));
+    }
+
+    for (const folderPath of folders) {
+      this.removeAllPCDsInFolder(folderPath);
+    }
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(

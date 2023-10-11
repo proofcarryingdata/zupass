@@ -326,7 +326,8 @@ describe("Permissions", async function () {
 
     const deleteAction: DeleteFolderAction = {
       type: PCDActionType.DeleteFolder,
-      folder: "test"
+      folder: "test",
+      recursive: false
     };
 
     const deletePermission: DeleteFolderPermission = {
@@ -366,7 +367,8 @@ describe("Permissions", async function () {
 
     const deleteAction: DeleteFolderAction = {
       type: PCDActionType.DeleteFolder,
-      folder: "test"
+      folder: "test",
+      recursive: false
     };
 
     const deletePermission: DeleteFolderPermission = {

@@ -37,6 +37,7 @@ export function isAppendToFolderAction(
 export interface DeleteFolderAction {
   type: PCDActionType.DeleteFolder;
   folder: string;
+  recursive: boolean;
 }
 
 export function isDeleteFolderAction(
