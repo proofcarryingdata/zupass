@@ -23,7 +23,7 @@
     "@pcd/passport-ui": "0.7.1",
     "@pcd/pcd-types": "0.7.1",
     "@pcd/util": "0.1.1",
-    "@semaphore-protocol/identity": "^3.11.0",
+    "@semaphore-protocol/identity": "^3.12.0",
     "json-bigint": "^1.0.0",
     "react": "^18.2.0",
     "styled-components": "^5.3.9",
