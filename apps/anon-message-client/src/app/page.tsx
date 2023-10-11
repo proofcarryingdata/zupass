@@ -73,6 +73,7 @@ async function requestProof(
       userProvided: true
     },
     fieldsToReveal: {
+      description: "...without revealing any of the ticket information.",
       argumentType: ArgumentTypeName.ToggleList,
       value: {},
       userProvided: false
@@ -105,9 +106,9 @@ async function requestProof(
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK Ticket Proof",
+    title: "",
     description:
-      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+      "Zucat would like to send an anonymous message for you and requested a zero-knowledge proof."
   });
 
   window.location.href = proofUrl;
