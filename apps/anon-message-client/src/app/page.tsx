@@ -114,7 +114,7 @@ async function requestProof(
     genericProveScreen: true,
     title: "ZK TG Post",
     description:
-      "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message"
+      "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message."
   });
 
   window.location.href = proofUrl;
