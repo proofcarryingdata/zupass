@@ -1,6 +1,6 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { sleep } from "@pcd/util";
+import { ONE_HOUR_MS, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -10,7 +10,10 @@ import { Chat, ChatFromGetChat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
-import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
+import {
+  fetchAnonTopicNullifier,
+  fetchTelegramVerificationStatus
+} from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
@@ -19,7 +22,7 @@ import {
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
-  insertTelegramNullifier,
+  insertOrUpdateTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -40,6 +43,7 @@ import {
   isGroupWithTopics,
   senderIsAdmin
 } from "../util/telegramHelpers";
+import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const ALLOWED_TICKET_MANAGERS = [
@@ -803,21 +807,39 @@ export class TelegramService {
     }
 
     if (!nullifierHash) throw new Error(`Nullifier hash not found`);
-
-    const canPost = await insertTelegramNullifier(
+    const nullifierData = await fetchAnonTopicNullifier(
       this.context.dbPool,
-      nullifierHash,
-      chat.id,
-      parseInt(topicId),
-      parseInt(process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3")
+      nullifierHash
     );
-
-    // TODO: better ux
-    if (!canPost) {
-      throw new Error(
-        `You have exceeded the daily limit of ${
-          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? 3
-        } messages for this topic.`
+    if (nullifierData) {
+      const timestamps = nullifierData.message_timestamps.map((t) =>
+        new Date(t).getTime()
+      );
+      const maxDailyPostsPerTopic = parseInt(
+        process.env.MAX_DAILY_POSTS_PER_TOPIC_PER_USER ?? "3"
+      );
+      const rlDuration = ONE_HOUR_MS * 24;
+      const { rateLimitExceeded, newTimestamps } = checkSlidingWindowRateLimit(
+        timestamps,
+        maxDailyPostsPerTopic,
+        rlDuration
+      );
+      if (!rateLimitExceeded) {
+        await insertOrUpdateTelegramNullifier(
+          this.context.dbPool,
+          nullifierHash,
+          newTimestamps
+        );
+      } else {
+        throw new Error(
+          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+        );
+      }
+    } else {
+      await insertOrUpdateTelegramNullifier(
+        this.context.dbPool,
+        nullifierHash,
+        [new Date().toISOString()]
       );
     }
 

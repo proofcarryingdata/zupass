@@ -1,5 +1,5 @@
 import { Pool } from "postgres-pool";
-import { TelegramConversation } from "../../models";
+import { AnonNullifierInfo, TelegramConversation } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -40,4 +40,19 @@ export async function fetchTelegramVerificationStatus(
   );
 
   return result.rows[0]?.verified ?? false;
+}
+
+export async function fetchAnonTopicNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonNullifierInfo | undefined> {
+  const result = await sqlQuery(
+    client,
+    `\
+      select * from telegram_chat_anon_nullifiers 
+      where nullifier = $1
+    `,
+    [nullifierHash]
+  );
+  return result.rows[0];
 }

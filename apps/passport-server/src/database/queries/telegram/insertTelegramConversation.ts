@@ -72,54 +72,17 @@ set topic_name = $3, is_anon_topic = $4;`,
   return result.rowCount;
 }
 
-export async function insertTelegramNullifier(
+export async function insertOrUpdateTelegramNullifier(
   client: Pool,
   nullifierHash: string,
-  telegramChatId: number,
-  topicId: number,
-  maxMessagesPerDay: number
-): Promise<boolean> {
-  // Get the current usage count for the nullifier.
-  const nullifierTimesUsed = await sqlQuery(
-    client,
-    `\
-    select nullifier_times_used
-    from telegram_chat_anon_nullifiers
-    where nullifier = $1;`,
-    [nullifierHash]
-  );
-
-  const timesUsed = nullifierTimesUsed.rows[0]?.nullifier_times_used;
-
-  const canInsertOrUpdate =
-    timesUsed == undefined || timesUsed < maxMessagesPerDay;
-
-  if (canInsertOrUpdate) {
-    await doUpdateNullifier(client, nullifierHash, telegramChatId, topicId);
-  }
-
-  return canInsertOrUpdate;
-}
-
-async function doUpdateNullifier(
-  client: Pool,
-  nullifierHash: string,
-  telegramChatId: number,
-  topicId: number
+  messageTimestamps: string[]
 ): Promise<void> {
   const query = `
-    insert into telegram_chat_anon_nullifiers (nullifier, telegram_chat_id, topic_id, nullifier_times_used, last_used_timestamp)
-    values ($1, $2, $3, 1, now())
-    on conflict (nullifier) 
-    do update set
-        nullifier_times_used = 
-          case 
-              when excluded.last_used_timestamp <= now() - interval '24 hours' then 0 
-              else telegram_chat_anon_nullifiers.nullifier_times_used + 1
-          end,
-        last_used_timestamp = now()
-    returning nullifier_times_used;
+    insert into telegram_chat_anon_nullifiers (nullifier, message_timestamps)
+    values ($1, $2)
+    on conflict (nullifier) do update
+      set message_timestamps = $2
   `;
 
-  await sqlQuery(client, query, [nullifierHash, telegramChatId, topicId]);
+  await sqlQuery(client, query, [nullifierHash, messageTimestamps]);
 }

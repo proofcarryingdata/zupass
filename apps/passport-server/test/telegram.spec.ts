@@ -22,7 +22,6 @@ import {
 import {
   insertTelegramChat,
   insertTelegramEvent,
-  insertTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
@@ -296,41 +295,4 @@ describe("telegram bot functionality", function () {
     expect(insertedAnonTopic_1[1]?.topic_id).to.eq(anonChannelID_1.toString());
     expect(insertedAnonTopic_1[1]?.topic_name).to.eq("test1");
   });
-
-  step(
-    "should prevent inserting a nullifier more than 3 times",
-    async function () {
-      const nullifierHash = "0x1234";
-      const maxMessagesPerDay = 3;
-      await insertTelegramNullifier(
-        db,
-        nullifierHash,
-        dummyChatId,
-        anonChannelID,
-        maxMessagesPerDay
-      );
-      await insertTelegramNullifier(
-        db,
-        nullifierHash,
-        dummyChatId,
-        anonChannelID,
-        maxMessagesPerDay
-      );
-      await insertTelegramNullifier(
-        db,
-        nullifierHash,
-        dummyChatId,
-        anonChannelID,
-        maxMessagesPerDay
-      );
-      const result = await insertTelegramNullifier(
-        db,
-        nullifierHash,
-        dummyChatId,
-        anonChannelID,
-        maxMessagesPerDay
-      );
-      expect(result).to.eq(false);
-    }
-  );
 });

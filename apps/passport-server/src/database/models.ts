@@ -202,3 +202,8 @@ export interface KnownTicketTypeWithKey extends KnownTicketType {
   known_public_key_type: KnownPublicKeyType;
   public_key: string;
 }
+
+export interface AnonNullifierInfo {
+  nullifier: string;
+  message_timestamps: string[];
+}
