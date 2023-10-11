@@ -1,6 +1,7 @@
 import { ReactNode, useCallback } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { useAppError, useDispatch } from "../../src/appHooks";
+import { RippleLoader } from "../core/RippleLoader";
 import { ErrorPopup } from "../modals/ErrorPopup";
 
 // Wrapper for all screens.
@@ -25,7 +26,7 @@ export function AppContainer({
       <GlobalBackground color={col} />
       <Background>
         <Container>
-          {children}
+          {children ?? <RippleLoader />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </Container>
       </Background>
