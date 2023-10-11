@@ -114,6 +114,8 @@ export function AddSubscriptionScreen() {
         <div>Enter a URL to a feed provider:</div>
         <Spacer h={8} />
         <BigInput
+          autoCorrect="off"
+          autoCapitalize="off"
           disabled={fetching}
           value={providerUrl}
           onChange={(e) => {
