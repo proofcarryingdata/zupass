@@ -1,18 +1,18 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  applyActions,
   CredentialManager,
   Feed,
   FeedSubscriptionManager,
-  SyncedEncryptedStorage,
-  User,
-  applyActions,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  requestUser
+  requestUser,
+  SyncedEncryptedStorage,
+  User
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
@@ -40,8 +40,8 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { hasSetupPassword } from "./user";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -460,6 +460,10 @@ async function resetPassport(state: AppState, update: ZuUpdate) {
       modalType: "none"
     }
   });
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 1);
 }
 
 async function addPCDs(
