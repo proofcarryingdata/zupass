@@ -459,8 +459,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
         displayName: "",
-        description:
-          "...with the following information. The rest will remain private to you."
+        description: "The following information will be revealed"
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,

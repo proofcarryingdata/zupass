@@ -246,9 +246,9 @@ const generateProofUrl = (
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "",
+    title: "ZK TG Auth",
     description:
-      "Zucat would like to invite you to a Telegram group and requested a zero-knowledge proof."
+      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
   });
   return proofUrl;
 };
