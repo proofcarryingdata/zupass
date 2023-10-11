@@ -123,6 +123,7 @@ export function CreatePasswordScreen() {
           your data. Save your password somewhere you'll be able to find later.
         </TextCenter>
         <Spacer h={24} />
+        {/* TODO: Add back disabled BigInput */}
 
         <CenterColumn>
           <NewPasswordForm

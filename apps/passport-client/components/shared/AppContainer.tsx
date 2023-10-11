@@ -26,7 +26,7 @@ export function AppContainer({
       <GlobalBackground color={col} />
       <Background>
         <Container>
-          {children ?? <ScreenLoader />}
+          {children ?? <ScreenLoader text="Zupass" />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </Container>
       </Background>
