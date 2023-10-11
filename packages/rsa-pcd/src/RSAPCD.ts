@@ -13,11 +13,11 @@ import { RSACardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-pcd";
 
-export interface RSAPCDArgs {
+export type RSAPCDArgs = {
   privateKey: StringArgument;
   signedMessage: StringArgument;
   id: StringArgument;
-}
+};
 
 export interface RSAPCDClaim {
   /**

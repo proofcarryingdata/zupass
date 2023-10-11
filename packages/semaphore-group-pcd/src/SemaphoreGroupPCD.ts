@@ -42,12 +42,12 @@ export interface SempahoreGroupPCDInitArgs {
   wasmFilePath: string;
 }
 
-export interface SemaphoreGroupPCDArgs {
+export type SemaphoreGroupPCDArgs = {
   group: ObjectArgument<SerializedSemaphoreGroup>;
   identity: PCDArgument<SemaphoreIdentityPCD>;
   externalNullifier: BigIntArgument;
   signal: BigIntArgument;
-}
+};
 
 export interface SemaphoreGroupPCDClaim {
   /**

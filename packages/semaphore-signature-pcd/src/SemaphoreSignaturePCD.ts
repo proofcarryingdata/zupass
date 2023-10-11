@@ -49,10 +49,10 @@ let initArgs: SemaphoreSignaturePCDInitArgs | undefined = undefined;
 // We hardcode the externalNullifer to also be your identityCommitment
 // so that your nullifier for specific groups is not revealed when
 // a SemaphoreSignaturePCD is requested from a consumer application.
-export interface SemaphoreSignaturePCDArgs {
+export type SemaphoreSignaturePCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   signedMessage: StringArgument;
-}
+};
 
 export interface SemaphoreSignaturePCDClaim {
   /**

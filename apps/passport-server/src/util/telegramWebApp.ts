@@ -4,9 +4,15 @@ export const closeWebviewHtml = `
     <head>
       <title>Sample HTML Page</title>
       <script src="https://telegram.org/js/telegram-web-app.js"></script>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #2a3231;
+        }
+      </style>
     </head>
     <body>
-      <h1>Hello, World!</h1>
       <script>
         // Call the function when the page loads
         window.onload = Telegram.WebApp.close();

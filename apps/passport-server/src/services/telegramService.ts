@@ -275,7 +275,7 @@ export class TelegramService {
       const messageThreadId = ctx?.message?.message_thread_id;
       await ctx.reply(
         `<b>Help</b>
-    
+
         <b>Admins</b>
         <b>/manage</b> - Gate / Ungate this group with a ticketed event
         <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.

@@ -35,11 +35,11 @@ export interface EthereumOwnershipPCDInitArgs {
   wasmFilePath: string;
 }
 
-export interface EthereumOwnershipPCDArgs {
+export type EthereumOwnershipPCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   ethereumAddress: StringArgument;
   ethereumSignatureOfCommitment: StringArgument;
-}
+};
 
 export interface EthereumOwnershipPCDClaim {
   /**
