@@ -20,7 +20,8 @@ import {
   usePCDCollection,
   useQuery,
   useSelf,
-  useSubscriptions
+  useSubscriptions,
+  useUserForcedToLogout
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
 import {
@@ -55,17 +56,20 @@ export function AddSubscriptionScreen() {
   const { value: subs } = useSubscriptions();
   const self = useSelf();
   const dispatch = useDispatch();
+  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(url ?? "");
       setPendingAddSubscriptionRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [self, dispatch, url]);
+  }, [self, dispatch, url, userForcedToLogout]);
 
   const onFetchFeedsClick = useCallback(() => {
     if (fetching) {
@@ -176,7 +180,6 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
-
   return (
     <InfoRowContainer>
       <FeedName>{info.name}</FeedName>
@@ -226,7 +229,8 @@ function SubscribeSection({
 
   const credentialManager = useMemo(
     () => new CredentialManager(identity, pcds, credentialCache),
-    [credentialCache, identity, pcds]);
+    [credentialCache, identity, pcds]
+  );
 
   // Check that we can actually generate the credential that the feed wants
   const missingCredentialPCD = !credentialManager.canGenerateCredential({
@@ -236,14 +240,17 @@ function SubscribeSection({
 
   const onSubscribeClick = useCallback(() => {
     (async () => {
-      dispatch({ type: "add-subscription", providerUrl, providerName, feed: info });
+      dispatch({
+        type: "add-subscription",
+        providerUrl,
+        providerName,
+        feed: info
+      });
     })();
   }, [providerUrl, info, dispatch, providerName]);
 
   const credentialHumanReadableName =
-    info.credentialRequest.pcdType === EmailPCDTypeName
-      ? "Verified Email"
-      : "";
+    info.credentialRequest.pcdType === EmailPCDTypeName ? "Verified Email" : "";
 
   // This UI should probably resemble the proving screen much more, giving
   // the user more information about what information will be disclosed in
@@ -268,7 +275,11 @@ function SubscribeSection({
       <div>This feed requires the following permissions:</div>
       <PermissionsView permissions={info.permissions} />
       <Spacer h={16} />
-      <Button disabled={missingCredentialPCD} onClick={onSubscribeClick} size="small">
+      <Button
+        disabled={missingCredentialPCD}
+        onClick={onSubscribeClick}
+        size="small"
+      >
         Subscribe
       </Button>
     </>

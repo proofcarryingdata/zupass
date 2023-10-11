@@ -158,9 +158,9 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport(state);
+      return resetPassport(state, update);
     case "load-from-sync":
-      return loadFromSync(action.encryptionKey, action.storage, state, update);
+      return loadFromSync(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -445,7 +445,7 @@ function clearError(state: AppState, update: ZuUpdate) {
   update({ error: undefined });
 }
 
-async function resetPassport(state: AppState) {
+async function resetPassport(state: AppState, update: ZuUpdate) {
   await requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
@@ -453,9 +453,13 @@ async function resetPassport(state: AppState) {
   });
   // Clear saved state.
   window.localStorage.clear();
-  // Reload to clear in-memory state.
-  window.location.hash = "#/";
-  window.location.reload();
+  // Clear in-memory state
+  update({
+    self: undefined,
+    modal: {
+      modalType: "none"
+    }
+  });
 }
 
 async function addPCDs(
@@ -486,7 +490,6 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 async function loadFromSync(
   encryptionKey: string,
   storage: SyncedEncryptedStorage,
-  currentState: AppState,
   update: ZuUpdate
 ) {
   let pcds: PCDCollection;
