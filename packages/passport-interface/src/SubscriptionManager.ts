@@ -96,9 +96,7 @@ export class FeedSubscriptionManager {
 
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
-        Promise.resolve(
-          await this.fetchSingleSubscription(subscription, credentialManager)
-        )
+        this.fetchSingleSubscription(subscription, credentialManager)
       );
     }
 
