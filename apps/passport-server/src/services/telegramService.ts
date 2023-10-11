@@ -809,7 +809,7 @@ export class TelegramService {
       nullifierHash,
       chat.id,
       parseInt(topicId),
-      3 // TODO: don't hardcode this
+      parseInt(process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3")
     );
 
     // TODO: better ux
