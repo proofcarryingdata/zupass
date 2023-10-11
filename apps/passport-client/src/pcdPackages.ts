@@ -12,7 +12,6 @@ import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { WebAuthnPCDPackage } from "@pcd/webauthn-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { appConfig } from "./appConfig";
 import { makeEncodedVerifyLink } from "./qr";
@@ -91,7 +90,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EthereumOwnershipPCDPackage,
     EthereumGroupPCDPackage,
     RLNPCDPackage,
-    WebAuthnPCDPackage,
     HaLoNoncePCDPackage,
     RSAPCDPackage,
     RSATicketPCDPackage,

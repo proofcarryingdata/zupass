@@ -82,7 +82,7 @@ export default function Page() {
         <br />
         <br />
         <button onClick={addWebAuthnPCD}>
-          add a new webauthn credential to Zupass
+          add a new webauthn credential to Zupass [REMOVED FOR DEVCONNECT]
         </button>
         <br />
         <br />
