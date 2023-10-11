@@ -1,3 +1,4 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
@@ -199,8 +200,28 @@ export interface CheckTicketRequest {
 export type CheckTicketReponseValue = undefined;
 
 /**
- * However, many problems can come up in {@link CheckTicketRequest}. This type
- * enumerates all the possible problems.
+ * Ask the server to check whether this ticket is still eligible to be checked
+ * in, after looking it up by ticket ID.
+ */
+export interface CheckTicketByIdRequest {
+  ticketId: string;
+}
+
+/**
+ * Response to a {@link CheckTicketByIdRequest} is a subset of {@link ITicketData}
+ * required for DevconnectCheckinByIdScreen.tsx
+ */
+export type CheckTicketByIdResponseValue = {
+  attendeeName: string;
+  attendeeEmail: string;
+  eventName: string;
+  ticketName: string;
+};
+
+/**
+ * However, many problems can come up in {@link CheckTicketRequest}
+ * and {@link CheckTicketByIdRequest}. This type enumerates all the possible
+ * problems.
  */
 export type TicketError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
@@ -244,6 +265,71 @@ export type CheckTicketInResponseValue = undefined;
  * A {@link CheckTicketInRequest} can fail for a number of reasons.
  */
 export type CheckTicketInError = TicketError;
+
+/**
+ * A particular 'superuser' ticket-holder can request to check in
+ * another ticket that belongs to the same event, by referencing the ID
+ * of the ticket.
+ */
+export interface CheckTicketInByIdRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine whether the checker has the required permissions
+   * to check this ticket in.
+   */
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * The ticket ID to attempt to check in.
+   */
+  ticketId: string;
+}
+
+/**
+ * On the happy path, {@link CheckTicketInByIdRequest} has nothing to say and
+ * just succeeds.
+ */
+export type CheckTicketInByIdResponseValue = undefined;
+
+/**
+ * A {@link CheckTicketInByIdRequest} can fail for a number of reasons.
+ */
+export type CheckTicketInByIdError = TicketError;
+
+/**
+ * When verifying scanned PCDs, we want to check with the server, which
+ * knows about public keys when the client does not.
+ */
+export interface VerifyTicketRequest {
+  /**
+   * A PCD to verify. JSON-encoded {@link SerializedPCD}.
+   */
+  pcd: string;
+}
+
+/**
+ * Supported ticket groups for known tickets. This is based on pattern-matching
+ * of event ID, product ID, and signing key.
+ */
+export const enum KnownTicketGroup {
+  Devconnect23 = "Devconnect23",
+  Zuzalu23 = "Zuzalu23",
+  Zuconnect23 = "Zuconnect23"
+}
+
+/**
+ * Result of verification, and name of the public key if recognized.
+ */
+export type VerifyTicketResponseValue =
+  | {
+      verified: true;
+      publicKeyName: string;
+      group: KnownTicketGroup.Zuconnect23 | KnownTicketGroup.Zuzalu23;
+    }
+  | {
+      verified: false;
+      message?: string;
+    };
 
 /**
  * Ask the Zupass server, or a 3rd party server to return the list of feeds
@@ -415,6 +501,58 @@ export type UserResponseValue = ZupassUserJson;
  * (id, rootHash) tuple.
  */
 export type SemaphoreValidRootResponseValue = { valid: boolean };
+
+/**
+ * For known tickets, this is the type of the public key.
+ * Possibly this information is redundant, but it seems useful to be
+ * explicit about the type of key used.
+ */
+export const enum KnownPublicKeyType {
+  EdDSA = "eddsa",
+  RSA = "rsa"
+}
+
+/**
+ * Known ticket types, describing the attributes of a ticket that
+ * belongs to a group.
+ */
+export interface KnownTicketType {
+  eventId: string;
+  productId: string;
+  publicKey: EdDSAPublicKey;
+  publicKeyName: string;
+  publicKeyType: KnownPublicKeyType;
+  ticketGroup: KnownTicketGroup;
+}
+
+/**
+ * Known public keys, with a name and type to enable them to be
+ * identified in relation to known ticket types.
+ */
+export type KnownPublicKey =
+  | {
+      publicKeyName: string;
+      publicKeyType: "eddsa";
+      publicKey: EdDSAPublicKey;
+    }
+  | {
+      publicKeyName: string;
+      publicKeyType: "rsa";
+      publicKey: string;
+    };
+
+export interface KnownTicketTypesAndKeys {
+  knownTicketTypes: KnownTicketType[];
+  publicKeys: KnownPublicKey[];
+}
+
+/**
+ * Zupass responds with this when you ask it for the details of known
+ * ticket types.
+ */
+export type KnownTicketTypesResponseValue = KnownTicketTypesAndKeys;
+
+export type KnownTicketTypesRequest = undefined;
 
 /**
  * The string the client must sign with the user's semaphore identity

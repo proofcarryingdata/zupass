@@ -271,10 +271,10 @@ export const EdDSAPCDPackage: PCDPackage<
 };
 
 /**
- * Returns an {@link EDdSAPublicKey} derived from a 32-byte EdDSA private key.
+ * Returns an {@link EdDSAPublicKey} derived from a 32-byte EdDSA private key.
  * The private key must be a hexadecimal string or a Uint8Array typed array.
  * @param privateKey The 32-byte EdDSA private key.
- * @returns The {@link EDdSAPublicKey} extracted from the private key.
+ * @returns The {@link EdDSAPublicKey} extracted from the private key.
  */
 export async function getEdDSAPublicKey(
   privateKey: string | Uint8Array

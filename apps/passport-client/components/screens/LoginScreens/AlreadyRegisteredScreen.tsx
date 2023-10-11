@@ -16,6 +16,7 @@ import {
 } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
+import { hasPendingRequest } from "../../../src/sessionStorage";
 import {
   BigInput,
   Button,
@@ -155,7 +156,11 @@ export function AlreadyRegisteredScreen() {
 
   useEffect(() => {
     if (self || !email) {
-      window.location.href = "#/";
+      if (hasPendingRequest()) {
+        window.location.hash = "#/login-interstitial";
+      } else {
+        window.location.hash = "#/";
+      }
     }
   }, [self, email]);
 

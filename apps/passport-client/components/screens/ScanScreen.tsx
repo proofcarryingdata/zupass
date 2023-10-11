@@ -33,8 +33,12 @@ export function ScanScreen() {
 }
 
 function maybeRedirect(text: string): string | null {
-  const verifyUrlPrefix = `${window.location.origin}#/verify-devconnect?`;
-  if (text.startsWith(verifyUrlPrefix)) {
+  const verifyUrlPrefixes = [
+    `${window.location.origin}#/verify`,
+    `${window.location.origin}#/checkin`,
+    `${window.location.origin}#/checkin-by-id`
+  ];
+  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
     const hash = text.substring(window.location.origin.length + 1);
     console.log(`Redirecting to ${hash}`);
     return hash;

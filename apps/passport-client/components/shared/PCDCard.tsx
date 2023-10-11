@@ -1,11 +1,18 @@
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  isEdDSATicketPCD
+} from "@pcd/eddsa-ticket-pcd";
+import { KnownTicketGroup } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
-import { usePCDCollection } from "../../src/appHooks";
+import { useMatchedTicketType, usePCDCollection } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
+import { DevconnectCardBody } from "./cards/DevconnectTicket";
 
 export const PCDCard = React.memo(PCDCardImpl);
 
@@ -124,6 +131,18 @@ function CardFooterImpl({
   );
 }
 
+function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
+  const ticketType = useMatchedTicketType(pcd);
+
+  if (ticketType && ticketType.ticketGroup === KnownTicketGroup.Devconnect23) {
+    return <DevconnectCardBody pcd={pcd} />;
+  }
+
+  const Component = EdDSATicketPCDPackage.renderCardBody;
+
+  return <Component pcd={pcd} />;
+}
+
 function CardBody({
   pcd,
   isMainIdentity
@@ -135,6 +154,10 @@ function CardBody({
 
   if (isMainIdentity) {
     return <MainIdentityCard />;
+  }
+
+  if (isEdDSATicketPCD(pcd)) {
+    return <TicketCardBody pcd={pcd} />;
   }
 
   if (pcdCollection.hasPackage(pcd.type)) {

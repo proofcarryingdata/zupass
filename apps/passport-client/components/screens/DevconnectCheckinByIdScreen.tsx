@@ -1,22 +1,15 @@
 import {
-  EdDSATicketPCD,
-  EdDSATicketPCDPackage,
-  getEdDSATicketData,
-  ITicketData
-} from "@pcd/eddsa-ticket-pcd";
-import {
-  checkinTicket,
-  CheckTicketResult,
-  requestCheckTicket,
-  TicketError
+  CheckTicketByIdResponseValue,
+  CheckTicketByIdResult,
+  TicketError,
+  checkinTicketById,
+  requestCheckTicketById
 } from "@pcd/passport-interface";
-import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
-import { getErrorMessage } from "@pcd/util";
+import { Spacer } from "@pcd/passport-ui";
 import { useCallback, useEffect, useState } from "react";
-import { Location, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useIdentity } from "../../src/appHooks";
+import { useIdentity, useQuery } from "../../src/appHooks";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -26,49 +19,40 @@ import {
   CardOutlineExpanded
 } from "../shared/PCDCard";
 
-export function DevconnectCheckinScreen() {
-  const { ticket, error: decodeError } = useDecodedTicket();
-  const { loading: checkingTicket, result: checkTicketResult } =
-    useCheckTicket(ticket);
+export function DevconnectCheckinByIdScreen() {
+  const query = useQuery();
+  const ticketId = query?.get("id");
 
-  const ticketData = getEdDSATicketData(ticket);
+  const { loading: checkingTicket, result: checkTicketByIdResult } =
+    useCheckTicketById(ticketId);
 
   let content = null;
 
-  if (decodeError) {
-    content = (
-      <TicketError ticketData={ticketData} error={{ name: "InvalidTicket" }} />
-    );
-  } else if (checkingTicket) {
+  if (checkingTicket) {
     content = (
       <div>
         <Spacer h={32} />
         <RippleLoader />
       </div>
     );
+  } else if (!checkTicketByIdResult.success) {
+    content = <TicketError error={checkTicketByIdResult.error} />;
   } else {
-    if (checkTicketResult.success) {
-      content = <UserReadyForCheckin ticket={ticket} ticketData={ticketData} />;
-    } else {
-      content = (
-        <TicketError ticketData={ticketData} error={checkTicketResult.error} />
-      );
-    }
+    content = (
+      <UserReadyForCheckin
+        ticketId={ticketId}
+        ticketData={checkTicketByIdResult.value}
+      />
+    );
   }
 
   return <>{content}</>;
 }
 
-function TicketError({
-  ticketData,
-  error
-}: {
-  ticketData: ITicketData;
-  error: TicketError;
-}) {
+function TicketError({ error }: { error: TicketError }) {
   let errorContent = null;
-  let showTicket = true;
 
+  console.log(error);
   switch (error.name) {
     case "AlreadyCheckedIn":
       errorContent = (
@@ -96,7 +80,6 @@ function TicketError({
       );
       break;
     case "InvalidTicket":
-      showTicket = false;
       errorContent = (
         <>
           <ErrorTitle>Invalid ticket</ErrorTitle>
@@ -145,7 +128,6 @@ function TicketError({
   return (
     <AppContainer bg={"primary"}>
       <Container>
-        {showTicket && <TicketInfoSection ticketData={ticketData} />}
         <ErrorContainer>{errorContent}</ErrorContainer>
         <div
           style={{
@@ -184,56 +166,62 @@ function Home() {
 
 function UserReadyForCheckin({
   ticketData,
-  ticket
+  ticketId
 }: {
-  ticketData: ITicketData;
-  ticket: EdDSATicketPCD;
+  ticketData: CheckTicketByIdResponseValue;
+  ticketId: string;
 }) {
   return (
     <AppContainer bg={"primary"}>
       <Container>
         <TicketInfoSection ticketData={ticketData} />
-        <CheckInSection ticket={ticket} />
+        <CheckInSection ticketId={ticketId} />
       </Container>
     </AppContainer>
   );
 }
 
-function useCheckTicket(ticket: EdDSATicketPCD | undefined): {
-  loading: boolean;
-  result: CheckTicketResult;
-} {
+function useCheckTicketById(ticketId: string | undefined):
+  | {
+      loading: true;
+      result: undefined;
+    }
+  | {
+      loading: false;
+      result: CheckTicketByIdResult;
+    } {
   const [inProgress, setInProgress] = useState(true);
-  const [result, setResult] = useState<CheckTicketResult | undefined>();
+  const [result, setResult] = useState<CheckTicketByIdResult | undefined>();
 
-  const checkTicket = useCallback(
-    async (ticket: EdDSATicketPCD | undefined) => {
-      if (!ticket) {
-        return;
-      } else {
-        console.log("checking", ticket);
+  const checkTicketById = useCallback(async (ticketId: string | undefined) => {
+    if (!ticketId) {
+      return;
+    } else {
+      console.log("checking", ticketId);
+    }
+
+    const checkTicketByIdResult = await requestCheckTicketById(
+      appConfig.zupassServer,
+      {
+        ticketId
       }
-
-      const checkTicketResult = await requestCheckTicket(
-        appConfig.zupassServer,
-        {
-          ticket: await EdDSATicketPCDPackage.serialize(ticket)
-        }
-      );
-      setInProgress(false);
-      setResult(checkTicketResult);
-    },
-    []
-  );
+    );
+    setInProgress(false);
+    setResult(checkTicketByIdResult);
+  }, []);
 
   useEffect(() => {
-    checkTicket(ticket);
-  }, [checkTicket, ticket]);
+    checkTicketById(ticketId);
+  }, [checkTicketById, ticketId]);
 
-  return { loading: inProgress, result };
+  if (inProgress) {
+    return { loading: true, result: undefined };
+  } else {
+    return { loading: false, result };
+  }
 }
 
-function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
+function CheckInSection({ ticketId }: { ticketId: string }) {
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
@@ -245,9 +233,9 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
     }
 
     setInProgress(true);
-    const checkinResult = await checkinTicket(
+    const checkinResult = await checkinTicketById(
       appConfig.zupassServer,
-      ticket,
+      ticketId,
       identity
     );
     setInProgress(false);
@@ -259,7 +247,7 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
       setCheckedIn(true);
       setFinishedCheckinAttempt(true);
     }
-  }, [inProgress, identity, ticket]);
+  }, [inProgress, identity, ticketId]);
 
   return (
     <CheckinSectionContainer>
@@ -292,7 +280,11 @@ function CheckInSection({ ticket }: { ticket: EdDSATicketPCD }) {
   );
 }
 
-function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
+function TicketInfoSection({
+  ticketData
+}: {
+  ticketData: CheckTicketByIdResponseValue;
+}) {
   return (
     <CardOutlineExpanded>
       <CardHeader>
@@ -313,54 +305,6 @@ function TicketInfoSection({ ticketData }: { ticketData: ITicketData }) {
       </CardBodyContainer>
     </CardOutlineExpanded>
   );
-}
-
-function useDecodedTicket(): {
-  ticket: EdDSATicketPCD | undefined;
-  error: string;
-} {
-  const location = useLocation();
-  const [ticket, setDecodedPCD] = useState<EdDSATicketPCD | undefined>();
-  const [error, setError] = useState<string | undefined>();
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const pcd = await decodePCD(location);
-        setDecodedPCD(pcd);
-        console.log("decoded ticket", pcd);
-      } catch (e) {
-        console.log(e);
-        setError(getErrorMessage(e));
-      }
-    })();
-  }, [location, setDecodedPCD]);
-
-  return { ticket, error };
-}
-
-async function decodePCD(
-  location: Location
-): Promise<EdDSATicketPCD | undefined> {
-  try {
-    const params = new URLSearchParams(location.search);
-    const encodedQRPayload = params.get("pcd");
-
-    console.log(
-      `Decoding Devconnect Ticket proof, ${encodedQRPayload.length}b gzip+base64`
-    );
-
-    const decodedQrPayload = decodeQRPayload(encodedQRPayload);
-    const parsedQrPayload = JSON.parse(decodedQrPayload);
-    const decodedPCD = await EdDSATicketPCDPackage.deserialize(
-      parsedQrPayload.pcd
-    );
-    return decodedPCD;
-  } catch (e) {
-    console.log("error decoding pcd", e);
-  }
-
-  return undefined;
 }
 
 const TicketInfoContainer = styled.div`

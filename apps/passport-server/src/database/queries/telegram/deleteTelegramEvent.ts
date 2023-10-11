@@ -31,3 +31,18 @@ export async function deleteTelegramChat(
     [telegramChatId]
   );
 }
+
+export async function deleteTelegramChatTopic(
+  client: Pool,
+  telegramChatId: number,
+  telegramTopicId: number
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `\
+    delete from telegram_chat_topics
+    where telegram_chat_id = $1 and topic_id = $2
+    `,
+    [telegramChatId, telegramTopicId]
+  );
+}

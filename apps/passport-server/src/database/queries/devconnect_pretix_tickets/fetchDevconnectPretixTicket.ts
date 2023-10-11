@@ -3,6 +3,7 @@ import {
   DevconnectPretixTicketDB,
   DevconnectPretixTicketDBWithCheckinListID,
   DevconnectPretixTicketDBWithEmailAndItem,
+  DevconnectProduct,
   DevconnectSuperuser
 } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
@@ -51,11 +52,11 @@ export async function fetchDevconnectPretixTicketsByEvent(
 export async function fetchDevconnectPretixTicketByTicketId(
   client: Pool,
   ticketId: string
-): Promise<DevconnectPretixTicketDB | undefined> {
+): Promise<DevconnectPretixTicketDBWithEmailAndItem | undefined> {
   const result = await sqlQuery(
     client,
     `\
-    select t.* from devconnect_pretix_tickets t
+    select t.*, e.event_name, i.item_name, e.pretix_events_config_id as pretix_events_config_id from devconnect_pretix_tickets t
     join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
     join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
     where t.id = $1
@@ -183,7 +184,8 @@ export async function fetchDevconnectTicketsAwaitingSync(
   const result = await sqlQuery(
     client,
     `\
-      select t.*, e.checkin_list_id from devconnect_pretix_tickets t
+      select t.*, e.event_name, i.item_name, e.pretix_events_config_id as pretix_events_config_id,
+      e.checkin_list_id from devconnect_pretix_tickets t
       join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
       join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
       join pretix_events_config ec on ec.id = e.pretix_events_config_id
@@ -193,6 +195,21 @@ export async function fetchDevconnectTicketsAwaitingSync(
       and t.is_consumed = true
       and t.pretix_checkin_timestamp IS NULL`,
     [orgUrl]
+  );
+
+  return result.rows;
+}
+
+export async function fetchDevconnectProducts(
+  client: Pool
+): Promise<DevconnectProduct[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+  SELECT i.id AS product_id, e.pretix_events_config_id AS event_id
+  FROM devconnect_pretix_items_info i
+  JOIN devconnect_pretix_events_info e ON e.id = i.devconnect_pretix_events_info_id
+`
   );
 
   return result.rows;

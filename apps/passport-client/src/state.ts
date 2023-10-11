@@ -1,4 +1,10 @@
-import { CredentialCache, FeedSubscriptionManager, User } from "@pcd/passport-interface";
+import {
+  CredentialCache,
+  FeedSubscriptionManager,
+  KnownPublicKey,
+  KnownTicketType,
+  User
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import React from "react";
@@ -48,6 +54,9 @@ export interface AppState {
   downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
   loadingIssuedPCDs?: boolean;
+
+  knownTicketTypes?: KnownTicketType[];
+  knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
 }
 
 export interface AppError {

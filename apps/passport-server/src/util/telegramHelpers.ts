@@ -18,7 +18,8 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId
+  fetchTelegramEventsByChatId,
+  fetchUserTelegramChats
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -346,13 +347,34 @@ export const chatsToJoin = async (
 
   const events = await fetchEventsPerChat(db);
   const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  if (eventsWithChats && eventsWithChats.length === 0) {
+  const userChats = await fetchUserTelegramChats(db, userId);
+
+  const finalEvents = eventsWithChats.map((e) => {
+    return {
+      ...e,
+      userIsChatMember: userChats
+        ? userChats.telegramChatIDs.includes(e.telegramChatID)
+        : false
+    };
+  });
+  if (finalEvents && finalEvents.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
-  for (const chat of eventsWithChats) {
-    const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
-    range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  const sortedChats = finalEvents.sort(
+    (a, b) => +a.userIsChatMember - +b.userIsChatMember
+  );
+  for (const chat of sortedChats) {
+    if (chat.userIsChatMember) {
+      const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
+        creates_join_request: true
+      });
+      range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+      range.row();
+    } else {
+      const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+      range.webApp(`${chat.chat?.title}`, proofUrl).row();
+    }
   }
 };
 
@@ -383,22 +405,28 @@ export const chatsToPostIn = async (
       );
       const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
-      range.text(`Choose a topic ⬇`).row();
-      for (const topic of topics) {
-        const encodedTopicData = base64EncodeTopicData(
-          topic.anon_topic_name,
-          topic.anon_topic_id,
-          validEventIds
-        );
+      if (topics.length === 0) {
+        range.text(`No topics found`).row();
+      } else {
         range
-          .webApp(
-            `${topic.anon_topic_name}`,
-            `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-          )
-          .row();
-      }
+          .text(`${chat.title} Topics`)
 
-      range.text(`Go back`, async (ctx) => {
+          .row();
+        for (const topic of topics) {
+          const encodedTopicData = base64EncodeTopicData(
+            topic.topic_name,
+            topic.topic_id,
+            validEventIds
+          );
+          range
+            .webApp(
+              `${topic.topic_name}`,
+              `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+            )
+            .row();
+        }
+      }
+      range.text(`↰  Back`, async (ctx) => {
         ctx.session.selectedChat = undefined;
         await ctx.menu.update({ immediate: true });
       });
@@ -409,13 +437,22 @@ export const chatsToPostIn = async (
         range.text(`No groups to join at this time`);
         return;
       }
-      for (const chat of eventsWithChats) {
-        range
-          .text(`${chat.chat?.title}`, async (ctx) => {
-            ctx.session.selectedChat = chat.chat;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
+      const userChats = await fetchUserTelegramChats(db, userId);
+
+      const finalChats = eventsWithChats.filter(
+        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
+      );
+      if (finalChats?.length > 0) {
+        for (const chat of finalChats) {
+          range
+            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+              ctx.session.selectedChat = chat.chat;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+        }
+      } else {
+        ctx.reply(`No chats found to post in. Type /start to join one!`);
       }
     }
   } catch (error) {

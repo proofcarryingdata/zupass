@@ -3,7 +3,12 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useDispatch, useIsSyncSettled, useSelf } from "../../../src/appHooks";
+import {
+  useDispatch,
+  useIsSyncSettled,
+  useSelf,
+  useUserForcedToLogout
+} from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
   pendingProofRequestKey,
@@ -28,6 +33,7 @@ export function ProveScreen() {
   const params = new URLSearchParams(location.search);
   const request = JSON.parse(params.get("request")) as PCDGetRequest;
   const screen = getScreen(request);
+  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
@@ -48,15 +54,17 @@ export function ProveScreen() {
   }, [dispatch, screen]);
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingProofRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingProofRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingProofRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [request, self]);
+  }, [request, self, userForcedToLogout]);
 
   if (self == null) {
     return null;

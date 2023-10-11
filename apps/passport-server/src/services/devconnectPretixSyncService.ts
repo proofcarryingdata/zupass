@@ -1,12 +1,20 @@
+import { KnownPublicKeyType, KnownTicketGroup } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import { IDevconnectPretixAPI } from "../apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixOrganizerConfig,
   getDevconnectPretixConfig
 } from "../apis/devconnect/organizer";
+import { fetchDevconnectProducts } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import {
+  deleteKnownTicketType,
+  fetchKnownTicketTypesByGroup,
+  setKnownTicketType
+} from "../database/queries/knownTicketTypes";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { OrganizerSync } from "./devconnect/organizerSync";
+import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "./issuanceService";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { setError, traced } from "./telemetryService";
@@ -69,6 +77,7 @@ export class DevconnectPretixSyncService {
 
         logger("[DEVCONNECT PRETIX] Sync start");
         await this.sync();
+        await this.setDevconnectTicketTypes();
         this.semaphoreService.scheduleReload();
         this._hasCompletedSyncSinceStarting = true;
         logger("[DEVCONNECT PRETIX] Sync successful");
@@ -187,6 +196,49 @@ export class DevconnectPretixSyncService {
         )} seconds.`
       );
     });
+  }
+
+  /**
+   * After synchronization with Pretix, we can register the known "ticket
+   * types" we have just synchronized in the database.
+   *
+   * Ticket types are comprised of a combination of event ID, product ID,
+   * public key and "group". The public key is the counterpart of the
+   * private key we use to sign PCDs, and the event/product IDs are the
+   * ones we just sync'ed.
+   *
+   * See also {@link setupKnownTicketTypes} in the issuance service.
+   */
+  public async setDevconnectTicketTypes(): Promise<void> {
+    const products = await fetchDevconnectProducts(this.db);
+    const savedProductIds = [];
+
+    for (const product of products) {
+      await setKnownTicketType(
+        this.db,
+        `sync-${product.product_id}`,
+        product.event_id,
+        product.product_id,
+        ZUPASS_TICKET_PUBLIC_KEY_NAME,
+        KnownPublicKeyType.EdDSA,
+        // This works since we're only using this sync service for Devconnect
+        KnownTicketGroup.Devconnect23
+      );
+
+      savedProductIds.push(product.product_id);
+    }
+
+    // Check to see if there are any tickets in the DB which were not present
+    // in the sync, and delete them.
+    const existingTicketTypes = await fetchKnownTicketTypesByGroup(
+      this.db,
+      KnownTicketGroup.Devconnect23
+    );
+    for (const existingType of existingTicketTypes) {
+      if (!savedProductIds.find((p) => p === existingType.product_id)) {
+        await deleteKnownTicketType(this.db, existingType.identifier);
+      }
+    }
   }
 }
 
