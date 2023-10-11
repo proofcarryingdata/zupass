@@ -4,7 +4,6 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
 import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
@@ -90,7 +89,9 @@ async function requestProof(
       argumentType: ArgumentTypeName.BigInt,
       value: BigInt(
         "0x" +
-          sha256.sha256(JSON.stringify({ chatId, topicId })).substring(0, 16)
+          sha256
+            .sha256(JSON.stringify({ chatId, topicId: parseInt(topicId) }))
+            .substring(0, 16)
       ).toString(),
       userProvided: false
     },
@@ -105,8 +106,6 @@ async function requestProof(
       userProvided: false
     }
   };
-
-  await sleep(1000);
 
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
