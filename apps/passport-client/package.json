@@ -34,7 +34,7 @@
     "@pcd/webauthn-pcd": "0.7.1",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.1.1",
     "@rollbar/react": "^0.11.1",
-    "@semaphore-protocol/identity": "^3.12.0",
+    "@semaphore-protocol/identity": "^3.12.3",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
     "dotenv": "^16.0.3",

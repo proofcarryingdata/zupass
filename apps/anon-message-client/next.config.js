@@ -6,7 +6,8 @@ const nextConfig = {
     if (typeof nextRuntime === "undefined") {
       config.resolve.fallback = {
         ...config.resolve.fallback,
-        fs: false
+        fs: false,
+        readline: false
       };
     }
 

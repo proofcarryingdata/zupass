@@ -13,9 +13,9 @@ import {
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import {
-  FullProof,
-  Proof,
   generateProof,
+  PackedProof,
+  SemaphoreProof,
   verifyProof
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
@@ -71,7 +71,7 @@ export interface SemaphoreSignaturePCDClaim {
   nullifierHash: string;
 }
 
-export type SemaphoreSignaturePCDProof = Proof;
+export type SemaphoreSignaturePCDProof = PackedProof;
 export class SemaphoreSignaturePCD
   implements PCD<SemaphoreSignaturePCDClaim, SemaphoreSignaturePCDProof>
 {
@@ -159,12 +159,12 @@ export async function verify(pcd: SemaphoreSignaturePCD): Promise<boolean> {
   group.addMember(pcd.claim.identityCommitment);
 
   // Convert PCD into Semaphore FullProof
-  const fullProof: FullProof = {
-    externalNullifier: STATIC_SIGNATURE_PCD_NULLIFIER,
+  const fullProof: SemaphoreProof = {
+    externalNullifier: STATIC_SIGNATURE_PCD_NULLIFIER.toString(),
     merkleTreeRoot: group.root + "",
     nullifierHash: pcd.claim.nullifierHash,
     proof: pcd.proof,
-    signal: generateSnarkMessageHash(pcd.claim.signedMessage)
+    signal: generateSnarkMessageHash(pcd.claim.signedMessage).toString()
   };
 
   // check if proof is valid

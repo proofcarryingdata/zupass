@@ -3275,10 +3275,10 @@
     "@noble/hashes" "~1.3.0"
     "@scure/base" "~1.1.0"
 
-"@semaphore-protocol/group@^3.12.0":
-  version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.12.0.tgz#e5981fec72c6f91f798cfa4edd0315c16ff51ca5"
-  integrity sha512-IsXbwF3h7DlS8j8cKwiY9rGu07VFeTW2r4+x9Zbubi1yYsHj5BvW6I9CqrGob4js805C4137mD7QZhukRp9IuA==
+"@semaphore-protocol/group@^3.12.3":
+  version "3.12.3"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.12.3.tgz#aa68b7af9a9d1e8a1d7e3921cc1d155237a2345c"
+  integrity sha512-VOxzfoYIU9OznCZGZlND9gG9OqqZ+8MbSnsE3PjraacXZlTG9HBVYwCyzBaSypSIEbSIf3LLYtrrDho/RPyEJw==
   dependencies:
     "@ethersproject/bignumber" "^5.7.0"
     "@ethersproject/bytes" "^5.7.0"
@@ -3296,10 +3296,10 @@
     "@ethersproject/strings" "^5.6.1"
     circomlibjs "0.0.8"
 
-"@semaphore-protocol/identity@^3.12.0":
-  version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.12.0.tgz#21673c95a8157fe0cc0df8e4b9d43b8d9e3bf1b7"
-  integrity sha512-06YIJOOnVChHzeQPR2f8m04yNeH6IHuQzb00qxkzVfeF4m+O/3iBCijO+gxT2fiJ2mgUqLvocU/Pv8N3DC21gQ==
+"@semaphore-protocol/identity@^3.12.3":
+  version "3.12.3"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.12.3.tgz#d449fd2358d3447af4c8402c4da903fdb78e1514"
+  integrity sha512-B/lCas4mpzRlljbj7W3KodwVK20lvhHlqp5mshQSNEuxYW3yOB/wSbPyzIZWxPibxMHvZDs1w83LmYmPrYY0Lg==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/keccak256" "^5.7.0"
@@ -3307,17 +3307,16 @@
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
 
-"@semaphore-protocol/proof@^3.12.0":
-  version "3.12.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.12.0.tgz#c7c64eaaba0877abae2ea182d36dd38ef5c9b95d"
-  integrity sha512-1kfJo07tc4HwvZkWLHTxPGyJe0rVqWN7cp2sEHETp3pVxVyAR/GI0lcZj46XlRgXo1NygZ52asoNIqZsRN22MQ==
+"@semaphore-protocol/proof@^3.12.3":
+  version "3.12.3"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.12.3.tgz#0d7da506df4fc422e586cc27a816c1d97f6e9f9a"
+  integrity sha512-IhEPYO1sHCNwyRgBbrBfqR8f7QW4pJYhuNiSHZH2G912onIgGOLXaeqsB/mWPSe05nUSeXRLhYSEFQAj4RbhWQ==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/keccak256" "^5.7.0"
     "@ethersproject/strings" "^5.5.0"
     "@zk-kit/incremental-merkle-tree" "0.4.3"
-    snarkjs "0.7.1"
 
 "@sideway/address@^4.1.3":
   version "4.1.4"
@@ -3992,10 +3991,10 @@
   resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.3.6.tgz#7b489e8baf393d5dd1266fb203ddd4ea941259e6"
   integrity sha512-VOVRLM1mBxIRxydiViqPcKn6MIxZytrbMpd6RJLIWKxUNr3zux8no0Oc7kJx0WAPIitgZ0gkrDS+btlqQpubpw==
 
-"@types/circomlibjs@0.1.2":
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.2.tgz#2d6021ea0680973f4b522dbb4f82401c81872f1f"
-  integrity sha512-frsB+ZOIRA3I76hcoOIdkKO9kO+ZE9hNVT/Z27Cw6/gv6X3dGzWnSbRZkwCQ9NwGUzFtQugL4AfBBWKU3Uv0bg==
+"@types/circomlibjs@0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.4.tgz#162e6ab09a802c689f304c328e604ae302263811"
+  integrity sha512-H5z8wQBsr1ng+4lS9Q3H7hCBoNd0I6U0CwpUCFsM+0ea5EXpAztMzmjzr4zkqv0EtwQc/ZtZkOvX7UZuXiS/Lg==
 
 "@types/connect@*":
   version "3.4.36"
@@ -4529,10 +4528,10 @@
   resolved "https://registry.yarnpkg.com/@types/shimmer/-/shimmer-1.0.2.tgz#93eb2c243c351f3f17d5c580c7467ae5d686b65f"
   integrity sha512-dKkr1bTxbEsFlh2ARpKzcaAmsYixqt9UyCdoEZk8rHyE4iQYcDCyvSjDSf7JUWJHlJiTtbIoQjxKh6ViywqDAg==
 
-"@types/snarkjs@0.7.1":
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.1.tgz#f19957c3d98c590b344a9c67636d49e5a1d66ddd"
-  integrity sha512-V7OBbC8GSUax/VKT0qSrFlckhj3jqi6hUs+EKnxkMWjWKzKWipib5LR61hhfLDePx7AMoK8fKfnPUTExv+iNMQ==
+"@types/snarkjs@0.7.5":
+  version "0.7.5"
+  resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.5.tgz#bf31c8a43246867df2f148fc5716d95a01d91f41"
+  integrity sha512-Dyeid5dOIxboZmG4RTch3XBX7myVVllE8908rPnp0McSYWUatAdn/MKcXxUx3KUdxe7qeLKBVgZvTqXsR5+d5A==
 
 "@types/stack-utils@^2.0.0":
   version "2.0.1"
@@ -5935,13 +5934,6 @@ circom_runtime@0.1.22:
   integrity sha512-V/XYZWBhbZY8SotkaGH4FbiDYAZ8a1Md++MBiKPDOuWS/NIJB+Q+XIiTC8zKMgoDaa9cd2OiTvsC9J6te7twNg==
   dependencies:
     ffjavascript "0.2.57"
-
-circom_runtime@0.1.24:
-  version "0.1.24"
-  resolved "https://registry.yarnpkg.com/circom_runtime/-/circom_runtime-0.1.24.tgz#60ca8a31c3675802fbab5a0bcdeb02556e510733"
-  integrity sha512-H7/7I2J/cBmRnZm9docOCGhfxzS61BEm4TMCWcrZGsWNBQhePNfQq88Oj2XpUfzmBTCd8pRvRb3Mvazt3TMrJw==
-  dependencies:
-    ffjavascript "0.2.60"
 
 circomlib@^2.0.5:
   version "2.0.5"
@@ -7927,7 +7919,7 @@ ffjavascript@0.2.59:
     wasmcurves "0.2.1"
     web-worker "^1.2.0"
 
-ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0.2.48:
+ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0.2.48:
   version "0.2.60"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.60.tgz#4d8ae613d6bf4e98b3cc29ba10c626f5853854cf"
   integrity sha512-T/9bnEL5xAZRDbQoEMf+pM9nrhK+C3JyZNmqiWub26EQorW7Jt+jR54gpqDhceA4Nj0YctPQwYnl8xa52/A26A==
@@ -11860,16 +11852,6 @@ r1csfile@0.0.45:
     fastfile "0.0.20"
     ffjavascript "0.2.57"
 
-r1csfile@0.0.47:
-  version "0.0.47"
-  resolved "https://registry.yarnpkg.com/r1csfile/-/r1csfile-0.0.47.tgz#ed95a0dc8e910e9c070253906f7a31bd8c5333c8"
-  integrity sha512-oI4mAwuh1WwuFg95eJDNDDL8hCaZkwnPuNZrQdLBWvDoRU7EG+L/MOHL7SwPW2Y+ZuYcTLpj3rBkgllBQZN/JA==
-  dependencies:
-    "@iden3/bigarray" "0.0.2"
-    "@iden3/binfileutils" "0.0.11"
-    fastfile "0.0.20"
-    ffjavascript "0.2.60"
-
 randombytes@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/randombytes/-/randombytes-2.1.0.tgz#df6f84372f0270dc65cdf6291349ab7a473d4f2a"
@@ -12680,22 +12662,6 @@ smartwrap@^2.0.2:
     strip-ansi "^6.0.0"
     wcwidth "^1.0.1"
     yargs "^15.1.0"
-
-snarkjs@0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/snarkjs/-/snarkjs-0.7.1.tgz#c96ecaf4db8c2eb44d60b17ee02f37ed39c821bb"
-  integrity sha512-Qs1oxssa135WZkzfARgEp5SuKHKvKNtcspeJbE5je6MurUpBylD1rzcAzQSTGWA/EH/BV/TmUyTaTD64xScvbA==
-  dependencies:
-    "@iden3/binfileutils" "0.0.11"
-    bfj "^7.0.2"
-    blake2b-wasm "^2.4.0"
-    circom_runtime "0.1.24"
-    ejs "^3.1.6"
-    fastfile "0.0.20"
-    ffjavascript "0.2.60"
-    js-sha3 "^0.8.0"
-    logplease "^1.2.15"
-    r1csfile "0.0.47"
 
 snarkjs@^0.4.22:
   version "0.4.27"
