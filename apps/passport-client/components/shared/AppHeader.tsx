@@ -7,7 +7,13 @@ import { icons } from "../icons";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 
-function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
+function AppHeaderImpl({
+  children,
+  isProveScreen = false
+}: {
+  children?: React.ReactNode;
+  isProveScreen?: boolean;
+}) {
   const dispatch = useDispatch();
 
   const setModal = useCallback(
@@ -38,20 +44,22 @@ function AppHeaderImpl({ children }: { children?: React.ReactNode }) {
         <img draggable="false" src={icons.infoAccent} width={34} height={34} />
       </CircleButton>
       {children}
-      <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
-        {subscriptions.value.getAllErrors().size > 0 && (
-          <ErrorDotContainer>
-            <ErrorDot />
-          </ErrorDotContainer>
-        )}
-        <img
-          title="Subscriptions"
-          draggable="false"
-          src={icons.subscription}
-          width={34}
-          height={34}
-        />
-      </CircleButton>
+      {!isProveScreen && (
+        <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
+          {subscriptions.value.getAllErrors().size > 0 && (
+            <ErrorDotContainer>
+              <ErrorDot />
+            </ErrorDotContainer>
+          )}
+          <img
+            title="Subscriptions"
+            draggable="false"
+            src={icons.subscription}
+            width={34}
+            height={34}
+          />
+        </CircleButton>
+      )}
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <img
           draggable="false"
