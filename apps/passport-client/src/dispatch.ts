@@ -8,6 +8,7 @@ import {
   applyActions,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
+  KnownTicketTypesAndKeys,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
@@ -108,6 +109,10 @@ export type Action =
       type: "update-subscription-permissions";
       subscriptionId: string;
       permissions: PCDPermission[];
+    }
+  | {
+      type: "set-known-ticket-types-and-keys";
+      knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     };
 
 export type StateContextState = {
@@ -195,6 +200,12 @@ export async function dispatch(
         update,
         action.subscriptionId,
         action.permissions
+      );
+    case "set-known-ticket-types-and-keys":
+      return setKnownTicketTypesAndKeys(
+        state,
+        update,
+        action.knownTicketTypesAndKeys
       );
     default:
       // We can ensure that we never get here using the type system
@@ -792,5 +803,24 @@ async function updateSubscriptionPermissions(
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false,
     loadingIssuedPCDs: false
+  });
+}
+
+async function setKnownTicketTypesAndKeys(
+  _state: AppState,
+  update: ZuUpdate,
+  knownTicketTypesAndKeys: KnownTicketTypesAndKeys
+) {
+  const keyMap = {};
+  knownTicketTypesAndKeys.publicKeys.forEach((k) => {
+    if (!keyMap[k.publicKeyType]) {
+      keyMap[k.publicKeyType] = {};
+    }
+    keyMap[k.publicKeyType][k.publicKeyName] = k;
+  });
+
+  update({
+    knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
+    knownPublicKeys: keyMap
   });
 }

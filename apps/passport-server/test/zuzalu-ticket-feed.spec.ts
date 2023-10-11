@@ -15,7 +15,7 @@ import {
   ZuzaluPretixOrder
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
-import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
+import { ZUZALU_23_EVENT_ID } from "../src/services/issuanceService";
 import { Zupass } from "../src/types";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
@@ -117,7 +117,7 @@ describe("zuzalu pcdpass functionality", function () {
         await EdDSATicketPCDPackage.deserialize(zuzaluTicketPCD.pcd);
 
       expect(deserializedZuzaluTicketPCD.claim.ticket.eventId).to.eq(
-        ZUZALU_ORGANIZER_EVENT_ID
+        ZUZALU_23_EVENT_ID
       );
 
       const verified = await EdDSATicketPCDPackage.verify(

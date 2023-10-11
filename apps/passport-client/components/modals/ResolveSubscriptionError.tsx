@@ -77,7 +77,11 @@ function FetchError({
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    const credentialManager = new CredentialManager(identity, pcds, credentialCache);
+    const credentialManager = new CredentialManager(
+      identity,
+      pcds,
+      credentialCache
+    );
     await subscriptions.pollSingleSubscription(subscription, credentialManager);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);
@@ -232,13 +236,16 @@ function PermissionUpdate({
 
   const onUpdateClick = useCallback(async () => {
     try {
-      dispatch({ type: "update-subscription-permissions", subscriptionId: subscription.id, permissions: newPermissions });
+      dispatch({
+        type: "update-subscription-permissions",
+        subscriptionId: subscription.id,
+        permissions: newPermissions
+      });
       setOutcome("success");
     } catch (e) {
       setOutcome("fail");
     }
   }, [newPermissions, subscription.id, dispatch]);
-
 
   const finish = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });

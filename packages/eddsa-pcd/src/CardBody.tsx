@@ -8,7 +8,7 @@ import { EdDSAPCD } from "./EdDSAPCD";
 export function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (
     <Container>
-      <p>This PCD represents an EDdSA signature of some bigint values</p>
+      <p>This PCD represents an EdDSA signature of some bigint values</p>
 
       <Separator />
 

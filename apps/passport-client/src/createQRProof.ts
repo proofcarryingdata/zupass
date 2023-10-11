@@ -3,7 +3,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDArgs,
-  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { uuidToBigint } from "./util";
@@ -23,21 +23,21 @@ export async function createQRProof(
 
   const payload: QRPayload = {
     uuid: uuidToBigint(uuid).toString(),
-    timestamp,
+    timestamp
   };
 
   const args: SemaphoreSignaturePCDArgs = {
     signedMessage: {
       argumentType: ArgumentTypeName.String,
-      value: JSON.stringify(payload),
+      value: JSON.stringify(payload)
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({ identity })
-      ),
-    },
+      )
+    }
   };
 
   const pcd = await prove(args);

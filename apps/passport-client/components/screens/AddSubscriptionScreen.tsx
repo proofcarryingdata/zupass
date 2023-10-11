@@ -198,9 +198,7 @@ export function SubscriptionInfoRow({
         </>
       )}
       {alreadySubscribed ? (
-        <AlreadySubscribed
-          existingSubscription={existingSubscriptions[0]}
-        />
+        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
       ) : (
         <SubscribeSection
           providerUrl={providerUrl}
@@ -325,7 +323,10 @@ function AlreadySubscribed({
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
       )
     ) {
-      dispatch({ type: "remove-subscription", subscriptionId: existingSubscription.id });
+      dispatch({
+        type: "remove-subscription",
+        subscriptionId: existingSubscription.id
+      });
     }
   }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 
