@@ -17,7 +17,7 @@ export const HaLoNoncePCDTypeName = "halo-nonce-pcd";
 
 // Arguments taken from the URL produced by the HaLo tags, the definition is at
 // https://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random
-export interface HaLoNoncePCDArgs {
+export type HaLoNoncePCDArgs = {
   /**
    * The uncompressed hex string of the signing public key
    */
@@ -32,7 +32,7 @@ export interface HaLoNoncePCDArgs {
    * The signature of the nonce + random string
    */
   rndsig: StringArgument;
-}
+};
 
 export interface HaLoNoncePCDClaim {
   /**

@@ -77,7 +77,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         onProve(pcd as any, serializedPCD, undefined);
       } catch (e) {
         setError(getErrorMessage(e));
-      } finally {
+        // NB: Only re-enable the 'Prove' button if there was an error. If
+        // the proving operation succeeded, we want to leave the button
+        // disabled while onProve redirects user.
         setProving(false);
       }
     }
@@ -88,7 +90,12 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {options?.description && <Description>{options.description}</Description>}
 
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
-      <PCDArgs args={args} setArgs={setArgs} pcdCollection={pcds} />
+
+      <PCDArgs
+        args={args}
+        setArgs={setArgs}
+        options={pcdPackage.getProveDisplayOptions?.()?.defaultArgs}
+      />
 
       {error && <ErrorContainer>{error}</ErrorContainer>}
 

@@ -33,7 +33,7 @@ export interface EdDSAInitArgs {}
 /**
  * Defines the essential parameters required for creating an {@link EdDSAPCD}.
  */
-export interface EdDSAPCDArgs {
+export type EdDSAPCDArgs = {
   /**
    * The EdDSA private key is a 32-byte value used to sign the message.
    * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
@@ -51,7 +51,7 @@ export interface EdDSAPCDArgs {
    * id will be generated.
    */
   id: StringArgument;
-}
+};
 
 /**
  * Defines the EdDSA PCD claim. The claim contains a message signed
