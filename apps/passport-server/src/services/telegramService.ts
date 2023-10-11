@@ -38,6 +38,7 @@ import {
   chatsToPostIn,
   dynamicEvents,
   findChatByEventIds,
+  getAnonTopicNullifier,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
@@ -741,6 +742,7 @@ export class TelegramService {
     const {
       watermark,
       partialTicket: { eventId },
+      externalNullifier,
       nullifierHash
     } = pcd.claim;
 
@@ -807,6 +809,15 @@ export class TelegramService {
     }
 
     if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+    const expectedExternalNullifier = getAnonTopicNullifier(
+      chat.id,
+      parseInt(topicId)
+    ).toString();
+
+    if (externalNullifier !== expectedExternalNullifier)
+      throw new Error("Nullifier mismatch - try proving again.");
+
     const nullifierData = await fetchAnonTopicNullifier(
       this.context.dbPool,
       nullifierHash
