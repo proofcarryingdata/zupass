@@ -35,18 +35,17 @@ import {
   VerifyTicketResult,
   ZupassFeedIds,
   ZuzaluUserRole,
-  verifyFeedCredential
+  verifyFeedCredential,
+  zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
   DeleteFolderAction,
-  DeleteFolderPermission,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
   ReplaceInFolderAction,
-  ReplaceInFolderPermission,
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -213,42 +212,7 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: {
-            id: ZupassFeedIds.Devconnect,
-            name: "Devconnect Tickets",
-            description: "Get your Devconnect tickets here!",
-            inputPCDType: EdDSATicketPCDPackage.name,
-            partialArgs: undefined,
-            credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
-            },
-            permissions: [
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission,
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.ReplaceInFolder
-              } as ReplaceInFolderPermission,
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.DeleteFolder
-              } as DeleteFolderPermission,
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission,
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.ReplaceInFolder
-              } as ReplaceInFolderPermission,
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.DeleteFolder
-              } as DeleteFolderPermission
-            ]
-          }
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Devconnect]
         },
         {
           handleRequest: async (
@@ -330,26 +294,7 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: {
-            id: ZupassFeedIds.Email,
-            name: "Zupass Verified Emails",
-            description: "Emails verified by Zupass",
-            inputPCDType: EmailPCDPackage.name,
-            partialArgs: undefined,
-            credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
-            },
-            permissions: [
-              {
-                folder: "Email",
-                type: PCDPermissionType.DeleteFolder
-              } as DeleteFolderPermission,
-              {
-                folder: "Email",
-                type: PCDPermissionType.ReplaceInFolder
-              } as ReplaceInFolderPermission
-            ]
-          }
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Email]
         },
         {
           handleRequest: async (
@@ -386,26 +331,7 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: {
-            id: ZupassFeedIds.Zuzalu_1,
-            name: "Zuzalu tickets",
-            description: "Your Zuzalu Tickets",
-            inputPCDType: EdDSATicketPCD.name,
-            partialArgs: undefined,
-            credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
-            },
-            permissions: [
-              {
-                folder: "Zuzalu '23",
-                type: PCDPermissionType.DeleteFolder
-              } as DeleteFolderPermission,
-              {
-                folder: "Zuzalu '23",
-                type: PCDPermissionType.ReplaceInFolder
-              } as ReplaceInFolderPermission
-            ]
-          }
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Zuzalu_1]
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
