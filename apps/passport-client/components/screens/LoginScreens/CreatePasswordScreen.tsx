@@ -6,7 +6,7 @@ import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { hasPendingRequest } from "../../../src/sessionStorage";
 import { validateEmail } from "../../../src/util";
-import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
+import { CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button } from "../../core/Button";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -120,15 +120,11 @@ export function CreatePasswordScreen() {
           <H2>Choose a Password</H2>
           <Spacer h={24} />
           This password will be used to generate an encryption key that secures
-          your data. Save your password somewhere you'll be able to find it
-          later. If you skip this now, you will be asked to set a password on
-          adding your first PCD.
+          your data. Save your password somewhere you'll be able to find later.
         </TextCenter>
         <Spacer h={24} />
 
         <CenterColumn>
-          <BigInput value={email} disabled={true} />
-          <Spacer h={8} />
           <NewPasswordForm
             error={error}
             setError={setError}
