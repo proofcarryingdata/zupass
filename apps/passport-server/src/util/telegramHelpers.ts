@@ -181,8 +181,8 @@ const generateProofUrl = (
 ): string => {
   const fieldsToReveal: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
-    revealEventId: true,
-    revealProductId: true,
+    revealEventId: false,
+    revealProductId: false,
     revealTimestampConsumed: false,
     revealTimestampSigned: false,
     revealAttendeeSemaphoreId: true,
