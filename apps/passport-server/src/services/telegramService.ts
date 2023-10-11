@@ -814,7 +814,11 @@ export class TelegramService {
 
     // TODO: better ux
     if (!canPost) {
-      throw new Error(`You have exceeded the daily limit of 3 messages.`);
+      throw new Error(
+        `You have exceeded the daily limit of ${
+          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? 3
+        } messages for this topic.`
+      );
     }
 
     await this.sendToAnonymousChannel(
