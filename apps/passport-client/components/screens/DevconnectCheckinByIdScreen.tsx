@@ -1,9 +1,9 @@
 import {
+  checkinTicketById,
   CheckTicketByIdResponseValue,
   CheckTicketByIdResult,
-  TicketError,
-  checkinTicketById,
-  requestCheckTicketById
+  requestCheckTicketById,
+  TicketError
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { useCallback, useEffect, useState } from "react";
@@ -148,7 +148,11 @@ function ScanAnotherTicket() {
     window.location.href = "/#/scan";
   }, []);
 
-  return <Button onClick={onClick}>Scan Another Ticket</Button>;
+  return (
+    <Button style="secondary" onClick={onClick}>
+      Scan Another Ticket
+    </Button>
+  );
 }
 
 function Home() {
@@ -159,7 +163,9 @@ function Home() {
   return (
     <>
       <Spacer h={8} />
-      <Button onClick={onClick}>Home</Button>
+      <Button style="secondary" onClick={onClick}>
+        Home
+      </Button>
     </>
   );
 }
@@ -252,7 +258,12 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
   return (
     <CheckinSectionContainer>
       {!inProgress && !finishedCheckinAttempt && (
-        <Button onClick={onCheckInClick}>Check In</Button>
+        <>
+          <Button onClick={onCheckInClick}>Check In</Button>
+          <Spacer h={8} />
+          <ScanAnotherTicket />
+          <Home />
+        </>
       )}
       {inProgress && <RippleLoader />}
       {finishedCheckinAttempt && (
