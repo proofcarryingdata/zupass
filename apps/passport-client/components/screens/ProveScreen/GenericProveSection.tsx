@@ -3,9 +3,15 @@ import {
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
-import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import {
+  ArgsOf,
+  PCDOf,
+  PCDPackage,
+  SerializedPCD,
+  isPCDArgument
+} from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
@@ -36,7 +42,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 }) {
   const rollbar = useAppRollbar();
   const pcds = usePCDCollection();
-  const [args, setArgs] = useState(JSON.parse(JSON.stringify(initialArgs)));
+  const [args, setArgs] = useState<ArgsOf<T>>(
+    JSON.parse(JSON.stringify(initialArgs))
+  );
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
@@ -44,6 +52,16 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   useEffect(() => {
     setError(undefined);
   }, [args]);
+
+  const isProveReady = useMemo(
+    () =>
+      !Object.entries(args).find(
+        ([_, arg]) =>
+          // only PCD arguments are required
+          arg.value || !isPCDArgument(arg)
+      ),
+    [args]
+  );
 
   const onProveClick = useCallback(async () => {
     setProving(true);
@@ -102,7 +120,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {proving ? (
         <RippleLoader />
       ) : (
-        <Button onClick={onProveClick}>Prove</Button>
+        <Button disabled={!isProveReady} onClick={onProveClick}>
+          Prove
+        </Button>
       )}
     </Container>
   );
