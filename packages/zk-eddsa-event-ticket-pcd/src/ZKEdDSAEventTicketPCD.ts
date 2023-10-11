@@ -97,12 +97,12 @@ export type ZKEdDSAEventTicketPCDArgs = {
        * or in the app level (e.g. check revealed eventId or productId)
        *
        * If both `eventIds` and `productIds` are provided, they must be of the same length and
-       * they will be checked as pairs.
+       * they will be checked as pairs. Pass empty array to skip the check.
        */
-      eventIds?: string[];
-      productIds?: string[];
+      eventIds: string[];
+      productIds: string[];
       // user friendly message when no valid ticket is found
-      notFoundMessage?: string;
+      notFoundMessage: string;
     }
   >;
   identity: PCDArgument<SemaphoreIdentityPCD>;
@@ -453,6 +453,8 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
           return true;
         },
         validatorParams: {
+          eventIds: [],
+          productIds: [],
           notFoundMessage: "You do not have any eligible tickets."
         }
       },

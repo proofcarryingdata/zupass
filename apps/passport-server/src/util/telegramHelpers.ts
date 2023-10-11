@@ -200,6 +200,7 @@ const generateProofUrl = (
       description: "",
       validatorParams: {
         eventIds: validEventIds,
+        productIds: [],
         // TODO: surface which event ticket we are looking for
         notFoundMessage: "You don't have a ticket to this event."
       },

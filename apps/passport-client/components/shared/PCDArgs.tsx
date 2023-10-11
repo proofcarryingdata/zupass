@@ -478,8 +478,16 @@ export function PCDArgInput({
   }, [arg.value, pcdCollection]);
 
   return (
-    <ArgContainer arg={arg} {...rest}>
-      {relevantPCDs.length ? (
+    <ArgContainer
+      arg={arg}
+      {...rest}
+      error={
+        !relevantPCDs.length &&
+        (arg.validatorParams?.notFoundMessage ||
+          "You do not have an eligible PCD.")
+      }
+    >
+      {!!relevantPCDs.length && (
         <Select
           value={pcd?.id || "none"}
           onChange={onChange}
@@ -494,8 +502,6 @@ export function PCDArgInput({
             );
           })}
         </Select>
-      ) : (
-        <ErrorText>No eligible {arg.displayName || "PCD"}s found</ErrorText>
       )}
     </ArgContainer>
   );
@@ -516,7 +522,7 @@ function ArgContainer({
   end?: React.ReactNode;
 }) {
   return (
-    <ArgItemContainer hidden={hidden}>
+    <ArgItemContainer hidden={hidden} error={!!error}>
       {!hideIcon && (
         <ArgItemIcon
           src={argTypeIcons[argumentType]}
@@ -589,9 +595,11 @@ const End = styled.div`
   margin-right: 8px;
 `;
 
-const ArgItemContainer = styled.div<{ hidden: boolean }>`
+const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   border-radius: 16px;
-  border: 1px solid var(--bg-lite-gray);
+  border: 1px solid;
+  border-color: ${({ error }) =>
+    error ? "var(--danger)" : "var(--bg-lite-gray)"};
   background-color: rgba(var(--white-rgb), 0.01);
   align-items: center;
   padding: 8px 16px;
@@ -634,7 +642,8 @@ const ArgsContainer = styled.div`
 `;
 
 const ErrorText = styled.div`
-  color: var(--danger);
+  color: var(--danger-bright);
+  font-size: 14px;
 `;
 
 const Select = styled.select`
