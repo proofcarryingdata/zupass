@@ -180,7 +180,12 @@ function SendEmailVerification({ email }: { email: string }) {
           <form onSubmit={onSubmit}>
             <BigInput value={email} disabled={true} />
             <Spacer h={8} />
-            <BigInput ref={inRef} autoFocus placeholder="code from email" />
+            <BigInput
+              type="number"
+              ref={inRef}
+              autoFocus
+              placeholder="code from email"
+            />
             <InlineError error={error} />
             <Spacer h={8} />
             <Button type="submit">Verify</Button>

@@ -85,6 +85,7 @@ export function EnterConfirmationCodeScreen() {
           <BigInput value={email} disabled />
           <Spacer h={8} />
           <BigInput
+            type="number"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="confirmation code"
