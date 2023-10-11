@@ -11,6 +11,7 @@ import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
+import { EmailCodeInput } from "../../core/Input";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
 import { ResendCodeButton } from "../../shared/ResendCodeButton";
@@ -180,8 +181,7 @@ function SendEmailVerification({ email }: { email: string }) {
           <form onSubmit={onSubmit}>
             <BigInput value={email} disabled={true} />
             <Spacer h={8} />
-            <BigInput
-              type="number"
+            <EmailCodeInput
               ref={inRef}
               autoFocus
               placeholder="code from email"
