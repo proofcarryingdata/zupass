@@ -82,8 +82,7 @@ async function requestProof(
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: {},
-      userProvided: false,
-      hideIcon: true
+      userProvided: false
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
