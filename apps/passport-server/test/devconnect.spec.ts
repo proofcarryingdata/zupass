@@ -26,7 +26,6 @@ import {
   requestVerifyTicket
 } from "@pcd/passport-interface";
 import {
-  AppendToFolderAction,
   PCDActionType,
   ReplaceInFolderAction,
   isReplaceInFolderAction
@@ -1754,11 +1753,8 @@ describe("devconnect functionality", function () {
       // First action for a subfolder is to clear it
       const clearAction = response.value?.actions?.[2] as ReplaceInFolderAction;
 
-      expect(clearAction.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(clearAction.type).to.eq(PCDActionType.DeleteFolder);
       expect(clearAction.folder).to.eq("Devconnect/Event A");
-
-      expect(Array.isArray(clearAction.pcds)).to.eq(true);
-      expect(clearAction.pcds.length).to.eq(0);
 
       // Second action is to populate it
       const populateAction = response.value
@@ -1803,8 +1799,8 @@ describe("devconnect functionality", function () {
     MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[0] as AppendToFolderAction;
-    const action2 = response2.actions[0] as AppendToFolderAction;
+    const action1 = response1.actions[3] as ReplaceInFolderAction;
+    const action2 = response2.actions[3] as ReplaceInFolderAction;
 
     const pcds1 = await Promise.all(
       action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
@@ -1814,6 +1810,7 @@ describe("devconnect functionality", function () {
     );
 
     expect(pcds1.length).to.eq(pcds2.length);
+    expect(pcds1.length).to.not.eq(0);
 
     pcds1.forEach((_, i) => {
       expect(pcds1[i].id).to.eq(pcds2[i].id);
@@ -2128,12 +2125,9 @@ describe("devconnect functionality", function () {
 
       const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([
-        { type: PCDActionType.ReplaceInFolder, folder: "SBC SRW", pcds: [] },
-        { type: PCDActionType.ReplaceInFolder, folder: "Devconnect", pcds: [] }
+        { type: PCDActionType.DeleteFolder, folder: "SBC SRW" },
+        { type: PCDActionType.DeleteFolder, folder: "Devconnect" }
       ]);
-
-      const action = response.actions[0] as ReplaceInFolderAction;
-      expect(action.pcds).to.deep.eq([]);
     }
   );
 
