@@ -40,6 +40,8 @@ import {
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  DeleteFolderAction,
+  DeleteFolderPermission,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
@@ -162,15 +164,13 @@ export class IssuanceService {
               );
 
               actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "SBC SRW",
-                pcds: []
+                type: PCDActionType.DeleteFolder,
+                folder: "SBC SRW"
               });
 
               actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Devconnect",
-                pcds: []
+                type: PCDActionType.DeleteFolder,
+                folder: "Devconnect"
               });
 
               actions.push(
@@ -178,9 +178,8 @@ export class IssuanceService {
                   await Promise.all(
                     devconnectTickets.map(async ([eventName, tickets]) => [
                       {
-                        type: PCDActionType.ReplaceInFolder,
-                        folder: joinPath("Devconnect", eventName),
-                        pcds: []
+                        type: PCDActionType.DeleteFolder,
+                        folder: joinPath("Devconnect", eventName)
                       },
                       {
                         type: PCDActionType.ReplaceInFolder,
@@ -233,13 +232,21 @@ export class IssuanceService {
                 type: PCDPermissionType.ReplaceInFolder
               } as ReplaceInFolderPermission,
               {
+                folder: "Devconnect",
+                type: PCDPermissionType.DeleteFolder
+              } as DeleteFolderPermission,
+              {
                 folder: "SBC SRW",
                 type: PCDPermissionType.AppendToFolder
               } as AppendToFolderPermission,
               {
                 folder: "SBC SRW",
                 type: PCDPermissionType.ReplaceInFolder
-              } as ReplaceInFolderPermission
+              } as ReplaceInFolderPermission,
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.DeleteFolder
+              } as DeleteFolderPermission
             ]
           }
         },
@@ -305,10 +312,9 @@ export class IssuanceService {
 
               // Clear out the folder
               actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Email",
-                pcds: []
-              } as ReplaceInFolderAction);
+                type: PCDActionType.DeleteFolder,
+                folder: "Email"
+              } as DeleteFolderAction);
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -336,8 +342,8 @@ export class IssuanceService {
             permissions: [
               {
                 folder: "Email",
-                type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission,
+                type: PCDPermissionType.DeleteFolder
+              } as DeleteFolderPermission,
               {
                 folder: "Email",
                 type: PCDPermissionType.ReplaceInFolder
@@ -362,10 +368,9 @@ export class IssuanceService {
 
               // Clear out the folder
               actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Zuzalu '23",
-                pcds: []
-              } as ReplaceInFolderAction);
+                type: PCDActionType.DeleteFolder,
+                folder: "Zuzalu '23"
+              } as DeleteFolderAction);
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -393,8 +398,8 @@ export class IssuanceService {
             permissions: [
               {
                 folder: "Zuzalu '23",
-                type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission,
+                type: PCDPermissionType.DeleteFolder
+              } as DeleteFolderPermission,
               {
                 folder: "Zuzalu '23",
                 type: PCDPermissionType.ReplaceInFolder

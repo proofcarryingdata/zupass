@@ -7,6 +7,8 @@ import { v4 as uuid } from "uuid";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
+  DeleteFolderAction,
+  DeleteFolderPermission,
   PCDActionType,
   PCDCollection,
   PCDPermissionType,
@@ -300,5 +302,85 @@ describe("Permissions", async function () {
     // This means that the string representations of action types should
     // never overlap with the string representations of permission types.
     expect(intersection).to.be.empty;
+  });
+
+  it("deleting should succeed with right permission", async function () {
+    const collection = new PCDCollection(packages);
+
+    const action: AppendToFolderAction = {
+      type: PCDActionType.AppendToFolder,
+      folder: "test",
+      pcds: [serializedPcd]
+    };
+
+    const permission: AppendToFolderPermission = {
+      type: PCDPermissionType.AppendToFolder,
+      folder: "test"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(action, permission)
+    ).to.be.true;
+
+    expect(collection.getSize()).to.eq(1);
+
+    const deleteAction: DeleteFolderAction = {
+      type: PCDActionType.DeleteFolder,
+      folder: "test"
+    };
+
+    const deletePermission: DeleteFolderPermission = {
+      type: PCDPermissionType.DeleteFolder,
+      folder: "test"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(
+        deleteAction,
+        deletePermission
+      )
+    ).to.be.true;
+
+    expect(collection.getSize()).to.eq(0);
+  });
+
+  it("deleting should fail without right permission", async function () {
+    const collection = new PCDCollection(packages);
+
+    const action: AppendToFolderAction = {
+      type: PCDActionType.AppendToFolder,
+      folder: "test",
+      pcds: [serializedPcd]
+    };
+
+    const permission: AppendToFolderPermission = {
+      type: PCDPermissionType.AppendToFolder,
+      folder: "test"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(action, permission)
+    ).to.be.true;
+
+    expect(collection.getSize()).to.eq(1);
+
+    const deleteAction: DeleteFolderAction = {
+      type: PCDActionType.DeleteFolder,
+      folder: "test"
+    };
+
+    const deletePermission: DeleteFolderPermission = {
+      type: PCDPermissionType.DeleteFolder,
+      folder: "other"
+    };
+
+    expect(
+      await collection.tryExecutingActionWithPermission(
+        deleteAction,
+        deletePermission
+      )
+    ).to.be.false;
+
+    expect(collection.getSize()).to.eq(1);
   });
 });

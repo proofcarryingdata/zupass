@@ -3,23 +3,28 @@ import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import {
   AppendToFolderAction,
+  DeleteFolderAction,
   PCDAction,
   ReplaceInFolderAction,
   isAppendToFolderAction,
+  isDeleteFolderAction,
   isReplaceInFolderAction
 } from "./actions";
 import {
   AppendToFolderPermission,
+  DeleteFolderPermission,
   PCDPermission,
   ReplaceInFolderPermission,
   isAppendToFolderPermission,
+  isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "./permissions";
 import { getFoldersInFolder, isFolderAncestor, isRootFolder } from "./util";
 
 export type MatchingActionPermission =
   | { permission: ReplaceInFolderPermission; action: ReplaceInFolderAction }
-  | { permission: AppendToFolderPermission; action: AppendToFolderAction };
+  | { permission: AppendToFolderPermission; action: AppendToFolderAction }
+  | { permission: DeleteFolderPermission; action: DeleteFolderAction };
 
 type AddPCDOptions = { upsert?: boolean };
 
@@ -40,6 +45,15 @@ export function matchActionToPermission(
     if (
       isReplaceInFolderAction(action) &&
       isReplaceInFolderPermission(permission) &&
+      (action.folder === permission.folder ||
+        isFolderAncestor(action.folder, permission.folder))
+    ) {
+      return { action, permission };
+    }
+
+    if (
+      isDeleteFolderAction(action) &&
+      isDeleteFolderPermission(permission) &&
       (action.folder === permission.folder ||
         isFolderAncestor(action.folder, permission.folder))
     ) {
@@ -182,6 +196,19 @@ export class PCDCollection {
       return true;
     }
 
+    if (isDeleteFolderAction(action) && isDeleteFolderPermission(permission)) {
+      if (
+        action.folder !== permission.folder &&
+        !isFolderAncestor(action.folder, permission.folder)
+      ) {
+        return false;
+      }
+
+      this.deleteFolder(action.folder);
+
+      return true;
+    }
+
     return false;
   }
 
@@ -250,6 +277,10 @@ export class PCDCollection {
     this.removeAllPCDsInFolder(folder);
     this.addAll(pcds, { upsert: true });
     pcds.forEach((pcd) => this.setPCDFolder(pcd.id, folder));
+  }
+
+  private deleteFolder(folder: string): void {
+    this.removeAllPCDsInFolder(folder);
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(
