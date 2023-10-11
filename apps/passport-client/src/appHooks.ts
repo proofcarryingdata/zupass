@@ -1,7 +1,11 @@
+import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
   CredentialCache,
   FeedSubscriptionManager,
+  KnownPublicKey,
+  KnownTicketType,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -120,6 +124,46 @@ export function useResolvingSubscriptionId(): string | undefined {
 
 export function useCredentialCache(): CredentialCache {
   return useSelector<CredentialCache>((s) => s.credentialCache);
+}
+
+export function useKnownTicketTypes(): KnownTicketType[] | undefined {
+  return useSelector<KnownTicketType[] | undefined>((s) => s.knownTicketTypes);
+}
+
+export function useKnownPublicKeys():
+  | Record<string, Record<string, KnownPublicKey>>
+  | undefined {
+  return useSelector<
+    Record<string, Record<string, KnownPublicKey>> | undefined
+  >((s) => s.knownPublicKeys);
+}
+
+/**
+ * Given an EdDSATicketPCD, find a matched ticket type, if any exists
+ */
+export function useMatchedTicketType(
+  pcd: EdDSATicketPCD
+): KnownTicketType | null {
+  const ticketTypes = useKnownTicketTypes();
+  const keys = useKnownPublicKeys();
+
+  const keyType = "eddsa";
+  const ticket = pcd.claim.ticket;
+  const pubKey = pcd.proof.eddsaPCD.claim.publicKey;
+
+  const matchedType = ticketTypes.find((tt) => {
+    const matchedPubKeyByName = keys[keyType][tt.publicKeyName];
+    return (
+      matchedPubKeyByName &&
+      tt.eventId === ticket.eventId &&
+      tt.productId === ticket.productId &&
+      // Next line is for the benefit of the type-checker
+      matchedPubKeyByName.publicKeyType === keyType &&
+      isEqualEdDSAPublicKey(pubKey, matchedPubKeyByName.publicKey)
+    );
+  });
+
+  return matchedType ?? null;
 }
 
 export function useQuery(): URLSearchParams | undefined {

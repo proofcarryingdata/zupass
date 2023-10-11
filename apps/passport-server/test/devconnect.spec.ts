@@ -1,4 +1,8 @@
-import { EdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  newEdDSAPrivateKey
+} from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -6,15 +10,20 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import {
+  KnownTicketGroup,
+  KnownTicketTypesResult,
   PollFeedResponseValue,
   User,
   ZupassFeedIds,
   ZuzaluUserRole,
   checkinTicket,
+  checkinTicketById,
   createFeedCredentialPayload,
   pollFeed,
+  requestKnownTicketTypes,
   requestServerEdDSAPublicKey,
-  requestServerRSAPublicKey
+  requestServerRSAPublicKey,
+  requestVerifyTicket
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
@@ -77,6 +86,11 @@ import {
   SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
+import {
+  ZUPASS_TICKET_PUBLIC_KEY_NAME,
+  ZUZALU_23_EVENT_ID,
+  ZUZALU_23_RESIDENT_PRODUCT_ID
+} from "../src/services/issuanceService";
 import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
@@ -139,7 +153,7 @@ describe("devconnect functionality", function () {
   let publicKeyRSA: NodeRSA;
   let publicKeyEdDSA: EdDSAPublicKey;
 
-  let ticket: EdDSATicketPCD;
+  let ticketPCD: EdDSATicketPCD;
   let checkerIdentity: Identity;
 
   this.beforeEach(async () => {
@@ -1944,11 +1958,41 @@ describe("devconnect functionality", function () {
       const action = issueResponseBody.actions[3] as ReplaceInFolderAction;
 
       const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
-      ticket = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
+      ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
       const checkinResult = await checkinTicket(
         application.expressContext.localEndpoint,
-        ticket,
+        ticketPCD,
+        checkerIdentity
+      );
+
+      expect(checkinResult.success).to.eq(true);
+      expect(checkinResult.value).to.eq(undefined);
+      expect(checkinResult.error).to.eq(undefined);
+    }
+  );
+
+  step(
+    "event 'superuser' should be able to checkin a valid ticket by ID",
+    async function () {
+      MockDate.set(new Date());
+      const payload = JSON.stringify(createFeedCredentialPayload());
+      const issueResponse = await pollFeed(
+        application.expressContext.localEndpoint,
+        identity,
+        payload,
+        ZupassFeedIds.Devconnect
+      );
+      MockDate.reset();
+      const issueResponseBody = issueResponse.value as PollFeedResponseValue;
+
+      const action = issueResponseBody.actions[3] as ReplaceInFolderAction;
+      const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
+      ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
+
+      const checkinResult = await checkinTicketById(
+        application.expressContext.localEndpoint,
+        ticketPCD.claim.ticket.ticketId,
         checkerIdentity
       );
 
@@ -1963,7 +2007,7 @@ describe("devconnect functionality", function () {
     async function () {
       const checkinResult = await checkinTicket(
         application.expressContext.localEndpoint,
-        ticket,
+        ticketPCD,
         checkerIdentity
       );
 
@@ -1996,7 +2040,7 @@ describe("devconnect functionality", function () {
         ticketCategory: TicketCategory.Devconnect
       };
 
-      ticket = await EdDSATicketPCDPackage.prove({
+      ticketPCD = await EdDSATicketPCDPackage.prove({
         ticket: {
           value: ticketData,
           argumentType: ArgumentTypeName.Object
@@ -2013,7 +2057,7 @@ describe("devconnect functionality", function () {
 
       const checkinResult = await checkinTicket(
         application.expressContext.localEndpoint,
-        ticket,
+        ticketPCD,
         checkerIdentity
       );
 
@@ -2398,6 +2442,168 @@ describe("devconnect functionality", function () {
       expect(true).to.eq(true);
     }
   );
+
+  let knownTicketTypesAndKeys: KnownTicketTypesResult | undefined;
+
+  step(
+    "known ticket types should include Zupass public key",
+    async function () {
+      knownTicketTypesAndKeys = await requestKnownTicketTypes(
+        application.expressContext.localEndpoint
+      );
+
+      const eddsaPubKey = await getEdDSAPublicKey(
+        testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+      );
+
+      expect(knownTicketTypesAndKeys.success).to.be.true;
+      expect(knownTicketTypesAndKeys.value?.publicKeys).to.deep.eq([
+        {
+          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+          publicKeyType: "eddsa",
+          publicKey: eddsaPubKey
+        }
+      ]);
+    }
+  );
+
+  step(
+    "known ticket types should include Zuzalu '23 tickets",
+    async function () {
+      const knownTicketTypes = knownTicketTypesAndKeys?.value?.knownTicketTypes;
+      const zuzaluTicketTypes = knownTicketTypes?.filter(
+        (tt) => tt.ticketGroup === KnownTicketGroup.Zuzalu23
+      );
+
+      expect(zuzaluTicketTypes?.length).to.eq(3);
+    }
+  );
+
+  step(
+    "known ticket types should include Devconnect tickets",
+    async function () {
+      const knownTicketTypes = knownTicketTypesAndKeys?.value?.knownTicketTypes;
+      const devconnectTicketTypes = knownTicketTypes?.filter(
+        (tt) => tt.ticketGroup === KnownTicketGroup.Devconnect23
+      );
+
+      expect(devconnectTicketTypes?.length).to.eq(3);
+    }
+  );
+
+  step(
+    "should verify and report knowledge of a known ticket type",
+    async function () {
+      const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
+
+      // create a Zuzalu resident ticket
+      const ticketData: ITicketData = {
+        attendeeName: "test name",
+        attendeeEmail: "user@test.com",
+        eventName: "event",
+        ticketName: "ticket",
+        checkerEmail: "checker@test.com",
+        ticketId: uuid(),
+        eventId: ZUZALU_23_EVENT_ID,
+        productId: ZUZALU_23_RESIDENT_PRODUCT_ID,
+        timestampConsumed: Date.now(),
+        timestampSigned: Date.now(),
+        attendeeSemaphoreId: "12345",
+        isConsumed: false,
+        isRevoked: false,
+        ticketCategory: TicketCategory.Zuzalu
+      };
+
+      ticketPCD = await EdDSATicketPCDPackage.prove({
+        ticket: {
+          value: ticketData,
+          argumentType: ArgumentTypeName.Object
+        },
+        privateKey: {
+          value: prvKey,
+          argumentType: ArgumentTypeName.String
+        },
+        id: {
+          value: undefined,
+          argumentType: ArgumentTypeName.String
+        }
+      });
+
+      const result = await requestVerifyTicket(
+        application.expressContext.localEndpoint,
+        {
+          pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
+        }
+      );
+
+      expect(result.success).to.be.true;
+      // The type-checker wants to know about this too
+      if (result.success === true) {
+        expect(result.value?.verified).to.be.true;
+
+        if (result.value.verified === true) {
+          // Should match the Zupass public key name, since we used the Zupass
+          // private key to sign the ticket.
+          expect(result.value.publicKeyName).to.eq(
+            ZUPASS_TICKET_PUBLIC_KEY_NAME
+          );
+          expect(result.value.group).to.eq(KnownTicketGroup.Zuzalu23);
+        }
+      }
+    }
+  );
+
+  step("should not verify an unknown ticket", async function () {
+    const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
+
+    // create a Zuzalu resident ticket
+    const ticketData: ITicketData = {
+      attendeeName: "test name",
+      attendeeEmail: "user@test.com",
+      eventName: "event",
+      ticketName: "ticket",
+      checkerEmail: "checker@test.com",
+      ticketId: uuid(),
+      // Random UUIDs mean that this will not be a known ticket type
+      eventId: uuid(),
+      productId: uuid(),
+      timestampConsumed: Date.now(),
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId: "12345",
+      isConsumed: false,
+      isRevoked: false,
+      // Category is claimed to be Zuzalu but this is not trustworthy
+      ticketCategory: TicketCategory.Zuzalu
+    };
+
+    ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: prvKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: undefined,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    const result = await requestVerifyTicket(
+      application.expressContext.localEndpoint,
+      {
+        pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
+      }
+    );
+
+    expect(result.success).to.be.true;
+    // The type-checker wants to know about this too
+    if (result.success === true) {
+      expect(result.value?.verified).to.be.false;
+    }
+  });
 
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.

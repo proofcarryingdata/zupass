@@ -56,7 +56,7 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
-  const issuanceService = startIssuanceService(
+  const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,

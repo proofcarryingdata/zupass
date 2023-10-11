@@ -1,10 +1,24 @@
-import { ZuzaluUserRole } from "@pcd/passport-interface";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEqualEdDSAPublicKey,
+  newEdDSAPrivateKey
+} from "@pcd/eddsa-pcd";
+import {
+  KnownPublicKeyType,
+  KnownTicketGroup,
+  ZuzaluUserRole
+} from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
-import { ZuzaluPretixTicket } from "../src/database/models";
+import {
+  KnownTicketTypeWithKey,
+  ZuzaluPretixTicket
+} from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   CacheEntry,
@@ -23,6 +37,13 @@ import {
   fetchEmailToken,
   insertEmailToken
 } from "../src/database/queries/emailToken";
+import {
+  deleteKnownTicketType,
+  fetchKnownTicketByEventAndProductId,
+  fetchKnownTicketTypesByGroup,
+  setKnownPublicKey,
+  setKnownTicketType
+} from "../src/database/queries/knownTicketTypes";
 import { upsertUser } from "../src/database/queries/saveUser";
 import {
   deleteUserByEmail,
@@ -543,5 +564,226 @@ describe("database reads and writes", function () {
     expect(thirdDeleteCount).to.eq(18);
     const afterThirdAgeOut = await getCacheSize(db);
     expect(afterThirdAgeOut).to.eq(beforeThirdAgeOut - 18);
+  });
+
+  const testPublicKeyName = "Zupass Test";
+  const eddsaPubKeyPromise = getEdDSAPublicKey(
+    testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+  );
+
+  step("should be able to insert known public keys", async function () {
+    const eddsaPubKey = await eddsaPubKeyPromise;
+
+    await setKnownPublicKey(
+      db,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      JSON.stringify(eddsaPubKey)
+    );
+
+    const inserted = (
+      await sqlQuery(
+        db,
+        `select * from known_public_keys where public_key_name = $1`,
+        [testPublicKeyName]
+      )
+    ).rows[0];
+    expect(inserted.public_key_name).to.eq(testPublicKeyName);
+    expect(inserted.public_key_type).to.eq(KnownPublicKeyType.EdDSA);
+    expect(JSON.parse(inserted.public_key)).to.deep.eq(eddsaPubKey);
+    expect(isEqualEdDSAPublicKey(JSON.parse(inserted.public_key), eddsaPubKey))
+      .to.be.true;
+  });
+
+  step("should be able to replace known public keys", async function () {
+    const eddsaPubKey = await eddsaPubKeyPromise;
+    const dummyEddsaPubKey = await getEdDSAPublicKey(newEdDSAPrivateKey());
+
+    // Replace the public key with a different one, but use the same name
+    // and type
+    await setKnownPublicKey(
+      db,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      JSON.stringify(dummyEddsaPubKey)
+    );
+
+    let result = await sqlQuery(
+      db,
+      `select * from known_public_keys where public_key_name = $1`,
+      [testPublicKeyName]
+    );
+    let publicKeyInDB = result.rows[0];
+
+    // There should still only be one key with the used name
+    expect(result.rowCount).to.eq(1);
+    expect(publicKeyInDB.public_key_name).to.eq(testPublicKeyName);
+    expect(publicKeyInDB.public_key_type).to.eq(KnownPublicKeyType.EdDSA);
+    expect(JSON.parse(publicKeyInDB.public_key)).to.deep.eq(dummyEddsaPubKey);
+    expect(
+      isEqualEdDSAPublicKey(
+        JSON.parse(publicKeyInDB.public_key),
+        dummyEddsaPubKey
+      )
+    ).to.be.true;
+
+    // Restore the original public key
+    await setKnownPublicKey(
+      db,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      JSON.stringify(eddsaPubKey)
+    );
+
+    result = await sqlQuery(
+      db,
+      `select * from known_public_keys where public_key_name = $1`,
+      [testPublicKeyName]
+    );
+    publicKeyInDB = result.rows[0];
+
+    // There should still only be one key with the used name
+    expect(result.rowCount).to.eq(1);
+    expect(publicKeyInDB.public_key_name).to.eq(testPublicKeyName);
+    expect(publicKeyInDB.public_key_type).to.eq(KnownPublicKeyType.EdDSA);
+    expect(JSON.parse(publicKeyInDB.public_key)).to.deep.eq(eddsaPubKey);
+    expect(
+      isEqualEdDSAPublicKey(JSON.parse(publicKeyInDB.public_key), eddsaPubKey)
+    ).to.be.true;
+  });
+
+  const knownEventId = randomUUID();
+  const knownProductId = randomUUID();
+  const ticketTypeIdentifier = "ZUCONNECT_TEST";
+
+  step("should be able to insert known ticket type", async function () {
+    const eddsaPubKey = await eddsaPubKeyPromise;
+
+    await setKnownTicketType(
+      db,
+      ticketTypeIdentifier,
+      knownEventId,
+      knownProductId,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      KnownTicketGroup.Zuconnect23
+    );
+
+    const knownTicketType = (await fetchKnownTicketByEventAndProductId(
+      db,
+      knownEventId,
+      knownProductId
+    )) as KnownTicketTypeWithKey;
+
+    expect(knownTicketType.event_id).to.eq(knownEventId);
+    expect(knownTicketType.product_id).to.eq(knownProductId);
+    expect(knownTicketType.known_public_key_name).to.eq(testPublicKeyName);
+    expect(knownTicketType.known_public_key_type).to.eq(
+      KnownPublicKeyType.EdDSA
+    );
+    expect(JSON.parse(knownTicketType.public_key)).to.deep.eq(eddsaPubKey);
+    expect(
+      isEqualEdDSAPublicKey(
+        JSON.parse(knownTicketType.public_key) as EdDSAPublicKey,
+        eddsaPubKey
+      )
+    );
+  });
+
+  step("should be able to replace known ticket type", async function () {
+    const eddsaPubKey = await eddsaPubKeyPromise;
+    const newProductId = randomUUID(),
+      newEventId = randomUUID();
+
+    // Change the ticket type created in the previous test
+    await setKnownTicketType(
+      db,
+      ticketTypeIdentifier,
+      newEventId,
+      newProductId,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      KnownTicketGroup.Zuconnect23
+    );
+
+    let knownTicketType = await fetchKnownTicketByEventAndProductId(
+      db,
+      knownEventId,
+      knownProductId
+    );
+
+    expect(knownTicketType).to.be.null;
+
+    const changedTicketType = (await fetchKnownTicketByEventAndProductId(
+      db,
+      newEventId,
+      newProductId
+    )) as KnownTicketTypeWithKey;
+
+    expect(changedTicketType.event_id).to.eq(newEventId);
+    expect(changedTicketType.product_id).to.eq(newProductId);
+    expect(changedTicketType.known_public_key_name).to.eq(testPublicKeyName);
+    expect(changedTicketType.known_public_key_type).to.eq(
+      KnownPublicKeyType.EdDSA
+    );
+    expect(JSON.parse(changedTicketType.public_key)).to.deep.eq(eddsaPubKey);
+    expect(
+      isEqualEdDSAPublicKey(
+        JSON.parse(changedTicketType.public_key) as EdDSAPublicKey,
+        eddsaPubKey
+      )
+    );
+
+    // Restore the ticket type to the original value
+    await setKnownTicketType(
+      db,
+      ticketTypeIdentifier,
+      knownEventId,
+      knownProductId,
+      testPublicKeyName,
+      KnownPublicKeyType.EdDSA,
+      KnownTicketGroup.Zuconnect23
+    );
+
+    knownTicketType = (await fetchKnownTicketByEventAndProductId(
+      db,
+      knownEventId,
+      knownProductId
+    )) as KnownTicketTypeWithKey;
+
+    expect(knownTicketType.event_id).to.eq(knownEventId);
+    expect(knownTicketType.product_id).to.eq(knownProductId);
+    expect(knownTicketType.known_public_key_name).to.eq(testPublicKeyName);
+    expect(knownTicketType.known_public_key_type).to.eq(
+      KnownPublicKeyType.EdDSA
+    );
+    expect(JSON.parse(knownTicketType.public_key)).to.deep.eq(eddsaPubKey);
+    expect(
+      isEqualEdDSAPublicKey(
+        JSON.parse(knownTicketType.public_key) as EdDSAPublicKey,
+        eddsaPubKey
+      )
+    );
+  });
+
+  step("should be able to fetch known ticket type by group", async function () {
+    const ticketTypes = await fetchKnownTicketTypesByGroup(
+      db,
+      KnownTicketGroup.Zuconnect23
+    );
+
+    expect(ticketTypes.length).to.eq(1);
+    expect(ticketTypes[0].ticket_group).to.eq(KnownTicketGroup.Zuconnect23);
+  });
+
+  step("should be able to delete known ticket types", async function () {
+    await deleteKnownTicketType(db, ticketTypeIdentifier);
+
+    const ticketTypes = await fetchKnownTicketTypesByGroup(
+      db,
+      KnownTicketGroup.Zuconnect23
+    );
+
+    expect(ticketTypes.length).to.eq(0);
   });
 });

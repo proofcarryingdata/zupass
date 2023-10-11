@@ -81,6 +81,10 @@ export interface ChatIDWithEventIDs {
   telegramChatID: string;
   ticketEventIds: string[];
 }
+export interface UserIDWithChatIDs {
+  telegramUserID: string;
+  telegramChatIDs: string[];
+}
 
 export async function fetchEventsPerChat(
   client: Pool
@@ -106,10 +110,47 @@ export async function fetchTelegramAnonTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_anon_topics
+    select * from telegram_chat_topics
+    where telegram_chat_id = $1 and is_anon_topic is true
+    `,
+    [telegramChatId]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramTopicsByChatId(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramAnonChannel[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_chat_topics
     where telegram_chat_id = $1
     `,
     [telegramChatId]
   );
   return result.rows;
+}
+
+export async function fetchUserTelegramChats(
+  client: Pool,
+  telegramUserID: number
+): Promise<UserIDWithChatIDs | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT 
+      telegram_user_id AS "telegramUserID",
+      ARRAY_AGG(telegram_chat_id) AS "telegramChatIDs"
+    FROM 
+      telegram_bot_conversations
+    WHERE
+      telegram_user_id = $1
+    GROUP BY 
+      telegram_user_id
+    `,
+    [telegramUserID]
+  );
+  return result.rows[0] ?? null;
 }
