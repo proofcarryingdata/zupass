@@ -19,6 +19,7 @@ import {
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
+  insertTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -735,7 +736,8 @@ export class TelegramService {
 
     const {
       watermark,
-      partialTicket: { eventId }
+      partialTicket: { eventId },
+      nullifierHash
     } = pcd.claim;
 
     const { validEventIds } = pcd.claim;
@@ -798,6 +800,21 @@ export class TelegramService {
       throw new Error(
         `Couldn't find anon topic for event: ${eventId} with requested topic_id: ${topicId}`
       );
+    }
+
+    if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+    const canPost = await insertTelegramNullifier(
+      this.context.dbPool,
+      nullifierHash,
+      chat.id,
+      parseInt(topicId),
+      3 // TODO: don't hardcode this
+    );
+
+    // TODO: better ux
+    if (!canPost) {
+      throw new Error(`You have exceeded the daily limit of 3 messages.`);
     }
 
     await this.sendToAnonymousChannel(

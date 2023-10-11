@@ -86,7 +86,7 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: undefined,
+      value: topicId,
       userProvided: false
     },
     validEventIds: {
