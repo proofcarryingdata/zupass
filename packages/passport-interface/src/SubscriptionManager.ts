@@ -1,10 +1,10 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  matchActionToPermission,
   PCDAction,
   PCDCollection,
-  PCDPermission,
-  matchActionToPermission
+  PCDPermission
 } from "@pcd/pcd-collection";
 import { ArgsOf, PCDPackage, PCDTypeNameOf } from "@pcd/pcd-types";
 import { isFulfilled } from "@pcd/util";
@@ -89,6 +89,10 @@ export class FeedSubscriptionManager {
     credentialManager: CredentialManagerAPI
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
+
+    await credentialManager.prepareCredentials(
+      this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
+    );
 
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
