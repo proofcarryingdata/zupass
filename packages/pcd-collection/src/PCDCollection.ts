@@ -1,25 +1,31 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import _ from "lodash";
 import {
   AppendToFolderAction,
+  DeleteFolderAction,
   PCDAction,
   ReplaceInFolderAction,
   isAppendToFolderAction,
+  isDeleteFolderAction,
   isReplaceInFolderAction
 } from "./actions";
 import {
   AppendToFolderPermission,
+  DeleteFolderPermission,
   PCDPermission,
   ReplaceInFolderPermission,
   isAppendToFolderPermission,
+  isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "./permissions";
 import { getFoldersInFolder, isFolderAncestor, isRootFolder } from "./util";
 
 export type MatchingActionPermission =
   | { permission: ReplaceInFolderPermission; action: ReplaceInFolderAction }
-  | { permission: AppendToFolderPermission; action: AppendToFolderAction };
+  | { permission: AppendToFolderPermission; action: AppendToFolderAction }
+  | { permission: DeleteFolderPermission; action: DeleteFolderAction };
 
 type AddPCDOptions = { upsert?: boolean };
 
@@ -40,6 +46,15 @@ export function matchActionToPermission(
     if (
       isReplaceInFolderAction(action) &&
       isReplaceInFolderPermission(permission) &&
+      (action.folder === permission.folder ||
+        isFolderAncestor(action.folder, permission.folder))
+    ) {
+      return { action, permission };
+    }
+
+    if (
+      isDeleteFolderAction(action) &&
+      isDeleteFolderPermission(permission) &&
       (action.folder === permission.folder ||
         isFolderAncestor(action.folder, permission.folder))
     ) {
@@ -182,6 +197,19 @@ export class PCDCollection {
       return true;
     }
 
+    if (isDeleteFolderAction(action) && isDeleteFolderPermission(permission)) {
+      if (
+        action.folder !== permission.folder &&
+        !isFolderAncestor(action.folder, permission.folder)
+      ) {
+        return false;
+      }
+
+      this.deleteFolder(action.folder, action.recursive);
+
+      return true;
+    }
+
     return false;
   }
 
@@ -250,6 +278,25 @@ export class PCDCollection {
     this.removeAllPCDsInFolder(folder);
     this.addAll(pcds, { upsert: true });
     pcds.forEach((pcd) => this.setPCDFolder(pcd.id, folder));
+  }
+
+  /**
+   * Removes all PCDs within a given folder, and optionally within all
+   * subfolders.
+   */
+  private deleteFolder(folder: string, recursive: boolean): void {
+    const folders = [folder];
+
+    if (recursive) {
+      const subFolders = Object.values(this.folders).filter((folderPath) => {
+        return isFolderAncestor(folderPath, folder);
+      });
+      folders.push(..._.uniq(subFolders));
+    }
+
+    for (const folderPath of folders) {
+      this.removeAllPCDsInFolder(folderPath);
+    }
   }
 
   public getPackage<T extends PCDPackage = PCDPackage>(

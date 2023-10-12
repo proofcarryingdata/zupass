@@ -12,6 +12,7 @@ export * from "./SemaphoreSignatureIntegration";
 export * from "./SerializedPCDIntegration";
 export * from "./SubscriptionManager";
 export * from "./User";
+export * from "./ZupassDefaultSubscriptions";
 export * from "./api/apiResult";
 export * from "./api/constants";
 export * from "./api/makeRequest";
