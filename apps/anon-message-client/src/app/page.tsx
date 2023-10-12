@@ -179,8 +179,7 @@ export default function () {
           {message.length != 0 && !messageInvalid && (
             <button
               onClick={onClick}
-              className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
-              disabled={messageInvalid}
+              className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4"
             >
               {loadingProofUrl
                 ? `Loading...`
