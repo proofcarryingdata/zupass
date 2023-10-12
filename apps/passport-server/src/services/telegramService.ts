@@ -491,6 +491,7 @@ export class TelegramService {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
+            // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
             `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${directLinkParams}&startapp=${directLinkParams}`
           )
         });
