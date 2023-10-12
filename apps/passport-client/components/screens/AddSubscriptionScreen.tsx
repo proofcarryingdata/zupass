@@ -8,6 +8,7 @@ import {
 import {
   PCDPermission,
   isAppendToFolderPermission,
+  isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -311,6 +312,12 @@ function SinglePermission({ permission }: { permission: PCDPermission }) {
     return (
       <PermissionListItem>
         Replace in folder <strong>{permission.folder}</strong>
+      </PermissionListItem>
+    );
+  } else if (isDeleteFolderPermission(permission)) {
+    return (
+      <PermissionListItem>
+        Delete folder <strong>{permission.folder}</strong>
       </PermissionListItem>
     );
   } else {
