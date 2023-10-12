@@ -1,4 +1,4 @@
-import { createCredentialCache } from "@pcd/passport-interface";
+import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -214,7 +214,7 @@ async function loadInitialState(): Promise<AppState> {
     modal = { modalType: "upgrade-account-modal" };
   }
 
-  const credentialCache = createCredentialCache();
+  const credentialCache = createStorageBackedCredentialCache();
 
   return {
     self,
