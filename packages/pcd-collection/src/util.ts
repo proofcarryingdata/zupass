@@ -66,12 +66,16 @@ export function isChild(parent: string, child: string): boolean {
 }
 
 /**
- * Checks if a particular path has {@link folderPath} as a descendant.
+ * Checks if {@link possibleAncestor} has {@link possibleDescendant} as a
+ * descendant.
  * eg. a/b/c/d is a descendant of a/b, but not of a/q.
  */
-export function isFolderAncestor(path: string, folderPath: string): boolean {
-  const pathParts = splitPath(path);
-  const folderParts = splitPath(folderPath);
+export function isFolderAncestor(
+  possibleDescendant: string,
+  possibleAncestor: string
+): boolean {
+  const pathParts = splitPath(possibleDescendant);
+  const folderParts = splitPath(possibleAncestor);
 
   if (folderParts.length >= pathParts.length) {
     return false;

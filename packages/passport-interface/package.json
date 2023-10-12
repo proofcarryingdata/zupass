@@ -30,7 +30,6 @@
     "@pcd/semaphore-identity-pcd": "0.7.1",
     "@pcd/semaphore-signature-pcd": "0.7.1",
     "@pcd/util": "0.1.1",
-    "@pcd/webauthn-pcd": "0.7.1",
     "@semaphore-protocol/group": "^3.14.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@semaphore-protocol/proof": "^3.14.0",

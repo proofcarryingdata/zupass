@@ -81,8 +81,8 @@ export default function Page() {
         </button>
         <br />
         <br />
-        <button onClick={addWebAuthnPCD}>
-          add a new webauthn credential to Zupass
+        <button onClick={addWebAuthnPCD} disabled>
+          add a new webauthn credential to Zupass [REMOVED FOR DEVCONNECT]
         </button>
         <br />
         <br />
@@ -256,12 +256,13 @@ function AddEthGroupPCDButton() {
 
   return (
     <button
+      disabled
       onClick={() => {
         setIsActive(true);
         zupassSignIn("eth-group-pcd");
       }}
     >
-      add a new Ethereum Group Membership to Zupass
+      add a new Ethereum Group Membership to Zupass [REMOVED FOR DEVCONNECT]
     </button>
   );
 }

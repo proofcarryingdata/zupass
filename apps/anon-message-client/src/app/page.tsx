@@ -64,7 +64,14 @@ async function requestProof(
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      displayName: "Ticket",
+      description: "",
+      validatorParams: {
+        eventIds: validEventIds,
+        notFoundMessage: `You don't have a ticket for this event`
+      },
+      hideIcon: true
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -171,7 +178,8 @@ export default function () {
             onChange={(e) => setMessage(e.target.value)}
             className={`border-2 ${
               messageInvalid ? "border-red-500" : ""
-            } text-2xl rounded-lg text-black resize-none p-2 h-[30vh]`}
+            } text-2xl rounded-lg text-black resize-none p-2 h-[25vh]`}
+            autoFocus
           />
         </div>
         <div className="mt-8 text-center flex flex-col w-full">
