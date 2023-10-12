@@ -472,13 +472,6 @@ export class TelegramService {
           true
         );
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-        const encodedTopicData = base64EncodeTopicData(
-          topicName,
-          messageThreadId,
-          validEventIds
-        );
-
         await ctx.reply(
           `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
           {
@@ -487,16 +480,15 @@ export class TelegramService {
           }
         );
 
-        const messageToPin = await ctx.reply(
-          "Click here to post to this topic. Or send me a DM with /anonsend",
-          {
-            message_thread_id: messageThreadId,
-            reply_markup: new InlineKeyboard().url(
-              "Post Anonymously",
-              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startapp=${encodedTopicData}&startApp=${encodedTopicData}`
-            )
-          }
-        );
+        const messageToPin = await ctx.reply("Click to post", {
+          message_thread_id: messageThreadId,
+          reply_markup: new InlineKeyboard().url(
+            "Post Anonymously",
+            `${
+              process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
+            }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
+          )
+        });
         ctx.pinChatMessage(messageToPin.message_id);
         ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
@@ -814,6 +806,44 @@ export class TelegramService {
       parseInt(ticketedAnonEvent.topic_id),
       message
     );
+  }
+
+  public async handleRequestAnonymousMessageLink(
+    telegramChatId: number,
+    topicId: number
+  ): Promise<string> {
+    // Confirm that topicId exists and is anonymous
+    const topics = await fetchTelegramAnonTopicsByChatId(
+      this.context.dbPool,
+      telegramChatId
+    );
+    const topic = topics.find(
+      (t) => t.topic_id === topicId.toString() && t.is_anon_topic
+    );
+    if (!topic) throw new Error(`No anonyous topic found`);
+
+    // Get valid eventIds for this chat
+    const telegramEvents = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      telegramChatId
+    );
+    if (!telegramEvents || telegramEvents.length === 0)
+      throw new Error(`No events associated with this group`);
+
+    const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+    const encodedTopicData = base64EncodeTopicData(
+      topic.topic_name,
+      topic.topic_id,
+      validEventIds
+    );
+
+    const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
+    logger(
+      `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
+    );
+
+    return url;
   }
 
   public stop(): void {
