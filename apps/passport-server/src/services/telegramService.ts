@@ -6,7 +6,7 @@ import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Bot, InlineKeyboard, session } from "grammy";
+import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
@@ -62,16 +62,19 @@ const adminBotChannel = "Admins";
 export class TelegramService {
   private context: ApplicationContext;
   private bot: Bot<BotContext>;
+  private anonBot: Bot<BotContext>;
   private rollbarService: RollbarService | null;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
-    bot: Bot<BotContext>
+    bot: Bot<BotContext>,
+    anonBot: Bot<BotContext>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
     this.bot = bot;
+    this.anonBot = anonBot;
 
     setBotInfo(bot);
 
@@ -87,7 +90,7 @@ export class TelegramService {
 
     this.bot.use(eventsMenu);
     this.bot.use(zupassMenu);
-    this.bot.use(anonSendMenu);
+    this.anonBot.use(anonSendMenu);
 
     // Users gain access to gated chats by requesting to join. The bot
     // receives a notification of this, and will approve requests from
@@ -343,7 +346,7 @@ export class TelegramService {
       );
     });
 
-    this.bot.command("anonsend", async (ctx) => {
+    this.anonBot.command("anonsend", async (ctx) => {
       if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
 
@@ -420,7 +423,7 @@ export class TelegramService {
       logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
     });
 
-    this.bot.command("incognito", async (ctx) => {
+    this.anonBot.command("incognito", async (ctx) => {
       const messageThreadId = ctx.message?.message_thread_id;
 
       if (!isGroupWithTopics(ctx.chat)) {
@@ -526,7 +529,7 @@ export class TelegramService {
    * Since this function awaits on bot.start(), it will likely be very long-
    * lived.
    */
-  public async startBot(): Promise<void> {
+  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
     const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
     if (startDelay > 0) {
       logger(`[TELEGRAM] Delaying bot startup by ${startDelay} milliseconds`);
@@ -537,7 +540,7 @@ export class TelegramService {
 
     try {
       // This will not resolve while the bot remains running.
-      await this.bot.start({
+      await bot.start({
         allowed_updates: [
           "chat_join_request",
           "chat_member",
@@ -604,7 +607,7 @@ export class TelegramService {
     message: string
   ): Promise<void> {
     try {
-      await this.bot.api.sendMessage(groupId, message, {
+      await this.anonBot.api.sendMessage(groupId, message, {
         message_thread_id: anonChatId
       });
     } catch (error: { error_code: number; description: string } & any) {
@@ -888,26 +891,49 @@ export async function startTelegramService(
   context: ApplicationContext,
   rollbarService: RollbarService | null
 ): Promise<TelegramService | null> {
-  if (!process.env.TELEGRAM_BOT_TOKEN) {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const anonBotToken = process.env.TELEGRAM_ANON_BOT_TOKEN;
+
+  if (!botToken) {
     logger(
       `[INIT] missing TELEGRAM_BOT_TOKEN, not instantiating Telegram service`
     );
     return null;
   }
 
-  const bot = new Bot<BotContext>(process.env.TELEGRAM_BOT_TOKEN);
-  const initial = (): SessionData => {
-    return { dbPool: context.dbPool };
+  const createBot = (token: string): Bot<BotContext, Api<RawApi>> => {
+    const bot = new Bot<BotContext>(token);
+    const initial = (): SessionData => ({ dbPool: context.dbPool });
+
+    bot.use(session({ initial, getSessionKey }));
+    bot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
+
+    return bot;
   };
 
-  bot.use(session({ initial, getSessionKey }));
+  const mainBot = createBot(botToken);
+  await mainBot.init();
 
-  const service = new TelegramService(context, rollbarService, bot);
-  bot.catch((error) => {
-    logger(`[TELEGRAM] Bot error`, error);
-  });
-  // Start the bot, but do not await on the result here.
-  service.startBot();
+  let anonBot: Bot<BotContext>;
+
+  if (anonBotToken) {
+    logger(`[TELEGRAM] found anon bot`);
+    anonBot = createBot(anonBotToken);
+    await anonBot.init();
+  } else {
+    anonBot = mainBot;
+  }
+
+  const service = new TelegramService(
+    context,
+    rollbarService,
+    mainBot,
+    anonBot
+  );
+  service.startBot(mainBot);
+  if (anonBotToken) {
+    service.startBot(anonBot);
+  }
 
   return service;
 }
