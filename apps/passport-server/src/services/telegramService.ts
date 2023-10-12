@@ -487,9 +487,8 @@ export class TelegramService {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
-            // WEBAPP is actually just the server url, but a TG Bot direct link.
             `${
-              process.env.TELEGRAM_ANON_BOT_WEBAPP
+              process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
             }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
           )
         });
