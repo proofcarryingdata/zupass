@@ -58,7 +58,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       !Object.entries(args).find(
         ([_, arg]) =>
           // only PCD arguments are required
-          arg.value || !isPCDArgument(arg)
+          isPCDArgument(arg) && !arg.value
       ),
     [args]
   );
