@@ -706,10 +706,13 @@ async function sync(state: AppState, update: ZuUpdate) {
         state.pcds,
         state.credentialCache
       );
+      console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
+      console.log("[SYNC] fetched actions", actions);
 
       await applyActions(state.pcds, actions);
+      console.log("[SYNC] applied pcd actions");
       await savePCDs(state.pcds);
       console.log("[SYNC] loaded and saved issued pcds");
     } catch (e) {
