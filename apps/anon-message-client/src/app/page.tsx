@@ -48,7 +48,9 @@ async function requestProof(
       description: "",
       validatorParams: {
         eventIds: validEventIds,
-        notFoundMessage: `You don't have a ticket for this event`
+        productIds: [],
+        // TODO: surface which event ticket we are looking for
+        notFoundMessage: "You don't have a ticket for this event."
       },
       hideIcon: true
     },

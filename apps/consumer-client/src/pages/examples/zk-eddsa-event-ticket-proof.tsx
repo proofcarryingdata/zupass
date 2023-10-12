@@ -371,7 +371,8 @@ export function openZKEdDSAEventTicketPopup(
       userProvided: true,
       validatorParams: {
         eventIds: displayValidEventIds,
-        productIds: displayValidProductIds
+        productIds: displayValidProductIds,
+        notFoundMessage: "No eligible PCDs found"
       }
     },
     identity: {
