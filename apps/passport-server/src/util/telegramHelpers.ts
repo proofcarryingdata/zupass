@@ -14,6 +14,7 @@ import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/delete";
 import {
   ChatIDWithEventIDs,
+  ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
@@ -99,6 +100,25 @@ export const chatIDsToChats = async <
     .map((e) => e.value);
 
   return eventsWithChats;
+};
+
+const getChatsWithMembershipStatus = async (
+  db: Pool,
+  ctx: BotContext,
+  userId: number
+): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
+  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+    db,
+    userId
+  );
+
+  const chatsWithMembership = await chatIDsToChats(
+    db,
+    ctx,
+    chatIdsWithMembership
+  );
+
+  return chatsWithMembership;
 };
 
 export const findChatByEventIds = (
@@ -347,16 +367,10 @@ export const chatsToJoin = async (
     return;
   }
 
-  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
-    db,
-    userId
-  );
-  // Ping the Telegram API to get the actual chat objects based on chat Ids
-  // This is not optimal, but means we don't have to store data like the Chat name in our DB.
-  const chatsWithMembership = await chatIDsToChats(
+  const chatsWithMembership = await getChatsWithMembershipStatus(
     db,
     ctx,
-    chatIdsWithMembership
+    userId
   );
 
   if (chatsWithMembership.length === 0) {
@@ -432,15 +446,11 @@ export const chatsToPostIn = async (
         await ctx.menu.update({ immediate: true });
       });
     } else {
-      const chatIdsWithMembership =
-        await fetchTelegramChatsWithMembershipStatus(db, userId);
-
-      const chatsWithMembership = await chatIDsToChats(
+      const chatsWithMembership = await getChatsWithMembershipStatus(
         db,
         ctx,
-        chatIdsWithMembership
+        userId
       );
-
       if (chatsWithMembership.length === 0) {
         range.text(`No chats found to post in. Type /start to join one!`);
         return;

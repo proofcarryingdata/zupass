@@ -3,6 +3,34 @@ import { AnonNullifierInfo, TelegramConversation } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
+ * Interfaces
+ */
+
+export interface LinkedPretixTelegramEvent {
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
+}
+
+export interface ChatIDWithEventIDs {
+  telegramChatID: string;
+  ticketEventIds: string[];
+}
+
+export interface UserIDWithChatIDs {
+  telegramUserID: string;
+  telegramChatIDs: string[];
+}
+
+export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+  isChatMember: boolean;
+};
+
+/**
+ * Queries
+ */
+
+/**
  * Fetch the list of Telegram conversations for a user from the database.
  */
 export async function fetchTelegramConversation(
@@ -110,12 +138,6 @@ export async function fetchTelegramEventsByChatId(
   return result.rows;
 }
 
-export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
-  eventName: string;
-  configEventID: string;
-}
-
 export async function fetchLinkedPretixAndTelegramEvents(
   client: Pool
 ): Promise<LinkedPretixTelegramEvent[]> {
@@ -132,15 +154,6 @@ export async function fetchLinkedPretixAndTelegramEvents(
   );
 
   return result.rows;
-}
-
-export interface ChatIDWithEventIDs {
-  telegramChatID: string;
-  ticketEventIds: string[];
-}
-export interface UserIDWithChatIDs {
-  telegramUserID: string;
-  telegramChatIDs: string[];
 }
 
 export async function fetchEventsPerChat(
