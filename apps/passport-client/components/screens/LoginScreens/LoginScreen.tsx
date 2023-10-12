@@ -140,6 +140,7 @@ export function LoginScreen() {
         <form onSubmit={onGenPass}>
           <BigInput
             autoCapitalize="off"
+            autoCorrect="off"
             type="text"
             autoFocus
             placeholder="email address"
