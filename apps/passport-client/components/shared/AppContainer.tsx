@@ -20,7 +20,8 @@ export function AppContainer({
     [dispatch]
   );
 
-  const col = bg === "gray" ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
+  // const col = bg === "gray" ? "var(--bg-dark-gray)" : "var(--bg-dark-primary)";
+  const col = "var(--bg-dark-primary)";
   return (
     <>
       <GlobalBackground color={col} />
