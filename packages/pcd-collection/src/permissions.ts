@@ -3,7 +3,8 @@
 // types or vice-versa" in permissions.spec.ts
 export enum PCDPermissionType {
   ReplaceInFolder = "ReplaceInFolder_permission",
-  AppendToFolder = "AppendToFolder_permission"
+  AppendToFolder = "AppendToFolder_permission",
+  DeleteFolder = "DeleteFolder_permission"
 }
 
 export interface PCDPermission {
@@ -25,12 +26,18 @@ export interface ReplaceInFolderPermission extends PCDPermission {
   folder: string;
 }
 
+export interface DeleteFolderPermission extends PCDPermission {
+  type: PCDPermissionType.DeleteFolder;
+  folder: string;
+}
+
 export function isPCDFolderPermission(
   permission: PCDPermission
 ): permission is PCDFolderPermission {
   return [
     PCDPermissionType.AppendToFolder,
-    PCDPermissionType.ReplaceInFolder
+    PCDPermissionType.ReplaceInFolder,
+    PCDPermissionType.DeleteFolder
   ].includes(permission.type);
 }
 
@@ -44,4 +51,10 @@ export function isReplaceInFolderPermission(
   permission: PCDPermission
 ): permission is ReplaceInFolderPermission {
   return permission.type === PCDPermissionType.ReplaceInFolder;
+}
+
+export function isDeleteFolderPermission(
+  permission: PCDPermission
+): permission is DeleteFolderPermission {
+  return permission.type === PCDPermissionType.DeleteFolder;
 }

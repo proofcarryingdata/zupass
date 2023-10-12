@@ -1,7 +1,8 @@
 import {
   FeedSubscriptionManager,
   Subscription,
-  ZupassFeedIds
+  ZupassFeedIds,
+  zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import { appConfig } from "../src/appConfig";
 
@@ -25,27 +26,12 @@ export async function addDefaultSubscriptions(
     subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
   }
 
-  const subscribedFeedIds = new Set(
-    subscriptions
-      .getSubscriptionsForProvider(DEFAULT_FEED_URL)
-      .map((s) => s.feed.id)
-  );
-
-  const difference = [...DEFAULT_FEEDS].filter(
-    (id) => !subscribedFeedIds.has(id)
-  );
-
-  if (difference.length > 0) {
-    try {
-      const list = await subscriptions.listFeeds(DEFAULT_FEED_URL);
-
-      for (const feed of list.feeds) {
-        if (DEFAULT_FEEDS.has(feed.id)) {
-          subscriptions.subscribe(DEFAULT_FEED_URL, feed);
-        }
-      }
-    } catch (e) {
-      console.log("Could not add default subscriptions due to error:", e);
-    }
+  for (const id in zupassDefaultSubscriptions) {
+    subscriptions.subscribe(
+      DEFAULT_FEED_URL,
+      zupassDefaultSubscriptions[id],
+      // Replace the existing subscription if it already exists
+      true
+    );
   }
 }
