@@ -18,6 +18,7 @@ import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
+  fetchTelegramChatsWithMembershipStatus,
   fetchTelegramEventsByChatId,
   fetchUserTelegramChats
 } from "../database/queries/telegram/fetch";
@@ -348,27 +349,20 @@ export const chatsToJoin = async (
     return;
   }
 
-  const events = await fetchEventsPerChat(db);
-  const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  const userChats = await fetchUserTelegramChats(db, userId);
-
-  const finalEvents = eventsWithChats.map((e) => {
-    return {
-      ...e,
-      userIsChatMember: userChats
-        ? userChats.telegramChatIDs.includes(e.telegramChatID)
-        : false
-    };
-  });
-  if (finalEvents && finalEvents.length === 0) {
-    range.text(`No groups to join at this time`);
-    return;
-  }
-  const sortedChats = finalEvents.sort(
-    (a, b) => +a.userIsChatMember - +b.userIsChatMember
+  // The user is presented with a list of Telegram chats they can join
+  // To do this, we fetch the chats a user can join, mark if they have already joined, and hydrating the chat id with the actual chat object
+  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+    db,
+    userId
   );
-  for (const chat of sortedChats) {
-    if (chat.userIsChatMember) {
+  const chatsWithMembership = await chatIDsToChats(
+    db,
+    ctx,
+    chatIdsWithMembership
+  );
+
+  for (const chat of chatsWithMembership) {
+    if (chat.isChatMember) {
       const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
         creates_join_request: true
       });

@@ -211,3 +211,36 @@ export async function fetchUserTelegramChats(
   );
   return result.rows[0] ?? null;
 }
+
+export async function fetchTelegramChatsWithMembershipStatus(
+  client: Pool,
+  userId: number
+): Promise<
+  Array<{
+    telegramChatID: string;
+    ticketEventIds: string[];
+    isChatMember: boolean;
+  }>
+> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT
+      tbe.telegram_chat_id AS "telegramChatID",
+        ARRAY_AGG(tbe.ticket_event_id) AS "ticketEventIds",
+        CASE WHEN tbc.telegram_user_id IS NOT NULL THEN true ELSE false END AS "isChatMember"
+    FROM 
+        telegram_bot_events tbe 
+    LEFT JOIN 
+        telegram_bot_conversations tbc 
+    ON 
+        tbe.telegram_chat_id = tbc.telegram_chat_id AND tbc.telegram_user_id = $1
+    GROUP BY 
+        tbe.telegram_chat_id, tbc.telegram_user_id
+    ORDER BY 
+        "isChatMember" ASC;
+    `,
+    [userId]
+  );
+  return result.rows;
+}
