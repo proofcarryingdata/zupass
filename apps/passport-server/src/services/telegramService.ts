@@ -483,19 +483,16 @@ export class TelegramService {
           }
         );
 
-        const messageToPin = await ctx.reply(
-          "Click here to post to this topic. Or send me a DM with /anonsend",
-          {
-            message_thread_id: messageThreadId,
-            reply_markup: new InlineKeyboard().url(
-              "Post Anonymously",
-              // WEBAPP is actually just the server url, but a TG Bot direct link.
-              `${
-                process.env.TELEGRAM_ANON_BOT_WEBAPP
-              }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
-            )
-          }
-        );
+        const messageToPin = await ctx.reply("Click to post", {
+          message_thread_id: messageThreadId,
+          reply_markup: new InlineKeyboard().url(
+            "Post Anonymously",
+            // WEBAPP is actually just the server url, but a TG Bot direct link.
+            `${
+              process.env.TELEGRAM_ANON_BOT_WEBAPP
+            }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
+          )
+        });
         ctx.pinChatMessage(messageToPin.message_id);
         ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
@@ -819,7 +816,7 @@ export class TelegramService {
     telegramChatId: number,
     topicId: number
   ): Promise<string> {
-    // Confirm that topic Id exists and is anonymous
+    // Confirm that topicId exists and is anonymous
     const topics = await fetchTelegramAnonTopicsByChatId(
       this.context.dbPool,
       telegramChatId
