@@ -112,7 +112,7 @@ async function requestProof(
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK TG Post",
+    title: "",
     description:
       "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message."
   });
