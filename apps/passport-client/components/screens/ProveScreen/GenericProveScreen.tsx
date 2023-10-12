@@ -46,9 +46,9 @@ export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
 
   return (
     <>
-      <MaybeModal fullScreen />
+      <MaybeModal fullScreen isProveScreen={true} />
       <AppContainer bg="gray">
-        <AppHeader hideSubscriptionsButton={true}>
+        <AppHeader isProveScreen={true}>
           <H2 style={{ flex: 1 }}>
             {req.options?.title ?? "Prove " + req.pcdType}
           </H2>
