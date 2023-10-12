@@ -409,10 +409,14 @@ export const chatsToPostIn = async (
   try {
     if (ctx.session.selectedChat) {
       const chat = ctx.session.selectedChat;
+
+      // Fetch anon topics for a specific chat
       const topics = await fetchTelegramAnonTopicsByChatId(
         ctx.session.dbPool,
         chat.id
       );
+
+      // Fetch telegram events associated with the selected chat.
       const telegramEvents = await fetchTelegramEventsByChatId(
         ctx.session.dbPool,
         chat.id
