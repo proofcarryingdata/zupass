@@ -160,6 +160,14 @@ export function initPCDIssuanceRoutes(
     res.json(result satisfies CheckTicketInByIdResult);
   });
 
+  app.post(
+    "/issue/device-check-in-by-id",
+    async (req: Request, res: Response) => {
+      checkIssuanceServiceStarted(issuanceService);
+      // todo
+    }
+  );
+
   /**
    * For non-Devconnect ticket PCDs, the standard QR code generates a link
    * to a verification screen in passport-client, which calls this endpoint

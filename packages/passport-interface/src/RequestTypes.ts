@@ -296,6 +296,25 @@ export type CheckTicketInByIdResponseValue = undefined;
  */
 export type CheckTicketInByIdError = TicketError;
 
+export interface DeviceCheckTicketInByIdRequest {
+  /**
+   * Device login credentials for proper authentication
+   */
+  email: string;
+  secret: string;
+  /**
+   * The ticket ID to attempt to check in.
+   */
+  ticketId: string;
+}
+
+export type DeviceCheckTicketInByIdResponseValue = undefined;
+
+/**
+ * A {@link DeviceCheckTicketInByIdRequest} can fail for a number of reasons.
+ */
+export type DeviceCheckTicketInByIdError = TicketError;
+
 /**
  * When verifying scanned PCDs, we want to check with the server, which
  * knows about public keys when the client does not.
