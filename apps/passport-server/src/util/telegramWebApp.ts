@@ -26,7 +26,11 @@ export const errorHtmlWithDetails = (error: string): string => {
   <html>
   <head>
     <title>Error</title>
-    <style></style>
+    <style>
+    body {
+      background-color: white;
+    }
+    </style>
   </head>
   <body>
   <h3>Action failed</h3>
