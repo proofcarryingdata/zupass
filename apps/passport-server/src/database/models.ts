@@ -207,3 +207,18 @@ export interface AnonNullifierInfo {
   nullifier: string;
   message_timestamps: string[];
 }
+
+/**
+ * A Zuconnect ticket in the DB.
+ */
+export interface ZuconnectTicketDB {
+  // Our internal ticket ID, a UUID
+  ticket_id: string;
+  // Ticket ID received from Tripsha
+  external_ticket_id: string;
+  // Our internal product ID, see
+  // {@link ZUCONNECT_PRODUCT_ID_MAPPINGS}
+  product_id: string;
+  attendee_email: string;
+  attendee_name: string;
+}

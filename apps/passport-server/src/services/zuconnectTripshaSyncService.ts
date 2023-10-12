@@ -1,0 +1,164 @@
+import {
+  IZuconnectTripshaAPI,
+  ZuconnectTicket
+} from "../apis/zuconnect/zuconnectTripshaAPI";
+import { fetchAllZuconnectTicketIds } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import {
+  softDeleteZuconnectTicket,
+  upsertZuconnectTicket
+} from "../database/queries/zuconnect/insertZuconnectTicket";
+import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
+import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "../util/zuconnectTicket";
+import { RollbarService } from "./rollbarService";
+import { SemaphoreService } from "./semaphoreService";
+import { setError, traced } from "./telemetryService";
+
+const NAME = "Zuconnect Tripsha";
+
+/**
+ * Fetches ticket data from Tripsha's API and stores it in the database.
+ */
+export class ZuconnectTripshaSyncService {
+  private zuconnectTripshaAPI: IZuconnectTripshaAPI;
+  private rollbarService: RollbarService | null;
+  private semaphoreService: SemaphoreService;
+  private context: ApplicationContext;
+  private timeout: NodeJS.Timeout | undefined;
+  private static readonly SYNC_INTERVAL_MS = 1000 * 60;
+
+  public constructor(
+    context: ApplicationContext,
+    api: IZuconnectTripshaAPI,
+    rollbarService: RollbarService | null,
+    semaphoreService: SemaphoreService
+  ) {
+    this.context = context;
+    this.zuconnectTripshaAPI = api;
+    this.rollbarService = rollbarService;
+    this.semaphoreService = semaphoreService;
+  }
+
+  /**
+   * Starts the sync service by conducting an initial sync and setting up
+   * a timeout to repeat it at a set interval.
+   */
+  public async start(): Promise<void> {
+    logger("[ZUCONNECT TRIPSHA] Starting sync loop");
+
+    const trySync = async (): Promise<void> => {
+      await this.trySync();
+      this.timeout = setTimeout(
+        () => trySync(),
+        ZuconnectTripshaSyncService.SYNC_INTERVAL_MS
+      );
+    };
+
+    trySync();
+  }
+
+  /**
+   * Stop the sync service by cancelling the timeout.
+   */
+  public stop(): void {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+  }
+
+  /**
+   * Run a sync job and report any errors that are thrown.
+   */
+  public async trySync(): Promise<void> {
+    return traced(NAME, "trySync", async (span) => {
+      try {
+        logger("[ZUCONNECT TRIPSHA] Sync start");
+        await this.sync();
+        this.semaphoreService.scheduleReload();
+        logger("[ZUCONNECT TRIPSHA] Sync finished");
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger("[ZUCONNECT TRIPSHA] Sync failed", e);
+        setError(e, span);
+      }
+    });
+  }
+
+  /**
+   * Fetch and save data from Tripsha. Thrown errors will be caught in trySync.
+   */
+  public async sync(): Promise<void> {
+    return traced(NAME, "sync", async (_span) => {
+      const tickets = await this.fetchData();
+      await this.saveData(tickets);
+    });
+  }
+
+  /**
+   * Fetch tickets from the Tripsha API. Will throw errors if the network
+   * fails or if invalid data is received.
+   */
+  private async fetchData(): Promise<ZuconnectTicket[]> {
+    return this.zuconnectTripshaAPI.fetchTickets();
+  }
+
+  /**
+   * Convert a Tripsha ticket type to a product ID.
+   */
+  private ticketTypeToProductId(type: ZuconnectTicket["type"]): string {
+    return ZUCONNECT_PRODUCT_ID_MAPPINGS[type].id;
+  }
+
+  /**
+   * Save tickets to the database.
+   */
+  private async saveData(tickets: ZuconnectTicket[]): Promise<void> {
+    const savedTickets = [];
+    for (const ticket of tickets) {
+      savedTickets.push(
+        await upsertZuconnectTicket(this.context.dbPool, {
+          external_ticket_id: ticket.id,
+          product_id: this.ticketTypeToProductId(ticket.type),
+          attendee_email: ticket.email,
+          attendee_name: `${ticket.first} ${ticket.last}`
+        })
+      );
+    }
+    // Compare the tickets in the database with the ones we just saved
+    const allIds = await fetchAllZuconnectTicketIds(this.context.dbPool);
+    const savedTicketIds = new Set(
+      savedTickets.map((ticket) => ticket.ticket_id)
+    );
+    const idsToDelete = allIds.filter((id) => !savedTicketIds.has(id));
+    // Anything in the DB that was not present in the sync we just ran should
+    // be soft-deleted.
+    for (const id of idsToDelete) {
+      await softDeleteZuconnectTicket(this.context.dbPool, id);
+    }
+  }
+}
+
+/**
+ * Starts the Zuconnect Tripsha sync service.
+ * Before running, stores the Zuconnect ticket types in the database.
+ */
+export function startZuconnectTripshaSyncService(
+  context: ApplicationContext,
+  rollbarService: RollbarService | null,
+  semaphoreService: SemaphoreService,
+  api: IZuconnectTripshaAPI | null
+): ZuconnectTripshaSyncService | null {
+  if (!api) {
+    logger(
+      "[ZUCONNECT TRIPSHA] Can't start sync service - no api instantiated"
+    );
+    return null;
+  }
+
+  return new ZuconnectTripshaSyncService(
+    context,
+    api,
+    rollbarService,
+    semaphoreService
+  );
+}

@@ -1,6 +1,7 @@
 import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
+import _ from "lodash";
 import { Pool } from "postgres-pool";
 import { HistoricSemaphoreGroup, LoggedInZuzaluUser } from "../database/models";
 import {
@@ -9,11 +10,18 @@ import {
   insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
 import { fetchAllUsers } from "../database/queries/users";
+import { fetchAllLoggedInZuconnectUsers } from "../database/queries/zuconnect/fetchZuconnectUsers";
 import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
 import { traced } from "./telemetryService";
+
+type LoggedInZuzaluOrZuconnectUser = Pick<
+  LoggedInZuzaluUser,
+  "email" | "role" | "commitment"
+>;
 
 /**
  * Responsible for maintaining semaphore groups for all the categories of users
@@ -169,13 +177,33 @@ export class SemaphoreService {
 
   private async reloadZuzaluGroups(): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
-      const users = await fetchAllLoggedInZuzaluUsers(this.dbPool);
+      const zuzaluUsers: LoggedInZuzaluOrZuconnectUser[] =
+        await fetchAllLoggedInZuzaluUsers(this.dbPool);
+      const zuconnectUsers = await fetchAllLoggedInZuconnectUsers(this.dbPool);
+      // Give Zuconnect users roles equivalent to Zuzalu roles
+      const zuconnectUsersWithZuzaluRoles = zuconnectUsers.map((user) => {
+        return {
+          email: user.attendee_email,
+          role: zuconnectProductIdToZuzaluRole(user.product_id),
+          commitment: user.commitment
+        };
+      });
+      // If the same user appears with the same role in both Zuzalu and
+      // Zuconnect, only use one of them
+      const users = _.uniqWith(
+        zuzaluUsers.concat(zuconnectUsersWithZuzaluRoles),
+        (a, b) =>
+          a.role === b.role &&
+          a.commitment === b.commitment &&
+          a.email === b.email
+      );
       span?.setAttribute("users", users.length);
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
       this.groups = SemaphoreService.createGroups();
 
-      const groupIdsToUsers: Map<string, LoggedInZuzaluUser[]> = new Map();
+      const groupIdsToUsers: Map<string, LoggedInZuzaluOrZuconnectUser[]> =
+        new Map();
       const groupsById: Map<string, NamedGroup> = new Map();
       for (const group of this.groups) {
         groupIdsToUsers.set(group.group.id.toString(), []);
@@ -195,7 +223,19 @@ export class SemaphoreService {
           const usersInGroup = groupIdsToUsers.get(
             namedGroup.group.id.toString()
           );
-          usersInGroup?.push(p);
+          // The same user might appear twice, due to having both a Zuzalu and
+          // Zuconnect ticket. However, there is no need to include them in a
+          // group they are already a member of.
+          if (
+            !usersInGroup?.find(
+              (user) =>
+                user.commitment === p.commitment &&
+                user.email === p.email &&
+                user.role === p.role
+            )
+          ) {
+            usersInGroup?.push(p);
+          }
         }
       }
 
