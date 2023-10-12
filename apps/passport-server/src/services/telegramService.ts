@@ -1,6 +1,7 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { sleep } from "@pcd/util";
+import { getAnonTopicNullifier } from "@pcd/passport-interface";
+import { ONE_HOUR_MS, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -10,7 +11,10 @@ import { Chat, ChatFromGetChat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
-import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
+import {
+  fetchAnonTopicNullifier,
+  fetchTelegramVerificationStatus
+} from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
@@ -19,6 +23,7 @@ import {
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
+  insertOrUpdateTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -39,6 +44,7 @@ import {
   isGroupWithTopics,
   senderIsAdmin
 } from "../util/telegramHelpers";
+import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const ALLOWED_TICKET_MANAGERS = [
@@ -485,6 +491,7 @@ export class TelegramService {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
+            // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
             `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${directLinkParams}&startapp=${directLinkParams}`
           )
         });
@@ -735,7 +742,9 @@ export class TelegramService {
 
     const {
       watermark,
-      partialTicket: { eventId }
+      partialTicket: { eventId },
+      externalNullifier,
+      nullifierHash
     } = pcd.claim;
 
     const { validEventIds } = pcd.claim;
@@ -800,6 +809,52 @@ export class TelegramService {
       );
     }
 
+    if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+    const expectedExternalNullifier = getAnonTopicNullifier(
+      chat.id,
+      parseInt(topicId)
+    ).toString();
+
+    if (externalNullifier !== expectedExternalNullifier)
+      throw new Error("Nullifier mismatch - try proving again.");
+
+    const nullifierData = await fetchAnonTopicNullifier(
+      this.context.dbPool,
+      nullifierHash
+    );
+    if (!nullifierData) {
+      await insertOrUpdateTelegramNullifier(
+        this.context.dbPool,
+        nullifierHash,
+        [new Date().toISOString()]
+      );
+    } else {
+      const timestamps = nullifierData.message_timestamps.map((t) =>
+        new Date(t).getTime()
+      );
+      const maxDailyPostsPerTopic = parseInt(
+        process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
+      );
+      const rlDuration = ONE_HOUR_MS * 24;
+      const { rateLimitExceeded, newTimestamps } = checkSlidingWindowRateLimit(
+        timestamps,
+        maxDailyPostsPerTopic,
+        rlDuration
+      );
+      if (!rateLimitExceeded) {
+        await insertOrUpdateTelegramNullifier(
+          this.context.dbPool,
+          nullifierHash,
+          newTimestamps
+        );
+      } else {
+        throw new Error(
+          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+        );
+      }
+    }
+
     await this.sendToAnonymousChannel(
       chat.id,
       parseInt(ticketedAnonEvent.topic_id),
@@ -832,6 +887,7 @@ export class TelegramService {
     const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
     const encodedTopicData = base64EncodeTopicData(
+      telegramChatId,
       topic.topic_name,
       topic.topic_id,
       validEventIds

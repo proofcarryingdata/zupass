@@ -1,4 +1,5 @@
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { sha256 } from "js-sha256";
 
 export enum PCDRequestType {
   Get = "Get",
@@ -123,3 +124,12 @@ export function constructZupassPcdProveAndAddRequestUrl<
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;
 }
+
+export const getAnonTopicNullifier = (
+  chatId: number,
+  topicId: number
+): bigint => {
+  return BigInt(
+    "0x" + sha256(JSON.stringify({ chatId, topicId })).substring(0, 16)
+  );
+};
