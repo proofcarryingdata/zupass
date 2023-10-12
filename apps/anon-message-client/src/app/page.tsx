@@ -64,7 +64,14 @@ async function requestProof(
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      displayName: "Ticket",
+      description: "",
+      validatorParams: {
+        eventIds: validEventIds,
+        notFoundMessage: `You don't have a ticket for this event`
+      },
+      hideIcon: true
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
