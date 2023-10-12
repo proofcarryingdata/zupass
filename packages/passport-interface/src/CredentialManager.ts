@@ -12,6 +12,7 @@ import {
   createFeedCredentialPayload
 } from "./FeedCredential";
 import { CredentialRequest } from "./SubscriptionManager";
+import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
@@ -29,8 +30,14 @@ interface CacheEntry {
 const CACHE_TTL = ONE_HOUR_MS;
 
 // Creates an in-memory cache with a TTL of one hour.
+// Use this where local storage is not available, e.g. in tests
 export function createCredentialCache(): CredentialCache {
   return new Map();
+}
+
+// Creates an in-memory cache with a TTL of one hour, backed by localStorage
+export function createStorageBackedCredentialCache(): CredentialCache {
+  return new StorageBackedMap("credential-cache");
 }
 
 /**
@@ -89,7 +96,6 @@ export class CredentialManager implements CredentialManagerAPI {
         this.cache.delete(cacheKey);
       }
     }
-
     return undefined;
   }
 
