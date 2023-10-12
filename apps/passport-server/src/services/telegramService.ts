@@ -475,13 +475,6 @@ export class TelegramService {
           true
         );
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-        const encodedTopicData = base64EncodeTopicData(
-          topicName,
-          messageThreadId,
-          validEventIds
-        );
-
         await ctx.reply(
           `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
           {
@@ -496,7 +489,10 @@ export class TelegramService {
             message_thread_id: messageThreadId,
             reply_markup: new InlineKeyboard().url(
               "Post Anonymously",
-              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startapp=${encodedTopicData}&startApp=${encodedTopicData}`
+              // WEBAPP is actually just the server url, but a TG Bot direct link.
+              `${
+                process.env.TELEGRAM_ANON_BOT_WEBAPP
+              }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
             )
           }
         );
@@ -817,6 +813,44 @@ export class TelegramService {
       parseInt(ticketedAnonEvent.topic_id),
       message
     );
+  }
+
+  public async handleRequestAnonymousMessageLink(
+    telegramChatId: number,
+    topicId: number
+  ): Promise<string> {
+    // Confirm that topic Id exists and is anonymous
+    const topics = await fetchTelegramAnonTopicsByChatId(
+      this.context.dbPool,
+      telegramChatId
+    );
+    const topic = topics.find(
+      (t) => t.topic_id === topicId.toString() && t.is_anon_topic
+    );
+    if (!topic) throw new Error(`No anonyous topic found`);
+
+    // Get valid eventIds for this chat
+    const telegramEvents = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      telegramChatId
+    );
+    if (!telegramEvents || telegramEvents.length === 0)
+      throw new Error(`No events associated with this group`);
+
+    const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+    const encodedTopicData = base64EncodeTopicData(
+      topic.topic_name,
+      topic.topic_id,
+      validEventIds
+    );
+
+    const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
+    logger(
+      `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
+    );
+
+    return url;
   }
 
   public stop(): void {

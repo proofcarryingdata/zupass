@@ -125,4 +125,29 @@ export function initTelegramRoutes(
       res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
     }
   });
+
+  app.get("/telegram/anon", async (req: Request, res: Response) => {
+    try {
+      const { tgWebAppStartParam } = req.query;
+      if (!tgWebAppStartParam) throw new Error(`No start param received`);
+
+      const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
+      if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
+
+      const redirectUrl =
+        await telegramService?.handleRequestAnonymousMessageLink(
+          parseInt(chatId),
+          parseInt(topicId)
+        );
+
+      if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+      logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+      res.redirect(redirectUrl);
+    } catch (e) {
+      logger("[TELEGRAM] generate link for anonymous message", e);
+      rollbarService?.reportError(e);
+      res.set("Content-Type", "text/html");
+      res.status(500).send(errorHtmlWithDetails(e as string));
+    }
+  });
 }
