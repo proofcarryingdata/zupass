@@ -112,9 +112,9 @@ async function requestProof(
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK Ticket Proof",
+    title: "",
     description:
-      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+      "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message."
   });
 
   window.location.href = proofUrl;

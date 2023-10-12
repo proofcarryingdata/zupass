@@ -358,10 +358,7 @@ export class TelegramService {
         topicName,
         false
       );
-      ctx.reply(`<i>[ADMIN]: Created topic ${topicName} in the db</i>`, {
-        message_thread_id: messageThreadId,
-        parse_mode: "HTML"
-      });
+      logger(`[TELEGRAM]: Created topic ${topicName} in the db`);
     });
 
     this.bot.on(":forum_topic_edited", async (ctx) => {

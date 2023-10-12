@@ -181,8 +181,8 @@ const generateProofUrl = (
 ): string => {
   const fieldsToReveal: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
-    revealEventId: true,
-    revealProductId: true,
+    revealEventId: false,
+    revealProductId: false,
     revealTimestampConsumed: false,
     revealTimestampSigned: false,
     revealAttendeeSemaphoreId: true,
@@ -248,7 +248,7 @@ const generateProofUrl = (
     genericProveScreen: true,
     title: "",
     description:
-      "Zucat would like to invite you to a Telegram group and requested a zero-knowledge proof."
+      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
   });
   return proofUrl;
 };
