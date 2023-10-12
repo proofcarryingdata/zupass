@@ -34,7 +34,7 @@ export function PasswordInput({
       <PasswordBigInput
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            onEnter(e);
+            onEnter?.(e);
           }
         }}
         ref={inputRef}

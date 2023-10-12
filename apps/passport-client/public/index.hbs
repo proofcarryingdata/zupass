@@ -29,7 +29,16 @@
     <script defer src="/js/index.js"></script>
   </head>
   <body>
-    <div id="root" />
+    <div id="root">
+      {{!-- This shows the RippleLoader in the background so we don't get a
+      blank green screen --}}
+      <div class="loaderWrapper">
+        <div class="loader">
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+    </div>
     <script
       async
       defer

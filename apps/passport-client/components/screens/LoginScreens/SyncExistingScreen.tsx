@@ -89,6 +89,8 @@ export function SyncExistingScreen() {
         <Spacer h={32} />
         <CenterColumn>
           <BigInput
+            autoCapitalize="false"
+            autoCorrect="false"
             disabled={isLoading}
             type="text"
             placeholder="Sync Key"

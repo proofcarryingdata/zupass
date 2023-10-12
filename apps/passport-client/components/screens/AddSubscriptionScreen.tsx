@@ -8,6 +8,7 @@ import {
 import {
   PCDPermission,
   isAppendToFolderPermission,
+  isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -114,6 +115,8 @@ export function AddSubscriptionScreen() {
         <div>Enter a URL to a feed provider:</div>
         <Spacer h={8} />
         <BigInput
+          autoCorrect="off"
+          autoCapitalize="off"
           disabled={fetching}
           value={providerUrl}
           onChange={(e) => {
@@ -311,6 +314,12 @@ function SinglePermission({ permission }: { permission: PCDPermission }) {
     return (
       <PermissionListItem>
         Replace in folder <strong>{permission.folder}</strong>
+      </PermissionListItem>
+    );
+  } else if (isDeleteFolderPermission(permission)) {
+    return (
+      <PermissionListItem>
+        Delete folder <strong>{permission.folder}</strong>
       </PermissionListItem>
     );
   } else {
