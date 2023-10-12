@@ -481,11 +481,12 @@ export class TelegramService {
         );
 
         const directLinkParams = `${ctx.chat.id.toString()}_${messageThreadId}`;
+
         const messageToPin = await ctx.reply("Click to post", {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
-            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${directLinkParams}&startapp=${directLinkParams}`
+            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startapp=${directLinkParams}&startApp=${directLinkParams}`
           )
         });
         ctx.pinChatMessage(messageToPin.message_id);
