@@ -11,20 +11,20 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { upsertUser } from "../src/database/queries/saveUser";
-import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
-import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
+import { deleteTelegramVerification } from "../src/database/queries/telegram/delete";
 import {
   ChatIDWithEventIDs,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChat,
-  fetchTelegramEventByEventId
-} from "../src/database/queries/telegram/fetchTelegramEvent";
+  fetchTelegramEventByEventId,
+  fetchTelegramVerificationStatus
+} from "../src/database/queries/telegram/fetch";
 import {
   insertTelegramChat,
   insertTelegramEvent,
   insertTelegramTopic,
   insertTelegramVerification
-} from "../src/database/queries/telegram/insertTelegramConversation";
+} from "../src/database/queries/telegram/insert";
 import { findChatByEventIds } from "../src/util/telegramHelpers";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";

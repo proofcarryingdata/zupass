@@ -11,7 +11,7 @@ import {
 import { Context, SessionFlavor } from "grammy";
 import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
 import { Pool } from "postgres-pool";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import { deleteTelegramEvent } from "../database/queries/telegram/delete";
 import {
   ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
@@ -20,11 +20,11 @@ import {
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
   fetchUserTelegramChats
-} from "../database/queries/telegram/fetchTelegramEvent";
+} from "../database/queries/telegram/fetch";
 import {
   insertTelegramChat,
   insertTelegramEvent
-} from "../database/queries/telegram/insertTelegramConversation";
+} from "../database/queries/telegram/insert";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;

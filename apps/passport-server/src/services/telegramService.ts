@@ -9,24 +9,24 @@ import {
 import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat, ChatFromGetChat } from "grammy/types";
 import { sha256 } from "js-sha256";
-import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
-import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
+import {
+  deleteTelegramChatTopic,
+  deleteTelegramVerification
+} from "../database/queries/telegram/delete";
 import {
   fetchAnonTopicNullifier,
-  fetchTelegramVerificationStatus
-} from "../database/queries/telegram/fetchTelegramConversation";
-import {
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
-  fetchTelegramTopicsByChatId
-} from "../database/queries/telegram/fetchTelegramEvent";
+  fetchTelegramTopicsByChatId,
+  fetchTelegramVerificationStatus
+} from "../database/queries/telegram/fetch";
 import {
   insertOrUpdateTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
-} from "../database/queries/telegram/insertTelegramConversation";
+} from "../database/queries/telegram/insert";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
