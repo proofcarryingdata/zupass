@@ -886,6 +886,7 @@ export class TelegramService {
     const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
     const encodedTopicData = base64EncodeTopicData(
+      telegramChatId,
       topic.topic_name,
       topic.topic_id,
       validEventIds
