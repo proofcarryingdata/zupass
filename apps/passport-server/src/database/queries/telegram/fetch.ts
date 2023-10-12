@@ -10,6 +10,7 @@ export interface LinkedPretixTelegramEvent {
   telegramChatID: string | null;
   eventName: string;
   configEventID: string;
+  isLinkedToChat: boolean;
 }
 
 export interface ChatIDWithEventIDs {
@@ -139,18 +140,23 @@ export async function fetchTelegramEventsByChatId(
 }
 
 export async function fetchLinkedPretixAndTelegramEvents(
-  client: Pool
+  client: Pool,
+  telegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
-    `\
+    `
     SELECT
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
-      dpe.pretix_events_config_id AS "configEventID" 
-    FROM devconnect_pretix_events_info dpe 
-    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
-    `
+      dpe.pretix_events_config_id AS "configEventID",
+      CASE WHEN tbe.telegram_chat_id = $1 THEN true ELSE false END AS "isLinkedToChat"
+    FROM 
+      devconnect_pretix_events_info dpe 
+    LEFT JOIN 
+      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
+    `,
+    [telegramChatId]
   );
 
   return result.rows;
