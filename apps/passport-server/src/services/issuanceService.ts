@@ -6,9 +6,9 @@ import {
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  getEdDSATicketData,
   ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -31,22 +31,22 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  verifyFeedCredential,
   VerifyTicketRequest,
   VerifyTicketResult,
+  zupassDefaultSubscriptions,
   ZupassFeedIds,
-  ZuzaluUserRole,
-  verifyFeedCredential,
-  zupassDefaultSubscriptions
+  ZuzaluUserRole
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
   DeleteFolderAction,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction,
-  joinPath
+  ReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -1068,7 +1068,7 @@ export class IssuanceService {
    * Returns a promised verification of a PCD, either from the cache or,
    * if there is no cache entry, from the multiprocess service.
    */
-  private cachedVerifySignaturePCD(
+  private async cachedVerifySignaturePCD(
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<boolean> {
     const key = JSON.stringify(serializedPCD);
@@ -1076,8 +1076,10 @@ export class IssuanceService {
     if (cached) {
       return cached;
     } else {
-      const promise =
-        this.multiprocessService.verifySignaturePCD(serializedPCD);
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
       this.verificationPromiseCache.set(key, promise);
       // If the promise rejects, delete it from the cache
       promise.catch(() => this.verificationPromiseCache.delete(key));
