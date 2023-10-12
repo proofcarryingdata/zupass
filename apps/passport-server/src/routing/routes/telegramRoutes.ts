@@ -134,8 +134,11 @@ export function initTelegramRoutes(
       const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
       if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
 
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
       const redirectUrl =
-        await telegramService?.handleRequestAnonymousMessageLink(
+        await telegramService.handleRequestAnonymousMessageLink(
           parseInt(chatId),
           parseInt(topicId)
         );
