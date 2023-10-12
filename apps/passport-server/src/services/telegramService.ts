@@ -42,7 +42,8 @@ import {
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
+  senderIsAdmin,
+  setBotInfo
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -71,13 +72,7 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
 
-    this.bot.api.setMyDescription(
-      "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
-    );
-
-    this.bot.api.setMyShortDescription(
-      "Zucat manages events and groups with zero-knowledge proofs"
-    );
+    setBotInfo(bot);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -321,6 +316,13 @@ export class TelegramService {
       await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
         parse_mode: "HTML"
       });
+    });
+
+    this.bot.command("help", async (ctx) => {
+      // TODO: Link to troubleshooting guide
+      await ctx.reply(
+        `Please email passport@0xparc.org if you have any additional issues`
+      );
     });
 
     this.bot.command("anonsend", async (ctx) => {
@@ -923,7 +925,6 @@ export async function startTelegramService(
   };
 
   bot.use(session({ initial, getSessionKey }));
-  await bot.init();
 
   const service = new TelegramService(context, rollbarService, bot);
   bot.catch((error) => {

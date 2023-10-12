@@ -8,8 +8,13 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Context, SessionFlavor } from "grammy";
-import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Api, Bot, Context, RawApi, SessionFlavor } from "grammy";
+import {
+  BotCommand,
+  Chat,
+  ChatMemberAdministrator,
+  ChatMemberOwner
+} from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
@@ -72,6 +77,35 @@ function isFulfilled<T>(
 ): promiseSettledResult is PromiseFulfilledResult<T> {
   return promiseSettledResult.status === "fulfilled";
 }
+
+export const setBotInfo = async (
+  bot: Bot<BotContext, Api<RawApi>>
+): Promise<void> => {
+  bot.api.setMyDescription(
+    "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
+  );
+
+  bot.api.setMyShortDescription(
+    "Zucat manages events and groups with zero-knowledge proofs"
+  );
+
+  const commands: BotCommand[] = [
+    {
+      command: "/start",
+      description: "[DM only] join a group with a proof of ticket"
+    },
+    {
+      command: "/anonsend",
+      description: "[DM only] Send an anonymous message"
+    },
+    {
+      command: "/help",
+      description: "Get help"
+    }
+  ];
+
+  bot.api.setMyCommands(commands);
+};
 
 /**
  * Fetches the chat object for a list contaning a telegram chat id
