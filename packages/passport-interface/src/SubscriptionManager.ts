@@ -88,23 +88,31 @@ export class FeedSubscriptionManager {
   public async pollSubscriptions(
     credentialManager: CredentialManagerAPI
   ): Promise<SubscriptionActions[]> {
+    console.log("Polling subscriptions", { credentialManager });
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
+    console.log("Preparing credentials", {
+      activeSubscriptions: this.activeSubscriptions
+    });
 
     await credentialManager.prepareCredentials(
       this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
     );
+    console.log("Pushing promises");
 
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
         this.fetchSingleSubscription(subscription, credentialManager)
       );
     }
+    console.log("Filter through promises", { responsePromises });
 
     const responses = (await Promise.allSettled(responsePromises))
       .filter(isFulfilled<Awaited<(typeof responsePromises)[number]>>)
       .flatMap((result) => result.value);
 
+    console.log("Emitting", { emitter: this.updatedEmitter });
     this.updatedEmitter.emit();
+    console.log("Returning");
 
     return responses;
   }
