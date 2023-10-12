@@ -7,9 +7,9 @@ import { SemaphoreIdentityCardBody } from "./CardBody";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
-export interface SemaphoreIdentityPCDArgs {
+export type SemaphoreIdentityPCDArgs = {
   identity: Identity;
-}
+};
 
 export interface SemaphoreIdentityPCDClaim {
   identity: Identity;
@@ -83,6 +83,7 @@ export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
 export const SemaphoreIdentityPCDPackage: PCDPackage<
   SemaphoreIdentityPCDClaim,
   SemaphoreIdentityPCDProof,
+  // @ts-expect-error https://github.com/proofcarryingdata/zupass/issues/830
   SemaphoreIdentityPCDArgs
 > = {
   name: SemaphoreIdentityPCDTypeName,

@@ -1,7 +1,7 @@
-import { Dispatch, FormEvent, SetStateAction } from "react";
+import { Dispatch, SetStateAction, UIEvent, useRef } from "react";
 import {
-  checkPasswordStrength,
-  PASSWORD_MINIMUM_LENGTH
+  PASSWORD_MINIMUM_LENGTH,
+  checkPasswordStrength
 } from "../../src/password";
 import { Button, Spacer } from "../core";
 import { InlineError } from "./InlineError";
@@ -38,7 +38,9 @@ export function NewPasswordForm({
   setError,
   error
 }: NewPasswordForm) {
-  const checkPasswordAndSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const confirmPasswordRef = useRef<HTMLInputElement>(null);
+
+  const checkPasswordAndSubmit = async (e: UIEvent) => {
     e.preventDefault();
     if (password === "") {
       setError("Enter a password");
@@ -63,7 +65,7 @@ export function NewPasswordForm({
   };
 
   return (
-    <form onSubmit={checkPasswordAndSubmit}>
+    <form>
       {/* For password manager autofill */}
       <input hidden readOnly value={email} />
       <PasswordInput
@@ -73,12 +75,18 @@ export function NewPasswordForm({
           setPassword(value);
         }}
         placeholder={passwordInputPlaceholder || "Password"}
+        onEnter={(e) => {
+          e.preventDefault();
+          confirmPasswordRef.current.focus();
+        }}
         autoFocus={autoFocus}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
       />
       <Spacer h={8} />
       <PasswordInput
+        inputRef={confirmPasswordRef}
+        onEnter={checkPasswordAndSubmit}
         value={confirmPassword}
         setValue={(value) => {
           setError("");
@@ -90,7 +98,7 @@ export function NewPasswordForm({
       />
       <InlineError error={error} />
       <Spacer h={8} />
-      <Button style="primary" type="submit">
+      <Button style="primary" onClick={checkPasswordAndSubmit}>
         {submitButtonText}
       </Button>
     </form>

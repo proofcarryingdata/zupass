@@ -2,6 +2,7 @@ import { ReactNode, useCallback } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { useAppError, useDispatch } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
+import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
 export function AppContainer({
@@ -25,7 +26,7 @@ export function AppContainer({
       <GlobalBackground color={col} />
       <Background>
         <Container>
-          {children}
+          {children ?? <ScreenLoader text="Zupass" />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </Container>
       </Background>

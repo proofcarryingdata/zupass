@@ -1,4 +1,5 @@
 import {
+  CredentialManager,
   FeedSubscriptionManager,
   Subscription,
   SubscriptionErrorType,
@@ -9,7 +10,10 @@ import { PCDPermission, matchActionToPermission } from "@pcd/pcd-collection";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
+  useCredentialCache,
   useDispatch,
+  useIdentity,
+  usePCDCollection,
   useResolvingSubscriptionId,
   useSubscriptions
 } from "../../src/appHooks";
@@ -65,11 +69,20 @@ function FetchError({
 }) {
   const [polling, setPolling] = useState<boolean>(false);
   const [stillFailing, setStillFailing] = useState<boolean>(false);
+  const credentialCache = useCredentialCache();
+
+  const identity = useIdentity();
+  const pcds = usePCDCollection();
 
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
 
-    await subscriptions.pollSingleSubscription(subscription);
+    const credentialManager = new CredentialManager(
+      identity,
+      pcds,
+      credentialCache
+    );
+    await subscriptions.pollSingleSubscription(subscription, credentialManager);
     setPolling(false);
     const error = subscriptions.getError(subscription.id);
     if (error && error.type === SubscriptionErrorType.FetchError) {
@@ -77,7 +90,7 @@ function FetchError({
     } else {
       setStillFailing(false);
     }
-  }, [setPolling, setStillFailing, subscription, subscriptions]);
+  }, [identity, pcds, credentialCache, subscriptions, subscription]);
   return (
     <div>
       <div>
@@ -223,13 +236,16 @@ function PermissionUpdate({
 
   const onUpdateClick = useCallback(async () => {
     try {
-      dispatch({ type: "update-subscription-permissions", subscriptionId: subscription.id, permissions: newPermissions });
+      dispatch({
+        type: "update-subscription-permissions",
+        subscriptionId: subscription.id,
+        permissions: newPermissions
+      });
       setOutcome("success");
     } catch (e) {
       setOutcome("fail");
     }
   }, [newPermissions, subscription.id, dispatch]);
-
 
   const finish = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });

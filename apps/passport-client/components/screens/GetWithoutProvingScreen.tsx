@@ -10,7 +10,8 @@ import {
   useDispatch,
   useIsSyncSettled,
   usePCDCollection,
-  useSelf
+  useSelf,
+  useUserForcedToLogout
 } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
 import {
@@ -57,16 +58,20 @@ export function GetWithoutProvingScreen() {
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
 
+  const userForcedToLogout = useUserForcedToLogout();
+
   useEffect(() => {
-    if (self == null) {
+    if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingGetWithoutProvingRequest(stringifiedRequest);
-      window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
-        stringifiedRequest
-      )}`;
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
     }
-  }, [request, self]);
+  }, [request, self, userForcedToLogout]);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(

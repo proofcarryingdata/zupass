@@ -13,12 +13,12 @@ import { RSAImageCardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-image-pcd";
 
-export interface RSAImagePCDArgs {
+export type RSAImagePCDArgs = {
   privateKey: StringArgument;
   id: StringArgument;
   url: StringArgument;
   title: StringArgument;
-}
+};
 
 export interface RSAImagePCDClaim {}
 

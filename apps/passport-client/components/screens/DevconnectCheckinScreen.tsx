@@ -69,7 +69,6 @@ function TicketError({
   let errorContent = null;
   let showTicket = true;
 
-  console.log(error);
   switch (error.name) {
     case "AlreadyCheckedIn":
       errorContent = (

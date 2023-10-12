@@ -23,6 +23,28 @@ export enum TicketCategory {
   Zuzalu = 3
 }
 
+/**
+ * The ticket data here is based on passport-server's ticket data model,
+ * which is in turn based on the data model from Pretix.
+ *
+ * In this model, a Ticket represents the purchase of a Product, which is
+ * associated with an Event.
+ *
+ * Events may have many Products, such as subsidized tickets, sponsor tickets,
+ * organizer tickets, or time-restricted passes. A given Product can only be
+ * associated with one Event.
+ *
+ * In general, consumers of this data will want to be aware of both the event
+ * ID and product ID. If providing a service that should be accessible to
+ * ticket-holders for an event, and using this PCD as proof of ticket-holding,
+ * the consumer should check that both the event ID and product ID match a
+ * list of known ticket types, and that the public key (in `proof.eddsaPCD`)
+ * matches the public key of the known issuer of the tickets.
+ *
+ * An example of how this might be done is shown in {@link verifyTicket} in
+ * passport-server's issuance service, which is requested by passport-client
+ * when verifying tickets.
+ */
 export interface ITicketData {
   // the fields below are not signed and are used for display purposes
 
@@ -54,14 +76,14 @@ async function init(args: EdDSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
-export interface EdDSATicketPCDArgs {
+export type EdDSATicketPCDArgs = {
   // The EdDSA private key to sign the message with, as a hex string
   privateKey: StringArgument;
   // ticket information that is encoded into this pcd
   ticket: ObjectArgument<ITicketData>;
   // A unique string identifying the PCD
   id: StringArgument;
-}
+};
 
 export interface EdDSATicketPCDClaim {
   ticket: ITicketData;
@@ -208,6 +230,10 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
     header: header,
     displayName: `${ticketData.eventName} (${ticketData.ticketName})`
   };
+}
+
+export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
+  return pcd.type === EdDSAPCDTypeName;
 }
 
 /**

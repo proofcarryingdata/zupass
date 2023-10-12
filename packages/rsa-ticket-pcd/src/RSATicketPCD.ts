@@ -35,10 +35,10 @@ async function init(args: RSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
-export interface RSATicketPCDArgs {
+export type RSATicketPCDArgs = {
   id: StringArgument;
   rsaPCD: PCDArgument<RSATicketPCD>;
-}
+};
 
 export interface RSATicketPCDClaim {}
 

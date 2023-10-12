@@ -1,6 +1,6 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  ISSUANCE_STRING,
+  createFeedCredentialPayload,
   pollFeed,
   ZupassFeedIds
 } from "@pcd/passport-interface";
@@ -9,12 +9,13 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import {
   getZuzaluPretixConfig,
   ZuzaluPretixOrder
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
-import { ZUZALU_ORGANIZER_EVENT_ID } from "../src/services/issuanceService";
+import { ZUZALU_23_EVENT_ID } from "../src/services/issuanceService";
 import { Zupass } from "../src/types";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
@@ -30,6 +31,16 @@ describe("zuzalu pcdpass functionality", function () {
   let pretixMocker: ZuzaluPretixDataMocker;
   let identity: Identity;
   let order: ZuzaluPretixOrder;
+
+  this.beforeEach(() => {
+    // Means that the time won't change during the test, which could cause
+    // spurious issues with timestamps in feed credentials.
+    MockDate.set(new Date());
+  });
+
+  this.afterEach(() => {
+    MockDate.reset();
+  });
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
@@ -77,10 +88,11 @@ describe("zuzalu pcdpass functionality", function () {
   step(
     "user should be able to be issued Zuzalu ticket PCDs from the server",
     async function () {
+      const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
         application.expressContext.localEndpoint,
         identity,
-        ISSUANCE_STRING,
+        payload,
         ZupassFeedIds.Zuzalu_1
       );
 
@@ -105,7 +117,7 @@ describe("zuzalu pcdpass functionality", function () {
         await EdDSATicketPCDPackage.deserialize(zuzaluTicketPCD.pcd);
 
       expect(deserializedZuzaluTicketPCD.claim.ticket.eventId).to.eq(
-        ZUZALU_ORGANIZER_EVENT_ID
+        ZUZALU_23_EVENT_ID
       );
 
       const verified = await EdDSATicketPCDPackage.verify(

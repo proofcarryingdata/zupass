@@ -45,12 +45,12 @@ export interface EthereumGroupPCDInitArgs {
   pubkeyMembershipConfig: ProverConfig;
 }
 
-export interface EthereumGroupPCDArgs {
+export type EthereumGroupPCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
   signatureOfIdentityCommitment: StringArgument;
   merkleProof: StringArgument;
   groupType: StringArgument;
-}
+};
 
 export interface EthereumGroupPCDClaim {
   publicInput: PublicInput;

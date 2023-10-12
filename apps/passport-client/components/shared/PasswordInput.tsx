@@ -1,4 +1,9 @@
-import { Dispatch, SetStateAction } from "react";
+import {
+  Dispatch,
+  KeyboardEvent,
+  MutableRefObject,
+  SetStateAction
+} from "react";
 import styled from "styled-components";
 import { BigInput } from "../core";
 import { icons } from "../icons";
@@ -9,6 +14,8 @@ interface SetPasswordInputProps {
   revealPassword: boolean;
   setRevealPassword: Dispatch<SetStateAction<boolean>>;
   placeholder: string;
+  onEnter?: (e: KeyboardEvent<HTMLInputElement>) => void;
+  inputRef?: MutableRefObject<HTMLInputElement>;
   autoFocus?: boolean;
 }
 
@@ -18,11 +25,19 @@ export function PasswordInput({
   revealPassword,
   autoFocus,
   setRevealPassword,
-  placeholder
+  placeholder,
+  inputRef,
+  onEnter
 }: SetPasswordInputProps) {
   return (
     <Container>
       <PasswordBigInput
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            onEnter?.(e);
+          }
+        }}
+        ref={inputRef}
         autoFocus={autoFocus}
         type={revealPassword ? "text" : "password"}
         placeholder={placeholder}

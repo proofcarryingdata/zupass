@@ -1,3 +1,5 @@
+import { ONE_HOUR_MS } from "@pcd/util";
+
 interface AppConfig {
   // Development mode lets you bypass email auth, etc.
   devMode: boolean;
@@ -14,7 +16,7 @@ interface AppConfig {
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL,
-  maxIdentityProofAgeMs: 1000 * 60 * 60 * 4,
+  maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME
 };

@@ -5,12 +5,13 @@ import {
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button, LinkButton } from "../../core/Button";
+import { ConfirmationCodeInput } from "../../core/Input";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
 import { ResendCodeButton } from "../../shared/ResendCodeButton";
@@ -46,6 +47,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [loadingSalt, setLoadingSalt] = useState(false);
+  const [token, setToken] = useState("");
 
   const verifyToken = useCallback(
     async (token: string) => {
@@ -144,14 +146,12 @@ function SendEmailVerification({ email }: { email: string }) {
   }, [triedSendingEmail, doRequestConfirmationEmail]);
 
   // Verify the code the user entered.
-  const inRef = useRef<HTMLInputElement>();
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const token = inRef.current?.value || "";
       verifyToken(token);
     },
-    [verifyToken]
+    [verifyToken, token]
   );
 
   let content = null;
@@ -180,7 +180,12 @@ function SendEmailVerification({ email }: { email: string }) {
           <form onSubmit={onSubmit}>
             <BigInput value={email} disabled={true} />
             <Spacer h={8} />
-            <BigInput ref={inRef} autoFocus placeholder="code from email" />
+            <ConfirmationCodeInput
+              value={token}
+              onChange={(e) => setToken(e.target.value.replace(/\D/g, ""))}
+              autoFocus
+              placeholder="code from email"
+            />
             <InlineError error={error} />
             <Spacer h={8} />
             <Button type="submit">Verify</Button>

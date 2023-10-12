@@ -1,3 +1,4 @@
+import { createCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -5,6 +6,7 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
+import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
@@ -20,8 +22,8 @@ import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExist
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
+import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
-import { VerifyScreen } from "../components/screens/VerifyScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import {
@@ -57,6 +59,7 @@ class App extends React.Component<object, AppState> {
       this.stateEmitter.emit(this.state);
     });
   };
+
   dispatch = (action: Action) => dispatch(action, this.state, this.update);
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
@@ -158,10 +161,16 @@ function RouterImpl() {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          <Route path="verify-zupass" element={<VerifyScreen />} />
+          {/* This route is used by non-Devconnect tickets */}
+          <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
+          {/* This route is used to check in a Devconnect ticket with the
+              full PCD in the parameters */}
+          <Route path="checkin" element={<DevconnectCheckinScreen />} />
+          {/* This route is used to check in a Devconnect ticket with only
+              the ticket ID in the parameters */}
           <Route
-            path="verify-devconnect"
-            element={<DevconnectCheckinScreen />}
+            path="checkin-by-id"
+            element={<DevconnectCheckinByIdScreen />}
           />
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
@@ -190,7 +199,7 @@ async function loadInitialState(): Promise<AppState> {
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   if (self) {
-    await addDefaultSubscriptions(identity, subscriptions);
+    await addDefaultSubscriptions(subscriptions);
   }
 
   let modal = { modalType: "none" } as AppState["modal"];
@@ -205,6 +214,8 @@ async function loadInitialState(): Promise<AppState> {
     modal = { modalType: "upgrade-account-modal" };
   }
 
+  const credentialCache = createCredentialCache();
+
   return {
     self,
     encryptionKey,
@@ -212,7 +223,8 @@ async function loadInitialState(): Promise<AppState> {
     identity,
     modal,
     subscriptions,
-    resolvingSubscriptionId: undefined
+    resolvingSubscriptionId: undefined,
+    credentialCache
   };
 }
 

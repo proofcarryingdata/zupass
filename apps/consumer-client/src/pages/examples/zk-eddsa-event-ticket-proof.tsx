@@ -35,9 +35,23 @@ export default function Page() {
     useState(false);
   const [revealIsConsumed, setRevealIsConsumed] = useState(false);
   const [revealIsRevoked, setRevealIsRevoked] = useState(false);
+  const [revealFieldsUserProvided, setRevealFieldsUserProvided] =
+    useState(false);
   const [validEventIdsInput, setValidEventIdsInput] = useState("");
+  const [validDisplayEventIdsInput, setDisplayValidEventIdsInput] =
+    useState("");
+  const [validDisplayProductIdsInput, setDisplayValidProductIdsInput] =
+    useState("");
 
   const validEventIds = validEventIdsInput
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s != "");
+  const displayValidEventIds = validDisplayEventIdsInput
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s != "");
+  const displayValidProductIds = validDisplayProductIdsInput
     .split(",")
     .map((s) => s.trim())
     .filter((s) => s != "");
@@ -106,8 +120,11 @@ export default function Page() {
               ZUPASS_URL,
               window.location.origin + "#/popup",
               fieldsToReveal,
+              revealFieldsUserProvided,
               watermark,
               validEventIds,
+              displayValidEventIds,
+              displayValidProductIds,
               externalNullifier
             )
           }
@@ -213,6 +230,40 @@ export default function Page() {
           />
           request isRevoked?
         </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealFieldsUserProvided}
+            onChange={() => {
+              setRevealFieldsUserProvided((checked) => !checked);
+            }}
+          />
+          allow reveal fields customization?
+        </label>
+        <br />
+        [Prove Screen Only]
+        <br />
+        Valid event ids, comma separated (or empty for no validation):
+        <textarea
+          cols={45}
+          rows={12}
+          value={validDisplayEventIdsInput}
+          onChange={(e) => {
+            setDisplayValidEventIdsInput(e.target.value);
+          }}
+        />
+        <br />
+        Valid product ids, comma separated (or empty for no validation):
+        <textarea
+          cols={45}
+          rows={12}
+          value={validDisplayProductIdsInput}
+          onChange={(e) => {
+            setDisplayValidProductIdsInput(e.target.value);
+          }}
+        />
+        <br />
         {!!pcd && (
           <>
             <p>Got Zupass ZKEdDSA Event Ticket Proof from Zupass</p>
@@ -297,6 +348,7 @@ export default function Page() {
  * @param urlToZupassWebsite URL of the Zupass website
  * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param fieldsToReveal Ticket data fields that site is requesting for user to reveal
+ * @param fieldsToRevealUserProvided Whether the user can customize the fields to reveal
  * @param watermark Challenge to watermark this proof to
  * @param externalNullifier Optional unique identifier for this ZKEdDSAEventTicketPCD
  */
@@ -304,8 +356,11 @@ export function openZKEdDSAEventTicketPopup(
   urlToZupassWebsite: string,
   popupUrl: string,
   fieldsToReveal: EdDSATicketFieldsToReveal,
+  fieldsToRevealUserProvided: boolean,
   watermark: bigint,
   validEventIds: string[],
+  displayValidEventIds: string[],
+  displayValidProductIds: string[],
   externalNullifier?: string
 ) {
   const args: ZKEdDSAEventTicketPCDArgs = {
@@ -313,7 +368,11 @@ export function openZKEdDSAEventTicketPopup(
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      validatorParams: {
+        eventIds: displayValidEventIds,
+        productIds: displayValidProductIds
+      }
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -329,7 +388,7 @@ export function openZKEdDSAEventTicketPopup(
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: fieldsToReveal,
-      userProvided: false
+      userProvided: fieldsToRevealUserProvided
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,

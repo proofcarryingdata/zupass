@@ -40,6 +40,8 @@ export function DeviceLoginScreen() {
         <CenterColumn>
           <form>
             <BigInput
+              autoCapitalize="false"
+              autoCorrect="false"
               type="text"
               placeholder="email address"
               value={email}
@@ -50,6 +52,8 @@ export function DeviceLoginScreen() {
             />
             <Spacer h={8} />
             <BigInput
+              autoCapitalize="false"
+              autoCorrect="false"
               type="text"
               placeholder="secret key"
               value={secret}

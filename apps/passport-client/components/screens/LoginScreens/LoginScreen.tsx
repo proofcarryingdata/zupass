@@ -90,13 +90,14 @@ export function LoginScreen() {
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
       e.preventDefault();
+      const trimmedEmail = email.trim();
 
-      if (email === "" || validateEmail(email) === false) {
+      if (trimmedEmail === "" || validateEmail(trimmedEmail) === false) {
         setError("Enter a valid email address");
       } else {
         dispatch({
           type: "new-passport",
-          email: email.toLocaleLowerCase("en-US")
+          email: trimmedEmail.toLocaleLowerCase("en-US")
         });
       }
     },
@@ -138,6 +139,8 @@ export function LoginScreen() {
       <CenterColumn>
         <form onSubmit={onGenPass}>
           <BigInput
+            autoCapitalize="off"
+            autoCorrect="off"
             type="text"
             autoFocus
             placeholder="email address"

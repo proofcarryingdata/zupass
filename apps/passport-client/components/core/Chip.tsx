@@ -1,5 +1,4 @@
 import React from "react";
-
 import styled from "styled-components";
 
 /**
@@ -58,10 +57,11 @@ const Label = styled.div`
   font-size: 14px;
 `;
 
-export const ChipsContainer = styled.div`
+export const ChipsContainer = styled.div<{ direction: "row" | "column" }>`
   display: flex;
-  align-items: center;
+  align-items: ${(p) => (p.direction === "row" ? "center" : "flex-start")};
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 8px;
+  flex-direction: ${(p) => (p.direction === "row" ? "row" : "column")};
 `;

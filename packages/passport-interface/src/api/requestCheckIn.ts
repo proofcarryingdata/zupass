@@ -18,6 +18,9 @@ import { httpPost } from "./makeRequest";
  * a 'superuser' of a particular event wants to check in a Devconnect
  * attendee into the event.
  *
+ * Sends a serialized PCD. See {@link requestCheckInById} for an alternative
+ * API which sends only the ticket ID.
+ *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestCheckIn(

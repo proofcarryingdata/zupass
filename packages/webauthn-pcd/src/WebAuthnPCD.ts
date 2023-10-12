@@ -158,6 +158,7 @@ export function getDisplayOptions(pcd: WebAuthnPCD): DisplayOptions {
 export const WebAuthnPCDPackage: PCDPackage<
   WebAuthnPCDClaim,
   WebAuthnPCDProof,
+  // @ts-expect-error https://github.com/proofcarryingdata/zupass/issues/830
   WebAuthnPCDArgs
 > = {
   name: WebAuthnPCDTypeName,

@@ -19,7 +19,7 @@ export function ScanScreen() {
             const newLoc = maybeRedirect(result.getText());
             if (newLoc) nav(newLoc);
           } else if (error != null) {
-            console.info(error);
+            //    console.info(error);
           }
         }}
         constraints={{ facingMode: "environment", aspectRatio: 1 }}
@@ -33,9 +33,16 @@ export function ScanScreen() {
 }
 
 function maybeRedirect(text: string): string | null {
-  const verifyUrlPrefix = `${window.location.origin}#/verify-devconnect?`;
-  if (text.startsWith(verifyUrlPrefix)) {
-    const hash = text.substring(window.location.origin.length + 1);
+  const verifyUrlPrefixes = [
+    `${window.location.origin}/#/verify`,
+    `${window.location.origin}#/verify`,
+    `${window.location.origin}/#/checkin`,
+    `${window.location.origin}#/checkin`,
+    `${window.location.origin}/#/checkin-by-id`,
+    `${window.location.origin}#/checkin-by-id`
+  ];
+  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
+    const hash = text.substring(text.indexOf("#") + 1);
     console.log(`Redirecting to ${hash}`);
     return hash;
   }

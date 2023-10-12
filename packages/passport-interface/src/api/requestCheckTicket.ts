@@ -1,13 +1,18 @@
 import urlJoin from "url-join";
 import {
-  CheckTicketReponseValue as CheckTicketResponseValue,
   CheckTicketRequest,
+  CheckTicketReponseValue as CheckTicketResponseValue,
   TicketError
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
 /**
+ * For Devconnect tickets, pre-check a ticket before attempting check-in.
+ *
+ * Sends a serialized PCD. See {@link requestCheckTicketById} for an
+ * alternative API which sends only the ticket ID.
+ *
  * Does NOT check in the user, rather checks whether the ticket is valid and
  * can be used to check in.
  *

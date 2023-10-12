@@ -4,9 +4,15 @@ export const closeWebviewHtml = `
     <head>
       <title>Sample HTML Page</title>
       <script src="https://telegram.org/js/telegram-web-app.js"></script>
+      <style>
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #2a3231;
+        }
+      </style>
     </head>
     <body>
-      <h1>Hello, World!</h1>
       <script>
         // Call the function when the page loads
         window.onload = Telegram.WebApp.close();
@@ -23,24 +29,21 @@ export const errorHtmlWithDetails = (error: string): string => {
     <style></style>
   </head>
   <body>
-    <p>We were unable to verify that you have a ticket for a Telegram group</p>
-    <p>
-      Make sure that the event associated with your ticket has corresponding Telegram group in
-      the list provided by the bot.
-    </p>
-    <p>Type <i>/start</i> again to view the list if needed.</p>
+  <h3>Action failed</h3>
+  ${
+    error
+      ? `
+      <p>Here is the error we received:</p>
+      <p><b>${error}</b></p>
+      `
+      : ""
+  }
+    <p>Type <i>/start</i> to try again.</p>
     <p>
       If you need help additional help, please email
       <b>passport@0xparc.org</b>.
     </p>
-    ${
-      error
-        ? `
-        <p>Here is the error we received:</p>
-        <p>${error}</p>
-        `
-        : ""
-    }
+
   </body>
 </html>
 `;

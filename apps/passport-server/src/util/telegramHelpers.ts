@@ -16,9 +16,15 @@ import {
   ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
   fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents
+  fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramAnonTopicsByChatId,
+  fetchTelegramEventsByChatId,
+  fetchUserTelegramChats
 } from "../database/queries/telegram/fetchTelegramEvent";
-import { insertTelegramEvent } from "../database/queries/telegram/insertTelegramConversation";
+import {
+  insertTelegramChat,
+  insertTelegramEvent
+} from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
@@ -32,9 +38,32 @@ export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent & { isLinked: boolean };
   lastMessageId?: number;
+  selectedChat?: TopicChat;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+export const base64EncodeTopicData = (
+  topicName: string,
+  topicId: number | string,
+  validEventIds: string[]
+): string => {
+  const topicData = Buffer.from(
+    encodeURIComponent(
+      JSON.stringify({
+        topicName: topicName,
+        topicId,
+        validEventIds
+      })
+    ),
+    "utf-8"
+  );
+  const encodedTopicData = topicData.toString("base64");
+  if (encodedTopicData.length > 512)
+    throw new Error("Topic data too big for telegram startApp parameter");
+
+  return encodedTopicData;
+};
 
 function isFulfilled<T>(
   promiseSettledResult: PromiseSettledResult<T>
@@ -166,7 +195,15 @@ const generateProofUrl = (
       argumentType: ArgumentTypeName.PCD,
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
-      userProvided: true
+      userProvided: true,
+      displayName: "Your Ticket",
+      description: "",
+      validatorParams: {
+        eventIds: validEventIds,
+        // TODO: surface which event ticket we are looking for
+        notFoundMessage: "You don't have a ticket to this event."
+      },
+      hideIcon: true
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -177,7 +214,8 @@ const generateProofUrl = (
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: fieldsToReveal,
-      userProvided: false
+      userProvided: false,
+      hideIcon: true
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
@@ -192,7 +230,8 @@ const generateProofUrl = (
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
       value: telegramUserId.toString(),
-      userProvided: false
+      userProvided: false,
+      description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
     }
   };
 
@@ -207,9 +246,9 @@ const generateProofUrl = (
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK Ticket Proof",
+    title: "",
     description:
-      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+      "Zucat would like to invite you to a Telegram group and requested a zero-knowledge proof."
   });
   return proofUrl;
 };
@@ -238,6 +277,7 @@ export const dynamicEvents = async (
         } else {
           if (!event.isLinked) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
+            await insertTelegramChat(db, ctx.chat.id);
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
@@ -307,12 +347,116 @@ export const chatsToJoin = async (
 
   const events = await fetchEventsPerChat(db);
   const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  if (eventsWithChats && eventsWithChats.length === 0) {
+  const userChats = await fetchUserTelegramChats(db, userId);
+
+  const finalEvents = eventsWithChats.map((e) => {
+    return {
+      ...e,
+      userIsChatMember: userChats
+        ? userChats.telegramChatIDs.includes(e.telegramChatID)
+        : false
+    };
+  });
+  if (finalEvents && finalEvents.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
-  for (const chat of eventsWithChats) {
-    const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
-    range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  const sortedChats = finalEvents.sort(
+    (a, b) => +a.userIsChatMember - +b.userIsChatMember
+  );
+  for (const chat of sortedChats) {
+    if (chat.userIsChatMember) {
+      const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
+        creates_join_request: true
+      });
+      range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+      range.row();
+    } else {
+      const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+      range.webApp(`${chat.chat?.title}`, proofUrl).row();
+    }
+  }
+};
+
+export const chatsToPostIn = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  const db = ctx.session.dbPool;
+  if (!db) {
+    range.text(`Database not connected. Try again...`);
+    return;
+  }
+  const userId = ctx.from?.id;
+  if (!userId) {
+    range.text(`User not found. Try again...`);
+    return;
+  }
+  try {
+    if (ctx.session.selectedChat) {
+      const chat = ctx.session.selectedChat;
+      const topics = await fetchTelegramAnonTopicsByChatId(
+        ctx.session.dbPool,
+        chat.id
+      );
+      const telegramEvents = await fetchTelegramEventsByChatId(
+        ctx.session.dbPool,
+        chat.id
+      );
+      const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+      if (topics.length === 0) {
+        range.text(`No topics found`).row();
+      } else {
+        range
+          .text(`${chat.title} Topics`)
+
+          .row();
+        for (const topic of topics) {
+          const encodedTopicData = base64EncodeTopicData(
+            topic.topic_name,
+            topic.topic_id,
+            validEventIds
+          );
+          range
+            .webApp(
+              `${topic.topic_name}`,
+              `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+            )
+            .row();
+        }
+      }
+      range.text(`↰  Back`, async (ctx) => {
+        ctx.session.selectedChat = undefined;
+        await ctx.menu.update({ immediate: true });
+      });
+    } else {
+      const events = await fetchEventsPerChat(db);
+      const eventsWithChats = await chatIDsToChats(db, ctx, events);
+      if (eventsWithChats && eventsWithChats.length === 0) {
+        range.text(`No groups to join at this time`);
+        return;
+      }
+      const userChats = await fetchUserTelegramChats(db, userId);
+
+      const finalChats = eventsWithChats.filter(
+        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
+      );
+      if (finalChats?.length > 0) {
+        for (const chat of finalChats) {
+          range
+            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+              ctx.session.selectedChat = chat.chat;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+        }
+      } else {
+        ctx.reply(`No chats found to post in. Type /start to join one!`);
+      }
+    }
+  } catch (error) {
+    range.text(`Action failed ${error}`);
+    return;
   }
 };

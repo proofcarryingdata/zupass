@@ -11,6 +11,7 @@ import {
   Spacer,
   TextCenter
 } from "../core";
+import { ConfirmationCodeInput } from "../core/Input";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -84,9 +85,10 @@ export function EnterConfirmationCodeScreen() {
         <CenterColumn>
           <BigInput value={email} disabled />
           <Spacer h={8} />
-          <BigInput
+          <ConfirmationCodeInput
+            autoFocus
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.replace(/\D/g, ""))}
             placeholder="confirmation code"
             disabled={verifyingCode}
           />

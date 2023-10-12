@@ -1,16 +1,18 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  applyActions,
+  CredentialManager,
   Feed,
   FeedSubscriptionManager,
-  SyncedEncryptedStorage,
-  User,
-  applyActions,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
+  KnownTicketTypesAndKeys,
   requestCreateNewUser,
   requestDeviceLogin,
   requestLogToServer,
-  requestUser
+  requestUser,
+  SyncedEncryptedStorage,
+  User
 } from "@pcd/passport-interface";
 import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
@@ -38,8 +40,8 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { hasSetupPassword } from "./user";
+import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -99,14 +101,18 @@ export type Action =
   | {
       type: "add-subscription";
       providerUrl: string;
+      providerName: string;
       feed: Feed;
-      credential: SerializedPCD;
     }
   | { type: "remove-subscription"; subscriptionId: string }
   | {
       type: "update-subscription-permissions";
       subscriptionId: string;
       permissions: PCDPermission[];
+    }
+  | {
+      type: "set-known-ticket-types-and-keys";
+      knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     };
 
 export type StateContextState = {
@@ -152,9 +158,9 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport(state);
+      return resetPassport(state, update);
     case "load-from-sync":
-      return loadFromSync(action.encryptionKey, action.storage, state, update);
+      return loadFromSync(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -183,8 +189,8 @@ export async function dispatch(
         state,
         update,
         action.providerUrl,
-        action.feed,
-        action.credential
+        action.providerName,
+        action.feed
       );
     case "remove-subscription":
       return removeSubscription(state, update, action.subscriptionId);
@@ -194,6 +200,12 @@ export async function dispatch(
         update,
         action.subscriptionId,
         action.permissions
+      );
+    case "set-known-ticket-types-and-keys":
+      return setKnownTicketTypesAndKeys(
+        state,
+        update,
+        action.knownTicketTypesAndKeys
       );
     default:
       // We can ensure that we never get here using the type system
@@ -358,7 +370,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
     });
   }
 
-  await addDefaultSubscriptions(identity, state.subscriptions);
+  await addDefaultSubscriptions(state.subscriptions);
 
   // Save to local storage.
   await setSelf(user, state, update);
@@ -433,7 +445,7 @@ function clearError(state: AppState, update: ZuUpdate) {
   update({ error: undefined });
 }
 
-async function resetPassport(state: AppState) {
+async function resetPassport(state: AppState, update: ZuUpdate) {
   await requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
@@ -441,9 +453,17 @@ async function resetPassport(state: AppState) {
   });
   // Clear saved state.
   window.localStorage.clear();
-  // Reload to clear in-memory state.
-  window.location.hash = "#/";
-  window.location.reload();
+  // Clear in-memory state
+  update({
+    self: undefined,
+    modal: {
+      modalType: "none"
+    }
+  });
+
+  setTimeout(() => {
+    window.location.reload();
+  }, 1);
 }
 
 async function addPCDs(
@@ -474,7 +494,6 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 async function loadFromSync(
   encryptionKey: string,
   storage: SyncedEncryptedStorage,
-  currentState: AppState,
   update: ZuUpdate
 ) {
   let pcds: PCDCollection;
@@ -634,7 +653,7 @@ async function sync(state: AppState, update: ZuUpdate) {
       const { pcds, subscriptions } = downloaded;
 
       if (subscriptions) {
-        addDefaultSubscriptions(state.identity, subscriptions);
+        addDefaultSubscriptions(subscriptions);
       }
 
       update({
@@ -682,7 +701,13 @@ async function sync(state: AppState, update: ZuUpdate) {
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
       );
-      const actions = await state.subscriptions.pollSubscriptions();
+      const credentialManager = new CredentialManager(
+        state.identity,
+        state.pcds,
+        state.credentialCache
+      );
+      const actions =
+        await state.subscriptions.pollSubscriptions(credentialManager);
 
       await applyActions(state.pcds, actions);
       await savePCDs(state.pcds);
@@ -742,10 +767,13 @@ async function addSubscription(
   state: AppState,
   update: ZuUpdate,
   providerUrl: string,
-  feed: Feed,
-  credential: SerializedPCD
+  providerName: string,
+  feed: Feed
 ) {
-  state.subscriptions.subscribe(providerUrl, feed, credential);
+  if (!state.subscriptions.getProvider(providerUrl)) {
+    state.subscriptions.addProvider(providerUrl, providerName);
+  }
+  await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
@@ -782,5 +810,24 @@ async function updateSubscriptionPermissions(
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false,
     loadingIssuedPCDs: false
+  });
+}
+
+async function setKnownTicketTypesAndKeys(
+  _state: AppState,
+  update: ZuUpdate,
+  knownTicketTypesAndKeys: KnownTicketTypesAndKeys
+) {
+  const keyMap = {};
+  knownTicketTypesAndKeys.publicKeys.forEach((k) => {
+    if (!keyMap[k.publicKeyType]) {
+      keyMap[k.publicKeyType] = {};
+    }
+    keyMap[k.publicKeyType][k.publicKeyName] = k;
+  });
+
+  update({
+    knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
+    knownPublicKeys: keyMap
   });
 }

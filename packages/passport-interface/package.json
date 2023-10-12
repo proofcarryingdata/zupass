@@ -20,24 +20,23 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/rsa-ticket-pcd": "0.2.1",
-    "@pcd/webauthn-pcd": "0.7.1",
-    "@semaphore-protocol/group": "^3.11.0",
-    "@semaphore-protocol/proof": "^3.11.0",
-    "react": "^18.2.0",
-    "url-join": "4.0.1",
-    "uuid": "^9.0.0",
     "@pcd/eddsa-ticket-pcd": "0.2.1",
-    "@pcd/pcd-collection": "0.7.1",
+    "@pcd/emitter": "0.1.1",
     "@pcd/passport-crypto": "0.7.1",
+    "@pcd/pcd-collection": "0.7.1",
     "@pcd/pcd-types": "0.7.1",
+    "@pcd/rsa-ticket-pcd": "0.2.1",
     "@pcd/semaphore-group-pcd": "0.7.1",
     "@pcd/semaphore-identity-pcd": "0.7.1",
     "@pcd/semaphore-signature-pcd": "0.7.1",
     "@pcd/util": "0.1.1",
+    "@semaphore-protocol/group": "^3.11.0",
     "@semaphore-protocol/identity": "^3.11.0",
-    "@pcd/emitter": "0.1.1",
-    "js-sha256": "^0.9.0"
+    "@semaphore-protocol/proof": "^3.11.0",
+    "js-sha256": "^0.9.0",
+    "react": "^18.2.0",
+    "url-join": "4.0.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
@@ -49,6 +48,7 @@
     "chai": "^4.3.7",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
+    "mockdate": "^3.0.5",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.9.5"
   },

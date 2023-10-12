@@ -86,6 +86,7 @@ export function initTelegramRoutes(
     try {
       const proof = checkQueryParam(req, "proof");
       const message = checkQueryParam(req, "message");
+      const topicId = checkQueryParam(req, "topicId");
 
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
@@ -95,12 +96,20 @@ export function initTelegramRoutes(
         throw new Error("message field needs to be a string and be non-empty");
       }
 
+      if (!topicId || typeof topicId !== "string") {
+        throw new Error("topicId field needs to be a string and be non-empty");
+      }
+
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
 
       try {
-        await telegramService.handleSendAnonymousMessage(proof, message);
+        await telegramService.handleSendAnonymousMessage(
+          proof,
+          message,
+          topicId
+        );
         logger(`[TELEGRAM] Posted anonymous message: ${message}`);
         res.setHeader("Content-Type", "text/html");
         res.send(closeWebviewHtml);
@@ -108,7 +117,7 @@ export function initTelegramRoutes(
         logger("[TELEGRAM] failed to send anonymous message", e);
         rollbarService?.reportError(e);
         res.set("Content-Type", "text/html");
-        res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
+        res.status(500).send(errorHtmlWithDetails(e as string));
       }
     } catch (e) {
       logger("[TELEGRAM] failed to send anonymous message", e);

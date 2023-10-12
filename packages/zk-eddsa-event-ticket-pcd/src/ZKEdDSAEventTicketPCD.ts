@@ -1,21 +1,19 @@
-import { BabyJub, buildBabyjub, buildEddsa, Eddsa } from "circomlibjs";
-import JSONBig from "json-bigint";
-import { groth16, Groth16Proof } from "snarkjs";
-import { v4 as uuid } from "uuid";
-
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  EdDSAPCDTypeName,
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
   ticketDataToBigInts
 } from "@pcd/eddsa-ticket-pcd";
 import {
+  ArgumentTypeName,
   BigIntArgument,
   DisplayOptions,
   PCD,
   PCDArgument,
   PCDPackage,
+  ProveDisplayOptions,
   RevealListArgument,
   SerializedPCD,
   StringArrayArgument
@@ -26,8 +24,8 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
-  babyJubIsNegativeOne,
   BABY_JUB_NEGATIVE_ONE,
+  babyJubIsNegativeOne,
   booleanToBigInt,
   decStringToBigIntToUuid,
   fromHexString,
@@ -37,6 +35,10 @@ import {
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
+import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import JSONBig from "json-bigint";
+import { Groth16Proof, groth16 } from "snarkjs";
+import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
@@ -83,9 +85,26 @@ export const VALID_EVENT_IDS_MAX_LEN = 20;
 /**
  * Arguments to request a new proof.
  */
-export interface ZKEdDSAEventTicketPCDArgs {
+export type ZKEdDSAEventTicketPCDArgs = {
   // generally, `ticket` and `identity` are user-provided
-  ticket: PCDArgument<EdDSATicketPCD>;
+  ticket: PCDArgument<
+    EdDSATicketPCD,
+    {
+      /**
+       * used only in proof screen validation
+       *
+       * dev should implement additional constraints either in the proof level (e.g. validEventIds)
+       * or in the app level (e.g. check revealed eventId or productId)
+       *
+       * If both `eventIds` and `productIds` are provided, they must be of the same length and
+       * they will be checked as pairs.
+       */
+      eventIds?: string[];
+      productIds?: string[];
+      // user friendly message when no valid ticket is found
+      notFoundMessage?: string;
+    }
+  >;
   identity: PCDArgument<SemaphoreIdentityPCD>;
 
   // `validEventIds` is usually app-specified.  It is optional, and if included
@@ -100,7 +119,7 @@ export interface ZKEdDSAEventTicketPCDArgs {
   // provide externalNullifier field to request a nullifierHash
   // if you don't provide this field, no nullifierHash will be outputted
   externalNullifier: BigIntArgument;
-}
+};
 
 /**
  * Claim part of a ZKEdDSAEventTicketPCD contains all public/revealed fields.
@@ -396,6 +415,77 @@ function claimFromProofResult(
   return claim;
 }
 
+export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicketPCDArgs> {
+  return {
+    defaultArgs: {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        description: "Generate a proof for the selected ticket",
+        validate(value, params) {
+          if (value.type !== EdDSAPCDTypeName || !value.claim) {
+            return false;
+          }
+
+          if (params?.eventIds?.length && params?.productIds?.length) {
+            if (params.eventIds.length !== params.productIds.length) {
+              // soft-error: dev passed invalid eventIds and productIds
+              console.error(
+                "eventIds and productIds must have the same length"
+              );
+              return false;
+            }
+
+            return !!params.eventIds.find(
+              (eventId, i) =>
+                eventId === value.claim.ticket.eventId &&
+                params.productIds?.[i] === value.claim.ticket.productId
+            );
+          }
+
+          if (params?.eventIds?.length) {
+            return params.eventIds.includes(value.claim.ticket.eventId);
+          }
+
+          if (params?.productIds?.length) {
+            return params.productIds.includes(value.claim.ticket.productId);
+          }
+
+          return true;
+        },
+        validatorParams: {
+          notFoundMessage: "You do not have any eligible tickets."
+        }
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        displayName: "",
+        description:
+          "...with the following information. The rest will remain private to you."
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        defaultVisible: false,
+        description:
+          "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        defaultVisible: false,
+        description:
+          "The list of valid event IDs that the ticket can be used for. If this is not provided, the proof will not check the validity of the event ID. When this is provided and event id is not directly revealed, the proof can only be used to prove that the ticket is valid for one of the events in the list."
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        defaultVisible: false
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        defaultVisible: false
+      }
+    }
+  };
+}
+
 /**
  * Creates a new ZKEdDSAEventTicketPCD.
  */
@@ -561,6 +651,7 @@ export const ZKEdDSAEventTicketPCDPackage: PCDPackage<
   getDisplayOptions,
   renderCardBody: ZKEdDSAEventTicketCardBody,
   init,
+  getProveDisplayOptions,
   prove,
   verify,
   serialize,
