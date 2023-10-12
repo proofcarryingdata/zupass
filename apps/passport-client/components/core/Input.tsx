@@ -29,20 +29,13 @@ interface EmailCodeInputProps extends InputHTMLAttributes<HTMLInputElement> {
   ref?: Ref<HTMLInputElement>;
 }
 
-export const EmailCodeInput = (inputProps: EmailCodeInputProps) => {
-  return <BigInputWithoutArrows {...inputProps} type="number" />;
+export const ConfirmationCodeInput = (inputProps: EmailCodeInputProps) => {
+  return (
+    <BigInput
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      {...inputProps}
+    />
+  );
 };
-
-// Removes the up and down arrows for type="number" inputs.
-// Source: https://www.w3schools.com/howto/howto_css_hide_arrow_number.asp
-const BigInputWithoutArrows = styled(BigInput)`
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-
-  /* Firefox */
-  -moz-appearance: textfield;
-  appearance: none;
-`;
