@@ -486,7 +486,7 @@ export class TelegramService {
             "Post Anonymously",
             `${
               process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
-            }?startApp=${ctx.chat.id.toString()}_${messageThreadId}`
+            }?startApp=${ctx.chat.id.toString()}_${messageThreadId}&startapp=${ctx.chat.id.toString()}_${messageThreadId}`
           )
         });
         ctx.pinChatMessage(messageToPin.message_id);
