@@ -1,5 +1,4 @@
 import express, { Request, Response } from "express";
-import path from "path";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import {
@@ -47,27 +46,20 @@ export function initTelegramRoutes(
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      try {
-        await telegramService.handleVerification(
-          proof,
-          parseInt(telegram_user_id)
-        );
-        logger(
-          `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
-        );
-        res.setHeader("Content-Type", "text/html");
-        res.send(closeWebviewHtml);
-      } catch (e) {
-        logger("[TELEGRAM] failed to verify", e);
-        rollbarService?.reportError(e);
-        res.set("Content-Type", "text/html");
-        res.status(500).send(errorHtmlWithDetails(e as string));
-      }
+      await telegramService.handleVerification(
+        proof,
+        parseInt(telegram_user_id)
+      );
+      logger(
+        `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
+      );
+      res.setHeader("Content-Type", "text/html");
+      res.send(closeWebviewHtml);
     } catch (e) {
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
-      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
+      res.status(500).send(errorHtmlWithDetails(e as string));
     }
   });
 
@@ -104,25 +96,15 @@ export function initTelegramRoutes(
         throw new Error("Telegram service not initialized");
       }
 
-      try {
-        await telegramService.handleSendAnonymousMessage(
-          proof,
-          message,
-          topicId
-        );
-        logger(`[TELEGRAM] Posted anonymous message: ${message}`);
-        res.setHeader("Content-Type", "text/html");
-        res.send(closeWebviewHtml);
-      } catch (e) {
-        logger("[TELEGRAM] failed to send anonymous message", e);
-        rollbarService?.reportError(e);
-        res.set("Content-Type", "text/html");
-        res.status(500).send(errorHtmlWithDetails(e as string));
-      }
+      await telegramService.handleSendAnonymousMessage(proof, message, topicId);
+      logger(`[TELEGRAM] Posted anonymous message: ${message}`);
+      res.setHeader("Content-Type", "text/html");
+      res.send(closeWebviewHtml);
     } catch (e) {
       logger("[TELEGRAM] failed to send anonymous message", e);
       rollbarService?.reportError(e);
-      res.status(500).sendFile(path.resolve("resources/telegram/error.html"));
+      res.set("Content-Type", "text/html");
+      res.status(500).send(errorHtmlWithDetails(e as string));
     }
   });
 
