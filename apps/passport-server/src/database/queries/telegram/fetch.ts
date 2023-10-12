@@ -212,6 +212,8 @@ export async function fetchUserTelegramChats(
   return result.rows[0] ?? null;
 }
 
+// Fetch a list of Telegram chats that can be joined with the status of user
+// The list is sorted such that chat a user hasn't joined are returned first
 export async function fetchTelegramChatsWithMembershipStatus(
   client: Pool,
   userId: number

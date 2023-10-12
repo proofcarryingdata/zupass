@@ -15,12 +15,10 @@ import { deleteTelegramEvent } from "../database/queries/telegram/delete";
 import {
   ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
-  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChatsWithMembershipStatus,
-  fetchTelegramEventsByChatId,
-  fetchUserTelegramChats
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetch";
 import {
   insertTelegramChat,
@@ -349,17 +347,22 @@ export const chatsToJoin = async (
     return;
   }
 
-  // The user is presented with a list of Telegram chats they can join
-  // To do this, we fetch the chats a user can join, mark if they have already joined, and hydrating the chat id with the actual chat object
   const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
     db,
     userId
   );
+  // Ping the Telegram API to get the actual chat objects based on chat Ids
+  // This is not optimal, but means we don't have to store data like the Chat name in our DB.
   const chatsWithMembership = await chatIDsToChats(
     db,
     ctx,
     chatIdsWithMembership
   );
+
+  if (chatsWithMembership.length === 0) {
+    range.text(`No chats to join at this time`);
+    return;
+  }
 
   for (const chat of chatsWithMembership) {
     if (chat.isChatMember) {
@@ -429,28 +432,27 @@ export const chatsToPostIn = async (
         await ctx.menu.update({ immediate: true });
       });
     } else {
-      const events = await fetchEventsPerChat(db);
-      const eventsWithChats = await chatIDsToChats(db, ctx, events);
-      if (eventsWithChats && eventsWithChats.length === 0) {
-        range.text(`No groups to join at this time`);
+      const chatIdsWithMembership =
+        await fetchTelegramChatsWithMembershipStatus(db, userId);
+
+      const chatsWithMembership = await chatIDsToChats(
+        db,
+        ctx,
+        chatIdsWithMembership
+      );
+
+      if (chatsWithMembership.length === 0) {
+        range.text(`No chats found to post in. Type /start to join one!`);
         return;
       }
-      const userChats = await fetchUserTelegramChats(db, userId);
 
-      const finalChats = eventsWithChats.filter(
-        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
-      );
-      if (finalChats?.length > 0) {
-        for (const chat of finalChats) {
-          range
-            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
-              ctx.session.selectedChat = chat.chat;
-              await ctx.menu.update({ immediate: true });
-            })
-            .row();
-        }
-      } else {
-        ctx.reply(`No chats found to post in. Type /start to join one!`);
+      for (const chat of chatsWithMembership) {
+        range
+          .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+            ctx.session.selectedChat = chat.chat;
+            await ctx.menu.update({ immediate: true });
+          })
+          .row();
       }
     }
   } catch (error) {
