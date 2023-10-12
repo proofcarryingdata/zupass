@@ -10,7 +10,6 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Context, SessionFlavor } from "grammy";
 import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
-import { sha256 } from "js-sha256";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
@@ -43,15 +42,6 @@ export interface SessionData {
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
-
-export const getAnonTopicNullifier = (
-  chatId: number,
-  topicId: number
-): bigint => {
-  return BigInt(
-    "0x" + sha256(JSON.stringify({ chatId, topicId })).substring(0, 16)
-  );
-};
 
 export const base64EncodeTopicData = (
   chatId: number | string,

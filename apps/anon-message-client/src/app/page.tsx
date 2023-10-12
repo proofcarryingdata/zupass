@@ -1,8 +1,11 @@
 "use client";
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
-import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
+import {
+  constructZupassPcdGetRequestUrl,
+  getAnonTopicNullifier
+} from "@pcd/passport-interface/src/PassportInterface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   ZKEdDSAEventTicketPCDArgs,
@@ -24,31 +27,6 @@ interface TopicData {
   topicName: string;
   topicId: string;
   validEventIds: string[];
-}
-
-enum PCDRequestType {
-  Get = "Get",
-  GetWithoutProving = "GetWithoutProving",
-  Add = "Add",
-  ProveAndAdd = "ProveAndAdd"
-}
-
-function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
-  zupassClientUrl: string,
-  returnUrl: string,
-  pcdType: T["name"],
-  args: ArgsOf<T>,
-  options?: ProveOptions
-) {
-  const req: PCDGetRequest<T> = {
-    type: PCDRequestType.Get,
-    returnUrl: returnUrl,
-    args: args,
-    pcdType,
-    options
-  };
-  const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${zupassClientUrl}#/prove?request=${encReq}`;
 }
 
 async function requestProof(
@@ -87,11 +65,9 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: BigInt(
-        "0x" +
-          sha256
-            .sha256(JSON.stringify({ chatId, topicId: parseInt(topicId) }))
-            .substring(0, 16)
+      value: getAnonTopicNullifier(
+        parseInt(chatId),
+        parseInt(topicId)
       ).toString(),
       userProvided: false
     },

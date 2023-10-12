@@ -1,5 +1,6 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { getAnonTopicNullifier } from "@pcd/passport-interface";
 import { ONE_HOUR_MS, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
@@ -38,7 +39,6 @@ import {
   chatsToPostIn,
   dynamicEvents,
   findChatByEventIds,
-  getAnonTopicNullifier,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
