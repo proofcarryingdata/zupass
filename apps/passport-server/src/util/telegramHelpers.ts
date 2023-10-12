@@ -44,6 +44,7 @@ export interface SessionData {
 export type BotContext = Context & SessionFlavor<SessionData>;
 
 export const base64EncodeTopicData = (
+  chatId: number | string,
   topicName: string,
   topicId: number | string,
   validEventIds: string[]
@@ -51,7 +52,8 @@ export const base64EncodeTopicData = (
   const topicData = Buffer.from(
     encodeURIComponent(
       JSON.stringify({
-        topicName: topicName,
+        chatId,
+        topicName,
         topicId,
         validEventIds
       })
@@ -415,6 +417,7 @@ export const chatsToPostIn = async (
           .row();
         for (const topic of topics) {
           const encodedTopicData = base64EncodeTopicData(
+            chat.id,
             topic.topic_name,
             topic.topic_id,
             validEventIds

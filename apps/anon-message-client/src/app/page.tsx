@@ -1,10 +1,12 @@
 "use client";
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
-import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
+import {
+  constructZupassPcdGetRequestUrl,
+  getAnonTopicNullifier
+} from "@pcd/passport-interface/src/PassportInterface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
@@ -21,38 +23,15 @@ function getMessageWatermark(message: string): bigint {
 }
 
 interface TopicData {
+  chatId: string;
   topicName: string;
   topicId: string;
   validEventIds: string[];
 }
 
-enum PCDRequestType {
-  Get = "Get",
-  GetWithoutProving = "GetWithoutProving",
-  Add = "Add",
-  ProveAndAdd = "ProveAndAdd"
-}
-
-function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
-  zupassClientUrl: string,
-  returnUrl: string,
-  pcdType: T["name"],
-  args: ArgsOf<T>,
-  options?: ProveOptions
-) {
-  const req: PCDGetRequest<T> = {
-    type: PCDRequestType.Get,
-    returnUrl: returnUrl,
-    args: args,
-    pcdType,
-    options
-  };
-  const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${zupassClientUrl}#/prove?request=${encReq}`;
-}
-
 async function requestProof(
   message: string,
+  chatId: string,
   topicId: string,
   validEventIds: string[]
 ) {
@@ -88,7 +67,10 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: undefined,
+      value: getAnonTopicNullifier(
+        parseInt(chatId),
+        parseInt(topicId)
+      ).toString(),
       userProvided: false
     },
     validEventIds: {
@@ -102,8 +84,6 @@ async function requestProof(
       userProvided: false
     }
   };
-
-  await sleep(1000);
 
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
@@ -150,7 +130,12 @@ export default function () {
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
     if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
-    await requestProof(message, topicData.topicId, topicData.validEventIds);
+    await requestProof(
+      message,
+      topicData.chatId,
+      topicData.topicId,
+      topicData.validEventIds
+    );
     setLoadingProofUrl(false);
   }, [message]);
 
