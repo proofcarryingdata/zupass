@@ -78,6 +78,28 @@ export class TelegramService {
 
     setBotInfo(bot);
 
+    const botCommands = [
+      { command: "/start", description: "Join a group with a proof of ticket" }
+    ];
+
+    this.bot.api.setMyCommands([
+      { command: "/start", description: "Join a group with a proof of ticket" }
+    ]);
+
+    if (this.bot.botInfo.id !== this.anonBot.botInfo.id) {
+      this.anonBot.api.setMyDescription(
+        "I'm Zuraffe 🦒 ! I send anonmyous messages with zero-knowledge proofs"
+      );
+
+      this.anonBot.api.setMyShortDescription(
+        "Zuraffe sends anonmyous messages with zero-knowledge proofs"
+      );
+
+      this.anonBot.api.setMyCommands([
+        { command: "/anonsend", description: "Send an anonymous message" }
+      ]);
+    }
+
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu<BotContext>("anonsend");
