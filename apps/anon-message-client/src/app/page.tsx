@@ -165,7 +165,7 @@ export default function () {
             onChange={(e) => setMessage(e.target.value)}
             className={`border-2 ${
               messageInvalid ? "border-red-500" : ""
-            } text-2xl rounded-lg text-black resize-none p-2 h-[25vh]`}
+            } text-2xl rounded-lg text-black resize-none p-2 h-[25vh] select-text`}
             autoFocus
           />
         </div>
@@ -176,13 +176,18 @@ export default function () {
             </div>
           )}
           <span className="text-white pb-2">🔒 Anonymous posting</span>
-          <button
-            onClick={onClick}
-            className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
-            disabled={messageInvalid}
-          >
-            {loadingProofUrl ? `Loading...` : `Send to ${topicData.topicName}`}
-          </button>
+          {message.length == 0 ||
+            (!messageInvalid && (
+              <button
+                onClick={onClick}
+                className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
+                disabled={messageInvalid}
+              >
+                {loadingProofUrl
+                  ? `Loading...`
+                  : `Send to ${topicData.topicName}`}
+              </button>
+            ))}
         </div>
       </div>
     );
