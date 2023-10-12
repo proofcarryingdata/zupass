@@ -2,7 +2,8 @@ import {
   IZuconnectTripshaAPI,
   ZuconnectTicket
 } from "../apis/zuconnect/zuconnectTripshaAPI";
-import { fetchAllZuconnectTicketIds } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import { ZuconnectTicketDB } from "../database/models";
+import { fetchAllZuconnectTickets } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import {
   softDeleteZuconnectTicket,
   upsertZuconnectTicket
@@ -109,6 +110,10 @@ export class ZuconnectTripshaSyncService {
     return ZUCONNECT_PRODUCT_ID_MAPPINGS[type].id;
   }
 
+  private isMockTicketRecord(ticket: ZuconnectTicketDB): boolean {
+    return ticket.external_ticket_id.startsWith("mock-");
+  }
+
   /**
    * Save tickets to the database.
    */
@@ -125,13 +130,20 @@ export class ZuconnectTripshaSyncService {
       );
     }
     // Compare the tickets in the database with the ones we just saved
-    const allIds = await fetchAllZuconnectTicketIds(this.context.dbPool);
+    const allTickets = await fetchAllZuconnectTickets(this.context.dbPool);
     const savedTicketIds = new Set(
       savedTickets.map((ticket) => ticket.ticket_id)
     );
-    const idsToDelete = allIds.filter((id) => !savedTicketIds.has(id));
-    // Anything in the DB that was not present in the sync we just ran should
-    // be soft-deleted.
+    const idsToDelete = allTickets
+      .filter(
+        (ticket) =>
+          !savedTicketIds.has(ticket.ticket_id) &&
+          // Don't soft-delete mock tickets even though we didn't sync them
+          !this.isMockTicketRecord(ticket)
+      )
+      .map((ticket) => ticket.ticket_id);
+    // Anything in the DB that was not present in the sync we just ran, and
+    // is not a mock ticket, should be soft-deleted.
     for (const id of idsToDelete) {
       await softDeleteZuconnectTicket(this.context.dbPool, id);
     }
@@ -142,12 +154,32 @@ export class ZuconnectTripshaSyncService {
  * Starts the Zuconnect Tripsha sync service.
  * Before running, stores the Zuconnect ticket types in the database.
  */
-export function startZuconnectTripshaSyncService(
+export async function startZuconnectTripshaSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   semaphoreService: SemaphoreService,
   api: IZuconnectTripshaAPI | null
-): ZuconnectTripshaSyncService | null {
+): Promise<ZuconnectTripshaSyncService | null> {
+  if (process.env.ZUCONNECT_MOCK_TICKETS) {
+    try {
+      const mockEmails: string[] = JSON.parse(
+        process.env.ZUCONNECT_MOCK_TICKETS
+      );
+      for (const email of mockEmails) {
+        logger(`[ZUCONNECT TRIPSHA] Inserting mock ticket for ${email}`);
+        await upsertZuconnectTicket(context.dbPool, {
+          external_ticket_id: `mock-${email}`,
+          attendee_email: email,
+          attendee_name: email,
+          product_id:
+            ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
+        });
+      }
+    } catch (e) {
+      logger("[ZUCONNECT TRIPSHA] Got invalid mock ticket emails");
+    }
+  }
+
   if (!api) {
     logger(
       "[ZUCONNECT TRIPSHA] Can't start sync service - no api instantiated"

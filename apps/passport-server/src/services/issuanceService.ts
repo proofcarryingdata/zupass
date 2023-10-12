@@ -6,9 +6,9 @@ import {
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -31,22 +31,22 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyFeedCredential,
   VerifyTicketRequest,
   VerifyTicketResult,
-  zupassDefaultSubscriptions,
   ZupassFeedIds,
-  ZuzaluUserRole
+  ZuzaluUserRole,
+  verifyFeedCredential,
+  zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
   DeleteFolderAction,
-  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction
+  ReplaceInFolderAction,
+  joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";

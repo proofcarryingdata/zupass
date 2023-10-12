@@ -45,7 +45,7 @@ export async function startServices(
     semaphoreService,
     apis.devconnectPretixAPIFactory
   );
-  const zuconnectTripshaSyncService = startZuconnectTripshaSyncService(
+  const zuconnectTripshaSyncService = await startZuconnectTripshaSyncService(
     context,
     rollbarService,
     semaphoreService,

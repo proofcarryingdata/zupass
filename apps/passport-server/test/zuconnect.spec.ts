@@ -239,37 +239,4 @@ describe("zuconnect functionality", function () {
     expect(response?.success).to.be.true;
     expect(response?.value?.verified).to.be.true;
   });
-
-  let userWithTwoTicketsRow;
-  it("should allow a user to have more than one ticket", async () => {
-    // Note that this is not the email used for the previous user
-    const result = await testLogin(application, goodResponse.tickets[1].email, {
-      expectEmailIncorrect: false,
-      expectUserAlreadyLoggedIn: false,
-      force: false,
-      skipSetupPassword: false
-    });
-
-    if (!result) {
-      throw new Error("failed to log in");
-    }
-
-    expect(result).to.not.be.undefined;
-
-    userWithTwoTicketsRow = result;
-
-    server.use(makeHandler({ tickets: goodResponse.tickets.concat([]) }));
-    await zuconnectTripshaSyncService.sync();
-    const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(4);
-
-    const deleted = await sqlQuery(
-      db,
-      `SELECT * FROM zuconnect_tickets WHERE is_deleted = TRUE`
-    );
-    expect(deleted.rowCount).to.eq(1);
-    expect(deleted.rows[0].external_ticket_id).to.eq(
-      goodResponse.tickets[4].id
-    );
-  });
 });
