@@ -27,6 +27,7 @@ import {
 } from "@pcd/pcd-types";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import ReactSelect from "react-select";
 import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
@@ -454,9 +455,24 @@ export function PCDArgInput({
     [pcdCollection, setArg]
   );
 
+  type Option = {
+    id: string;
+    label: string;
+  };
+  const options = useMemo<Option[]>(
+    () =>
+      relevantPCDs.map((pcd) => {
+        const pcdPackage = pcdCollection.getPackage(pcd.type);
+        return {
+          id: pcd.id,
+          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type
+        };
+      }),
+    [relevantPCDs, pcdCollection]
+  );
   const onChange = useCallback(
-    async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setPCDById(e.target.value);
+    (option: Option) => {
+      setPCDById(option.id);
     },
     [setPCDById]
   );
@@ -489,19 +505,13 @@ export function PCDArgInput({
     >
       {!!relevantPCDs.length && (
         <Select
-          value={pcd?.id || "none"}
+          classNamePrefix="Select"
+          isSearchable
+          value={options.find((option) => option.id === pcd?.id)}
+          options={options}
           onChange={onChange}
-          disabled={relevantPCDs.length === 0}
-        >
-          {relevantPCDs.map((pcd) => {
-            const pcdPackage = pcdCollection.getPackage(pcd.type);
-            return (
-              <option key={pcd.id} value={pcd.id}>
-                {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
-              </option>
-            );
-          })}
-        </Select>
+          isDisabled={!arg.userProvided}
+        />
       )}
     </ArgContainer>
   );
@@ -646,28 +656,56 @@ const ErrorText = styled.div`
   font-size: 14px;
 `;
 
-const Select = styled.select`
-  width: 100%;
-  height: 32px;
-  border-radius: 4px;
-  color: var(--white);
-  background-color: var(--bg-lite-gray);
-  padding: 0 24px 0 8px;
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23FFF'><polygon points='0,0 100,0 50,50'/></svg>")
-    no-repeat;
-  background-size: 12px;
-  background-position: calc(100% - 8px) 12px;
-  background-repeat: no-repeat;
+const Select = styled(ReactSelect)`
+  .Select__control {
+    width: 100%;
+    background-color: var(--bg-dark-gray);
+    border: 1px solid var(--bg-lite-gray);
+    font:
+      14px PlexSans,
+      system-ui,
+      sans-serif;
+  }
 
-  :disabled {
-    background: none;
+  .Select__control--is-focused {
+    box-shadow: 0 0 0 1px var(--white);
+    outline: none;
+
+    .Select__dropdown-indicator {
+      color: hsl(0, 0%, 80%);
+    }
+  }
+
+  .Select__control--is-disabled .Select__dropdown-indicator {
+    display: none;
+  }
+
+  .Select__indicator-separator {
+    display: none;
+  }
+
+  .Select__dropdown-indicator {
+    &:hover {
+      color: var(--white);
+    }
+  }
+
+  .Select__menu {
+    background-color: var(--bg-dark-gray);
+    border: 1px solid var(--bg-lite-gray);
+  }
+
+  .Select__option {
+    background-color: var(--bg-dark-gray);
+
+    &:hover {
+      background-color: var(--bg-lite-gray);
+    }
+  }
+
+  .Select__placeholder,
+  .Select__single-value {
+    color: var(--white);
   }
 `;
 
