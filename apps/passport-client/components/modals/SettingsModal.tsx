@@ -39,12 +39,12 @@ export function SettingsModal({ isProveScreen }: { isProveScreen: boolean }) {
               Scan Ticket
             </LinkButton>
             <Spacer h={16} />
+            <LinkButton $primary={true} to="/change-password" onClick={close}>
+              {hasSetupPassword ? "Change" : "Add"} Password
+            </LinkButton>
+            <Spacer h={16} />
           </>
         )}
-        <LinkButton $primary={true} to="/change-password" onClick={close}>
-          {hasSetupPassword ? "Change" : "Add"} Password
-        </LinkButton>
-        <Spacer h={16} />
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
