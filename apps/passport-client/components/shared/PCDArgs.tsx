@@ -33,6 +33,7 @@ import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import { icons } from "../icons";
+import Select from "./Select";
 
 /**
  * Given an {@link Argument}, renders a UI that displays its value.
@@ -458,9 +459,24 @@ export function PCDArgInput({
     [pcdCollection, setArg]
   );
 
+  type Option = {
+    id: string;
+    label: string;
+  };
+  const options = useMemo<Option[]>(
+    () =>
+      relevantPCDs.map((pcd) => {
+        const pcdPackage = pcdCollection.getPackage(pcd.type);
+        return {
+          id: pcd.id,
+          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type
+        };
+      }),
+    [relevantPCDs, pcdCollection]
+  );
   const onChange = useCallback(
-    async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setPCDById(e.target.value);
+    (option: Option) => {
+      setPCDById(option.id);
     },
     [setPCDById]
   );
@@ -493,19 +509,11 @@ export function PCDArgInput({
     >
       {!!relevantPCDs.length && (
         <Select
-          value={pcd?.id || "none"}
+          value={options.find((option) => option.id === pcd?.id)}
+          options={options}
           onChange={onChange}
-          disabled={relevantPCDs.length === 0}
-        >
-          {relevantPCDs.map((pcd) => {
-            const pcdPackage = pcdCollection.getPackage(pcd.type);
-            return (
-              <option key={pcd.id} value={pcd.id}>
-                {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
-              </option>
-            );
-          })}
-        </Select>
+          isDisabled={!arg.userProvided}
+        />
       )}
     </ArgContainer>
   );
@@ -648,31 +656,6 @@ const ArgsContainer = styled.div`
 const ErrorText = styled.div`
   color: var(--danger-bright);
   font-size: 14px;
-`;
-
-const Select = styled.select`
-  width: 100%;
-  height: 32px;
-  border-radius: 4px;
-  color: var(--white);
-  background-color: var(--bg-lite-gray);
-  padding: 0 24px 0 8px;
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23FFF'><polygon points='0,0 100,0 50,50'/></svg>")
-    no-repeat;
-  background-size: 12px;
-  background-position: calc(100% - 8px) 12px;
-  background-repeat: no-repeat;
-
-  :disabled {
-    background: none;
-  }
 `;
 
 const Input = styled.input`

@@ -847,9 +847,11 @@ export class TelegramService {
           newTimestamps
         );
       } else {
-        throw new Error(
+        const rlError = new Error(
           `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
         );
+        rlError.name = "Rate limit exceeded";
+        throw rlError;
       }
     }
 
