@@ -406,26 +406,30 @@ function ToggleListArgInput({
       arg={arg}
       {...rest}
       end={
-        <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
-          {showAll ? "▲" : "▼"}
-        </ShowMoreButton>
+        entries.length ? (
+          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+            {showAll ? "▲" : "▼"}
+          </ShowMoreButton>
+        ) : undefined
       }
     >
-      <ChipsContainer direction={showAll ? "row" : "column"}>
-        {entries.map(([key, value]) => (
-          <Chip
-            key={key}
-            label={getLabel(key)}
-            onClick={
-              arg.userProvided
-                ? () => setArg({ ...arg.value, [key]: !value })
-                : undefined
-            }
-            checked={value}
-            icon={getIcon(value)}
-          />
-        ))}
-      </ChipsContainer>
+      {!!entries.length && (
+        <ChipsContainer direction={showAll ? "row" : "column"}>
+          {entries.map(([key, value]) => (
+            <Chip
+              key={key}
+              label={getLabel(key)}
+              onClick={
+                arg.userProvided
+                  ? () => setArg({ ...arg.value, [key]: !value })
+                  : undefined
+              }
+              checked={value}
+              icon={getIcon(value)}
+            />
+          ))}
+        </ChipsContainer>
+      )}
     </ArgContainer>
   );
 }
@@ -561,7 +565,7 @@ function ArgContainer({
           <End>{end}</End>
         </ArgName>
         {children}
-        <ErrorText>{error}</ErrorText>
+        {error && <ErrorText>{error}</ErrorText>}
       </ArgItem>
     </ArgItemContainer>
   );
