@@ -51,24 +51,28 @@ export const errorHtmlWithDetails = (error: Error): string => {
           color: #585b6b;
         }
 
-        .toggleButton {
-          cursor: pointer;
+        .button {
           border: none;
-          color: rgba(0, 0, 0, 0.5);
-          background: #fff;
-          padding: 0.5rem 1rem;
+          cursor: pointer;
+          padding: 1rem;
           border-radius: 0.3rem;
           font-size: 1rem;
+          transition: all 0.2s ease-in-out; 
+        }
+
+        .toggleButton {
+          border: 1px solid rgba(0,0,0,0.1);
+          color: rgba(0, 0, 0, 0.5);
+          background: #fff;
+        }
+
+        .toggleButton:hover {
+          background: rgba(0,0,0,0.05);
         }
 
         .contactButton {
-          cursor: pointer;
-          border: none;
           color: #fff;
           background: #2a3231;
-          padding: 0.5rem 1rem;
-          border-radius: 0.3rem;
-          font-size: 1rem; 
         }
 
         .errorStack {
@@ -85,11 +89,14 @@ export const errorHtmlWithDetails = (error: Error): string => {
     <body>
       <div class="container">
         <span class="header">${error.name}</span>
-        <span class="description">
+        <span class="description" style="margin-bottom:1rem;">
           ${errorMessage}
         </span>
-        <button class="contactButton">Message Zucat Support</button>
-        <button class="toggleButton" onclick="toggleErrorStack()">Show Error Details (Advanced)</button>
+        <button class="button contactButton">Message Zucat Support</button>
+        <div onclick="toggleErrorStack()" class="button toggleButton" style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:1rem;border:none;background:none;color:rgba(0,0,0,0.5);">Show Error Details (Advanced)</span>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H11L7.5 10.5L4 6Z" fill="currentColor"></path></svg>
+        </div>
         <span class="errorStack">
           ${errorStack}
         </span>
