@@ -32,6 +32,7 @@ import { logger } from "../util/logger";
 import {
   BotContext,
   SessionData,
+  TopicChat,
   base64EncodeTopicData,
   chatIDsToChats,
   chatsToJoin,
@@ -442,6 +443,7 @@ export class TelegramService {
           this.context.dbPool,
           ctx.chat.id
         );
+
         const hasLinked = telegramEvents.length > 0;
         if (!hasLinked) {
           await ctx.reply(
@@ -851,7 +853,7 @@ export class TelegramService {
       this.context.dbPool,
       telegramChatId
     );
-    if (!telegramEvents || telegramEvents.length === 0)
+    if (telegramEvents.length === 0)
       throw new Error(`No events associated with this group`);
 
     const validEventIds = telegramEvents.map((e) => e.ticket_event_id);

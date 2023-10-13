@@ -444,7 +444,7 @@ export const chatsToJoin = async (
     ctx,
     userId
   );
-  if (chatsWithMembership && chatsWithMembership.length === 0) {
+  if (chatsWithMembership.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
@@ -533,7 +533,7 @@ export const chatsToPostIn = async (
         ctx,
         userId
       );
-      if (chatsWithMembership?.length > 0) {
+      if (chatsWithMembership.length > 0) {
         for (const chat of chatsWithMembership) {
           // Only show the chats the user is a member of
           if (chat.isChatMember) {
