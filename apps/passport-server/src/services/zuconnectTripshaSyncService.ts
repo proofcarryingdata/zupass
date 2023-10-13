@@ -79,7 +79,7 @@ export class ZuconnectTripshaSyncService {
         logger("[ZUCONNECT TRIPSHA] Sync finished");
       } catch (e) {
         this.rollbarService?.reportError(e);
-        logger("[ZUCONNECT TRIPSHA] Sync failed", e);
+        logger("[ZUCONNECT TRIPSHA] Sync failed", JSON.stringify(e, null, 2));
         setError(e, span);
       }
     });
@@ -106,7 +106,7 @@ export class ZuconnectTripshaSyncService {
   /**
    * Convert a Tripsha ticket type to a product ID.
    */
-  private ticketTypeToProductId(type: ZuconnectTicket["type"]): string {
+  private ticketTypeToProductId(type: ZuconnectTicket["ticketName"]): string {
     return ZUCONNECT_PRODUCT_ID_MAPPINGS[type].id;
   }
 
@@ -126,9 +126,9 @@ export class ZuconnectTripshaSyncService {
         savedTickets.push(
           await upsertZuconnectTicket(this.context.dbPool, {
             external_ticket_id: ticket.id,
-            product_id: this.ticketTypeToProductId(ticket.type),
+            product_id: this.ticketTypeToProductId(ticket.ticketName),
             attendee_email: ticket.email,
-            attendee_name: `${ticket.first} ${ticket.last}`,
+            attendee_name: ticket.fullName,
             is_deleted: false,
             is_mock_ticket: false
           })
@@ -155,6 +155,9 @@ export class ZuconnectTripshaSyncService {
       for (const id of idsToDelete) {
         await softDeleteZuconnectTicket(this.context.dbPool, id);
       }
+
+      logger(`[ZUCONNECT TRIPSHA] Saved ${savedTickets.length} tickets`);
+      logger(`[ZUCONNECT TRIPSHA] Soft-deleted ${idsToDelete.length} tickets`);
     });
   }
 }
@@ -198,10 +201,14 @@ export async function startZuconnectTripshaSyncService(
     return null;
   }
 
-  return new ZuconnectTripshaSyncService(
+  const service = new ZuconnectTripshaSyncService(
     context,
     api,
     rollbarService,
     semaphoreService
   );
+
+  service.start();
+
+  return service;
 }

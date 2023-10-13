@@ -1,7 +1,9 @@
 import { RestHandler, rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
+import urljoin from "url-join";
 
 export const MOCK_ZUCONNECT_TRIPSHA_URL = "http://tripsha.example.com";
+export const MOCK_ZUCONNECT_TRIPSHA_KEY = "mock-auth-key";
 
 // An empty response
 export const badEmptyResponse = {};
@@ -11,8 +13,21 @@ export const badTicketsResponse = {
   tickets: [
     {
       id: "65012572b5f4a42c66422b9f",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       // Ticket has no email address
+      first: "Test",
+      last: "One"
+    }
+  ]
+};
+
+// A response with an incorrect ticketName.
+export const badTicketNameResponse = {
+  tickets: [
+    {
+      id: "65012572b5f4a42c66422b9f",
+      ticketName: "ZuConnect Root Administrator",
+      email: "testing@example.com",
       first: "Test",
       last: "One"
     }
@@ -24,38 +39,38 @@ export const goodResponse = {
   tickets: [
     {
       id: "65012572b5f4a42c66422b9f",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       email: "test1@example.com",
       first: "Test",
       last: "One"
     },
     {
       id: "6501284fb5f4a42c66426353",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       email: "test2@example.com",
-      first: "Test",
-      last: "Two"
+      first: "Test Two",
+      last: null
     },
     {
       id: "65018334b5f4a42c6648d4e2",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       email: "test3@example.com",
       first: "",
       last: "Test Three"
     },
     {
       id: "65018a79b5f4a42c6649604d",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       email: "test4@example.com",
       first: "Test Four",
       last: ""
     },
     {
       id: "6501996fb5f4a42c664a8626",
-      type: "ZuConnect Resident Pass",
+      ticketName: "ZuConnect Resident Pass",
       email: "test5@example.com",
-      first: "Test",
-      last: "Five"
+      first: "Test Five",
+      last: undefined
     }
   ]
 };
@@ -64,7 +79,12 @@ export const goodResponse = {
  * Make a mock handler for a given sample response.
  */
 export function makeHandler(data: any): RestHandler {
-  return rest.get(`${MOCK_ZUCONNECT_TRIPSHA_URL}/tickets`, (req, res, ctx) => {
+  const url = urljoin(
+    MOCK_ZUCONNECT_TRIPSHA_URL,
+    "tickets",
+    MOCK_ZUCONNECT_TRIPSHA_KEY
+  );
+  return rest.get(url, (req, res, ctx) => {
     return res(ctx.json(data));
   });
 }

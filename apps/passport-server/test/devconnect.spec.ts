@@ -85,13 +85,13 @@ import {
   SyncFailureError
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
-import {
-  ZUPASS_TICKET_PUBLIC_KEY_NAME,
-  ZUZALU_23_EVENT_ID,
-  ZUZALU_23_RESIDENT_PRODUCT_ID
-} from "../src/services/issuanceService";
+import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../src/services/issuanceService";
 import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
+import {
+  ZUZALU_23_EVENT_ID,
+  ZUZALU_23_RESIDENT_PRODUCT_ID
+} from "../src/util/constants";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
 import {
   DevconnectPretixDataMocker,
