@@ -89,14 +89,14 @@ export const setBotInfo = async (
     "Zucat manages events and groups with zero-knowledge proofs"
   );
 
-  const commands: BotCommand[] = [
+  const privateChatCommands: BotCommand[] = [
     {
       command: "/start",
-      description: "[DM only] join a group with a proof of ticket"
+      description: "join a group with a proof of ticket"
     },
     {
       command: "/anonsend",
-      description: "[DM only] Send an anonymous message"
+      description: "Send an anonymous message"
     },
     {
       command: "/help",
@@ -104,7 +104,33 @@ export const setBotInfo = async (
     }
   ];
 
-  bot.api.setMyCommands(commands);
+  bot.api.setMyCommands(privateChatCommands, {
+    scope: { type: "all_private_chats" }
+  });
+
+  const adminGroupChatCommands: BotCommand[] = [
+    {
+      command: "/incognito",
+      description: "Set a topic for anonymous posting"
+    },
+    {
+      command: "/manage",
+      description: "Link this chat to events"
+    },
+    {
+      command: "/setup",
+      description:
+        "Initialize a group chat with an Admin and Announcements topic"
+    },
+    {
+      command: "/adminhelp",
+      description: "Get info in a DM about the group and linked events"
+    }
+  ];
+
+  bot.api.setMyCommands(adminGroupChatCommands, {
+    scope: { type: "all_chat_administrators" }
+  });
 };
 
 /**

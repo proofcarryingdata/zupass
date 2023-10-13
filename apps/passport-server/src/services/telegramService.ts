@@ -94,6 +94,7 @@ export class TelegramService {
     // Approval of the join request is required even for users with the
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
+
     this.bot.on("chat_join_request", async (ctx) => {
       const userId = ctx.chatJoinRequest.user_chat_id;
 
@@ -206,9 +207,10 @@ export class TelegramService {
         if (!username) throw new Error(`Username not found`);
 
         if (!(await senderIsAdmin(ctx, admins)))
-          throw new Error(`Only admins can run this command`);
+          return ctx.reply(`Only admins can run this command`);
+
         if (!ALLOWED_TICKET_MANAGERS.includes(username))
-          throw new Error(
+          return ctx.reply(
             `Only Zupass team members are allowed to run this command.`
           );
 
@@ -274,17 +276,30 @@ export class TelegramService {
 
     this.bot.command("adminhelp", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
-      await ctx.reply(
-        `<b>Help</b>
+      const admins = await ctx.getChatAdministrators();
 
-        <b>Admins</b>
-        <b>/manage</b> - Gate / Ungate this group with a ticketed event
-        <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.
-        <b>/incognito</b> - Mark a topic as anonymous
-      `,
-        { parse_mode: "HTML", reply_to_message_id: messageThreadId }
+      if (!(await senderIsAdmin(ctx, admins)))
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
+
+      const userId = ctx.from?.id;
+      if (!userId)
+        return ctx.reply(`User not found, try again.`, {
+          message_thread_id: messageThreadId
+        });
+
+      const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+      await ctx.api.sendMessage(
+        userId,
+        `Sending info for group <b>${chat?.title}</b> ID: <i>${ctx.chat.id}</i>`,
+        { parse_mode: "HTML" }
       );
-      const msg = await ctx.reply(`Loading tickets and events...`);
+
+      const msg = await ctx.api.sendMessage(
+        userId,
+        `Loading tickets and events...`
+      );
       const events = await fetchLinkedPretixAndTelegramEvents(
         this.context.dbPool
       );
@@ -294,8 +309,6 @@ export class TelegramService {
         events
       );
 
-      const userId = ctx.from?.id;
-      if (!userId) throw new Error(`No user found. Try again...`);
       if (eventsWithChats.length === 0) {
         return ctx.api.editMessageText(
           userId,
