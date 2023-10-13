@@ -101,11 +101,11 @@ export function GetWithoutProvingScreen() {
 
   return (
     <>
-      <MaybeModal fullScreen />
+      <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
         <Container>
           <Spacer h={16} />
-          <AppHeader />
+          <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />
           <H1>Get {request.pcdType}</H1>
           <p>

@@ -17,7 +17,8 @@ export const enum ZupassFeedIds {
   Devconnect = "1",
   Frogs = "2",
   Email = "3",
-  Zuzalu_1 = "4"
+  Zuzalu_23 = "4",
+  Zuconnect_23 = "5"
 }
 
 /**

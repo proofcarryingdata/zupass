@@ -13,6 +13,7 @@ import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
+import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
 import { instrumentPCDs } from "./util/instrumentPCDs";
@@ -44,6 +45,12 @@ export async function startServices(
     semaphoreService,
     apis.devconnectPretixAPIFactory
   );
+  const zuconnectTripshaSyncService = await startZuconnectTripshaSyncService(
+    context,
+    rollbarService,
+    semaphoreService,
+    apis.zuconnectTripshaAPI
+  );
   const userService = startUserService(
     context,
     semaphoreService,
@@ -71,6 +78,7 @@ export async function startServices(
     provingService,
     zuzaluPretixSyncService,
     devconnectPretixSyncService,
+    zuconnectTripshaSyncService,
     metricsService,
     issuanceService,
     discordService,
@@ -89,6 +97,7 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.telegramService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
+  services.zuconnectTripshaSyncService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();
 }
