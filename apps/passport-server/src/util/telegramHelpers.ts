@@ -41,7 +41,7 @@ type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
 
 export interface SessionData {
   dbPool: Pool;
-  selectedEvent?: LinkedPretixTelegramEvent & { isLinked: boolean };
+  selectedEvent?: LinkedPretixTelegramEvent;
   lastMessageId?: number;
   selectedChat?: TopicChat;
 }
@@ -344,7 +344,7 @@ const getChatsWithMembershipStatus = async (
   return chatsWithMembership;
 };
 
-export const dynamicEvents = async (
+export const eventsToLink = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
@@ -353,20 +353,20 @@ export const dynamicEvents = async (
     range.text(`Database not connected. Try again...`);
     return;
   }
-  // If an event is selected, display it and its menu options
-  if (ctx.session.selectedEvent) {
-    const event = ctx.session.selectedEvent;
-
-    range.text(`${event.isLinked ? "✅" : ""} ${event.eventName}`).row();
+  // If an event is selected, give the option to add or remove it from the chat
+  // based on if it is already linked or not
+  const event = ctx.session.selectedEvent;
+  if (event) {
+    range.text(`${event.isLinkedToChat ? "✅" : ""} ${event.eventName}`).row();
     range
-      .text(`Yes, ${event.isLinked ? "remove" : "add"}`, async (ctx) => {
+      .text(`Yes, ${event.isLinkedToChat ? "remove" : "add"}`, async (ctx) => {
         let replyText = "";
         if (!(await senderIsAdmin(ctx))) return;
 
         if (!ctx.chat?.id) {
           await editOrSendMessage(ctx, `Chat Id not found`);
         } else {
-          if (!event.isLinked) {
+          if (!event.isLinkedToChat) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
             await insertTelegramChat(db, ctx.chat.id);
             await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
@@ -389,31 +389,24 @@ export const dynamicEvents = async (
       await ctx.menu.update({ immediate: true });
     });
   }
-  // Otherwise, display all events to manage.
+  // Otherwise, display all events to add or remove.
   else {
     const events = await fetchLinkedPretixAndTelegramEvents(db);
-    const eventsWithGateStatus = events.map((e) => {
-      return { ...e, isLinked: e.telegramChatID === ctx.chat?.id.toString() };
-    });
-    for (const event of eventsWithGateStatus) {
+    for (const event of events) {
       range
         .text(
-          `${event.isLinked ? "✅" : ""} ${event.eventName}`,
+          `${event.isLinkedToChat ? "✅" : ""} ${event.eventName}`,
           async (ctx) => {
             if (!(await senderIsAdmin(ctx))) return;
-            if (ctx.session) {
-              ctx.session.selectedEvent = event;
-              await ctx.menu.update({ immediate: true });
-              let initText = "";
-              if (event.isLinked) {
-                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
-              } else {
-                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
-              }
-              await editOrSendMessage(ctx, initText);
+            ctx.session.selectedEvent = event;
+            await ctx.menu.update({ immediate: true });
+            let initText = "";
+            if (event.isLinkedToChat) {
+              initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
             } else {
-              ctx.reply(`No session found`);
+              initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
             }
+            await editOrSendMessage(ctx, initText);
           }
         )
         .row();
