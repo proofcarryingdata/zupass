@@ -111,42 +111,51 @@ export class ZuconnectTripshaSyncService {
   }
 
   private isMockTicketRecord(ticket: ZuconnectTicketDB): boolean {
-    return ticket.external_ticket_id.startsWith("mock-");
+    return ticket.is_mock_ticket;
   }
 
   /**
    * Save tickets to the database.
    */
   private async saveData(tickets: ZuconnectTicket[]): Promise<void> {
-    const savedTickets = [];
-    for (const ticket of tickets) {
-      savedTickets.push(
-        await upsertZuconnectTicket(this.context.dbPool, {
-          external_ticket_id: ticket.id,
-          product_id: this.ticketTypeToProductId(ticket.type),
-          attendee_email: ticket.email,
-          attendee_name: `${ticket.first} ${ticket.last}`
-        })
+    return traced(NAME, "saveData", async (span) => {
+      span?.setAttribute("ticket_count", tickets.length);
+
+      const savedTickets = [];
+      for (const ticket of tickets) {
+        savedTickets.push(
+          await upsertZuconnectTicket(this.context.dbPool, {
+            external_ticket_id: ticket.id,
+            product_id: this.ticketTypeToProductId(ticket.type),
+            attendee_email: ticket.email,
+            attendee_name: `${ticket.first} ${ticket.last}`,
+            is_deleted: false,
+            is_mock_ticket: false
+          })
+        );
+      }
+      // Compare the tickets in the database with the ones we just saved
+      const allTickets = await fetchAllZuconnectTickets(this.context.dbPool);
+      const savedTicketIds = new Set(savedTickets.map((ticket) => ticket.id));
+      span?.setAttribute(
+        "saved_ticket_ids",
+        [...savedTicketIds.values()].join(", ")
       );
-    }
-    // Compare the tickets in the database with the ones we just saved
-    const allTickets = await fetchAllZuconnectTickets(this.context.dbPool);
-    const savedTicketIds = new Set(
-      savedTickets.map((ticket) => ticket.ticket_id)
-    );
-    const idsToDelete = allTickets
-      .filter(
-        (ticket) =>
-          !savedTicketIds.has(ticket.ticket_id) &&
-          // Don't soft-delete mock tickets even though we didn't sync them
-          !this.isMockTicketRecord(ticket)
-      )
-      .map((ticket) => ticket.ticket_id);
-    // Anything in the DB that was not present in the sync we just ran, and
-    // is not a mock ticket, should be soft-deleted.
-    for (const id of idsToDelete) {
-      await softDeleteZuconnectTicket(this.context.dbPool, id);
-    }
+      const idsToDelete = allTickets
+        .filter(
+          (ticket) =>
+            !savedTicketIds.has(ticket.id) &&
+            // Don't soft-delete mock tickets even though we didn't sync them
+            !this.isMockTicketRecord(ticket)
+        )
+        .map((ticket) => ticket.id);
+      // Anything in the DB that was not present in the sync we just ran, and
+      // is not a mock ticket, should be soft-deleted.
+      span?.setAttribute("ids_to_delete", idsToDelete.join(", "));
+      for (const id of idsToDelete) {
+        await softDeleteZuconnectTicket(this.context.dbPool, id);
+      }
+    });
   }
 }
 
@@ -172,11 +181,13 @@ export async function startZuconnectTripshaSyncService(
           attendee_email: email,
           attendee_name: email,
           product_id:
-            ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
+            ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
+          is_deleted: false,
+          is_mock_ticket: true
         });
       }
     } catch (e) {
-      logger("[ZUCONNECT TRIPSHA] Got invalid mock ticket emails");
+      logger("[ZUCONNECT TRIPSHA] Got invalid mock ticket emails", e);
     }
   }
 

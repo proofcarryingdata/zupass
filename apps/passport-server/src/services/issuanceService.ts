@@ -104,6 +104,7 @@ export const ZUZALU_23_ORGANIZER_PRODUCT_ID =
   "10016d35-40df-4033-a171-7d661ebaccaa";
 export const ZUZALU_23_EVENT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
 export const ZUCONNECT_23_EVENT_ID = "91312aa1-5f74-4264-bdeb-f4a3ddb8670c";
+// Zuconnect product IDs are defined in src/util/zuconnectTicket.ts
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -370,8 +371,10 @@ export class IssuanceService {
                 )
               } as ReplaceInFolderAction);
             } catch (e) {
-              //
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
             }
+
             return { actions };
           },
           feed: zupassDefaultSubscriptions[ZupassFeedIds.Zuconnect_23]
@@ -1145,7 +1148,7 @@ export class IssuanceService {
               attendeeSemaphoreId: user.commitment,
               eventName: "Zuconnect October-November '23",
               checkerEmail: undefined,
-              ticketId: ticket.ticket_id,
+              ticketId: ticket.id,
               ticketName: zuconnectProductIdToName(ticket.product_id),
               attendeeName: `${ticket.attendee_name}`,
               attendeeEmail: ticket.attendee_email,

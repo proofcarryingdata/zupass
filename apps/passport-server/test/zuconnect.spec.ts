@@ -8,7 +8,6 @@ import {
   requestVerifyTicket
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
-import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -20,6 +19,7 @@ import { ZuconnectTripshaAPI } from "../src/apis/zuconnect/zuconnectTripshaAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllZuconnectTickets } from "../src/database/queries/zuconnect/fetchZuconnectTickets";
+import { upsertZuconnectTicket } from "../src/database/queries/zuconnect/insertZuconnectTicket";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { ZuconnectTripshaSyncService } from "../src/services/zuconnectTripshaSyncService";
@@ -120,6 +120,32 @@ describe("zuconnect functionality", function () {
     expect(deleted.rowCount).to.eq(0);
   });
 
+  it("mock tickets should never be soft-deleted by the sync process", async () => {
+    await upsertZuconnectTicket(db, {
+      product_id: randomUUID(),
+      external_ticket_id: randomUUID(),
+      attendee_email: "mock@example.com",
+      attendee_name: "Mock User",
+      is_deleted: false,
+      is_mock_ticket: true
+    });
+    await zuconnectTripshaSyncService.sync();
+    const tickets = await fetchAllZuconnectTickets(db);
+    expect(tickets.length).to.eq(6);
+
+    const deleted = await sqlQuery(
+      db,
+      `SELECT * FROM zuconnect_tickets WHERE is_deleted = TRUE`
+    );
+    expect(deleted.rowCount).to.eq(0);
+
+    // Clean up mock ticket
+    await sqlQuery(
+      db,
+      "DELETE FROM zuconnect_tickets WHERE is_mock_ticket = TRUE"
+    );
+  });
+
   it("should fail to sync with bad API response", async () => {
     server.use(makeHandler(badEmptyResponse));
     try {
@@ -170,8 +196,6 @@ describe("zuconnect functionality", function () {
     }
 
     await application.services.semaphoreService.reload();
-
-    await sleep(100);
 
     expectCurrentSemaphoreToBe(application, {
       p: [user.commitment],

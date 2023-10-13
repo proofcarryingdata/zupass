@@ -1,3 +1,4 @@
+import urljoin from "url-join";
 import { z } from "zod";
 import { logger } from "../../util/logger";
 
@@ -7,7 +8,8 @@ import { logger } from "../../util/logger";
  */
 const TRIPSHA_TICKET_TYPES = [
   "ZuConnect Resident Pass",
-  "ZuConnect Organizer Pass"
+  "ZuConnect Organizer Pass",
+  "ZuConnect Visitor Pass"
 ] as const;
 
 /**
@@ -50,7 +52,8 @@ export class ZuconnectTripshaAPI {
    * invalid according to the schema {@link ZuconnectTripshaSchema}.
    */
   public async fetchTickets(): Promise<ZuconnectTicket[]> {
-    const fetchResult = await fetch(`${this.baseUrl}/tickets`);
+    const url = urljoin(this.baseUrl, "tickets");
+    const fetchResult = await fetch(url);
     const data = await fetchResult.json();
 
     const parsed = z

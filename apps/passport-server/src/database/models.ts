@@ -213,7 +213,7 @@ export interface AnonNullifierInfo {
  */
 export interface ZuconnectTicketDB {
   // Our internal ticket ID, a UUID
-  ticket_id: string;
+  id: string;
   // Ticket ID received from Tripsha
   external_ticket_id: string;
   // Our internal product ID, see
@@ -221,4 +221,6 @@ export interface ZuconnectTicketDB {
   product_id: string;
   attendee_email: string;
   attendee_name: string;
+  is_deleted: boolean;
+  is_mock_ticket: boolean;
 }

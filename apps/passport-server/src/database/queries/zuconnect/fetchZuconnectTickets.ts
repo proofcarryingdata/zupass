@@ -22,11 +22,11 @@ export async function fetchAllZuconnectTickets(
  */
 export async function fetchAllZuconnectTicketIds(
   client: Pool
-): Promise<ZuconnectTicketDB["ticket_id"][]> {
+): Promise<ZuconnectTicketDB["id"][]> {
   const result = await sqlQuery(
     client,
     `\
-    SELECT ticket_id FROM zuconnect_tickets WHERE is_deleted = FALSE
+    SELECT id FROM zuconnect_tickets WHERE is_deleted = FALSE
     `
   );
 

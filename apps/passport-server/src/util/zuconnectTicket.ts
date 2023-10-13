@@ -18,9 +18,14 @@ export const ZUCONNECT_PRODUCT_ID_MAPPINGS: {
     zuzaluRoleEquivalent: ZuzaluUserRole.Resident
   },
   "ZuConnect Organizer Pass": {
-    id: "NOT-CONFIRMED-DO-NOT-USE",
+    id: "0179ed5b-f265-417c-aeaa-ac61a525c6b0",
     name: "Organizer",
     zuzaluRoleEquivalent: ZuzaluUserRole.Organizer
+  },
+  "ZuConnect Visitor Pass": {
+    id: "98437d28-0a39-4f40-9f2a-b38bf04cb55d",
+    name: "Visitor",
+    zuzaluRoleEquivalent: ZuzaluUserRole.Visitor
   }
 };
 

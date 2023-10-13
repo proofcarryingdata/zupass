@@ -40,15 +40,15 @@ export const goodResponse = {
       id: "65018334b5f4a42c6648d4e2",
       type: "ZuConnect Resident Pass",
       email: "test3@example.com",
-      first: "Test",
-      last: "Three"
+      first: "",
+      last: "Test Three"
     },
     {
       id: "65018a79b5f4a42c6649604d",
       type: "ZuConnect Resident Pass",
       email: "test4@example.com",
-      first: "Test",
-      last: "Four"
+      first: "Test Four",
+      last: ""
     },
     {
       id: "6501996fb5f4a42c664a8626",

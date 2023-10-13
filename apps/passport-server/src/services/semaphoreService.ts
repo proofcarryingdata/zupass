@@ -1,7 +1,6 @@
 import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
-import _ from "lodash";
 import { Pool } from "postgres-pool";
 import { HistoricSemaphoreGroup, LoggedInZuzaluUser } from "../database/models";
 import {
@@ -188,15 +187,9 @@ export class SemaphoreService {
           commitment: user.commitment
         };
       });
-      // If the same user appears with the same role in both Zuzalu and
-      // Zuconnect, only use one of them
-      const users = _.uniqWith(
-        zuzaluUsers.concat(zuconnectUsersWithZuzaluRoles),
-        (a, b) =>
-          a.role === b.role &&
-          a.commitment === b.commitment &&
-          a.email === b.email
-      );
+
+      const users = zuzaluUsers.concat(zuconnectUsersWithZuzaluRoles);
+
       span?.setAttribute("users", users.length);
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
