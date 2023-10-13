@@ -84,7 +84,7 @@ export const setBotInfo = async (
   if (process.env.PASSPORT_CLIENT_URL) {
     bot.api.setChatMenuButton({
       menu_button: {
-        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/telegram" },
+        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
         type: "web_app",
         text: "Zupass"
       }

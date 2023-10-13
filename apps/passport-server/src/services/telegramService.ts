@@ -189,7 +189,7 @@ export class TelegramService {
         return ctx.reply(`Log in to Zupass`, {
           reply_markup: new InlineKeyboard().webApp(
             "Zupass",
-            process.env.PASSPORT_CLIENT_URL + "/telegram"
+            process.env.PASSPORT_CLIENT_URL + "/#telegram"
           )
         });
       }
