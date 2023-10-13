@@ -850,7 +850,7 @@ export class TelegramService {
         );
       } else {
         throw new Error(
-          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic. Try posting in another topic, or wait 24 hours.`
         );
       }
     }
