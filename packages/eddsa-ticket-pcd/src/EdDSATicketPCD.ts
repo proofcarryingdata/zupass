@@ -58,9 +58,7 @@ export interface ITicketData {
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
-
   // The fields below are signed using the server's private eddsa key.
-
   ticketId: string; // Primary key uuid of the ticket's `devconnect_pretix_tickets` entry.
   eventId: string; // Primary key uuid of the event's `pretix_events_config` entry.
   productId: string; // Primary key uuid of the ticket's `devconnect_pretix_items_info` entry.
@@ -121,7 +119,7 @@ export interface EdDSATicketPCDClaim {
 }
 
 /**
- * Defines the EdDSA Ticket PCD proof. The proof is a EdDSA PCD whose message
+ * Defines the EdDSA Ticket PCD proof. The proof is an EdDSA PCD whose message
  * is the encoded ticket.
  */
 export interface EdDSATicketPCDProof {
@@ -293,7 +291,7 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
 }
 
 /**
- * Returns true if a pcd is an EdDSA Ticket PCD, or false otherwise.
+ * Returns true if a PCD is an EdDSA Ticket PCD, or false otherwise.
  */
 export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
   return pcd.type === EdDSAPCDTypeName;
