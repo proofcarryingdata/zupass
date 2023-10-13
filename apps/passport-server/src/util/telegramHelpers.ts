@@ -32,7 +32,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
-export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
+export type TopicChat = Chat.SupergroupChat | null;
 
 type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
   T & {
@@ -47,6 +47,16 @@ export interface SessionData {
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
+
+export const getGroupChat = async (
+  api: Api<RawApi>,
+  chatId: string | number
+): Promise<Chat.SupergroupChat> => {
+  const chat = await api.getChat(chatId);
+  if (!chat) throw new Error(`No chat found for id ${chatId}`);
+  if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
+  else throw new Error(`Chat is not a group with topics enabled`);
+};
 
 export const base64EncodeTopicData = (
   chatId: number | string,
@@ -208,8 +218,8 @@ export const isDirectMessage = (ctx: Context): boolean => {
   return !!(ctx.chat?.type && ctx.chat?.type === "private");
 };
 
-export const isGroupWithTopics = (ctx: Context): boolean => {
-  return !!(ctx.chat?.type && ctx.chat?.type === "supergroup");
+export const isGroupWithTopics = (chat: Chat): boolean => {
+  return !!(chat?.type && chat?.type === "supergroup");
 };
 
 const checkDeleteMessage = (ctx: BotContext): void => {
