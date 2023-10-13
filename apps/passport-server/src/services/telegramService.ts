@@ -12,9 +12,9 @@ import {
   fetchAnonTopicNullifier,
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
-  fetchTelegramAnonTopicById,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
+  fetchTelegramTopicById,
   fetchTelegramTopicsByChatId,
   fetchTelegramVerificationStatus
 } from "../database/queries/telegram/fetch";
@@ -197,7 +197,7 @@ export class TelegramService {
       }
     });
 
-    // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
+    // The "manage" command is wrapper around linking Telegram chats to events with tickets in the DB.
     this.bot.command("manage", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
 
@@ -421,7 +421,9 @@ export class TelegramService {
       }
 
       if (!(await senderIsAdmin(ctx)))
-        return ctx.reply(`Only admins can run this command`);
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(
@@ -437,29 +439,18 @@ export class TelegramService {
           return;
         }
 
-        const chatAnonTopics = await fetchTelegramAnonTopicsByChatId(
+        const topicToUpdate = await fetchTelegramTopicById(
           this.context.dbPool,
-          ctx.chat.id
+          ctx.chat.id,
+          messageThreadId
         );
 
-        const currentAnonTopic = chatAnonTopics.find(
-          (t) => t.topic_id == messageThreadId.toString()
-        );
-
-        if (currentAnonTopic && currentAnonTopic.is_anon_topic) {
+        if (topicToUpdate && topicToUpdate.is_anon_topic) {
           await ctx.reply(`This topic is already anonymous.`, {
             message_thread_id: messageThreadId
           });
           return;
         }
-
-        const topicsForChat = await fetchTelegramTopicsByChatId(
-          this.context.dbPool,
-          ctx.chat.id
-        );
-        const topicToUpdate = topicsForChat.find(
-          (t) => t.topic_id === messageThreadId.toString()
-        );
 
         const topicName =
           topicToUpdate?.topic_name ||
@@ -813,7 +804,7 @@ export class TelegramService {
     topicId: number
   ): Promise<string> {
     // Confirm that topicId exists and is anonymous
-    const topic = await fetchTelegramAnonTopicById(
+    const topic = await fetchTelegramTopicById(
       this.context.dbPool,
       telegramChatId,
       topicId

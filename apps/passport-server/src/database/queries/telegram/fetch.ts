@@ -198,23 +198,27 @@ export async function fetchTelegramAnonTopicsByChatId(
   return result.rows;
 }
 
-export async function fetchTelegramAnonTopicById(
+export async function fetchTelegramTopicById(
   client: Pool,
   telegramChatId: number,
-  topicId: number
+  topicId: number,
+  onlyAnon?: boolean
 ): Promise<TelegramAnonChannel | null> {
-  const result = await sqlQuery(
-    client,
-    `
+  let queryText = `
     SELECT * 
     FROM telegram_chat_topics
     WHERE 
         telegram_chat_id = $1 AND 
-        topic_id = $2 AND 
-        is_anon_topic IS TRUE;
-    `,
-    [telegramChatId, topicId]
-  );
+        topic_id = $2
+  `;
+  const queryParams = [telegramChatId, topicId];
+
+  // Add the is_anon_topic condition if onlyAnon is true
+  if (onlyAnon) {
+    queryText += `AND is_anon_topic IS TRUE `;
+  }
+
+  const result = await sqlQuery(client, queryText, queryParams);
   return result.rows[0] ?? null;
 }
 
