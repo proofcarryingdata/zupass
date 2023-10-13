@@ -4,7 +4,11 @@ import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 
-export function SettingsModal() {
+export function SettingsModal({
+  isProveOrAddScreen
+}: {
+  isProveOrAddScreen: boolean;
+}) {
   const dispatch = useDispatch();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
@@ -33,14 +37,18 @@ export function SettingsModal() {
       <CenterColumn>
         <TextCenter>{self.email}</TextCenter>
         <Spacer h={16} />
-        <LinkButton $primary={true} to="/scan">
-          Scan Ticket
-        </LinkButton>
-        <Spacer h={16} />
-        <LinkButton $primary={true} to="/change-password" onClick={close}>
-          {hasSetupPassword ? "Change" : "Add"} Password
-        </LinkButton>
-        <Spacer h={16} />
+        {!isProveOrAddScreen && (
+          <>
+            <LinkButton $primary={true} to="/scan">
+              Scan Ticket
+            </LinkButton>
+            <Spacer h={16} />
+            <LinkButton $primary={true} to="/change-password" onClick={close}>
+              {hasSetupPassword ? "Change" : "Add"} Password
+            </LinkButton>
+            <Spacer h={16} />
+          </>
+        )}
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>

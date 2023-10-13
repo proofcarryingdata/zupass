@@ -16,7 +16,13 @@ import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
 import { UpgradeAccountModal } from "./UpgradeAccountModal";
 
-export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
+export function MaybeModal({
+  fullScreen,
+  isProveOrAddScreen
+}: {
+  fullScreen?: boolean;
+  isProveOrAddScreen?: boolean;
+}) {
   const dispatch = useDispatch();
   const modal = useModal();
 
@@ -38,7 +44,7 @@ export function MaybeModal({ fullScreen }: { fullScreen?: boolean }) {
       window.removeEventListener("keydown", listener, { capture: true });
   }, [close, dismissable]);
 
-  const body = getModalBody(modal);
+  const body = getModalBody(modal, isProveOrAddScreen);
 
   if (body == null) return null;
 
@@ -62,12 +68,12 @@ function isModalDismissable(modal: AppState["modal"]) {
   ].includes(modal.modalType);
 }
 
-function getModalBody(modal: AppState["modal"]) {
+function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
   switch (modal.modalType) {
     case "info":
       return <InfoModal />;
     case "settings":
-      return <SettingsModal />;
+      return <SettingsModal isProveOrAddScreen={isProveOrAddScreen} />;
     case "invalid-participant":
       return <InvalidUserModal />;
     case "another-device-changed-password":
