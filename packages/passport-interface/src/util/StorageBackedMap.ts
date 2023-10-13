@@ -51,8 +51,12 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
    */
   private syncToStorage(): void {
     const data = JSON.stringify(Array.from(this.entries()));
-    if (window.localStorage.getItem(this.storageKey) !== data) {
-      window.localStorage.setItem(this.storageKey, data);
+    try {
+      if (window.localStorage.getItem(this.storageKey) !== data) {
+        window.localStorage.setItem(this.storageKey, data);
+      }
+    } catch (e) {
+      console.log("[CACHE] Error encountered when syncing to local storage", e);
     }
     this.syncing = false;
   }
@@ -62,18 +66,26 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
    * come from other tabs.
    */
   private reloadFromStorage() {
-    const storageData = window.localStorage.getItem(this.storageKey);
     let loadedData = [];
-    if (storageData) {
-      try {
-        const parsed = JSON.parse(storageData);
-        if (parsed instanceof Array) {
-          loadedData = parsed;
+
+    try {
+      const storageData = window.localStorage.getItem(this.storageKey);
+      if (storageData) {
+        try {
+          const parsed = JSON.parse(storageData);
+          if (parsed instanceof Array) {
+            loadedData = parsed;
+          }
+        } catch (e) {
+          // Local storage had invalid JSON, so proceed without having changed
+          // `loadedData`
         }
-      } catch (e) {
-        // Local storage had invalid JSON, so proceed without having changed
-        // `loadedData`
       }
+    } catch (e) {
+      console.log(
+        "[CACHE] Error encountered when reading from local storage",
+        e
+      );
     }
 
     super.clear();
