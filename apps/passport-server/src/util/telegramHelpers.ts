@@ -91,7 +91,7 @@ export const setBotInfo = async (
     });
   }
   bot.api.setMyDescription(
-    "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
+    "I'm Zucat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
   );
 
   bot.api.setMyShortDescription(
