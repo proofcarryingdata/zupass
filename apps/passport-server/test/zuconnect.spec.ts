@@ -29,6 +29,7 @@ import {
   MOCK_ZUCONNECT_TRIPSHA_KEY,
   MOCK_ZUCONNECT_TRIPSHA_URL,
   badEmptyResponse,
+  badTicketNameResponse,
   badTicketsResponse,
   getZuconnectMockTripshaServer,
   goodResponse,
@@ -151,6 +152,7 @@ describe("zuconnect functionality", function () {
   });
 
   it("should fail to sync with bad API response", async () => {
+    // Test that validation fails with no tickets
     server.use(makeHandler(badEmptyResponse));
     try {
       expect(await zuconnectTripshaSyncService.sync()).to.throw;
@@ -165,6 +167,7 @@ describe("zuconnect functionality", function () {
       expect((e as any).issues[0].received).to.eq("undefined");
     }
 
+    // Test that validation fails for a ticket with no email address
     server.use(makeHandler(badTicketsResponse));
     try {
       expect(await zuconnectTripshaSyncService.sync()).to.throw;
@@ -173,6 +176,19 @@ describe("zuconnect functionality", function () {
       expect((e as any).issues[0].path).to.deep.eq(["tickets", 0, "email"]);
       expect((e as any).issues[0].expected).to.eq("string");
       expect((e as any).issues[0].received).to.eq("undefined");
+    }
+
+    // Test that validation fails for a ticket with an unknown ticketName
+    server.use(makeHandler(badTicketNameResponse));
+    try {
+      expect(await zuconnectTripshaSyncService.sync()).to.throw;
+    } catch (e) {
+      expect((e as any).issues[0].code).to.eq("invalid_enum_value");
+      expect((e as any).issues[0].path).to.deep.eq([
+        "tickets",
+        0,
+        "ticketName"
+      ]);
     }
   });
 

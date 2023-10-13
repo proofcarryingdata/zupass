@@ -17,16 +17,21 @@ const TRIPSHA_TICKET_TYPES = [
 /**
  * A schema for validating the API response from Tripsha.
  */
-const ZuconnectTripshaSchema = z
-  .object({
-    id: z.string(),
-    email: z.string().email(),
-    // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-    ticketName: z.enum(TRIPSHA_TICKET_TYPES),
-    first: z.string(),
-    // Last names are optional
-    last: z.string().default("")
-  })
+const ZuconnectTripshaSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
+  ticketName: z.enum(TRIPSHA_TICKET_TYPES),
+  first: z.string(),
+  // Last names might be undefined or null
+  last: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((last) => last ?? "")
+});
+
+const ZuconnectTripshaNormalizedNameSchema = ZuconnectTripshaSchema
   // Handle the logic of name concatenation here
   .transform(({ first, last, id, ticketName, email }) => {
     return { id, ticketName, email, fullName: `${first} ${last}`.trim() };
@@ -35,7 +40,10 @@ const ZuconnectTripshaSchema = z
 /**
  * Infer a type from the schema.
  */
-export type ZuconnectTicket = z.infer<typeof ZuconnectTripshaSchema>;
+export type ZuconnectRawTripshaTicket = z.infer<typeof ZuconnectTripshaSchema>;
+export type ZuconnectTicket = z.infer<
+  typeof ZuconnectTripshaNormalizedNameSchema
+>;
 
 /**
  * The Zuconnect Tripsha API - can only do one thing, which is fetch tickets.
@@ -66,7 +74,7 @@ export class ZuconnectTripshaAPI {
     const fetchResult = await fetch(url);
     const data = await fetchResult.json();
     const parsed = z
-      .object({ tickets: z.array(ZuconnectTripshaSchema) })
+      .object({ tickets: z.array(ZuconnectTripshaNormalizedNameSchema) })
       .safeParse(data);
 
     if (parsed.success) {

@@ -21,6 +21,19 @@ export const badTicketsResponse = {
   ]
 };
 
+// A response with an incorrect ticketName.
+export const badTicketNameResponse = {
+  tickets: [
+    {
+      id: "65012572b5f4a42c66422b9f",
+      ticketName: "ZuConnect Root Administrator",
+      email: "testing@example.com",
+      first: "Test",
+      last: "One"
+    }
+  ]
+};
+
 // A response that parses correctly.
 export const goodResponse = {
   tickets: [
@@ -35,8 +48,8 @@ export const goodResponse = {
       id: "6501284fb5f4a42c66426353",
       ticketName: "ZuConnect Resident Pass",
       email: "test2@example.com",
-      first: "Test",
-      last: "Two"
+      first: "Test Two",
+      last: null
     },
     {
       id: "65018334b5f4a42c6648d4e2",
@@ -56,8 +69,8 @@ export const goodResponse = {
       id: "6501996fb5f4a42c664a8626",
       ticketName: "ZuConnect Resident Pass",
       email: "test5@example.com",
-      first: "Test",
-      last: "Five"
+      first: "Test Five",
+      last: undefined
     }
   ]
 };
