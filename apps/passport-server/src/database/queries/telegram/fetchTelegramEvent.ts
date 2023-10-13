@@ -72,7 +72,7 @@ export async function fetchLinkedTelegramEvents(
       dpe.event_name AS "eventName"
     FROM known_events ke
     LEFT JOIN devconnect_pretix_events_info dpe ON dpe.pretix_events_config_id = ke.event_id
-    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
+    LEFT JOIN telegram_bot_events tbe ON ke.event_id = tbe.ticket_event_id;
     `
   );
 
