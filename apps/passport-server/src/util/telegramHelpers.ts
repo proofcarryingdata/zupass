@@ -19,12 +19,12 @@ import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   ChatIDWithEventIDs,
+  ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
-  fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId,
-  fetchUserTelegramChats
+  fetchTelegramChatsWithMembershipStatus,
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -246,7 +246,7 @@ const editOrSendMessage = async (
   }
 };
 
-const generateProofUrl = (
+const generateTicketProofUrl = (
   telegramUserId: string,
   validEventIds: string[]
 ): string => {
@@ -323,6 +323,25 @@ const generateProofUrl = (
       "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
   });
   return proofUrl;
+};
+
+const getChatsWithMembershipStatus = async (
+  db: Pool,
+  ctx: BotContext,
+  userId: number
+): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
+  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+    db,
+    userId
+  );
+
+  const chatsWithMembership = await chatIDsToChats(
+    db,
+    ctx,
+    chatIdsWithMembership
+  );
+
+  return chatsWithMembership;
 };
 
 export const dynamicEvents = async (
@@ -417,34 +436,28 @@ export const chatsToJoin = async (
     return;
   }
 
-  const events = await fetchEventsPerChat(db);
-  const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  const userChats = await fetchUserTelegramChats(db, userId);
-
-  const finalEvents = eventsWithChats.map((e) => {
-    return {
-      ...e,
-      userIsChatMember: userChats
-        ? userChats.telegramChatIDs.includes(e.telegramChatID)
-        : false
-    };
-  });
-  if (finalEvents && finalEvents.length === 0) {
+  const chatsWithMembership = await getChatsWithMembershipStatus(
+    db,
+    ctx,
+    userId
+  );
+  if (chatsWithMembership && chatsWithMembership.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
-  const sortedChats = finalEvents.sort(
-    (a, b) => +a.userIsChatMember - +b.userIsChatMember
-  );
-  for (const chat of sortedChats) {
-    if (chat.userIsChatMember) {
+
+  for (const chat of chatsWithMembership) {
+    if (chat.isChatMember) {
       const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
         creates_join_request: true
       });
       range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
       range.row();
     } else {
-      const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+      const proofUrl = generateTicketProofUrl(
+        userId.toString(),
+        chat.ticketEventIds
+      );
       range.webApp(`${chat.chat?.title}`, proofUrl).row();
     }
   }
@@ -504,19 +517,13 @@ export const chatsToPostIn = async (
         await ctx.menu.update({ immediate: true });
       });
     } else {
-      const events = await fetchEventsPerChat(db);
-      const eventsWithChats = await chatIDsToChats(db, ctx, events);
-      if (eventsWithChats && eventsWithChats.length === 0) {
-        range.text(`No groups to join at this time`);
-        return;
-      }
-      const userChats = await fetchUserTelegramChats(db, userId);
-
-      const finalChats = eventsWithChats.filter(
-        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
+      const chatsWithMembership = await getChatsWithMembershipStatus(
+        db,
+        ctx,
+        userId
       );
-      if (finalChats?.length > 0) {
-        for (const chat of finalChats) {
+      if (chatsWithMembership?.length > 0) {
+        for (const chat of chatsWithMembership) {
           range
             .text(`✅ ${chat.chat?.title}`, async (ctx) => {
               ctx.session.selectedChat = chat.chat;

@@ -1,5 +1,5 @@
 import { Pool } from "postgres-pool";
-import { TelegramAnonChannel, TelegramChat, TelegramEvent } from "../../models";
+import { TelegramChat, TelegramEvent, TelegramTopic } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -106,7 +106,7 @@ export async function fetchEventsPerChat(
 export async function fetchTelegramAnonTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramAnonChannel[]> {
+): Promise<TelegramTopic[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -121,7 +121,7 @@ export async function fetchTelegramAnonTopicsByChatId(
 export async function fetchTelegramTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramAnonChannel[]> {
+): Promise<TelegramTopic[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -153,4 +153,36 @@ export async function fetchUserTelegramChats(
     [telegramUserID]
   );
   return result.rows[0] ?? null;
+}
+
+export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+  isChatMember: boolean;
+};
+// Fetch a list of Telegram chats that can be joined with the status of user
+// The list is sorted such that chat a user hasn't joined are returned first
+export async function fetchTelegramChatsWithMembershipStatus(
+  client: Pool,
+  userId: number
+): Promise<ChatIDWithEventsAndMembership[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT
+      tbe.telegram_chat_id AS "telegramChatID",
+        ARRAY_AGG(tbe.ticket_event_id) AS "ticketEventIds",
+        CASE WHEN tbc.telegram_user_id IS NOT NULL THEN true ELSE false END AS "isChatMember"
+    FROM 
+        telegram_bot_events tbe 
+    LEFT JOIN 
+        telegram_bot_conversations tbc 
+    ON 
+        tbe.telegram_chat_id = tbc.telegram_chat_id AND tbc.telegram_user_id = $1
+    GROUP BY 
+        tbe.telegram_chat_id, tbc.telegram_user_id
+    ORDER BY 
+        "isChatMember" ASC;
+    `,
+    [userId]
+  );
+  return result.rows;
 }

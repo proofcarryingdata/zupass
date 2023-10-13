@@ -173,7 +173,7 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramAnonChannel {
+export interface TelegramTopic {
   telegram_chat_id: string;
   topic_id: string;
   topic_name: string;
