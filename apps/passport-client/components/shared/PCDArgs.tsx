@@ -27,13 +27,13 @@ import {
 } from "@pcd/pcd-types";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import ReactSelect from "react-select";
 import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import { icons } from "../icons";
+import Select from "./Select";
 
 /**
  * Given an {@link Argument}, renders a UI that displays its value.
@@ -505,8 +505,6 @@ export function PCDArgInput({
     >
       {!!relevantPCDs.length && (
         <Select
-          classNamePrefix="Select"
-          isSearchable
           value={options.find((option) => option.id === pcd?.id)}
           options={options}
           onChange={onChange}
@@ -654,59 +652,6 @@ const ArgsContainer = styled.div`
 const ErrorText = styled.div`
   color: var(--danger-bright);
   font-size: 14px;
-`;
-
-const Select = styled(ReactSelect)`
-  .Select__control {
-    width: 100%;
-    background-color: var(--bg-dark-gray);
-    border: 1px solid var(--bg-lite-gray);
-    font:
-      14px PlexSans,
-      system-ui,
-      sans-serif;
-  }
-
-  .Select__control--is-focused {
-    box-shadow: 0 0 0 1px var(--white);
-    outline: none;
-
-    .Select__dropdown-indicator {
-      color: hsl(0, 0%, 80%);
-    }
-  }
-
-  .Select__control--is-disabled .Select__dropdown-indicator {
-    display: none;
-  }
-
-  .Select__indicator-separator {
-    display: none;
-  }
-
-  .Select__dropdown-indicator {
-    &:hover {
-      color: var(--white);
-    }
-  }
-
-  .Select__menu {
-    background-color: var(--bg-dark-gray);
-    border: 1px solid var(--bg-lite-gray);
-  }
-
-  .Select__option {
-    background-color: var(--bg-dark-gray);
-
-    &:hover {
-      background-color: var(--bg-lite-gray);
-    }
-  }
-
-  .Select__placeholder,
-  .Select__single-value {
-    color: var(--white);
-  }
 `;
 
 const Input = styled.input`
