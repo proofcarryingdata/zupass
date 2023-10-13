@@ -36,13 +36,13 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
   }
 
   /**
-   * Queues a microtask to sync to local storage once the current event loop
-   *  has finished processing
+   * Queues a job to sync to local storage once the current event loop
+   * has finished processing
    */
   private queueSync() {
     if (!this.syncing) {
       this.syncing = true;
-      queueMicrotask(() => this.syncToStorage());
+      setTimeout(() => this.syncToStorage(), 0);
     }
   }
 
