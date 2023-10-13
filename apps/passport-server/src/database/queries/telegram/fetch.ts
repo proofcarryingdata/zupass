@@ -37,9 +37,6 @@ export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
  * Queries
  */
 
-/**
- * Fetch the list of Telegram conversations for a user from the database.
- */
 export async function fetchTelegramConversation(
   client: Pool,
   telegramUserId: number
@@ -56,9 +53,6 @@ export async function fetchTelegramConversation(
   return result.rows[0];
 }
 
-/**
- *
- */
 export async function fetchTelegramVerificationStatus(
   client: Pool,
   telegramUserId: number,
