@@ -37,6 +37,7 @@ async function requestProof(
 ) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
+  const revealedFields = {};
 
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
@@ -62,8 +63,11 @@ async function requestProof(
     },
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
-      value: {},
-      userProvided: false
+      value: revealedFields,
+      userProvided: false,
+      description: Object.keys(revealedFields).length
+        ? "The following fields will be revealed"
+        : "No information will be revealed"
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
