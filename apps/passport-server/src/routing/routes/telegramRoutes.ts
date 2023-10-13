@@ -59,7 +59,7 @@ export function initTelegramRoutes(
       logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
-      res.status(500).send(errorHtmlWithDetails(e as string));
+      res.status(500).send(errorHtmlWithDetails(e as Error));
     }
   });
 
@@ -104,7 +104,7 @@ export function initTelegramRoutes(
       logger("[TELEGRAM] failed to send anonymous message", e);
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
-      res.status(500).send(errorHtmlWithDetails(e as string));
+      res.status(500).send(errorHtmlWithDetails(e as Error));
     }
   });
 
@@ -132,7 +132,7 @@ export function initTelegramRoutes(
       logger("[TELEGRAM] generate link for anonymous message", e);
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
-      res.status(500).send(errorHtmlWithDetails(e as string));
+      res.status(500).send(errorHtmlWithDetails(e as Error));
     }
   });
 }
