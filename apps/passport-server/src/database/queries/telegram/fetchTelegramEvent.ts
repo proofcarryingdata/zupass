@@ -164,6 +164,7 @@ export async function fetchUserTelegramChats(
 export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
   isChatMember: boolean;
 };
+
 // Fetch a list of Telegram chats that can be joined with the status of user
 // The list is sorted such that chat a user hasn't joined are returned first
 export async function fetchTelegramChatsWithMembershipStatus(
