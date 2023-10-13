@@ -68,7 +68,7 @@ export function ProveAndAddScreen({
       <AppContainer bg="gray">
         <Container>
           <Spacer h={24} />
-          <AppHeader>
+          <AppHeader isProveScreen={true}>
             <H2>
               {request.options.title || `Add and Prove ${request.pcdType}`}
             </H2>

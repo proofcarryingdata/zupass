@@ -52,11 +52,11 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
 
   return (
     <>
-      <MaybeModal fullScreen />
+      <MaybeModal fullScreen isProveScreen={true} />
       <AppContainer bg="gray">
         <Container>
           <Spacer h={16} />
-          <AppHeader />
+          <AppHeader isProveScreen={true} />
           <Spacer h={16} />
           {content}
         </Container>
