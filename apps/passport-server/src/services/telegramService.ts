@@ -20,6 +20,7 @@ import {
   fetchLinkedPretixAndTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
+  fetchTelegramTopic,
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
@@ -451,29 +452,21 @@ export class TelegramService {
           return;
         }
 
-        const chatAnonTopics = await fetchTelegramAnonTopicsByChatId(
+        const topicToUpdate = await fetchTelegramTopic(
           this.context.dbPool,
-          ctx.chat.id
+          ctx.chat.id,
+          messageThreadId
         );
 
-        const currentAnonTopic = chatAnonTopics.find(
-          (t) => t.topic_id == messageThreadId.toString()
-        );
+        if (!topicToUpdate)
+          throw new Error(`Couldn't find this topic in the db.`);
 
-        if (currentAnonTopic && currentAnonTopic.is_anon_topic) {
+        if (topicToUpdate.is_anon_topic) {
           await ctx.reply(`This topic is already anonymous.`, {
             message_thread_id: messageThreadId
           });
           return;
         }
-
-        const topicsForChat = await fetchTelegramTopicsByChatId(
-          this.context.dbPool,
-          ctx.chat.id
-        );
-        const topicToUpdate = topicsForChat.find(
-          (t) => t.topic_id === messageThreadId.toString()
-        );
 
         const topicName =
           topicToUpdate?.topic_name ||
@@ -879,13 +872,12 @@ export class TelegramService {
     topicId: number
   ): Promise<string> {
     // Confirm that topicId exists and is anonymous
-    const topics = await fetchTelegramAnonTopicsByChatId(
+    const topic = await fetchTelegramTopic(
       this.context.dbPool,
-      telegramChatId
+      telegramChatId,
+      topicId
     );
-    const topic = topics.find(
-      (t) => t.topic_id === topicId.toString() && t.is_anon_topic
-    );
+
     if (!topic) throw new Error(`No anonyous topic found`);
 
     // Get valid eventIds for this chat
