@@ -10,7 +10,7 @@ const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
 const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
 
 const DEFAULT_FEEDS = new Set(
-  [ZupassFeedIds.Devconnect, ZupassFeedIds.Email, ZupassFeedIds.Zuzalu_1].map(
+  [ZupassFeedIds.Devconnect, ZupassFeedIds.Email, ZupassFeedIds.Zuzalu_23].map(
     (s) => s.toString()
   )
 );

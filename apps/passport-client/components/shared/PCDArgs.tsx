@@ -407,26 +407,30 @@ function ToggleListArgInput({
       arg={arg}
       {...rest}
       end={
-        <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
-          {showAll ? "▲" : "▼"}
-        </ShowMoreButton>
+        entries.length ? (
+          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+            {showAll ? "▲" : "▼"}
+          </ShowMoreButton>
+        ) : undefined
       }
     >
-      <ChipsContainer direction={showAll ? "row" : "column"}>
-        {entries.map(([key, value]) => (
-          <Chip
-            key={key}
-            label={getLabel(key)}
-            onClick={
-              arg.userProvided
-                ? () => setArg({ ...arg.value, [key]: !value })
-                : undefined
-            }
-            checked={value}
-            icon={getIcon(value)}
-          />
-        ))}
-      </ChipsContainer>
+      {!!entries.length && (
+        <ChipsContainer direction={showAll ? "row" : "column"}>
+          {entries.map(([key, value]) => (
+            <Chip
+              key={key}
+              label={getLabel(key)}
+              onClick={
+                arg.userProvided
+                  ? () => setArg({ ...arg.value, [key]: !value })
+                  : undefined
+              }
+              checked={value}
+              icon={getIcon(value)}
+            />
+          ))}
+        </ChipsContainer>
+      )}
     </ArgContainer>
   );
 }
@@ -569,7 +573,7 @@ function ArgContainer({
           <End>{end}</End>
         </ArgName>
         {children}
-        <ErrorText>{error}</ErrorText>
+        {error && <ErrorText>{error}</ErrorText>}
       </ArgItem>
     </ArgItemContainer>
   );
@@ -607,7 +611,7 @@ const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   border-radius: 16px;
   border: 1px solid;
   border-color: ${({ error }) =>
-    error ? "var(--danger)" : "var(--bg-lite-gray)"};
+    error ? "var(--danger)" : "var(--primary-lite)"};
   background-color: rgba(var(--white-rgb), 0.01);
   align-items: center;
   padding: 8px 16px;
@@ -657,8 +661,8 @@ const ErrorText = styled.div`
 const Input = styled.input`
   width: 100%;
   height: 32px;
-  background-color: var(--bg-lite-gray);
-  border: 1px solid var(--bg-lite-gray);
+  background-color: var(--bg-lite-primary);
+  border: 1px solid var(--bg-lite-primary);
   color: var(--white);
   font:
     14px PlexSans,
@@ -673,8 +677,9 @@ const Input = styled.input`
 const TextareaInput = styled.textarea`
   width: 100%;
   height: 4em;
-  background-color: var(--bg-lite-gray);
-  border: 1px solid var(--bg-lite-gray);
+  /* background-color: var(--bg-lite-gray); */
+  background-color: var(--bg-lite-primary);
+  border: 1px solid var(--bg-lite-primary);
   color: var(--white);
   resize: vertical;
   font:

@@ -1,11 +1,11 @@
 import styled from "styled-components";
-import { RippleLoader } from "../core/RippleLoader";
+import { ScreenLoader } from "./ScreenLoader";
 
 export function SyncingPCDs() {
   return (
     <SyncingPCDsContainer>
       <div>
-        <RippleLoader />
+        <ScreenLoader text="Syncing PCDs..." />
       </div>
     </SyncingPCDsContainer>
   );
