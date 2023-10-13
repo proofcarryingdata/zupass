@@ -59,8 +59,10 @@
     "source-map-support": "^0.5.21",
     "superagent": "^8.0.0",
     "ts-node": "^10.9.1",
+    "url-join": "4.0.1",
     "uuid": "^9.0.0",
-    "worker-farm": "^1.7.0"
+    "worker-farm": "^1.7.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",

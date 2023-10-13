@@ -93,7 +93,7 @@ describe("zuzalu pcdpass functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         payload,
-        ZupassFeedIds.Zuzalu_1
+        ZupassFeedIds.Zuzalu_23
       );
 
       if (!response.success) {

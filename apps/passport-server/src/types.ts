@@ -3,6 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
+import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import {
   DevconnectPretixAPIFactory,
@@ -20,6 +21,7 @@ import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
+import { ZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
 export interface ApplicationContext {
@@ -39,6 +41,7 @@ export interface GlobalServices {
   provingService: ProvingService;
   zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
+  zuconnectTripshaSyncService: ZuconnectTripshaSyncService | null;
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
@@ -62,6 +65,7 @@ export interface APIs {
   emailAPI: IEmailAPI | null;
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
+  zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
 }
 
 export interface EnvironmentVariables {
