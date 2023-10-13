@@ -101,7 +101,7 @@ export const setBotInfo = async (
   const privateChatCommands: BotCommand[] = [
     {
       command: "/start",
-      description: "join a group with a proof of ticket"
+      description: "Join a group with a proof of ticket"
     },
     {
       command: "/anonsend",
