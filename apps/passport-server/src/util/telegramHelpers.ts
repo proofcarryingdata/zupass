@@ -478,16 +478,22 @@ export const chatsToPostIn = async (
     return;
   }
   try {
+    // If a chat has been selected, give the user a choice of topics to send to.
     if (ctx.session.selectedChat) {
       const chat = ctx.session.selectedChat;
+
+      // Fetch anon topics for the selected chat
       const topics = await fetchTelegramAnonTopicsByChatId(
         ctx.session.dbPool,
         chat.id
       );
+
+      // Fetch telegram event Ids for the selected chat.
       const telegramEvents = await fetchTelegramEventsByChatId(
         ctx.session.dbPool,
         chat.id
       );
+
       const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
       if (topics.length === 0) {
@@ -516,7 +522,9 @@ export const chatsToPostIn = async (
         ctx.session.selectedChat = undefined;
         await ctx.menu.update({ immediate: true });
       });
-    } else {
+    }
+    // Otherwise, give the user a list of chats that they are members of.
+    else {
       const chatsWithMembership = await getChatsWithMembershipStatus(
         db,
         ctx,
@@ -524,12 +532,15 @@ export const chatsToPostIn = async (
       );
       if (chatsWithMembership?.length > 0) {
         for (const chat of chatsWithMembership) {
-          range
-            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
-              ctx.session.selectedChat = chat.chat;
-              await ctx.menu.update({ immediate: true });
-            })
-            .row();
+          // Only show the chats the user is a member of
+          if (chat.isChatMember) {
+            range
+              .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+                ctx.session.selectedChat = chat.chat;
+                await ctx.menu.update({ immediate: true });
+              })
+              .row();
+          }
         }
       } else {
         ctx.reply(`No chats found to post in. Type /start to join one!`);
