@@ -72,7 +72,7 @@ const ticketData: ITicketData = {
 }
 
 // Create a PCD with the required attributes and their types.
-// It uses the EdDSA PCD to sign the message, which is the seralized ticket in this PCD.
+// It uses the EdDSA PCD to sign the message, which is the serialized ticket in this PCD.
 const pcd = await prove({
     // The id is optional and if you don't pass it a random value will be automatically created.
     id: {
