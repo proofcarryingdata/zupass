@@ -81,6 +81,15 @@ function isFulfilled<T>(
 export const setBotInfo = async (
   bot: Bot<BotContext, Api<RawApi>>
 ): Promise<void> => {
+  if (process.env.PASSPORT_CLIENT_URL) {
+    bot.api.setChatMenuButton({
+      menu_button: {
+        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/telegram" },
+        type: "web_app",
+        text: "Zupass"
+      }
+    });
+  }
   bot.api.setMyDescription(
     "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
   );

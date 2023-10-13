@@ -180,6 +180,19 @@ export class TelegramService {
     // The "start" command initiates the process of invitation and approval.
     this.bot.command("start", async (ctx) => {
       const userId = ctx?.from?.id;
+      const startParam = ctx.match;
+      if (
+        startParam &&
+        startParam === "zupass" &&
+        process.env.PASSPORT_CLIENT_URL
+      ) {
+        return ctx.reply(`Log in to Zupass`, {
+          reply_markup: new InlineKeyboard().webApp(
+            "Zupass",
+            process.env.PASSPORT_CLIENT_URL + "/telegram"
+          )
+        });
+      }
       try {
         // Only process the command if it comes as a private message.
         if (isDirectMessage(ctx) && userId) {
@@ -283,6 +296,11 @@ export class TelegramService {
           message_thread_id: messageThreadId
         });
 
+      if (messageThreadId)
+        return ctx.reply(`Must be in ${adminBotChannel}.`, {
+          message_thread_id: messageThreadId
+        });
+
       const userId = ctx.from?.id;
       if (!userId)
         return ctx.reply(`User not found, try again.`, {
@@ -324,8 +342,9 @@ export class TelegramService {
 
       for (const event of eventsWithChats) {
         if (event.chat?.title)
-          eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
+          eventsHtml += `Chat: <b>${event.chat.title}</b> ➡ Event: <i>${event.eventName}</i> \n`;
       }
+
       await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
         parse_mode: "HTML"
       });
@@ -341,21 +360,10 @@ export class TelegramService {
     this.bot.command("anonsend", async (ctx) => {
       if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
-        const chatId = ctx.chat.id;
 
-        // if there is a message_thread_id or a chat_id, use reply settings.
-        const replyOptions = messageThreadId
-          ? { message_thread_id: messageThreadId }
-          : chatId
-          ? {}
-          : undefined;
-
-        if (replyOptions) {
-          await ctx.reply(
-            "Please message directly within a private chat.",
-            replyOptions
-          );
-        }
+        await ctx.reply("Please message directly within a private chat.", {
+          message_thread_id: messageThreadId
+        });
         return;
       }
 
