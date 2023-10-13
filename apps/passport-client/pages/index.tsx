@@ -175,6 +175,7 @@ function RouterImpl() {
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
+          <Route path="telegram" element={<HomeScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

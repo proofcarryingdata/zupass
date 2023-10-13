@@ -42,7 +42,8 @@ import {
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
+  senderIsAdmin,
+  setBotInfo
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -71,13 +72,7 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
 
-    this.bot.api.setMyDescription(
-      "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
-    );
-
-    this.bot.api.setMyShortDescription(
-      "Zucat manages events and groups with zero-knowledge proofs"
-    );
+    setBotInfo(bot);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -99,6 +94,7 @@ export class TelegramService {
     // Approval of the join request is required even for users with the
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
+
     this.bot.on("chat_join_request", async (ctx) => {
       const userId = ctx.chatJoinRequest.user_chat_id;
 
@@ -211,9 +207,10 @@ export class TelegramService {
         if (!username) throw new Error(`Username not found`);
 
         if (!(await senderIsAdmin(ctx, admins)))
-          throw new Error(`Only admins can run this command`);
+          return ctx.reply(`Only admins can run this command`);
+
         if (!ALLOWED_TICKET_MANAGERS.includes(username))
-          throw new Error(
+          return ctx.reply(
             `Only Zupass team members are allowed to run this command.`
           );
 
@@ -279,17 +276,35 @@ export class TelegramService {
 
     this.bot.command("adminhelp", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
-      await ctx.reply(
-        `<b>Help</b>
+      const admins = await ctx.getChatAdministrators();
 
-        <b>Admins</b>
-        <b>/manage</b> - Gate / Ungate this group with a ticketed event
-        <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.
-        <b>/incognito</b> - Mark a topic as anonymous
-      `,
-        { parse_mode: "HTML", reply_to_message_id: messageThreadId }
+      if (!(await senderIsAdmin(ctx, admins)))
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
+
+      if (messageThreadId)
+        return ctx.reply(`Must be in ${adminBotChannel}.`, {
+          message_thread_id: messageThreadId
+        });
+
+      const userId = ctx.from?.id;
+      if (!userId)
+        return ctx.reply(`User not found, try again.`, {
+          message_thread_id: messageThreadId
+        });
+
+      const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+      await ctx.api.sendMessage(
+        userId,
+        `Sending info for group <b>${chat?.title}</b> ID: <i>${ctx.chat.id}</i>`,
+        { parse_mode: "HTML" }
       );
-      const msg = await ctx.reply(`Loading tickets and events...`);
+
+      const msg = await ctx.api.sendMessage(
+        userId,
+        `Loading tickets and events...`
+      );
       const events = await fetchLinkedPretixAndTelegramEvents(
         this.context.dbPool
       );
@@ -299,8 +314,6 @@ export class TelegramService {
         events
       );
 
-      const userId = ctx.from?.id;
-      if (!userId) throw new Error(`No user found. Try again...`);
       if (eventsWithChats.length === 0) {
         return ctx.api.editMessageText(
           userId,
@@ -316,31 +329,28 @@ export class TelegramService {
 
       for (const event of eventsWithChats) {
         if (event.chat?.title)
-          eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
+          eventsHtml += `Chat: <b>${event.chat.title}</b> ➡ Event: <i>${event.eventName}</i> \n`;
       }
+
       await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
         parse_mode: "HTML"
       });
     });
 
+    this.bot.command("help", async (ctx) => {
+      // TODO: Link to troubleshooting guide
+      await ctx.reply(
+        `Please email passport@0xparc.org if you have any additional issues`
+      );
+    });
+
     this.bot.command("anonsend", async (ctx) => {
       if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
-        const chatId = ctx.chat.id;
 
-        // if there is a message_thread_id or a chat_id, use reply settings.
-        const replyOptions = messageThreadId
-          ? { message_thread_id: messageThreadId }
-          : chatId
-          ? {}
-          : undefined;
-
-        if (replyOptions) {
-          await ctx.reply(
-            "Please message directly within a private chat.",
-            replyOptions
-          );
-        }
+        await ctx.reply("Please message directly within a private chat.", {
+          message_thread_id: messageThreadId
+        });
         return;
       }
 
@@ -925,7 +935,6 @@ export async function startTelegramService(
   };
 
   bot.use(session({ initial, getSessionKey }));
-  await bot.init();
 
   const service = new TelegramService(context, rollbarService, bot);
   bot.catch((error) => {
