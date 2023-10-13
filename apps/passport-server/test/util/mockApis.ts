@@ -1,6 +1,10 @@
 import chai from "chai";
 import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
+import {
+  IZuconnectTripshaAPI,
+  getZuconnectTripshaAPI
+} from "../../src/apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "../../src/apis/zuzaluPretixAPI";
 import { DevconnectPretixAPIFactory } from "../../src/services/devconnectPretixSyncService";
 import { APIs } from "../../src/types";
@@ -10,6 +14,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let emailAPI: IEmailAPI | null;
   let pretixAPI: IZuzaluPretixAPI | null;
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
+  let zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
 
   if (apiOverrides?.emailAPI) {
     emailAPI = apiOverrides.emailAPI;
@@ -21,7 +26,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     };
   }
 
-  if (emailAPI) {
+  if (emailAPI && chai.spy) {
     chai.spy.on(emailAPI, "send");
   }
 
@@ -36,10 +41,16 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   } else {
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
+  if (apiOverrides?.zuconnectTripshaAPI) {
+    zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
+  } else {
+    zuconnectTripshaAPI = getZuconnectTripshaAPI();
+  }
 
   return {
     emailAPI,
     zuzaluPretixAPI: pretixAPI,
-    devconnectPretixAPIFactory
+    devconnectPretixAPIFactory,
+    zuconnectTripshaAPI
   };
 }

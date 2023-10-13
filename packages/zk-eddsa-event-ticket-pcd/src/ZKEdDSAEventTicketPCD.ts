@@ -37,7 +37,11 @@ import {
 } from "@pcd/util";
 import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { Groth16Proof, groth16 } from "snarkjs";
+import {
+  Groth16Proof,
+  prove as groth16Prove,
+  verify as groth16Verify
+} from "@zk-kit/groth16";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -217,8 +221,9 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket =
-    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
+  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+    serializedTicketPCD
+  );
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -507,7 +512,7 @@ export async function prove(
     watermark
   );
 
-  const { proof, publicSignals } = await groth16.fullProve(
+  const { proof, publicSignals } = await groth16Prove(
     snarkInput,
     initArgs.wasmFilePath,
     initArgs.zkeyFilePath
@@ -592,7 +597,7 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // full package initialization.
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
 }
 
 /**

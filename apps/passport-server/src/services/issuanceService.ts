@@ -6,9 +6,9 @@ import {
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getEdDSATicketData,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -31,22 +31,22 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyFeedCredential,
   VerifyTicketRequest,
   VerifyTicketResult,
-  zupassDefaultSubscriptions,
   ZupassFeedIds,
-  ZuzaluUserRole
+  ZuzaluUserRole,
+  verifyFeedCredential,
+  zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
   DeleteFolderAction,
-  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction
+  ReplaceInFolderAction,
+  joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -77,11 +77,16 @@ import {
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
 import { fetchUserByCommitment } from "../database/queries/users";
+import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
+import {
+  ZUCONNECT_PRODUCT_ID_MAPPINGS,
+  zuconnectProductIdToName
+} from "../util/zuconnectTicket";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -98,6 +103,8 @@ export const ZUZALU_23_VISITOR_PRODUCT_ID =
 export const ZUZALU_23_ORGANIZER_PRODUCT_ID =
   "10016d35-40df-4033-a171-7d661ebaccaa";
 export const ZUZALU_23_EVENT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
+export const ZUCONNECT_23_EVENT_ID = "91312aa1-5f74-4264-bdeb-f4a3ddb8670c";
+// Zuconnect product IDs are defined in src/util/zuconnectTicket.ts
 
 export class IssuanceService {
   private readonly context: ApplicationContext;
@@ -331,7 +338,46 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: zupassDefaultSubscriptions[ZupassFeedIds.Zuzalu_1]
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Zuzalu_23]
+        },
+        {
+          handleRequest: async (
+            req: PollFeedRequest
+          ): Promise<PollFeedResponseValue> => {
+            const actions: PCDAction[] = [];
+            if (req.pcd === undefined) {
+              throw new Error(`Missing credential`);
+            }
+            try {
+              const { pcd } = await verifyFeedCredential(
+                req.pcd,
+                this.cachedVerifySignaturePCD.bind(this)
+              );
+
+              const pcds = await this.issueZuconnectTicketPCDs(pcd);
+
+              // Clear out the folder
+              actions.push({
+                type: PCDActionType.DeleteFolder,
+                folder: "Zuconnect",
+                recursive: false
+              } as DeleteFolderAction);
+
+              actions.push({
+                type: PCDActionType.ReplaceInFolder,
+                folder: "Zuconnect",
+                pcds: await Promise.all(
+                  pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                )
+              } as ReplaceInFolderAction);
+            } catch (e) {
+              logger(`Error encountered while serving feed:`, e);
+              this.rollbarService?.reportError(e);
+            }
+
+            return { actions };
+          },
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Zuconnect_23]
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
@@ -1065,6 +1111,64 @@ export class IssuanceService {
   }
 
   /**
+   * Issues EdDSATicketPCD tickets to Zuconnect ticket holders.
+   * It is technically possible for a user to have more than one ticket, e.g.
+   * a day pass ticket-holder might upgrade to a full ticket.
+   */
+  private async issueZuconnectTicketPCDs(
+    credential: SemaphoreSignaturePCD
+  ): Promise<EdDSATicketPCD[]> {
+    return traced(
+      "IssuanceService",
+      "issueZuconnectTicketPCDs",
+      async (span) => {
+        const user = await this.checkUserExists(credential);
+        const email = user?.email;
+        if (user) {
+          span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
+        }
+        if (email) {
+          span?.setAttribute("email", email);
+        }
+
+        if (user == null || email == null) {
+          return [];
+        }
+
+        const tickets = await fetchZuconnectTicketsByEmail(
+          this.context.dbPool,
+          email
+        );
+
+        const pcds = [];
+
+        for (const ticket of tickets) {
+          pcds.push(
+            await this.getOrGenerateTicket({
+              attendeeSemaphoreId: user.commitment,
+              eventName: "Zuconnect October-November '23",
+              checkerEmail: undefined,
+              ticketId: ticket.id,
+              ticketName: zuconnectProductIdToName(ticket.product_id),
+              attendeeName: `${ticket.attendee_name}`,
+              attendeeEmail: ticket.attendee_email,
+              eventId: ZUCONNECT_23_EVENT_ID,
+              productId: ticket.product_id,
+              timestampSigned: Date.now(),
+              timestampConsumed: 0,
+              isConsumed: false,
+              isRevoked: false,
+              ticketCategory: TicketCategory.ZuConnect
+            })
+          );
+        }
+
+        return pcds;
+      }
+    );
+  }
+
+  /**
    * Returns a promised verification of a PCD, either from the cache or,
    * if there is no cache entry, from the multiprocess service.
    */
@@ -1300,6 +1404,19 @@ async function setupKnownTicketTypes(
     KnownPublicKeyType.EdDSA,
     KnownTicketGroup.Zuzalu23
   );
+
+  // Store Zuconnect ticket types
+  for (const { id } of Object.values(ZUCONNECT_PRODUCT_ID_MAPPINGS)) {
+    setKnownTicketType(
+      db,
+      `zuconnect-${id}`,
+      ZUCONNECT_23_EVENT_ID,
+      id,
+      ZUPASS_TICKET_PUBLIC_KEY_NAME,
+      KnownPublicKeyType.EdDSA,
+      KnownTicketGroup.Zuconnect23
+    );
+  }
 }
 
 function loadRSAPrivateKey(): NodeRSA | null {
