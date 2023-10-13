@@ -180,19 +180,6 @@ export class TelegramService {
     // The "start" command initiates the process of invitation and approval.
     this.bot.command("start", async (ctx) => {
       const userId = ctx?.from?.id;
-      const startParam = ctx.match;
-      if (
-        startParam &&
-        startParam === "zupass" &&
-        process.env.PASSPORT_CLIENT_URL
-      ) {
-        return ctx.reply(`Log in to Zupass`, {
-          reply_markup: new InlineKeyboard().webApp(
-            "Zupass",
-            process.env.PASSPORT_CLIENT_URL + "/#telegram"
-          )
-        });
-      }
       try {
         // Only process the command if it comes as a private message.
         if (isDirectMessage(ctx) && userId) {
