@@ -1,13 +1,8 @@
 import { Menu } from "@grammyjs/menu";
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
 import { ONE_HOUR_MS, sleep } from "@pcd/util";
-import {
-  ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDPackage
-} from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
-import { Chat, ChatFromGetChat } from "grammy/types";
+import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import {
   deleteTelegramChatTopic,
@@ -17,6 +12,7 @@ import {
   fetchAnonTopicNullifier,
   fetchEventsPerChat,
   fetchLinkedPretixAndTelegramEvents,
+  fetchTelegramAnonTopicById,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
   fetchTelegramTopicsByChatId,
@@ -29,21 +25,21 @@ import {
 } from "../database/queries/telegram/insert";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { chatsToJoin, chatsToPostIn, eventsToLink } from "../util/telegramMenu";
 import {
   BotContext,
   SessionData,
   TopicChat,
   base64EncodeTopicData,
   chatIDsToChats,
-  chatsToJoin,
-  chatsToPostIn,
-  dynamicEvents,
+  chatIsGroup,
   findChatByEventIds,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
-} from "../util/telegramHelpers";
+  senderIsAdmin,
+  verifyZKEdDSAEventTicketPCD
+} from "../util/telegramUtils";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
@@ -85,7 +81,7 @@ export class TelegramService {
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
-    eventsMenu.dynamic(dynamicEvents);
+    eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
 
@@ -549,56 +545,6 @@ export class TelegramService {
     return `https://t.me/${username}`;
   }
 
-  private async verifyZKEdDSAEventTicketPCD(
-    serializedZKEdDSATicket: string
-  ): Promise<ZKEdDSAEventTicketPCD | null> {
-    let pcd: ZKEdDSAEventTicketPCD;
-
-    try {
-      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-        JSON.parse(serializedZKEdDSATicket).pcd
-      );
-    } catch (e) {
-      throw new Error(`Deserialization error, ${e}`);
-    }
-
-    let signerMatch = false;
-
-    if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
-      throw new Error(`Missing server eddsa private key .env value`);
-
-    // This Pubkey value should work for staging + prod as well, but needs to be tested
-    const TICKETING_PUBKEY = await getEdDSAPublicKey(
-      process.env.SERVER_EDDSA_PRIVATE_KEY
-    );
-
-    signerMatch =
-      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-
-    if (
-      // TODO: wrap in a MultiProcessService?
-      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
-      signerMatch
-    ) {
-      return pcd;
-    } else {
-      logger("[TELEGRAM] pcd invalid");
-      return null;
-    }
-  }
-
-  private chatIsGroup(
-    chat: ChatFromGetChat
-  ): chat is Chat.GroupGetChat | Chat.SupergroupGetChat {
-    // Chat must be a group chat of some kind
-    return (
-      chat?.type === "channel" ||
-      chat?.type === "group" ||
-      chat?.type === "supergroup"
-    );
-  }
-
   private async sendToAnonymousChannel(
     groupId: number,
     anonChatId: number,
@@ -663,7 +609,7 @@ export class TelegramService {
     telegramUserId: number
   ): Promise<void> {
     // Verify PCD
-    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
+    const pcd = await verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
 
     if (!pcd) {
       throw new Error(`Could not verify PCD for ${telegramUserId}`);
@@ -708,7 +654,7 @@ export class TelegramService {
 
     logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
 
-    if (!this.chatIsGroup(chat)) {
+    if (!chatIsGroup(chat)) {
       throw new Error(
         `Event is configured with Telegram chat ${chat.id}, which is of incorrect type "${chat.type}"`
       );
@@ -734,7 +680,7 @@ export class TelegramService {
   ): Promise<void> {
     logger("[TELEGRAM] Verifying anonymous message");
 
-    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
+    const pcd = await verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
 
     if (!pcd) {
       throw new Error("Could not verify PCD for anonymous message");
@@ -794,7 +740,7 @@ export class TelegramService {
 
     // The event is linked to a chat. Make sure we can access it.
     const chat = await this.bot.api.getChat(telegramChatId);
-    if (!this.chatIsGroup(chat)) {
+    if (!chatIsGroup(chat)) {
       throw new Error(
         `Events ${validEventIds} is configured with Telegram chat ${telegramChatId}, which is of incorrect type "${chat.type}"`
       );
@@ -867,12 +813,10 @@ export class TelegramService {
     topicId: number
   ): Promise<string> {
     // Confirm that topicId exists and is anonymous
-    const topics = await fetchTelegramAnonTopicsByChatId(
+    const topic = await fetchTelegramAnonTopicById(
       this.context.dbPool,
-      telegramChatId
-    );
-    const topic = topics.find(
-      (t) => t.topic_id === topicId.toString() && t.is_anon_topic
+      telegramChatId,
+      topicId
     );
     if (!topic) throw new Error(`No anonyous topic found`);
 

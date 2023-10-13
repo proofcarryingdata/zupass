@@ -25,7 +25,7 @@ import {
   insertTelegramTopic,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insert";
-import { findChatByEventIds } from "../src/util/telegramHelpers";
+import { findChatByEventIds } from "../src/util/telegramUtils";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 

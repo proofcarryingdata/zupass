@@ -4,7 +4,7 @@ import { logger } from "../../util/logger";
 import {
   closeWebviewHtml,
   errorHtmlWithDetails
-} from "../../util/telegramWebApp";
+} from "../../util/telegramHtml";
 import { checkQueryParam, checkUrlParam } from "../params";
 
 export function initTelegramRoutes(

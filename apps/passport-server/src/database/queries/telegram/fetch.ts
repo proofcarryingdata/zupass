@@ -1,5 +1,11 @@
 import { Pool } from "postgres-pool";
-import { AnonNullifierInfo, TelegramConversation } from "../../models";
+import {
+  AnonNullifierInfo,
+  TelegramAnonChannel,
+  TelegramChat,
+  TelegramConversation,
+  TelegramEvent
+} from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -85,8 +91,6 @@ export async function fetchAnonTopicNullifier(
   );
   return result.rows[0];
 }
-
-import { TelegramAnonChannel, TelegramChat, TelegramEvent } from "../../models";
 
 /**
  * Fetch the list of Telegram conversations from the database.
@@ -192,6 +196,26 @@ export async function fetchTelegramAnonTopicsByChatId(
     [telegramChatId]
   );
   return result.rows;
+}
+
+export async function fetchTelegramAnonTopicById(
+  client: Pool,
+  telegramChatId: number,
+  topicId: number
+): Promise<TelegramAnonChannel | null> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT * 
+    FROM telegram_chat_topics
+    WHERE 
+        telegram_chat_id = $1 AND 
+        topic_id = $2 AND 
+        is_anon_topic IS TRUE;
+    `,
+    [telegramChatId, topicId]
+  );
+  return result.rows[0] ?? null;
 }
 
 export async function fetchTelegramTopicsByChatId(
