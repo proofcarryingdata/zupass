@@ -1,4 +1,5 @@
 import { Pool } from "postgres-pool";
+import { FALLBACK_EVENT_IDS_TO_EVENT_NAME } from "../../../util/constants";
 import { TelegramAnonChannel, TelegramChat, TelegramEvent } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -56,25 +57,29 @@ export async function fetchTelegramEventsByChatId(
 export interface LinkedPretixTelegramEvent {
   telegramChatID: string | null;
   eventName: string;
-  configEventID: string;
+  eventID: string;
 }
 
-export async function fetchLinkedPretixAndTelegramEvents(
+export async function fetchLinkedTelegramEvents(
   client: Pool
 ): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
     SELECT
+      ke.event_id AS "eventID",
       tbe.telegram_chat_id AS "telegramChatID",
-      dpe.event_name AS "eventName",
-      dpe.pretix_events_config_id AS "configEventID" 
-    FROM devconnect_pretix_events_info dpe 
-    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+      dpe.event_name AS "eventName"
+    FROM known_events ke
+    LEFT JOIN devconnect_pretix_events_info dpe ON dpe.pretix_events_config_id = ke.event_id
+    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
     `
   );
 
-  return result.rows;
+  return result.rows.map((row: LinkedPretixTelegramEvent) => ({
+    ...row,
+    eventName: row.eventName || FALLBACK_EVENT_IDS_TO_EVENT_NAME[row.eventID]
+  }));
 }
 
 export interface ChatIDWithEventIDs {

@@ -16,7 +16,7 @@ import {
   ChatIDWithEventIDs,
   LinkedPretixTelegramEvent,
   fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents,
+  fetchLinkedTelegramEvents,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramEventsByChatId,
   fetchUserTelegramChats
@@ -281,11 +281,11 @@ export const dynamicEvents = async (
           if (!event.isLinked) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
             await insertTelegramChat(db, ctx.chat.id);
-            await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
+            await insertTelegramEvent(db, event.eventID, ctx.chat.id);
             await editOrSendMessage(ctx, replyText);
           } else {
             replyText = `<i>Removed ${event.eventName} to chat</i>`;
-            await deleteTelegramEvent(db, event.configEventID);
+            await deleteTelegramEvent(db, event.eventID);
           }
         }
         ctx.session.selectedEvent = undefined;
@@ -303,7 +303,7 @@ export const dynamicEvents = async (
   }
   // Otherwise, display all events to manage.
   else {
-    const events = await fetchLinkedPretixAndTelegramEvents(db);
+    const events = await fetchLinkedTelegramEvents(db);
     const eventsWithGateStatus = events.map((e) => {
       return { ...e, isLinked: e.telegramChatID === ctx.chat?.id.toString() };
     });

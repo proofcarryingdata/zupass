@@ -16,3 +16,8 @@ export const ZUCONNECT_23_VISITOR_PRODUCT_ID =
   "98437d28-0a39-4f40-9f2a-b38bf04cb55d";
 export const ZUCONNECT_23_ORGANIZER_PRODUCT_ID =
   "0179ed5b-f265-417c-aeaa-ac61a525c6b0";
+
+export const FALLBACK_EVENT_IDS_TO_EVENT_NAME: Record<string, string> = {
+  [ZUCONNECT_23_EVENT_ID]: "Zuconnect",
+  [ZUZALU_23_EVENT_ID]: "Zuzalu"
+};

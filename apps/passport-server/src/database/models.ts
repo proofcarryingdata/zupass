@@ -187,6 +187,12 @@ export interface KnownPublicKeyDB {
   public_key: string;
 }
 
+// A known event as represented in the DB. All possible event IDs for all possible
+// ticket types are listed here.
+export interface KnownEvent {
+  event_id: string;
+}
+
 // A known ticket type as represented in the DB. Allows us to match tickets to
 // known combinations of event ID, product ID, and public key.
 export interface KnownTicketType {

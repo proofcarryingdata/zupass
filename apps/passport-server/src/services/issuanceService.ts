@@ -69,6 +69,7 @@ import {
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { setKnownEvent } from "../database/queries/knownEvents";
 import {
   fetchKnownPublicKeys,
   fetchKnownTicketByEventAndProductId,
@@ -1369,6 +1370,9 @@ async function setupKnownTicketTypes(
     KnownPublicKeyType.EdDSA,
     JSON.stringify(eddsaPubKey)
   );
+
+  await setKnownEvent(db, ZUZALU_23_EVENT_ID);
+  await setKnownEvent(db, ZUCONNECT_23_EVENT_ID);
 
   await setKnownTicketType(
     db,

@@ -37,6 +37,7 @@ import {
   fetchEmailToken,
   insertEmailToken
 } from "../src/database/queries/emailToken";
+import { setKnownEvent } from "../src/database/queries/knownEvents";
 import {
   deleteKnownTicketType,
   fetchKnownTicketByEventAndProductId,
@@ -656,45 +657,50 @@ describe("database reads and writes", function () {
   const knownProductId = randomUUID();
   const ticketTypeIdentifier = "ZUCONNECT_TEST";
 
-  step("should be able to insert known ticket type", async function () {
-    const eddsaPubKey = await eddsaPubKeyPromise;
+  step(
+    "should be able to insert known event and ticket type",
+    async function () {
+      const eddsaPubKey = await eddsaPubKeyPromise;
 
-    await setKnownTicketType(
-      db,
-      ticketTypeIdentifier,
-      knownEventId,
-      knownProductId,
-      testPublicKeyName,
-      KnownPublicKeyType.EdDSA,
-      KnownTicketGroup.Zuconnect23
-    );
+      await setKnownEvent(db, knownEventId);
+      await setKnownTicketType(
+        db,
+        ticketTypeIdentifier,
+        knownEventId,
+        knownProductId,
+        testPublicKeyName,
+        KnownPublicKeyType.EdDSA,
+        KnownTicketGroup.Zuconnect23
+      );
 
-    const knownTicketType = (await fetchKnownTicketByEventAndProductId(
-      db,
-      knownEventId,
-      knownProductId
-    )) as KnownTicketTypeWithKey;
+      const knownTicketType = (await fetchKnownTicketByEventAndProductId(
+        db,
+        knownEventId,
+        knownProductId
+      )) as KnownTicketTypeWithKey;
 
-    expect(knownTicketType.event_id).to.eq(knownEventId);
-    expect(knownTicketType.product_id).to.eq(knownProductId);
-    expect(knownTicketType.known_public_key_name).to.eq(testPublicKeyName);
-    expect(knownTicketType.known_public_key_type).to.eq(
-      KnownPublicKeyType.EdDSA
-    );
-    expect(JSON.parse(knownTicketType.public_key)).to.deep.eq(eddsaPubKey);
-    expect(
-      isEqualEdDSAPublicKey(
-        JSON.parse(knownTicketType.public_key) as EdDSAPublicKey,
-        eddsaPubKey
-      )
-    );
-  });
+      expect(knownTicketType.event_id).to.eq(knownEventId);
+      expect(knownTicketType.product_id).to.eq(knownProductId);
+      expect(knownTicketType.known_public_key_name).to.eq(testPublicKeyName);
+      expect(knownTicketType.known_public_key_type).to.eq(
+        KnownPublicKeyType.EdDSA
+      );
+      expect(JSON.parse(knownTicketType.public_key)).to.deep.eq(eddsaPubKey);
+      expect(
+        isEqualEdDSAPublicKey(
+          JSON.parse(knownTicketType.public_key) as EdDSAPublicKey,
+          eddsaPubKey
+        )
+      );
+    }
+  );
 
   step("should be able to replace known ticket type", async function () {
     const eddsaPubKey = await eddsaPubKeyPromise;
     const newProductId = randomUUID(),
       newEventId = randomUUID();
 
+    await setKnownEvent(db, newEventId);
     // Change the ticket type created in the previous test
     await setKnownTicketType(
       db,

@@ -6,6 +6,7 @@ import {
   getDevconnectPretixConfig
 } from "../apis/devconnect/organizer";
 import { fetchDevconnectProducts } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { setKnownEvent } from "../database/queries/knownEvents";
 import {
   deleteKnownTicketType,
   fetchKnownTicketTypesByGroup,
@@ -214,6 +215,7 @@ export class DevconnectPretixSyncService {
     const savedProductIds = [];
 
     for (const product of products) {
+      await setKnownEvent(this.db, product.event_id);
       await setKnownTicketType(
         this.db,
         `sync-${product.product_id}`,
