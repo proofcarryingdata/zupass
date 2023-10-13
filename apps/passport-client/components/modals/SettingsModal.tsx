@@ -4,7 +4,11 @@ import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 
-export function SettingsModal({ isProveScreen }: { isProveScreen: boolean }) {
+export function SettingsModal({
+  isProveOrAddScreen
+}: {
+  isProveOrAddScreen: boolean;
+}) {
   const dispatch = useDispatch();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
@@ -33,7 +37,7 @@ export function SettingsModal({ isProveScreen }: { isProveScreen: boolean }) {
       <CenterColumn>
         <TextCenter>{self.email}</TextCenter>
         <Spacer h={16} />
-        {!isProveScreen && (
+        {!isProveOrAddScreen && (
           <>
             <LinkButton $primary={true} to="/scan">
               Scan Ticket
