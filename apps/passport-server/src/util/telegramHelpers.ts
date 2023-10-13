@@ -363,6 +363,13 @@ export const eventsToLink = async (
     range.text(`Database not connected. Try again...`);
     return;
   }
+  const chatId = ctx.chat?.id;
+  if (!chatId) {
+    {
+      range.text(`No chat id found`);
+      return;
+    }
+  }
   // If an event is selected, give the option to add or remove it from the chat
   // based on if it is already linked or not
   const event = ctx.session.selectedEvent;
@@ -373,18 +380,14 @@ export const eventsToLink = async (
         let replyText = "";
         if (!(await senderIsAdmin(ctx))) return;
 
-        if (!ctx.chat?.id) {
-          await editOrSendMessage(ctx, `Chat Id not found`);
+        if (!event.isLinkedToChat) {
+          replyText = `<i>Added ${event.eventName} from chat</i>`;
+          await insertTelegramChat(db, chatId);
+          await insertTelegramEvent(db, event.configEventID, chatId);
+          await editOrSendMessage(ctx, replyText);
         } else {
-          if (!event.isLinkedToChat) {
-            replyText = `<i>Added ${event.eventName} from chat</i>`;
-            await insertTelegramChat(db, ctx.chat.id);
-            await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
-            await editOrSendMessage(ctx, replyText);
-          } else {
-            replyText = `<i>Removed ${event.eventName} to chat</i>`;
-            await deleteTelegramEvent(db, event.configEventID);
-          }
+          replyText = `<i>Removed ${event.eventName} to chat</i>`;
+          await deleteTelegramEvent(db, event.configEventID);
         }
         ctx.session.selectedEvent = undefined;
         await ctx.menu.update({ immediate: true });
@@ -401,7 +404,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchLinkedPretixAndTelegramEvents(db);
+    const events = await fetchLinkedPretixAndTelegramEvents(db, chatId);
     for (const event of events) {
       range
         .text(

@@ -263,6 +263,7 @@ export class TelegramService {
           throw new Error(`Cannot run setup from an existing topic`);
 
         await ctx.editGeneralForumTopic(adminBotChannel);
+        await ctx.closeGeneralForumTopic();
         const topic = await ctx.createForumTopic(`Announcements`, {
           icon_custom_emoji_id: "5309984423003823246" // 📢
         });
@@ -374,14 +375,20 @@ export class TelegramService {
         topicName,
         false
       );
-      logger(`[TELEGRAM]: Created topic ${topicName} in the db`);
+
+      logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
     });
 
     this.bot.on(":forum_topic_edited", async (ctx) => {
       const topicName = ctx.update?.message?.forum_topic_edited.name;
-      const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
-      if (!chatId || !topicName || !messageThreadId)
+      const messageThreadId = ctx.update.message?.message_thread_id;
+      if (!messageThreadId)
+        return logger(
+          `[TELEGRAM] ignoring edit for general topic ${topicName}`
+        );
+
+      if (!chatId || !topicName)
         throw new Error(`Missing chatId or topic name`);
 
       const topicsForChat = await fetchTelegramTopicsByChatId(
