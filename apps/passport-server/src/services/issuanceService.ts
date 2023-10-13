@@ -60,6 +60,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -1203,40 +1204,87 @@ export class IssuanceService {
       throw new Error("input was not a serialized PCD");
     }
 
-    if (serializedPCD.type !== EdDSATicketPCDPackage.name) {
+    if (
+      serializedPCD.type !== EdDSATicketPCDPackage.name &&
+      serializedPCD.type !== ZKEdDSAEventTicketPCDPackage.name
+    ) {
       throw new Error(
-        `serialized PCD was wrong type, '${serializedPCD.type}' instead of '${EdDSATicketPCDPackage.name}'`
+        `serialized PCD was wrong type, '${serializedPCD.type}' instead of '${EdDSATicketPCDPackage.name}' or '${ZKEdDSAEventTicketPCDPackage.name}'`
       );
     }
 
-    await EdDSATicketPCDPackage.init?.({});
+    let eventId: string;
+    let productId: string;
+    let publicKey: EdDSAPublicKey;
 
-    const pcd = await EdDSATicketPCDPackage.deserialize(serializedPCD.pcd);
+    if (serializedPCD.type === EdDSATicketPCDPackage.name) {
+      const pcd = await EdDSATicketPCDPackage.deserialize(serializedPCD.pcd);
 
-    if (!EdDSATicketPCDPackage.verify(pcd)) {
-      return {
-        success: true,
-        value: { verified: false, message: "Could not verify PCD." }
-      };
+      if (!EdDSATicketPCDPackage.verify(pcd)) {
+        return {
+          success: true,
+          value: { verified: false, message: "Could not verify PCD." }
+        };
+      }
+
+      eventId = pcd.claim.ticket.eventId;
+      productId = pcd.claim.ticket.productId;
+      publicKey = pcd.proof.eddsaPCD.claim.publicKey;
+    } else {
+      const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+
+      if (!ZKEdDSAEventTicketPCDPackage.verify(pcd)) {
+        return {
+          success: true,
+          value: { verified: false, message: "Could not verify PCD." }
+        };
+      }
+
+      if (
+        !(pcd.claim.partialTicket.eventId && pcd.claim.partialTicket.productId)
+      ) {
+        return {
+          success: true,
+          value: {
+            verified: false,
+            message: "PCD does not revent correct fields."
+          }
+        };
+      }
+
+      // The client generates a QR code and keeps it for one minute, so the QR
+      // code might be up to one minute old by the time it is scanned. Two
+      // minutes seems like a reasonably aggressive check.
+      // If the user's clock is wrong by more than a minute, this could make
+      // it hard for them to get a verifiable QR code.
+      if (Date.now() - parseInt(pcd.claim.watermark) > 1000 * 120) {
+        return {
+          success: true,
+          value: {
+            verified: false,
+            message: "PCD watermark has expired."
+          }
+        };
+      }
+
+      eventId = pcd.claim.partialTicket.eventId;
+      productId = pcd.claim.partialTicket.productId;
+      publicKey = pcd.claim.signer;
+
+      logger(eventId, productId, publicKey);
     }
-
-    // PCD has verified, let's see if it's a known ticket
-    const ticket = pcd.claim.ticket;
     const knownTicketType = await fetchKnownTicketByEventAndProductId(
       this.context.dbPool,
-      ticket.eventId,
-      ticket.productId
+      eventId,
+      productId
     );
 
     // If we found a known ticket type, compare public keys
     if (
       knownTicketType &&
-      (knownTicketType.ticket_group === KnownTicketGroup.Zuconnect23 ||
-        knownTicketType.ticket_group === KnownTicketGroup.Zuzalu23) &&
-      isEqualEdDSAPublicKey(
-        JSON.parse(knownTicketType.public_key),
-        pcd.proof.eddsaPCD.claim.publicKey
-      )
+      isEqualEdDSAPublicKey(JSON.parse(knownTicketType.public_key), publicKey)
     ) {
       // We can say that the submitted ticket can be verified as belonging
       // to a known group

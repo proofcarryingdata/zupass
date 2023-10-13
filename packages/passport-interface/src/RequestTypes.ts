@@ -324,7 +324,7 @@ export type VerifyTicketResponseValue =
   | {
       verified: true;
       publicKeyName: string;
-      group: KnownTicketGroup.Zuconnect23 | KnownTicketGroup.Zuzalu23;
+      group: KnownTicketGroup;
     }
   | {
       verified: false;

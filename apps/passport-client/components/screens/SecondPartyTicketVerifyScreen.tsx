@@ -2,6 +2,10 @@ import { EdDSATicketPCD, isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { KnownTicketGroup, requestVerifyTicket } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
+import {
+  ZKEdDSAEventTicketPCD,
+  isZKEdDSAEventTicketPCD
+} from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useQuery } from "../../src/appHooks";
@@ -21,16 +25,16 @@ enum VerifyOutcome {
 
 type VerifyResult =
   | {
-    outcome: VerifyOutcome.KnownTicketType;
-    pcd: EdDSATicketPCD;
-    group: KnownTicketGroup.Zuconnect23 | KnownTicketGroup.Zuzalu23;
-    publicKeyName: string;
-  }
+      outcome: VerifyOutcome.KnownTicketType;
+      pcd: EdDSATicketPCD | ZKEdDSAEventTicketPCD;
+      group: KnownTicketGroup;
+      publicKeyName: string;
+    }
   | {
-    outcome: VerifyOutcome.NotVerified;
-    // For unverified tickets there is an error message
-    message: string;
-  };
+      outcome: VerifyOutcome.NotVerified;
+      // For unverified tickets there is an error message
+      message: string;
+    };
 
 // Shows whether a ticket can be verified, and whether it is a known ticket
 // about which we can show extra information. "Known tickets" are tickets such
@@ -59,9 +63,7 @@ export function SecondPartyTicketVerifyScreen() {
 
   let icon = icons.verifyInProgress;
   if (verifyResult) {
-    if (
-      verifyResult.outcome === VerifyOutcome.NotVerified
-    ) {
+    if (verifyResult.outcome === VerifyOutcome.NotVerified) {
       // The "invalid" icon is used for PCDs which are formally valid but
       // unknown
       icon = icons.verifyInvalid;
@@ -124,14 +126,14 @@ function VerifiedAndKnownTicket({
   publicKeyName,
   category
 }: {
-  pcd: EdDSATicketPCD;
+  pcd: EdDSATicketPCD | ZKEdDSAEventTicketPCD;
   publicKeyName: string;
   category: KnownTicketGroup;
 }) {
   // Supported tickets here are Zuzalu '23 and Zuconnect '23
   // Devconnect tickets have a separate "check-in" flow and never come here.
   if (category === KnownTicketGroup.Zuzalu23) {
-    return <ZuzaluKnownTicketDetails pcd={pcd} publicKeyName={publicKeyName} />;
+    return <ZuzaluKnownTicketDetails publicKeyName={publicKeyName} />;
   } else if (category === KnownTicketGroup.Zuconnect23) {
     return (
       <ZuconnectKnownTicketDetails pcd={pcd} publicKeyName={publicKeyName} />
@@ -163,8 +165,8 @@ async function deserializeAndVerify(
 
     // This check is mostly for the benefit of the TypeScript type-checker
     // If requestVerifyTicket() succeeded then the PCD type must be
-    // EdDSATicketPCD
-    if (isEdDSATicketPCD(pcd)) {
+    // EdDSATicketPCD or ZKEdDSAEventTicketPCD
+    if (isEdDSATicketPCD(pcd) || isZKEdDSAEventTicketPCD(pcd)) {
       if (result.value.verified) {
         return {
           outcome: VerifyOutcome.KnownTicketType,
