@@ -92,7 +92,6 @@ export const errorHtmlWithDetails = (error: Error): string => {
         <span class="description" style="margin-bottom:1rem;">
           ${errorMessage}
         </span>
-        <button class="button contactButton">Message Zucat Support</button>
         <div onclick="toggleErrorStack()" class="button toggleButton" style="display:flex;align-items:center;justify-content:space-between;">
           <span style="font-size:1rem;border:none;background:none;color:rgba(0,0,0,0.5);">Show Error Details (Advanced)</span>
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H11L7.5 10.5L4 6Z" fill="currentColor"></path></svg>
