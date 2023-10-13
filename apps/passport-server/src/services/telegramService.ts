@@ -37,7 +37,7 @@ import {
   chatIDsToChats,
   chatsToJoin,
   chatsToPostIn,
-  dynamicEvents,
+  eventsToLink,
   findChatByEventIds,
   getSessionKey,
   isDirectMessage,
@@ -80,7 +80,7 @@ export class TelegramService {
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
-    eventsMenu.dynamic(dynamicEvents);
+    eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
 
