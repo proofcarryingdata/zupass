@@ -6,7 +6,6 @@ import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
 export function AppContainer({
-  bg,
   children
 }: {
   bg: "primary" | "gray";
