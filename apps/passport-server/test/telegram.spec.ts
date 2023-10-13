@@ -17,7 +17,8 @@ import {
   ChatIDWithEventIDs,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChat,
-  fetchTelegramEventByEventId
+  fetchTelegramEventByEventId,
+  fetchTelegramTopicsByChatId
 } from "../src/database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -223,7 +224,7 @@ describe("telegram bot functionality", function () {
 
   step(
     "fetching a telegram chat via a list of eventIds should work",
-    async () => {
+    async function () {
       const sampleChats: ChatIDWithEventIDs[] = [
         {
           telegramChatID: "chat1",
@@ -271,7 +272,7 @@ describe("telegram bot functionality", function () {
       });
     }
   );
-  step("should be able to add multiple anon channels", async function () {
+  step("should be able to add multiple anon topics", async function () {
     await insertTelegramTopic(db, dummyChatId, anonChannelID, "test", true);
     const insertedAnonTopic = await fetchTelegramAnonTopicsByChatId(
       db,
@@ -294,5 +295,10 @@ describe("telegram bot functionality", function () {
     );
     expect(insertedAnonTopic_1[1]?.topic_id).to.eq(anonChannelID_1.toString());
     expect(insertedAnonTopic_1[1]?.topic_name).to.eq("test1");
+  });
+
+  step("test empty array query", async function () {
+    const badQuery = await fetchTelegramTopicsByChatId(db, 169);
+    expect(badQuery.length).to.eq(0);
   });
 });
