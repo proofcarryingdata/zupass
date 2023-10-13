@@ -57,7 +57,7 @@ const ALLOWED_TICKET_MANAGERS = [
   "chubivan"
 ];
 
-const adminBotChannel = "Admin Central";
+const adminBotChannel = "Admins";
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -263,7 +263,6 @@ export class TelegramService {
           throw new Error(`Cannot run setup from an existing topic`);
 
         await ctx.editGeneralForumTopic(adminBotChannel);
-        await ctx.hideGeneralForumTopic();
         const topic = await ctx.createForumTopic(`Announcements`, {
           icon_custom_emoji_id: "5309984423003823246" // 📢
         });
@@ -436,7 +435,9 @@ export class TelegramService {
       }
 
       if (!(await senderIsAdmin(ctx)))
-        return ctx.reply(`Only admins can run this command`);
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(
