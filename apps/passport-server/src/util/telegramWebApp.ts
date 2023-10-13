@@ -22,6 +22,11 @@ export const closeWebviewHtml = `
   `;
 
 export const errorHtmlWithDetails = (error: Error): string => {
+  const errorMessage = error ? error.message.replace(/\n/g, "<br>") : "";
+  const errorStack =
+    error instanceof Error && error.stack
+      ? error.stack.replace(/\n/g, "<br>")
+      : "";
   return `<!DOCTYPE html>
   <html>
     <head>
@@ -81,12 +86,12 @@ export const errorHtmlWithDetails = (error: Error): string => {
       <div class="container">
         <span class="header">${error.name}</span>
         <span class="description">
-        ${error ? error.message : ""}
+          ${errorMessage}
         </span>
         <button class="contactButton">Message Zucat Support</button>
         <button class="toggleButton" onclick="toggleErrorStack()">Show Error Details (Advanced)</button>
         <span class="errorStack">
-          ${error instanceof Error && error.stack}
+          ${errorStack}
         </span>
       </div>
       <script>

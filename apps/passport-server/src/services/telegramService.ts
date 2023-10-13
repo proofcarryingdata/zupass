@@ -42,6 +42,7 @@ import {
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
+  msToTimeString,
   senderIsAdmin
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
@@ -849,8 +850,18 @@ export class TelegramService {
           newTimestamps
         );
       } else {
+        const nullifierTimeLeft =
+          new Date(
+            nullifierData.message_timestamps[
+              nullifierData.message_timestamps.length - 1
+            ]
+          ).getTime() +
+          rlDuration -
+          Date.now();
         throw new Error(
-          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic. Try posting in another topic, or wait 24 hours.`
+          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic. \n\nTry posting in another topic or wait ${msToTimeString(
+            nullifierTimeLeft
+          )}.`
         );
       }
     }
