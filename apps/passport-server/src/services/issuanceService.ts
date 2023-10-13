@@ -81,6 +81,13 @@ import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetc
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
+import {
+  ZUCONNECT_23_EVENT_ID,
+  ZUZALU_23_EVENT_ID,
+  ZUZALU_23_ORGANIZER_PRODUCT_ID,
+  ZUZALU_23_RESIDENT_PRODUCT_ID,
+  ZUZALU_23_VISITOR_PRODUCT_ID
+} from "../util/constants";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import {
@@ -93,18 +100,6 @@ import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
-
-// Since Zuzalu did not have event or product UUIDs at the time, we can
-// allocate some constant ones now.
-export const ZUZALU_23_RESIDENT_PRODUCT_ID =
-  "5ba4cd9e-893c-4a4a-b15b-cf36ceda1938";
-export const ZUZALU_23_VISITOR_PRODUCT_ID =
-  "53b518ed-e427-4a23-bf36-a6e1e2764256";
-export const ZUZALU_23_ORGANIZER_PRODUCT_ID =
-  "10016d35-40df-4033-a171-7d661ebaccaa";
-export const ZUZALU_23_EVENT_ID = "5de90d09-22db-40ca-b3ae-d934573def8b";
-export const ZUCONNECT_23_EVENT_ID = "91312aa1-5f74-4264-bdeb-f4a3ddb8670c";
-// Zuconnect product IDs are defined in src/util/zuconnectTicket.ts
 
 export class IssuanceService {
   private readonly context: ApplicationContext;

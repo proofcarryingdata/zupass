@@ -15,10 +15,7 @@ import "mocha";
 import MockDate from "mockdate";
 import { SetupServer } from "msw/lib/node";
 import { Pool } from "postgres-pool";
-import {
-  ZuconnectTicket,
-  ZuconnectTripshaAPI
-} from "../src/apis/zuconnect/zuconnectTripshaAPI";
+import { ZuconnectTripshaAPI } from "../src/apis/zuconnect/zuconnectTripshaAPI";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllZuconnectTickets } from "../src/database/queries/zuconnect/fetchZuconnectTickets";
@@ -29,6 +26,7 @@ import { ZuconnectTripshaSyncService } from "../src/services/zuconnectTripshaSyn
 import { Zupass } from "../src/types";
 import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import {
+  MOCK_ZUCONNECT_TRIPSHA_KEY,
   MOCK_ZUCONNECT_TRIPSHA_URL,
   badEmptyResponse,
   badTicketsResponse,
@@ -62,7 +60,10 @@ describe("zuconnect functionality", function () {
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
-      zuconnectTripshaAPI: new ZuconnectTripshaAPI(MOCK_ZUCONNECT_TRIPSHA_URL)
+      zuconnectTripshaAPI: new ZuconnectTripshaAPI(
+        MOCK_ZUCONNECT_TRIPSHA_URL,
+        MOCK_ZUCONNECT_TRIPSHA_KEY
+      )
     });
 
     if (!application.services.zuconnectTripshaSyncService) {
@@ -285,9 +286,9 @@ describe("zuconnect functionality", function () {
 
     userWithTwoTicketsRow = result;
 
-    const extraTicket: ZuconnectTicket = {
+    const extraTicket = {
       ...goodResponse.tickets[4],
-      type: "ZuConnect Organizer Pass",
+      ticketName: "ZuConnect Organizer Pass",
       id: randomUUID()
     };
 

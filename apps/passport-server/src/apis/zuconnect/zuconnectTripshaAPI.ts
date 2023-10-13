@@ -8,6 +8,8 @@ import { logger } from "../../util/logger";
  */
 const TRIPSHA_TICKET_TYPES = [
   "ZuConnect Resident Pass",
+  "1st Week Pass",
+  "ZuConnect Scholarship",
   "ZuConnect Organizer Pass",
   "ZuConnect Visitor Pass"
 ] as const;
@@ -15,14 +17,20 @@ const TRIPSHA_TICKET_TYPES = [
 /**
  * A schema for validating the API response from Tripsha.
  */
-const ZuconnectTripshaSchema = z.object({
-  id: z.string(),
-  email: z.string().email(),
-  // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-  type: z.enum(TRIPSHA_TICKET_TYPES),
-  first: z.string(),
-  last: z.string()
-});
+const ZuconnectTripshaSchema = z
+  .object({
+    id: z.string(),
+    email: z.string().email(),
+    // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
+    ticketName: z.enum(TRIPSHA_TICKET_TYPES),
+    first: z.string(),
+    // Last names are optional
+    last: z.string().default("")
+  })
+  // Handle the logic of name concatenation here
+  .transform(({ first, last, id, ticketName, email }) => {
+    return { id, ticketName, email, fullName: `${first} ${last}`.trim() };
+  });
 
 /**
  * Infer a type from the schema.
@@ -41,9 +49,11 @@ export interface IZuconnectTripshaAPI {
  */
 export class ZuconnectTripshaAPI {
   private readonly baseUrl;
+  private readonly authKey;
 
-  public constructor(baseUrl: string) {
+  public constructor(baseUrl: string, authKey: string) {
     this.baseUrl = baseUrl;
+    this.authKey = authKey;
   }
 
   /**
@@ -52,10 +62,9 @@ export class ZuconnectTripshaAPI {
    * invalid according to the schema {@link ZuconnectTripshaSchema}.
    */
   public async fetchTickets(): Promise<ZuconnectTicket[]> {
-    const url = urljoin(this.baseUrl, "tickets");
+    const url = urljoin(this.baseUrl, "tickets", this.authKey);
     const fetchResult = await fetch(url);
     const data = await fetchResult.json();
-
     const parsed = z
       .object({ tickets: z.array(ZuconnectTripshaSchema) })
       .safeParse(data);
@@ -73,12 +82,15 @@ export class ZuconnectTripshaAPI {
  * expected configuration is not available.
  */
 export function getZuconnectTripshaAPI(): ZuconnectTripshaAPI | null {
-  if (process.env.ZUCONNECT_TRIPSHA_URL) {
-    return new ZuconnectTripshaAPI(process.env.ZUCONNECT_TRIPSHA_URL);
+  if (process.env.ZUCONNECT_TRIPSHA_URL && process.env.ZUCONNECT_TRIPSHA_KEY) {
+    return new ZuconnectTripshaAPI(
+      process.env.ZUCONNECT_TRIPSHA_URL,
+      process.env.ZUCONNECT_TRIPSHA_KEY
+    );
   }
 
   logger(
-    "[ZUCONNECT TRIPSHA] Missing 'ZUCONNECT_TRIPSHA_URL' environment variable"
+    "[ZUCONNECT TRIPSHA] Missing 'ZUCONNECT_TRIPSHA_URL' or 'ZUCONNECT_TRIPSHA_KEY' environment variable"
   );
   return null;
 }

@@ -1,29 +1,44 @@
 import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { ZuconnectTicket } from "../apis/zuconnect/zuconnectTripshaAPI";
+import {
+  ZUCONNECT_23_ORGANIZER_PRODUCT_ID,
+  ZUCONNECT_23_RESIDENT_PRODUCT_ID,
+  ZUCONNECT_23_VISITOR_PRODUCT_ID
+} from "./constants";
 
 /**
  * Maps from ticket "types" from Tripsha to UUIDs, user-facing names, and
  * equivalent Zuzalu roles (for Semaphore Group setup).
  */
 export const ZUCONNECT_PRODUCT_ID_MAPPINGS: {
-  [key in ZuconnectTicket["type"]]: {
+  [key in ZuconnectTicket["ticketName"]]: {
     id: string;
     name: string;
     zuzaluRoleEquivalent: ZuzaluUserRole;
   };
 } = {
   "ZuConnect Resident Pass": {
-    id: "cc9e3650-c29b-4629-b275-6b34fc70b2f9",
+    id: ZUCONNECT_23_RESIDENT_PRODUCT_ID,
+    name: "Resident",
+    zuzaluRoleEquivalent: ZuzaluUserRole.Resident
+  },
+  "ZuConnect Scholarship": {
+    id: ZUCONNECT_23_RESIDENT_PRODUCT_ID,
+    name: "Resident",
+    zuzaluRoleEquivalent: ZuzaluUserRole.Resident
+  },
+  "1st Week Pass": {
+    id: ZUCONNECT_23_RESIDENT_PRODUCT_ID,
     name: "Resident",
     zuzaluRoleEquivalent: ZuzaluUserRole.Resident
   },
   "ZuConnect Organizer Pass": {
-    id: "0179ed5b-f265-417c-aeaa-ac61a525c6b0",
+    id: ZUCONNECT_23_ORGANIZER_PRODUCT_ID,
     name: "Organizer",
     zuzaluRoleEquivalent: ZuzaluUserRole.Organizer
   },
   "ZuConnect Visitor Pass": {
-    id: "98437d28-0a39-4f40-9f2a-b38bf04cb55d",
+    id: ZUCONNECT_23_VISITOR_PRODUCT_ID,
     name: "Visitor",
     zuzaluRoleEquivalent: ZuzaluUserRole.Visitor
   }
