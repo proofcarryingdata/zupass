@@ -48,18 +48,28 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
   ];
 }
 
+/**
+ * Returns the PCD ticket if it exists.
+ */
 export function getEdDSATicketData(
   pcd?: EdDSATicketPCD
 ): ITicketData | undefined {
   return pcd?.claim?.ticket;
 }
 
+/**
+ * Returns the PCD public key if it exists.
+ */
 export function getPublicKey(pcd?: EdDSATicketPCD): EdDSAPublicKey | undefined {
   return pcd?.proof?.eddsaPCD?.claim?.publicKey;
 }
 
 const INVALID_TICKET_QR_CODE_COLOR = "#d3d3d3";
 
+/**
+ * The QR code's color to be shown when a ticket is
+ * not valid, i.e. undefined, consumed or revoked.
+ */
 export function getQRCodeColorOverride(
   pcd: EdDSATicketPCD
 ): string | undefined {
