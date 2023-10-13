@@ -94,25 +94,26 @@ export class FeedSubscriptionManager {
       activeSubscriptions: this.activeSubscriptions
     });
 
+    // Error
     await credentialManager.prepareCredentials(
       this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
     );
-    console.log("Pushing promises");
+    console.log("[DEBUG] Pushing promises");
 
     for (const subscription of this.activeSubscriptions) {
       responsePromises.push(
         this.fetchSingleSubscription(subscription, credentialManager)
       );
     }
-    console.log("Filter through promises", { responsePromises });
+    console.log("[DEBUG] Filter through promises", { responsePromises });
 
     const responses = (await Promise.allSettled(responsePromises))
       .filter(isFulfilled<Awaited<(typeof responsePromises)[number]>>)
       .flatMap((result) => result.value);
 
-    console.log("Emitting", { emitter: this.updatedEmitter });
+    console.log("[DEBUG] Emitting", { emitter: this.updatedEmitter });
     this.updatedEmitter.emit();
-    console.log("Returning");
+    console.log("[DEBUG] Returning");
 
     return responses;
   }

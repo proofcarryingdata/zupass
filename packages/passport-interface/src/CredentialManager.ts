@@ -76,6 +76,7 @@ export class CredentialManager implements CredentialManagerAPI {
    */
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
     for (const req of reqs) {
+      console.log("[DEBUG] Preparing credentials for", req);
       if (!this.getCachedCredential(req.pcdType)) {
         this.setCachedCredential(
           req.pcdType,
@@ -87,6 +88,7 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Get a credential from the local cache, if it exists
   private getCachedCredential(type?: string): SerializedPCD | undefined {
+    console.log("[DEBUG] getting cached credential for", type);
     const cacheKey = type ?? "none";
     const res = this.cache.get(cacheKey);
     if (res) {
