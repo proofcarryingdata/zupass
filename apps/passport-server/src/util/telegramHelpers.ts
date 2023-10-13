@@ -412,9 +412,9 @@ export const eventsToLink = async (
             await ctx.menu.update({ immediate: true });
             let initText = "";
             if (event.isLinkedToChat) {
-              initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
+              initText = `<i>Users with tickets for ${event.eventName} will NOT be able to join this chat</i>`;
             } else {
-              initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
+              initText = `<i>Users with tickets for ${event.eventName} will be able to join this chat</i>`;
             }
             await editOrSendMessage(ctx, initText);
           }
