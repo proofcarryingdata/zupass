@@ -2,6 +2,7 @@ import { wrap, Wrapper } from "@pcd/emitter";
 import {
   CredentialCache,
   FeedSubscriptionManager,
+  LATEST_TERMS,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -98,6 +99,17 @@ export function useUserForcedToLogout(): boolean {
   );
 
   return userForcedToLogout;
+}
+
+export function useUserShouldAgreeNewTerms(): void {
+  const self = useSelf();
+  const dispatch = useDispatch();
+
+  if (self && self.terms_agreed < LATEST_TERMS) {
+    dispatch({
+      type: "prompt-to-agree-terms"
+    });
+  }
 }
 
 export function useIsSyncSettled(): boolean {

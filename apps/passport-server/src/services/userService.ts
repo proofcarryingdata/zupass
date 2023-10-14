@@ -1,13 +1,23 @@
-import { HexString } from "@pcd/passport-crypto";
+import { HexString, getHash } from "@pcd/passport-crypto";
 import {
+  AgreeTermsResult,
   ConfirmEmailResponseValue,
+  LATEST_TERMS,
   ZupassUserJson
 } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
+import { isInteger } from "lodash";
 import { UserRow } from "../database/models";
+import { unredactDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   updateUserAccountRestTimestamps,
+  updateUserAgreeTerms,
   upsertUser
 } from "../database/queries/saveUser";
 import { fetchUserByEmail, fetchUserByUUID } from "../database/queries/users";
@@ -225,7 +235,8 @@ export class UserService {
       email,
       commitment,
       salt,
-      encryptionKey
+      encryptionKey,
+      terms_agreed: LATEST_TERMS
     });
 
     // Reload Merkle trees
@@ -286,6 +297,48 @@ export class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * Updates the version of the legal terms the user agrees to
+   */
+  public async handleAgreeTerms(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<AgreeTermsResult> {
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+      serializedPCD.pcd
+    );
+    if (await SemaphoreSignaturePCDPackage.verify(pcd)) {
+      const payload = JSON.parse(pcd.claim.signedMessage);
+      if (
+        payload.version &&
+        isInteger(payload.version) &&
+        payload.version <= LATEST_TERMS
+      ) {
+        const user = await updateUserAgreeTerms(
+          this.context.dbPool,
+          pcd.claim.identityCommitment,
+          payload.version
+        );
+
+        logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+        await unredactDevconnectPretixTicket(
+          this.context.dbPool,
+          user.email,
+          await getHash(user.email)
+        );
+
+        return {
+          success: true,
+          value: { version: payload.version }
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: "Invalid signature"
+    };
   }
 }
 

@@ -14,6 +14,7 @@ import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
+import { LegalTermsScreen } from "../components/screens/LoginScreens/LegalTermsScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
@@ -153,6 +154,7 @@ function RouterImpl() {
             element={<AlreadyRegisteredScreen />}
           />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
+          <Route path="legal-terms" element={<LegalTermsScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
           <Route

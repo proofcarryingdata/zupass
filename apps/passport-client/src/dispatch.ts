@@ -1,5 +1,6 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  agreeTerms,
   applyActions,
   CredentialManager,
   Feed,
@@ -7,6 +8,7 @@ import {
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
+  LATEST_TERMS,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
@@ -30,6 +32,7 @@ import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadSelf,
+  loadTermsAgreed,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
@@ -106,6 +109,13 @@ export type Action =
   | {
       type: "set-known-ticket-types-and-keys";
       knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
+    }
+  | {
+      type: "terms-agreed";
+      version: number;
+    }
+  | {
+      type: "prompt-to-agree-terms";
     };
 
 export type StateContextState = {
@@ -196,6 +206,10 @@ export async function dispatch(
         update,
         action.knownTicketTypesAndKeys
       );
+    case "terms-agreed":
+      return termsAgreed(state, update, action.version);
+    case "prompt-to-agree-terms":
+      return promptToAgreeTerms(state, update);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -776,4 +790,33 @@ async function setKnownTicketTypesAndKeys(
     knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
     knownPublicKeys: keyMap
   });
+}
+
+function termsAgreed(state: AppState, update: ZuUpdate, version: number) {
+  update({
+    self: { ...state.self, terms_agreed: version },
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false,
+    modal: { modalType: "none" }
+  });
+}
+
+/**
+ * If the `user` object doesn't indicate that the user has agreed to the
+ * latest terms, check local storage in case they've agreed but we failed
+ * to sync it. If so, sync to server. If not, prompt user with an
+ * un-dismissable modal.
+ */
+async function promptToAgreeTerms(state: AppState, update: ZuUpdate) {
+  const cachedTerms = loadTermsAgreed();
+  if (cachedTerms === LATEST_TERMS) {
+    // sync to server
+    await agreeTerms(appConfig.zupassServer, LATEST_TERMS, state.identity);
+  } else {
+    update({
+      modal: {
+        modalType: "legal-terms"
+      }
+    });
+  }
 }

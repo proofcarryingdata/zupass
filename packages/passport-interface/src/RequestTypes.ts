@@ -405,6 +405,7 @@ export interface ZupassUserJson {
   commitment: string;
   email: string;
   salt: string | null;
+  terms_agreed: number;
 }
 
 /**
@@ -582,6 +583,27 @@ export interface KnownTicketTypesAndKeys {
 export type KnownTicketTypesResponseValue = KnownTicketTypesAndKeys;
 
 export type KnownTicketTypesRequest = undefined;
+
+/**
+ * The version of the legal terms being agreed to.
+ */
+export interface AgreeTermsPayload {
+  version: number;
+}
+
+/**
+ * When a user agrees to new legal terms, they send us a signed proof.
+ */
+export interface AgreeTermsRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * After the user agrees to the terms, respond with the terms version recorded.
+ */
+export interface AgreeToTermsResponseValue {
+  version: number;
+}
 
 /**
  * The string the client must sign with the user's semaphore identity

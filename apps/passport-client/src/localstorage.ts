@@ -68,3 +68,12 @@ export function loadIdentity(): Identity | null {
 export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
+
+export function loadTermsAgreed(): number | null {
+  const stored = window.localStorage["agreed_terms"];
+  return stored ? parseInt(stored) : null;
+}
+
+export function saveTermsAgreed(version: number): void {
+  window.localStorage["terms_agreed"] = version.toString();
+}

@@ -45,7 +45,8 @@ export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
       uuid: user.uuid,
       commitment: user.commitment,
       email: user.email,
-      salt: user.salt
+      salt: user.salt,
+      terms_agreed: user.terms_agreed
     } satisfies ZupassUserJson,
     {
       // TODO: remove this once we are sure that

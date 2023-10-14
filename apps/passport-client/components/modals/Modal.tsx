@@ -11,6 +11,7 @@ import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { LegalTermsModal } from "./LegalTerms";
 import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
@@ -65,7 +66,8 @@ function isModalDismissable(modal: AppState["modal"]) {
     "another-device-changed-password",
     "upgrade-account-modal",
     "require-add-password",
-    "confirm-setup-later"
+    "confirm-setup-later",
+    "legal-terms"
   ].includes(modal.modalType);
 }
 
@@ -89,6 +91,8 @@ function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
       return <UpgradeAccountModal />;
     case "require-add-password":
       return <RequireAddPasswordModal />;
+    case "legal-terms":
+      return <LegalTermsModal />;
     case "none":
       return null;
     default:

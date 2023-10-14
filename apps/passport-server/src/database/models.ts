@@ -84,6 +84,17 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   pretix_events_config_id: string;
 }
 
+// A ticket but with no PII
+export interface DevconnectPretixRedactedTicket {
+  hashed_email: string;
+  devconnect_pretix_items_info_id: string;
+  is_consumed: boolean;
+  position_id: string;
+  secret: string;
+  checker: string | null;
+  pretix_checkin_timestamp: Date | null;
+}
+
 export interface DevconnectSuperuser {
   ticket_id: string;
   email: string;
@@ -113,6 +124,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   commitment: string;
   salt: string | null;
   encryption_key: string | null;
+  terms_agreed: number;
 }
 
 export interface UserRow {
@@ -122,6 +134,7 @@ export interface UserRow {
   salt: string | null;
   encryption_key: string | null;
   account_reset_timestamps: string[];
+  terms_agreed: number;
 }
 
 export interface EncryptedStorageModel {

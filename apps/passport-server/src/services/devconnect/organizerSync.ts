@@ -1,3 +1,5 @@
+import { getHash } from "@pcd/passport-crypto";
+import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixCheckinList,
@@ -19,6 +21,10 @@ import {
   PretixItemInfo
 } from "../../database/models";
 import {
+  deleteAllDevconnectPretixRedactedTicketsForProducts,
+  insertDevconnectPretixRedactedTicket
+} from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
+import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectTicketsAwaitingSync
 } from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -36,10 +42,12 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
+import { fetchUsersByAgreedTerms } from "../../database/queries/users";
 import {
   mostRecentCheckinEvent,
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
+import { FEATURES_REQUIRING_TERMS } from "../../util/legalTerms";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
 import { setError, traced } from "../telemetryService";
@@ -87,6 +95,8 @@ export class OrganizerSync {
   private pretixAPI: IDevconnectPretixAPI;
   private db: Pool;
   private _isRunning: boolean;
+  private approvedLegalTermsEmails: Set<string>;
+  private readonly enableRedaction: boolean;
 
   public get isRunning(): boolean {
     return this._isRunning;
@@ -95,12 +105,15 @@ export class OrganizerSync {
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
     pretixAPI: IDevconnectPretixAPI,
-    db: Pool
+    db: Pool,
+    enableRedaction: boolean
   ) {
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
     this.db = db;
     this._isRunning = false;
+    this.approvedLegalTermsEmails = new Set();
+    this.enableRedaction = enableRedaction;
   }
 
   // Conduct a single sync run
@@ -369,6 +382,16 @@ export class OrganizerSync {
     return traced(NAME, "fetchEventData", async () => {
       const { orgURL, token } = organizer;
       const { eventID } = event;
+
+      if (this.enableRedaction) {
+        const usersApprovingPII = await fetchUsersByAgreedTerms(
+          this.db,
+          FEATURES_REQUIRING_TERMS.storePIIFromPretixDevconnectSync
+        );
+        this.approvedLegalTermsEmails = new Set(
+          usersApprovingPII.map((user) => user.email)
+        );
+      }
 
       const settings = await this.pretixAPI.fetchEventSettings(
         orgURL,
@@ -663,8 +686,24 @@ export class OrganizerSync {
           updatedItemsInfo
         );
 
+        let approvedTickets: DevconnectPretixTicket[] = [];
+        let redactedTickets: DevconnectPretixTicket[] = [];
+
+        if (this.enableRedaction) {
+          const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
+            this.approvedLegalTermsEmails.has(ticket.email)
+              ? "approved"
+              : "redacted"
+          );
+
+          approvedTickets = groupedTickets.approved ?? [];
+          redactedTickets = groupedTickets.redacted ?? [];
+        } else {
+          approvedTickets = ticketsFromPretix;
+        }
+
         const newTicketsByPositionId = new Map(
-          ticketsFromPretix.map((t) => [t.position_id, t])
+          approvedTickets.map((t) => [t.position_id, t])
         );
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
@@ -673,7 +712,7 @@ export class OrganizerSync {
         const existingTicketsByPositionId = new Map(
           existingTickets.map((t) => [t.position_id, t])
         );
-        const newTickets = ticketsFromPretix.filter(
+        const newTickets = approvedTickets.filter(
           (t) => !existingTicketsByPositionId.has(t.position_id)
         );
 
@@ -707,7 +746,7 @@ export class OrganizerSync {
 
         // Step 2 of saving: update tickets that have changed
         // Filter to tickets that existed before, and filter to those that have changed.
-        const updatedTickets = ticketsFromPretix
+        const updatedTickets = approvedTickets
           .filter((t) => existingTicketsByPositionId.has(t.position_id))
           .filter((t) => {
             const oldTicket = existingTicketsByPositionId.get(
@@ -787,9 +826,31 @@ export class OrganizerSync {
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
+        if (this.enableRedaction) {
+          // Step 4 of saving: wipe and save redacted tickets
+          await deleteAllDevconnectPretixRedactedTicketsForProducts(
+            this.db,
+            event.activeItemIDs
+          );
+
+          for (const redactedTicket of redactedTickets) {
+            await insertDevconnectPretixRedactedTicket(this.db, {
+              hashed_email: await getHash(redactedTicket.email),
+              position_id: redactedTicket.position_id,
+              checker: redactedTicket.is_consumed ? PRETIX_CHECKER : null,
+              pretix_checkin_timestamp: redactedTicket.pretix_checkin_timestamp,
+              secret: redactedTicket.secret,
+              is_consumed: redactedTicket.is_consumed,
+              devconnect_pretix_items_info_id:
+                redactedTicket.devconnect_pretix_items_info_id
+            });
+          }
+        }
+
         span?.setAttribute("ticketsInserted", newTickets.length);
         span?.setAttribute("ticketsUpdated", updatedTickets.length);
         span?.setAttribute("ticketsDeleted", removedTickets.length);
+        span?.setAttribute("redactedTicketsInserted", redactedTickets.length);
         span?.setAttribute(
           "ticketsTotal",
           existingTickets.length + newTickets.length - removedTickets.length

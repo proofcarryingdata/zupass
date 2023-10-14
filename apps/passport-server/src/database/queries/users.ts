@@ -83,3 +83,20 @@ export async function fetchUserByCommitment(
 
   return result.rows[0];
 }
+
+/**
+ * Fetches users who have agreed to minimum legal terms.
+ */
+export async function fetchUsersByAgreedTerms(
+  client: Pool,
+  version: number
+): Promise<UserRow[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT * FROM users WHERE terms_agreed >= $1`,
+    [version]
+  );
+
+  return result.rows;
+}

@@ -1,5 +1,6 @@
 import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
+import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -32,20 +33,21 @@ export async function upsertUser(
     commitment: string;
     salt?: string;
     encryptionKey?: string;
+    terms_agreed: number;
   }
 ): Promise<string> {
-  const { email, commitment, salt, encryptionKey } = params;
+  const { email, commitment, salt, encryptionKey, terms_agreed } = params;
   logger(
-    `Saving user email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey}`
+    `Saving user email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey} terms_agreed=${terms_agreed}`
   );
 
   const insertResult = await sqlQuery(
     client,
     `\
-INSERT INTO users (uuid, email, commitment, salt, encryption_key)
-VALUES (gen_random_uuid(), $1, $2, $3, $4)
-ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3, encryption_key = $4`,
-    [email, commitment, salt, encryptionKey]
+INSERT INTO users (uuid, email, commitment, salt, encryption_key, terms_agreed)
+VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+ON CONFLICT (email) DO UPDATE SET commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5`,
+    [email, commitment, salt, encryptionKey, terms_agreed]
   );
   const uuidResult = await sqlQuery(
     client,
@@ -66,4 +68,20 @@ WHERE email = $1 AND commitment = $2`,
     `Saved. email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey} has ${stat} uuid=${uuid}`
   );
   return uuid;
+}
+
+export async function updateUserAgreeTerms(
+  client: Pool,
+  commitment: string,
+  version: number
+): Promise<UserRow> {
+  const result = await sqlQuery(
+    client,
+    `
+    UPDATE users SET terms_agreed = $1 WHERE commitment = $2 RETURNING *
+  `,
+    [version, commitment]
+  );
+
+  return result.rows[0];
 }
