@@ -8,12 +8,16 @@ import {
   requestVerifyTicket
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import MockDate from "mockdate";
 import { SetupServer } from "msw/lib/node";
+import path from "path";
 import { Pool } from "postgres-pool";
 import { ZuconnectTripshaAPI } from "../src/apis/zuconnect/zuconnectTripshaAPI";
 import { stopApplication } from "../src/application";
@@ -49,6 +53,15 @@ describe("zuconnect functionality", function () {
   let user: User;
   let ticketPCD: EdDSATicketPCD;
 
+  const zkeyFilePath = path.join(
+    __dirname,
+    `../public/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey`
+  );
+  const wasmFilePath = path.join(
+    __dirname,
+    `../public/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm`
+  );
+
   this.afterEach(async () => {
     server.resetHandlers();
   });
@@ -73,6 +86,12 @@ describe("zuconnect functionality", function () {
 
     zuconnectTripshaSyncService =
       application.services.zuconnectTripshaSyncService;
+
+    await EdDSATicketPCDPackage.init?.({});
+    await ZKEdDSAEventTicketPCDPackage.init?.({
+      zkeyFilePath,
+      wasmFilePath
+    });
   });
 
   this.afterAll(async () => {
@@ -274,6 +293,58 @@ describe("zuconnect functionality", function () {
     const response = await requestVerifyTicket(
       application.expressContext.localEndpoint,
       { pcd: JSON.stringify(serializedPCD) }
+    );
+
+    expect(response?.success).to.be.true;
+    expect(response?.value?.verified).to.be.true;
+  });
+
+  it("should recognize a ZK ticket as known ticket", async () => {
+    const serializedTicketPCD =
+      await EdDSATicketPCDPackage.serialize(ticketPCD);
+
+    const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity
+      })
+    );
+
+    const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
+      ticket: {
+        value: serializedTicketPCD,
+        argumentType: ArgumentTypeName.PCD
+      },
+      identity: {
+        value: serializedIdentityPCD,
+        argumentType: ArgumentTypeName.PCD
+      },
+      fieldsToReveal: {
+        value: {
+          revealTicketId: true,
+          revealEventId: true,
+          revealProductId: true
+        },
+        argumentType: ArgumentTypeName.ToggleList
+      },
+      validEventIds: {
+        value: [ticketPCD.claim.ticket.eventId],
+        argumentType: ArgumentTypeName.StringArray
+      },
+      externalNullifier: {
+        value: undefined,
+        argumentType: ArgumentTypeName.BigInt
+      },
+      watermark: {
+        value: Date.now().toString(),
+        argumentType: ArgumentTypeName.BigInt
+      }
+    });
+
+    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
+
+    const response = await requestVerifyTicket(
+      application.expressContext.localEndpoint,
+      { pcd: JSON.stringify(serializedZKPCD) }
     );
 
     expect(response?.success).to.be.true;
