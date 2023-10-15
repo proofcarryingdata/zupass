@@ -176,6 +176,7 @@ export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
 async function ensureDepsInitialized(): Promise<void> {
   if (!depsInitializedPromise) {
     depsInitializedPromise = (async () => {
+      const start = performance.now();
       const bn128 = await getCurveFromName("bn128", true, null);
       babyJub = new BabyJub(bn128.Fr);
       const pedersenHash = new PedersenHash(babyJub);
@@ -184,6 +185,7 @@ async function ensureDepsInitialized(): Promise<void> {
       const mimcSponge = new MimcSponge(bn128.Fr);
 
       eddsa = new Eddsa(babyJub, pedersenHash, mimc7, poseidon, mimcSponge);
+      console.log(`Initialization took ${performance.now() - start} ms`);
     })();
   }
 
