@@ -1,0 +1,23 @@
+diff --git a/node_modules/circomlibjs/build/main.cjs b/node_modules/circomlibjs/build/main.cjs
+index 41b3edb..d81c710 100644
+--- a/node_modules/circomlibjs/build/main.cjs
++++ b/node_modules/circomlibjs/build/main.cjs
+@@ -1,5 +1,7 @@
+ 'use strict';
+ 
++import { getCurveFromName } from 'ffjavascript';
++
+ Object.defineProperty(exports, '__esModule', { value: true });
+ 
+ var ffjavascript = require('ffjavascript');
+@@ -27388,3 +27390,9 @@ exports.mimc7Contract = mimc7Contract;
+ exports.mimcSpongecontract = mimcSpongecontract;
+ exports.newMemEmptyTrie = newMemEmptyTrie;
+ exports.poseidonContract = poseidonContract;
++exports.BabyJub = BabyJub;
++exports.PedersenHash = PedersenHash;
++exports.Mimc7 = Mimc7;
++exports.MimcSponge = MimcSponge;
++exports.Eddsa = Eddsa;
++exports.getCurveFromName = getCurveFromName;
+\ No newline at end of file

@@ -35,13 +35,21 @@ import {
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
-import JSONBig from "json-bigint";
 import {
   Groth16Proof,
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
+import {
+  BabyJub,
+  Eddsa,
+  Mimc7,
+  MimcSponge,
+  PedersenHash,
+  buildPoseidon,
+  getCurveFromName
+} from "circomlibjs";
+import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -168,8 +176,14 @@ export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
 async function ensureDepsInitialized(): Promise<void> {
   if (!depsInitializedPromise) {
     depsInitializedPromise = (async () => {
-      babyJub = await buildBabyjub();
-      eddsa = await buildEddsa();
+      const bn128 = await getCurveFromName("bn128", true, null);
+      babyJub = new BabyJub(bn128.Fr);
+      const pedersenHash = new PedersenHash(babyJub);
+      const mimc7 = new Mimc7(bn128.Fr);
+      const poseidon = await buildPoseidon();
+      const mimcSponge = new MimcSponge(bn128.Fr);
+
+      eddsa = new Eddsa(babyJub, pedersenHash, mimc7, poseidon, mimcSponge);
     })();
   }
 
@@ -221,9 +235,8 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-    serializedTicketPCD
-  );
+  const deserializedTicket =
+    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD

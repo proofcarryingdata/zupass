@@ -25,7 +25,8 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
-    "knip": "knip --no-gitignore"
+    "knip": "knip --no-gitignore",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",
@@ -41,6 +42,8 @@
   "dependencies": {
     "@changesets/cli": "^2.26.0",
     "@types/react": "^18.0.22",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "turbo": "^1.8.5"
   },
   "resolutions": {

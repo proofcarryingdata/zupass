@@ -1,0 +1,90 @@
+diff --git a/node_modules/@types/circomlibjs/index.d.cts b/node_modules/@types/circomlibjs/index.d.cts
+index 1ead68c..99205da 100644
+--- a/node_modules/@types/circomlibjs/index.d.cts
++++ b/node_modules/@types/circomlibjs/index.d.cts
+@@ -56,7 +56,7 @@ export class SMTMemDb {
+     setRoot(root: BigNumberish): void;
+ }
+ 
+-export interface BabyJub {
++export class BabyJub {
+     F: any; // https://github.com/iden3/ffjavascript/blob/master/src/wasm_field1.js
+     p: bigint;
+     pm1d2: bigint;
+@@ -67,6 +67,8 @@ export interface BabyJub {
+     A: Uint8Array;
+     D: Uint8Array;
+ 
++    constructor(F: any);
++
+     addPoint(a: Point, b: Point): Point;
+ 
+     mulPointEscalar(base: Point, e: BigNumberish): Point;
+@@ -80,10 +82,12 @@ export interface BabyJub {
+     unpackPoint(buff: Uint8Array): Point;
+ }
+ 
+-export interface Mimc7 {
++export class Mimc7 {
+     F: any; // https://github.com/iden3/ffjavascript/blob/master/src/wasm_field1.js
+     cts: Uint8Array[];
+ 
++    constructor(F: any);
++
+     getIV(seed?: string): bigint;
+ 
+     getConstants(seed?: string, nRounds?: number): Uint8Array[];
+@@ -93,10 +97,12 @@ export interface Mimc7 {
+     multiHash(arr: BigNumberish[], key?: BigNumberish): Uint8Array;
+ }
+ 
+-export interface MimcSponge {
++export class MimcSponge {
+     F: any; // https://github.com/iden3/ffjavascript/blob/master/src/wasm_field1.js
+     cts: Uint8Array[];
+ 
++    constructor(F: any);
++
+     getIV(seed?: string): bigint;
+ 
+     getConstants(seed?: string, nRounds?: number): Uint8Array[];
+@@ -106,10 +112,12 @@ export interface MimcSponge {
+     multiHash(arr: BigNumberish[], key?: BigNumberish, numOutputs?: number): Uint8Array;
+ }
+ 
+-export interface PedersenHash {
++export class PedersenHash {
+     babyJub: BabyJub;
+     bases: any[];
+ 
++    constructor(F: any);
++
+     baseHash(type: "blake" | "blake2b", S: any): any;
+ 
+     hash(msg: Uint8Array, options?: { baseHash?: "blake" | "blake2b" }): Uint8Array;
+@@ -121,7 +129,7 @@ export interface PedersenHash {
+     buffer2bits(buff: Uint8Array): boolean[];
+ }
+ 
+-export interface Eddsa {
++export class Eddsa {
+     F: any; // https://github.com/iden3/ffjavascript/blob/master/src/wasm_field1.js
+     babyJub: BabyJub;
+     pedersenHash: PedersenHash;
+@@ -129,6 +137,9 @@ export interface Eddsa {
+     poseidon: Poseidon;
+     mimcSponge: MimcSponge;
+ 
++    constructor(babyJub: BabyJub, pedersenHash: PedersenHash, mimc7: Mimc7,
++        poseidon: Poseidon, mimcSponge: MimcSponge);
++
+     pruneBuffer(buff: Uint8Array): Uint8Array;
+ 
+     prv2pub(prv: any): Point;
+@@ -377,3 +388,5 @@ export namespace poseidonContract {
+ 
+     function generateABI(nInputs: number): any;
+ }
++
++export function getCurveFromName(name: any, singleThread: any, plugins: any): any;
+\ No newline at end of file
