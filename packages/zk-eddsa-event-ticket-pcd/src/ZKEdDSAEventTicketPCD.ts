@@ -35,13 +35,14 @@ import {
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
-import JSONBig from "json-bigint";
 import {
   Groth16Proof,
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
+import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import JSONBig from "json-bigint";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -221,9 +222,8 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-    serializedTicketPCD
-  );
+  const deserializedTicket =
+    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -420,12 +420,14 @@ function claimFromProofResult(
   return claim;
 }
 
-export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicketPCDArgs> {
+export function getProveDisplayOptions(
+  args: ZKEdDSAEventTicketPCDArgs
+): ProveDisplayOptions<ZKEdDSAEventTicketPCDArgs> {
   return {
     defaultArgs: {
       ticket: {
         argumentType: ArgumentTypeName.PCD,
-        description: "Generate a proof for the selected ticket",
+        displayName: "Select Ticket",
         validate(value, params) {
           if (value.type !== EdDSAPCDTypeName || !value.claim) {
             return false;
@@ -460,13 +462,21 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
         validatorParams: {
           eventIds: [],
           productIds: [],
-          notFoundMessage: "You do not have any eligible tickets."
-        }
+          notFoundMessage: "You don't have an eligible ticket."
+        },
+        hideIcon: true,
+        displayOrder: 2
       },
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
         displayName: "",
-        description: "The following information will be revealed"
+        description:
+          args.fieldsToReveal.userProvided ||
+          _.some(_.values(args.fieldsToReveal.value))
+            ? "Requests additional ticket information."
+            : "No other ticket information will be accessed.",
+        hideIcon: true,
+        displayOrder: 1
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
@@ -476,9 +486,17 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
       },
       validEventIds: {
         argumentType: ArgumentTypeName.StringArray,
-        defaultVisible: false,
-        description:
-          "The list of valid event IDs that the ticket can be used for. If this is not provided, the proof will not check the validity of the event ID. When this is provided and event id is not directly revealed, the proof can only be used to prove that the ticket is valid for one of the events in the list."
+        displayName: "",
+        description: args.validEventIds.userProvided
+          ? "Proves that a ticket from one of the following events."
+          : args.validEventIds.value?.length === 1
+          ? "Requests a ticket for the following event."
+          : "Requests a ticket for one of the following events, but the particular event you are attending will remain private.",
+        hideIcon: true,
+        defaultVisible:
+          // hide the value if it's not user-provided and not set
+          args.validEventIds.userProvided || !!args.validEventIds.value?.length,
+        displayOrder: 0
       },
       watermark: {
         argumentType: ArgumentTypeName.BigInt,

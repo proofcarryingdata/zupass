@@ -37,7 +37,6 @@ async function requestProof(
 ) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
-  const revealedFields = {};
 
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
@@ -45,15 +44,11 @@ async function requestProof(
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
       userProvided: true,
-      displayName: "Ticket",
-      description: "",
       validatorParams: {
         eventIds: validEventIds,
         productIds: [],
-        // TODO: surface which event ticket we are looking for
-        notFoundMessage: "You don't have a ticket for this event."
-      },
-      hideIcon: true
+        notFoundMessage: "You don't have an eligible ticket."
+      }
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -63,13 +58,12 @@ async function requestProof(
     },
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
-      value: revealedFields,
-      userProvided: false,
-      description: Object.keys(revealedFields).length
-        ? "The following fields will be revealed"
-        : "No information will be revealed"
+      value: {},
+      userProvided: false
     },
     externalNullifier: {
+      description:
+        "This is a hash that encodes the chatId and topicId of the message you are posting.",
       argumentType: ArgumentTypeName.BigInt,
       value: getAnonTopicNullifier(
         parseInt(chatId),
@@ -83,6 +77,8 @@ async function requestProof(
       userProvided: false
     },
     watermark: {
+      description:
+        "This is the hash of the message you are posting. Zucat uses this to make sure the same proof cannot be used to post other messages.",
       argumentType: ArgumentTypeName.BigInt,
       value: watermark,
       userProvided: false

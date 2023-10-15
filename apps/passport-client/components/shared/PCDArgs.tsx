@@ -53,7 +53,10 @@ export function PCDArgs<T extends PCDPackage>({
 }) {
   const [showAll, setShowAll] = useState(false);
   const [visible, hidden] = _.partition(
-    Object.entries(args),
+    _.orderBy(Object.entries(args), [
+      ([key]) => options?.[key]?.displayOrder ?? Number.MAX_VALUE,
+      ([key]) => key
+    ]),
     ([key]) => options?.[key]?.defaultVisible ?? true
   );
 

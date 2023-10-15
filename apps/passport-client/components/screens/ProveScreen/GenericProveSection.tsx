@@ -112,7 +112,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       <PCDArgs
         args={args}
         setArgs={setArgs}
-        options={pcdPackage.getProveDisplayOptions?.()?.defaultArgs}
+        options={pcdPackage.getProveDisplayOptions?.(args)?.defaultArgs}
       />
 
       {error && <ErrorContainer>{error}</ErrorContainer>}

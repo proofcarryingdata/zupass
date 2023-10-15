@@ -110,7 +110,7 @@ export interface PCDPackage<
    * Given the arguments passed into {@link PCDPackage#prove}, returns options on how
    * to render the Prove Screen for this {@link PCDPackage}.
    */
-  getProveDisplayOptions?: () => ProveDisplayOptions<A>;
+  getProveDisplayOptions?: (args: A) => ProveDisplayOptions<A>;
 
   /**
    * This is effectively a factory for instances of the {@link PCD} that this {@link PCDPackage}
@@ -232,6 +232,10 @@ export interface Argument<
    * proactive filtering of options, such as PCDs, in the UI.
    */
   validatorParams?: ValidatorParams;
+  /**
+   * Order of the argument in the UI. Lower numbers are displayed first. If two arguments have the same order, they are displayed in alphabetical order. Unspecified arguments are displayed last.
+   */
+  displayOrder?: number;
 }
 
 /**

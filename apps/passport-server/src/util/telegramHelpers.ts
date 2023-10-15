@@ -267,15 +267,11 @@ const generateProofUrl = (
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
       userProvided: true,
-      displayName: "Your Ticket",
-      description: "",
       validatorParams: {
         eventIds: validEventIds,
         productIds: [],
-        // TODO: surface which event ticket we are looking for
-        notFoundMessage: "You don't have a ticket to this event."
-      },
-      hideIcon: true
+        notFoundMessage: "You don't have an eligible ticket."
+      }
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -286,8 +282,7 @@ const generateProofUrl = (
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: fieldsToReveal,
-      userProvided: false,
-      hideIcon: true
+      userProvided: false
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
@@ -303,7 +298,8 @@ const generateProofUrl = (
       argumentType: ArgumentTypeName.BigInt,
       value: telegramUserId.toString(),
       userProvided: false,
-      description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+      description:
+        "This encodes your Telegram user ID so that the proof can grant only you access to the TG group."
     }
   };
 
@@ -320,7 +316,7 @@ const generateProofUrl = (
     genericProveScreen: true,
     title: "",
     description:
-      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+      "Zucat requests a zero-knowledge proof of your ticket for Telegram group invitation. Only specific details are revealed while personal information like ticket ID and email remains confidential, viewable only by you."
   });
   return proofUrl;
 };
