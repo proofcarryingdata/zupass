@@ -130,8 +130,8 @@ function VerifiedAndKnownTicket({
   publicKeyName: string;
   category: KnownTicketGroup;
 }) {
-  // Supported tickets here are Zuzalu '23 and Zuconnect '23
-  // Devconnect tickets have a separate "check-in" flow and never come here.
+  // Devconnect tickets with the "simple" QR code have a separate "check-in"
+  // flow and never come here.
   if (category === KnownTicketGroup.Zuzalu23) {
     return <ZuzaluKnownTicketDetails publicKeyName={publicKeyName} />;
   } else if (category === KnownTicketGroup.Zuconnect23) {

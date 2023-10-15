@@ -12,19 +12,23 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback } from "react";
 import styled from "styled-components";
-import { useIdentity } from "../../../src/appHooks";
+import { usePCDCollection } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
 import { icons } from "../../icons";
 
+/**
+ * Generates a ZK proof and uses this to generate the QR code.
+ * This overrides the normal rendering of an EdDSATicketPCD, and is
+ * done here to avoid circular dependencies between EdDSATicketPCD and
+ * ZKEdDSAEventTicketPCD.
+ */
 function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
-  const identity = useIdentity();
+  const pcds = usePCDCollection();
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
     const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({
-        identity
-      })
+      pcds.getPCDsByType(SemaphoreIdentityPCDPackage.name)[0]
     );
     const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
       ticket: {
@@ -61,7 +65,7 @@ function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
       encodeQRPayload(JSON.stringify(serializedZKPCD))
     );
     return verificationLink;
-  }, [identity, pcd]);
+  }, [pcd, pcds]);
 
   return (
     <QRDisplayWithRegenerateAndStorage

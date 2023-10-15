@@ -12,7 +12,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { useIdentity } from "../../../src/appHooks";
+import { usePCDCollection } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
@@ -32,17 +32,22 @@ function Shades() {
   );
 }
 
+/**
+ * Renders a QR code. Can render either the simple QR code with the ticket ID
+ * for check-in, or a ZK QR code which (currently) goes to the "verify" screen.
+ * We might want this to go to the check-in screen, but this raises some
+ * interesting questions about what to do when attendees start scanning each
+ * other's ZK QR codes.
+ */
 function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
-  const identity = useIdentity();
+  const pcds = usePCDCollection();
 
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     if (zk) {
       const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
       const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({
-          identity
-        })
+        pcds.getPCDsByType(SemaphoreIdentityPCDPackage.name)[0]
       );
       const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
         ticket: {
@@ -84,15 +89,19 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
       const verificationLink = makeTicketIdVerifyLink(ticketId);
       return verificationLink;
     }
-  }, [identity, pcd, zk]);
+  }, [pcd, pcds, zk]);
 
   if (zk) {
     return (
       <QRDisplayWithRegenerateAndStorage
+        // Key is necessary so that React notices that this isn't the non-ZK
+        // QR code component.
         key={`zk-${pcd.id}`}
         generateQRPayload={generate}
         loadedLogo={<Shades />}
         maxAgeMs={1000 * 60}
+        // QR codes are cached by ID, so we need to distinguish the ZK version
+        // by this prefix.
         uniqueId={`zk-${pcd.id}`}
         fgColor={getQRCodeColorOverride(pcd)}
       />

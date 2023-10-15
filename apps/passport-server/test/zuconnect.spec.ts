@@ -320,7 +320,6 @@ describe("zuconnect functionality", function () {
       },
       fieldsToReveal: {
         value: {
-          revealTicketId: true,
           revealEventId: true,
           revealProductId: true
         },

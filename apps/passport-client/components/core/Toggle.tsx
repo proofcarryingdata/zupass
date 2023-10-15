@@ -44,6 +44,10 @@ const Input = styled.input`
   }
 `;
 
+/**
+ * A simple toggle-switch React component. Internally implemented as a
+ * checkbox, but rendered as an animated sliding toggle.
+ */
 export const ToggleSwitch = ({
   label,
   checked,
