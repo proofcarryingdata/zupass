@@ -61,7 +61,7 @@ const adminBotChannel = "Admins";
 
 export class TelegramService {
   private context: ApplicationContext;
-  private bot: Bot<BotContext>;
+  private authBot: Bot<BotContext>;
   private anonBot: Bot<BotContext>;
   private rollbarService: RollbarService | null;
   private anonBotExists: boolean;
@@ -69,16 +69,16 @@ export class TelegramService {
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
-    bot: Bot<BotContext>,
+    authBot: Bot<BotContext>,
     anonBot: Bot<BotContext>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.bot = bot;
+    this.authBot = authBot;
     this.anonBot = anonBot;
-    this.anonBotExists = bot.botInfo.id !== anonBot.botInfo.id;
+    this.anonBotExists = authBot.botInfo.id !== anonBot.botInfo.id;
 
-    setBotInfo(bot, anonBot, this.anonBotExists);
+    setBotInfo(authBot, anonBot, this.anonBotExists);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -90,18 +90,18 @@ export class TelegramService {
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
 
-    this.bot.use(eventsMenu);
-    this.bot.use(zupassMenu);
+    this.authBot.use(eventsMenu);
+    this.authBot.use(zupassMenu);
     this.anonBot.use(anonSendMenu);
 
-    // Users gain access to gated chats by requesting to join. The bot
+    // Users gain access to gated chats by requesting to join. The authBot
     // receives a notification of this, and will approve requests from
     // users who have verified their possession of a matching PCD.
     // Approval of the join request is required even for users with the
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
 
-    this.bot.on("chat_join_request", async (ctx) => {
+    this.authBot.on("chat_join_request", async (ctx) => {
       const userId = ctx.chatJoinRequest.user_chat_id;
 
       try {
@@ -121,14 +121,14 @@ export class TelegramService {
           );
           const chat = await getGroupChat(ctx.api, chatId);
 
-          await this.bot.api.sendMessage(
+          await this.authBot.api.sendMessage(
             userId,
             `<i>Verifying and inviting...</i>`,
             { parse_mode: "HTML" }
           );
-          await this.bot.api.approveChatJoinRequest(chatId, userId);
+          await this.authBot.api.approveChatJoinRequest(chatId, userId);
           if (ctx.chatJoinRequest?.invite_link?.invite_link) {
-            await this.bot.api.sendMessage(userId, `Congrats!`, {
+            await this.authBot.api.sendMessage(userId, `Congrats!`, {
               reply_markup: new InlineKeyboard().url(
                 `Go to ${chat?.title} `,
                 ctx.chatJoinRequest.invite_link.invite_link
@@ -136,20 +136,20 @@ export class TelegramService {
               parse_mode: "HTML"
             });
           } else {
-            await this.bot.api.sendMessage(
+            await this.authBot.api.sendMessage(
               userId,
               `Congrats! ${chat?.title} should now appear at the top of your list
                of Chats.\nYou can also click the above button.`
             );
           }
         } else {
-          await this.bot.api.sendMessage(
+          await this.authBot.api.sendMessage(
             userId,
             `You are not verified. Try again with the /start command.`
           );
         }
       } catch (e) {
-        await this.bot.api.sendMessage(userId, `Error joining: ${e}`);
+        await this.authBot.api.sendMessage(userId, `Error joining: ${e}`);
         logger("[TELEGRAM] chat_join_request error", e);
         this.rollbarService?.reportError(e);
       }
@@ -157,7 +157,7 @@ export class TelegramService {
 
     // When a user joins the channel, remove their verification, so they
     // cannot rejoin without verifying again.
-    this.bot.on("chat_member", async (ctx) => {
+    this.authBot.on("chat_member", async (ctx) => {
       try {
         const newMember = ctx.update.chat_member.new_chat_member;
         if (newMember.status === "left" || newMember.status === "kicked") {
@@ -171,7 +171,7 @@ export class TelegramService {
           );
           const chat = await getGroupChat(ctx.api, ctx.chat.id);
           const userId = newMember.user.id;
-          await this.bot.api.sendMessage(
+          await this.authBot.api.sendMessage(
             userId,
             `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
             { parse_mode: "HTML" }
@@ -184,7 +184,7 @@ export class TelegramService {
     });
 
     // The "start" command initiates the process of invitation and approval.
-    this.bot.command("start", async (ctx) => {
+    this.authBot.command("start", async (ctx) => {
       const userId = ctx?.from?.id;
       try {
         // Only process the command if it comes as a private message.
@@ -204,7 +204,7 @@ export class TelegramService {
     });
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
-    this.bot.command("manage", async (ctx) => {
+    this.authBot.command("manage", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
 
       try {
@@ -233,7 +233,7 @@ export class TelegramService {
           });
 
         const botIsAdmin = admins.some(
-          (admin) => admin.user.id === this.bot.botInfo.id
+          (admin) => admin.user.id === this.authBot.botInfo.id
         );
         if (!botIsAdmin) {
           await ctx.reply(
@@ -257,7 +257,7 @@ export class TelegramService {
       }
     });
 
-    this.bot.command("setup", async (ctx) => {
+    this.authBot.command("setup", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
       try {
         if (!isGroupWithTopics(ctx.chat)) {
@@ -280,7 +280,7 @@ export class TelegramService {
       }
     });
 
-    this.bot.command("adminhelp", async (ctx) => {
+    this.authBot.command("adminhelp", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
       const admins = await ctx.getChatAdministrators();
 
@@ -341,7 +341,7 @@ export class TelegramService {
       });
     });
 
-    this.bot.command("help", async (ctx) => {
+    this.authBot.command("help", async (ctx) => {
       // TODO: Link to troubleshooting guide
       await ctx.reply(
         `Please email passport@0xparc.org if you have any additional issues`
@@ -363,7 +363,7 @@ export class TelegramService {
       });
     });
 
-    this.bot.on(":forum_topic_created", async (ctx) => {
+    this.authBot.on(":forum_topic_created", async (ctx) => {
       const topicName = ctx.update?.message?.forum_topic_created.name;
       const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
@@ -382,7 +382,7 @@ export class TelegramService {
       logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
     });
 
-    this.bot.on(":forum_topic_edited", async (ctx) => {
+    this.authBot.on(":forum_topic_edited", async (ctx) => {
       const topicName = ctx.update?.message?.forum_topic_edited.name;
       const chatId = ctx.chat.id;
       const messageThreadId = ctx.update.message?.message_thread_id;
@@ -522,27 +522,29 @@ export class TelegramService {
   }
 
   /**
-   * Telegram does not allow two instances of a bot to be running at once.
+   * Telegram does not allow two instances of a authBot to be running at once.
    * During deployment, a new instance of the app will be started before the
    * old one is shut down, so we might end up with two instances running at
-   * the same time. This method allows us to delay starting the bot by an
+   * the same time. This method allows us to delay starting the authBot by an
    * amount configurable per-environment.
    *
-   * Since this function awaits on bot.start(), it will likely be very long-
+   * Since this function awaits on authBot.start(), it will likely be very long-
    * lived.
    */
-  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
+  public async startBot(authBot: Bot<BotContext, Api<RawApi>>): Promise<void> {
     const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
     if (startDelay > 0) {
-      logger(`[TELEGRAM] Delaying bot startup by ${startDelay} milliseconds`);
+      logger(
+        `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
+      );
       await sleep(startDelay);
     }
 
-    logger(`[TELEGRAM] Starting bot`);
+    logger(`[TELEGRAM] Starting authBot`);
 
     try {
-      // This will not resolve while the bot remains running.
-      await bot.start({
+      // This will not resolve while the authBot remains running.
+      await authBot.start({
         allowed_updates: [
           "chat_join_request",
           "chat_member",
@@ -550,11 +552,11 @@ export class TelegramService {
           "callback_query"
         ],
         onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+          logger(`[TELEGRAM] Started authBot '${info.username}' successfully!`);
         }
       });
     } catch (e) {
-      logger(`[TELEGRAM] Error starting bot`, e);
+      logger(`[TELEGRAM] Error starting authBot`, e);
       this.rollbarService?.reportError(e);
     }
   }
@@ -628,16 +630,16 @@ export class TelegramService {
     chat: Chat.SupergroupChat
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
-    // trigger a "join request", which the bot will respond to.
+    // trigger a "join request", which the authBot will respond to.
 
     logger(
       `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
     );
-    const inviteLink = await this.bot.api.createChatInviteLink(chat.id, {
+    const inviteLink = await this.authBot.api.createChatInviteLink(chat.id, {
       creates_join_request: true,
       name: `${Date.now().toLocaleString()}`
     });
-    await this.bot.api.sendMessage(
+    await this.authBot.api.sendMessage(
       userId,
       `You've proved that you have a ticket to <b>${chat.title}</b>!\nPress this button to send your proof and join the group`,
       {
@@ -703,7 +705,7 @@ export class TelegramService {
         )}, which have no matching chat`
       );
     }
-    const chat = await getGroupChat(this.bot.api, telegramChatId);
+    const chat = await getGroupChat(this.authBot.api, telegramChatId);
 
     logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
 
@@ -782,7 +784,7 @@ export class TelegramService {
     }
 
     // The event is linked to a chat. Make sure we can access it.
-    const chat = await getGroupChat(this.bot.api, telegramChatId);
+    const chat = await getGroupChat(this.anonBot.api, telegramChatId);
 
     if (!nullifierHash) throw new Error(`Nullifier hash not found`);
 
@@ -880,7 +882,7 @@ export class TelegramService {
   }
 
   public stop(): void {
-    this.bot.stop();
+    this.authBot.stop();
   }
 }
 
@@ -900,16 +902,16 @@ export async function startTelegramService(
   }
 
   const createBot = (token: string): Bot<BotContext, Api<RawApi>> => {
-    const bot = new Bot<BotContext>(token);
+    const authBot = new Bot<BotContext>(token);
     const initial = (): SessionData => ({
       dbPool: context.dbPool,
       anonBotExists
     });
 
-    bot.use(session({ initial, getSessionKey }));
-    bot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
+    authBot.use(session({ initial, getSessionKey }));
+    authBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
 
-    return bot;
+    return authBot;
   };
 
   const mainBot = createBot(botToken);
@@ -918,7 +920,7 @@ export async function startTelegramService(
   let anonBot: Bot<BotContext>;
 
   if (anonBotExists) {
-    logger(`[TELEGRAM] found anon bot`);
+    logger(`[TELEGRAM] found anon authBot`);
     anonBot = createBot(anonBotToken);
     await anonBot.init();
   } else {
