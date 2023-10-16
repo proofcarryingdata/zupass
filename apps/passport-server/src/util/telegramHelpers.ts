@@ -47,6 +47,8 @@ export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent;
   anonBotExists: boolean;
+  authBotURL: string;
+  anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
 }
@@ -626,7 +628,7 @@ export const chatsToPostIn = async (
       } else {
         if (ctx.session.anonBotExists) {
           ctx.reply(
-            `No chats found to post in. Click here to join one: https://t.me/zucat_bot?start=zucat`
+            `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
           );
         } else {
           ctx.reply(`No chats found to post in. Type /start to join one!`);

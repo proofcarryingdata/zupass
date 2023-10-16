@@ -39,6 +39,7 @@ import {
   chatsToPostIn,
   eventsToLink,
   findChatByEventIds,
+  getBotURL,
   getGroupChat,
   getSessionKey,
   isDirectMessage,
@@ -362,6 +363,30 @@ export class TelegramService {
         reply_markup: anonSendMenu
       });
     });
+
+    // Edge case logic to handle routing people between bots
+    if (this.anonBotExists) {
+      this.authBot.command("anonsend", async (ctx) => {
+        await ctx.reply(
+          `Command only available here: ${ctx.session.anonBotURL}?start=anonsend`
+        );
+      });
+
+      this.anonBot.command("start", async (ctx) => {
+        if (!isDirectMessage(ctx)) {
+          const messageThreadId = ctx.message?.message_thread_id;
+
+          await ctx.reply("Please message directly within a private chat.", {
+            message_thread_id: messageThreadId
+          });
+          return;
+        }
+
+        await ctx.reply("Choose a chat to post in anonymously ⬇", {
+          reply_markup: anonSendMenu
+        });
+      });
+    }
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
       const topicName = ctx.update?.message?.forum_topic_created.name;
@@ -901,40 +926,45 @@ export async function startTelegramService(
     return null;
   }
 
-  const createBot = (token: string): Bot<BotContext, Api<RawApi>> => {
-    const authBot = new Bot<BotContext>(token);
-    const initial = (): SessionData => ({
-      dbPool: context.dbPool,
-      anonBotExists
-    });
-
-    authBot.use(session({ initial, getSessionKey }));
-    authBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
-
-    return authBot;
-  };
-
-  const mainBot = createBot(botToken);
-  await mainBot.init();
-
+  // Initialize bots
+  const authBot = new Bot<BotContext>(botToken);
+  await authBot.init();
+  const authBotURL = await getBotURL(authBot);
   let anonBot: Bot<BotContext>;
+  let anonBotURL: string;
 
   if (anonBotExists) {
-    logger(`[TELEGRAM] found anon authBot`);
-    anonBot = createBot(anonBotToken);
+    anonBot = new Bot<BotContext>(anonBotToken);
     await anonBot.init();
+    anonBotURL = await getBotURL(anonBot);
   } else {
-    anonBot = mainBot;
+    anonBot = authBot;
+    anonBotURL = authBotURL;
   }
+
+  // Start sessions
+  const initial = (): SessionData => ({
+    dbPool: context.dbPool,
+    anonBotExists,
+    authBotURL,
+    anonBotURL
+  });
+
+  if (anonBotExists) {
+    anonBot.use(session({ initial, getSessionKey }));
+    anonBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
+  }
+  authBot.use(session({ initial, getSessionKey }));
+  authBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
 
   const service = new TelegramService(
     context,
     rollbarService,
-    mainBot,
+    authBot,
     anonBot
   );
 
-  service.startBot(mainBot);
+  service.startBot(authBot);
   if (anonBotExists) {
     service.startBot(anonBot);
   }
