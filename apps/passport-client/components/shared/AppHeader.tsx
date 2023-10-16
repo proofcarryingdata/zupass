@@ -9,10 +9,15 @@ export const AppHeader = React.memo(AppHeaderImpl);
 
 function AppHeaderImpl({
   children,
-  isProveOrAddScreen = false
+  isProveOrAddScreen = false,
+  start
 }: {
   children?: React.ReactNode;
   isProveOrAddScreen?: boolean;
+  /**
+   * A React node to render on the left side of the header. If not provided, a default Info button will be rendered.
+   */
+  start?: React.ReactNode;
 }) {
   const dispatch = useDispatch();
 
@@ -40,9 +45,16 @@ function AppHeaderImpl({
 
   return (
     <AppHeaderWrap>
-      <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <img draggable="false" src={icons.infoAccent} width={34} height={34} />
-      </CircleButton>
+      {start ?? (
+        <CircleButton diameter={34} padding={8} onClick={openInfo}>
+          <img
+            draggable="false"
+            src={icons.infoAccent}
+            width={34}
+            height={34}
+          />
+        </CircleButton>
+      )}
       {children}
       {!isProveOrAddScreen && (
         <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>

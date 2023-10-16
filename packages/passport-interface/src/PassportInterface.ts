@@ -15,6 +15,7 @@ export interface PCDRequest {
 
 export interface ProveOptions {
   genericProveScreen?: boolean;
+  iconSrc?: string;
   title?: string;
   description?: string;
   debug?: boolean;
