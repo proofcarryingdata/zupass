@@ -1,18 +1,7 @@
+import { ZUCONNECT_TICKET_NAMES } from "@pcd/passport-interface";
 import urljoin from "url-join";
 import { z } from "zod";
 import { logger } from "../../util/logger";
-
-/**
- * These are the ticket "types" we get back from the Tripsha API.
- * @todo confirm these as final.
- */
-const TRIPSHA_TICKET_TYPES = [
-  "ZuConnect Resident Pass",
-  "1st Week Pass",
-  "ZuConnect Scholarship",
-  "ZuConnect Organizer Pass",
-  "ZuConnect Visitor Pass"
-] as const;
 
 /**
  * A schema for validating the API response from Tripsha.
@@ -21,7 +10,7 @@ const ZuconnectTripshaSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-  ticketName: z.enum(TRIPSHA_TICKET_TYPES),
+  ticketName: z.enum(ZUCONNECT_TICKET_NAMES),
   first: z.string(),
   // Last names might be undefined or null
   last: z
