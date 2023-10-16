@@ -771,14 +771,13 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
     );
 
-    const anonTopic = await fetchTelegramTopic(
+    const topic = await fetchTelegramTopic(
       this.context.dbPool,
       parseInt(telegramChatId),
-      parseInt(topicId),
-      true // only search for anon topics
+      parseInt(topicId)
     );
 
-    if (!anonTopic) {
+    if (!topic || !topic.is_anon_topic) {
       throw new Error(`this group doesn't have any anon topics`);
     }
 
@@ -836,7 +835,7 @@ export class TelegramService {
 
     await this.sendToAnonymousChannel(
       chat.id,
-      parseInt(anonTopic.topic_id),
+      parseInt(topic.topic_id),
       message
     );
   }
