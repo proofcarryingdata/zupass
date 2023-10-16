@@ -521,6 +521,7 @@ export const chatsToJoin = async (
     ctx,
     userId
   );
+
   if (chatsWithMembership.length === 0) {
     range.text(`No groups to join at this time`);
     return;
