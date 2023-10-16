@@ -1,5 +1,13 @@
 import { Pool } from "postgres-pool";
-import { TelegramChat, TelegramEvent, TelegramTopic } from "../../models";
+import {
+  ChatIDWithEventIDs,
+  ChatIDWithEventsAndMembership,
+  LinkedPretixTelegramEvent,
+  TelegramChat,
+  TelegramEvent,
+  TelegramTopic,
+  UserIDWithChatIDs
+} from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -53,14 +61,7 @@ export async function fetchTelegramEventsByChatId(
   return result.rows;
 }
 
-export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
-  eventName: string;
-  configEventID: string;
-  isLinkedToCurrentChat: boolean;
-}
-
-export async function fetchAllTelegramChats(
+export async function fetchEventsWithTelegramChats(
   client: Pool,
   currentTelegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
@@ -81,15 +82,6 @@ export async function fetchAllTelegramChats(
   );
 
   return result.rows;
-}
-
-export interface ChatIDWithEventIDs {
-  telegramChatID: string;
-  ticketEventIds: string[];
-}
-export interface UserIDWithChatIDs {
-  telegramUserID: string;
-  telegramChatIDs: string[];
 }
 
 export async function fetchEventsPerChat(
@@ -160,10 +152,6 @@ export async function fetchUserTelegramChats(
   );
   return result.rows[0] ?? null;
 }
-
-export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
-  isChatMember: boolean;
-};
 
 // Fetch a list of Telegram chats that can be joined with the status of user
 // The list is sorted such that chat a user hasn't joined are returned first

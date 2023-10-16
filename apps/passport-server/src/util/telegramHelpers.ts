@@ -16,11 +16,13 @@ import {
   ChatMemberOwner
 } from "grammy/types";
 import { Pool } from "postgres-pool";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
-  LinkedPretixTelegramEvent,
+  LinkedPretixTelegramEvent
+} from "../database/models";
+import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import {
   fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChatsWithMembershipStatus,

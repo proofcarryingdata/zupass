@@ -4,6 +4,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
+import { ChatIDWithEventIDs } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   getAllOrganizers,
@@ -14,7 +15,6 @@ import { upsertUser } from "../src/database/queries/saveUser";
 import { deleteTelegramVerification } from "../src/database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../src/database/queries/telegram/fetchTelegramConversation";
 import {
-  ChatIDWithEventIDs,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChat,
   fetchTelegramEventByEventId,
