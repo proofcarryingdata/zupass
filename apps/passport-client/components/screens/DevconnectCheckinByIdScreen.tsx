@@ -1,8 +1,8 @@
 import {
   checkinTicketById,
+  checkTicketById,
   CheckTicketByIdResponseValue,
   CheckTicketByIdResult,
-  requestCheckTicketById,
   TicketError
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
@@ -49,7 +49,7 @@ export function DevconnectCheckinByIdScreen() {
   return <>{content}</>;
 }
 
-function TicketError({ error }: { error: TicketError }) {
+function TicketErrorContent({ error }: { error: TicketError }) {
   let errorContent = null;
 
   console.log(error);
@@ -57,11 +57,11 @@ function TicketError({ error }: { error: TicketError }) {
     case "AlreadyCheckedIn":
       errorContent = (
         <>
-          <ErrorTitle>This ticket has already been checked in</ErrorTitle>
+          <ErrorTitle>Already checked in</ErrorTitle>
           <Spacer h={8} />
           <Spread>
             <span>Checked in at</span>
-            <span>{error.checkinTimestamp}</span>
+            <span>{new Date(error.checkinTimestamp).toLocaleString()}</span>
           </Spread>
           <Spread>
             <span>Checked in by</span>
@@ -91,14 +91,9 @@ function TicketError({ error }: { error: TicketError }) {
     case "NotSuperuser":
       errorContent = (
         <>
-          <ErrorTitle>
-            You are not authorized to check this ticket in
-          </ErrorTitle>
+          <ErrorTitle>Not authorized</ErrorTitle>
           <Spacer h={8} />
-          <span>This event is: ""</span>
-          <div>The events you are able to check in are:</div>
-          <div>- a</div>
-          <div>- b</div>
+          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -125,10 +120,14 @@ function TicketError({ error }: { error: TicketError }) {
       break;
   }
 
+  return <ErrorContainer>{errorContent}</ErrorContainer>;
+}
+
+function TicketError({ error }: { error: TicketError }) {
   return (
     <AppContainer bg={"primary"}>
       <Container>
-        <ErrorContainer>{errorContent}</ErrorContainer>
+        <TicketErrorContent error={error} />
         <div
           style={{
             marginTop: "16px",
@@ -198,27 +197,30 @@ function useCheckTicketById(ticketId: string | undefined):
     } {
   const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<CheckTicketByIdResult | undefined>();
+  const identity = useIdentity();
 
-  const checkTicketById = useCallback(async (ticketId: string | undefined) => {
-    if (!ticketId) {
-      return;
-    } else {
-      console.log("checking", ticketId);
-    }
-
-    const checkTicketByIdResult = await requestCheckTicketById(
-      appConfig.zupassServer,
-      {
-        ticketId
+  const doCheckTicketById = useCallback(
+    async (ticketId: string | undefined) => {
+      if (!ticketId) {
+        return;
+      } else {
+        console.log("checking", ticketId);
       }
-    );
-    setInProgress(false);
-    setResult(checkTicketByIdResult);
-  }, []);
+
+      const checkTicketByIdResult = await checkTicketById(
+        appConfig.zupassServer,
+        ticketId,
+        identity
+      );
+      setInProgress(false);
+      setResult(checkTicketByIdResult);
+    },
+    [identity]
+  );
 
   useEffect(() => {
-    checkTicketById(ticketId);
-  }, [checkTicketById, ticketId]);
+    doCheckTicketById(ticketId);
+  }, [doCheckTicketById, ticketId]);
 
   if (inProgress) {
     return { loading: true, result: undefined };
@@ -231,6 +233,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
+  const [checkinError, setCheckinError] = useState<TicketError | null>(null);
   const identity = useIdentity();
 
   const onCheckInClick = useCallback(async () => {
@@ -247,8 +250,8 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
     setInProgress(false);
 
     if (!checkinResult.success) {
-      // todo: display error better
       setFinishedCheckinAttempt(true);
+      setCheckinError(checkinResult.error);
     } else {
       setCheckedIn(true);
       setFinishedCheckinAttempt(true);
@@ -278,9 +281,8 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
             </>
           ) : (
             <>
-              <StatusContainer style={{ backgroundColor: "#ffd4d4" }}>
-                <CheckinFailure>Failed to check in ❌</CheckinFailure>
-              </StatusContainer>
+              <TicketErrorContent error={checkinError} />
+              <Spacer h={16} />
               <ScanAnotherTicket />
               <Home />
             </>
@@ -331,11 +333,6 @@ const Container = styled.div`
 
 const CheckinSuccess = styled.span`
   color: green;
-  font-size: 1.5em;
-`;
-
-const CheckinFailure = styled.span`
-  color: red;
   font-size: 1.5em;
 `;
 
