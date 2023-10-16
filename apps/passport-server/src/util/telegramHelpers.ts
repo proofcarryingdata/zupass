@@ -21,7 +21,7 @@ import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
-  fetchLinkedPretixAndTelegramEvents,
+  fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChatsWithMembershipStatus,
   fetchTelegramEventsByChatId
@@ -374,25 +374,30 @@ export const eventsToLink = async (
   // based on if it is already linked or not
   const event = ctx.session.selectedEvent;
   if (event) {
-    range.text(`${event.isLinkedToChat ? "✅" : ""} ${event.eventName}`).row();
     range
-      .text(`Yes, ${event.isLinkedToChat ? "remove" : "add"}`, async (ctx) => {
-        let replyText = "";
-        if (!(await senderIsAdmin(ctx))) return;
+      .text(`${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`)
+      .row();
+    range
+      .text(
+        `Yes, ${event.isLinkedToCurrentChat ? "remove" : "add"}`,
+        async (ctx) => {
+          let replyText = "";
+          if (!(await senderIsAdmin(ctx))) return;
 
-        if (!event.isLinkedToChat) {
-          replyText = `<i>Added ${event.eventName} from chat</i>`;
-          await insertTelegramChat(db, chatId);
-          await insertTelegramEvent(db, event.configEventID, chatId);
+          if (!event.isLinkedToCurrentChat) {
+            replyText = `<i>Added ${event.eventName} from chat</i>`;
+            await insertTelegramChat(db, chatId);
+            await insertTelegramEvent(db, event.configEventID, chatId);
+            await editOrSendMessage(ctx, replyText);
+          } else {
+            replyText = `<i>Removed ${event.eventName} to chat</i>`;
+            await deleteTelegramEvent(db, event.configEventID);
+          }
+          ctx.session.selectedEvent = undefined;
+          await ctx.menu.update({ immediate: true });
           await editOrSendMessage(ctx, replyText);
-        } else {
-          replyText = `<i>Removed ${event.eventName} to chat</i>`;
-          await deleteTelegramEvent(db, event.configEventID);
         }
-        ctx.session.selectedEvent = undefined;
-        await ctx.menu.update({ immediate: true });
-        await editOrSendMessage(ctx, replyText);
-      })
+      )
       .row();
 
     range.text(`Go back`, async (ctx) => {
@@ -404,17 +409,17 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchLinkedPretixAndTelegramEvents(db, chatId);
+    const events = await fetchEventsWithTelegramChats(db, chatId);
     for (const event of events) {
       range
         .text(
-          `${event.isLinkedToChat ? "✅" : ""} ${event.eventName}`,
+          `${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`,
           async (ctx) => {
             if (!(await senderIsAdmin(ctx))) return;
             ctx.session.selectedEvent = event;
             await ctx.menu.update({ immediate: true });
             let initText = "";
-            if (event.isLinkedToChat) {
+            if (event.isLinkedToCurrentChat) {
               initText = `<i>Users with tickets for ${event.eventName} will NOT be able to join this chat</i>`;
             } else {
               initText = `<i>Users with tickets for ${event.eventName} will be able to join this chat</i>`;

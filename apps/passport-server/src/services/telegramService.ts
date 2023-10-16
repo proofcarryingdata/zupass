@@ -17,7 +17,7 @@ import {
 } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents,
+  fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
   fetchTelegramTopicsByChatId
@@ -306,9 +306,7 @@ export class TelegramService {
         userId,
         `Loading tickets and events...`
       );
-      const events = await fetchLinkedPretixAndTelegramEvents(
-        this.context.dbPool
-      );
+      const events = await fetchEventsWithTelegramChats(this.context.dbPool);
       const eventsWithChats = await chatIDsToChats(
         this.context.dbPool,
         ctx,
