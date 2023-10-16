@@ -8,8 +8,13 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Context, SessionFlavor } from "grammy";
-import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Api, Bot, Context, RawApi, SessionFlavor } from "grammy";
+import {
+  BotCommand,
+  Chat,
+  ChatMemberAdministrator,
+  ChatMemberOwner
+} from "grammy/types";
 import { Pool } from "postgres-pool";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
@@ -72,6 +77,70 @@ function isFulfilled<T>(
 ): promiseSettledResult is PromiseFulfilledResult<T> {
   return promiseSettledResult.status === "fulfilled";
 }
+
+export const setBotInfo = async (
+  bot: Bot<BotContext, Api<RawApi>>
+): Promise<void> => {
+  if (process.env.PASSPORT_CLIENT_URL) {
+    bot.api.setChatMenuButton({
+      menu_button: {
+        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
+        type: "web_app",
+        text: "Zupass"
+      }
+    });
+  }
+  bot.api.setMyDescription(
+    "I'm Zucat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
+  );
+
+  bot.api.setMyShortDescription(
+    "Zucat manages events and groups with zero-knowledge proofs"
+  );
+
+  const privateChatCommands: BotCommand[] = [
+    {
+      command: "/start",
+      description: "Join a group with a proof of ticket"
+    },
+    {
+      command: "/anonsend",
+      description: "Send an anonymous message"
+    },
+    {
+      command: "/help",
+      description: "Get help"
+    }
+  ];
+
+  bot.api.setMyCommands(privateChatCommands, {
+    scope: { type: "all_private_chats" }
+  });
+
+  const adminGroupChatCommands: BotCommand[] = [
+    {
+      command: "/incognito",
+      description: "Set a topic for anonymous posting"
+    },
+    {
+      command: "/manage",
+      description: "Link this chat to events"
+    },
+    {
+      command: "/setup",
+      description:
+        "Initialize a group chat with an Admin and Announcements topic"
+    },
+    {
+      command: "/adminhelp",
+      description: "Get info in a DM about the group and linked events"
+    }
+  ];
+
+  bot.api.setMyCommands(adminGroupChatCommands, {
+    scope: { type: "all_chat_administrators" }
+  });
+};
 
 /**
  * Fetches the chat object for a list contaning a telegram chat id
@@ -464,3 +533,11 @@ export const chatsToPostIn = async (
     return;
   }
 };
+
+export function msToTimeString(duration: number): string {
+  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((duration / (1000 * 60)) % 60);
+  const seconds = Math.floor((duration / 1000) % 60);
+
+  return `${hours} hours, ${minutes} minutes, and ${seconds} seconds`;
+}
