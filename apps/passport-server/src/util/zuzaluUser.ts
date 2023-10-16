@@ -1,4 +1,4 @@
-import { ZupassUserJson } from "@pcd/passport-interface";
+import { ZupassUserJson, ZuzaluUserRole } from "@pcd/passport-interface";
 import _ from "lodash";
 import { UserRow, ZuzaluPretixTicket } from "../database/models";
 
@@ -40,10 +40,16 @@ export function ticketsToMapByEmail(
  * Converts UserRow from database into ZupassUserJson to be returned from API.
  */
 export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
-  return {
-    uuid: user.uuid,
-    commitment: user.commitment,
-    email: user.email,
-    salt: user.salt
-  };
+  return Object.assign(
+    {
+      uuid: user.uuid,
+      commitment: user.commitment,
+      email: user.email,
+      salt: user.salt
+    } satisfies ZupassUserJson,
+    {
+      // TODO: remove this
+      role: ZuzaluUserRole.Resident
+    }
+  );
 }
