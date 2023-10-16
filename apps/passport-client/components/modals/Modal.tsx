@@ -145,7 +145,6 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
-  /* background: radial-gradient(circle, var(--bg-lite-gray), var(--bg-dark-gray)); */
   background: radial-gradient(
     circle,
     var(--bg-lite-primary),

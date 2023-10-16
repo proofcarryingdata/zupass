@@ -677,7 +677,6 @@ const Input = styled.input`
 const TextareaInput = styled.textarea`
   width: 100%;
   height: 4em;
-  /* background-color: var(--bg-lite-gray); */
   background-color: var(--bg-lite-primary);
   border: 1px solid var(--bg-lite-primary);
   color: var(--white);

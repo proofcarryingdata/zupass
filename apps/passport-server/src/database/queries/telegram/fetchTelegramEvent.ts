@@ -1,5 +1,13 @@
 import { Pool } from "postgres-pool";
-import { TelegramAnonChannel, TelegramChat, TelegramEvent } from "../../models";
+import {
+  ChatIDWithEventIDs,
+  ChatIDWithEventsAndMembership,
+  LinkedPretixTelegramEvent,
+  TelegramChat,
+  TelegramEvent,
+  TelegramTopic,
+  UserIDWithChatIDs
+} from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -53,37 +61,27 @@ export async function fetchTelegramEventsByChatId(
   return result.rows;
 }
 
-export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
-  eventName: string;
-  configEventID: string;
-}
-
-export async function fetchLinkedPretixAndTelegramEvents(
-  client: Pool
+export async function fetchEventsWithTelegramChats(
+  client: Pool,
+  currentTelegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
-    `\
+    `
     SELECT
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
-      dpe.pretix_events_config_id AS "configEventID" 
-    FROM devconnect_pretix_events_info dpe 
-    LEFT JOIN telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
-    `
+      dpe.pretix_events_config_id AS "configEventID",
+      CASE WHEN tbe.telegram_chat_id = $1 THEN true ELSE false END AS "isLinkedToCurrentChat"
+    FROM 
+      devconnect_pretix_events_info dpe 
+    LEFT JOIN 
+      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
+    `,
+    [currentTelegramChatId]
   );
 
   return result.rows;
-}
-
-export interface ChatIDWithEventIDs {
-  telegramChatID: string;
-  ticketEventIds: string[];
-}
-export interface UserIDWithChatIDs {
-  telegramUserID: string;
-  telegramChatIDs: string[];
 }
 
 export async function fetchEventsPerChat(
@@ -106,7 +104,7 @@ export async function fetchEventsPerChat(
 export async function fetchTelegramAnonTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramAnonChannel[]> {
+): Promise<TelegramTopic[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -121,7 +119,7 @@ export async function fetchTelegramAnonTopicsByChatId(
 export async function fetchTelegramTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramAnonChannel[]> {
+): Promise<TelegramTopic[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -151,6 +149,54 @@ export async function fetchUserTelegramChats(
       telegram_user_id
     `,
     [telegramUserID]
+  );
+  return result.rows[0] ?? null;
+}
+
+// Fetch a list of Telegram chats that can be joined with the status of user
+// The list is sorted such that chat a user hasn't joined are returned first
+export async function fetchTelegramChatsWithMembershipStatus(
+  client: Pool,
+  userId: number
+): Promise<ChatIDWithEventsAndMembership[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT
+      tbe.telegram_chat_id AS "telegramChatID",
+        ARRAY_AGG(tbe.ticket_event_id) AS "ticketEventIds",
+        CASE WHEN tbc.telegram_user_id IS NOT NULL THEN true ELSE false END AS "isChatMember"
+    FROM 
+        telegram_bot_events tbe 
+    LEFT JOIN 
+        telegram_bot_conversations tbc 
+    ON 
+        tbe.telegram_chat_id = tbc.telegram_chat_id AND tbc.telegram_user_id = $1
+    GROUP BY 
+        tbe.telegram_chat_id, tbc.telegram_user_id
+    ORDER BY 
+        "isChatMember" ASC;
+    `,
+    [userId]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramTopic(
+  client: Pool,
+  telegramChatId: number,
+  topicId: number
+): Promise<TelegramTopic | null> {
+  const result = await sqlQuery(
+    client,
+    ` 
+    SELECT * 
+    FROM telegram_chat_topics
+    WHERE 
+        telegram_chat_id = $1 AND 
+        topic_id = $2
+  `,
+    [telegramChatId, topicId]
   );
   return result.rows[0] ?? null;
 }
