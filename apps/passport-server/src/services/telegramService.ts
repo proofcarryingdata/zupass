@@ -64,6 +64,7 @@ export class TelegramService {
   private bot: Bot<BotContext>;
   private anonBot: Bot<BotContext>;
   private rollbarService: RollbarService | null;
+  private anonBotExists: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -75,30 +76,9 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
     this.anonBot = anonBot;
+    this.anonBotExists = bot.botInfo.id !== anonBot.botInfo.id;
 
-    setBotInfo(bot);
-
-    const botCommands = [
-      { command: "/start", description: "Join a group with a proof of ticket" }
-    ];
-
-    this.bot.api.setMyCommands([
-      { command: "/start", description: "Join a group with a proof of ticket" }
-    ]);
-
-    if (this.bot.botInfo.id !== this.anonBot.botInfo.id) {
-      this.anonBot.api.setMyDescription(
-        "I'm Zuraffe 🦒 ! I send anonmyous messages with zero-knowledge proofs"
-      );
-
-      this.anonBot.api.setMyShortDescription(
-        "Zuraffe sends anonmyous messages with zero-knowledge proofs"
-      );
-
-      this.anonBot.api.setMyCommands([
-        { command: "/anonsend", description: "Send an anonymous message" }
-      ]);
-    }
+    setBotInfo(bot, anonBot, this.anonBotExists);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -579,11 +559,6 @@ export class TelegramService {
     }
   }
 
-  public async getBotURL(): Promise<string> {
-    const { username } = await this.bot.api.getMe();
-    return `https://t.me/${username}`;
-  }
-
   private async verifyZKEdDSAEventTicketPCD(
     serializedZKEdDSATicket: string
   ): Promise<ZKEdDSAEventTicketPCD | null> {
@@ -915,6 +890,7 @@ export async function startTelegramService(
 ): Promise<TelegramService | null> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const anonBotToken = process.env.TELEGRAM_ANON_BOT_TOKEN;
+  const anonBotExists = !!(anonBotToken && anonBotToken !== botToken);
 
   if (!botToken) {
     logger(
@@ -925,7 +901,10 @@ export async function startTelegramService(
 
   const createBot = (token: string): Bot<BotContext, Api<RawApi>> => {
     const bot = new Bot<BotContext>(token);
-    const initial = (): SessionData => ({ dbPool: context.dbPool });
+    const initial = (): SessionData => ({
+      dbPool: context.dbPool,
+      anonBotExists
+    });
 
     bot.use(session({ initial, getSessionKey }));
     bot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
@@ -938,7 +917,7 @@ export async function startTelegramService(
 
   let anonBot: Bot<BotContext>;
 
-  if (anonBotToken) {
+  if (anonBotExists) {
     logger(`[TELEGRAM] found anon bot`);
     anonBot = createBot(anonBotToken);
     await anonBot.init();
@@ -952,8 +931,9 @@ export async function startTelegramService(
     mainBot,
     anonBot
   );
+
   service.startBot(mainBot);
-  if (anonBotToken) {
+  if (anonBotExists) {
     service.startBot(anonBot);
   }
 

@@ -41,9 +41,12 @@ type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
     chat: TopicChat;
   };
 
+type BotCommandWithAnon = BotCommand & { isAnon: boolean };
+
 export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent;
+  anonBotExists: boolean;
   lastMessageId?: number;
   selectedChat?: TopicChat;
 }
@@ -59,6 +62,48 @@ export const getGroupChat = async (
   if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
   else throw new Error(`Chat is not a group with topics enabled`);
 };
+const privateChatCommands: BotCommandWithAnon[] = [
+  {
+    command: "/start",
+    description: "Join a group with a proof of ticket",
+    isAnon: false
+  },
+
+  {
+    command: "/help",
+    description: "Get help",
+    isAnon: false
+  },
+  {
+    command: "/anonsend",
+    description: "Send an anonymous message",
+    isAnon: true
+  }
+];
+
+const adminGroupChatCommands: BotCommandWithAnon[] = [
+  {
+    command: "/incognito",
+    description: "Set a topic for anonymous posting",
+    isAnon: true
+  },
+  {
+    command: "/manage",
+    description: "Link this chat to events",
+    isAnon: false
+  },
+  {
+    command: "/setup",
+    description:
+      "Initialize a group chat with an Admin and Announcements topic",
+    isAnon: false
+  },
+  {
+    command: "/adminhelp",
+    description: "Get info in a DM about the group and linked events",
+    isAnon: false
+  }
+];
 
 export const base64EncodeTopicData = (
   chatId: number | string,
@@ -90,9 +135,19 @@ function isFulfilled<T>(
   return promiseSettledResult.status === "fulfilled";
 }
 
-export const setBotInfo = async (
+export const getBotURL = async (
   bot: Bot<BotContext, Api<RawApi>>
+): Promise<string> => {
+  const { username } = await bot.api.getMe();
+  return `https://t.me/${username}`;
+};
+
+export const setBotInfo = async (
+  bot: Bot<BotContext, Api<RawApi>>,
+  anonBot: Bot<BotContext, Api<RawApi>>,
+  anonBotExists: boolean
 ): Promise<void> => {
+  // Set Zupass as the default menu item
   if (process.env.PASSPORT_CLIENT_URL) {
     bot.api.setChatMenuButton({
       menu_button: {
@@ -101,7 +156,62 @@ export const setBotInfo = async (
         text: "Zupass"
       }
     });
+
+    if (anonBotExists) {
+      anonBot.api.setChatMenuButton({
+        menu_button: {
+          web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
+          type: "web_app",
+          text: "Zupass"
+        }
+      });
+    }
   }
+
+  if (anonBotExists) {
+    anonBot.api.setMyDescription(
+      "I'm Zuraffe! I send anonmyous messages with zero-knowledge proofs"
+    );
+
+    anonBot.api.setMyShortDescription(
+      "Zuraffe sends anonmyous messages with zero-knowledge proofs"
+    );
+
+    anonBot.api.setMyCommands(
+      privateChatCommands.filter((c) => c.isAnon),
+      { scope: { type: "all_private_chats" } }
+    );
+    anonBot.api.setMyCommands(
+      adminGroupChatCommands.filter((c) => c.isAnon),
+      {
+        scope: { type: "all_chat_administrators" }
+      }
+    );
+
+    // Only add non-anon commands to main bot
+    bot.api.setMyCommands(
+      adminGroupChatCommands.filter((c) => !c.isAnon),
+      {
+        scope: { type: "all_chat_administrators" }
+      }
+    );
+
+    bot.api.setMyCommands(
+      privateChatCommands.filter((c) => !c.isAnon),
+      {
+        scope: { type: "all_private_chats" }
+      }
+    );
+  } else {
+    bot.api.setMyCommands(adminGroupChatCommands, {
+      scope: { type: "all_chat_administrators" }
+    });
+
+    bot.api.setMyCommands(privateChatCommands, {
+      scope: { type: "all_private_chats" }
+    });
+  }
+
   bot.api.setMyDescription(
     "I'm Zucat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
   );
@@ -109,49 +219,6 @@ export const setBotInfo = async (
   bot.api.setMyShortDescription(
     "Zucat manages events and groups with zero-knowledge proofs"
   );
-
-  const privateChatCommands: BotCommand[] = [
-    {
-      command: "/start",
-      description: "Join a group with a proof of ticket"
-    },
-    {
-      command: "/anonsend",
-      description: "Send an anonymous message"
-    },
-    {
-      command: "/help",
-      description: "Get help"
-    }
-  ];
-
-  bot.api.setMyCommands(privateChatCommands, {
-    scope: { type: "all_private_chats" }
-  });
-
-  const adminGroupChatCommands: BotCommand[] = [
-    {
-      command: "/incognito",
-      description: "Set a topic for anonymous posting"
-    },
-    {
-      command: "/manage",
-      description: "Link this chat to events"
-    },
-    {
-      command: "/setup",
-      description:
-        "Initialize a group chat with an Admin and Announcements topic"
-    },
-    {
-      command: "/adminhelp",
-      description: "Get info in a DM about the group and linked events"
-    }
-  ];
-
-  bot.api.setMyCommands(adminGroupChatCommands, {
-    scope: { type: "all_chat_administrators" }
-  });
 };
 
 /**
