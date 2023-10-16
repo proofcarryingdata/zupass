@@ -20,7 +20,7 @@ export async function requestUploadEncryptedStorage(
   knownRevision?: string
 ): Promise<UploadEncryptedStorageResult> {
   return httpPost<UploadEncryptedStorageResult>(
-    urlJoin(zupassServerUrl, `/sync/save`),
+    urlJoin(zupassServerUrl, `/sync/v2/save`),
     {
       onValue: async (resText: string) => ({
         value: JSON.parse(resText) as UploadEncryptedStorageResponseValue,

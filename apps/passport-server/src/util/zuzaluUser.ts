@@ -1,4 +1,4 @@
-import { ZupassUserJson } from "@pcd/passport-interface";
+import { ZupassUserJson, ZuzaluUserRole } from "@pcd/passport-interface";
 import _ from "lodash";
 import { UserRow, ZuzaluPretixTicket } from "../database/models";
 
@@ -40,10 +40,20 @@ export function ticketsToMapByEmail(
  * Converts UserRow from database into ZupassUserJson to be returned from API.
  */
 export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
-  return {
-    uuid: user.uuid,
-    commitment: user.commitment,
-    email: user.email,
-    salt: user.salt
-  };
+  return Object.assign(
+    {
+      uuid: user.uuid,
+      commitment: user.commitment,
+      email: user.email,
+      salt: user.salt
+    } satisfies ZupassUserJson,
+    {
+      // TODO: remove this once we are sure that
+      // 1) no old versions of the client are in the wild and
+      // 2) once we figure out a way to clear old versions of the client programmatically.
+      // Added in order to preserve compatibility. between older client versions and the
+      // new version of the server.
+      role: ZuzaluUserRole.Resident
+    }
+  );
 }
