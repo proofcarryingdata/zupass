@@ -624,7 +624,13 @@ export const chatsToPostIn = async (
           }
         }
       } else {
-        ctx.reply(`No chats found to post in. Type /start to join one!`);
+        if (ctx.session.anonBotExists) {
+          ctx.reply(
+            `No chats found to post in. Click here to join one: https://t.me/zucat_bot?start=zucat`
+          );
+        } else {
+          ctx.reply(`No chats found to post in. Type /start to join one!`);
+        }
       }
     }
   } catch (error) {
