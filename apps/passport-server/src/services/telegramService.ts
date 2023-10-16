@@ -851,7 +851,8 @@ export class TelegramService {
       topicId
     );
 
-    if (!topic) throw new Error(`No anonyous topic found`);
+    if (!topic || !topic.is_anon_topic)
+      throw new Error(`No anonyous topic found`);
 
     // Get valid eventIds for this chat
     const telegramEvents = await fetchTelegramEventsByChatId(
