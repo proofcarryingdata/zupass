@@ -48,7 +48,11 @@ export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
       salt: user.salt
     } satisfies ZupassUserJson,
     {
-      // TODO: remove this
+      // TODO: remove this once we are sure that
+      // 1) no old versions of the client are in the wild and
+      // 2) once we figure out a way to clear old versions of the client programmatically.
+      // Added in order to preserve compatibility. between older client versions and the
+      // new version of the server.
       role: ZuzaluUserRole.Resident
     }
   );
