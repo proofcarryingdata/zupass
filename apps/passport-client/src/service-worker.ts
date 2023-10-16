@@ -18,6 +18,9 @@ const impermanentCache = [
 async function addResourcesToCache(resources: string[]): Promise<void> {
   const cache = await caches.open("v1");
 
+  await Promise.all(
+    ["/", "/index.html", "/js/index.js"].map((item) => cache.delete(item))
+  );
   await Promise.all(impermanentCache.map((item) => cache.delete(item)));
 
   await cache.addAll(resources);
@@ -34,7 +37,7 @@ self.addEventListener("install", (event: any) => {
       "/semaphore-artifacts/16.zkey",
       "/fonts/IBMPlexSans-Regular.ttf",
       "/fonts/IBMPlexSans-Medium.ttf",
-      "/fonts/IBMPlexSans-Light.ttf",
+      "/fonts/IBMPlexSans-Light.ttf"
     ])
   );
 
