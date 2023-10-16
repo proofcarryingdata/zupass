@@ -26,7 +26,7 @@ export async function requestChangeBlobKey(
   knownRevision?: string
 ): Promise<ChangeBlobKeyResult> {
   return httpPost<ChangeBlobKeyResult>(
-    urlJoin(zupassServerUrl, `/sync/changeBlobKey`),
+    urlJoin(zupassServerUrl, `/sync/v2/changeBlobKey`),
     {
       onValue: async (resText: string) => ({
         value: JSON.parse(resText) as ChangeBlobKeyResponseValue,

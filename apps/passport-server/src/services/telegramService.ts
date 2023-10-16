@@ -1,24 +1,29 @@
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { sleep } from "@pcd/util";
+import { getAnonTopicNullifier } from "@pcd/passport-interface";
+import { ONE_HOUR_MS, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Bot, InlineKeyboard, session } from "grammy";
-import { Chat, ChatFromGetChat } from "grammy/types";
+import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
-import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
+import {
+  fetchAnonTopicNullifier,
+  fetchTelegramVerificationStatus
+} from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents,
-  fetchTelegramAnonTopicsByChatId,
+  fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
+  fetchTelegramTopic,
   fetchTelegramTopicsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
+  insertOrUpdateTelegramNullifier,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -32,13 +37,16 @@ import {
   chatIDsToChats,
   chatsToJoin,
   chatsToPostIn,
-  dynamicEvents,
+  eventsToLink,
   findChatByEventIds,
+  getGroupChat,
   getSessionKey,
   isDirectMessage,
   isGroupWithTopics,
-  senderIsAdmin
+  senderIsAdmin,
+  setBotInfo
 } from "../util/telegramHelpers";
+import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
 
 const ALLOWED_TICKET_MANAGERS = [
@@ -49,7 +57,7 @@ const ALLOWED_TICKET_MANAGERS = [
   "chubivan"
 ];
 
-const adminBotChannel = "Admin Central";
+const adminBotChannel = "Admins";
 
 export class TelegramService {
   private context: ApplicationContext;
@@ -65,13 +73,7 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.bot = bot;
 
-    this.bot.api.setMyDescription(
-      "I'm Zucat 🐱 ! I manage fun events with zero-knowledge proofs. Press START to get started!"
-    );
-
-    this.bot.api.setMyShortDescription(
-      "Zucat manages events and groups with zero-knowledge proofs"
-    );
+    setBotInfo(bot);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -79,7 +81,7 @@ export class TelegramService {
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
-    eventsMenu.dynamic(dynamicEvents);
+    eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
 
@@ -93,6 +95,7 @@ export class TelegramService {
     // Approval of the join request is required even for users with the
     // invite link - see `creates_join_request` parameter on
     // `createChatInviteLink` API invocation below.
+
     this.bot.on("chat_join_request", async (ctx) => {
       const userId = ctx.chatJoinRequest.user_chat_id;
 
@@ -111,7 +114,7 @@ export class TelegramService {
           logger(
             `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
           );
-          const chat = (await ctx.api.getChat(chatId)) as TopicChat;
+          const chat = await getGroupChat(ctx.api, chatId);
 
           await this.bot.api.sendMessage(
             userId,
@@ -161,7 +164,7 @@ export class TelegramService {
             newMember.user.id,
             ctx.chat.id
           );
-          const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+          const chat = await getGroupChat(ctx.api, ctx.chat.id);
           const userId = newMember.user.id;
           await this.bot.api.sendMessage(
             userId,
@@ -205,13 +208,14 @@ export class TelegramService {
         if (!username) throw new Error(`Username not found`);
 
         if (!(await senderIsAdmin(ctx, admins)))
-          throw new Error(`Only admins can run this command`);
+          return ctx.reply(`Only admins can run this command`);
+
         if (!ALLOWED_TICKET_MANAGERS.includes(username))
-          throw new Error(
+          return ctx.reply(
             `Only Zupass team members are allowed to run this command.`
           );
 
-        if (!isGroupWithTopics(ctx)) {
+        if (!isGroupWithTopics(ctx.chat)) {
           await ctx.reply(
             "This command only works in a group with Topics enabled.",
             { message_thread_id: messageThreadId }
@@ -251,7 +255,7 @@ export class TelegramService {
     this.bot.command("setup", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
       try {
-        if (!isGroupWithTopics(ctx)) {
+        if (!isGroupWithTopics(ctx.chat)) {
           throw new Error("Please enable topics for this group and try again");
         }
 
@@ -259,7 +263,7 @@ export class TelegramService {
           throw new Error(`Cannot run setup from an existing topic`);
 
         await ctx.editGeneralForumTopic(adminBotChannel);
-        await ctx.hideGeneralForumTopic();
+        await ctx.closeGeneralForumTopic();
         const topic = await ctx.createForumTopic(`Announcements`, {
           icon_custom_emoji_id: "5309984423003823246" // 📢
         });
@@ -273,28 +277,42 @@ export class TelegramService {
 
     this.bot.command("adminhelp", async (ctx) => {
       const messageThreadId = ctx?.message?.message_thread_id;
-      await ctx.reply(
-        `<b>Help</b>
+      const admins = await ctx.getChatAdministrators();
 
-        <b>Admins</b>
-        <b>/manage</b> - Gate / Ungate this group with a ticketed event
-        <b>/setup</b> - When the chat is created, hide the general channel and set up Announcements.
-        <b>/incognito</b> - Mark a topic as anonymous
-      `,
-        { parse_mode: "HTML", reply_to_message_id: messageThreadId }
+      if (!(await senderIsAdmin(ctx, admins)))
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
+
+      if (messageThreadId)
+        return ctx.reply(`Must be in ${adminBotChannel}.`, {
+          message_thread_id: messageThreadId
+        });
+
+      const userId = ctx.from?.id;
+      if (!userId)
+        return ctx.reply(`User not found, try again.`, {
+          message_thread_id: messageThreadId
+        });
+
+      const chat = (await ctx.api.getChat(ctx.chat.id)) as TopicChat;
+      await ctx.api.sendMessage(
+        userId,
+        `Sending info for group <b>${chat?.title}</b> ID: <i>${ctx.chat.id}</i>`,
+        { parse_mode: "HTML" }
       );
-      const msg = await ctx.reply(`Loading tickets and events...`);
-      const events = await fetchLinkedPretixAndTelegramEvents(
-        this.context.dbPool
+
+      const msg = await ctx.api.sendMessage(
+        userId,
+        `Loading tickets and events...`
       );
+      const events = await fetchEventsWithTelegramChats(this.context.dbPool);
       const eventsWithChats = await chatIDsToChats(
         this.context.dbPool,
         ctx,
         events
       );
 
-      const userId = ctx.from?.id;
-      if (!userId) throw new Error(`No user found. Try again...`);
       if (eventsWithChats.length === 0) {
         return ctx.api.editMessageText(
           userId,
@@ -310,31 +328,28 @@ export class TelegramService {
 
       for (const event of eventsWithChats) {
         if (event.chat?.title)
-          eventsHtml += `Event: <b>${event.eventName}</b> ➡ Chat: <i>${event.chat.title}</i>\n`;
+          eventsHtml += `Chat: <b>${event.chat.title}</b> ➡ Event: <i>${event.eventName}</i> \n`;
       }
+
       await ctx.api.editMessageText(userId, msg.message_id, eventsHtml, {
         parse_mode: "HTML"
       });
     });
 
+    this.bot.command("help", async (ctx) => {
+      // TODO: Link to troubleshooting guide
+      await ctx.reply(
+        `Please email passport@0xparc.org if you have any additional issues`
+      );
+    });
+
     this.bot.command("anonsend", async (ctx) => {
       if (!isDirectMessage(ctx)) {
         const messageThreadId = ctx.message?.message_thread_id;
-        const chatId = ctx.chat.id;
 
-        // if there is a message_thread_id or a chat_id, use reply settings.
-        const replyOptions = messageThreadId
-          ? { message_thread_id: messageThreadId }
-          : chatId
-          ? {}
-          : undefined;
-
-        if (replyOptions) {
-          await ctx.reply(
-            "Please message directly within a private chat.",
-            replyOptions
-          );
-        }
+        await ctx.reply("Please message directly within a private chat.", {
+          message_thread_id: messageThreadId
+        });
         return;
       }
 
@@ -358,17 +373,20 @@ export class TelegramService {
         topicName,
         false
       );
-      ctx.reply(`<i>[ADMIN]: Created topic ${topicName} in the db</i>`, {
-        message_thread_id: messageThreadId,
-        parse_mode: "HTML"
-      });
+
+      logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
     });
 
     this.bot.on(":forum_topic_edited", async (ctx) => {
       const topicName = ctx.update?.message?.forum_topic_edited.name;
-      const messageThreadId = ctx.update.message?.message_thread_id;
       const chatId = ctx.chat.id;
-      if (!chatId || !topicName || !messageThreadId)
+      const messageThreadId = ctx.update.message?.message_thread_id;
+      if (!messageThreadId)
+        return logger(
+          `[TELEGRAM] ignoring edit for general topic ${topicName}`
+        );
+
+      if (!chatId || !topicName)
         throw new Error(`Missing chatId or topic name`);
 
       const topicsForChat = await fetchTelegramTopicsByChatId(
@@ -405,7 +423,7 @@ export class TelegramService {
     this.bot.command("incognito", async (ctx) => {
       const messageThreadId = ctx.message?.message_thread_id;
 
-      if (!isGroupWithTopics(ctx)) {
+      if (!isGroupWithTopics(ctx.chat)) {
         await ctx.reply(
           "This command only works in a group with Topics enabled.",
           { message_thread_id: messageThreadId }
@@ -422,13 +440,16 @@ export class TelegramService {
       }
 
       if (!(await senderIsAdmin(ctx)))
-        return ctx.reply(`Only admins can run this command`);
+        return ctx.reply(`Only admins can run this command`, {
+          message_thread_id: messageThreadId
+        });
 
       try {
         const telegramEvents = await fetchTelegramEventsByChatId(
           this.context.dbPool,
           ctx.chat.id
         );
+
         const hasLinked = telegramEvents.length > 0;
         if (!hasLinked) {
           await ctx.reply(
@@ -438,29 +459,21 @@ export class TelegramService {
           return;
         }
 
-        const chatAnonTopics = await fetchTelegramAnonTopicsByChatId(
+        const topicToUpdate = await fetchTelegramTopic(
           this.context.dbPool,
-          ctx.chat.id
+          ctx.chat.id,
+          messageThreadId
         );
 
-        const currentAnonTopic = chatAnonTopics.find(
-          (t) => t.topic_id == messageThreadId.toString()
-        );
+        if (!topicToUpdate)
+          throw new Error(`Couldn't find this topic in the db.`);
 
-        if (currentAnonTopic && currentAnonTopic.is_anon_topic) {
+        if (topicToUpdate.is_anon_topic) {
           await ctx.reply(`This topic is already anonymous.`, {
             message_thread_id: messageThreadId
           });
           return;
         }
-
-        const topicsForChat = await fetchTelegramTopicsByChatId(
-          this.context.dbPool,
-          ctx.chat.id
-        );
-        const topicToUpdate = topicsForChat.find(
-          (t) => t.topic_id === messageThreadId.toString()
-        );
 
         const topicName =
           topicToUpdate?.topic_name ||
@@ -475,13 +488,6 @@ export class TelegramService {
           true
         );
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-        const encodedTopicData = base64EncodeTopicData(
-          topicName,
-          messageThreadId,
-          validEventIds
-        );
-
         await ctx.reply(
           `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
           {
@@ -490,16 +496,15 @@ export class TelegramService {
           }
         );
 
-        const messageToPin = await ctx.reply(
-          "Click here to post to this topic. Or send me a DM with /anonsend",
-          {
-            message_thread_id: messageThreadId,
-            reply_markup: new InlineKeyboard().url(
-              "Post Anonymously",
-              `${process.env.TELEGRAM_ANON_BOT_WEBAPP}?startapp=${encodedTopicData}&startApp=${encodedTopicData}`
-            )
-          }
-        );
+        const directLinkParams = `${ctx.chat.id.toString()}_${messageThreadId}`;
+        const messageToPin = await ctx.reply("Click to post", {
+          message_thread_id: messageThreadId,
+          reply_markup: new InlineKeyboard().url(
+            "Post Anonymously",
+            // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
+            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${directLinkParams}&startapp=${directLinkParams}`
+          )
+        });
         ctx.pinChatMessage(messageToPin.message_id);
         ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
@@ -593,17 +598,6 @@ export class TelegramService {
     }
   }
 
-  private chatIsGroup(
-    chat: ChatFromGetChat
-  ): chat is Chat.GroupGetChat | Chat.SupergroupGetChat {
-    // Chat must be a group chat of some kind
-    return (
-      chat?.type === "channel" ||
-      chat?.type === "group" ||
-      chat?.type === "supergroup"
-    );
-  }
-
   private async sendToAnonymousChannel(
     groupId: number,
     anonChatId: number,
@@ -631,7 +625,7 @@ export class TelegramService {
 
   private async sendInviteLink(
     userId: number,
-    chat: Chat.GroupGetChat | Chat.SupergroupGetChat
+    chat: Chat.SupergroupChat
   ): Promise<void> {
     // Send the user an invite link. When they follow the link, this will
     // trigger a "join request", which the bot will respond to.
@@ -709,15 +703,9 @@ export class TelegramService {
         )}, which have no matching chat`
       );
     }
-    const chat = await this.bot.api.getChat(telegramChatId);
+    const chat = await getGroupChat(this.bot.api, telegramChatId);
 
     logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
-
-    if (!this.chatIsGroup(chat)) {
-      throw new Error(
-        `Event is configured with Telegram chat ${chat.id}, which is of incorrect type "${chat.type}"`
-      );
-    }
 
     // We've verified that the chat exists, now add the user to our list.
     // This will be important later when the user requests to join.
@@ -745,12 +733,9 @@ export class TelegramService {
       throw new Error("Could not verify PCD for anonymous message");
     }
 
-    const {
-      watermark,
-      partialTicket: { eventId }
-    } = pcd.claim;
+    const { watermark, validEventIds, externalNullifier, nullifierHash } =
+      pcd.claim;
 
-    const { validEventIds } = pcd.claim;
     if (!validEventIds) {
       throw new Error(`User did not submit any valid event ids`);
     }
@@ -786,37 +771,112 @@ export class TelegramService {
       `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
     );
 
-    const anonTopicsForEvent = await fetchTelegramAnonTopicsByChatId(
+    const topic = await fetchTelegramTopic(
       this.context.dbPool,
-      parseInt(telegramChatId)
+      parseInt(telegramChatId),
+      parseInt(topicId)
     );
 
-    if (anonTopicsForEvent.length == 0) {
+    if (!topic || !topic.is_anon_topic) {
       throw new Error(`this group doesn't have any anon topics`);
     }
 
     // The event is linked to a chat. Make sure we can access it.
-    const chat = await this.bot.api.getChat(telegramChatId);
-    if (!this.chatIsGroup(chat)) {
-      throw new Error(
-        `Events ${validEventIds} is configured with Telegram chat ${telegramChatId}, which is of incorrect type "${chat.type}"`
-      );
-    }
+    const chat = await getGroupChat(this.bot.api, telegramChatId);
 
-    const ticketedAnonEvent = anonTopicsForEvent.find(
-      (topicForEvent) => topicForEvent.topic_id == topicId
+    if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+    const expectedExternalNullifier = getAnonTopicNullifier(
+      chat.id,
+      parseInt(topicId)
+    ).toString();
+
+    if (externalNullifier !== expectedExternalNullifier)
+      throw new Error("Nullifier mismatch - try proving again.");
+
+    const nullifierData = await fetchAnonTopicNullifier(
+      this.context.dbPool,
+      nullifierHash
     );
-    if (!ticketedAnonEvent) {
-      throw new Error(
-        `Couldn't find anon topic for event: ${eventId} with requested topic_id: ${topicId}`
+
+    if (!nullifierData) {
+      await insertOrUpdateTelegramNullifier(
+        this.context.dbPool,
+        nullifierHash,
+        [new Date().toISOString()]
       );
+    } else {
+      const timestamps = nullifierData.message_timestamps.map((t) =>
+        new Date(t).getTime()
+      );
+      const maxDailyPostsPerTopic = parseInt(
+        process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
+      );
+      const rlDuration = ONE_HOUR_MS * 24;
+      const { rateLimitExceeded, newTimestamps } = checkSlidingWindowRateLimit(
+        timestamps,
+        maxDailyPostsPerTopic,
+        rlDuration
+      );
+      if (!rateLimitExceeded) {
+        await insertOrUpdateTelegramNullifier(
+          this.context.dbPool,
+          nullifierHash,
+          newTimestamps
+        );
+      } else {
+        const rlError = new Error(
+          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+        );
+        rlError.name = "Rate limit exceeded";
+        throw rlError;
+      }
     }
 
     await this.sendToAnonymousChannel(
       chat.id,
-      parseInt(ticketedAnonEvent.topic_id),
+      parseInt(topic.topic_id),
       message
     );
+  }
+
+  public async handleRequestAnonymousMessageLink(
+    telegramChatId: number,
+    topicId: number
+  ): Promise<string> {
+    // Confirm that topicId exists and is anonymous
+    const topic = await fetchTelegramTopic(
+      this.context.dbPool,
+      telegramChatId,
+      topicId
+    );
+
+    if (!topic || !topic.is_anon_topic)
+      throw new Error(`No anonyous topic found`);
+
+    // Get valid eventIds for this chat
+    const telegramEvents = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      telegramChatId
+    );
+    if (telegramEvents.length === 0)
+      throw new Error(`No events associated with this group`);
+
+    const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+    const encodedTopicData = base64EncodeTopicData(
+      telegramChatId,
+      topic.topic_name,
+      topic.topic_id,
+      validEventIds
+    );
+
+    const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
+    logger(
+      `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
+    );
+
+    return url;
   }
 
   public stop(): void {
@@ -841,7 +901,6 @@ export async function startTelegramService(
   };
 
   bot.use(session({ initial, getSessionKey }));
-  await bot.init();
 
   const service = new TelegramService(context, rollbarService, bot);
   bot.catch((error) => {

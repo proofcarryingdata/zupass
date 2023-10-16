@@ -7,11 +7,14 @@ import {
 import { Feed, ZupassFeedIds } from "./SubscriptionManager";
 
 export const zupassDefaultSubscriptions: Record<
-  ZupassFeedIds.Devconnect | ZupassFeedIds.Email | ZupassFeedIds.Zuzalu_1,
+  | ZupassFeedIds.Devconnect
+  | ZupassFeedIds.Email
+  | ZupassFeedIds.Zuzalu_23
+  | ZupassFeedIds.Zuconnect_23,
   Feed
 > = {
-  [ZupassFeedIds.Zuzalu_1]: {
-    id: ZupassFeedIds.Zuzalu_1,
+  [ZupassFeedIds.Zuzalu_23]: {
+    id: ZupassFeedIds.Zuzalu_23,
     name: "Zuzalu tickets",
     description: "Your Zuzalu Tickets",
     partialArgs: undefined,
@@ -79,6 +82,25 @@ export const zupassDefaultSubscriptions: Record<
       } as DeleteFolderPermission,
       {
         folder: "Email",
+        type: PCDPermissionType.ReplaceInFolder
+      } as ReplaceInFolderPermission
+    ]
+  },
+  [ZupassFeedIds.Zuconnect_23]: {
+    id: ZupassFeedIds.Zuconnect_23,
+    name: "Zuconnect tickets",
+    description: "Your Zuconnect Tickets",
+    partialArgs: undefined,
+    credentialRequest: {
+      signatureType: "sempahore-signature-pcd"
+    },
+    permissions: [
+      {
+        folder: "Zuconnect",
+        type: PCDPermissionType.DeleteFolder
+      } as DeleteFolderPermission,
+      {
+        folder: "Zuconnect",
         type: PCDPermissionType.ReplaceInFolder
       } as ReplaceInFolderPermission
     ]

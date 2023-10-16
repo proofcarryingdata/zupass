@@ -33,6 +33,7 @@ import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import { icons } from "../icons";
+import Select from "./Select";
 
 /**
  * Given an {@link Argument}, renders a UI that displays its value.
@@ -406,26 +407,30 @@ function ToggleListArgInput({
       arg={arg}
       {...rest}
       end={
-        <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
-          {showAll ? "▲" : "▼"}
-        </ShowMoreButton>
+        entries.length ? (
+          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+            {showAll ? "▲" : "▼"}
+          </ShowMoreButton>
+        ) : undefined
       }
     >
-      <ChipsContainer direction={showAll ? "row" : "column"}>
-        {entries.map(([key, value]) => (
-          <Chip
-            key={key}
-            label={getLabel(key)}
-            onClick={
-              arg.userProvided
-                ? () => setArg({ ...arg.value, [key]: !value })
-                : undefined
-            }
-            checked={value}
-            icon={getIcon(value)}
-          />
-        ))}
-      </ChipsContainer>
+      {!!entries.length && (
+        <ChipsContainer direction={showAll ? "row" : "column"}>
+          {entries.map(([key, value]) => (
+            <Chip
+              key={key}
+              label={getLabel(key)}
+              onClick={
+                arg.userProvided
+                  ? () => setArg({ ...arg.value, [key]: !value })
+                  : undefined
+              }
+              checked={value}
+              icon={getIcon(value)}
+            />
+          ))}
+        </ChipsContainer>
+      )}
     </ArgContainer>
   );
 }
@@ -454,9 +459,24 @@ export function PCDArgInput({
     [pcdCollection, setArg]
   );
 
+  type Option = {
+    id: string;
+    label: string;
+  };
+  const options = useMemo<Option[]>(
+    () =>
+      relevantPCDs.map((pcd) => {
+        const pcdPackage = pcdCollection.getPackage(pcd.type);
+        return {
+          id: pcd.id,
+          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type
+        };
+      }),
+    [relevantPCDs, pcdCollection]
+  );
   const onChange = useCallback(
-    async (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setPCDById(e.target.value);
+    (option: Option) => {
+      setPCDById(option.id);
     },
     [setPCDById]
   );
@@ -478,24 +498,22 @@ export function PCDArgInput({
   }, [arg.value, pcdCollection]);
 
   return (
-    <ArgContainer arg={arg} {...rest}>
-      {relevantPCDs.length ? (
+    <ArgContainer
+      arg={arg}
+      {...rest}
+      error={
+        !relevantPCDs.length &&
+        (arg.validatorParams?.notFoundMessage ||
+          "You do not have an eligible PCD.")
+      }
+    >
+      {!!relevantPCDs.length && (
         <Select
-          value={pcd?.id || "none"}
+          value={options.find((option) => option.id === pcd?.id)}
+          options={options}
           onChange={onChange}
-          disabled={relevantPCDs.length === 0}
-        >
-          {relevantPCDs.map((pcd) => {
-            const pcdPackage = pcdCollection.getPackage(pcd.type);
-            return (
-              <option key={pcd.id} value={pcd.id}>
-                {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type}
-              </option>
-            );
-          })}
-        </Select>
-      ) : (
-        <ErrorText>No eligible {arg.displayName || "PCD"}s found</ErrorText>
+          isDisabled={!arg.userProvided}
+        />
       )}
     </ArgContainer>
   );
@@ -516,7 +534,7 @@ function ArgContainer({
   end?: React.ReactNode;
 }) {
   return (
-    <ArgItemContainer hidden={hidden}>
+    <ArgItemContainer hidden={hidden} error={!!error}>
       {!hideIcon && (
         <ArgItemIcon
           src={argTypeIcons[argumentType]}
@@ -555,7 +573,7 @@ function ArgContainer({
           <End>{end}</End>
         </ArgName>
         {children}
-        <ErrorText>{error}</ErrorText>
+        {error && <ErrorText>{error}</ErrorText>}
       </ArgItem>
     </ArgItemContainer>
   );
@@ -589,9 +607,11 @@ const End = styled.div`
   margin-right: 8px;
 `;
 
-const ArgItemContainer = styled.div<{ hidden: boolean }>`
+const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   border-radius: 16px;
-  border: 1px solid var(--bg-lite-gray);
+  border: 1px solid;
+  border-color: ${({ error }) =>
+    error ? "var(--danger)" : "var(--primary-lite)"};
   background-color: rgba(var(--white-rgb), 0.01);
   align-items: center;
   padding: 8px 16px;
@@ -634,39 +654,15 @@ const ArgsContainer = styled.div`
 `;
 
 const ErrorText = styled.div`
-  color: var(--danger);
-`;
-
-const Select = styled.select`
-  width: 100%;
-  height: 32px;
-  border-radius: 4px;
-  color: var(--white);
-  background-color: var(--bg-lite-gray);
-  padding: 0 24px 0 8px;
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23FFF'><polygon points='0,0 100,0 50,50'/></svg>")
-    no-repeat;
-  background-size: 12px;
-  background-position: calc(100% - 8px) 12px;
-  background-repeat: no-repeat;
-
-  :disabled {
-    background: none;
-  }
+  color: var(--danger-bright);
+  font-size: 14px;
 `;
 
 const Input = styled.input`
   width: 100%;
   height: 32px;
-  background-color: var(--bg-lite-gray);
-  border: 1px solid var(--bg-lite-gray);
+  background-color: var(--bg-lite-primary);
+  border: 1px solid var(--bg-lite-primary);
   color: var(--white);
   font:
     14px PlexSans,
@@ -681,8 +677,8 @@ const Input = styled.input`
 const TextareaInput = styled.textarea`
   width: 100%;
   height: 4em;
-  background-color: var(--bg-lite-gray);
-  border: 1px solid var(--bg-lite-gray);
+  background-color: var(--bg-lite-primary);
+  border: 1px solid var(--bg-lite-primary);
   color: var(--white);
   resize: vertical;
   font:

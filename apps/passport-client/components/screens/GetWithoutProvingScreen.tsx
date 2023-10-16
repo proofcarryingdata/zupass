@@ -3,7 +3,7 @@ import {
   PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -25,6 +25,7 @@ import { Button, H1, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
+import Select from "../shared/Select";
 import { SyncingPCDs } from "../shared/SyncingPCDs";
 
 /**
@@ -40,9 +41,21 @@ export function GetWithoutProvingScreen() {
   const syncSettled = useIsSyncSettled();
   const params = new URLSearchParams(location.search);
   const request = validateRequest<PCDGetWithoutProvingRequest>(params);
-  const filteredPCDs = pcds
-    .getAll()
-    .filter((pcd) => pcd.type === request.pcdType);
+  const filteredPCDs = useMemo(
+    () => pcds.getAll().filter((pcd) => pcd.type === request.pcdType),
+    [pcds, request.pcdType]
+  );
+  const options = useMemo(
+    () =>
+      filteredPCDs.map((pcd) => {
+        const pcdPackage = pcds.getPackage(pcd.type);
+        return {
+          id: pcd.id,
+          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id
+        };
+      }),
+    [filteredPCDs, pcds]
+  );
 
   // If we only have one matching PCD, then make that the default selection
   const defaultSelection =
@@ -101,11 +114,11 @@ export function GetWithoutProvingScreen() {
 
   return (
     <>
-      <MaybeModal fullScreen />
+      <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
         <Container>
           <Spacer h={16} />
-          <AppHeader />
+          <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />
           <H1>Get {request.pcdType}</H1>
           <p>
@@ -114,21 +127,12 @@ export function GetWithoutProvingScreen() {
             give it to the website.
           </p>
           <Spacer h={16} />
-          <select
-            style={{ width: "100%" }}
-            value={selectedPCDID}
-            onChange={(e) => setSelectedPCDID(e.target.value)}
-          >
-            <option value="none">select</option>
-            {filteredPCDs.map((pcd) => {
-              const pcdPackage = pcds.getPackage(pcd.type);
-              return (
-                <option key={pcd.id} value={pcd.id}>
-                  {pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id}
-                </option>
-              );
-            })}
-          </select>
+          <Select
+            value={options.find((o) => o.id === selectedPCDID)}
+            onChange={(o) => setSelectedPCDID(o.id)}
+            options={options}
+            noOptionsMessage={() => "No matching PCDs"}
+          />
           <Spacer h={16} />
           <Button onClick={onSendClick}>Send</Button>
         </Container>

@@ -173,7 +173,7 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramAnonChannel {
+export interface TelegramTopic {
   telegram_chat_id: string;
   topic_id: string;
   topic_name: string;
@@ -202,3 +202,45 @@ export interface KnownTicketTypeWithKey extends KnownTicketType {
   known_public_key_type: KnownPublicKeyType;
   public_key: string;
 }
+
+export interface AnonNullifierInfo {
+  nullifier: string;
+  message_timestamps: string[];
+}
+
+/**
+ * A Zuconnect ticket in the DB.
+ */
+export interface ZuconnectTicketDB {
+  // Our internal ticket ID, a UUID
+  id: string;
+  // Ticket ID received from Tripsha
+  external_ticket_id: string;
+  // Our internal product ID, see
+  // {@link ZUCONNECT_PRODUCT_ID_MAPPINGS}
+  product_id: string;
+  attendee_email: string;
+  attendee_name: string;
+  is_deleted: boolean;
+  is_mock_ticket: boolean;
+}
+
+export interface LinkedPretixTelegramEvent {
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
+  isLinkedToCurrentChat: boolean;
+}
+
+export interface ChatIDWithEventIDs {
+  telegramChatID: string;
+  ticketEventIds: string[];
+}
+export interface UserIDWithChatIDs {
+  telegramUserID: string;
+  telegramChatIDs: string[];
+}
+
+export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+  isChatMember: boolean;
+};

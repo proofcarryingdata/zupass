@@ -1,10 +1,12 @@
 "use client";
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { PCDGetRequest, ProveOptions } from "@pcd/passport-interface";
-import { ArgsOf, ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
+import {
+  constructZupassPcdGetRequestUrl,
+  getAnonTopicNullifier
+} from "@pcd/passport-interface/src/PassportInterface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
@@ -21,43 +23,21 @@ function getMessageWatermark(message: string): bigint {
 }
 
 interface TopicData {
+  chatId: string;
   topicName: string;
   topicId: string;
   validEventIds: string[];
 }
 
-enum PCDRequestType {
-  Get = "Get",
-  GetWithoutProving = "GetWithoutProving",
-  Add = "Add",
-  ProveAndAdd = "ProveAndAdd"
-}
-
-function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
-  zupassClientUrl: string,
-  returnUrl: string,
-  pcdType: T["name"],
-  args: ArgsOf<T>,
-  options?: ProveOptions
-) {
-  const req: PCDGetRequest<T> = {
-    type: PCDRequestType.Get,
-    returnUrl: returnUrl,
-    args: args,
-    pcdType,
-    options
-  };
-  const encReq = encodeURIComponent(JSON.stringify(req));
-  return `${zupassClientUrl}#/prove?request=${encReq}`;
-}
-
 async function requestProof(
   message: string,
+  chatId: string,
   topicId: string,
   validEventIds: string[]
 ) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
+  const revealedFields = {};
 
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
@@ -69,7 +49,9 @@ async function requestProof(
       description: "",
       validatorParams: {
         eventIds: validEventIds,
-        notFoundMessage: `You don't have a ticket for this event`
+        productIds: [],
+        // TODO: surface which event ticket we are looking for
+        notFoundMessage: "You don't have a ticket for this event."
       },
       hideIcon: true
     },
@@ -81,12 +63,18 @@ async function requestProof(
     },
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
-      value: {},
-      userProvided: false
+      value: revealedFields,
+      userProvided: false,
+      description: Object.keys(revealedFields).length
+        ? "The following fields will be revealed"
+        : "No information will be revealed"
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: undefined,
+      value: getAnonTopicNullifier(
+        parseInt(chatId),
+        parseInt(topicId)
+      ).toString(),
       userProvided: false
     },
     validEventIds: {
@@ -101,8 +89,6 @@ async function requestProof(
     }
   };
 
-  await sleep(1000);
-
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
@@ -112,9 +98,9 @@ async function requestProof(
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK Ticket Proof",
+    title: "",
     description:
-      "Generate a zero-knowledge proof that you have an EdDSA ticket for a conference event! Select your ticket from the dropdown below."
+      "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message."
   });
 
   window.location.href = proofUrl;
@@ -148,7 +134,12 @@ export default function () {
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
     if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
-    await requestProof(message, topicData.topicId, topicData.validEventIds);
+    await requestProof(
+      message,
+      topicData.chatId,
+      topicData.topicId,
+      topicData.validEventIds
+    );
     setLoadingProofUrl(false);
   }, [message]);
 
@@ -178,7 +169,8 @@ export default function () {
             onChange={(e) => setMessage(e.target.value)}
             className={`border-2 ${
               messageInvalid ? "border-red-500" : ""
-            } text-2xl rounded-lg text-black resize-none p-2 h-[30vh]`}
+            } text-2xl rounded-lg text-black resize-none p-2 h-[25vh] select-text`}
+            autoFocus
           />
         </div>
         <div className="mt-8 text-center flex flex-col w-full">
@@ -188,13 +180,16 @@ export default function () {
             </div>
           )}
           <span className="text-white pb-2">🔒 Anonymous posting</span>
-          <button
-            onClick={onClick}
-            className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4 disabled:opacity-40"
-            disabled={messageInvalid}
-          >
-            {loadingProofUrl ? `Loading...` : `Send to ${topicData.topicName}`}
-          </button>
+          {message.length != 0 && !messageInvalid && (
+            <button
+              onClick={onClick}
+              className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4"
+            >
+              {loadingProofUrl
+                ? `Loading...`
+                : `Send to ${topicData.topicName}`}
+            </button>
+          )}
         </div>
       </div>
     );

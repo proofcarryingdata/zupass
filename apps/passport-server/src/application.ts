@@ -3,7 +3,11 @@ import * as path from "path";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { getZuzaluPretixAPI, ZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import {
+  IZuconnectTripshaAPI,
+  getZuconnectTripshaAPI
+} from "./apis/zuconnect/zuconnectTripshaAPI";
+import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
@@ -110,9 +114,19 @@ async function getOverridenApis(
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
+  let zuconnectTripshaAPI: IZuconnectTripshaAPI | null = null;
+
+  if (apiOverrides?.zuconnectTripshaAPI) {
+    logger("[INIT] overriding Zuconnect Tripsha API");
+    zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
+  } else {
+    zuconnectTripshaAPI = getZuconnectTripshaAPI();
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI,
-    devconnectPretixAPIFactory
+    devconnectPretixAPIFactory,
+    zuconnectTripshaAPI
   };
 }

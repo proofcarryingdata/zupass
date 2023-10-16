@@ -14,9 +14,9 @@ import {
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import {
-  FullProof,
-  Proof,
   generateProof,
+  PackedProof,
+  SemaphoreProof,
   verifyProof
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
@@ -77,7 +77,7 @@ export interface SemaphoreGroupPCDClaim {
   nullifierHash: string;
 }
 
-export type SemaphoreGroupPCDProof = Proof;
+export type SemaphoreGroupPCDProof = PackedProof;
 
 export class SemaphoreGroupPCD
   implements PCD<SemaphoreGroupPCDClaim, SemaphoreGroupPCDProof>
@@ -172,7 +172,7 @@ export async function prove(
 }
 
 export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
-  const fullProof: FullProof = {
+  const fullProof: SemaphoreProof = {
     externalNullifier: pcd.claim.externalNullifier,
     merkleTreeRoot: pcd.claim.merkleRoot + "",
     nullifierHash: pcd.claim.nullifierHash,

@@ -1,4 +1,4 @@
-import { createCredentialCache } from "@pcd/passport-interface";
+import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -175,6 +175,7 @@ function RouterImpl() {
           <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
+          <Route path="telegram" element={<HomeScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -214,7 +215,7 @@ async function loadInitialState(): Promise<AppState> {
     modal = { modalType: "upgrade-account-modal" };
   }
 
-  const credentialCache = createCredentialCache();
+  const credentialCache = createStorageBackedCredentialCache();
 
   return {
     self,

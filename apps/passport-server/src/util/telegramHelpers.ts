@@ -8,18 +8,25 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Context, SessionFlavor } from "grammy";
-import { Chat, ChatMemberAdministrator, ChatMemberOwner } from "grammy/types";
+import { Api, Bot, Context, RawApi, SessionFlavor } from "grammy";
+import {
+  BotCommand,
+  Chat,
+  ChatMemberAdministrator,
+  ChatMemberOwner
+} from "grammy/types";
 import { Pool } from "postgres-pool";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   ChatIDWithEventIDs,
-  LinkedPretixTelegramEvent,
-  fetchEventsPerChat,
-  fetchLinkedPretixAndTelegramEvents,
+  ChatIDWithEventsAndMembership,
+  LinkedPretixTelegramEvent
+} from "../database/models";
+import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import {
+  fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramEventsByChatId,
-  fetchUserTelegramChats
+  fetchTelegramChatsWithMembershipStatus,
+  fetchTelegramEventsByChatId
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -27,7 +34,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { logger } from "./logger";
 
-export type TopicChat = Chat.GroupChat | Chat.SupergroupChat | null;
+export type TopicChat = Chat.SupergroupChat | null;
 
 type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
   T & {
@@ -36,14 +43,25 @@ type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
 
 export interface SessionData {
   dbPool: Pool;
-  selectedEvent?: LinkedPretixTelegramEvent & { isLinked: boolean };
+  selectedEvent?: LinkedPretixTelegramEvent;
   lastMessageId?: number;
   selectedChat?: TopicChat;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
 
+export const getGroupChat = async (
+  api: Api<RawApi>,
+  chatId: string | number
+): Promise<Chat.SupergroupChat> => {
+  const chat = await api.getChat(chatId);
+  if (!chat) throw new Error(`No chat found for id ${chatId}`);
+  if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
+  else throw new Error(`Chat is not a group with topics enabled`);
+};
+
 export const base64EncodeTopicData = (
+  chatId: number | string,
   topicName: string,
   topicId: number | string,
   validEventIds: string[]
@@ -51,7 +69,8 @@ export const base64EncodeTopicData = (
   const topicData = Buffer.from(
     encodeURIComponent(
       JSON.stringify({
-        topicName: topicName,
+        chatId,
+        topicName,
         topicId,
         validEventIds
       })
@@ -70,6 +89,70 @@ function isFulfilled<T>(
 ): promiseSettledResult is PromiseFulfilledResult<T> {
   return promiseSettledResult.status === "fulfilled";
 }
+
+export const setBotInfo = async (
+  bot: Bot<BotContext, Api<RawApi>>
+): Promise<void> => {
+  if (process.env.PASSPORT_CLIENT_URL) {
+    bot.api.setChatMenuButton({
+      menu_button: {
+        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
+        type: "web_app",
+        text: "Zupass"
+      }
+    });
+  }
+  bot.api.setMyDescription(
+    "I'm Zucat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
+  );
+
+  bot.api.setMyShortDescription(
+    "Zucat manages events and groups with zero-knowledge proofs"
+  );
+
+  const privateChatCommands: BotCommand[] = [
+    {
+      command: "/start",
+      description: "Join a group with a proof of ticket"
+    },
+    {
+      command: "/anonsend",
+      description: "Send an anonymous message"
+    },
+    {
+      command: "/help",
+      description: "Get help"
+    }
+  ];
+
+  bot.api.setMyCommands(privateChatCommands, {
+    scope: { type: "all_private_chats" }
+  });
+
+  const adminGroupChatCommands: BotCommand[] = [
+    {
+      command: "/incognito",
+      description: "Set a topic for anonymous posting"
+    },
+    {
+      command: "/manage",
+      description: "Link this chat to events"
+    },
+    {
+      command: "/setup",
+      description:
+        "Initialize a group chat with an Admin and Announcements topic"
+    },
+    {
+      command: "/adminhelp",
+      description: "Get info in a DM about the group and linked events"
+    }
+  ];
+
+  bot.api.setMyCommands(adminGroupChatCommands, {
+    scope: { type: "all_chat_administrators" }
+  });
+};
 
 /**
  * Fetches the chat object for a list contaning a telegram chat id
@@ -137,8 +220,8 @@ export const isDirectMessage = (ctx: Context): boolean => {
   return !!(ctx.chat?.type && ctx.chat?.type === "private");
 };
 
-export const isGroupWithTopics = (ctx: Context): boolean => {
-  return !!(ctx.chat?.type && ctx.chat?.type === "supergroup");
+export const isGroupWithTopics = (chat: Chat): boolean => {
+  return !!(chat?.type && chat?.type === "supergroup");
 };
 
 const checkDeleteMessage = (ctx: BotContext): void => {
@@ -175,14 +258,14 @@ const editOrSendMessage = async (
   }
 };
 
-const generateProofUrl = (
+const generateTicketProofUrl = (
   telegramUserId: string,
   validEventIds: string[]
 ): string => {
   const fieldsToReveal: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
-    revealEventId: true,
-    revealProductId: true,
+    revealEventId: false,
+    revealProductId: false,
     revealTimestampConsumed: false,
     revealTimestampSigned: false,
     revealAttendeeSemaphoreId: true,
@@ -200,6 +283,7 @@ const generateProofUrl = (
       description: "",
       validatorParams: {
         eventIds: validEventIds,
+        productIds: [],
         // TODO: surface which event ticket we are looking for
         notFoundMessage: "You don't have a ticket to this event."
       },
@@ -248,12 +332,31 @@ const generateProofUrl = (
     genericProveScreen: true,
     title: "",
     description:
-      "Zucat would like to invite you to a Telegram group and requested a zero-knowledge proof."
+      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
   });
   return proofUrl;
 };
 
-export const dynamicEvents = async (
+const getChatsWithMembershipStatus = async (
+  db: Pool,
+  ctx: BotContext,
+  userId: number
+): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
+  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+    db,
+    userId
+  );
+
+  const chatsWithMembership = await chatIDsToChats(
+    db,
+    ctx,
+    chatIdsWithMembership
+  );
+
+  return chatsWithMembership;
+};
+
+export const eventsToLink = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
@@ -262,33 +365,41 @@ export const dynamicEvents = async (
     range.text(`Database not connected. Try again...`);
     return;
   }
-  // If an event is selected, display it and its menu options
-  if (ctx.session.selectedEvent) {
-    const event = ctx.session.selectedEvent;
-
-    range.text(`${event.isLinked ? "✅" : ""} ${event.eventName}`).row();
+  const chatId = ctx.chat?.id;
+  if (!chatId) {
+    {
+      range.text(`No chat id found`);
+      return;
+    }
+  }
+  // If an event is selected, give the option to add or remove it from the chat
+  // based on if it is already linked or not
+  const event = ctx.session.selectedEvent;
+  if (event) {
     range
-      .text(`Yes, ${event.isLinked ? "remove" : "add"}`, async (ctx) => {
-        let replyText = "";
-        if (!(await senderIsAdmin(ctx))) return;
+      .text(`${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`)
+      .row();
+    range
+      .text(
+        `Yes, ${event.isLinkedToCurrentChat ? "remove" : "add"}`,
+        async (ctx) => {
+          let replyText = "";
+          if (!(await senderIsAdmin(ctx))) return;
 
-        if (!ctx.chat?.id) {
-          await editOrSendMessage(ctx, `Chat Id not found`);
-        } else {
-          if (!event.isLinked) {
+          if (!event.isLinkedToCurrentChat) {
             replyText = `<i>Added ${event.eventName} from chat</i>`;
-            await insertTelegramChat(db, ctx.chat.id);
-            await insertTelegramEvent(db, event.configEventID, ctx.chat.id);
+            await insertTelegramChat(db, chatId);
+            await insertTelegramEvent(db, event.configEventID, chatId);
             await editOrSendMessage(ctx, replyText);
           } else {
             replyText = `<i>Removed ${event.eventName} to chat</i>`;
             await deleteTelegramEvent(db, event.configEventID);
           }
+          ctx.session.selectedEvent = undefined;
+          await ctx.menu.update({ immediate: true });
+          await editOrSendMessage(ctx, replyText);
         }
-        ctx.session.selectedEvent = undefined;
-        await ctx.menu.update({ immediate: true });
-        await editOrSendMessage(ctx, replyText);
-      })
+      )
       .row();
 
     range.text(`Go back`, async (ctx) => {
@@ -298,31 +409,24 @@ export const dynamicEvents = async (
       await ctx.menu.update({ immediate: true });
     });
   }
-  // Otherwise, display all events to manage.
+  // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchLinkedPretixAndTelegramEvents(db);
-    const eventsWithGateStatus = events.map((e) => {
-      return { ...e, isLinked: e.telegramChatID === ctx.chat?.id.toString() };
-    });
-    for (const event of eventsWithGateStatus) {
+    const events = await fetchEventsWithTelegramChats(db, chatId);
+    for (const event of events) {
       range
         .text(
-          `${event.isLinked ? "✅" : ""} ${event.eventName}`,
+          `${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`,
           async (ctx) => {
             if (!(await senderIsAdmin(ctx))) return;
-            if (ctx.session) {
-              ctx.session.selectedEvent = event;
-              await ctx.menu.update({ immediate: true });
-              let initText = "";
-              if (event.isLinked) {
-                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will NOT be able to join this chat</i>`;
-              } else {
-                initText = `<i>Users with tickets for ${ctx.session.selectedEvent.eventName} will be able to join this chat</i>`;
-              }
-              await editOrSendMessage(ctx, initText);
+            ctx.session.selectedEvent = event;
+            await ctx.menu.update({ immediate: true });
+            let initText = "";
+            if (event.isLinkedToCurrentChat) {
+              initText = `<i>Users with tickets for ${event.eventName} will NOT be able to join this chat</i>`;
             } else {
-              ctx.reply(`No session found`);
+              initText = `<i>Users with tickets for ${event.eventName} will be able to join this chat</i>`;
             }
+            await editOrSendMessage(ctx, initText);
           }
         )
         .row();
@@ -345,34 +449,28 @@ export const chatsToJoin = async (
     return;
   }
 
-  const events = await fetchEventsPerChat(db);
-  const eventsWithChats = await chatIDsToChats(db, ctx, events);
-  const userChats = await fetchUserTelegramChats(db, userId);
-
-  const finalEvents = eventsWithChats.map((e) => {
-    return {
-      ...e,
-      userIsChatMember: userChats
-        ? userChats.telegramChatIDs.includes(e.telegramChatID)
-        : false
-    };
-  });
-  if (finalEvents && finalEvents.length === 0) {
+  const chatsWithMembership = await getChatsWithMembershipStatus(
+    db,
+    ctx,
+    userId
+  );
+  if (chatsWithMembership.length === 0) {
     range.text(`No groups to join at this time`);
     return;
   }
-  const sortedChats = finalEvents.sort(
-    (a, b) => +a.userIsChatMember - +b.userIsChatMember
-  );
-  for (const chat of sortedChats) {
-    if (chat.userIsChatMember) {
+
+  for (const chat of chatsWithMembership) {
+    if (chat.isChatMember) {
       const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
         creates_join_request: true
       });
       range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
       range.row();
     } else {
-      const proofUrl = generateProofUrl(userId.toString(), chat.ticketEventIds);
+      const proofUrl = generateTicketProofUrl(
+        userId.toString(),
+        chat.ticketEventIds
+      );
       range.webApp(`${chat.chat?.title}`, proofUrl).row();
     }
   }
@@ -393,16 +491,22 @@ export const chatsToPostIn = async (
     return;
   }
   try {
+    // If a chat has been selected, give the user a choice of topics to send to.
     if (ctx.session.selectedChat) {
       const chat = ctx.session.selectedChat;
+
+      // Fetch anon topics for the selected chat
       const topics = await fetchTelegramAnonTopicsByChatId(
         ctx.session.dbPool,
         chat.id
       );
+
+      // Fetch telegram event Ids for the selected chat.
       const telegramEvents = await fetchTelegramEventsByChatId(
         ctx.session.dbPool,
         chat.id
       );
+
       const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
       if (topics.length === 0) {
@@ -414,6 +518,7 @@ export const chatsToPostIn = async (
           .row();
         for (const topic of topics) {
           const encodedTopicData = base64EncodeTopicData(
+            chat.id,
             topic.topic_name,
             topic.topic_id,
             validEventIds
@@ -430,26 +535,25 @@ export const chatsToPostIn = async (
         ctx.session.selectedChat = undefined;
         await ctx.menu.update({ immediate: true });
       });
-    } else {
-      const events = await fetchEventsPerChat(db);
-      const eventsWithChats = await chatIDsToChats(db, ctx, events);
-      if (eventsWithChats && eventsWithChats.length === 0) {
-        range.text(`No groups to join at this time`);
-        return;
-      }
-      const userChats = await fetchUserTelegramChats(db, userId);
-
-      const finalChats = eventsWithChats.filter(
-        (e) => userChats && userChats.telegramChatIDs.includes(e.telegramChatID)
+    }
+    // Otherwise, give the user a list of chats that they are members of.
+    else {
+      const chatsWithMembership = await getChatsWithMembershipStatus(
+        db,
+        ctx,
+        userId
       );
-      if (finalChats?.length > 0) {
-        for (const chat of finalChats) {
-          range
-            .text(`✅ ${chat.chat?.title}`, async (ctx) => {
-              ctx.session.selectedChat = chat.chat;
-              await ctx.menu.update({ immediate: true });
-            })
-            .row();
+      if (chatsWithMembership.length > 0) {
+        for (const chat of chatsWithMembership) {
+          // Only show the chats the user is a member of
+          if (chat.isChatMember) {
+            range
+              .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+                ctx.session.selectedChat = chat.chat;
+                await ctx.menu.update({ immediate: true });
+              })
+              .row();
+          }
         }
       } else {
         ctx.reply(`No chats found to post in. Type /start to join one!`);
@@ -460,3 +564,11 @@ export const chatsToPostIn = async (
     return;
   }
 };
+
+export function msToTimeString(duration: number): string {
+  const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((duration / (1000 * 60)) % 60);
+  const seconds = Math.floor((duration / 1000) % 60);
+
+  return `${hours} hours, ${minutes} minutes, and ${seconds} seconds`;
+}

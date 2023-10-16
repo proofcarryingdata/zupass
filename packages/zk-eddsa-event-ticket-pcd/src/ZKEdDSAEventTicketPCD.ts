@@ -37,7 +37,11 @@ import {
 } from "@pcd/util";
 import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { Groth16Proof, groth16 } from "snarkjs";
+import {
+  Groth16Proof,
+  prove as groth16Prove,
+  verify as groth16Verify
+} from "@zk-kit/groth16";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -97,12 +101,12 @@ export type ZKEdDSAEventTicketPCDArgs = {
        * or in the app level (e.g. check revealed eventId or productId)
        *
        * If both `eventIds` and `productIds` are provided, they must be of the same length and
-       * they will be checked as pairs.
+       * they will be checked as pairs. Pass empty array to skip the check.
        */
-      eventIds?: string[];
-      productIds?: string[];
+      eventIds: string[];
+      productIds: string[];
       // user friendly message when no valid ticket is found
-      notFoundMessage?: string;
+      notFoundMessage: string;
     }
   >;
   identity: PCDArgument<SemaphoreIdentityPCD>;
@@ -217,8 +221,9 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket =
-    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
+  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+    serializedTicketPCD
+  );
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -453,14 +458,15 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
           return true;
         },
         validatorParams: {
+          eventIds: [],
+          productIds: [],
           notFoundMessage: "You do not have any eligible tickets."
         }
       },
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
         displayName: "",
-        description:
-          "...with the following information. The rest will remain private to you."
+        description: "The following information will be revealed"
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
@@ -506,7 +512,7 @@ export async function prove(
     watermark
   );
 
-  const { proof, publicSignals } = await groth16.fullProve(
+  const { proof, publicSignals } = await groth16Prove(
     snarkInput,
     initArgs.wasmFilePath,
     initArgs.zkeyFilePath
@@ -591,7 +597,7 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // full package initialization.
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
 }
 
 /**

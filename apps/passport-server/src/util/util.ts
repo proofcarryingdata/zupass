@@ -69,3 +69,20 @@ export function isLocalServer(): boolean {
     process.env.PASSPORT_SERVER_URL === "https://dev.local:3002"
   );
 }
+
+export function checkSlidingWindowRateLimit(
+  timestamps: number[],
+  maxRequestCount: number,
+  timeWindowMs: number
+): { rateLimitExceeded: boolean; newTimestamps: string[] } {
+  const currentTime = Date.now();
+  timestamps.push(currentTime);
+
+  const startTime = currentTime - timeWindowMs;
+  const requestsSinceStartTime = timestamps.filter((t) => t > startTime);
+
+  return {
+    rateLimitExceeded: requestsSinceStartTime.length > maxRequestCount,
+    newTimestamps: requestsSinceStartTime.map((t) => new Date(t).toISOString())
+  };
+}

@@ -15,8 +15,8 @@ import {
   ZuzaluPretixOrder
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
-import { ZUZALU_23_EVENT_ID } from "../src/services/issuanceService";
 import { Zupass } from "../src/types";
+import { ZUZALU_23_EVENT_ID } from "../src/util/constants";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
@@ -93,7 +93,7 @@ describe("zuzalu pcdpass functionality", function () {
         application.expressContext.localEndpoint,
         identity,
         payload,
-        ZupassFeedIds.Zuzalu_1
+        ZupassFeedIds.Zuzalu_23
       );
 
       if (!response.success) {
