@@ -31,6 +31,7 @@ export const errorHtmlWithDetails = (error: Error): string => {
   <html>
     <head>
       <title>Error</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
       <style>
         body {
           background-color: white;
