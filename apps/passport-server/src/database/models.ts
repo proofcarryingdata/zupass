@@ -173,7 +173,7 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramAnonChannel {
+export interface TelegramTopic {
   telegram_chat_id: string;
   topic_id: string;
   topic_name: string;
@@ -224,3 +224,23 @@ export interface ZuconnectTicketDB {
   is_deleted: boolean;
   is_mock_ticket: boolean;
 }
+
+export interface LinkedPretixTelegramEvent {
+  telegramChatID: string | null;
+  eventName: string;
+  configEventID: string;
+  isLinkedToCurrentChat: boolean;
+}
+
+export interface ChatIDWithEventIDs {
+  telegramChatID: string;
+  ticketEventIds: string[];
+}
+export interface UserIDWithChatIDs {
+  telegramUserID: string;
+  telegramChatIDs: string[];
+}
+
+export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+  isChatMember: boolean;
+};
