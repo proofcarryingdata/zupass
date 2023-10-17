@@ -335,7 +335,6 @@ export type VerifyTicketResponseValue =
  * Verifies a ticket by ticket ID and timestamp.
  * See also {@link VerifyTicketRequest}
  */
-
 export interface VerifyTicketByIdRequest {
   /**
    * The ID of an EdDSATicketPCD.

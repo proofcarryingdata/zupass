@@ -1254,7 +1254,7 @@ export class IssuanceService {
           success: true,
           value: {
             verified: false,
-            message: "PCD does not revent correct fields."
+            message: "PCD does not reveal the correct fields."
           }
         };
       }
