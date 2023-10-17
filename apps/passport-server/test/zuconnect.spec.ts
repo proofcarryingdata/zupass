@@ -168,7 +168,7 @@ describe("zuconnect functionality", function () {
       expect(tickets.length).to.eq(0);
     } catch (e) {
       // Should never get here
-      expect(false).to.be.true;
+      expect.fail();
     }
 
     // Test that validation fails for a ticket with an unknown ticketName
@@ -179,7 +179,7 @@ describe("zuconnect functionality", function () {
       expect(tickets.length).to.eq(0);
     } catch (e) {
       // Should never get here
-      expect(false).to.be.true;
+      expect.fail();
     }
 
     // Run a good sync so that following tests have good data to work with
