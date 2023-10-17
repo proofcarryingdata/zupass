@@ -1,8 +1,4 @@
-import {
-  EdDSAPublicKey,
-  getEdDSAPublicKey,
-  newEdDSAPrivateKey
-} from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -18,7 +14,6 @@ import {
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
-  checkinTicket,
   checkinTicketById,
   createFeedCredentialPayload,
   pollFeed,
@@ -1932,36 +1927,6 @@ describe("devconnect functionality", function () {
   });
 
   step(
-    "event 'superuser' should be able to checkin a valid ticket",
-    async function () {
-      MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const issueResponse = await pollFeed(
-        application.expressContext.localEndpoint,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
-      );
-      MockDate.reset();
-      const issueResponseBody = issueResponse.value as PollFeedResponseValue;
-      const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
-
-      const serializedTicket = action.pcds[1] as SerializedPCD<EdDSATicketPCD>;
-      ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
-
-      const checkinResult = await checkinTicket(
-        application.expressContext.localEndpoint,
-        ticketPCD,
-        checkerIdentity
-      );
-
-      expect(checkinResult.success).to.eq(true);
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult.error).to.eq(undefined);
-    }
-  );
-
-  step(
     "event 'superuser' should be able to checkin a valid ticket by ID",
     async function () {
       MockDate.set(new Date());
@@ -1994,64 +1959,14 @@ describe("devconnect functionality", function () {
   step(
     "a 'superuser' should not be able to check in a ticket that has already been used to check in",
     async function () {
-      const checkinResult = await checkinTicket(
+      const checkinResult = await checkinTicketById(
         application.expressContext.localEndpoint,
-        ticketPCD,
+        ticketPCD.claim.ticket.ticketId,
         checkerIdentity
       );
 
       expect(checkinResult.value).to.eq(undefined);
       expect(checkinResult?.error?.name).to.eq("AlreadyCheckedIn");
-    }
-  );
-
-  step(
-    "a 'superuser' should not able to check in with a ticket not signed by the server",
-    async function () {
-      const prvKey = newEdDSAPrivateKey();
-      const ticketData: ITicketData = {
-        // the fields below are not signed and are used for display purposes
-        attendeeName: "test name",
-        attendeeEmail: "user@test.com",
-        eventName: "event",
-        ticketName: "ticket",
-        checkerEmail: "checker@test.com",
-
-        // the fields below are signed using the server's private eddsa key
-        ticketId: uuid(),
-        eventId: uuid(),
-        productId: uuid(),
-        timestampConsumed: Date.now(),
-        timestampSigned: Date.now(),
-        attendeeSemaphoreId: "12345",
-        isConsumed: false,
-        isRevoked: false,
-        ticketCategory: TicketCategory.Devconnect
-      };
-
-      ticketPCD = await EdDSATicketPCDPackage.prove({
-        ticket: {
-          value: ticketData,
-          argumentType: ArgumentTypeName.Object
-        },
-        privateKey: {
-          value: prvKey,
-          argumentType: ArgumentTypeName.String
-        },
-        id: {
-          value: undefined,
-          argumentType: ArgumentTypeName.String
-        }
-      });
-
-      const checkinResult = await checkinTicket(
-        application.expressContext.localEndpoint,
-        ticketPCD,
-        checkerIdentity
-      );
-
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult?.error?.name).to.eq("InvalidSignature");
     }
   );
 

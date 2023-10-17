@@ -7,8 +7,7 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  TicketCategory,
-  getEdDSATicketData
+  TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -17,10 +16,6 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
-  CheckTicketInRequest,
-  CheckTicketInResult,
-  CheckTicketRequest,
-  CheckTicketResult,
   FeedHost,
   ISSUANCE_STRING,
   KnownPublicKeyType,
@@ -408,89 +403,6 @@ export class IssuanceService {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
-  public async handleDevconnectCheckInRequest(
-    request: CheckTicketInRequest
-  ): Promise<CheckTicketInResult> {
-    try {
-      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
-        request.ticket.pcd
-      );
-
-      const ticketValid = await this.checkDevconnectTicket(ticketPCD);
-
-      if (ticketValid.error != null) {
-        return ticketValid;
-      }
-
-      const ticketData = getEdDSATicketData(ticketPCD);
-
-      if (!ticketData) {
-        return {
-          error: { name: "InvalidTicket" },
-          success: false
-        };
-      }
-
-      const signature = await SemaphoreSignaturePCDPackage.deserialize(
-        request.checkerProof.pcd
-      );
-
-      if (
-        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
-        signature.claim.signedMessage !== ISSUANCE_STRING
-      ) {
-        return {
-          error: { name: "NotSuperuser" },
-          success: false
-        };
-      }
-
-      const checker = await this.checkUserExists(signature);
-
-      if (!checker) {
-        return {
-          error: { name: "NotSuperuser" },
-          success: false
-        };
-      }
-
-      const checkerSuperUserPermissions =
-        await fetchDevconnectSuperusersForEmail(
-          this.context.dbPool,
-          checker.email
-        );
-
-      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) => perm.pretix_events_config_id === ticketData.eventId
-      );
-
-      if (!relevantSuperUserPermission) {
-        return { error: { name: "NotSuperuser" }, success: false };
-      }
-
-      const successfullyConsumed = await consumeDevconnectPretixTicket(
-        this.context.dbPool,
-        ticketData.ticketId,
-        checker.email
-      );
-
-      if (successfullyConsumed) {
-        return {
-          value: undefined,
-          success: true
-        };
-      }
-
-      return {
-        error: { name: "ServerError" },
-        success: false
-      };
-    } catch (e) {
-      logger("Error when consuming devconnect ticket", { error: e });
-      throw new PCDHTTPError(500, "failed to check in", { cause: e });
-    }
-  }
-
   public async handleDevconnectCheckInByIdRequest(
     request: CheckTicketInByIdRequest
   ): Promise<CheckTicketInByIdResult> {
@@ -500,11 +412,16 @@ export class IssuanceService {
         request.ticketId
       );
 
-      if (!ticketDB) {
-        return {
-          error: { name: "InvalidTicket" },
-          success: false
-        };
+      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+        request.checkerProof.pcd
+      );
+
+      const check = await this.checkDevconnectTicketById(
+        request.ticketId,
+        signaturePCD
+      );
+      if (check.success === false) {
+        return check;
       }
 
       const ticketData = {
@@ -512,40 +429,12 @@ export class IssuanceService {
         eventId: ticketDB?.pretix_events_config_id
       };
 
-      const verified = await this.cachedVerifySignaturePCD(
-        request.checkerProof
-      );
-      if (!verified) {
-        return {
-          error: { name: "InvalidSignature" },
-          success: false
-        };
-      }
-
-      const checker = await this.checkUserExists(
-        await SemaphoreSignaturePCDPackage.deserialize(request.checkerProof.pcd)
-      );
-
-      if (!checker) {
-        return {
-          error: { name: "NotSuperuser" },
-          success: false
-        };
-      }
-
-      const checkerSuperUserPermissions =
-        await fetchDevconnectSuperusersForEmail(
-          this.context.dbPool,
-          checker.email
-        );
-
-      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) => perm.pretix_events_config_id === ticketData.eventId
-      );
-
-      if (!relevantSuperUserPermission) {
-        return { error: { name: "NotSuperuser" }, success: false };
-      }
+      // We know this will succeed as it's also called by
+      // checkDevconnectTicketById() above
+      const checker = (await fetchUserByCommitment(
+        this.context.dbPool,
+        signaturePCD.claim.identityCommitment
+      )) as UserRow;
 
       const successfullyConsumed = await consumeDevconnectPretixTicket(
         this.context.dbPool,
@@ -561,120 +450,16 @@ export class IssuanceService {
       }
 
       return {
-        error: { name: "ServerError" },
+        error: {
+          name: "ServerError",
+          detailedMessage:
+            "The server encountered an error. Please try again later."
+        },
         success: false
       };
     } catch (e) {
       logger("Error when consuming devconnect ticket", { error: e });
       throw new PCDHTTPError(500, "failed to check in", { cause: e });
-    }
-  }
-
-  /**
-   * Check that a ticket is valid for Devconnect-only check-in by validating
-   * the PCD and checking that the ticket is in the DB and is not deleted,
-   * consumed etc.
-   */
-  public async handleDevconnectCheckTicketRequest(
-    request: CheckTicketRequest
-  ): Promise<CheckTicketResult> {
-    try {
-      const ticketPCD = await EdDSATicketPCDPackage.deserialize(
-        request.ticket.pcd
-      );
-      return this.checkDevconnectTicket(ticketPCD);
-    } catch (e) {
-      return {
-        error: { name: "ServerError" },
-        success: false
-      };
-    }
-  }
-
-  /**
-   * Validates an EdDSATicketPCD for Devconnect check-in by checking the
-   * PCD's attributes and the status of the ticket in the DB.
-   */
-  public async checkDevconnectTicket(
-    ticketPCD: EdDSATicketPCD
-  ): Promise<CheckTicketResult> {
-    try {
-      const proofPublicKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
-      if (!proofPublicKey) {
-        return {
-          error: {
-            name: "InvalidSignature",
-            detailedMessage: "Ticket malformed: missing public key."
-          },
-          success: false
-        };
-      }
-
-      const serverPublicKey = await this.getEdDSAPublicKey();
-      if (!isEqualEdDSAPublicKey(serverPublicKey, proofPublicKey)) {
-        return {
-          error: {
-            name: "InvalidSignature",
-            detailedMessage: "This ticket was not signed by Zupass."
-          },
-          success: false
-        };
-      }
-
-      const ticket = getEdDSATicketData(ticketPCD);
-
-      if (!ticket || !ticket.ticketId) {
-        return {
-          error: {
-            name: "InvalidTicket",
-            detailedMessage: "Ticket malformed: missing data."
-          },
-          success: false
-        };
-      }
-
-      const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
-        this.context.dbPool,
-        ticket.ticketId
-      );
-
-      if (!ticketInDb) {
-        return {
-          error: {
-            name: "InvalidTicket",
-            detailedMessage: "Ticket does not exist on backend."
-          },
-          success: false
-        };
-      }
-
-      if (ticketInDb.is_deleted) {
-        return {
-          error: { name: "TicketRevoked", revokedTimestamp: Date.now() },
-          success: false
-        };
-      }
-
-      if (ticketInDb.is_consumed) {
-        return {
-          error: {
-            name: "AlreadyCheckedIn",
-            checker: ticketInDb.checker ?? undefined,
-            checkinTimestamp: (
-              ticketInDb.zupass_checkin_timestamp ?? new Date()
-            ).toISOString()
-          },
-          success: false
-        };
-      }
-
-      return { value: undefined, success: true };
-    } catch (e) {
-      logger("Error when checking ticket", { error: e });
-      return {
-        error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
-        success: false
-      };
     }
   }
 
@@ -686,7 +471,10 @@ export class IssuanceService {
     request: CheckTicketByIdRequest
   ): Promise<CheckTicketByIdResult> {
     try {
-      return this.checkDevconnectTicketById(request.ticketId);
+      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+        request.signature.pcd
+      );
+      return this.checkDevconnectTicketById(request.ticketId, signaturePCD);
     } catch (e) {
       return {
         error: { name: "ServerError" },
@@ -699,7 +487,8 @@ export class IssuanceService {
    * Checks a ticket for validity based on the ticket's status in the DB.
    */
   public async checkDevconnectTicketById(
-    ticketId: string
+    ticketId: string,
+    signature: SemaphoreSignaturePCD
   ): Promise<CheckTicketByIdResult> {
     try {
       const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
@@ -711,7 +500,7 @@ export class IssuanceService {
         return {
           error: {
             name: "InvalidTicket",
-            detailedMessage: "Ticket does not exist on backend."
+            detailedMessage: "The ticket you tried to check in is not valid."
           },
           success: false
         };
@@ -719,7 +508,12 @@ export class IssuanceService {
 
       if (ticketInDb.is_deleted) {
         return {
-          error: { name: "TicketRevoked", revokedTimestamp: Date.now() },
+          error: {
+            name: "TicketRevoked",
+            revokedTimestamp: Date.now(),
+            detailedMessage:
+              "The ticket has been revoked. Please check with the event host."
+          },
           success: false
         };
       }
@@ -732,6 +526,56 @@ export class IssuanceService {
             checkinTimestamp: (
               ticketInDb.zupass_checkin_timestamp ?? new Date()
             ).toISOString()
+          },
+          success: false
+        };
+      }
+
+      if (
+        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
+        signature.claim.signedMessage !== ISSUANCE_STRING
+      ) {
+        return {
+          error: {
+            name: "NotSuperuser",
+            detailedMessage:
+              "You do not have permission to check this ticket in. Please check with the event host."
+          },
+
+          success: false
+        };
+      }
+
+      const checker = await this.checkUserExists(signature);
+
+      if (!checker) {
+        return {
+          error: {
+            name: "NotSuperuser",
+            detailedMessage:
+              "You do not have permission to check this ticket in. Please check with the event host."
+          },
+          success: false
+        };
+      }
+
+      const checkerSuperUserPermissions =
+        await fetchDevconnectSuperusersForEmail(
+          this.context.dbPool,
+          checker.email
+        );
+
+      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
+        (perm) =>
+          perm.pretix_events_config_id === ticketInDb.pretix_events_config_id
+      );
+
+      if (!relevantSuperUserPermission) {
+        return {
+          error: {
+            name: "NotSuperuser",
+            detailedMessage:
+              "You do not have permission to check this ticket in. Please check with the event host."
           },
           success: false
         };
