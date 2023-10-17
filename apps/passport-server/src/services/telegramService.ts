@@ -65,7 +65,6 @@ export class TelegramService {
   private authBot: Bot<BotContext>;
   private anonBot: Bot<BotContext>;
   private rollbarService: RollbarService | null;
-  private anonBotExists: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -77,9 +76,7 @@ export class TelegramService {
     this.rollbarService = rollbarService;
     this.authBot = authBot;
     this.anonBot = anonBot;
-    this.anonBotExists = authBot.botInfo.id !== anonBot.botInfo.id;
-
-    setBotInfo(authBot, anonBot, this.anonBotExists);
+    setBotInfo(authBot, anonBot, this.anonBotExists());
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
@@ -365,7 +362,7 @@ export class TelegramService {
     });
 
     // Edge case logic to handle routing people between bots
-    if (this.anonBotExists) {
+    if (this.anonBotExists()) {
       this.authBot.command("anonsend", async (ctx) => {
         await ctx.reply(
           `Command only available here: ${ctx.session.anonBotURL}?start=anonsend`
@@ -546,6 +543,9 @@ export class TelegramService {
     });
   }
 
+  public anonBotExists(): boolean {
+    return this.authBot.botInfo.id !== this.anonBot.botInfo.id;
+  }
   /**
    * Telegram does not allow two instances of a authBot to be running at once.
    * During deployment, a new instance of the app will be started before the

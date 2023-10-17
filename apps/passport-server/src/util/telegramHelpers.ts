@@ -158,19 +158,17 @@ export const setBotInfo = async (
         text: "Zupass"
       }
     });
-
-    if (anonBotExists) {
-      anonBot.api.setChatMenuButton({
-        menu_button: {
-          web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
-          type: "web_app",
-          text: "Zupass"
-        }
-      });
-    }
   }
 
   if (anonBotExists) {
+    anonBot.api.setChatMenuButton({
+      menu_button: {
+        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
+        type: "web_app",
+        text: "Zupass"
+      }
+    });
+
     anonBot.api.setMyDescription(
       "I'm Zuraffe! I send anonmyous messages with zero-knowledge proofs"
     );
