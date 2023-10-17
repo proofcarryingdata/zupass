@@ -67,7 +67,7 @@ export const goodResponse = {
     },
     {
       id: "6501996fb5f4a42c664a8626",
-      ticketName: "ZuConnect Resident Pass",
+      // @todo stop allowing default values for name
       email: "test5@example.com",
       first: "Test Five",
       last: undefined

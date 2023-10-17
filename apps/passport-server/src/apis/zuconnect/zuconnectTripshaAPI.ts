@@ -1,4 +1,5 @@
 import { ZUCONNECT_TICKET_NAMES } from "@pcd/passport-interface";
+import _ from "lodash";
 import urljoin from "url-join";
 import { z } from "zod";
 import { logger } from "../../util/logger";
@@ -10,7 +11,7 @@ const ZuconnectTripshaSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-  ticketName: z.enum(ZUCONNECT_TICKET_NAMES),
+  ticketName: z.enum(ZUCONNECT_TICKET_NAMES).default("ZuConnect Resident Pass"),
   first: z.string(),
   // Last names might be undefined or null
   last: z
@@ -23,7 +24,12 @@ const ZuconnectTripshaSchema = z.object({
 const ZuconnectTripshaNormalizedNameSchema = ZuconnectTripshaSchema
   // Handle the logic of name concatenation here
   .transform(({ first, last, id, ticketName, email }) => {
-    return { id, ticketName, email, fullName: `${first} ${last}`.trim() };
+    return {
+      id,
+      ticketName,
+      email,
+      fullName: `${first} ${last}`.trim()
+    };
   });
 
 /**
@@ -62,14 +68,26 @@ export class ZuconnectTripshaAPI {
     const url = urljoin(this.baseUrl, "tickets", this.authKey);
     const fetchResult = await fetch(url);
     const data = await fetchResult.json();
-    const parsed = z
-      .object({ tickets: z.array(ZuconnectTripshaNormalizedNameSchema) })
-      .safeParse(data);
 
-    if (parsed.success) {
-      return parsed.data.tickets;
+    if (_.isArray(data.tickets)) {
+      const parsed = data.tickets.flatMap((ticket: any) => {
+        const parsedTicket =
+          ZuconnectTripshaNormalizedNameSchema.safeParse(ticket);
+
+        if (parsedTicket.success) {
+          return parsedTicket.data;
+        } else {
+          logger(
+            `Could not parsed ticket due to errors:`,
+            parsedTicket.error.issues
+          );
+          return [];
+        }
+      });
+
+      return parsed;
     } else {
-      throw parsed.error;
+      throw new Error(`Invalid data received`, data);
     }
   }
 }
