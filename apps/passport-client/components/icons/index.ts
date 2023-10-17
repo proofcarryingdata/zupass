@@ -19,7 +19,6 @@ import settingsAccent from "./settings-accent.svg";
 import settingsPrimary from "./settings-primary.svg";
 import spinner from "./spinner.svg";
 import subscription from "./subscription.svg";
-import thuglife from "./thuglife.svg";
 import upArrow from "./up-arrow.svg";
 import verifyInProgress from "./verify-in-progress.svg";
 import verifyInvalid from "./verify-invalid.svg";
@@ -47,7 +46,6 @@ export const icons = {
   settingsPrimary,
   subscription,
   spinner,
-  thuglife,
   upArrow,
   verifyInProgress,
   verifyInvalid,
