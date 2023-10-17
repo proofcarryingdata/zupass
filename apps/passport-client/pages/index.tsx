@@ -7,7 +7,6 @@ import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
-import { DevconnectCheckinScreen } from "../components/screens/DevconnectCheckinScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
@@ -163,9 +162,6 @@ function RouterImpl() {
           <Route path="scan" element={<ScanScreen />} />
           {/* This route is used by non-Devconnect tickets */}
           <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
-          {/* This route is used to check in a Devconnect ticket with the
-              full PCD in the parameters */}
-          <Route path="checkin" element={<DevconnectCheckinScreen />} />
           {/* This route is used to check in a Devconnect ticket with only
               the ticket ID in the parameters */}
           <Route

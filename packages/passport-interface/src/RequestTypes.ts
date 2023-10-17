@@ -192,6 +192,7 @@ export type ChangeBlobKeyError = NamedAPIError;
  */
 export interface CheckTicketRequest {
   ticket: SerializedPCD<EdDSATicketPCD>;
+  signature: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 /**
@@ -205,6 +206,7 @@ export type CheckTicketReponseValue = undefined;
  */
 export interface CheckTicketByIdRequest {
   ticketId: string;
+  signature: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 /**
