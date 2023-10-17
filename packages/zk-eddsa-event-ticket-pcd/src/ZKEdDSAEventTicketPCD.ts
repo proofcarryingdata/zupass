@@ -40,7 +40,7 @@ import {
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
@@ -53,7 +53,6 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
 export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
 
 let depsInitializedPromise: Promise<void> | undefined;
-let babyJub: BabyJub;
 let eddsa: Eddsa;
 let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 
@@ -168,7 +167,13 @@ export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
 async function ensureDepsInitialized(): Promise<void> {
   if (!depsInitializedPromise) {
     depsInitializedPromise = (async () => {
-      babyJub = await buildBabyjub();
+      // TODO: This object is expensive to build, and duplicates some work,
+      // including buiding curves which aren't cached and thus have to be
+      // re-built by groth16.  We need this object only for eddsa.F.toObject
+      // and eddsa.unpackSignature.  To improve performance, we could tweak
+      // circomlibjs and/or zk-kit/groth16 either to expose those functions in a
+      // more limited way, or to cache all the expensive parts which will be
+      // needed later.
       eddsa = await buildEddsa();
     })();
   }
@@ -322,8 +327,8 @@ function snarkInputForProof(
     // Ticket signature fields
     ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
     ticketSignerPubkeyAy: hexToBigInt(pubKey[1]).toString(),
-    ticketSignatureR8x: babyJub.F.toObject(rawSig.R8[0]).toString(),
-    ticketSignatureR8y: babyJub.F.toObject(rawSig.R8[1]).toString(),
+    ticketSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
+    ticketSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
     ticketSignatureS: rawSig.S.toString(),
 
     // Attendee identity secret
