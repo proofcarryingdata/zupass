@@ -306,7 +306,7 @@ describe("zuconnect functionality", function () {
 
     server.use(
       makeHandler({
-        tickets: goodResponse.tickets.concat([extraTicket])
+        tickets: [...goodResponse.tickets, extraTicket]
       })
     );
     await zuconnectTripshaSyncService.sync();
