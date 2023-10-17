@@ -157,39 +157,36 @@ describe("zuconnect functionality", function () {
     try {
       expect(await zuconnectTripshaSyncService.sync()).to.throw;
     } catch (e) {
-      /**
-       * We get detailed validation errors here due to the schema defined in
-       * {@link ZuconnectTripshaSchema}
-       */
-      expect((e as any).issues[0].code).to.eq("invalid_type");
-      expect((e as any).issues[0].path).to.deep.eq(["tickets"]);
-      expect((e as any).issues[0].expected).to.eq("array");
-      expect((e as any).issues[0].received).to.eq("undefined");
+      expect(e instanceof Error).to.be.true;
     }
 
     // Test that validation fails for a ticket with no email address
     server.use(makeHandler(badTicketsResponse));
     try {
-      expect(await zuconnectTripshaSyncService.sync()).to.throw;
+      expect(await zuconnectTripshaSyncService.sync()).to.not.throw;
+      const tickets = await fetchAllZuconnectTickets(db);
+      expect(tickets.length).to.eq(0);
     } catch (e) {
-      expect((e as any).issues[0].code).to.eq("invalid_type");
-      expect((e as any).issues[0].path).to.deep.eq(["tickets", 0, "email"]);
-      expect((e as any).issues[0].expected).to.eq("string");
-      expect((e as any).issues[0].received).to.eq("undefined");
+      // Should never get here
+      expect.fail();
     }
 
     // Test that validation fails for a ticket with an unknown ticketName
     server.use(makeHandler(badTicketNameResponse));
     try {
-      expect(await zuconnectTripshaSyncService.sync()).to.throw;
+      expect(await zuconnectTripshaSyncService.sync()).to.not.throw;
+      const tickets = await fetchAllZuconnectTickets(db);
+      expect(tickets.length).to.eq(0);
     } catch (e) {
-      expect((e as any).issues[0].code).to.eq("invalid_enum_value");
-      expect((e as any).issues[0].path).to.deep.eq([
-        "tickets",
-        0,
-        "ticketName"
-      ]);
+      // Should never get here
+      expect.fail();
     }
+
+    // Run a good sync so that following tests have good data to work with
+    server.resetHandlers();
+    await zuconnectTripshaSyncService.sync();
+    const tickets = await fetchAllZuconnectTickets(db);
+    expect(tickets.length).to.eq(5);
   });
 
   it("should be able to log in", async function () {
@@ -216,7 +213,6 @@ describe("zuconnect functionality", function () {
     }
 
     await application.services.semaphoreService.reload();
-
     expectCurrentSemaphoreToBe(application, {
       p: [user.commitment],
       r: [user.commitment],
