@@ -35,13 +35,13 @@ import {
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
-import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
-import JSONBig from "json-bigint";
 import {
   Groth16Proof,
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
+import { BabyJub, Eddsa, buildBabyjub, buildEddsa } from "circomlibjs";
+import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -221,9 +221,8 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-    serializedTicketPCD
-  );
+  const deserializedTicket =
+    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -637,6 +636,12 @@ export function getDisplayOptions(pcd: ZKEdDSAEventTicketPCD): DisplayOptions {
     header: "ZK EdDSA Event Ticket PCD",
     displayName: "zk-eddsa-event-ticket-" + pcd.id.substring(0, 4)
   };
+}
+
+export function isZKEdDSAEventTicketPCD(
+  pcd: PCD
+): pcd is ZKEdDSAEventTicketPCD {
+  return pcd.type === ZKEdDSAEventTicketPCDTypeName;
 }
 
 /**

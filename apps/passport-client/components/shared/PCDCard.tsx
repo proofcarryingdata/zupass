@@ -1,6 +1,5 @@
 import {
   EdDSATicketPCD,
-  EdDSATicketPCDPackage,
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
@@ -13,6 +12,7 @@ import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 import { DevconnectCardBody } from "./cards/DevconnectTicket";
+import { ZKTicketPCDCard } from "./cards/ZKTicket";
 
 export const PCDCard = React.memo(PCDCardImpl);
 
@@ -136,9 +136,7 @@ function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
     return <DevconnectCardBody pcd={pcd} />;
   }
 
-  const Component = EdDSATicketPCDPackage.renderCardBody;
-
-  return <Component pcd={pcd} />;
+  return <ZKTicketPCDCard pcd={pcd} />;
 }
 
 function CardBody({
