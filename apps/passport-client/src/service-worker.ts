@@ -40,11 +40,11 @@ async function addResourcesToCache(): Promise<void> {
   // This eliminates any stale entries from old service workers which
   // used a different list.
   await Promise.all(
-    keys.map((request: Request) => {
+    keys.map(async (request: Request) => {
       const urlKey = requestToItemCacheKey(request);
       if (!permanentCache.includes(urlKey)) {
         console.log(`[SERVICE_WORKER] discarding ${urlKey}`);
-        cache.delete(request);
+        await cache.delete(request);
       } else {
         console.log(`[SERVICE_WORKER] keeping ${urlKey}`);
       }
