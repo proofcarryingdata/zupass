@@ -647,15 +647,19 @@ export const chatsToPostIn = async (
 };
 
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
-  await ctx.reply(
-    `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
-  );
+  if (isDirectMessage(ctx)) {
+    await ctx.reply(
+      `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
+    );
+  }
 };
 
 export const uwuResponse = async (ctx: BotContext): Promise<void> => {
-  await ctx.reply(
-    `I don't know that command UwU.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
-  );
+  if (isDirectMessage(ctx)) {
+    await ctx.reply(
+      `I don't know that command UwU.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
+    );
+  }
 };
 
 export function msToTimeString(duration: number): string {
