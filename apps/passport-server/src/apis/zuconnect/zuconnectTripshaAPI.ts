@@ -11,7 +11,7 @@ const ZuconnectTripshaSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-  ticketName: z.enum(ZUCONNECT_TICKET_NAMES),
+  ticketName: z.enum(ZUCONNECT_TICKET_NAMES).default("ZuConnect Resident Pass"),
   first: z.string(),
   // Last names might be undefined or null
   last: z
@@ -24,7 +24,12 @@ const ZuconnectTripshaSchema = z.object({
 const ZuconnectTripshaNormalizedNameSchema = ZuconnectTripshaSchema
   // Handle the logic of name concatenation here
   .transform(({ first, last, id, ticketName, email }) => {
-    return { id, ticketName, email, fullName: `${first} ${last}`.trim() };
+    return {
+      id,
+      ticketName,
+      email,
+      fullName: `${first} ${last}`.trim()
+    };
   });
 
 /**
