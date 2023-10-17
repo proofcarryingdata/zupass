@@ -1,3 +1,4 @@
+import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
 import {
   IZuconnectTripshaAPI,
   ZuconnectTicket
@@ -10,7 +11,6 @@ import {
 } from "../database/queries/zuconnect/insertZuconnectTicket";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "../util/zuconnectTicket";
 import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { setError, traced } from "./telemetryService";

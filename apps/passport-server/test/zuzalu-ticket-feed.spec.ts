@@ -2,7 +2,8 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   createFeedCredentialPayload,
   pollFeed,
-  ZupassFeedIds
+  ZupassFeedIds,
+  ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -16,7 +17,6 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
-import { ZUZALU_23_EVENT_ID } from "../src/util/constants";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";

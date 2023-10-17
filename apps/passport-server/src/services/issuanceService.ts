@@ -33,6 +33,11 @@ import {
   PollFeedResponseValue,
   VerifyTicketRequest,
   VerifyTicketResult,
+  ZUCONNECT_PRODUCT_ID_MAPPINGS,
+  ZUZALU_23_EVENT_ID,
+  ZUZALU_23_ORGANIZER_PRODUCT_ID,
+  ZUZALU_23_RESIDENT_PRODUCT_ID,
+  ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
   verifyFeedCredential,
@@ -81,17 +86,10 @@ import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetc
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
-import {
-  ZUCONNECT_23_EVENT_ID,
-  ZUZALU_23_EVENT_ID,
-  ZUZALU_23_ORGANIZER_PRODUCT_ID,
-  ZUZALU_23_RESIDENT_PRODUCT_ID,
-  ZUZALU_23_VISITOR_PRODUCT_ID
-} from "../util/constants";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import {
-  ZUCONNECT_PRODUCT_ID_MAPPINGS,
+  zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
 import { MultiProcessService } from "./multiProcessService";
@@ -1147,7 +1145,7 @@ export class IssuanceService {
               ticketName: zuconnectProductIdToName(ticket.product_id),
               attendeeName: `${ticket.attendee_name}`,
               attendeeEmail: ticket.attendee_email,
-              eventId: ZUCONNECT_23_EVENT_ID,
+              eventId: zuconnectProductIdToEventId(ticket.product_id),
               productId: ticket.product_id,
               timestampSigned: Date.now(),
               timestampConsumed: 0,
@@ -1401,11 +1399,11 @@ async function setupKnownTicketTypes(
   );
 
   // Store Zuconnect ticket types
-  for (const { id } of Object.values(ZUCONNECT_PRODUCT_ID_MAPPINGS)) {
+  for (const { id, eventId } of Object.values(ZUCONNECT_PRODUCT_ID_MAPPINGS)) {
     setKnownTicketType(
       db,
       `zuconnect-${id}`,
-      ZUCONNECT_23_EVENT_ID,
+      eventId,
       id,
       ZUPASS_TICKET_PUBLIC_KEY_NAME,
       KnownPublicKeyType.EdDSA,
