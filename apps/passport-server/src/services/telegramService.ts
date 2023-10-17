@@ -365,7 +365,7 @@ export class TelegramService {
     if (this.anonBotExists()) {
       this.authBot.command("anonsend", async (ctx) => {
         await ctx.reply(
-          `Command only available here: ${ctx.session.anonBotURL}?start=anonsend`
+          `Please message Zuraffe to send anonymous messages 😎🦒: ${ctx.session.anonBotURL}?start=anonsend`
         );
       });
 

@@ -41,7 +41,9 @@ type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
     chat: TopicChat;
   };
 
-type BotCommandWithAnon = BotCommand & { isAnon: boolean };
+interface BotCommandWithAnon extends BotCommand {
+  isAnon: boolean;
+}
 
 export interface SessionData {
   dbPool: Pool;
