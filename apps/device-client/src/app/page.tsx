@@ -2,11 +2,34 @@
 
 import { useEffect, useRef, useState } from "react";
 
+function useKeyPress() {
+  const [typedText, setTypedText] = useState("");
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      // Check if the pressed key is alphanumeric or a space
+      if (/^[a-zA-Z0-9\s]$/.test(event.key)) {
+        setTypedText((prevText) => prevText + event.key);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  return typedText;
+}
+
 export default function Home() {
   const [message, setMessage] = useState("");
   const [serviceWorkerStatus, setServiceWorkerStatus] = useState("Loading...");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const typedText = useKeyPress();
 
   useEffect(() => {
     const serviceWorkerPath = "/service-worker.js";
@@ -52,6 +75,7 @@ export default function Home() {
       className="w-screen h-screen flex flex-col items-center bg-[#19473f] p-4"
     >
       <span className="text-white font-bold my-4">Device Scanner</span>
+      <div>{typedText}</div>
       <span className="text-white font-bold my-4">
         Service worker status: {serviceWorkerStatus}
       </span>
