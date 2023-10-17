@@ -41,15 +41,12 @@ async function addResourcesToCache(): Promise<void> {
   // used a different list.
   await Promise.all(
     keys.map((request: Request) => {
-      if (!permanentCache.includes(requestToItemCacheKey(request))) {
-        console.log(
-          `[SERVICE_WORKER] discarding ${new URL(request.url).pathname}`
-        );
+      const urlKey = requestToItemCacheKey(request);
+      if (!permanentCache.includes(urlKey)) {
+        console.log(`[SERVICE_WORKER] discarding ${urlKey}`);
         cache.delete(request);
       } else {
-        console.log(
-          `[SERVICE_WORKER] keeping ${new URL(request.url).pathname}`
-        );
+        console.log(`[SERVICE_WORKER] keeping ${urlKey}`);
       }
     })
   );
