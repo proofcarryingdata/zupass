@@ -59,7 +59,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { getErrorMessage } from "@pcd/util";
+import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
@@ -1254,12 +1254,8 @@ export class IssuanceService {
         };
       }
 
-      // The client generates a QR code and keeps it for one minute, so the QR
-      // code might be up to one minute old by the time it is scanned. Two
-      // minutes seems like a reasonably aggressive check.
-      // If the user's clock is wrong by more than a minute, this could make
-      // it hard for them to get a verifiable QR code.
-      if (Date.now() - parseInt(pcd.claim.watermark) > 1000 * 120) {
+      // Watermarks can be up to four hours old
+      if (Date.now() - parseInt(pcd.claim.watermark) > ONE_HOUR_MS * 4) {
         return {
           success: true,
           value: {
