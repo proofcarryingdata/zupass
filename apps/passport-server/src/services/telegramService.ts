@@ -121,7 +121,7 @@ export class TelegramService {
 
           await this.authBot.api.sendMessage(
             userId,
-            `<i>Verifying and inviting...</i>`,
+            `<i>Verifying...\n\n\n\n\n\n\nInviting...</i>`,
             { parse_mode: "HTML" }
           );
           await this.authBot.api.approveChatJoinRequest(chatId, userId);
