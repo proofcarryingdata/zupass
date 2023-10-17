@@ -15,13 +15,15 @@ import {
   DevconnectPretixOrganizerConfig
 } from "../../apis/devconnect/organizer";
 import {
+  DevconnectPretixRedactedTicket,
   DevconnectPretixTicket,
   DevconnectPretixTicketDB,
   PretixEventInfo,
   PretixItemInfo
 } from "../../database/models";
 import {
-  deleteAllDevconnectPretixRedactedTicketsForProducts,
+  deleteDevconnectPretixRedactedTicketsByPositionIds,
+  fetchDevconnectPretixRedactedTicketsByEvent,
   insertDevconnectPretixRedactedTicket
 } from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
@@ -688,6 +690,7 @@ export class OrganizerSync {
 
         let approvedTickets: DevconnectPretixTicket[] = [];
         let redactedTickets: DevconnectPretixTicket[] = [];
+        let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
 
         if (this.enableRedaction) {
           const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
@@ -698,6 +701,12 @@ export class OrganizerSync {
 
           approvedTickets = groupedTickets.approved ?? [];
           redactedTickets = groupedTickets.redacted ?? [];
+
+          redactedTicketsInDB =
+            await fetchDevconnectPretixRedactedTicketsByEvent(
+              this.db,
+              eventConfigID
+            );
         } else {
           approvedTickets = ticketsFromPretix;
         }
@@ -827,12 +836,7 @@ export class OrganizerSync {
         }
 
         if (this.enableRedaction) {
-          // Step 4 of saving: wipe and save redacted tickets
-          await deleteAllDevconnectPretixRedactedTicketsForProducts(
-            this.db,
-            event.activeItemIDs
-          );
-
+          // Step 4 of saving: save redacted tickets
           for (const redactedTicket of redactedTickets) {
             await insertDevconnectPretixRedactedTicket(this.db, {
               hashed_email: await getHash(redactedTicket.email),
@@ -845,6 +849,21 @@ export class OrganizerSync {
                 redactedTicket.devconnect_pretix_items_info_id
             });
           }
+
+          const newRedactedTicketsByPositionId = new Map(
+            redactedTickets.map((r) => [r.position_id, r])
+          );
+
+          const removedRedactedTickets = redactedTicketsInDB.filter(
+            (existing) => {
+              return !newRedactedTicketsByPositionId.has(existing.position_id);
+            }
+          );
+
+          await deleteDevconnectPretixRedactedTicketsByPositionIds(
+            this.db,
+            removedRedactedTickets.map((t) => t.position_id)
+          );
         }
 
         span?.setAttribute("ticketsInserted", newTickets.length);

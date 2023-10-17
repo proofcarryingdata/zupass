@@ -13,6 +13,9 @@ export async function insertDevconnectPretixRedactedTicket(
     INSERT INTO devconnect_pretix_redacted_tickets
     (hashed_email, is_consumed, position_id, secret, checker, pretix_checkin_timestamp, devconnect_pretix_items_info_id)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT(position_id) DO
+    UPDATE SET hashed_email = $1, is_consumed = $2, secret = $4, checker = $5, pretix_checkin_timestamp = $6,
+    devconnect_pretix_items_info_id = $7 
     `,
     [
       params.hashed_email,
@@ -26,16 +29,14 @@ export async function insertDevconnectPretixRedactedTicket(
   );
 }
 
-export async function deleteAllDevconnectPretixRedactedTicketsForProducts(
+export async function deleteDevconnectPretixRedactedTicketsByPositionIds(
   client: Pool,
-  itemIds: string[]
+  ids: string[]
 ): Promise<void> {
   await sqlQuery(
     client,
-    `DELETE FROM devconnect_pretix_redacted_tickets
-       WHERE devconnect_pretix_items_info_id IN
-       (SELECT id FROM devconnect_pretix_items_info WHERE item_id IN($1))`,
-    [itemIds]
+    `DELETE FROM devconnect_pretix_redacted_tickets WHERE position_id IN($1)`,
+    [ids]
   );
 }
 
@@ -50,6 +51,23 @@ export async function fetchDevconnectPretixRedactedTicketsByHashedEmail(
     WHERE hashed_email = $1
     `,
     [hashedEmail]
+  );
+
+  return result.rows;
+}
+
+export async function fetchDevconnectPretixRedactedTicketsByEvent(
+  client: Pool,
+  eventConfigID: string
+): Promise<DevconnectPretixRedactedTicket[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT t.* FROM devconnect_pretix_redacted_tickets t
+    JOIN devconnect_pretix_items_info i ON t.devconnect_pretix_items_info_id = i.id
+    JOIN devconnect_pretix_events_info e ON e.id = i.devconnect_pretix_events_info_id
+    WHERE e.pretix_events_config_id = $1`,
+    [eventConfigID]
   );
 
   return result.rows;
@@ -74,4 +92,10 @@ export async function unredactDevconnectPretixTicket(
       zupass_checkin_timestamp: null
     });
   }
+
+  await sqlQuery(
+    client,
+    `DELETE FROM devconnect_pretix_redacted_tickets WHERE hashed_email = $1`,
+    [hashedEmail]
+  );
 }

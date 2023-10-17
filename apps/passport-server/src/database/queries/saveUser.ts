@@ -1,6 +1,5 @@
 import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
-import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -74,14 +73,12 @@ export async function updateUserAgreeTerms(
   client: Pool,
   commitment: string,
   version: number
-): Promise<UserRow> {
-  const result = await sqlQuery(
+): Promise<void> {
+  await sqlQuery(
     client,
     `
-    UPDATE users SET terms_agreed = $1 WHERE commitment = $2 RETURNING *
+    UPDATE users SET terms_agreed = $1 WHERE commitment = $2
   `,
     [version, commitment]
   );
-
-  return result.rows[0];
 }

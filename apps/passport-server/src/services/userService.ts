@@ -20,7 +20,11 @@ import {
   updateUserAgreeTerms,
   upsertUser
 } from "../database/queries/saveUser";
-import { fetchUserByEmail, fetchUserByUUID } from "../database/queries/users";
+import {
+  fetchUserByCommitment,
+  fetchUserByEmail,
+  fetchUserByUUID
+} from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -247,6 +251,13 @@ export class UserService {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
+    logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+    await unredactDevconnectPretixTicket(
+      this.context.dbPool,
+      user.email,
+      await getHash(user.email)
+    );
+
     const userJson = userRowToZupassUserJson(user);
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
@@ -315,7 +326,18 @@ export class UserService {
         isInteger(payload.version) &&
         payload.version <= LATEST_TERMS
       ) {
-        const user = await updateUserAgreeTerms(
+        const user = await fetchUserByCommitment(
+          this.context.dbPool,
+          pcd.claim.identityCommitment
+        );
+        if (!user) {
+          return {
+            success: false,
+            error: "User does not exist"
+          };
+        }
+
+        await updateUserAgreeTerms(
           this.context.dbPool,
           pcd.claim.identityCommitment,
           payload.version

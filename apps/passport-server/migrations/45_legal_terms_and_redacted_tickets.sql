@@ -4,7 +4,7 @@ CREATE TABLE devconnect_pretix_redacted_tickets (
   id UUID NOT NULL DEFAULT uuid_generate_v1(),
   hashed_email VARCHAR NOT NULL,
   is_consumed BOOLEAN NOT NULL DEFAULT 'FALSE',
-  position_id VARCHAR NOT NULL,
+  position_id VARCHAR NOT NULL UNIQUE,
   secret VARCHAR NOT NULL,
   checker VARCHAR,
   pretix_checkin_timestamp TIMESTAMP,

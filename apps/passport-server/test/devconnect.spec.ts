@@ -16,6 +16,7 @@ import {
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
+  agreeTerms,
   checkinTicketById,
   createFeedCredentialPayload,
   pollFeed,
@@ -76,8 +77,6 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import { updateUserAgreeTerms } from "../src/database/queries/saveUser";
-import { fetchUserByEmail } from "../src/database/queries/users";
 import {
   fetchAllZuzaluUsers,
   fetchZuzaluUser
@@ -2491,7 +2490,7 @@ describe("devconnect functionality", function () {
       true
     );
 
-    // Set up the case where nobody has agreed to legal terms
+    // Set up the case where nobody has not agreed to legal terms
     await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
 
     await os.run();
@@ -2513,14 +2512,26 @@ describe("devconnect functionality", function () {
         );
       expect(redactedTickets.length > 0).to.be.true;
     }
+  });
+
+  let unredactUser: Awaited<ReturnType<typeof testLogin>>;
+  step("creating a new account should unredact tickets", async () => {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const organizer = devconnectPretixAPIConfigFromDB
+      ?.organizers[0] as DevconnectPretixOrganizerConfig;
+    const orgUrl = organizer.orgURL;
+
+    // Pick an event where we will consume all of the tickets
+    const eventID = organizer.events[0].eventID;
+    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+    const ordersForEvent = org.ordersByEventID.get(
+      eventID
+    ) as DevconnectPretixOrder[];
 
     const testEmail = ordersForEvent[0].email;
-    const unredactUser = await fetchUserByEmail(db, testEmail);
-    await updateUserAgreeTerms(
-      db,
-      unredactUser?.commitment as string,
-      LATEST_TERMS
-    );
+
+    // Return the user to having not agreed terms
+    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
 
     const redactedTickets =
       await fetchDevconnectPretixRedactedTicketsByHashedEmail(
@@ -2528,11 +2539,88 @@ describe("devconnect functionality", function () {
         await getHash(testEmail)
       );
 
-    const unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
+    let unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
       db,
       testEmail
     );
     expect(unredactedTickets.length).to.eq(0);
+    expect(redactedTickets.length).to.eq(3);
+
+    unredactUser = await testLogin(application, testEmail, {
+      force: false,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
+    });
+
+    unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testEmail
+    );
+    // Redacted tickets should now be unredacted
+    expect(unredactedTickets.length).to.eq(redactedTickets.length);
+    expect(unredactedTickets.length).to.eq(3);
+  });
+
+  step("accepting legal terms should unredact tickets", async () => {
+    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const organizer = devconnectPretixAPIConfigFromDB
+      ?.organizers[0] as DevconnectPretixOrganizerConfig;
+    const orgUrl = organizer.orgURL;
+
+    // Pick an event where we will consume all of the tickets
+    const eventID = organizer.events[0].eventID;
+    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+    const ordersForEvent = org.ordersByEventID.get(
+      eventID
+    ) as DevconnectPretixOrder[];
+
+    const testEmail = ordersForEvent[0].email;
+
+    // Set up a sync manager for a single organizer
+    const os = new OrganizerSync(
+      organizer,
+      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+      application.context.dbPool,
+      // Enable redaction
+      true
+    );
+
+    // Set up the case where nobody has not agreed to legal terms
+    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
+
+    await os.run();
+
+    // First verify that the user has redacted tickets, and no unredacted ones
+
+    const redactedTickets =
+      await fetchDevconnectPretixRedactedTicketsByHashedEmail(
+        db,
+        await getHash(testEmail)
+      );
+
+    let unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testEmail
+    );
+    expect(unredactedTickets.length).to.eq(0);
+    expect(redactedTickets.length).to.eq(3);
+
+    const result = await agreeTerms(
+      application.expressContext.localEndpoint,
+      LATEST_TERMS,
+      unredactUser?.identity as Identity
+    );
+
+    expect(result.success).to.be.true;
+
+    unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
+      db,
+      testEmail
+    );
+    // Redacted tickets should now be unredacted
+    expect(unredactedTickets.length).to.eq(redactedTickets.length);
+    expect(unredactedTickets.length).to.eq(3);
   });
 
   // TODO: More tests
