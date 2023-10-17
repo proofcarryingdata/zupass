@@ -10,36 +10,56 @@ const impermanentCache = [
   // "/",
   // "/favicon.ico",
   // "/index.html",
-  // "/global-pcdpass.css",
   // "/global-zupass.css",
-  // "/js/index.js",
+  // "/js/index.js"
 ];
 
-async function addResourcesToCache(resources: string[]): Promise<void> {
+const permanentCache = [
+  "/semaphore-artifacts/16.wasm",
+  "/semaphore-artifacts/16.zkey",
+  "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
+  "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey",
+  "/fonts/IBMPlexSans-Regular.woff",
+  "/fonts/IBMPlexSans-Medium.woff",
+  "/fonts/IBMPlexSans-Light.woff",
+  "/fonts/IBMPlexSans-ExtraLight.woff"
+];
+
+function requestToItemCacheKey(request: Request): string {
+  // This may need updating if the list above ever includes more complex
+  // URLs, with parameters, or across domains.
+  return new URL(request.url).pathname;
+}
+
+async function addResourcesToCache(): Promise<void> {
   const cache = await caches.open("v1");
 
-  await Promise.all(
-    ["/", "/index.html", "/js/index.js"].map((item) => cache.delete(item))
-  );
-  await Promise.all(impermanentCache.map((item) => cache.delete(item)));
+  const keys = await cache.keys();
 
-  await cache.addAll(resources);
+  // Delete all existing cache entries not in our "permanent" list.
+  // This eliminates any stale entries from old service workers which
+  // used a different list.
+  await Promise.all(
+    keys.map(async (request: Request) => {
+      const urlKey = requestToItemCacheKey(request);
+      if (!permanentCache.includes(urlKey)) {
+        console.log(`[SERVICE_WORKER] discarding ${urlKey}`);
+        await cache.delete(request);
+      } else {
+        console.log(`[SERVICE_WORKER] keeping ${urlKey}`);
+      }
+    })
+  );
+
+  // Pre-populate the cache with the entries we want.
+  await cache.addAll([...impermanentCache, ...permanentCache]);
 }
 
 self.addEventListener("install", (event: any) => {
   console.log(`[SERVICE_WORKER] installing ${process.env.SW_ID}`);
   (self as any).skipWaiting();
 
-  event.waitUntil(
-    addResourcesToCache([
-      ...impermanentCache,
-      "/semaphore-artifacts/16.wasm",
-      "/semaphore-artifacts/16.zkey",
-      "/fonts/IBMPlexSans-Regular.ttf",
-      "/fonts/IBMPlexSans-Medium.ttf",
-      "/fonts/IBMPlexSans-Light.ttf"
-    ])
-  );
+  event.waitUntil(addResourcesToCache());
 
   console.log(`[SERVICE_WORKER] installed ${process.env.SW_ID}`);
 });
