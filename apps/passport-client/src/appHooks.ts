@@ -13,6 +13,7 @@ import { Dispatcher, StateContext } from "./dispatch";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
+import { getLastValidURL } from "./util";
 
 export function usePCDCollectionWithHash(): {
   pcds: PCDCollection;
@@ -167,4 +168,33 @@ export function useRequirePassword() {
       }
     });
   }
+}
+
+export function useLaserScanner() {
+  const [typedText, setTypedText] = useState("");
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      console.log(event.key);
+      if (event.key === "Enter") {
+        // Check url regex and navigate
+        const url = getLastValidURL(typedText);
+        if (url) {
+          window.location.href = url;
+        }
+      }
+      // Check if the pressed key is a url string
+      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%/]$/.test(event.key)) {
+        setTypedText((prevText) => prevText + event.key);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [typedText]);
+
+  return typedText;
 }

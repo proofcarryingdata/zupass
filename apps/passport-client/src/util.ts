@@ -54,3 +54,14 @@ export function randomEmail() {
 export function validateEmail(email: string): boolean {
   return validator.validate(email);
 }
+
+export function getLastValidURL(inputString: string) {
+  const urlRegex = /(https?:\/\/[^\s/$.?#].[^\s]*)$/i;
+  const matches = inputString.match(urlRegex);
+
+  if (matches) {
+    return matches[matches.length - 1];
+  } else {
+    return null;
+  }
+}
