@@ -19,15 +19,17 @@ const permanentCache = [
   "/semaphore-artifacts/16.zkey",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey",
-  "/fonts/IBMPlexSans-Regular.ttf",
-  "/fonts/IBMPlexSans-Medium.ttf",
-  "/fonts/IBMPlexSans-Light.ttf",
-  "/fonts/IBMPlexSans-ExtraLight.ttf",
   "/fonts/IBMPlexSans-Regular.woff",
   "/fonts/IBMPlexSans-Medium.woff",
   "/fonts/IBMPlexSans-Light.woff",
   "/fonts/IBMPlexSans-ExtraLight.woff"
 ];
+
+function requestToItemCacheKey(request: Request): string {
+  // This may need updating if the list above ever includes more complex
+  // URLs, with parameters, or across domains.
+  return new URL(request.url).pathname;
+}
 
 async function addResourcesToCache(): Promise<void> {
   const cache = await caches.open("v1");
@@ -39,7 +41,7 @@ async function addResourcesToCache(): Promise<void> {
   // used a different list.
   await Promise.all(
     keys.map((request: Request) => {
-      if (!permanentCache.includes(new URL(request.url).pathname)) {
+      if (!permanentCache.includes(requestToItemCacheKey(request))) {
         console.log(
           `[SERVICE_WORKER] discarding ${new URL(request.url).pathname}`
         );
