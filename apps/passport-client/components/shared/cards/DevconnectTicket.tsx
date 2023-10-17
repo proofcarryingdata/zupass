@@ -13,7 +13,6 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
-import { makeEncodedVerifyLink } from "../../../src/qr";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
 
@@ -24,12 +23,11 @@ function makeTicketIdVerifyLink(ticketId: string): string {
   return link;
 }
 
-function Shades() {
-  return (
-    <AnimatedShades>
-      <img style={{ width: "100%" }} src={icons.thuglife} />
-    </AnimatedShades>
-  );
+function makeTicketIdPCDVerifyLink(pcdStr: string): string {
+  const link = `${
+    window.location.origin
+  }/#/checkin-by-id?pcd=${encodeURIComponent(pcdStr)}`;
+  return link;
 }
 
 /**
@@ -61,7 +59,8 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
         fieldsToReveal: {
           value: {
             revealEventId: true,
-            revealProductId: true
+            revealProductId: true,
+            revealTicketId: true
           },
           argumentType: ArgumentTypeName.ToggleList
         },
@@ -80,7 +79,7 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
       });
       const serializedZKPCD =
         await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
-      const verificationLink = makeEncodedVerifyLink(
+      const verificationLink = makeTicketIdPCDVerifyLink(
         encodeQRPayload(JSON.stringify(serializedZKPCD))
       );
       return verificationLink;
@@ -98,7 +97,6 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
         // QR code component.
         key={`zk-${pcd.id}`}
         generateQRPayload={generate}
-        loadedLogo={<Shades />}
         loadingLogo={
           <LoadingIconContainer>
             <LoadingIcon src={icons.qrCenterLoading} />
@@ -156,32 +154,6 @@ const TicketInfo = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: column;
-`;
-
-const AnimatedShades = styled.div`
-  animation: dropdown 2s linear;
-  width: 100%;
-  position: absolute;
-  top: 100px;
-  margin: 0px auto;
-  opacity: 0;
-  @keyframes dropdown {
-    0% {
-      opacity: 1;
-      top: -100px;
-    }
-    75% {
-      top: 100px;
-      opacity: 1;
-    }
-    85% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
-      animation-play-state: paused;
-    }
-  }
 `;
 
 const ZKMode = styled.div`
