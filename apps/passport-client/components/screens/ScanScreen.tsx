@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { useLaserScanner } from "../../src/appHooks";
 import { Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
@@ -9,6 +10,7 @@ import { AppContainer } from "../shared/AppContainer";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
+  useLaserScanner();
   const nav = useNavigate();
   return (
     <AppContainer bg="gray">
