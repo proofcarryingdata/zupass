@@ -4,10 +4,6 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
-  CheckTicketInRequest,
-  CheckTicketInResult,
-  CheckTicketRequest,
-  CheckTicketResult,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
@@ -107,45 +103,12 @@ export function initPCDIssuanceRoutes(
     res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
   });
 
-  /**
-   * Checks whether the given ticket is eligible for being checked in.
-   * Each reason that a ticket *wouldn't* be able to be checked in for
-   * is encapuslated in the response we generate here, via {@link CheckTicketError}.
-   *
-   * @todo - this should probably live in a different service.
-   */
-  app.post("/issue/check-ticket", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckTicketRequest(
-      req.body as CheckTicketRequest
-    );
-    res.json(result satisfies CheckTicketResult);
-  });
-
   app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleDevconnectCheckTicketByIdRequest(
       req.body as CheckTicketByIdRequest
     );
     res.json(result satisfies CheckTicketByIdResult);
-  });
-
-  /**
-   * Checks whether the given ticket is eligible for being checked in,
-   * and whether user that is trying to check them in is allowed to check
-   * them in, and returns whether or not the operation succeeded.
-   *
-   * Both error and success cases are returned with a 200 OK status code,
-   * and must be interpreted further by the client.
-   *
-   * @todo - this should probably live in a different service.
-   */
-  app.post("/issue/check-in", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckInRequest(
-      req.body as CheckTicketInRequest
-    );
-    res.json(result satisfies CheckTicketInResult);
   });
 
   /**
