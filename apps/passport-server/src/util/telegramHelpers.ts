@@ -43,6 +43,7 @@ type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
 
 interface BotCommandWithAnon extends BotCommand {
   isAnon: boolean;
+  alwaysInclude?: boolean;
 }
 
 export interface SessionData {
@@ -72,16 +73,16 @@ const privateChatCommands: BotCommandWithAnon[] = [
     description: "Join a group with a proof of ticket",
     isAnon: false
   },
-
-  {
-    command: "/help",
-    description: "Get help",
-    isAnon: false
-  },
   {
     command: "/anonsend",
     description: "Send an anonymous message",
     isAnon: true
+  },
+  {
+    command: "/help",
+    description: "Get help",
+    isAnon: false,
+    alwaysInclude: true
   }
 ];
 
@@ -172,19 +173,19 @@ export const setBotInfo = async (
     });
 
     anonBot.api.setMyDescription(
-      "I'm Zuraffe! I send anonmyous messages with zero-knowledge proofs"
+      "I'm ZuRat! I send anonmyous messages with zero-knowledge proofs"
     );
 
     anonBot.api.setMyShortDescription(
-      "Zuraffe sends anonmyous messages with zero-knowledge proofs"
+      "ZuRat sends anonmyous messages with zero-knowledge proofs"
     );
 
     anonBot.api.setMyCommands(
-      privateChatCommands.filter((c) => c.isAnon),
+      privateChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       { scope: { type: "all_private_chats" } }
     );
     anonBot.api.setMyCommands(
-      adminGroupChatCommands.filter((c) => c.isAnon),
+      adminGroupChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       {
         scope: { type: "all_chat_administrators" }
       }
@@ -192,14 +193,14 @@ export const setBotInfo = async (
 
     // Only add non-anon commands to main bot
     bot.api.setMyCommands(
-      adminGroupChatCommands.filter((c) => !c.isAnon),
+      adminGroupChatCommands.filter((c) => !c.isAnon || c.alwaysInclude),
       {
         scope: { type: "all_chat_administrators" }
       }
     );
 
     bot.api.setMyCommands(
-      privateChatCommands.filter((c) => !c.isAnon),
+      privateChatCommands.filter((c) => !c.isAnon || c.alwaysInclude),
       {
         scope: { type: "all_private_chats" }
       }
@@ -643,6 +644,18 @@ export const chatsToPostIn = async (
     range.text(`Action failed ${error}`);
     return;
   }
+};
+
+export const helpResponse = async (ctx: BotContext): Promise<void> => {
+  await ctx.reply(
+    `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
+  );
+};
+
+export const uwuResponse = async (ctx: BotContext): Promise<void> => {
+  await ctx.reply(
+    `I don't know that command UwU.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
+  );
 };
 
 export function msToTimeString(duration: number): string {
