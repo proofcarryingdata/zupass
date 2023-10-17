@@ -99,6 +99,11 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
         key={`zk-${pcd.id}`}
         generateQRPayload={generate}
         loadedLogo={<Shades />}
+        loadingLogo={
+          <LoadingIconContainer>
+            <LoadingIcon src={icons.qrCenterLoading} />
+          </LoadingIconContainer>
+        }
         maxAgeMs={1000 * 60}
         // QR codes are cached by ID, so we need to distinguish the ZK version
         // by this prefix.
@@ -186,4 +191,20 @@ const ZKMode = styled.div`
   padding: 0px 16px;
   width: 100%;
   justify-content: flex-end;
+`;
+
+const LoadingIconContainer = styled.div`
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const LoadingIcon = styled.img`
+  height: 100px;
+  width: 100px;
 `;
