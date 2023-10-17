@@ -5,7 +5,8 @@ import {
   CheckTicketByIdResult,
   TicketError
 } from "@pcd/passport-interface";
-import { Spacer } from "@pcd/passport-ui";
+import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
@@ -20,9 +21,25 @@ import {
 } from "../shared/PCDCard";
 
 export function DevconnectCheckinByIdScreen() {
-  const query = useQuery();
-  const ticketId = query?.get("id");
+  const { loading: verifyingTicketId, ticketId } = useTicketId();
 
+  let content = null;
+
+  if (verifyingTicketId) {
+    content = (
+      <div>
+        <Spacer h={32} />
+        <RippleLoader />
+      </div>
+    );
+  } else {
+    content = <CheckInById ticketId={ticketId} />;
+  }
+
+  return <>{content}</>;
+}
+
+function CheckInById({ ticketId }: { ticketId: string }) {
   const { loading: checkingTicket, result: checkTicketByIdResult } =
     useCheckTicketById(ticketId);
 
@@ -46,7 +63,49 @@ export function DevconnectCheckinByIdScreen() {
     );
   }
 
-  return <>{content}</>;
+  return content;
+}
+
+type TicketId = {
+  loading: boolean;
+  ticketId: string | null;
+  error: string | null;
+};
+
+function useTicketId(): TicketId {
+  const query = useQuery();
+  const id = query.get("id");
+  const [ticketId, setTicketId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      const pcdStr = query.get("pcd");
+      const decodedPCD = decodeQRPayload(pcdStr);
+      const verify = async () => {
+        const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+          JSON.parse(decodedPCD).pcd
+        );
+
+        const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
+        if (verified) {
+          setTicketId(pcd.claim.partialTicket.ticketId);
+          setLoading(false);
+        } else {
+          setLoading(false);
+          setError("Could not verify ticket. Please try scanning again.");
+        }
+      };
+
+      verify();
+    } else {
+      setTicketId(id);
+      setLoading(false);
+    }
+  }, [id, query]);
+
+  return { loading, ticketId, error };
 }
 
 function TicketErrorContent({ error }: { error: TicketError }) {

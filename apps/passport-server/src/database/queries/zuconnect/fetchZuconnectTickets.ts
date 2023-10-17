@@ -50,3 +50,21 @@ export async function fetchZuconnectTicketsByEmail(
 
   return result.rows;
 }
+
+/**
+ * Fetches a Zuconnect ticket by ID.
+ */
+export async function fetchZuconnectTicketById(
+  client: Pool,
+  id: string
+): Promise<ZuconnectTicketDB | undefined> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT * FROM zuconnect_tickets WHERE id = $1 AND is_deleted = FALSE
+    `,
+    [id]
+  );
+
+  return result.rows[0];
+}

@@ -1,4 +1,4 @@
-import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
 import styled from "styled-components";
 import {
   CardContainerExpanded,
@@ -7,20 +7,22 @@ import {
 } from "../PCDCard";
 
 export function ZuconnectKnownTicketDetails({
-  pcd,
+  productId,
   publicKeyName
 }: {
-  pcd: EdDSATicketPCD;
+  productId: string;
   publicKeyName: string;
 }) {
+  const type = Object.entries(ZUCONNECT_PRODUCT_ID_MAPPINGS).find(
+    ([_name, product]) => product.id === productId
+  )[0];
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>
         <CardHeader col="var(--accent-lite)">
           <div>VERIFIED ZUCONNECT '23 TICKET</div>
           <div>SIGNED BY: {publicKeyName}</div>
-          <div>NAME: {pcd.claim.ticket.attendeeName}</div>
-          <ZuzaluRole>TYPE: {pcd.claim.ticket.ticketName}</ZuzaluRole>
+          <ZuzaluRole>TYPE: {type}</ZuzaluRole>
         </CardHeader>
       </CardOutlineExpanded>
     </CardContainerExpanded>

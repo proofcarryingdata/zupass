@@ -26,6 +26,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  VerifyTicketByIdRequest,
+  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
   ZUCONNECT_PRODUCT_ID_MAPPINGS,
@@ -54,7 +56,8 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { getErrorMessage } from "@pcd/util";
+import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -77,7 +80,10 @@ import {
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
 import { fetchUserByCommitment } from "../database/queries/users";
-import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import {
+  fetchZuconnectTicketById,
+  fetchZuconnectTicketsByEmail
+} from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -1047,40 +1053,82 @@ export class IssuanceService {
       throw new Error("input was not a serialized PCD");
     }
 
-    if (serializedPCD.type !== EdDSATicketPCDPackage.name) {
+    if (
+      serializedPCD.type !== EdDSATicketPCDPackage.name &&
+      serializedPCD.type !== ZKEdDSAEventTicketPCDPackage.name
+    ) {
       throw new Error(
-        `serialized PCD was wrong type, '${serializedPCD.type}' instead of '${EdDSATicketPCDPackage.name}'`
+        `serialized PCD was wrong type, '${serializedPCD.type}' instead of '${EdDSATicketPCDPackage.name}' or '${ZKEdDSAEventTicketPCDPackage.name}'`
       );
     }
 
-    await EdDSATicketPCDPackage.init?.({});
+    let eventId: string;
+    let productId: string;
+    let publicKey: EdDSAPublicKey;
 
-    const pcd = await EdDSATicketPCDPackage.deserialize(serializedPCD.pcd);
+    if (serializedPCD.type === EdDSATicketPCDPackage.name) {
+      const pcd = await EdDSATicketPCDPackage.deserialize(serializedPCD.pcd);
 
-    if (!EdDSATicketPCDPackage.verify(pcd)) {
-      return {
-        success: true,
-        value: { verified: false, message: "Could not verify PCD." }
-      };
+      if (!EdDSATicketPCDPackage.verify(pcd)) {
+        return {
+          success: true,
+          value: { verified: false, message: "Could not verify PCD." }
+        };
+      }
+
+      eventId = pcd.claim.ticket.eventId;
+      productId = pcd.claim.ticket.productId;
+      publicKey = pcd.proof.eddsaPCD.claim.publicKey;
+    } else {
+      const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+
+      if (!ZKEdDSAEventTicketPCDPackage.verify(pcd)) {
+        return {
+          success: true,
+          value: { verified: false, message: "Could not verify PCD." }
+        };
+      }
+
+      if (
+        !(pcd.claim.partialTicket.eventId && pcd.claim.partialTicket.productId)
+      ) {
+        return {
+          success: true,
+          value: {
+            verified: false,
+            message: "PCD does not reveal the correct fields."
+          }
+        };
+      }
+
+      // Watermarks can be up to four hours old
+      if (Date.now() - parseInt(pcd.claim.watermark) > ONE_HOUR_MS * 4) {
+        return {
+          success: true,
+          value: {
+            verified: false,
+            message: "PCD watermark has expired."
+          }
+        };
+      }
+
+      eventId = pcd.claim.partialTicket.eventId;
+      productId = pcd.claim.partialTicket.productId;
+      publicKey = pcd.claim.signer;
     }
 
-    // PCD has verified, let's see if it's a known ticket
-    const ticket = pcd.claim.ticket;
     const knownTicketType = await fetchKnownTicketByEventAndProductId(
       this.context.dbPool,
-      ticket.eventId,
-      ticket.productId
+      eventId,
+      productId
     );
 
     // If we found a known ticket type, compare public keys
     if (
       knownTicketType &&
-      (knownTicketType.ticket_group === KnownTicketGroup.Zuconnect23 ||
-        knownTicketType.ticket_group === KnownTicketGroup.Zuzalu23) &&
-      isEqualEdDSAPublicKey(
-        JSON.parse(knownTicketType.public_key),
-        pcd.proof.eddsaPCD.claim.publicKey
-      )
+      isEqualEdDSAPublicKey(JSON.parse(knownTicketType.public_key), publicKey)
     ) {
       // We can say that the submitted ticket can be verified as belonging
       // to a known group
@@ -1103,6 +1151,64 @@ export class IssuanceService {
     }
   }
 
+  private async verifyZuconnect23OrZuzalu23TicketById(
+    ticketId: string,
+    timestamp: string
+  ): Promise<VerifyTicketByIdResult> {
+    if (Date.now() - parseInt(timestamp) > ONE_HOUR_MS * 4) {
+      return {
+        success: true,
+        value: {
+          verified: false,
+          message: "Timestamp has expired."
+        }
+      };
+    }
+
+    const zuconnectTicket = await fetchZuconnectTicketById(
+      this.context.dbPool,
+      ticketId
+    );
+
+    if (zuconnectTicket) {
+      return {
+        success: true,
+        value: {
+          verified: true,
+          group: KnownTicketGroup.Zuconnect23,
+          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+          productId: zuconnectTicket.product_id
+        }
+      };
+    } else {
+      const zuzaluTicket = await fetchLoggedInZuzaluUser(this.context.dbPool, {
+        uuid: ticketId
+      });
+
+      if (zuzaluTicket) {
+        return {
+          success: true,
+          value: {
+            verified: true,
+            group: KnownTicketGroup.Zuzalu23,
+            publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+            productId:
+              zuzaluTicket.role === ZuzaluUserRole.Visitor
+                ? ZUZALU_23_VISITOR_PRODUCT_ID
+                : zuzaluTicket.role === ZuzaluUserRole.Organizer
+                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
+                : ZUZALU_23_RESIDENT_PRODUCT_ID
+          }
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: "Could not verify ticket."
+    };
+  }
+
   public async handleVerifyTicketRequest(
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
@@ -1115,6 +1221,15 @@ export class IssuanceService {
         cause: e
       });
     }
+  }
+
+  public async handleVerifyTicketByIdRequest(
+    req: VerifyTicketByIdRequest
+  ): Promise<VerifyTicketByIdResult> {
+    return this.verifyZuconnect23OrZuzalu23TicketById(
+      req.ticketId,
+      req.timestamp
+    );
   }
 
   /**

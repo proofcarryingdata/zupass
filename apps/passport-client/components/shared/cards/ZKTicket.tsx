@@ -13,33 +13,27 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
+import { makeEncodedVerifyLink } from "../../../src/qr";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
 
 function makeTicketIdVerifyLink(ticketId: string): string {
-  const link = `${
-    window.location.origin
-  }/#/checkin-by-id?id=${encodeURIComponent(ticketId)}`;
-  return link;
-}
-
-function makeTicketIdPCDVerifyLink(pcdStr: string): string {
-  const link = `${
-    window.location.origin
-  }/#/checkin-by-id?pcd=${encodeURIComponent(pcdStr)}`;
+  const link = `${window.location.origin}/#/verify?id=${encodeURIComponent(
+    Buffer.from(
+      JSON.stringify({ ticketId, timestamp: Date.now().toString() })
+    ).toString("base64")
+  )}`;
   return link;
 }
 
 /**
- * Renders a QR code. Can render either the simple QR code with the ticket ID
- * for check-in, or a ZK QR code which (currently) goes to the "verify" screen.
- * We might want this to go to the check-in screen, but this raises some
- * interesting questions about what to do when attendees start scanning each
- * other's ZK QR codes.
+ * Generates a ZK proof and uses this to generate the QR code.
+ * This overrides the normal rendering of an EdDSATicketPCD, and is
+ * done here to avoid circular dependencies between EdDSATicketPCD and
+ * ZKEdDSAEventTicketPCD.
  */
 function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   const pcds = usePCDCollection();
-
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     if (zk) {
@@ -58,9 +52,9 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
         },
         fieldsToReveal: {
           value: {
+            revealTicketId: true,
             revealEventId: true,
-            revealProductId: true,
-            revealTicketId: true
+            revealProductId: true
           },
           argumentType: ArgumentTypeName.ToggleList
         },
@@ -79,7 +73,7 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
       });
       const serializedZKPCD =
         await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
-      const verificationLink = makeTicketIdPCDVerifyLink(
+      const verificationLink = makeEncodedVerifyLink(
         encodeQRPayload(JSON.stringify(serializedZKPCD))
       );
       return verificationLink;
@@ -93,18 +87,14 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   if (zk) {
     return (
       <QRDisplayWithRegenerateAndStorage
-        // Key is necessary so that React notices that this isn't the non-ZK
-        // QR code component.
         key={`zk-${pcd.id}`}
-        generateQRPayload={generate}
         loadingLogo={
           <LoadingIconContainer>
             <LoadingIcon src={icons.qrCenterLoading} />
           </LoadingIconContainer>
         }
+        generateQRPayload={generate}
         maxAgeMs={1000 * 60}
-        // QR codes are cached by ID, so we need to distinguish the ZK version
-        // by this prefix.
         uniqueId={`zk-${pcd.id}`}
         fgColor={getQRCodeColorOverride(pcd)}
       />
@@ -113,21 +103,27 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
     return (
       <QRDisplayWithRegenerateAndStorage
         key={pcd.id}
+        loadingLogo={
+          <LoadingIconContainer>
+            <LoadingIcon src={icons.qrCenterLoading} />
+          </LoadingIconContainer>
+        }
         generateQRPayload={generate}
         maxAgeMs={1000 * 60}
-        uniqueId={`${pcd.id}`}
+        uniqueId={pcd.id}
         fgColor={getQRCodeColorOverride(pcd)}
       />
     );
   }
 }
 
-export function DevconnectCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
+export function ZKTicketPCDCard({ pcd }: { pcd: EdDSATicketPCD }) {
   const [zk, setZk] = useState<boolean>(false);
   const onToggle = useCallback(() => {
     setZk(!zk);
   }, [zk]);
   const ticketData = pcd.claim.ticket;
+
   return (
     <Container>
       <TicketInfo>
@@ -156,15 +152,6 @@ const TicketInfo = styled.div`
   flex-direction: column;
 `;
 
-const ZKMode = styled.div`
-  display: flex;
-  text-align: right;
-  margin-top: 8px;
-  padding: 0px 16px;
-  width: 100%;
-  justify-content: flex-end;
-`;
-
 const LoadingIconContainer = styled.div`
   height: 100%;
   width: 100%;
@@ -179,4 +166,13 @@ const LoadingIconContainer = styled.div`
 const LoadingIcon = styled.img`
   height: 100px;
   width: 100px;
+`;
+
+const ZKMode = styled.div`
+  display: flex;
+  text-align: right;
+  margin-top: 8px;
+  padding: 0px 16px;
+  width: 100%;
+  justify-content: flex-end;
 `;
