@@ -1,18 +1,8 @@
+import { ZUCONNECT_TICKET_NAMES } from "@pcd/passport-interface";
+import _ from "lodash";
 import urljoin from "url-join";
 import { z } from "zod";
 import { logger } from "../../util/logger";
-
-/**
- * These are the ticket "types" we get back from the Tripsha API.
- * @todo confirm these as final.
- */
-const TRIPSHA_TICKET_TYPES = [
-  "ZuConnect Resident Pass",
-  "1st Week Pass",
-  "ZuConnect Scholarship",
-  "ZuConnect Organizer Pass",
-  "ZuConnect Visitor Pass"
-] as const;
 
 /**
  * A schema for validating the API response from Tripsha.
@@ -21,7 +11,7 @@ const ZuconnectTripshaSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
-  ticketName: z.enum(TRIPSHA_TICKET_TYPES),
+  ticketName: z.enum(ZUCONNECT_TICKET_NAMES),
   first: z.string(),
   // Last names might be undefined or null
   last: z
@@ -73,14 +63,26 @@ export class ZuconnectTripshaAPI {
     const url = urljoin(this.baseUrl, "tickets", this.authKey);
     const fetchResult = await fetch(url);
     const data = await fetchResult.json();
-    const parsed = z
-      .object({ tickets: z.array(ZuconnectTripshaNormalizedNameSchema) })
-      .safeParse(data);
 
-    if (parsed.success) {
-      return parsed.data.tickets;
+    if (_.isArray(data.tickets)) {
+      const parsed = data.tickets.flatMap((ticket: any) => {
+        const parsedTicket =
+          ZuconnectTripshaNormalizedNameSchema.safeParse(ticket);
+
+        if (parsedTicket.success) {
+          return parsedTicket.data;
+        } else {
+          logger(
+            `Could not parsed ticket due to errors:`,
+            parsedTicket.error.issues
+          );
+          return [];
+        }
+      });
+
+      return parsed;
     } else {
-      throw parsed.error;
+      throw new Error(`Invalid data received`, data);
     }
   }
 }
