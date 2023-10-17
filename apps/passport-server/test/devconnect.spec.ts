@@ -25,7 +25,8 @@ import {
   requestKnownTicketTypes,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
-  requestVerifyTicket
+  requestVerifyTicket,
+  requestVerifyTicketById
 } from "@pcd/passport-interface";
 import {
   PCDActionType,
@@ -413,6 +414,23 @@ describe("devconnect functionality", function () {
       });
     }
   );
+
+  step("should verify zuzalu tickets by ID", async () => {
+    const response = await requestVerifyTicketById(
+      application.expressContext.localEndpoint,
+      {
+        ticketId: residentUser?.uuid as string,
+        timestamp: Date.now().toString()
+      }
+    );
+
+    expect(response?.success).to.be.true;
+    expect(response?.value?.verified).to.be.true;
+    if (response.value?.verified) {
+      expect(response.value.group).eq(KnownTicketGroup.Zuzalu23);
+      expect(response.value.productId).eq(ZUZALU_23_RESIDENT_PRODUCT_ID);
+    }
+  });
 
   step(
     "after more users log in, historic semaphore groups also get updated",

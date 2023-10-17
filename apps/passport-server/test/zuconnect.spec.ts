@@ -1,11 +1,13 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
+  KnownTicketGroup,
   User,
   ZupassFeedIds,
   ZuzaluUserRole,
   createFeedCredentialPayload,
   pollFeed,
-  requestVerifyTicket
+  requestVerifyTicket,
+  requestVerifyTicketById
 } from "@pcd/passport-interface";
 import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -348,6 +350,23 @@ describe("zuconnect functionality", function () {
 
     expect(response?.success).to.be.true;
     expect(response?.value?.verified).to.be.true;
+  });
+
+  step("should verify zuconnect tickets by ID", async () => {
+    const response = await requestVerifyTicketById(
+      application.expressContext.localEndpoint,
+      {
+        ticketId: ticketPCD.claim.ticket.ticketId,
+        timestamp: Date.now().toString()
+      }
+    );
+
+    expect(response?.success).to.be.true;
+    expect(response?.value?.verified).to.be.true;
+    if (response.value?.verified) {
+      expect(response.value.group).eq(KnownTicketGroup.Zuconnect23);
+      expect(response.value.productId).eq(ticketPCD.claim.ticket.productId);
+    }
   });
 
   let userWithTwoTicketsRow;
