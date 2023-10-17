@@ -581,16 +581,18 @@ export const chatsToPostIn = async (
       const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
       if (topics.length === 0) {
-        range.text(`No topics found`).row();
-      } else {
         range
-          .text(`↰ ${chat.title} Topics`, async (ctx) => {
-            if (!(await senderIsAdmin(ctx))) return;
-            checkDeleteMessage(ctx);
-            ctx.session.selectedEvent = undefined;
+          .text(`↰  No topics found`, async (ctx) => {
+            ctx.session.selectedChat = undefined;
             await ctx.menu.update({ immediate: true });
           })
-
+          .row();
+      } else {
+        range
+          .text(`↰  ${chat.title} Topics`, async (ctx) => {
+            ctx.session.selectedChat = undefined;
+            await ctx.menu.update({ immediate: true });
+          })
           .row();
         for (const topic of topics) {
           const encodedTopicData = base64EncodeTopicData(
