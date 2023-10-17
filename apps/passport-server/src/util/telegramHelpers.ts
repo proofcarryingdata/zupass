@@ -446,7 +446,15 @@ export const eventsToLink = async (
   const event = ctx.session.selectedEvent;
   if (event) {
     range
-      .text(`${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`)
+      .text(
+        `↰ ${event.isLinkedToCurrentChat ? "✅" : ""} ${event.eventName}`,
+        async (ctx) => {
+          if (!(await senderIsAdmin(ctx))) return;
+          checkDeleteMessage(ctx);
+          ctx.session.selectedEvent = undefined;
+          await ctx.menu.update({ immediate: true });
+        }
+      )
       .row();
     range
       .text(
@@ -470,13 +478,6 @@ export const eventsToLink = async (
         }
       )
       .row();
-
-    range.text(`Go back`, async (ctx) => {
-      if (!(await senderIsAdmin(ctx))) return;
-      checkDeleteMessage(ctx);
-      ctx.session.selectedEvent = undefined;
-      await ctx.menu.update({ immediate: true });
-    });
   }
   // Otherwise, display all events to add or remove.
   else {
@@ -583,7 +584,12 @@ export const chatsToPostIn = async (
         range.text(`No topics found`).row();
       } else {
         range
-          .text(`${chat.title} Topics`)
+          .text(`↰ ${chat.title} Topics`, async (ctx) => {
+            if (!(await senderIsAdmin(ctx))) return;
+            checkDeleteMessage(ctx);
+            ctx.session.selectedEvent = undefined;
+            await ctx.menu.update({ immediate: true });
+          })
 
           .row();
         for (const topic of topics) {
@@ -601,10 +607,6 @@ export const chatsToPostIn = async (
             .row();
         }
       }
-      range.text(`↰  Back`, async (ctx) => {
-        ctx.session.selectedChat = undefined;
-        await ctx.menu.update({ immediate: true });
-      });
     }
     // Otherwise, give the user a list of chats that they are members of.
     else {
