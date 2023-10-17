@@ -1,14 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+
+function getLastValidURL(inputString: string) {
+  const urlRegex = /(https?:\/\/[^\s\/$.?#].[^\s]*)$/i;
+  const matches = inputString.match(urlRegex);
+
+  if (matches) {
+    return matches[matches.length - 1];
+  } else {
+    return null;
+  }
+}
 
 function useKeyPress() {
   const [typedText, setTypedText] = useState("");
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      // Check if the pressed key is alphanumeric or a space
-      if (/^[a-zA-Z0-9\s]$/.test(event.key)) {
+      console.log(event.key);
+      if (event.key === "Enter") {
+        // Check url regex and navigate
+        const url = getLastValidURL(typedText);
+        if (url) {
+          window.location.href = url;
+        }
+      }
+      // Check if the pressed key is a url string
+      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%/]$/.test(event.key)) {
         setTypedText((prevText) => prevText + event.key);
       }
     }
@@ -18,7 +37,7 @@ function useKeyPress() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [typedText]);
 
   return typedText;
 }
@@ -26,8 +45,6 @@ function useKeyPress() {
 export default function Home() {
   const [message, setMessage] = useState("");
   const [serviceWorkerStatus, setServiceWorkerStatus] = useState("Loading...");
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const typedText = useKeyPress();
 
@@ -53,15 +70,6 @@ export default function Home() {
     }
   }, []);
 
-  useEffect(() => {
-    const listener = (e: KeyboardEvent) => {
-      console.log(e.code);
-    };
-    window.addEventListener("keydown", listener, { capture: true });
-    return () =>
-      window.removeEventListener("keydown", listener, { capture: true });
-  }, []);
-
   const onSave = () => {
     localStorage.setItem("message", message);
   };
@@ -69,7 +77,6 @@ export default function Home() {
   return (
     <div
       onKeyDown={(e) => {
-        console.log("hey", e);
         setMessage((m) => m + e.key);
       }}
       className="w-screen h-screen flex flex-col items-center bg-[#19473f] p-4"
@@ -79,16 +86,7 @@ export default function Home() {
       <span className="text-white font-bold my-4">
         Service worker status: {serviceWorkerStatus}
       </span>
-      <div className="flex flex-col gap-2 bg-[#206b5e] rounded-lg w-full p-2">
-        <textarea
-          ref={textareaRef}
-          placeholder="Enter QR code output here"
-          autoFocus
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="border-2 text-2xl rounded-lg text-black resize-none p-2 h-[30vh]"
-        />
-      </div>
+
       <div className="mt-8 text-center flex flex-col w-full">
         <button
           disabled={!message}
