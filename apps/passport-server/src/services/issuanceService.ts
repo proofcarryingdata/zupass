@@ -31,6 +31,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  VerifyTicketByIdRequest,
+  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
   ZUCONNECT_PRODUCT_ID_MAPPINGS,
@@ -83,7 +85,10 @@ import {
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
 import { fetchUserByCommitment } from "../database/queries/users";
-import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import {
+  fetchZuconnectTicketById,
+  fetchZuconnectTicketsByEmail
+} from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -1268,9 +1273,8 @@ export class IssuanceService {
       eventId = pcd.claim.partialTicket.eventId;
       productId = pcd.claim.partialTicket.productId;
       publicKey = pcd.claim.signer;
-
-      logger(eventId, productId, publicKey);
     }
+
     const knownTicketType = await fetchKnownTicketByEventAndProductId(
       this.context.dbPool,
       eventId,
@@ -1303,6 +1307,64 @@ export class IssuanceService {
     }
   }
 
+  private async verifyZuconnect23OrZuzalu23TicketById(
+    ticketId: string,
+    timestamp: string
+  ): Promise<VerifyTicketByIdResult> {
+    if (Date.now() - parseInt(timestamp) > ONE_HOUR_MS * 4) {
+      return {
+        success: true,
+        value: {
+          verified: false,
+          message: "Timestamp has expired."
+        }
+      };
+    }
+
+    const zuconnectTicket = await fetchZuconnectTicketById(
+      this.context.dbPool,
+      ticketId
+    );
+
+    if (zuconnectTicket) {
+      return {
+        success: true,
+        value: {
+          verified: true,
+          group: KnownTicketGroup.Zuconnect23,
+          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+          productId: zuconnectTicket.product_id
+        }
+      };
+    } else {
+      const zuzaluTicket = await fetchLoggedInZuzaluUser(this.context.dbPool, {
+        uuid: ticketId
+      });
+
+      if (zuzaluTicket) {
+        return {
+          success: true,
+          value: {
+            verified: true,
+            group: KnownTicketGroup.Zuzalu23,
+            publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+            productId:
+              zuzaluTicket.role === ZuzaluUserRole.Visitor
+                ? ZUZALU_23_VISITOR_PRODUCT_ID
+                : zuzaluTicket.role === ZuzaluUserRole.Organizer
+                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
+                : ZUZALU_23_RESIDENT_PRODUCT_ID
+          }
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: "Could not verify ticket."
+    };
+  }
+
   public async handleVerifyTicketRequest(
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
@@ -1315,6 +1377,15 @@ export class IssuanceService {
         cause: e
       });
     }
+  }
+
+  public async handleVerifyTicketByIdRequest(
+    req: VerifyTicketByIdRequest
+  ): Promise<VerifyTicketByIdResult> {
+    return this.verifyZuconnect23OrZuzalu23TicketById(
+      req.ticketId,
+      req.timestamp
+    );
   }
 
   /**

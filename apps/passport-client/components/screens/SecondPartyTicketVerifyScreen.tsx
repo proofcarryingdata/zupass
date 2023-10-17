@@ -1,11 +1,12 @@
-import { EdDSATicketPCD, isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { KnownTicketGroup, requestVerifyTicket } from "@pcd/passport-interface";
+import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import {
+  KnownTicketGroup,
+  requestVerifyTicket,
+  requestVerifyTicketById
+} from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
-import {
-  ZKEdDSAEventTicketPCD,
-  isZKEdDSAEventTicketPCD
-} from "@pcd/zk-eddsa-event-ticket-pcd";
+import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useQuery } from "../../src/appHooks";
@@ -26,7 +27,7 @@ enum VerifyOutcome {
 type VerifyResult =
   | {
       outcome: VerifyOutcome.KnownTicketType;
-      pcd: EdDSATicketPCD | ZKEdDSAEventTicketPCD;
+      productId: string;
       group: KnownTicketGroup;
       publicKeyName: string;
     }
@@ -46,15 +47,23 @@ type VerifyResult =
 export function SecondPartyTicketVerifyScreen() {
   const query = useQuery();
   const encodedQRPayload = query.get("pcd");
+  const id = query.get("id");
+
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
   const pcds = usePCDCollection();
 
   useEffect(() => {
     (async () => {
-      const result = await deserializeAndVerify(encodedQRPayload, pcds);
-      setVerifyResult(result);
+      if (encodedQRPayload) {
+        const result = await deserializeAndVerify(encodedQRPayload, pcds);
+        setVerifyResult(result);
+      } else {
+        const payload = JSON.parse(Buffer.from(id, "base64").toString());
+        const result = await verifyById(payload.ticketId, payload.timestamp);
+        setVerifyResult(result);
+      }
     })();
-  }, [encodedQRPayload, setVerifyResult, pcds]);
+  }, [setVerifyResult, pcds, encodedQRPayload, id]);
 
   const bg =
     verifyResult && verifyResult.outcome === VerifyOutcome.KnownTicketType
@@ -98,7 +107,7 @@ export function SecondPartyTicketVerifyScreen() {
         {verifyResult &&
           verifyResult.outcome === VerifyOutcome.KnownTicketType && (
             <VerifiedAndKnownTicket
-              pcd={verifyResult.pcd}
+              productId={verifyResult.productId}
               category={verifyResult.group}
               publicKeyName={verifyResult.publicKeyName}
             />
@@ -122,11 +131,11 @@ export function SecondPartyTicketVerifyScreen() {
  * ticket, display a ticket-specific message to the user.
  */
 function VerifiedAndKnownTicket({
-  pcd,
+  productId,
   publicKeyName,
   category
 }: {
-  pcd: EdDSATicketPCD | ZKEdDSAEventTicketPCD;
+  productId: string;
   publicKeyName: string;
   category: KnownTicketGroup;
 }) {
@@ -136,7 +145,10 @@ function VerifiedAndKnownTicket({
     return <ZuzaluKnownTicketDetails publicKeyName={publicKeyName} />;
   } else if (category === KnownTicketGroup.Zuconnect23) {
     return (
-      <ZuconnectKnownTicketDetails pcd={pcd} publicKeyName={publicKeyName} />
+      <ZuconnectKnownTicketDetails
+        productId={productId}
+        publicKeyName={publicKeyName}
+      />
     );
   }
 }
@@ -170,7 +182,9 @@ async function deserializeAndVerify(
       if (result.value.verified) {
         return {
           outcome: VerifyOutcome.KnownTicketType,
-          pcd,
+          productId: isEdDSATicketPCD(pcd)
+            ? pcd.claim.ticket.productId
+            : pcd.claim.partialTicket.productId,
           publicKeyName: result.value.publicKeyName,
           group: result.value.group
         };
@@ -184,5 +198,32 @@ async function deserializeAndVerify(
       (result.success && result.value.verified === false
         ? result.value.message
         : null) ?? "Could not verify PCD"
+  };
+}
+
+async function verifyById(
+  ticketId: string,
+  timestamp: string
+): Promise<VerifyResult> {
+  const result = await requestVerifyTicketById(appConfig.zupassServer, {
+    ticketId,
+    timestamp
+  });
+
+  if (result.success && result.value.verified) {
+    return {
+      outcome: VerifyOutcome.KnownTicketType,
+      productId: result.value.productId,
+      publicKeyName: result.value.publicKeyName,
+      group: result.value.group
+    };
+  }
+
+  return {
+    outcome: VerifyOutcome.NotVerified,
+    message:
+      (result.success && result.value.verified === false
+        ? result.value.message
+        : null) ?? "Could not verify ticket"
   };
 }

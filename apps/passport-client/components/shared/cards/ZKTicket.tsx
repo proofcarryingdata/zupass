@@ -10,11 +10,21 @@ import {
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
+import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
+
+function makeTicketIdVerifyLink(ticketId: string): string {
+  const link = `${window.location.origin}/#/verify?id=${encodeURIComponent(
+    Buffer.from(
+      JSON.stringify({ ticketId, timestamp: Date.now().toString() })
+    ).toString("base64")
+  )}`;
+  return link;
+}
 
 /**
  * Generates a ZK proof and uses this to generate the QR code.
@@ -22,75 +32,107 @@ import { icons } from "../../icons";
  * done here to avoid circular dependencies between EdDSATicketPCD and
  * ZKEdDSAEventTicketPCD.
  */
-function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
+function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   const pcds = usePCDCollection();
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
-    const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
-    const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      pcds.getPCDsByType(SemaphoreIdentityPCDPackage.name)[0]
-    );
-    const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
-      ticket: {
-        value: serializedTicketPCD,
-        argumentType: ArgumentTypeName.PCD
-      },
-      identity: {
-        value: serializedIdentityPCD,
-        argumentType: ArgumentTypeName.PCD
-      },
-      fieldsToReveal: {
-        value: {
-          revealTicketId: true,
-          revealEventId: true,
-          revealProductId: true
+    if (zk) {
+      const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
+      const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
+        pcds.getPCDsByType(SemaphoreIdentityPCDPackage.name)[0]
+      );
+      const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
+        ticket: {
+          value: serializedTicketPCD,
+          argumentType: ArgumentTypeName.PCD
         },
-        argumentType: ArgumentTypeName.ToggleList
-      },
-      validEventIds: {
-        value: [pcd.claim.ticket.eventId],
-        argumentType: ArgumentTypeName.StringArray
-      },
-      externalNullifier: {
-        value: undefined,
-        argumentType: ArgumentTypeName.BigInt
-      },
-      watermark: {
-        value: Date.now().toString(),
-        argumentType: ArgumentTypeName.BigInt
-      }
-    });
-    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
-    const verificationLink = makeEncodedVerifyLink(
-      encodeQRPayload(JSON.stringify(serializedZKPCD))
-    );
-    return verificationLink;
-  }, [pcd, pcds]);
+        identity: {
+          value: serializedIdentityPCD,
+          argumentType: ArgumentTypeName.PCD
+        },
+        fieldsToReveal: {
+          value: {
+            revealTicketId: true,
+            revealEventId: true,
+            revealProductId: true
+          },
+          argumentType: ArgumentTypeName.ToggleList
+        },
+        validEventIds: {
+          value: [pcd.claim.ticket.eventId],
+          argumentType: ArgumentTypeName.StringArray
+        },
+        externalNullifier: {
+          value: undefined,
+          argumentType: ArgumentTypeName.BigInt
+        },
+        watermark: {
+          value: Date.now().toString(),
+          argumentType: ArgumentTypeName.BigInt
+        }
+      });
+      const serializedZKPCD =
+        await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
+      const verificationLink = makeEncodedVerifyLink(
+        encodeQRPayload(JSON.stringify(serializedZKPCD))
+      );
+      return verificationLink;
+    } else {
+      const ticketId = pcd.claim.ticket.ticketId;
+      const verificationLink = makeTicketIdVerifyLink(ticketId);
+      return verificationLink;
+    }
+  }, [pcd, pcds, zk]);
 
-  return (
-    <QRDisplayWithRegenerateAndStorage
-      loadingLogo={
-        <LoadingIconContainer>
-          <LoadingIcon src={icons.qrCenterLoading} />
-        </LoadingIconContainer>
-      }
-      generateQRPayload={generate}
-      maxAgeMs={1000 * 60}
-      uniqueId={pcd.id}
-      fgColor={getQRCodeColorOverride(pcd)}
-    />
-  );
+  if (zk) {
+    return (
+      <QRDisplayWithRegenerateAndStorage
+        key={`zk-${pcd.id}`}
+        loadingLogo={
+          <LoadingIconContainer>
+            <LoadingIcon src={icons.qrCenterLoading} />
+          </LoadingIconContainer>
+        }
+        generateQRPayload={generate}
+        maxAgeMs={1000 * 60}
+        uniqueId={`zk-${pcd.id}`}
+        fgColor={getQRCodeColorOverride(pcd)}
+      />
+    );
+  } else {
+    return (
+      <QRDisplayWithRegenerateAndStorage
+        key={pcd.id}
+        loadingLogo={
+          <LoadingIconContainer>
+            <LoadingIcon src={icons.qrCenterLoading} />
+          </LoadingIconContainer>
+        }
+        generateQRPayload={generate}
+        maxAgeMs={1000 * 60}
+        uniqueId={pcd.id}
+        fgColor={getQRCodeColorOverride(pcd)}
+      />
+    );
+  }
 }
 
 export function ZKTicketPCDCard({ pcd }: { pcd: EdDSATicketPCD }) {
+  const [zk, setZk] = useState<boolean>(false);
+  const onToggle = useCallback(() => {
+    setZk(!zk);
+  }, [zk]);
   const ticketData = pcd.claim.ticket;
 
   return (
     <Container>
       <TicketInfo>
-        <TicketQR pcd={pcd} />
+        <TicketQR zk={zk} pcd={pcd} />
         <span>{ticketData?.attendeeName}</span>
         <span>{ticketData?.attendeeEmail}</span>
+        <ZKMode>
+          <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
+        </ZKMode>
       </TicketInfo>
     </Container>
   );
@@ -124,4 +166,13 @@ const LoadingIconContainer = styled.div`
 const LoadingIcon = styled.img`
   height: 100px;
   width: 100px;
+`;
+
+const ZKMode = styled.div`
+  display: flex;
+  text-align: right;
+  margin-top: 8px;
+  padding: 0px 16px;
+  width: 100%;
+  justify-content: flex-end;
 `;

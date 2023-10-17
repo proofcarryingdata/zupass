@@ -1,6 +1,4 @@
-import { EdDSATicketPCD, isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
-import { ZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import styled from "styled-components";
 import {
   CardContainerExpanded,
@@ -9,15 +7,12 @@ import {
 } from "../PCDCard";
 
 export function ZuconnectKnownTicketDetails({
-  pcd,
+  productId,
   publicKeyName
 }: {
-  pcd: EdDSATicketPCD | ZKEdDSAEventTicketPCD;
+  productId: string;
   publicKeyName: string;
 }) {
-  const productId = isEdDSATicketPCD(pcd)
-    ? pcd.claim.ticket.productId
-    : pcd.claim.partialTicket.productId;
   const type = Object.entries(ZUCONNECT_PRODUCT_ID_MAPPINGS).find(
     ([_name, product]) => product.id === productId
   )[0];

@@ -332,6 +332,34 @@ export type VerifyTicketResponseValue =
     };
 
 /**
+ * Verifies a ticket by ticket ID and timestamp.
+ * See also {@link VerifyTicketRequest}
+ */
+
+export interface VerifyTicketByIdRequest {
+  /**
+   * The ID of an EdDSATicketPCD.
+   */
+  ticketId: string;
+  /**
+   * A timestamp, in milliseconds since midnight January 1 1970.
+   */
+  timestamp: string;
+}
+
+export type VerifyTicketByIdResponseValue =
+  | {
+      verified: true;
+      publicKeyName: string;
+      group: KnownTicketGroup;
+      productId: string;
+    }
+  | {
+      verified: false;
+      message?: string;
+    };
+
+/**
  * Ask the Zupass server, or a 3rd party server to return the list of feeds
  * that it is hosting.
  */
