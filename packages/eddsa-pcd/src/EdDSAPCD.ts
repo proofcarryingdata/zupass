@@ -163,16 +163,22 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
  * If they match, the function returns true, otherwise false.
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
-  await ensureInitialized();
+  try {
+    await ensureInitialized();
 
-  const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
+    const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
 
-  // `F.fromObject` converts a point from standard format to Montgomery.
-  const pubKey = pcd.claim.publicKey.map((p) => eddsa.F.fromObject(p)) as Point;
+    // `F.fromObject` converts a point from standard format to Montgomery.
+    const pubKey = pcd.claim.publicKey.map((p) =>
+      eddsa.F.fromObject(p)
+    ) as Point;
 
-  const hashedMessage = poseidon(pcd.claim.message);
+    const hashedMessage = poseidon(pcd.claim.message);
 
-  return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
+    return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
+  } catch {
+    return false;
+  }
 }
 
 /**
