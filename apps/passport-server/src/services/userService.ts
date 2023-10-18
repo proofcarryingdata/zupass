@@ -1,4 +1,4 @@
-import { HexString, getHash } from "@pcd/passport-crypto";
+import { HexString } from "@pcd/passport-crypto";
 import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
@@ -14,10 +14,9 @@ import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
 import { isInteger } from "lodash";
 import { UserRow } from "../database/models";
-import { unredactDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
+import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   updateUserAccountRestTimestamps,
-  updateUserAgreeTerms,
   upsertUser
 } from "../database/queries/saveUser";
 import {
@@ -251,11 +250,14 @@ export class UserService {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
 
+    // Slightly redundantly, this will set the "terms agreed" again
+    // However, having a single canonical transaction for this seems like
+    // a benefit
     logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
-    await unredactDevconnectPretixTicket(
+    await agreeTermsAndUnredactTickets(
       this.context.dbPool,
       user.email,
-      await getHash(user.email)
+      LATEST_TERMS
     );
 
     const userJson = userRowToZupassUserJson(user);
@@ -337,17 +339,11 @@ export class UserService {
           };
         }
 
-        await updateUserAgreeTerms(
-          this.context.dbPool,
-          pcd.claim.identityCommitment,
-          payload.version
-        );
-
         logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
-        await unredactDevconnectPretixTicket(
+        await agreeTermsAndUnredactTickets(
           this.context.dbPool,
           user.email,
-          await getHash(user.email)
+          LATEST_TERMS
         );
 
         return {

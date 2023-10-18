@@ -1,7 +1,7 @@
-import { Pool } from "postgres-pool";
+import { getHash } from "@pcd/passport-crypto";
+import { Pool, PoolClient } from "postgres-pool";
 import { DevconnectPretixRedactedTicket } from "../../models";
-import { sqlQuery } from "../../sqlQuery";
-import { insertDevconnectPretixTicket } from "./insertDevconnectPretixTicket";
+import { sqlQuery, sqlTransaction } from "../../sqlQuery";
 
 export async function insertDevconnectPretixRedactedTicket(
   client: Pool,
@@ -73,29 +73,71 @@ export async function fetchDevconnectPretixRedactedTicketsByEvent(
   return result.rows;
 }
 
-export async function unredactDevconnectPretixTicket(
+export async function agreeTermsAndUnredactTickets(
   client: Pool,
   email: string,
-  hashedEmail: string
+  version: number
 ): Promise<void> {
-  const redacted = await fetchDevconnectPretixRedactedTicketsByHashedEmail(
+  const hashedEmail = await getHash(email);
+  await sqlTransaction<void>(
     client,
-    hashedEmail
-  );
+    "agree terms and unredact tickets",
+    async (txClient: PoolClient) => {
+      await txClient.query(
+        "UPDATE users SET terms_agreed = $1 WHERE email = $2",
+        [version, email]
+      );
 
-  for (const redactedTicket of redacted) {
-    await insertDevconnectPretixTicket(client, {
-      ...redactedTicket,
-      email,
-      full_name: "",
-      is_deleted: false,
-      zupass_checkin_timestamp: null
-    });
-  }
+      const redacted = (
+        await txClient.query(
+          "SELECT * FROM devconnect_pretix_redacted_tickets WHERE hashed_email = $1",
+          [hashedEmail]
+        )
+      ).rows as DevconnectPretixRedactedTicket[];
 
-  await sqlQuery(
-    client,
-    `DELETE FROM devconnect_pretix_redacted_tickets WHERE hashed_email = $1`,
-    [hashedEmail]
+      for (const redactedTicket of redacted) {
+        const {
+          devconnect_pretix_items_info_id,
+          is_consumed,
+          position_id,
+          secret,
+          checker,
+          pretix_checkin_timestamp
+        } = redactedTicket;
+
+        await txClient.query(
+          `
+          INSERT INTO devconnect_pretix_tickets
+          (email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id,
+          secret, checker, zupass_checkin_timestamp, pretix_checkin_timestamp
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (position_id) DO
+          update SET email = $1, full_name = $2, devconnect_pretix_items_info_id = $3,
+          is_deleted = $4, is_consumed = $5, secret = $7, checker = $8,
+          zupass_checkin_timestamp = $9, pretix_checkin_timestamp = $10`,
+          [
+            email,
+            // We don't have the user's name here, but it will get synced
+            // from Pretix later
+            "",
+            devconnect_pretix_items_info_id,
+            // If the ticket were deleted, no redacted ticket would exist
+            false,
+            is_consumed,
+            position_id,
+            secret,
+            checker,
+            // Can't have been checked in on Zupass yet
+            null,
+            pretix_checkin_timestamp
+          ]
+        );
+      }
+
+      await txClient.query(
+        `DELETE FROM devconnect_pretix_redacted_tickets WHERE hashed_email = $1`,
+        [hashedEmail]
+      );
+    }
   );
 }

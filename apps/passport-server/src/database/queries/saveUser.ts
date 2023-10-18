@@ -68,17 +68,3 @@ WHERE email = $1 AND commitment = $2`,
   );
   return uuid;
 }
-
-export async function updateUserAgreeTerms(
-  client: Pool,
-  commitment: string,
-  version: number
-): Promise<void> {
-  await sqlQuery(
-    client,
-    `
-    UPDATE users SET terms_agreed = $1 WHERE commitment = $2
-  `,
-    [version, commitment]
-  );
-}
