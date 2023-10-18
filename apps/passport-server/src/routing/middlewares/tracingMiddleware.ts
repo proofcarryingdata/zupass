@@ -18,6 +18,7 @@ export function tracingMiddleware(): RequestHandler {
         span?.setAttribute("path", req.path);
         span?.setAttribute("method", req.method);
         span?.setAttribute("ip", req.ip);
+        span?.setAttribute("referer", req.headers.referer ?? "");
 
         res.on("close", () => {
           span?.setAttribute("statusCode", res.statusCode);
