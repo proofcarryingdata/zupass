@@ -103,7 +103,7 @@ async function execTransactionWithRetry<T>(
     },
     (e) => {
       const errorMessage = getErrorMessage(e);
-      return errorMessage.includes("Error: Connection terminated unexpectedly");
+      return errorMessage.includes("Connection terminated unexpectedly");
     },
     3
   );
