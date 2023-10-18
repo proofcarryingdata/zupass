@@ -63,7 +63,7 @@ const ticketData: ITicketData = {
     ticketId: uuid(),
     eventId: uuid(),
     productId: uuid(),
-    timestampConsumed: Date.now(),
+    timestampConsumed: 0,
     timestampSigned: Date.now(),
     attendeeSemaphoreId: "12345",
     isConsumed: false,
