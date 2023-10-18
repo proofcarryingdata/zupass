@@ -49,7 +49,7 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
 }
 
 /**
- * Returns the PCD ticket if it exists.
+ * Returns the ticket inside of this PCD if it exists.
  */
 export function getEdDSATicketData(
   pcd?: EdDSATicketPCD
