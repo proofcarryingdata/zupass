@@ -7,18 +7,35 @@ import { SERVICE_WORKER_ENABLED } from "../sharedConstants";
 const swSelf = self as unknown as ServiceWorkerGlobalScope;
 
 /**
+ * Unique ID set each time the server is built or deployed.  The build
+ * process sets this by string replacement, so using it here also ensures
+ * this file changes on every deploy, causing the service worker to update,
+ * and changing the ephemeral cache name below.
+ */
+const SW_BUILD_ID = process.env.SW_ID;
+
+/**
  * Time to wait for fetching items before checking in the ephemeral cache.
  */
 const FETCH_TIMEOUT_MS = 5000;
 
 /**
+ * Common string identifying the stable and ephemeral caches as related.
+ * This should change if we fundamentally change our caching approach, and
+ * want to ensure even the stable cache is discarded.
+ */
+const CACHE_VERSION = "v2";
+
+/**
  * Ephemeral cache is for resources which may change frequently, where we
  * want to optimize for freshness, but allow caching for offline.  This cache
- * is also updated dynamically as resources are fetched.  Cache name includes
- * deployed code version, which protects against using
+ * is also updated dynamically as resources are fetched, including for any
+ * web resources (from passport-client) we might've missed when defining cache
+ * configuration.
+ * Cache name includes deployed code version, which protects against using
  * cached pages which came from a different server deploy.
  */
-const EPHEMERAL_CACHE_NAME = `v1-${process.env.SW_ID}`;
+const EPHEMERAL_CACHE_NAME = `${CACHE_VERSION}-${SW_BUILD_ID}`;
 const EPHEMERAL_CACHE_RESOURCES = new Set([
   "/",
   "/index.html",
@@ -30,25 +47,26 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
  * Stable cache is for resources which are expected not to change frequently,
  * where we want to optimize for speed and limit bandwidth at the cost of
  * freshness.  This cache never has additional resources added.
- * These resources are updated only when a new service worker is installed.
- * since htat update isn't guaranteed to succeed, this list shouldn't contain
- * anything which could cause compatibility problems if it isn't updated.
+ * These resources are updated only once after a new service worker is
+ * installed.  That update isn't guaranteed to succeed, and won't be retried
+ * if there's already a cached item.  Thus this list shouldn't contain anything
+ * which could cause compatibility problems if it isn't refreshed.  If any of
+ * these artifacts do need to be updated, they should be assigned a different
+ * path, or removed from this list.
  */
-const STABLE_CACHE_NAME = "v1-stable";
+const STABLE_CACHE_NAME = `${CACHE_VERSION}-stable`;
 const STABLE_CACHE_RESOURCES = new Set([
   "/favicon.ico",
   "/semaphore-artifacts/16.wasm",
   "/semaphore-artifacts/16.zkey",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey",
-  "/fonts/IBMPlexSans-Regular.ttf",
-  "/fonts/IBMPlexSans-Medium.ttf",
-  "/fonts/IBMPlexSans-Light.ttf",
-  "/fonts/IBMPlexSans-ExtraLight.ttf",
+  "/fonts/IBMPlexSans-ExtraLight.woff",
+  "/fonts/IBMPlexSans-Light.woff",
+  "/fonts/IBMPlexSans-LightItalic.woff",
   "/fonts/IBMPlexSans-Regular.woff",
   "/fonts/IBMPlexSans-Medium.woff",
-  "/fonts/IBMPlexSans-Light.woff",
-  "/fonts/IBMPlexSans-ExtraLight.woff"
+  "/fonts/IBMPlexSans-SemiBold.woff"
 ]);
 
 /**
@@ -60,7 +78,7 @@ function requestToItemCacheKey(request: Request): string {
   return new URL(request.url).pathname;
 }
 
-function logCacheName(cacheName: string): string {
+function cacheNameForLog(cacheName: string): string {
   return cacheName.substring(0, 9);
 }
 
@@ -68,7 +86,7 @@ function logCacheName(cacheName: string): string {
  * Helpers for quickly enabling or disabling verbose logging.
  */
 const swLog = {
-  tag: `[SERVICE_WORKER][${process.env.SW_ID.substring(0, 4)}]`,
+  tag: `[SERVICE_WORKER][${SW_BUILD_ID.substring(0, 4)}]`,
   I: function (msg: any) {
     console.log(this.tag, msg);
   },
@@ -82,7 +100,7 @@ const swLog = {
  * is registered.
  */
 self.addEventListener("install", (event: ExtendableEvent) => {
-  swLog.V(`installing ${process.env.SW_ID}`);
+  swLog.V(`installing ${SW_BUILD_ID}`);
 
   // By default, the browser will only let one version of our ServiceWorker
   // be active, and will wait to activate a new one until the old one isn't
@@ -94,15 +112,16 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 
   // Skip real service worker init if disabled.
   if (!SERVICE_WORKER_ENABLED) {
+    swLog.V(`skipping installation when disabled ${SW_BUILD_ID}`);
     return;
   }
 
   event.waitUntil(
     (async () => {
-      // Pre-populate our cache with all the resources we need to operate offline.
+      // Pre-populate our cache with all the resources to operate offline.
       await prePopulateCaches();
 
-      swLog.I(`installed ${process.env.SW_ID}`);
+      swLog.I(`installed ${SW_BUILD_ID}`);
     })()
   );
 });
@@ -114,7 +133,10 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 self.addEventListener("activate", (event: ExtendableEvent) => {
   // Clean up any stray service workers from prior development.
   if (!SERVICE_WORKER_ENABLED) {
-    swLog.I(`self-unregistering and refreshing client windows`);
+    swLog.I(
+      `service worker disabled: self-unregistering and refreshing client 
+      windows ${SW_BUILD_ID}`
+    );
     event.waitUntil(
       (async () => {
         await swSelf.clients.claim();
@@ -127,12 +149,13 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
     return;
   }
 
-  swLog.V(`activating ${process.env.SW_ID}`);
+  swLog.V(`activating ${SW_BUILD_ID}`);
 
   event.waitUntil(
     (async () => {
-      // If supported, NavigationPreload allows fetches to start in
-      // parallel to the running of our fetch event handler.
+      // If supported, NavigationPreload allows fetches to start in parallel to
+      // the running of our fetch event handler, as well as the bootup time of
+      // an idle service-worker.  It's worth enabling to reduce latency.
       if (swSelf.registration.navigationPreload) {
         swLog.V(`navigation preload enabled`);
         await swSelf.registration.navigationPreload.enable();
@@ -146,7 +169,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
       // letting us take over any existing windows.
       await swSelf.clients.claim();
 
-      swLog.I(`activated ${process.env.SW_ID}`);
+      swLog.I(`activated ${SW_BUILD_ID}`);
     })()
   );
 });
@@ -182,7 +205,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         // expiration both result in exceptions, so if we get a result
         // at all we can simply return it.
         return await Promise.race([respPromise, timeoutPromise]);
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If stable cache and network both failed, use ephemeral cache, but
         // still make sure the event waits for the fetch to finish and update
         // the cachee.
@@ -234,9 +257,19 @@ async function startFetch(event: FetchEvent): Promise<Response> {
       swLog.V(`network response fetching ${event.request?.url}`);
     }
 
-    // Response can be read only once, so needs to be cloned to be added
-    // to cache, which happens asynchronously after we return a response.
-    if (shouldUpdateEphemeralCache(event.request, resp)) {
+    // Update caches if appropriate.
+    // The stable cache update should only happen if pre-populating failed at
+    // install time, or the cache was cleared by the user, causing a cache miss.
+    // The ephemeral cache update happens after every network fetch.
+    // Note that Response can be read only once, so needs to be cloned to be
+    // added to cache.  The clone() has to happen synchronously to be safe, but
+    // the cache updates happen asynchronously on the cloned Response while the
+    // original response is returned.
+    if (shouldUpdateStableCache(event.request, resp)) {
+      event.waitUntil(
+        updateCache(STABLE_CACHE_NAME, event.request, resp.clone())
+      );
+    } else if (shouldUpdateEphemeralCache(event.request, resp)) {
       event.waitUntil(
         updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone())
       );
@@ -295,10 +328,10 @@ async function addResourcesToCache(
   for (const resource of resources) {
     try {
       await cache.add(resource);
-      swLog.V(`Cache ${logCacheName(cacheName)} pre-cached ${resource}`);
+      swLog.V(`Cache ${cacheNameForLog(cacheName)} pre-cached ${resource}`);
     } catch (error) {
       swLog.V(
-        `Cache ${logCacheName(
+        `Cache ${cacheNameForLog(
           cacheName
         )} failed to pre-cache ${resource}: ${error}`
       );
@@ -322,6 +355,8 @@ async function checkEphemeralCache(
 }
 
 function shouldHandleFetch(request: Request): boolean {
+  // This limits the scope of service worker caching to only web resources
+  // (i.e. passport-client not passport-server).
   return (
     SERVICE_WORKER_ENABLED &&
     request.method === "GET" &&
@@ -329,14 +364,31 @@ function shouldHandleFetch(request: Request): boolean {
   );
 }
 
+function shouldUpdateStableCache(
+  request: Request,
+  response: Response
+): boolean {
+  // shouldHandleFetch has already qualified the requests we want to cache, and
+  // we'd never fetch if we had a stable cache hit.  But on a cache miss which
+  // we successfully fetch, we want to add the missing entry if it's in our list
+  // of stable resources.
+  return (
+    response.ok && STABLE_CACHE_RESOURCES.has(requestToItemCacheKey(request))
+  );
+}
+
 function shouldUpdateEphemeralCache(
   request: Request,
   response: Response
 ): boolean {
+  // shouldHandleFetch has already qualified the requests we want to cache, but
+  // we want to update the cache only on success.
   return response.ok;
 }
 
 function shouldCheckStableCache(request: Request): boolean {
+  // shouldHandleFetch has already qualified the requests we want to cache, so
+  // here we only need to limit it to the specific stable resources.
   return STABLE_CACHE_RESOURCES.has(requestToItemCacheKey(request));
 }
 
@@ -353,9 +405,7 @@ async function updateCache(
   request: Request,
   response: Response
 ): Promise<void> {
-  if (shouldUpdateEphemeralCache(request, response)) {
-    swLog.V(`Cache ${logCacheName(cacheName)} updating ${request.url}`);
-    const cache = await caches.open(cacheName);
-    await cache.put(request, response);
-  }
+  swLog.V(`Cache ${cacheNameForLog(cacheName)} updating ${request.url}`);
+  const cache = await caches.open(cacheName);
+  await cache.put(request, response);
 }
