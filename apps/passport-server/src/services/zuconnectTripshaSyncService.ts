@@ -121,8 +121,35 @@ export class ZuconnectTripshaSyncService {
     return traced(NAME, "saveData", async (span) => {
       span?.setAttribute("ticket_count", tickets.length);
 
+      const allTickets = await fetchAllZuconnectTickets(this.context.dbPool);
+      // Tickets we just received from Tripsha only have an "external" ID, so
+      // we should use this to check for existing tickets
+      const existingTicketsByExternalId = new Map(
+        allTickets.map((ticket) => [ticket.external_ticket_id, ticket])
+      );
+      // Which tickets are new or updated?
+      const newOrUpdatedTickets = tickets.filter((ticket) => {
+        // If we don't have it in the DB, it's new
+        if (!existingTicketsByExternalId.has(ticket.id)) {
+          return true;
+        } else {
+          // If we do have it but with different values, it's updated
+          const existingTicket = existingTicketsByExternalId.get(ticket.id);
+          if (
+            existingTicket?.attendee_email !== ticket.email ||
+            existingTicket.attendee_name !== ticket.fullName ||
+            existingTicket.product_id !==
+              ZUCONNECT_PRODUCT_ID_MAPPINGS[ticket.ticketName].id
+          ) {
+            return true;
+          }
+        }
+        // We already have this ticket
+        return false;
+      });
+
       const savedTickets = [];
-      for (const ticket of tickets) {
+      for (const ticket of newOrUpdatedTickets) {
         savedTickets.push(
           await upsertZuconnectTicket(this.context.dbPool, {
             external_ticket_id: ticket.id,
@@ -134,21 +161,34 @@ export class ZuconnectTripshaSyncService {
           })
         );
       }
-      // Compare the tickets in the database with the ones we just saved
-      const allTickets = await fetchAllZuconnectTickets(this.context.dbPool);
-      const savedTicketIds = new Set(savedTickets.map((ticket) => ticket.id));
-      span?.setAttribute(
-        "saved_ticket_ids",
-        [...savedTicketIds.values()].join(", ")
+
+      // Compare the tickets in the database with the ones we just received
+      // Here we are doing the comparison based on DB ID, not external ID
+      const receivedTicketIds = new Set(
+        [
+          // Get the ID from the records generated during saving
+          ...savedTickets.map((ticket) => ticket.id),
+          // For existing tickets, use the map we created earlier to get the ID
+          ...tickets.map(
+            (ticket) => existingTicketsByExternalId.get(ticket.id)?.id ?? []
+          )
+        ].flat()
       );
+
+      span?.setAttribute(
+        "received_ticket_ids",
+        [...receivedTicketIds.values()].join(", ")
+      );
+
       const idsToDelete = allTickets
         .filter(
           (ticket) =>
-            !savedTicketIds.has(ticket.id) &&
+            !receivedTicketIds.has(ticket.id) &&
             // Don't soft-delete mock tickets even though we didn't sync them
             !this.isMockTicketRecord(ticket)
         )
         .map((ticket) => ticket.id);
+
       // Anything in the DB that was not present in the sync we just ran, and
       // is not a mock ticket, should be soft-deleted.
       span?.setAttribute("ids_to_delete", idsToDelete.join(", "));
@@ -156,6 +196,7 @@ export class ZuconnectTripshaSyncService {
         await softDeleteZuconnectTicket(this.context.dbPool, id);
       }
 
+      logger(`[ZUCONNECT TRIPSHA] Received ${tickets.length} tickets`);
       logger(`[ZUCONNECT TRIPSHA] Saved ${savedTickets.length} tickets`);
       logger(`[ZUCONNECT TRIPSHA] Soft-deleted ${idsToDelete.length} tickets`);
     });
