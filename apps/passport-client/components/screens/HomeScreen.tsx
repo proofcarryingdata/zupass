@@ -116,15 +116,17 @@ export function HomeScreenImpl() {
                   onFolderClick={onFolderClick}
                 />
               )}
-              {foldersInFolder.map((folder) => {
-                return (
-                  <FolderCard
-                    key={folder}
-                    onFolderClick={onFolderClick}
-                    folder={folder}
-                  />
-                );
-              })}
+              {foldersInFolder
+                .sort((a, b) => a.localeCompare(b))
+                .map((folder) => {
+                  return (
+                    <FolderCard
+                      key={folder}
+                      onFolderClick={onFolderClick}
+                      folder={folder}
+                    />
+                  );
+                })}
             </FolderExplorerContainer>
           )}
           {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
