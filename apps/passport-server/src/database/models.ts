@@ -88,6 +88,7 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
 export interface DevconnectPretixRedactedTicket {
   hashed_email: string;
   devconnect_pretix_items_info_id: string;
+  devconnect_pretix_events_info_id: string;
   is_consumed: boolean;
   position_id: string;
   secret: string;

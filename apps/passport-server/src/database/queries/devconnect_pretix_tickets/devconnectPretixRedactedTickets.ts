@@ -11,11 +11,12 @@ export async function insertDevconnectPretixRedactedTicket(
     client,
     `\
     INSERT INTO devconnect_pretix_redacted_tickets
-    (hashed_email, is_consumed, position_id, secret, checker, pretix_checkin_timestamp, devconnect_pretix_items_info_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    (hashed_email, is_consumed, position_id, secret, checker, pretix_checkin_timestamp, devconnect_pretix_items_info_id,
+      devconnect_pretix_events_info_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT(position_id) DO
     UPDATE SET hashed_email = $1, is_consumed = $2, secret = $4, checker = $5, pretix_checkin_timestamp = $6,
-    devconnect_pretix_items_info_id = $7 
+    devconnect_pretix_items_info_id = $7, devconnect_pretix_events_info_id = $8
     `,
     [
       params.hashed_email,
@@ -24,7 +25,8 @@ export async function insertDevconnectPretixRedactedTicket(
       params.secret,
       params.checker,
       params.pretix_checkin_timestamp,
-      params.devconnect_pretix_items_info_id
+      params.devconnect_pretix_items_info_id,
+      params.devconnect_pretix_events_info_id
     ]
   );
 }
