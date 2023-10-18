@@ -121,18 +121,21 @@ export class TelegramService {
           );
           const chat = await getGroupChat(ctx.api, chatId);
 
-          await this.authBot.api.sendMessage(
-            userId,
-            `<i>Verifying...\n\n\n\nInviting...</i>`,
-            { parse_mode: "HTML" }
-          );
           await this.authBot.api.approveChatJoinRequest(chatId, userId);
           if (ctx.chatJoinRequest?.invite_link?.invite_link) {
-            await this.authBot.api.sendMessage(userId, `Congrats!`, {
-              reply_markup: new InlineKeyboard().url(
-                `Go to ${chat?.title} `,
-                ctx.chatJoinRequest.invite_link.invite_link
-              ),
+            await this.authBot.api.sendMessage(
+              userId,
+              `You have been approved! Join here ⬇`,
+              {
+                reply_markup: new InlineKeyboard().url(
+                  `Join ${chat?.title}`,
+                  ctx.chatJoinRequest.invite_link.invite_link
+                ),
+                parse_mode: "HTML"
+              }
+            );
+
+            await this.authBot.api.sendMessage(userId, `🚀`, {
               parse_mode: "HTML"
             });
           } else {
@@ -193,7 +196,7 @@ export class TelegramService {
           const firstName = ctx?.from?.first_name;
           const name = firstName || username;
           await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick below join a group via a ZK proof!\n\nYou will sign in to Zupass, then prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
+            `Welcome ${name}! 👋\n\nClick the group you want to join.\n\nYou will sign in to Zupass, then ZK prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
             { reply_markup: zupassMenu }
           );
         }
@@ -667,10 +670,10 @@ export class TelegramService {
     });
     await this.authBot.api.sendMessage(
       userId,
-      `You've proved that you have a ticket to <b>${chat.title}</b>!\nPress this button to send your proof and join the group`,
+      `You've proved that you have a ticket for <b>${chat.title}</b>!\n\nNow, request to join the group ⬇`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Send ZK Proof ✈️`,
+          `Request to join`,
           inviteLink.invite_link
         ),
         parse_mode: "HTML"
