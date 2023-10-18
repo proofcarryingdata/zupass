@@ -111,8 +111,8 @@ export type EdDSATicketPCDArgs = {
 };
 
 /**
- * Defines the EdDSA Ticket PCD claim. The claim contains a ticket signed
- * with the private key corresponding to the given public key.
+ * Defines the EdDSA Ticket PCD claim. The claim contains a ticket that was signed
+ * with the private key corresponding to the given public key stored in the proof.
  */
 export interface EdDSATicketPCDClaim {
   ticket: ITicketData;
