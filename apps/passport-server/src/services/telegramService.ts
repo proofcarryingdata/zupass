@@ -737,11 +737,20 @@ export class TelegramService {
 
     // We've verified that the chat exists, now add the user to our list.
     // This will be important later when the user requests to join.
+    const {
+      user: { username }
+    } = await this.authBot.api.getChatMember(telegramChatId, telegramUserId);
+
+    username
+      ? logger(`[TELEGRAM] inserting ${username} into the db`)
+      : logger(`[TELEGRAM] ${telegramUserId} does not have a username`);
+
     await insertTelegramVerification(
       this.context.dbPool,
       telegramUserId,
       parseInt(telegramChatId),
-      attendeeSemaphoreId
+      attendeeSemaphoreId,
+      username
     );
 
     // Send invite link

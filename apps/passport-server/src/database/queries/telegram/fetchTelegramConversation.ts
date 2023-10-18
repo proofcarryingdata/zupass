@@ -21,6 +21,21 @@ export async function fetchTelegramConversation(
   return result.rows[0];
 }
 
+export async function fetchTelegramConversationsByChatId(
+  client: Pool,
+  telegramChatId: number
+): Promise<TelegramConversation[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_bot_conversations
+    where telegram_chat_id = $1
+    `,
+    [telegramChatId]
+  );
+
+  return result.rows;
+}
 /**
  *
  */
