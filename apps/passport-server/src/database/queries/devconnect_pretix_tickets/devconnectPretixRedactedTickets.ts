@@ -109,7 +109,7 @@ export async function agreeTermsAndUnredactTickets(
           `
           INSERT INTO devconnect_pretix_tickets
           (email, full_name, devconnect_pretix_items_info_id, is_deleted, is_consumed, position_id,
-          secret, checker, zupass_checkin_timestamp, pretix_checkin_timestamp
+          secret, checker, zupass_checkin_timestamp, pretix_checkin_timestamp)
           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           ON CONFLICT (position_id) DO
           update SET email = $1, full_name = $2, devconnect_pretix_items_info_id = $3,

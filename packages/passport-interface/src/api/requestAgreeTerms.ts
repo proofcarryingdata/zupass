@@ -16,11 +16,11 @@ import { httpPostSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestAgreeTerms(
-  url: string,
+  passportServerUrl: string,
   req: AgreeTermsRequest
 ): Promise<AgreeTermsResult> {
   return httpPostSimple(
-    url,
+    `${passportServerUrl}/account/agree-terms`,
     async (resText) => ({
       value: JSON.parse(resText) as AgreeToTermsResponseValue,
       success: true
@@ -34,7 +34,7 @@ export async function agreeTerms(
   version: number,
   identity: Identity
 ): Promise<AgreeTermsResult> {
-  return requestAgreeTerms(`${zupassServerUrl}/account/agree-terms`, {
+  return requestAgreeTerms(zupassServerUrl, {
     // A generic authenticated route solution might make this much simpler
     pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
