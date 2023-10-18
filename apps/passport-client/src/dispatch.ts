@@ -111,7 +111,7 @@ export type Action =
       knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     }
   | {
-      type: "terms-agreed";
+      type: "handle-agreed-terms";
       version: number;
     }
   | {
@@ -206,8 +206,8 @@ export async function dispatch(
         update,
         action.knownTicketTypesAndKeys
       );
-    case "terms-agreed":
-      return termsAgreed(state, update, action.version);
+    case "handle-agreed-terms":
+      return handleAgreedTerms(state, update, action.version);
     case "prompt-to-agree-terms":
       return promptToAgreeTerms(state, update);
     default:
@@ -792,7 +792,12 @@ async function setKnownTicketTypesAndKeys(
   });
 }
 
-function termsAgreed(state: AppState, update: ZuUpdate, version: number) {
+/**
+ * After the user has agreed to the terms, save the updated user record, set
+ * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
+ * feed refresh, and dismiss the "legal terms" modal.
+ */
+function handleAgreedTerms(state: AppState, update: ZuUpdate, version: number) {
   update({
     self: { ...state.self, terms_agreed: version },
     loadedIssuedPCDs: false,

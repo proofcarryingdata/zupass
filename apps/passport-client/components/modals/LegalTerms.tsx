@@ -24,11 +24,11 @@ export function LegalTermsModal() {
     setIsSubmitting(false);
 
     if (result.success) {
-      dispatch({ type: "terms-agreed", version: result.value.version });
+      dispatch({ type: "handle-agreed-terms", version: result.value.version });
     } else {
       // Persist to local storage and sync this later
       saveTermsAgreed(LATEST_TERMS);
-      dispatch({ type: "terms-agreed", version: result.value.version });
+      dispatch({ type: "handle-agreed-terms", version: result.value.version });
     }
   }, [dispatch, identity]);
 
