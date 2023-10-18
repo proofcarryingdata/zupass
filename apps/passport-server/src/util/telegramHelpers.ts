@@ -55,6 +55,7 @@ export interface SessionData {
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
+  kudosData?: { giver: string; receiver: string };
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;

@@ -13,7 +13,7 @@ import { CollapsableCode } from "../components/Core";
 import { ExampleContainer } from "../components/ExamplePage";
 import { KUDOSBOT_SERVER_UPLOAD_URL, ZUPASS_URL } from "../constants";
 
-export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
+export function constructProofUrl<T extends PCDPackage>(
   zupassClientUrl: string,
   returnUrl: string,
   pcdType: T["name"],
@@ -32,26 +32,29 @@ export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
 }
 
 const openSemaphoreSignaturePopup = (
-  urlToZupassClient: string,
+  zupassClientUrl: string,
   popupUrl: string,
   returnUrl: string,
   messageToSign: string
 ) => {
-  const proofUrl = constructZupassPcdGetRequestUrl<
-    typeof SemaphoreSignaturePCDPackage
-  >(urlToZupassClient, returnUrl, SemaphoreSignaturePCDPackage.name, {
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
-      value: undefined,
-      userProvided: true
-    },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      value: messageToSign,
-      userProvided: false
+  const proofUrl = constructProofUrl<typeof SemaphoreSignaturePCDPackage>(
+    zupassClientUrl,
+    returnUrl,
+    SemaphoreSignaturePCDPackage.name,
+    {
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: messageToSign,
+        userProvided: false
+      }
     }
-  });
+  );
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
   window.open(url, "_blank", "width=450,height=600,top=100,popup");
 };
@@ -81,7 +84,7 @@ export default function Page() {
       <ExampleContainer>
         <input
           style={{ marginBottom: "8px" }}
-          placeholder="User to give kudos to"
+          placeholder="Kudos data"
           type="text"
           value={messageToSign}
           onChange={(e) => setMessageToSign(e.target.value)}

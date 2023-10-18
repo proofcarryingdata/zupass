@@ -12,6 +12,14 @@ export function initUploadRoute(
 ): void {
   console.log("[INIT] Initializing upload route");
 
+  const deserializeKudosData = (kudosData: string) => {
+    const kudosDataArr = kudosData.split(":");
+    if (kudosDataArr.length !== 3 || kudosDataArr[0] !== "KUDOS") {
+      return null;
+    }
+    return { giver: kudosDataArr[1], receiver: kudosDataArr[2] };
+  };
+
   app.get("/upload", async (req: Request, res: Response) => {
     const proof = req.query.proof;
     if (typeof proof !== "string") {
@@ -30,13 +38,17 @@ export function initUploadRoute(
       return res.status(200).send("Error: proof is not valid.");
     }
 
-    const kudosGiver = pcd.claim.identityCommitment;
-    const kudosReceiver = pcd.claim.signedMessage;
+    const kudosGiverSemaphoreId = pcd.claim.identityCommitment;
+    const kudosDataRaw = pcd.claim.signedMessage;
+    const kudosData = deserializeKudosData(kudosDataRaw);
+    if (!kudosData) {
+      return res.status(400);
+    }
 
     res
       .status(200)
       .send(
-        `Received valid kudos proof: ${kudosGiver} gave a kudos to ${kudosReceiver}`
+        `Received valid kudos proof: ${kudosData.giver} gave a kudos to ${kudosData.receiver}. Giver semaphore id: ${kudosGiverSemaphoreId}`
       );
   });
 }
