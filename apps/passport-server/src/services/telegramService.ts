@@ -121,11 +121,6 @@ export class TelegramService {
           );
           const chat = await getGroupChat(ctx.api, chatId);
 
-          await this.authBot.api.sendMessage(
-            userId,
-            `<i>Verifying...\n\n\n\nInviting...</i>`,
-            { parse_mode: "HTML" }
-          );
           await this.authBot.api.approveChatJoinRequest(chatId, userId);
           if (ctx.chatJoinRequest?.invite_link?.invite_link) {
             await this.authBot.api.sendMessage(userId, `Congrats!`, {
@@ -135,6 +130,12 @@ export class TelegramService {
               ),
               parse_mode: "HTML"
             });
+
+            await this.authBot.api.sendMessage(
+              userId,
+              `<i>Verified...  ✅\n\n\n\nInvited...  ✅</i>`,
+              { parse_mode: "HTML" }
+            );
           } else {
             await this.authBot.api.sendMessage(
               userId,
