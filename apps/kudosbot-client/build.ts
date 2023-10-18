@@ -1,7 +1,10 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import { build, BuildOptions, context } from "esbuild";
+import express from "express";
 import fs from "fs";
+import https from "https";
+import { IS_LOCAL_HTTPS } from "./src/constants";
 
 const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
@@ -44,16 +47,28 @@ async function run(command: string) {
     case "dev":
       const ctx = await context(consumerClientAppOpts);
       await ctx.watch();
+      const port = 3004;
 
-      const options = {
-        host: "0.0.0.0",
-        port: 3004,
-        servedir: "public"
-      };
+      if (IS_LOCAL_HTTPS) {
+        console.log(`Serving local HTTPS...`);
+        const app = express();
+        app.use(express.static("public"));
+        const httpsOptions = {
+          key: fs.readFileSync("../certificates/dev.local-key.pem"),
+          cert: fs.readFileSync("../certificates/dev.local.pem")
+        };
 
-      const { host, port } = await ctx.serve(options);
-
-      console.log(`Serving kudosbot client on http://${host}:${port}`);
+        https.createServer(httpsOptions, app).listen(port, () => {
+          console.log(`Serving Kudosbot client on https://0.0.0.0:${port}`);
+        });
+      } else {
+        await ctx.serve({
+          servedir: "public",
+          port,
+          host: "0.0.0.0"
+        });
+        console.log(`Serving Kudosbot client on http://0.0.0.0:${port}`);
+      }
       break;
     default:
       throw new Error(`Unknown command ${command}`);
