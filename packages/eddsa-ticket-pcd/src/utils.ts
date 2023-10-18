@@ -58,7 +58,7 @@ export function getEdDSATicketData(
 }
 
 /**
- * Returns the PCD public key if it exists.
+ * Returns the public key this PCD was signed with if it exists.
  */
 export function getPublicKey(pcd?: EdDSATicketPCD): EdDSAPublicKey | undefined {
   return pcd?.proof?.eddsaPCD?.claim?.publicKey;
