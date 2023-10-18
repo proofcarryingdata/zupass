@@ -3,7 +3,7 @@ import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
- * A serialized ticket is a list of big integers, where each one is a signed field in {@link ITicketData}.
+ * A serialized ticket is a list of big integers, where each one is a field in {@link ITicketData}. It needs to be a list of big integers so that it can be passed into {@link EdDSAPCD} to be signed.
  */
 export type SerializedTicket = [
   bigint,
