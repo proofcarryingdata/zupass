@@ -58,10 +58,11 @@ export interface ITicketData {
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
-  // The fields below are signed using the server's private eddsa key.
-  ticketId: string; // Primary key uuid of the ticket's `devconnect_pretix_tickets` entry.
-  eventId: string; // Primary key uuid of the event's `pretix_events_config` entry.
-  productId: string; // Primary key uuid of the ticket's `devconnect_pretix_items_info` entry.
+  // The fields below are signed using the server's private EdDSA key
+  // and can be used by 3rd parties to represent their own tickets.
+  ticketId: string; // The ticket ID is a unique identifier of the ticket.
+  eventId: string; // The event ID uniquely identifies an event.
+  productId: string; // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
   timestampConsumed: number;
   timestampSigned: number;
   attendeeSemaphoreId: string;
@@ -75,10 +76,16 @@ export interface ITicketData {
  * initialize this PCD package.
  */
 export interface EdDSATicketPCDInitArgs {
+  /**
+   * This function lets the PCD Card Body UI create a QR code from a PCD, which,
+   * when scanned, directs a scanner to a webpage that verifies whether this PCD
+   * is valid.
+   */
   makeEncodedVerifyLink?: (encodedPCD: string) => string;
 }
 
-// The variable used for the init arguments.
+// Stores the initialization arguments for this PCD Package, which are used by
+// either `prove` or `verify` to initialize the required objects the first time either is called.
 export let initArgs: EdDSATicketPCDInitArgs;
 
 /**
@@ -193,6 +200,10 @@ export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
 /**
  * Verifies an EdDSA Ticket PCD by checking that its {@link EdDSATicketPCDClaim} corresponds to
  * its {@link EdDSATicketPCDProof}. If they match, the function returns true, otherwise false.
+ * In most cases, verifying the validity of the PCD with this function is not enough.
+ * It may also be necessary to ensure that the parameters of the ticket, such as the
+ * productId and eventId, match the expected values, and that the public key of the
+ * entity that signed the ticket is indeed the authority for that event.
  */
 export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   if (!initArgs) {

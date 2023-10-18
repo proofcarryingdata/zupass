@@ -125,12 +125,21 @@ EdDSATicketPCD {
 
 ### Verify
 
+In most cases, verifying the validity of the PCD with the 'verify' function is not enough. It may also be necessary to ensure that the parameters of the ticket, such as the productId and eventId, match the expected values, and that the public key of the entity that signed the ticket is indeed the authority for that event.
+
 ```javascript
 import { verify } from "@pcd/eddsa-ticket-pcd"
 
 const isValid = await verify(pcd)
 
 console.log(isValid) // true
+
+// Other possible checks.
+pcd.claim.ticket.productId === expectedProductId
+pcd.claim.ticket.eventId === expectedEventId
+pcd.claim.ticket.eventId === expectedEventId
+pcd.proof.eddsaPCD.claim.publicKey[0] === expectedPublicKey[0]
+pcd.proof.eddsaPCD.claim.publicKey[1] === expectedPublicKey[1]
 ```
 
 ### Serialize
