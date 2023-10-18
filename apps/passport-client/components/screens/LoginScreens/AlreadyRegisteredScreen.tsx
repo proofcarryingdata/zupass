@@ -187,7 +187,8 @@ export function AlreadyRegisteredScreen() {
         <TextCenter>
           <H2>Login</H2>
           <Spacer h={24} />
-          You already have an account. Log in with your password.
+          You already have an account. Please log in with your{" "}
+          {salt ? "password" : "Sync Key"}.
         </TextCenter>
         <Spacer h={24} />
 
@@ -232,7 +233,7 @@ export function AlreadyRegisteredScreen() {
           </Button>
           <Spacer h={8} />
           <Button onClick={onOverwriteClick} style="danger">
-            Forgot Password
+            {salt ? "Forgot Password" : "Lost Sync Key"}
           </Button>
         </CenterColumn>
       </>
