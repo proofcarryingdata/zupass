@@ -1,13 +1,15 @@
 // this file is loaded as a service worker
+import { setTimeout as promiseTimeout } from "isomorphic-timers-promises";
+import { SERVICE_WORKER_ENABLED } from "../sharedConstants";
 
 // Hack to make TypeScript aware of the ServiceWorkerGlobalScope type.
 // We can't redeclare `self`, but `swSelf` can be used with the right type.
-/// <reference lib="webworker" />
 const swSelf = self as unknown as ServiceWorkerGlobalScope;
 
-// Global flag to enable or disable service worker quickly.
-export const SERVICE_WORKER_ENABLED =
-  true || process.env.NODE_ENV !== "development"; // TODO(artwyman): cleanup before checkin
+/**
+ * Time to wait for fetching items before checking in the ephemeral cache.
+ */
+const FETCH_TIMEOUT_MS = 5000;
 
 /**
  * Ephemeral cache is for resources which may change frequently, where we
@@ -17,12 +19,12 @@ export const SERVICE_WORKER_ENABLED =
  * cached pages which came from a different server deploy.
  */
 const EPHEMERAL_CACHE_NAME = `v1-${process.env.SW_ID}`;
-const EPHEMERAL_CACHE_RESOURCES = [
+const EPHEMERAL_CACHE_RESOURCES = new Set([
   "/",
   "/index.html",
   "/global-zupass.css",
   "/js/index.js"
-];
+]);
 
 /**
  * Stable cache is for resources which are expected not to change frequently,
@@ -33,7 +35,7 @@ const EPHEMERAL_CACHE_RESOURCES = [
  * anything which could cause compatibility problems if it isn't updated.
  */
 const STABLE_CACHE_NAME = "v1-stable";
-const STABLE_CACHE_RESOURCES = [
+const STABLE_CACHE_RESOURCES = new Set([
   "/favicon.ico",
   "/semaphore-artifacts/16.wasm",
   "/semaphore-artifacts/16.zkey",
@@ -47,7 +49,7 @@ const STABLE_CACHE_RESOURCES = [
   "/fonts/IBMPlexSans-Medium.woff",
   "/fonts/IBMPlexSans-Light.woff",
   "/fonts/IBMPlexSans-ExtraLight.woff"
-];
+]);
 
 /**
  * Used to extract a key from a request, to compare it to the lists of
@@ -66,15 +68,12 @@ function logCacheName(cacheName: string): string {
  * Helpers for quickly enabling or disabling verbose logging.
  */
 const swLog = {
-  verbose: true, // TODO(artwyman): Disable before merging.
   tag: `[SERVICE_WORKER][${process.env.SW_ID.substring(0, 4)}]`,
-  I: function (msg: string) {
+  I: function (msg: any) {
     console.log(this.tag, msg);
   },
-  V: function (msg: string) {
-    if (this.verbose) {
-      console.debug(this.tag, msg);
-    }
+  V: function (msg: any) {
+    console.debug(this.tag, msg);
   }
 };
 
@@ -85,18 +84,21 @@ const swLog = {
 self.addEventListener("install", (event: ExtendableEvent) => {
   swLog.V(`installing ${process.env.SW_ID}`);
 
+  // By default, the browser will only let one version of our ServiceWorker
+  // be active, and will wait to activate a new one until the old one isn't
+  // controlling any pages.  This call skips that so the new one can take
+  // over ASAP.
+  // We want to do this even if the service worker is meant to be disabled,
+  // so that the disabled worker can take over from a stale enabled one.
+  event.waitUntil(swSelf.skipWaiting());
+
+  // Skip real service worker init if disabled.
   if (!SERVICE_WORKER_ENABLED) {
     return;
   }
 
   event.waitUntil(
     (async () => {
-      // By default, the browser will only let one version of our ServiceWorker
-      // be active, and will wait to activate a new one until the old one isn't
-      // controlling any pages.  This call skips that so the new one can take
-      // over ASAP.
-      await swSelf.skipWaiting();
-
       // Pre-populate our cache with all the resources we need to operate offline.
       await prePopulateCaches();
 
@@ -112,9 +114,10 @@ self.addEventListener("install", (event: ExtendableEvent) => {
 self.addEventListener("activate", (event: ExtendableEvent) => {
   // Clean up any stray service workers from prior development.
   if (!SERVICE_WORKER_ENABLED) {
-    swLog.I(`self-unregistering`);
+    swLog.I(`self-unregistering and refreshing client windows`);
     event.waitUntil(
       (async () => {
+        await swSelf.clients.claim();
         await swSelf.registration.unregister();
         for (const client of await swSelf.clients.matchAll()) {
           (client as WindowClient).navigate(client.url);
@@ -160,60 +163,91 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   }
 
   swLog.V(`fetching ${event.request?.url}`);
-
-  //TODO(artwyman): Investigate what respondWidth(undefined) does.
-
   event.respondWith(
     (async () => {
       // Check stable cache first.  If we get a hit, we never fetch.
-      const stableResp = await fetchFromCache(STABLE_CACHE_NAME, event.request);
+      const stableResp = await checkStableCache(event.request);
       if (stableResp) {
         swLog.V(`cache hit fetching ${event.request?.url}`);
         return stableResp;
       }
 
-      // Next go to the network, and update ephemeral cache with the results.
-      // We only try to look up a result in ephemeral cache when network fails.
+      // Next setup a network fetch to run asynchronously, along with a timeout.
+      // We're not awaiting either promise yet, so shouldn't get exceptions.
+      const timeoutPromise = startFetchTimeout();
+      const respPromise = startFetch(event);
+
       try {
-        // TODO(artwyman): Add a timeout so we can fall back to cache when slow.
-        // TODO(artwyman): check navigator.onLine to fall back faster.  Docs
-        // suggest it's reliable when false.
-        let resp: Response | undefined = await event.preloadResponse;
-        if (resp) {
-          swLog.V(`preload response fetching ${event.request?.url}`);
-        } else {
-          resp = await fetch(event.request);
-          swLog.V(`network response fetching ${event.request?.url}`);
-        }
-
-        // Response can be read only once, so needs to be cloned to be added
-        // to cache, which happens asynchronously after we return a response.
-        event.waitUntil(
-          updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone())
-        );
-
-        // Deliver successful response from network.
-        return resp;
+        // Wait for fetch to complete or timeout to expire.  Failure and
+        // expiration both result in exceptions, so if we get a result
+        // at all we can simply return it.
+        return await Promise.race([respPromise, timeoutPromise]);
       } catch (error: any) {
-        swLog.V(`failed to fetch ${event.request?.url}: ${error}`);
-
-        // If stable cache and network both failed, respond from ephemeral
-        // cache, if possible.
-        const cacheResp = await fetchFromCache(
-          EPHEMERAL_CACHE_NAME,
-          event.request
-        );
+        // If stable cache and network both failed, use ephemeral cache, but
+        // still make sure the event waits for the fetch to finish and update
+        // the cachee.
+        const cacheResp = await checkEphemeralCache(event.request);
         if (cacheResp) {
-          swLog.V(`cache fallback ${event.request?.url}`);
+          swLog.V(`cache fallback for ${event.request?.url} after ${error}`);
+          event.waitUntil(respPromise);
           return cacheResp;
+        } else {
+          swLog.V(`no fallback for ${event.request?.url} after ${error}`);
         }
 
-        // If we have no cached entry available, fail with the fetch's error.
-        throw error;
+        // If we have no cached entry available, we have no choice but to wait
+        // for the fetch to complete, or to fail and throw an exeption.
+        // This could be the same exception we already caught, which is fine.
+        return await respPromise;
       }
     })()
   );
 });
+
+/**
+ * Sets up a promise which will throw after a timeout expires.  The promise
+ * is never fulfilled, only rejected.  The timeout is configured based on
+ * the expected network conditions.
+ */
+async function startFetchTimeout(): Promise<Response> {
+  // The onLine flag is said to be reliable when false, but not when
+  // true.  So if we expect to be offline use a short timeout rather
+  // than waiting for a fetch which could be slow.  1ms gives the
+  // fetch a chance to fail fast in an informative way.
+  const timeoutMS = navigator.onLine ? FETCH_TIMEOUT_MS : 1;
+  await promiseTimeout(timeoutMS);
+  throw `fetch ${navigator.onLine ? "timed out" : "offline"}`;
+}
+
+/**
+ * Performs a network fetch (using preload if available) and updates
+ * the ephemeral cache with the result.  This function always waits
+ * for the fetch to finish, and doesn't include any fallback strategies.
+ */
+async function startFetch(event: FetchEvent): Promise<Response> {
+  try {
+    let resp = await event.preloadResponse;
+    if (resp) {
+      swLog.V(`preload response fetching ${event.request?.url}`);
+    } else {
+      resp = await fetch(event.request);
+      swLog.V(`network response fetching ${event.request?.url}`);
+    }
+
+    // Response can be read only once, so needs to be cloned to be added
+    // to cache, which happens asynchronously after we return a response.
+    if (shouldUpdateEphemeralCache(event.request, resp)) {
+      event.waitUntil(
+        updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone())
+      );
+    }
+
+    return resp;
+  } catch (error) {
+    swLog.V(`failed to fetch ${event.request?.url}: ${error}`);
+    throw error;
+  }
+}
 
 /**
  * Cache setup which occurs during installation.
@@ -243,7 +277,7 @@ async function deleteOldCaches(): Promise<void> {
   await Promise.all(
     keys.map(async (request: Request) => {
       const urlKey = requestToItemCacheKey(request);
-      if (!STABLE_CACHE_RESOURCES.includes(urlKey)) {
+      if (!STABLE_CACHE_RESOURCES.has(urlKey)) {
         swLog.I(`${STABLE_CACHE_NAME} discarding ${urlKey}`);
         await stableCache.delete(request);
       } else {
@@ -255,7 +289,7 @@ async function deleteOldCaches(): Promise<void> {
 
 async function addResourcesToCache(
   cacheName: string,
-  resources: string[]
+  resources: Set<string>
 ): Promise<void> {
   const cache = await caches.open(cacheName);
   for (const resource of resources) {
@@ -272,6 +306,21 @@ async function addResourcesToCache(
   }
 }
 
+async function checkStableCache(
+  request: Request
+): Promise<Response | undefined> {
+  if (shouldCheckStableCache(request)) {
+    return await fetchFromCache(STABLE_CACHE_NAME, request);
+  }
+  return undefined;
+}
+
+async function checkEphemeralCache(
+  request: Request
+): Promise<Response | undefined> {
+  return await fetchFromCache(EPHEMERAL_CACHE_NAME, request);
+}
+
 function shouldHandleFetch(request: Request): boolean {
   return (
     SERVICE_WORKER_ENABLED &&
@@ -280,8 +329,15 @@ function shouldHandleFetch(request: Request): boolean {
   );
 }
 
-function shouldCache(request: Request, response: Response): boolean {
-  return response.ok && shouldHandleFetch(request);
+function shouldUpdateEphemeralCache(
+  request: Request,
+  response: Response
+): boolean {
+  return response.ok;
+}
+
+function shouldCheckStableCache(request: Request): boolean {
+  return STABLE_CACHE_RESOURCES.has(requestToItemCacheKey(request));
 }
 
 async function fetchFromCache(
@@ -297,10 +353,8 @@ async function updateCache(
   request: Request,
   response: Response
 ): Promise<void> {
-  if (shouldCache(request, response)) {
-    swLog.V(
-      `Cache ${logCacheName(cacheName)} Updating cache for ${request.url}`
-    );
+  if (shouldUpdateEphemeralCache(request, response)) {
+    swLog.V(`Cache ${logCacheName(cacheName)} updating ${request.url}`);
     const cache = await caches.open(cacheName);
     await cache.put(request, response);
   }

@@ -1,3 +1,5 @@
+import { SERVICE_WORKER_ENABLED } from "./sharedConstants";
+
 /**
  * Installs a service worker which caches application code and
  * various artifacts needed by the application, so that the website
@@ -16,7 +18,7 @@ export async function registerServiceWorker() {
     return;
   }
 
-  if (false && process.env.NODE_ENV === "development") {
+  if (!SERVICE_WORKER_ENABLED) {
     console.log(
       `[SERVICE_WORKER] not registering service worker in development mode`
     );
