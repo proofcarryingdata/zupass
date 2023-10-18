@@ -7,7 +7,7 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { Eddsa, Point, Poseidon, buildEddsa, buildPoseidon } from "circomlibjs";
+import { buildEddsa, Eddsa, Point } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
@@ -103,18 +103,16 @@ export class EdDSAPCD implements PCD<EdDSAPCDClaim, EdDSAPCDProof> {
 
 let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;
-let poseidon: Poseidon;
 
 /**
- * A promise designed to make sure that the EdDSA and the Poseidon algorithms
- * of the `circomlibjs` package have been properly initialized.
+ * A promise designed to make sure that the EdDSA algorithm
+ * of the `circomlibjs` package has been properly initialized.
  * It only initializes them once.
  */
 async function ensureInitialized() {
   if (!initializedPromise) {
     initializedPromise = (async () => {
       eddsa = await buildEddsa();
-      poseidon = await buildPoseidon();
     })();
   }
 
@@ -147,7 +145,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
   const prvKey = fromHexString(args.privateKey.value);
 
-  const hashedMessage = poseidon(message);
+  const hashedMessage = eddsa.poseidon(message);
   const publicKey = await getEdDSAPublicKey(prvKey);
 
   // Make the signature on the message.
@@ -173,7 +171,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
       eddsa.F.fromObject(p)
     ) as Point;
 
-    const hashedMessage = poseidon(pcd.claim.message);
+    const hashedMessage = eddsa.poseidon(pcd.claim.message);
 
     return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
   } catch {
