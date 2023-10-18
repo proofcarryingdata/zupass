@@ -114,6 +114,18 @@ export class ZuconnectTripshaSyncService {
     return ticket.is_mock_ticket;
   }
 
+  private ticketsDifferent(
+    existingTicket: ZuconnectTicketDB,
+    newTicket: ZuconnectTicket
+  ): boolean {
+    return (
+      existingTicket?.attendee_email !== newTicket.email ||
+      existingTicket.attendee_name !== newTicket.fullName ||
+      existingTicket.product_id !==
+        ZUCONNECT_PRODUCT_ID_MAPPINGS[newTicket.ticketName]?.id
+    );
+  }
+
   /**
    * Save tickets to the database.
    */
@@ -134,13 +146,10 @@ export class ZuconnectTripshaSyncService {
           return true;
         } else {
           // If we do have it but with different values, it's updated
-          const existingTicket = existingTicketsByExternalId.get(ticket.id);
-          if (
-            existingTicket?.attendee_email !== ticket.email ||
-            existingTicket.attendee_name !== ticket.fullName ||
-            existingTicket.product_id !==
-              ZUCONNECT_PRODUCT_ID_MAPPINGS[ticket.ticketName].id
-          ) {
+          const existingTicket = existingTicketsByExternalId.get(
+            ticket.id
+          ) as ZuconnectTicketDB;
+          if (this.ticketsDifferent(existingTicket, ticket)) {
             return true;
           }
         }
