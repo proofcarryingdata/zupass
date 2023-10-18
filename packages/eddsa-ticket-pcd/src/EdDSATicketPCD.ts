@@ -158,12 +158,7 @@ export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
     throw new Error(`ticket data does not match proof`);
   }
 
-  try {
-    const valid = await EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
-    return valid;
-  } catch (e) {
-    return false;
-  }
+  return EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
 }
 
 export async function serialize(
