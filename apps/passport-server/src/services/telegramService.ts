@@ -670,10 +670,10 @@ export class TelegramService {
     });
     await this.authBot.api.sendMessage(
       userId,
-      `You've proved that you have a ticket for <b>${chat.title}</b>!\n\nVerify your proof to join the group ⬇`,
+      `You've proved that you have a ticket for <b>${chat.title}</b>!\n\nSend your proof to join the group ⬇`,
       {
         reply_markup: new InlineKeyboard().url(
-          `Verify ZK Proof 🚀`,
+          `Send ZK Proof 🚀`,
           inviteLink.invite_link
         ),
         parse_mode: "HTML"
