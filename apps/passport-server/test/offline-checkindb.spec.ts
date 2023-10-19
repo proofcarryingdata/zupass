@@ -1,14 +1,14 @@
-import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
+import {
+  OfflineTickets,
+  ZUCONNECT_PRODUCT_ID_MAPPINGS
+} from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
-import {
-  fetchOfflineTicketsForChecker,
-  OfflineTickets
-} from "../src/database/multitableQueries/fetchOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../src/database/multitableQueries/fetchOfflineTickets";
 import { getDB } from "../src/database/postgresPool";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
 import { insertPretixEventsInfo } from "../src/database/queries/pretixEventInfo";
@@ -26,7 +26,6 @@ interface TestUser {
   email: string;
   identity: Identity;
   fullName: string;
-  uuid?: string;
 }
 
 function makeTestUser(): TestUser {
@@ -54,38 +53,31 @@ describe.only("offline checkin database queries should work", function () {
   });
 
   step("inserting some test users", async function () {
-    const uuid = await upsertUser(db, {
+    await upsertUser(db, {
       email: user1.email,
       commitment: user1.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined
     });
-    user1.uuid = uuid;
 
-    const uuid2 = await upsertUser(db, {
+    await upsertUser(db, {
       email: user2.email,
       commitment: user2.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined
     });
-    user2.uuid = uuid2;
 
-    const uuid3 = await upsertUser(db, {
+    await upsertUser(db, {
       email: user3.email,
       commitment: user3.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined
     });
-    user3.uuid = uuid3;
   });
 
   step(
     "checking that users only get their appropriate offline tickets",
     async function () {
-      if (!user1.uuid || !user2.uuid || !user3.uuid) {
-        throw new Error("expected users to have db ids");
-      }
-
       const oxparc = await insertPretixOrganizerConfig(db, "test.com", "test");
       const progCrypto = await insertPretixEventConfig(
         db,
@@ -220,7 +212,10 @@ describe.only("offline checkin database queries should work", function () {
       });
 
       expectOfflineTickets(
-        await fetchOfflineTicketsForChecker(db, user1.uuid),
+        await fetchOfflineTicketsForChecker(
+          db,
+          user1.identity.commitment.toString()
+        ),
         {
           devconnectTickets: [],
           zuconnectTickets: []
@@ -228,7 +223,10 @@ describe.only("offline checkin database queries should work", function () {
       );
 
       expectOfflineTickets(
-        await fetchOfflineTicketsForChecker(db, user2.uuid),
+        await fetchOfflineTicketsForChecker(
+          db,
+          user2.identity.commitment.toString()
+        ),
         {
           devconnectTickets: [
             { id: user1ProgCryptoGA.id },
@@ -246,7 +244,10 @@ describe.only("offline checkin database queries should work", function () {
       );
 
       expectOfflineTickets(
-        await fetchOfflineTicketsForChecker(db, user3.uuid),
+        await fetchOfflineTicketsForChecker(
+          db,
+          user3.identity.commitment.toString()
+        ),
         {
           devconnectTickets: [
             { id: user1AwGA.id },

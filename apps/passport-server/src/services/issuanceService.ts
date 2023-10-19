@@ -17,6 +17,8 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
+  GetOfflineTicketsRequest,
+  GetOfflineTicketsResponseValue,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -26,29 +28,31 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
+  UploadOfflineCheckinsResponseValue,
+  verifyFeedCredential,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
   ZUCONNECT_PRODUCT_ID_MAPPINGS,
+  zupassDefaultSubscriptions,
+  ZupassFeedIds,
+  ZuzaluUserRole,
   ZUZALU_23_EVENT_ID,
   ZUZALU_23_ORGANIZER_PRODUCT_ID,
   ZUZALU_23_RESIDENT_PRODUCT_ID,
-  ZUZALU_23_VISITOR_PRODUCT_ID,
-  ZupassFeedIds,
-  ZuzaluUserRole,
-  verifyFeedCredential,
-  zupassDefaultSubscriptions
+  ZUZALU_23_VISITOR_PRODUCT_ID
 } from "@pcd/passport-interface";
 import {
   AppendToFolderAction,
   AppendToFolderPermission,
   DeleteFolderAction,
+  joinPath,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction,
-  joinPath
+  ReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -56,8 +60,9 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
+import { getErrorMessage, ONE_HOUR_MS } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -66,6 +71,8 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
+import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
@@ -1268,6 +1275,50 @@ export class IssuanceService {
         })
       }
     };
+  }
+
+  public async handleGetOfflineTickets(
+    req: GetOfflineTicketsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    const offlineTickets = await fetchOfflineTicketsForChecker(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment
+    );
+
+    res.json({
+      offlineTickets
+    } satisfies GetOfflineTicketsResponseValue);
+  }
+
+  public async handleUploadOfflineCheckins(
+    req: UploadOfflineCheckinsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    await checkInOfflineTickets(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment,
+      req.offlineTickets
+    );
+
+    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 

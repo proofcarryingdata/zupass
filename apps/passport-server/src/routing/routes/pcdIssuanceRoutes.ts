@@ -153,6 +153,31 @@ export function initPCDIssuanceRoutes(
     }
   );
 
+  /**
+   * As above, but using only the ticket ID.
+   */
+  app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    const result = await issuanceService.handleVerifyTicketByIdRequest(
+      req.body as VerifyTicketByIdRequest
+    );
+    return res.json(result satisfies VerifyTicketByIdResult);
+  });
+
+  /**
+   * As above, but using only the ticket ID.
+   */
+  app.post(
+    "/issue/checkin-offline-tickets",
+    async (req: Request, res: Response) => {
+      checkIssuanceServiceStarted(issuanceService);
+      const result = await issuanceService.handleVerifyTicketByIdRequest(
+        req.body as VerifyTicketByIdRequest
+      );
+      return res.json(result satisfies VerifyTicketByIdResult);
+    }
+  );
+
   app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleKnownTicketTypesRequest();
