@@ -107,7 +107,7 @@ export class TelegramService {
     this.authBot.on("chat_join_request", async (ctx) => {
       return traced("telegram", "chat_join_request", async (span) => {
         const userId = ctx.chatJoinRequest.user_chat_id;
-        if (userId) span?.setAttribute("userId", userId);
+        if (userId) span?.setAttribute("userId", userId.toString());
 
         try {
           const chatId = ctx.chatJoinRequest.chat.id;
@@ -173,7 +173,7 @@ export class TelegramService {
       return traced("telegram", "chat_member", async (span) => {
         try {
           const newMember = ctx.update.chat_member.new_chat_member;
-          span?.setAttribute("userId", newMember.user.id);
+          span?.setAttribute("userId", newMember.user.id.toString());
           span?.setAttribute("status", newMember.status);
 
           if (newMember.status === "left" || newMember.status === "kicked") {
@@ -676,7 +676,8 @@ export class TelegramService {
     chat: Chat.SupergroupChat
   ): Promise<void> {
     return traced("telegram", "sendInviteLink", async (span) => {
-      span?.setAttribute("chatId", userId);
+      span?.setAttribute("userId", userId.toString());
+      span?.setAttribute("chatId", chat.id);
       span?.setAttribute("chatTitle", chat.title);
 
       // Send the user an invite link. When they follow the link, this will
@@ -715,7 +716,7 @@ export class TelegramService {
     telegramUserId: number
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
-      span?.setAttribute("userId", telegramUserId);
+      span?.setAttribute("userId", telegramUserId.toString());
       // Verify PCD
       const pcd = await this.verifyZKEdDSAEventTicketPCD(
         serializedZKEdDSATicket
