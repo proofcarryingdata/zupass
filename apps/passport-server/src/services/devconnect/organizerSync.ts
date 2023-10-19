@@ -64,6 +64,7 @@ interface EventData {
   items: DevconnectPretixItem[];
   tickets: DevconnectPretixOrder[];
   checkinLists: DevconnectPretixCheckinList[];
+  approvedLegalTermsEmails?: Set<string>;
 }
 
 interface EventDataFromPretix {
@@ -97,7 +98,6 @@ export class OrganizerSync {
   private pretixAPI: IDevconnectPretixAPI;
   private db: Pool;
   private _isRunning: boolean;
-  private approvedLegalTermsEmails: Set<string>;
   private readonly enableRedaction: boolean;
 
   public get isRunning(): boolean {
@@ -114,7 +114,6 @@ export class OrganizerSync {
     this.pretixAPI = pretixAPI;
     this.db = db;
     this._isRunning = false;
-    this.approvedLegalTermsEmails = new Set();
     this.enableRedaction = enableRedaction;
   }
 
@@ -384,13 +383,14 @@ export class OrganizerSync {
     return traced(NAME, "fetchEventData", async () => {
       const { orgURL, token } = organizer;
       const { eventID } = event;
+      let approvedLegalTermsEmails: Set<string> | undefined = undefined;
 
       if (this.enableRedaction) {
         const usersApprovingPII = await fetchUsersByAgreedTerms(
           this.db,
           FEATURES_REQUIRING_TERMS.storePIIFromPretixDevconnectSync
         );
-        this.approvedLegalTermsEmails = new Set(
+        approvedLegalTermsEmails = new Set(
           usersApprovingPII.map((user) => user.email)
         );
       }
@@ -413,7 +413,14 @@ export class OrganizerSync {
         eventID
       );
 
-      return { settings, items, eventInfo, tickets, checkinLists };
+      return {
+        settings,
+        items,
+        eventInfo,
+        tickets,
+        checkinLists,
+        approvedLegalTermsEmails
+      };
     });
   }
 
@@ -430,7 +437,13 @@ export class OrganizerSync {
   ): Promise<void> {
     return traced(NAME, "saveEvent", async (span) => {
       try {
-        const { eventInfo, items, tickets, checkinLists } = eventData;
+        const {
+          eventInfo,
+          items,
+          tickets,
+          checkinLists,
+          approvedLegalTermsEmails
+        } = eventData;
 
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("ticket_count", tickets.length);
@@ -444,7 +457,12 @@ export class OrganizerSync {
           checkinLists[0].id.toString()
         );
         await this.syncItemInfos(organizer, event, items);
-        await this.syncTickets(organizer, event, tickets);
+        await this.syncTickets(
+          organizer,
+          event,
+          tickets,
+          approvedLegalTermsEmails
+        );
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
         setError(e, span);
@@ -657,7 +675,8 @@ export class OrganizerSync {
   private async syncTickets(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
-    pretixOrders: DevconnectPretixOrder[]
+    pretixOrders: DevconnectPretixOrder[],
+    approvedLegalTermsEmails?: Set<string>
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
@@ -693,11 +712,9 @@ export class OrganizerSync {
         let redactedTickets: DevconnectPretixTicket[] = [];
         let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
 
-        if (this.enableRedaction) {
+        if (this.enableRedaction && approvedLegalTermsEmails) {
           const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
-            this.approvedLegalTermsEmails.has(ticket.email)
-              ? "approved"
-              : "redacted"
+            approvedLegalTermsEmails.has(ticket.email) ? "approved" : "redacted"
           );
 
           approvedTickets = groupedTickets.approved ?? [];
@@ -836,6 +853,7 @@ export class OrganizerSync {
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
+        let redactedTicketsDeleted = 0;
         if (this.enableRedaction) {
           // Step 4 of saving: save redacted tickets
           for (const redactedTicket of redactedTickets) {
@@ -867,12 +885,15 @@ export class OrganizerSync {
             eventConfigID,
             removedRedactedTickets.map((t) => t.position_id)
           );
+
+          redactedTicketsDeleted = removedRedactedTickets.length;
         }
 
         span?.setAttribute("ticketsInserted", newTickets.length);
         span?.setAttribute("ticketsUpdated", updatedTickets.length);
         span?.setAttribute("ticketsDeleted", removedTickets.length);
         span?.setAttribute("redactedTicketsInserted", redactedTickets.length);
+        span?.setAttribute("redactedTicketsDeleted", redactedTicketsDeleted);
         span?.setAttribute(
           "ticketsTotal",
           existingTickets.length + newTickets.length - removedTickets.length
