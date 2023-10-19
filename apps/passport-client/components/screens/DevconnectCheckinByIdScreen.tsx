@@ -1,6 +1,4 @@
 import {
-  checkinTicketById,
-  checkTicketById,
   CheckTicketByIdResponseValue,
   CheckTicketByIdResult,
   TicketError
@@ -9,8 +7,11 @@ import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
 import { useIdentity, useQuery } from "../../src/appHooks";
+import {
+  devconnectCheckByIdWithOffline,
+  devconnectCheckInByIdWithOffline
+} from "../../src/checkin";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -266,8 +267,7 @@ function useCheckTicketById(ticketId: string | undefined):
         console.log("checking", ticketId);
       }
 
-      const checkTicketByIdResult = await checkTicketById(
-        appConfig.zupassServer,
+      const checkTicketByIdResult = await devconnectCheckByIdWithOffline(
         ticketId,
         identity
       );
@@ -301,8 +301,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
     }
 
     setInProgress(true);
-    const checkinResult = await checkinTicketById(
-      appConfig.zupassServer,
+    const checkinResult = await devconnectCheckInByIdWithOffline(
       ticketId,
       identity
     );

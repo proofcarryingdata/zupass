@@ -1,15 +1,14 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import {
-  KnownTicketGroup,
-  requestVerifyTicket,
-  requestVerifyTicketById
-} from "@pcd/passport-interface";
+import { KnownTicketGroup } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
-import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useQuery } from "../../src/appHooks";
+import {
+  zuconnectCheckByIdWithOffline,
+  zuconnectCheckByPCDWithOffline
+} from "../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
@@ -46,6 +45,7 @@ type VerifyResult =
 // product ID and signing key.
 export function SecondPartyTicketVerifyScreen() {
   const query = useQuery();
+  // JSON.stringify(SerializedPCD<ZKEdDSAEventTicketPCDPackage>)
   const encodedQRPayload = query.get("pcd");
   const id = query.get("id");
 
@@ -168,9 +168,7 @@ async function deserializeAndVerify(
   // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
   const decodedPCD = decodeQRPayload(pcdStr);
 
-  const result = await requestVerifyTicket(appConfig.zupassServer, {
-    pcd: decodedPCD
-  });
+  const result = await zuconnectCheckByPCDWithOffline(decodedPCD);
 
   if (result.success && result.value.verified) {
     const pcd = await pcds.deserialize(JSON.parse(decodedPCD));
@@ -205,10 +203,7 @@ async function verifyById(
   ticketId: string,
   timestamp: string
 ): Promise<VerifyResult> {
-  const result = await requestVerifyTicketById(appConfig.zupassServer, {
-    ticketId,
-    timestamp
-  });
+  const result = await zuconnectCheckByIdWithOffline(ticketId, timestamp);
 
   if (result.success && result.value.verified) {
     return {

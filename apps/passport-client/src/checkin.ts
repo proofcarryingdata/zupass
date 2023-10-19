@@ -4,7 +4,9 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
   KnownTicketGroup,
+  requestVerifyTicket,
   requestVerifyTicketById,
+  VerifyTicketByIdResult,
   VerifyTicketResult
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
@@ -57,6 +59,27 @@ export async function devconnectCheckByIdWithOffline(
 export async function zuconnectCheckByIdWithOffline(
   ticketId: string,
   timestamp: string
+): Promise<VerifyTicketByIdResult> {
+  if (IS_OFFLINE) {
+    return {
+      success: true,
+      value: {
+        group: KnownTicketGroup.Zuconnect23,
+        publicKeyName: "",
+        verified: true,
+        productId: ""
+      }
+    };
+  } else {
+    return await requestVerifyTicketById(appConfig.zupassServer, {
+      ticketId,
+      timestamp
+    });
+  }
+}
+
+export async function zuconnectCheckByPCDWithOffline(
+  pcd: string // JSON.stringify(SerializedPCD<ZKEventTicketPCD>)
 ): Promise<VerifyTicketResult> {
   if (IS_OFFLINE) {
     return {
@@ -68,9 +91,8 @@ export async function zuconnectCheckByIdWithOffline(
       }
     };
   } else {
-    return await requestVerifyTicketById(appConfig.zupassServer, {
-      ticketId,
-      timestamp
+    return await requestVerifyTicket(appConfig.zupassServer, {
+      pcd
     });
   }
 }

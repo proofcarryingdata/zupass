@@ -33,7 +33,7 @@ export function QRDisplayWithRegenerateAndStorage({
   loadingLogo,
   loadedLogo,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
@@ -117,7 +117,7 @@ export function QRDisplay({
   value,
   logoOverlay,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value?: string;
   logoOverlay?: React.ReactNode;
@@ -150,7 +150,7 @@ const QRWrap = styled.div`
 export function QR({
   value,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value: string;
   fgColor: string;
