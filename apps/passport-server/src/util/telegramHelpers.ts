@@ -649,7 +649,7 @@ export const chatsToPostIn = async (
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `Type \`/\` to see a list of commands or email passport@0xparc.org for help!`
+      `Type \`/\` to see a list of commands.`
     );
   }
 };
