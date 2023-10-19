@@ -622,6 +622,7 @@ export interface OfflineTickets {
 
 export interface OfflineDevconnectTicket {
   id: string;
+  checkinTimestamp?: string;
 }
 
 export interface OfflineZuconnectTicket {
