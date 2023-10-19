@@ -1,3 +1,4 @@
+import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
@@ -963,8 +964,17 @@ export async function startTelegramService(
   );
 
   service.startBot(authBot);
+  authBot.api.config.use(autoRetry({
+    maxRetryAttempts: 3, // only repeat requests once
+    maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
+  }))
+
   if (anonBotExists) {
     service.startBot(anonBot);
+    anonBot.api.config.use(autoRetry({
+      maxRetryAttempts: 3, // only repeat requests once
+      maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
+    }))
   }
 
   return service;
