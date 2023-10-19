@@ -1,4 +1,5 @@
 import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
+import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -17,6 +18,7 @@ import { DeviceLoginScreen } from "../components/screens/LoginScreens/DeviceLogi
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
@@ -83,8 +85,15 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        {!hasStack && <Router />}
-        {hasStack && (
+        {!isWebAssemblySupported() ? (
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<NoWASMScreen />} />
+            </Routes>
+          </HashRouter>
+        ) : !hasStack ? (
+          <Router />
+        ) : (
           <HashRouter>
             <Routes>
               <Route path="*" element={<AppContainer bg="gray" />} />
