@@ -23,6 +23,9 @@ CREATE TABLE devconnect_pretix_redacted_tickets (
 CREATE UNIQUE INDEX devconnect_pretix_redacted_tickets_position_id_pretix_events_config_id
 ON devconnect_pretix_redacted_tickets (position_id, pretix_events_config_id);
 
+-- These will get re-synced, but some will be redacted.
+DELETE FROM devconnect_pretix_tickets;
+
 ALTER TABLE devconnect_pretix_tickets ADD COLUMN pretix_events_config_id UUID;
 ALTER TABLE devconnect_pretix_tickets ADD CONSTRAINT devconnect_pretix_tickets_pretix_events_config_id
 FOREIGN KEY(pretix_events_config_id) REFERENCES pretix_events_config (id);
