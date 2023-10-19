@@ -15,13 +15,15 @@ export async function fetchOfflineTicketsForChecker(
   dbPool: Pool,
   userUUID: string
 ): Promise<OfflineTickets> {
-  return {
+  const result = {
     devconnectTickets: await fetchOfflineDevconnectTickets(dbPool, userUUID),
     zuconnectTickets: await fetchOfflineZuconnectTickets(dbPool, userUUID)
   };
+
+  return result;
 }
 
-export async function fetchOfflineZuconnectTickets(
+async function fetchOfflineZuconnectTickets(
   dbPool: Pool,
   userUUID: string
 ): Promise<OfflineZuconnectTicket[]> {
@@ -30,13 +32,13 @@ export async function fetchOfflineZuconnectTickets(
     throw new Error(`no user found for uuid ${userUUID}`);
   }
 
-  const zuconnectTicket = await fetchZuconnectTicketsByEmail(
+  const zuconnectTickets = await fetchZuconnectTicketsByEmail(
     dbPool,
     user.email
   );
 
   // only attendees of zuconnect get these offline tickets
-  if (!zuconnectTicket) {
+  if (zuconnectTickets.length === 0) {
     return [];
   }
 
@@ -44,7 +46,7 @@ export async function fetchOfflineZuconnectTickets(
   return allZuconnectTickets.map(zuconnectTicketToOfflineTicket);
 }
 
-export async function fetchOfflineDevconnectTickets(
+async function fetchOfflineDevconnectTickets(
   dbPool: Pool,
   userUUID: string
 ): Promise<OfflineDevconnectTicket[]> {
