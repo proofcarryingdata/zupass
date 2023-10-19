@@ -99,7 +99,7 @@ EdDSATicketPCD {
       attendeeEmail: 'user@test.com',
       eventName: 'event',
       ticketName: 'ticket',
-      checkerEmail: 'checker@test.com',
+      checkerEmail: undefined,
       ticketId: '69f7d074-cd96-4ffa-b406-f25ef6abccfd',
       eventId: '22ee4549-fd4d-4814-85e7-d0e7077032f5',
       productId: '9c9af161-6209-431a-953c-589604d5c5c4',
