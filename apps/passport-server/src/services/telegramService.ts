@@ -174,11 +174,13 @@ export class TelegramService {
           );
           const chat = await getGroupChat(ctx.api, ctx.chat.id);
           const userId = newMember.user.id;
-          await this.authBot.api.sendMessage(
-            userId,
-            `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
-            { parse_mode: "HTML" }
-          );
+          if (!newMember.user.is_bot) {
+            await this.authBot.api.sendMessage(
+              userId,
+              `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
+              { parse_mode: "HTML" }
+            );
+          }
         }
       } catch (e) {
         logger("[TELEGRAM] chat_member error", e);

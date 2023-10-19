@@ -613,11 +613,11 @@ export const chatsToPostIn = async (
     }
     // Otherwise, give the user a list of chats that they are members of.
     else {
-      const chatsWithMembership = await getChatsWithMembershipStatus(
-        db,
-        ctx,
-        userId
-      );
+      // Only show chats a user is in
+      const chatsWithMembership = (
+        await getChatsWithMembershipStatus(db, ctx, userId)
+      ).filter((c) => c.isChatMember);
+
       if (chatsWithMembership.length > 0) {
         for (const chat of chatsWithMembership) {
           // Only show the chats the user is a member of
@@ -632,11 +632,13 @@ export const chatsToPostIn = async (
         }
       } else {
         if (ctx.session.anonBotExists) {
-          ctx.reply(
+          await ctx.reply(
             `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
           );
         } else {
-          ctx.reply(`No chats found to post in. Type /start to join one!`);
+          await ctx.reply(
+            `No chats found to post in. Type /start to join one!`
+          );
         }
       }
     }
