@@ -22,7 +22,7 @@
     </a>
 </p>
 
-| This package defines a PCD designed to verify the authenticity of an event ticket signed using an EdDSA key. |
+| This package defines a PCD designed to verify the authenticity of an event ticket signed using an EdDSA key. It is used in production for Devconnect and Zuconnect events. |
 | ------------------------------------------------------------------------------------------------------------ |
 
 ## 🛠 Install
