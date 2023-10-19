@@ -347,18 +347,11 @@ export class TelegramService {
     });
 
     this.anonBot.command("anonsend", async (ctx) => {
-      if (!isDirectMessage(ctx)) {
-        const messageThreadId = ctx.message?.message_thread_id;
-
-        await ctx.reply("Please message directly within a private chat.", {
-          message_thread_id: messageThreadId
+      if (isDirectMessage(ctx)) {
+        await ctx.reply("Choose a chat to post in anonymously ⬇", {
+          reply_markup: anonSendMenu
         });
-        return;
       }
-
-      await ctx.reply("Choose a chat to post in anonymously ⬇", {
-        reply_markup: anonSendMenu
-      });
     });
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
@@ -521,24 +514,19 @@ export class TelegramService {
     // Edge case logic to handle routing people between bots
     if (this.anonBotExists()) {
       this.authBot.command("anonsend", async (ctx) => {
-        await ctx.reply(
-          `Please message ZuRat to send anonymous messages 😎: ${ctx.session.anonBotURL}?start=anonsend`
-        );
+        if (isDirectMessage(ctx)) {
+          await ctx.reply(
+            `Please message ZuRat to send anonymous messages 😎: ${ctx.session.anonBotURL}?start=anonsend`
+          );
+        }
       });
 
       this.anonBot.command("start", async (ctx) => {
-        if (!isDirectMessage(ctx)) {
-          const messageThreadId = ctx.message?.message_thread_id;
-
-          await ctx.reply("Please message directly within a private chat.", {
-            message_thread_id: messageThreadId
+        if (isDirectMessage(ctx)) {
+          await ctx.reply("Choose a chat to post in anonymously ⬇", {
+            reply_markup: anonSendMenu
           });
-          return;
         }
-
-        await ctx.reply("Choose a chat to post in anonymously ⬇", {
-          reply_markup: anonSendMenu
-        });
       });
 
       this.anonBot.command("help", helpResponse);

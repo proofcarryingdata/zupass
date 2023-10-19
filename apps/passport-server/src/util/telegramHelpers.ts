@@ -181,6 +181,7 @@ export const setBotInfo = async (
       privateChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       { scope: { type: "all_private_chats" } }
     );
+
     anonBot.api.setMyCommands(
       adminGroupChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       {
