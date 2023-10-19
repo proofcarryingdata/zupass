@@ -1,3 +1,5 @@
+import { SERVICE_WORKER_ENABLED } from "./sharedConstants";
+
 /**
  * Installs a service worker which caches application code and
  * various artifacts needed by the application, so that the website
@@ -11,7 +13,12 @@
  * iteration loops.
  */
 export async function registerServiceWorker() {
-  if (process.env.NODE_ENV === "development") {
+  if (!("serviceWorker" in navigator)) {
+    console.log(`[SERVICE_WORKER] service workers not supported`);
+    return;
+  }
+
+  if (!SERVICE_WORKER_ENABLED) {
     console.log(
       `[SERVICE_WORKER] not registering service worker in development mode`
     );
@@ -22,14 +29,9 @@ export async function registerServiceWorker() {
 
   console.log(`[SERVICE_WORKER] attempting to register ${serviceWorkerPath}`);
 
-  if (!("serviceWorker" in navigator)) {
-    console.log(`[SERVICE_WORKER] service workers not supported`);
-    return;
-  }
-
   try {
     await navigator.serviceWorker.register(serviceWorkerPath, {
-      scope: "/",
+      scope: "/"
     });
 
     console.log(`[SERVICE_WORKER] registered ${serviceWorkerPath}`);
