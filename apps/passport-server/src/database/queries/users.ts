@@ -87,7 +87,7 @@ export async function fetchUserByCommitment(
 /**
  * Fetches users who have agreed to minimum legal terms.
  */
-export async function fetchUsersByAgreedTerms(
+export async function fetchUsersByMinimumAgreedTerms(
   client: Pool,
   version: number
 ): Promise<UserRow[]> {

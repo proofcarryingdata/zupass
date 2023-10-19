@@ -1,4 +1,5 @@
 import { getHash } from "@pcd/passport-crypto";
+import { UNREDACT_TICKETS_TERMS_VERSION } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
@@ -44,12 +45,11 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
-import { fetchUsersByAgreedTerms } from "../../database/queries/users";
+import { fetchUsersByMinimumAgreedTerms } from "../../database/queries/users";
 import {
   mostRecentCheckinEvent,
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
-import { FEATURES_REQUIRING_TERMS } from "../../util/legalTerms";
 import { logger } from "../../util/logger";
 import { normalizeEmail } from "../../util/util";
 import { setError, traced } from "../telemetryService";
@@ -386,9 +386,9 @@ export class OrganizerSync {
       let approvedLegalTermsEmails: Set<string> | undefined = undefined;
 
       if (this.enableRedaction) {
-        const usersApprovingPII = await fetchUsersByAgreedTerms(
+        const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
           this.db,
-          FEATURES_REQUIRING_TERMS.storePIIFromPretixDevconnectSync
+          UNREDACT_TICKETS_TERMS_VERSION
         );
         approvedLegalTermsEmails = new Set(
           usersApprovingPII.map((user) => user.email)
