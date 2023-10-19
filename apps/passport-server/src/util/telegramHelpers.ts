@@ -33,6 +33,7 @@ import {
   insertTelegramChat,
   insertTelegramEvent
 } from "../database/queries/telegram/insertTelegramConversation";
+import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.SupergroupChat | null;
@@ -63,11 +64,15 @@ export const getGroupChat = async (
   api: Api<RawApi>,
   chatId: string | number
 ): Promise<Chat.SupergroupChat> => {
-  const chat = await api.getChat(chatId);
-  if (!chat) throw new Error(`No chat found for id ${chatId}`);
-  if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
-  else throw new Error(`Chat is not a group with topics enabled`);
+  return traced("telegram", "getGroupChat", async (span) => {
+    span?.setAttribute("chatId", chatId);
+    const chat = await api.getChat(chatId);
+    if (!chat) throw new Error(`No chat found for id ${chatId}`);
+    if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
+    else throw new Error(`Chat is not a group with topics enabled`);
+  });
 };
+
 const privateChatCommands: BotCommandWithAnon[] = [
   {
     command: "/start",
@@ -327,83 +332,91 @@ const editOrSendMessage = async (
   }
 };
 
-const generateTicketProofUrl = (
+const generateTicketProofUrl = async (
   telegramUserId: string,
   validEventIds: string[]
-): string => {
-  const fieldsToReveal: EdDSATicketFieldsToReveal = {
-    revealTicketId: false,
-    revealEventId: false,
-    revealProductId: false,
-    revealTimestampConsumed: false,
-    revealTimestampSigned: false,
-    revealAttendeeSemaphoreId: true,
-    revealIsConsumed: false,
-    revealIsRevoked: false
-  };
+): Promise<string> => {
+  return traced("telegram", "generateTicketProofUrl", async (span) => {
+    span?.setAttribute("userId", telegramUserId);
+    span?.setAttribute("validEventIds", validEventIds);
 
-  const args: ZKEdDSAEventTicketPCDArgs = {
-    ticket: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: EdDSATicketPCDPackage.name,
-      value: undefined,
-      userProvided: true,
-      displayName: "Your Ticket",
-      description: "",
-      validatorParams: {
-        eventIds: validEventIds,
-        productIds: [],
-        // TODO: surface which event ticket we are looking for
-        notFoundMessage: "You don't have a ticket to this event."
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: false,
+      revealEventId: false,
+      revealProductId: false,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: true,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+        displayName: "Your Ticket",
+        description: "",
+        validatorParams: {
+          eventIds: validEventIds,
+          productIds: [],
+          // TODO: surface which event ticket we are looking for
+          notFoundMessage: "You don't have a ticket to this event."
+        },
+        hideIcon: true
       },
-      hideIcon: true
-    },
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
-      value: undefined,
-      userProvided: true
-    },
-    fieldsToReveal: {
-      argumentType: ArgumentTypeName.ToggleList,
-      value: fieldsToReveal,
-      userProvided: false,
-      hideIcon: true
-    },
-    externalNullifier: {
-      argumentType: ArgumentTypeName.BigInt,
-      value: undefined,
-      userProvided: false
-    },
-    validEventIds: {
-      argumentType: ArgumentTypeName.StringArray,
-      value: validEventIds,
-      userProvided: false
-    },
-    watermark: {
-      argumentType: ArgumentTypeName.BigInt,
-      value: telegramUserId.toString(),
-      userProvided: false,
-      description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false,
+        hideIcon: true
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: undefined,
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: validEventIds,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: telegramUserId.toString(),
+        userProvided: false,
+        description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
     }
-  };
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    span?.setAttribute("returnUrl", returnUrl);
 
-  let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
-  if (passportOrigin === "http://localhost:3000/") {
-    // TG bot doesn't like localhost URLs
-    passportOrigin = "http://127.0.0.1:3000/";
-  }
-  const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    const proofUrl = constructZupassPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: "",
+      description:
+        "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    });
+    span?.setAttribute("proofUrl", proofUrl);
 
-  const proofUrl = constructZupassPcdGetRequestUrl<
-    typeof ZKEdDSAEventTicketPCDPackage
-  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-    genericProveScreen: true,
-    title: "",
-    description:
-      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    return proofUrl;
   });
-  return proofUrl;
 };
 
 const getChatsWithMembershipStatus = async (
@@ -508,43 +521,46 @@ export const chatsToJoin = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
-  const db = ctx.session.dbPool;
-  if (!db) {
-    range.text(`Database not connected. Try again...`);
-    return;
-  }
-  const userId = ctx.from?.id;
-  if (!userId) {
-    range.text(`User not found. Try again...`);
-    return;
-  }
-
-  const chatsWithMembership = await getChatsWithMembershipStatus(
-    db,
-    ctx,
-    userId
-  );
-
-  if (chatsWithMembership.length === 0) {
-    range.text(`No groups to join at this time`);
-    return;
-  }
-
-  for (const chat of chatsWithMembership) {
-    if (chat.isChatMember) {
-      const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
-        creates_join_request: true
-      });
-      range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
-      range.row();
-    } else {
-      const proofUrl = generateTicketProofUrl(
-        userId.toString(),
-        chat.ticketEventIds
-      );
-      range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  return traced("telegram", "chatsToJoin", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
     }
-  }
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+
+    const chatsWithMembership = await getChatsWithMembershipStatus(
+      db,
+      ctx,
+      userId
+    );
+
+    if (chatsWithMembership.length === 0) {
+      range.text(`No groups to join at this time`);
+      return;
+    }
+
+    for (const chat of chatsWithMembership) {
+      if (chat.isChatMember) {
+        const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
+          creates_join_request: true
+        });
+        range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+        range.row();
+      } else {
+        const proofUrl = await generateTicketProofUrl(
+          userId.toString(),
+          chat.ticketEventIds
+        );
+        range.webApp(`${chat.chat?.title}`, proofUrl).row();
+      }
+    }
+  });
 };
 
 export const chatsToPostIn = async (

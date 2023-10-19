@@ -53,6 +53,7 @@ import {
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
+import { traced } from "./telemetryService";
 
 const ALLOWED_TICKET_MANAGERS = [
   "cha0sg0d",
@@ -192,22 +193,26 @@ export class TelegramService {
 
     // The "start" command initiates the process of invitation and approval.
     this.authBot.command("start", async (ctx) => {
-      const userId = ctx?.from?.id;
-      try {
-        // Only process the command if it comes as a private message.
-        if (isDirectMessage(ctx) && userId) {
-          const username = ctx?.from?.username;
-          const firstName = ctx?.from?.first_name;
-          const name = firstName || username;
-          await ctx.reply(
-            `Welcome ${name}! 👋\n\nClick the group you want to join.\n\nYou will sign in to Zupass, then ZK prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
-            { reply_markup: zupassMenu }
-          );
+      return traced("telegram", "start", async (span) => {
+        const userId = ctx?.from?.id;
+        if (userId) span?.setAttribute("userId", userId?.toString());
+        try {
+          // Only process the command if it comes as a private message.
+          if (isDirectMessage(ctx) && userId) {
+            const username = ctx?.from?.username;
+            if (username) span?.setAttribute("username", username);
+            const firstName = ctx?.from?.first_name;
+            const name = firstName || username;
+            await ctx.reply(
+              `Welcome ${name}! 👋\n\nClick the group you want to join.\n\nYou will sign in to Zupass, then ZK prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
+              { reply_markup: zupassMenu }
+            );
+          }
+        } catch (e) {
+          logger("[TELEGRAM] start error", e);
+          this.rollbarService?.reportError(e);
         }
-      } catch (e) {
-        logger("[TELEGRAM] start error", e);
-        this.rollbarService?.reportError(e);
-      }
+      });
     });
 
     // The "link <eventName>" command is a dev utility for associating the channel Id with a given event.
@@ -654,27 +659,32 @@ export class TelegramService {
     userId: number,
     chat: Chat.SupergroupChat
   ): Promise<void> {
-    // Send the user an invite link. When they follow the link, this will
-    // trigger a "join request", which the authBot will respond to.
+    return traced("telegram", "sendInviteLink", async (span) => {
+      span?.setAttribute("chatId", userId);
+      span?.setAttribute("chatTitle", chat.title);
 
-    logger(
-      `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
-    );
-    const inviteLink = await this.authBot.api.createChatInviteLink(chat.id, {
-      creates_join_request: true,
-      name: `${Date.now().toLocaleString()}`
+      // Send the user an invite link. When they follow the link, this will
+      // trigger a "join request", which the authBot will respond to.
+
+      logger(
+        `[TELEGRAM] Creating chat invite link to ${chat.title}(${chat.id}) for ${userId}`
+      );
+      const inviteLink = await this.authBot.api.createChatInviteLink(chat.id, {
+        creates_join_request: true,
+        name: `${Date.now().toLocaleString()}`
+      });
+      await this.authBot.api.sendMessage(
+        userId,
+        `You've proved that you have a ticket for <b>${chat.title}</b>!\n\nNow, request to join the group ⬇`,
+        {
+          reply_markup: new InlineKeyboard().url(
+            `Request to join`,
+            inviteLink.invite_link
+          ),
+          parse_mode: "HTML"
+        }
+      );
     });
-    await this.authBot.api.sendMessage(
-      userId,
-      `You've proved that you have a ticket for <b>${chat.title}</b>!\n\nNow, request to join the group ⬇`,
-      {
-        reply_markup: new InlineKeyboard().url(
-          `Request to join`,
-          inviteLink.invite_link
-        ),
-        parse_mode: "HTML"
-      }
-    );
   }
 
   /**
@@ -688,63 +698,74 @@ export class TelegramService {
     serializedZKEdDSATicket: string,
     telegramUserId: number
   ): Promise<void> {
-    // Verify PCD
-    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
-
-    if (!pcd) {
-      throw new Error(`Could not verify PCD for ${telegramUserId}`);
-    }
-    const { watermark } = pcd.claim;
-
-    if (!watermark) {
-      throw new Error("Verification PCD did not contain watermark");
-    }
-
-    if (telegramUserId.toString() !== watermark.toString()) {
-      throw new Error(
-        `Telegram User id ${telegramUserId} does not match given watermark ${watermark}`
+    return traced("telegram", "handleVerification", async (span) => {
+      span?.setAttribute("userId", telegramUserId);
+      // Verify PCD
+      const pcd = await this.verifyZKEdDSAEventTicketPCD(
+        serializedZKEdDSATicket
       );
-    }
 
-    const { attendeeSemaphoreId } = pcd.claim.partialTicket;
+      if (!pcd) {
+        throw new Error(`Could not verify PCD for ${telegramUserId}`);
+      }
+      const { watermark } = pcd.claim;
 
-    if (!attendeeSemaphoreId) {
-      throw new Error(
-        `User ${telegramUserId} did not reveal their semaphore id`
+      if (!watermark) {
+        throw new Error("Verification PCD did not contain watermark");
+      }
+
+      if (telegramUserId.toString() !== watermark.toString()) {
+        throw new Error(
+          `Telegram User id ${telegramUserId} does not match given watermark ${watermark}`
+        );
+      }
+
+      const { attendeeSemaphoreId } = pcd.claim.partialTicket;
+
+      if (!attendeeSemaphoreId) {
+        throw new Error(
+          `User ${telegramUserId} did not reveal their semaphore id`
+        );
+      }
+      span?.setAttribute("semaphoreId", attendeeSemaphoreId);
+
+      const { validEventIds } = pcd.claim;
+      if (!validEventIds) {
+        throw new Error(
+          `User ${telegramUserId} did not submit any valid event ids`
+        );
+      }
+      span?.setAttribute("validEventIds", validEventIds);
+
+      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+      if (!telegramChatId) {
+        throw new Error(
+          `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
+            ","
+          )}, which have no matching chat`
+        );
+      }
+      span?.setAttribute("chatId", telegramChatId);
+
+      const chat = await getGroupChat(this.authBot.api, telegramChatId);
+
+      span?.setAttribute("chatTitle", chat.title);
+
+      logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
+
+      // We've verified that the chat exists, now add the user to our list.
+      // This will be important later when the user requests to join.
+      await insertTelegramVerification(
+        this.context.dbPool,
+        telegramUserId,
+        parseInt(telegramChatId),
+        attendeeSemaphoreId
       );
-    }
 
-    const { validEventIds } = pcd.claim;
-    if (!validEventIds) {
-      throw new Error(
-        `User ${telegramUserId} did not submit any valid event ids`
-      );
-    }
-
-    const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-    const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
-    if (!telegramChatId) {
-      throw new Error(
-        `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
-          ","
-        )}, which have no matching chat`
-      );
-    }
-    const chat = await getGroupChat(this.authBot.api, telegramChatId);
-
-    logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
-
-    // We've verified that the chat exists, now add the user to our list.
-    // This will be important later when the user requests to join.
-    await insertTelegramVerification(
-      this.context.dbPool,
-      telegramUserId,
-      parseInt(telegramChatId),
-      attendeeSemaphoreId
-    );
-
-    // Send invite link
-    await this.sendInviteLink(telegramUserId, chat);
+      // Send invite link
+      await this.sendInviteLink(telegramUserId, chat);
+    });
   }
 
   public async handleSendAnonymousMessage(
