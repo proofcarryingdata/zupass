@@ -3,6 +3,7 @@ import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
   LATEST_TERMS,
+  UNREDACT_TICKETS_TERMS_VERSION,
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -12,7 +13,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
-import { isInteger } from "lodash";
+import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
@@ -32,6 +33,10 @@ import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
+
+const AgreedTermsSchema = z.object({
+  version: z.number().max(LATEST_TERMS)
+});
 
 /**
  * Responsible for high-level user-facing functionality like logging in.
@@ -322,35 +327,47 @@ export class UserService {
       serializedPCD.pcd
     );
     if (await SemaphoreSignaturePCDPackage.verify(pcd)) {
-      const payload = JSON.parse(pcd.claim.signedMessage);
-      if (
-        payload.version &&
-        isInteger(payload.version) &&
-        payload.version <= LATEST_TERMS
-      ) {
-        const user = await fetchUserByCommitment(
-          this.context.dbPool,
-          pcd.claim.identityCommitment
-        );
-        if (!user) {
-          return {
-            success: false,
-            error: "User does not exist"
-          };
-        }
+      const parsedPayload = AgreedTermsSchema.safeParse(
+        JSON.parse(pcd.claim.signedMessage)
+      );
 
+      if (!parsedPayload.success) {
+        return {
+          success: false,
+          error: "Invalid terms specified"
+        };
+      }
+
+      const payload = parsedPayload.data;
+      const user = await fetchUserByCommitment(
+        this.context.dbPool,
+        pcd.claim.identityCommitment
+      );
+      if (!user) {
+        return {
+          success: false,
+          error: "User does not exist"
+        };
+      }
+
+      if (payload.version < UNREDACT_TICKETS_TERMS_VERSION) {
+        await upsertUser(this.context.dbPool, {
+          ...user,
+          terms_agreed: payload.version
+        });
+      } else {
         logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
         await agreeTermsAndUnredactTickets(
           this.context.dbPool,
           user.email,
-          LATEST_TERMS
+          payload.version
         );
-
-        return {
-          success: true,
-          value: { version: payload.version }
-        };
       }
+
+      return {
+        success: true,
+        value: { version: payload.version }
+      };
     }
 
     return {

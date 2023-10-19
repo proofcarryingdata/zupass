@@ -30,7 +30,7 @@ export async function upsertUser(
   params: {
     email: string;
     commitment: string;
-    salt?: string;
+    salt?: string | null;
     encryptionKey?: string;
     terms_agreed: number;
   }
