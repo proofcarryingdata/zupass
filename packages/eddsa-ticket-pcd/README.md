@@ -59,7 +59,7 @@ const ticketData: ITicketData = {
     attendeeEmail: "user@test.com",
     eventName: "event",
     ticketName: "ticket",
-    checkerEmail: "checker@test.com",
+    checkerEmail: undefined,
     ticketId: uuid(),
     eventId: uuid(),
     productId: uuid(),
