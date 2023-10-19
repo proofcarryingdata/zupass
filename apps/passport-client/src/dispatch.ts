@@ -797,7 +797,12 @@ async function setKnownTicketTypesAndKeys(
  * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
  * feed refresh, and dismiss the "legal terms" modal.
  */
-function handleAgreedTerms(state: AppState, update: ZuUpdate, version: number) {
+async function handleAgreedTerms(
+  state: AppState,
+  update: ZuUpdate,
+  version: number
+) {
+  await saveSelf({ ...state.self, terms_agreed: version });
   update({
     self: { ...state.self, terms_agreed: version },
     loadedIssuedPCDs: false,
