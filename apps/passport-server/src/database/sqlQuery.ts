@@ -1,9 +1,9 @@
-import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import { getErrorMessage, sleep } from "@pcd/util";
+import { getErrorMessage } from "@pcd/util";
 import { QueryResult } from "pg";
 import { Pool, PoolClient } from "postgres-pool";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
+import { execWithRetry } from "../util/retry";
 
 /**
  * Executes a sql query against the database, and traces its performance.
@@ -107,36 +107,4 @@ async function execTransactionWithRetry<T>(
     },
     3
   );
-}
-
-async function execWithRetry<T>(
-  task: () => Promise<T>,
-  shouldRetry: (e: unknown) => boolean,
-  maxTries: number
-): Promise<T> {
-  const span = getActiveSpan();
-  const backoffFactorMs = 100;
-  let latestError = undefined;
-
-  span?.setAttribute("max_tries", maxTries);
-
-  for (let i = 0; i < maxTries; i++) {
-    span?.setAttribute("try_count", i + 1);
-
-    try {
-      const result = await task();
-      span?.setAttribute("retry_succeeded", true);
-      return result;
-    } catch (e) {
-      latestError = e;
-      if (!shouldRetry(e)) {
-        break;
-      }
-    }
-
-    await sleep(backoffFactorMs * (i + 1));
-  }
-
-  span?.setAttribute("retry_succeeded", false);
-  throw latestError;
 }
