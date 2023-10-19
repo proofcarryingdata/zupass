@@ -32,7 +32,6 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
-import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
@@ -61,7 +60,6 @@ import {
 import { getDB } from "../src/database/postgresPool";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
-  fetchDevconnectDeviceLoginTicket,
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectTicketsAwaitingSync
@@ -108,7 +106,6 @@ import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
-import { testDeviceLogin, testFailedDeviceLogin } from "./user/testDeviceLogin";
 import { testLogin } from "./user/testLoginPCDPass";
 import {
   testUserSyncKeyChangeNoRev,
@@ -2061,80 +2058,6 @@ describe("devconnect functionality", function () {
           recursive: true
         }
       ]);
-    }
-  );
-
-  step("should be able to log in with a device login", async function () {
-    const positions = _.flatMap(
-      mocker
-        .get()
-        .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
-      (order) => order.positions
-    );
-
-    const secret = positions.find(
-      (position) =>
-        position.attendee_email == mocker.get().organizer1.EMAIL_1 &&
-        // in "mock pretix api config matches load from DB" we set 10002 as a superuserItemId
-        position.item == 10002
-    )?.secret;
-
-    if (!secret) {
-      throw new Error("No secret found");
-    }
-
-    const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
-      db,
-      mocker.get().organizer1.EMAIL_1,
-      secret
-    );
-
-    expect(fetchedDeviceLogin).is.not.undefined;
-
-    const result = await testDeviceLogin(
-      application,
-      mocker.get().organizer1.EMAIL_1,
-      secret
-    );
-
-    if (!result) {
-      throw new Error("Not able to login with device login");
-    }
-
-    expect(result.user).to.include({ email: mocker.get().organizer1.EMAIL_1 });
-  });
-
-  step(
-    "should not be able to log in with a device login for non-superuser",
-    async function () {
-      const positions = _.flatMap(
-        mocker
-          .get()
-          .organizer1.ordersByEventID.get(mocker.get().organizer1.eventA.slug),
-        (order) => order.positions
-      );
-
-      const secret = positions.find(
-        (position) => position.attendee_email == mocker.get().organizer1.EMAIL_3
-      )?.secret;
-
-      if (!secret) {
-        throw new Error("No secret found");
-      }
-
-      const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
-        db,
-        mocker.get().organizer1.EMAIL_3,
-        secret
-      );
-
-      expect(fetchedDeviceLogin).is.undefined;
-
-      testFailedDeviceLogin(
-        application,
-        mocker.get().organizer1.EMAIL_3,
-        secret
-      );
     }
   );
 

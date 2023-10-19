@@ -8,7 +8,6 @@ import {
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
   requestCreateNewUser,
-  requestDeviceLogin,
   requestLogToServer,
   requestUser,
   SyncedEncryptedStorage,
@@ -62,12 +61,6 @@ export type Action =
       password: string;
       token: string;
     }
-  | {
-      type: "device-login";
-      email: string;
-      secret: string;
-    }
-  | { type: "new-device-login-passport" }
   | {
       type: "set-self";
       self: User;
@@ -147,10 +140,6 @@ export async function dispatch(
         state,
         update
       );
-    case "device-login":
-      return deviceLogin(action.email, action.secret, state, update);
-    case "new-device-login-passport":
-      return genDeviceLoginPassport(state.identity, update);
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
@@ -228,26 +217,6 @@ async function genPassport(
   update({ pcds });
 }
 
-/**
- * Pretty much the same as genPassport, but without screen
- * navigation coupled to the email verification workflow
- */
-async function genDeviceLoginPassport(identity: Identity, update: ZuUpdate) {
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
-
-  const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-
-  await savePCDs(pcds);
-  await saveEncryptionKey(encryptionKey);
-
-  update({
-    pcds,
-    encryptionKey
-  });
-}
-
 async function createNewUserSkipPassword(
   email: string,
   token: string,
@@ -321,32 +290,6 @@ async function createNewUserWithPassword(
     error: {
       title: "Login failed",
       message: "Couldn't log in. " + newUserResult.error,
-      dismissToCurrentPage: true
-    }
-  });
-}
-
-async function deviceLogin(
-  email: string,
-  secret: string,
-  state: AppState,
-  update: ZuUpdate
-) {
-  const deviceLoginResult = await requestDeviceLogin(
-    appConfig.zupassServer,
-    email,
-    secret,
-    state.identity.commitment.toString()
-  );
-
-  if (deviceLoginResult.success) {
-    return finishLogin(deviceLoginResult.value, state, update);
-  }
-
-  update({
-    error: {
-      title: "Login failed",
-      message: "Couldn't log in. " + deviceLoginResult.error,
       dismissToCurrentPage: true
     }
   });
