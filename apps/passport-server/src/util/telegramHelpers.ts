@@ -662,6 +662,14 @@ export const uwuResponse = async (ctx: BotContext): Promise<void> => {
   }
 };
 
+export const ratResponse = async (ctx: BotContext): Promise<void> => {
+  if (isDirectMessage(ctx)) {
+    await ctx.reply(
+      `I don't know that command 🐭.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
+    );
+  }
+};
+
 export function msToTimeString(duration: number): string {
   const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((duration / (1000 * 60)) % 60);

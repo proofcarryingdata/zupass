@@ -46,6 +46,7 @@ import {
   helpResponse,
   isDirectMessage,
   isGroupWithTopics,
+  ratResponse,
   senderIsAdmin,
   setBotInfo,
   uwuResponse
@@ -535,7 +536,7 @@ export class TelegramService {
       });
 
       this.anonBot.command("help", helpResponse);
-      this.anonBot.on("message", uwuResponse);
+      this.anonBot.on("message", ratResponse);
     }
 
     this.authBot.command("help", helpResponse);
