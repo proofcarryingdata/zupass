@@ -1,4 +1,5 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
+import { sleep } from "@pcd/util";
 
 export async function execWithRetry<T>(
   task: () => Promise<T>,
