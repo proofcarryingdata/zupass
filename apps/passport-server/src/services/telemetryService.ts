@@ -66,6 +66,7 @@ export async function writeMarker(
   }
 
   try {
+    // eslint-disable-next-line no-restricted-globals
     await fetch(honeyClient.apiHost + `1/markers/${DATASET_SLUG}`, {
       method: "POST",
       body: JSON.stringify({

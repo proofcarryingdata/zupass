@@ -16,7 +16,10 @@ export function instrumentedFetch(
 
     try {
       const result = await execWithRetry(
-        () => fetch(input, init),
+        () => {
+          // eslint-disable-next-line no-restricted-globals
+          return fetch(input, init);
+        },
         (e) => {
           const errorMessage = getErrorMessage(e);
           return errorMessage.includes("other side closed");
