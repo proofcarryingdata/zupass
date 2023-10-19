@@ -7,7 +7,7 @@ export function NoWASMScreen() {
       <AppContainer bg="primary">
         <Spacer h={64} />
         <TextCenter>
-          <H2>No Web Assembly</H2>
+          <H2>Browser not supported</H2>
           <Spacer h={24} />
          Your browser does not currently support WebAssembly, which is
          required for Zupass to generate zero-knowledge proofs. Try using
