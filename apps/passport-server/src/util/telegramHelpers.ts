@@ -128,9 +128,6 @@ export const base64EncodeTopicData = (
     "utf-8"
   );
   const encodedTopicData = topicData.toString("base64");
-  if (encodedTopicData.length > 512)
-    throw new Error("Topic data too big for telegram startApp parameter");
-
   return encodedTopicData;
 };
 
