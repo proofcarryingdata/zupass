@@ -178,7 +178,9 @@ export class TelegramService {
 
           if (newMember.status === "left" || newMember.status === "kicked") {
             logger(
-              `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
+              `[TELEGRAM] Deleting verification for user leaving ${
+                newMember.user.username || newMember.user.first_name
+              } in chat ${ctx.chat.id}`
             );
             await deleteTelegramVerification(
               this.context.dbPool,
@@ -575,7 +577,7 @@ export class TelegramService {
    * Since this function awaits on authBot.start(), it will likely be very long-
    * lived.
    */
-  public async startBot(authBot: Bot<BotContext, Api<RawApi>>): Promise<void> {
+  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
     const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
     if (startDelay > 0) {
       logger(
@@ -588,7 +590,7 @@ export class TelegramService {
 
     try {
       // This will not resolve while the authBot remains running.
-      await authBot.start({
+      await bot.start({
         allowed_updates: [
           "chat_join_request",
           "chat_member",
@@ -596,7 +598,7 @@ export class TelegramService {
           "callback_query"
         ],
         onStart: (info) => {
-          logger(`[TELEGRAM] Started authBot '${info.username}' successfully!`);
+          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
         }
       });
     } catch (e) {
@@ -722,6 +724,8 @@ export class TelegramService {
       if (!pcd) {
         throw new Error(`Could not verify PCD for ${telegramUserId}`);
       }
+      span?.setAttribute("verifiedPCD", true);
+
       const { watermark } = pcd.claim;
 
       if (!watermark) {
