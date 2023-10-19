@@ -35,7 +35,7 @@ export async function offlineTicketsCheckin(
   passportServer: string,
   checkerIdentity: Identity,
   offlineTickets: OfflineTickets
-): Promise<UploadOfflineCheckinsResponseValue> {
+): Promise<OfflineTicketsCheckinResult> {
   return requestOfflineTicketsCheckin(passportServer, {
     offlineTickets,
     checkerProof: await SemaphoreSignaturePCDPackage.serialize(

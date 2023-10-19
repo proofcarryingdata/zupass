@@ -1,4 +1,8 @@
-import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
+import {
+  createStorageBackedCredentialCache,
+  offlineTickets,
+  offlineTicketsCheckin
+} from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -25,6 +29,7 @@ import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondParty
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -32,9 +37,9 @@ import {
 import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
+  dispatch,
   StateContext,
-  StateContextState,
-  dispatch
+  StateContextState
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -43,7 +48,9 @@ import {
   loadPCDs,
   loadSelf,
   loadSubscriptions,
+  saveCheckedInOfflineTickets,
   saveIdentity,
+  saveOfflineTickets,
   saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -107,8 +114,9 @@ class App extends React.Component<object, AppState> {
   }
 
   startBackgroundJobs = () => {
-    console.log("Starting background jobs...");
+    console.log("[JOB] Starting background jobs...");
     this.jobPollUser();
+    this.startJobSyncOfflineCheckins();
   };
 
   jobPollUser = async () => {
@@ -124,6 +132,44 @@ class App extends React.Component<object, AppState> {
     }
 
     setTimeout(this.jobPollUser, 1000 * 60);
+  };
+
+  async startJobSyncOfflineCheckins() {
+    await this.jobSyncOfflineCheckins();
+    setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
+  }
+
+  jobSyncOfflineCheckins = async () => {
+    const offlineTicketsResult = await offlineTickets(
+      appConfig.zupassServer,
+      this.state.identity
+    );
+
+    if (offlineTicketsResult.success) {
+      this.update({
+        ...this.state,
+        offlineTickets: offlineTicketsResult.value.offlineTickets
+      });
+      saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
+    }
+
+    if (!this.state.checkedinOfflineTickets) {
+      return;
+    }
+
+    const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+      appConfig.zupassServer,
+      this.state.identity,
+      this.state.checkedinOfflineTickets
+    );
+
+    if (checkinOfflineTicketsResult.success) {
+      this.update({
+        ...this.state,
+        checkedinOfflineTickets: undefined
+      });
+      saveCheckedInOfflineTickets(undefined);
+    }
   };
 }
 

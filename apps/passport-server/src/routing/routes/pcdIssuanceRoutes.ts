@@ -4,12 +4,14 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  GetOfflineTicketsRequest,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -158,10 +160,10 @@ export function initPCDIssuanceRoutes(
    */
   app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleVerifyTicketByIdRequest(
-      req.body as VerifyTicketByIdRequest
+    await issuanceService.handleGetOfflineTickets(
+      req.body as GetOfflineTicketsRequest,
+      res
     );
-    return res.json(result satisfies VerifyTicketByIdResult);
   });
 
   /**
@@ -171,10 +173,10 @@ export function initPCDIssuanceRoutes(
     "/issue/checkin-offline-tickets",
     async (req: Request, res: Response) => {
       checkIssuanceServiceStarted(issuanceService);
-      const result = await issuanceService.handleVerifyTicketByIdRequest(
-        req.body as VerifyTicketByIdRequest
+      await issuanceService.handleUploadOfflineCheckins(
+        req.body as UploadOfflineCheckinsRequest,
+        res
       );
-      return res.json(result satisfies VerifyTicketByIdResult);
     }
   );
 

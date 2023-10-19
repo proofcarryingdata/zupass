@@ -3,6 +3,7 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -57,6 +58,9 @@ export interface AppState {
 
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
+
+  offlineTickets?: OfflineTickets;
+  checkedinOfflineTickets?: OfflineTickets;
 }
 
 export interface AppError {
