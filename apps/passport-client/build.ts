@@ -50,9 +50,9 @@ const appOpts: BuildOptions = {
 };
 
 const serviceWorkerOpts: BuildOptions = {
-  tsconfig: "./service-worker-tsconfig.json",
+  tsconfig: "./src/worker/tsconfig.json",
   bundle: true,
-  entryPoints: ["src/service-worker.ts"],
+  entryPoints: ["src/worker/service-worker.ts"],
   plugins: [
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
