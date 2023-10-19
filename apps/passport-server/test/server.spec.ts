@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-globals */
 import { expect } from "chai";
 import "mocha";
 import { startApplication, stopApplication } from "../src/application";

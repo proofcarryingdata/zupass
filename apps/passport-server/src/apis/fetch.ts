@@ -1,5 +1,7 @@
+import { getErrorMessage } from "@pcd/util";
 import { setError, traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
+import { execWithRetry } from "../util/retry";
 
 export function instrumentedFetch(
   input: RequestInfo | URL,
@@ -13,7 +15,20 @@ export function instrumentedFetch(
     span?.setAttribute("method", init?.method ?? "GET");
 
     try {
-      const result = await fetch(input, init);
+      const result = await execWithRetry(
+        () => {
+          // eslint-disable-next-line no-restricted-globals
+          return fetch(input, init);
+        },
+        (e) => {
+          const errorMessage = getErrorMessage(e);
+          // some endpoints sometimes close our connection from their end
+          // which is a case we want to retry.
+          return errorMessage.includes("other side closed");
+        },
+        3
+      );
+
       span?.setAttribute("ok", result.ok);
       span?.setAttribute("statusCode", result.status);
       return result;

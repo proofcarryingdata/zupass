@@ -3,6 +3,7 @@ import _ from "lodash";
 import urljoin from "url-join";
 import { z } from "zod";
 import { logger } from "../../util/logger";
+import { instrumentedFetch } from "../fetch";
 
 /**
  * A schema for validating the API response from Tripsha.
@@ -66,7 +67,14 @@ export class ZuconnectTripshaAPI {
    */
   public async fetchTickets(): Promise<ZuconnectTicket[]> {
     const url = urljoin(this.baseUrl, "tickets", this.authKey);
-    const fetchResult = await fetch(url);
+    const fetchResult = await instrumentedFetch(url);
+
+    if (fetchResult.status !== 200) {
+      throw new Error(
+        `Tripsha API responded with not-ok status code ${fetchResult.status}`
+      );
+    }
+
     const data = await fetchResult.json();
 
     if (_.isArray(data.tickets)) {
