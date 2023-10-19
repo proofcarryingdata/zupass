@@ -105,90 +105,104 @@ export class TelegramService {
     // `createChatInviteLink` API invocation below.
 
     this.authBot.on("chat_join_request", async (ctx) => {
-      const userId = ctx.chatJoinRequest.user_chat_id;
+      return traced("telegram", "chat_join_request", async (span) => {
+        const userId = ctx.chatJoinRequest.user_chat_id;
+        if (userId) span?.setAttribute("userId", userId);
 
-      try {
-        const chatId = ctx.chatJoinRequest.chat.id;
+        try {
+          const chatId = ctx.chatJoinRequest.chat.id;
+          if (chatId) span?.setAttribute("chatId", chatId);
 
-        logger(`[TELEGRAM] Got chat join request for ${chatId} from ${userId}`);
-        // Check if this user is verified for the chat in question
-        const isVerified = await fetchTelegramVerificationStatus(
-          this.context.dbPool,
-          userId,
-          chatId
-        );
-
-        if (isVerified) {
           logger(
-            `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
+            `[TELEGRAM] Got chat join request for ${chatId} from ${userId}`
           );
-          const chat = await getGroupChat(ctx.api, chatId);
+          // Check if this user is verified for the chat in question
+          const isVerified = await fetchTelegramVerificationStatus(
+            this.context.dbPool,
+            userId,
+            chatId
+          );
 
-          await this.authBot.api.approveChatJoinRequest(chatId, userId);
-          if (ctx.chatJoinRequest?.invite_link?.invite_link) {
-            await this.authBot.api.sendMessage(
-              userId,
-              `You have been approved! Join here ⬇`,
-              {
-                reply_markup: new InlineKeyboard().url(
-                  `Join ${chat?.title}`,
-                  ctx.chatJoinRequest.invite_link.invite_link
-                ),
-                parse_mode: "HTML"
-              }
+          if (isVerified) {
+            logger(
+              `[TELEGRAM] Approving chat join request for ${userId} to join ${chatId}`
             );
+            const chat = await getGroupChat(ctx.api, chatId);
 
-            await this.authBot.api.sendMessage(userId, `🚀`, {
-              parse_mode: "HTML"
-            });
+            await this.authBot.api.approveChatJoinRequest(chatId, userId);
+            if (ctx.chatJoinRequest?.invite_link?.invite_link) {
+              await this.authBot.api.sendMessage(
+                userId,
+                `You have been approved! Join here ⬇`,
+                {
+                  reply_markup: new InlineKeyboard().url(
+                    `Join ${chat?.title}`,
+                    ctx.chatJoinRequest.invite_link.invite_link
+                  ),
+                  parse_mode: "HTML"
+                }
+              );
+
+              await this.authBot.api.sendMessage(userId, `🚀`, {
+                parse_mode: "HTML"
+              });
+            } else {
+              await this.authBot.api.sendMessage(
+                userId,
+                `Congrats! ${chat?.title} should now appear at the top of your list
+               of Chats.\nYou can also click the above button.`
+              );
+            }
           } else {
             await this.authBot.api.sendMessage(
               userId,
-              `Congrats! ${chat?.title} should now appear at the top of your list
-               of Chats.\nYou can also click the above button.`
+              `You are not verified. Try again with the /start command.`
             );
           }
-        } else {
-          await this.authBot.api.sendMessage(
-            userId,
-            `You are not verified. Try again with the /start command.`
-          );
+        } catch (e) {
+          await this.authBot.api.sendMessage(userId, `Error joining: ${e}`);
+          logger("[TELEGRAM] chat_join_request error", e);
+          this.rollbarService?.reportError(e);
         }
-      } catch (e) {
-        await this.authBot.api.sendMessage(userId, `Error joining: ${e}`);
-        logger("[TELEGRAM] chat_join_request error", e);
-        this.rollbarService?.reportError(e);
-      }
+      });
     });
 
     // When a user joins the channel, remove their verification, so they
     // cannot rejoin without verifying again.
     this.authBot.on("chat_member", async (ctx) => {
-      try {
-        const newMember = ctx.update.chat_member.new_chat_member;
-        if (newMember.status === "left" || newMember.status === "kicked") {
-          logger(
-            `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
-          );
-          await deleteTelegramVerification(
-            this.context.dbPool,
-            newMember.user.id,
-            ctx.chat.id
-          );
-          const chat = await getGroupChat(ctx.api, ctx.chat.id);
-          const userId = newMember.user.id;
-          if (!newMember.user.is_bot) {
-            await this.authBot.api.sendMessage(
-              userId,
-              `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
-              { parse_mode: "HTML" }
+      return traced("telegram", "chat_member", async (span) => {
+        try {
+          const newMember = ctx.update.chat_member.new_chat_member;
+          span?.setAttribute("userId", newMember.user.id);
+          span?.setAttribute("status", newMember.status);
+
+          if (newMember.status === "left" || newMember.status === "kicked") {
+            logger(
+              `[TELEGRAM] Deleting verification for user leaving ${newMember.user.username} in chat ${ctx.chat.id}`
             );
+            await deleteTelegramVerification(
+              this.context.dbPool,
+              newMember.user.id,
+              ctx.chat.id
+            );
+            const chat = await getGroupChat(ctx.api, ctx.chat.id);
+            span?.setAttribute("chatId", chat.id);
+            span?.setAttribute("chatTitle", chat.title);
+
+            const userId = newMember.user.id;
+            if (!newMember.user.is_bot) {
+              await this.authBot.api.sendMessage(
+                userId,
+                `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
+                { parse_mode: "HTML" }
+              );
+            }
           }
+        } catch (e) {
+          logger("[TELEGRAM] chat_member error", e);
+          this.rollbarService?.reportError(e);
         }
-      } catch (e) {
-        logger("[TELEGRAM] chat_member error", e);
-        this.rollbarService?.reportError(e);
-      }
+      });
     });
 
     // The "start" command initiates the process of invitation and approval.
