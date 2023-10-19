@@ -22,6 +22,8 @@ export function instrumentedFetch(
         },
         (e) => {
           const errorMessage = getErrorMessage(e);
+          // some endpoints sometimes close our connection from their end
+          // which is a case we want to retry.
           return errorMessage.includes("other side closed");
         },
         3
