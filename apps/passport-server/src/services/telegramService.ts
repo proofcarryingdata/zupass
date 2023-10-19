@@ -340,11 +340,7 @@ export class TelegramService {
         `Loading tickets and events...`
       );
       const events = await fetchEventsWithTelegramChats(this.context.dbPool);
-      const eventsWithChats = await chatIDsToChats(
-        this.context.dbPool,
-        ctx,
-        events
-      );
+      const eventsWithChats = await chatIDsToChats(ctx, events);
 
       if (eventsWithChats.length === 0) {
         return ctx.api.editMessageText(
@@ -370,15 +366,18 @@ export class TelegramService {
     });
 
     this.anonBot.command("anonsend", async (ctx) => {
-      if (isDirectMessage(ctx)) {
-        await ctx.reply("Choose a chat to post in anonymously ⬇", {
-          reply_markup: anonSendMenu
-        });
-      } else {
-        await ctx.reply("Please message directly within a private chat.", {
-          message_thread_id: ctx.message?.message_thread_id
-        });
-      }
+      return traced("telegram", "anonsend", async (span) => {
+        if (ctx.from?.id) span?.setAttribute("userId", ctx.from.id.toString());
+        if (isDirectMessage(ctx)) {
+          await ctx.reply("Choose a chat to post in anonymously ⬇", {
+            reply_markup: anonSendMenu
+          });
+        } else {
+          await ctx.reply("Please message directly within a private chat.", {
+            message_thread_id: ctx.message?.message_thread_id
+          });
+        }
+      });
     });
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
@@ -610,65 +609,73 @@ export class TelegramService {
   private async verifyZKEdDSAEventTicketPCD(
     serializedZKEdDSATicket: string
   ): Promise<ZKEdDSAEventTicketPCD | null> {
-    let pcd: ZKEdDSAEventTicketPCD;
+    return traced("telegram", "verifyZKEdDSAEventTicketPCD", async () => {
+      let pcd: ZKEdDSAEventTicketPCD;
 
-    try {
-      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-        JSON.parse(serializedZKEdDSATicket).pcd
+      try {
+        pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+          JSON.parse(serializedZKEdDSATicket).pcd
+        );
+      } catch (e) {
+        throw new Error(`Deserialization error, ${e}`);
+      }
+
+      let signerMatch = false;
+
+      if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
+        throw new Error(`Missing server eddsa private key .env value`);
+
+      // This Pubkey value should work for staging + prod as well, but needs to be tested
+      const TICKETING_PUBKEY = await getEdDSAPublicKey(
+        process.env.SERVER_EDDSA_PRIVATE_KEY
       );
-    } catch (e) {
-      throw new Error(`Deserialization error, ${e}`);
-    }
 
-    let signerMatch = false;
+      signerMatch =
+        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
-    if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
-      throw new Error(`Missing server eddsa private key .env value`);
-
-    // This Pubkey value should work for staging + prod as well, but needs to be tested
-    const TICKETING_PUBKEY = await getEdDSAPublicKey(
-      process.env.SERVER_EDDSA_PRIVATE_KEY
-    );
-
-    signerMatch =
-      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-
-    if (
-      // TODO: wrap in a MultiProcessService?
-      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
-      signerMatch
-    ) {
-      return pcd;
-    } else {
-      logger("[TELEGRAM] pcd invalid");
-      return null;
-    }
+      if (
+        // TODO: wrap in a MultiProcessService?
+        (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
+        signerMatch
+      ) {
+        return pcd;
+      } else {
+        logger("[TELEGRAM] pcd invalid");
+        return null;
+      }
+    });
   }
 
   private async sendToAnonymousChannel(
-    groupId: number,
-    anonChatId: number,
+    chatId: number,
+    topicId: number,
     message: string
   ): Promise<void> {
-    try {
-      await this.anonBot.api.sendMessage(groupId, message, {
-        message_thread_id: anonChatId
-      });
-    } catch (error: { error_code: number; description: string } & any) {
-      const isDeletedThread =
-        error.error_code === 400 &&
-        error.description === "Bad Request: message thread not found";
-      if (isDeletedThread) {
-        logger(
-          `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
-        );
-        await deleteTelegramChatTopic(this.context.dbPool, groupId, anonChatId);
-        throw new Error(`Topic has been deleted. Choose a different one!`);
-      } else {
-        throw new Error(error);
+    return traced("telegram", "sendToAnonymousChannel", async (span) => {
+      span?.setAttribute("chatId", chatId);
+      span?.setAttribute("topicId", topicId);
+      span?.setAttribute("message", message);
+
+      try {
+        await this.anonBot.api.sendMessage(chatId, message, {
+          message_thread_id: topicId
+        });
+      } catch (error: { error_code: number; description: string } & any) {
+        const isDeletedThread =
+          error.error_code === 400 &&
+          error.description === "Bad Request: message thread not found";
+        if (isDeletedThread) {
+          logger(
+            `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
+          );
+          await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
+          throw new Error(`Topic has been deleted. Choose a different one!`);
+        } else {
+          throw new Error(error);
+        }
       }
-    }
+    });
   }
 
   private async sendInviteLink(
@@ -792,158 +799,175 @@ export class TelegramService {
     message: string,
     topicId: string
   ): Promise<void> {
-    logger("[TELEGRAM] Verifying anonymous message");
+    return traced("telegram", "handleSendAnonymousMessage", async (span) => {
+      span?.setAttribute("topicId", topicId);
+      span?.setAttribute("message", message);
 
-    const pcd = await this.verifyZKEdDSAEventTicketPCD(serializedZKEdDSATicket);
+      logger("[TELEGRAM] Verifying anonymous message");
 
-    if (!pcd) {
-      throw new Error("Could not verify PCD for anonymous message");
-    }
-
-    const { watermark, validEventIds, externalNullifier, nullifierHash } =
-      pcd.claim;
-
-    if (!validEventIds) {
-      throw new Error(`User did not submit any valid event ids`);
-    }
-
-    const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-    const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
-    if (!telegramChatId) {
-      throw new Error(
-        `User attempted to use a ticket for events ${validEventIds.join(
-          ","
-        )}, which have no matching chat`
+      const pcd = await this.verifyZKEdDSAEventTicketPCD(
+        serializedZKEdDSATicket
       );
-    }
 
-    if (!watermark) {
-      throw new Error("Anonymous message PCD did not contain watermark");
-    }
+      if (!pcd) {
+        throw new Error("Could not verify PCD for anonymous message");
+      }
 
-    function getMessageWatermark(message: string): bigint {
-      const hashed = sha256(message).substring(0, 16);
-      return BigInt("0x" + hashed);
-    }
+      const { watermark, validEventIds, externalNullifier, nullifierHash } =
+        pcd.claim;
 
-    if (getMessageWatermark(message).toString() !== watermark.toString()) {
-      throw new Error(
-        `Anonymous message string ${message} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
-          message
-        ).toString()}`
+      if (!validEventIds) {
+        throw new Error(`User did not submit any valid event ids`);
+      }
+
+      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+      if (!telegramChatId) {
+        throw new Error(
+          `User attempted to use a ticket for events ${validEventIds.join(
+            ","
+          )}, which have no matching chat`
+        );
+      }
+      span?.setAttribute("chatId", telegramChatId);
+
+      if (!watermark) {
+        throw new Error("Anonymous message PCD did not contain watermark");
+      }
+
+      function getMessageWatermark(message: string): bigint {
+        const hashed = sha256(message).substring(0, 16);
+        return BigInt("0x" + hashed);
+      }
+
+      if (getMessageWatermark(message).toString() !== watermark.toString()) {
+        throw new Error(
+          `Anonymous message string ${message} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+            message
+          ).toString()}`
+        );
+      }
+
+      logger(
+        `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
       );
-    }
 
-    logger(
-      `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
-    );
-
-    const topic = await fetchTelegramTopic(
-      this.context.dbPool,
-      parseInt(telegramChatId),
-      parseInt(topicId)
-    );
-
-    if (!topic || !topic.is_anon_topic) {
-      throw new Error(`this group doesn't have any anon topics`);
-    }
-
-    // The event is linked to a chat. Make sure we can access it.
-    const chat = await getGroupChat(this.anonBot.api, telegramChatId);
-
-    if (!nullifierHash) throw new Error(`Nullifier hash not found`);
-
-    const expectedExternalNullifier = getAnonTopicNullifier(
-      chat.id,
-      parseInt(topicId)
-    ).toString();
-
-    if (externalNullifier !== expectedExternalNullifier)
-      throw new Error("Nullifier mismatch - try proving again.");
-
-    const nullifierData = await fetchAnonTopicNullifier(
-      this.context.dbPool,
-      nullifierHash
-    );
-
-    if (!nullifierData) {
-      await insertOrUpdateTelegramNullifier(
+      const topic = await fetchTelegramTopic(
         this.context.dbPool,
-        nullifierHash,
-        [new Date().toISOString()]
+        parseInt(telegramChatId),
+        parseInt(topicId)
       );
-    } else {
-      const timestamps = nullifierData.message_timestamps.map((t) =>
-        new Date(t).getTime()
+
+      if (!topic || !topic.is_anon_topic) {
+        throw new Error(`this group doesn't have any anon topics`);
+      }
+
+      // The event is linked to a chat. Make sure we can access it.
+      const chat = await getGroupChat(this.anonBot.api, telegramChatId);
+      span?.setAttribute("chatTitle", chat.title);
+
+      if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+      const expectedExternalNullifier = getAnonTopicNullifier(
+        chat.id,
+        parseInt(topicId)
+      ).toString();
+
+      if (externalNullifier !== expectedExternalNullifier)
+        throw new Error("Nullifier mismatch - try proving again.");
+
+      const nullifierData = await fetchAnonTopicNullifier(
+        this.context.dbPool,
+        nullifierHash
       );
-      const maxDailyPostsPerTopic = parseInt(
-        process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
-      );
-      const rlDuration = ONE_HOUR_MS * 24;
-      const { rateLimitExceeded, newTimestamps } = checkSlidingWindowRateLimit(
-        timestamps,
-        maxDailyPostsPerTopic,
-        rlDuration
-      );
-      if (!rateLimitExceeded) {
+
+      if (!nullifierData) {
         await insertOrUpdateTelegramNullifier(
           this.context.dbPool,
           nullifierHash,
-          newTimestamps
+          [new Date().toISOString()]
         );
       } else {
-        const rlError = new Error(
-          `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+        const timestamps = nullifierData.message_timestamps.map((t) =>
+          new Date(t).getTime()
         );
-        rlError.name = "Rate limit exceeded";
-        throw rlError;
+        const maxDailyPostsPerTopic = parseInt(
+          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
+        );
+        const rlDuration = ONE_HOUR_MS * 24;
+        const { rateLimitExceeded, newTimestamps } =
+          checkSlidingWindowRateLimit(
+            timestamps,
+            maxDailyPostsPerTopic,
+            rlDuration
+          );
+        if (!rateLimitExceeded) {
+          await insertOrUpdateTelegramNullifier(
+            this.context.dbPool,
+            nullifierHash,
+            newTimestamps
+          );
+        } else {
+          const rlError = new Error(
+            `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+          );
+          rlError.name = "Rate limit exceeded";
+          throw rlError;
+        }
       }
-    }
 
-    await this.sendToAnonymousChannel(
-      chat.id,
-      parseInt(topic.topic_id),
-      message
-    );
+      await this.sendToAnonymousChannel(
+        chat.id,
+        parseInt(topic.topic_id),
+        message
+      );
+    });
   }
 
   public async handleRequestAnonymousMessageLink(
     telegramChatId: number,
     topicId: number
   ): Promise<string> {
-    // Confirm that topicId exists and is anonymous
-    const topic = await fetchTelegramTopic(
-      this.context.dbPool,
-      telegramChatId,
-      topicId
+    return traced(
+      "telegram",
+      "handleRequestAnonymousMessageLink",
+      async (span) => {
+        // Confirm that topicId exists and is anonymous
+        const topic = await fetchTelegramTopic(
+          this.context.dbPool,
+          telegramChatId,
+          topicId
+        );
+
+        if (!topic || !topic.is_anon_topic)
+          throw new Error(`No anonymous topic found`);
+
+        // Get valid eventIds for this chat
+        const telegramEvents = await fetchTelegramEventsByChatId(
+          this.context.dbPool,
+          telegramChatId
+        );
+        if (telegramEvents.length === 0)
+          throw new Error(`No events associated with this group`);
+
+        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+        const encodedTopicData = base64EncodeTopicData(
+          telegramChatId,
+          topic.topic_name,
+          topic.topic_id,
+          validEventIds
+        );
+
+        const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
+        span?.setAttribute(`redriect url`, url);
+        logger(
+          `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
+        );
+
+        return url;
+      }
     );
-
-    if (!topic || !topic.is_anon_topic)
-      throw new Error(`No anonymous topic found`);
-
-    // Get valid eventIds for this chat
-    const telegramEvents = await fetchTelegramEventsByChatId(
-      this.context.dbPool,
-      telegramChatId
-    );
-    if (telegramEvents.length === 0)
-      throw new Error(`No events associated with this group`);
-
-    const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-
-    const encodedTopicData = base64EncodeTopicData(
-      telegramChatId,
-      topic.topic_name,
-      topic.topic_id,
-      validEventIds
-    );
-
-    const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
-    logger(
-      `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
-    );
-
-    return url;
   }
 
   public stop(): void {
@@ -1005,17 +1029,21 @@ export async function startTelegramService(
   );
 
   service.startBot(authBot);
-  authBot.api.config.use(autoRetry({
-    maxRetryAttempts: 3, // only repeat requests once
-    maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
-  }))
+  authBot.api.config.use(
+    autoRetry({
+      maxRetryAttempts: 3, // only repeat requests once
+      maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+    })
+  );
 
   if (anonBotExists) {
     service.startBot(anonBot);
-    anonBot.api.config.use(autoRetry({
-      maxRetryAttempts: 3, // only repeat requests once
-      maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
-    }))
+    anonBot.api.config.use(
+      autoRetry({
+        maxRetryAttempts: 3, // only repeat requests once
+        maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+      })
+    );
   }
 
   return service;

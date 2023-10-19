@@ -234,27 +234,28 @@ export const setBotInfo = async (
 export const chatIDsToChats = async <
   T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
 >(
-  db: Pool,
   ctx: BotContext,
   chats: T[]
 ): Promise<ChatIDWithChat<T>[]> => {
-  const chatIDsToChatRequests = chats.map(async (e) => {
-    return {
-      ...e,
-      chat: e.telegramChatID
-        ? ((await ctx.api.getChat(e.telegramChatID)) as TopicChat)
-        : null
-    };
+  return traced("telegram", "chatIDsToChats", async () => {
+    const chatIDsToChatRequests = chats.map(async (e) => {
+      return {
+        ...e,
+        chat: e.telegramChatID
+          ? ((await ctx.api.getChat(e.telegramChatID)) as TopicChat)
+          : null
+      };
+    });
+    const eventsWithChatsSettled = await Promise.allSettled(
+      chatIDsToChatRequests
+    );
+
+    const eventsWithChats = eventsWithChatsSettled
+      .filter(isFulfilled)
+      .map((e) => e.value);
+
+    return eventsWithChats;
   });
-  const eventsWithChatsSettled = await Promise.allSettled(
-    chatIDsToChatRequests
-  );
-
-  const eventsWithChats = eventsWithChatsSettled
-    .filter(isFulfilled)
-    .map((e) => e.value);
-
-  return eventsWithChats;
 };
 
 export const findChatByEventIds = (
@@ -424,18 +425,21 @@ const getChatsWithMembershipStatus = async (
   ctx: BotContext,
   userId: number
 ): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
-  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
-    db,
-    userId
-  );
+  return traced("telegram", "getChatsWithMembershipStatus", async (span) => {
+    span?.setAttribute("userId", userId.toString());
 
-  const chatsWithMembership = await chatIDsToChats(
-    db,
-    ctx,
-    chatIdsWithMembership
-  );
+    const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+      db,
+      userId
+    );
 
-  return chatsWithMembership;
+    const chatsWithMembership = await chatIDsToChats(
+      ctx,
+      chatIdsWithMembership
+    );
+
+    return chatsWithMembership;
+  });
 };
 
 export const eventsToLink = async (
@@ -567,100 +571,105 @@ export const chatsToPostIn = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
-  const db = ctx.session.dbPool;
-  if (!db) {
-    range.text(`Database not connected. Try again...`);
-    return;
-  }
-  const userId = ctx.from?.id;
-  if (!userId) {
-    range.text(`User not found. Try again...`);
-    return;
-  }
-  try {
-    // If a chat has been selected, give the user a choice of topics to send to.
-    if (ctx.session.selectedChat) {
-      const chat = ctx.session.selectedChat;
-
-      // Fetch anon topics for the selected chat
-      const topics = await fetchTelegramAnonTopicsByChatId(
-        ctx.session.dbPool,
-        chat.id
-      );
-
-      // Fetch telegram event Ids for the selected chat.
-      const telegramEvents = await fetchTelegramEventsByChatId(
-        ctx.session.dbPool,
-        chat.id
-      );
-
-      const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-
-      if (topics.length === 0) {
-        range
-          .text(`↰  No topics found`, async (ctx) => {
-            ctx.session.selectedChat = undefined;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
-      } else {
-        range
-          .text(`↰  ${chat.title} Topics`, async (ctx) => {
-            ctx.session.selectedChat = undefined;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
-        for (const topic of topics) {
-          const encodedTopicData = base64EncodeTopicData(
-            chat.id,
-            topic.topic_name,
-            topic.topic_id,
-            validEventIds
-          );
-          range
-            .webApp(
-              `${topic.topic_name}`,
-              `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-            )
-            .row();
-        }
-      }
+  return traced("telegram", "chatsToPostIn", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
     }
-    // Otherwise, give the user a list of chats that they are members of.
-    else {
-      // Only show chats a user is in
-      const chatsWithMembership = (
-        await getChatsWithMembershipStatus(db, ctx, userId)
-      ).filter((c) => c.isChatMember);
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+    if (ctx.chat?.id) span?.setAttribute("chatId", ctx.chat.id);
 
-      if (chatsWithMembership.length > 0) {
-        for (const chat of chatsWithMembership) {
-          // Only show the chats the user is a member of
-          if (chat.isChatMember) {
+    try {
+      // If a chat has been selected, give the user a choice of topics to send to.
+      if (ctx.session.selectedChat) {
+        const chat = ctx.session.selectedChat;
+
+        // Fetch anon topics for the selected chat
+        const topics = await fetchTelegramAnonTopicsByChatId(
+          ctx.session.dbPool,
+          chat.id
+        );
+
+        // Fetch telegram event Ids for the selected chat.
+        const telegramEvents = await fetchTelegramEventsByChatId(
+          ctx.session.dbPool,
+          chat.id
+        );
+
+        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+        if (topics.length === 0) {
+          range
+            .text(`↰  No topics found`, async (ctx) => {
+              ctx.session.selectedChat = undefined;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+        } else {
+          range
+            .text(`↰  ${chat.title} Topics`, async (ctx) => {
+              ctx.session.selectedChat = undefined;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+          for (const topic of topics) {
+            const encodedTopicData = base64EncodeTopicData(
+              chat.id,
+              topic.topic_name,
+              topic.topic_id,
+              validEventIds
+            );
             range
-              .text(`✅ ${chat.chat?.title}`, async (ctx) => {
-                ctx.session.selectedChat = chat.chat;
-                await ctx.menu.update({ immediate: true });
-              })
+              .webApp(
+                `${topic.topic_name}`,
+                `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+              )
               .row();
           }
         }
-      } else {
-        if (ctx.session.anonBotExists) {
-          await ctx.reply(
-            `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
-          );
+      }
+      // Otherwise, give the user a list of chats that they are members of.
+      else {
+        // Only show chats a user is in
+        const chatsWithMembership = (
+          await getChatsWithMembershipStatus(db, ctx, userId)
+        ).filter((c) => c.isChatMember);
+
+        if (chatsWithMembership.length > 0) {
+          for (const chat of chatsWithMembership) {
+            // Only show the chats the user is a member of
+            if (chat.isChatMember) {
+              range
+                .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+                  ctx.session.selectedChat = chat.chat;
+                  await ctx.menu.update({ immediate: true });
+                })
+                .row();
+            }
+          }
         } else {
-          await ctx.reply(
-            `No chats found to post in. Type /start to join one!`
-          );
+          if (ctx.session.anonBotExists) {
+            await ctx.reply(
+              `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
+            );
+          } else {
+            await ctx.reply(
+              `No chats found to post in. Type /start to join one!`
+            );
+          }
         }
       }
+    } catch (error) {
+      range.text(`Action failed ${error}`);
+      return;
     }
-  } catch (error) {
-    range.text(`Action failed ${error}`);
-    return;
-  }
+  });
 };
 
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
