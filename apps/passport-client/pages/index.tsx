@@ -39,7 +39,7 @@ import {
   Action,
   dispatch,
   StateContext,
-  StateContextState
+  StateContextValue
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
@@ -74,7 +74,7 @@ class App extends React.Component<object, AppState> {
   componentWillUnmount(): void {
     closeBroadcastChannel();
   }
-  stateContextState: StateContextState = {
+  stateContextState: StateContextValue = {
     getState: () => this.state,
     stateEmitter: this.stateEmitter,
     dispatch: this.dispatch

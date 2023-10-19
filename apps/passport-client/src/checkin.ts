@@ -9,14 +9,14 @@ import {
   VerifyTicketByIdResult,
   VerifyTicketResult
 } from "@pcd/passport-interface";
-import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
+import { StateContextValue } from "./dispatch";
 
 const IS_OFFLINE = true;
 
 export async function devconnectCheckInByIdWithOffline(
   ticketId: string,
-  userIdentity: Identity
+  stateContext: StateContextValue
 ): Promise<CheckTicketInByIdResult> {
   if (IS_OFFLINE) {
     return {
@@ -27,14 +27,14 @@ export async function devconnectCheckInByIdWithOffline(
     return await checkinTicketById(
       appConfig.zupassServer,
       ticketId,
-      userIdentity
+      stateContext.getState().identity
     );
   }
 }
 
 export async function devconnectCheckByIdWithOffline(
   ticketId: string,
-  userIdentity: Identity
+  stateContext: StateContextValue
 ): Promise<CheckTicketByIdResult> {
   if (IS_OFFLINE) {
     return {
@@ -51,14 +51,15 @@ export async function devconnectCheckByIdWithOffline(
     return await checkTicketById(
       appConfig.zupassServer,
       ticketId,
-      userIdentity
+      stateContext.getState().identity
     );
   }
 }
 
 export async function zuconnectCheckByIdWithOffline(
   ticketId: string,
-  timestamp: string
+  timestamp: string,
+  stateContext: StateContextValue
 ): Promise<VerifyTicketByIdResult> {
   if (IS_OFFLINE) {
     return {
@@ -79,7 +80,8 @@ export async function zuconnectCheckByIdWithOffline(
 }
 
 export async function zuconnectCheckByPCDWithOffline(
-  pcd: string // JSON.stringify(SerializedPCD<ZKEventTicketPCD>)
+  pcd: string, // JSON.stringify(SerializedPCD<ZKEventTicketPCD>)
+  stateContext: StateContextValue
 ): Promise<VerifyTicketResult> {
   if (IS_OFFLINE) {
     return {

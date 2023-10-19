@@ -115,12 +115,12 @@ export type Action =
       knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     };
 
-export type StateContextState = {
+export type StateContextValue = {
   getState: GetState;
   stateEmitter: StateEmitter;
   dispatch: Dispatcher;
 };
-export const StateContext = createContext<StateContextState>({} as any);
+export const StateContext = createContext<StateContextValue>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 

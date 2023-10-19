@@ -9,7 +9,7 @@ import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Dispatcher, StateContext } from "./dispatch";
+import { Dispatcher, StateContext, StateContextValue } from "./dispatch";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
@@ -64,6 +64,10 @@ export function useIdentity(): Identity {
 export function useDispatch(): Dispatcher {
   const { dispatch } = useContext(StateContext);
   return dispatch;
+}
+
+export function useStateContext(): StateContextValue {
+  return useContext(StateContext);
 }
 
 export function useModal(): AppState["modal"] {

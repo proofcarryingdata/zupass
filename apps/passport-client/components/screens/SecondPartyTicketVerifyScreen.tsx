@@ -1,14 +1,18 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { KnownTicketGroup } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { PCDCollection } from "@pcd/pcd-collection";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
-import { usePCDCollection, useQuery } from "../../src/appHooks";
+import {
+  usePCDCollection,
+  useQuery,
+  useStateContext
+} from "../../src/appHooks";
 import {
   zuconnectCheckByIdWithOffline,
   zuconnectCheckByPCDWithOffline
 } from "../../src/checkin";
+import { StateContextValue } from "../../src/dispatch";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
@@ -48,22 +52,29 @@ export function SecondPartyTicketVerifyScreen() {
   // JSON.stringify(SerializedPCD<ZKEdDSAEventTicketPCDPackage>)
   const encodedQRPayload = query.get("pcd");
   const id = query.get("id");
-
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
   const pcds = usePCDCollection();
+  const stateContext = useStateContext();
 
   useEffect(() => {
     (async () => {
       if (encodedQRPayload) {
-        const result = await deserializeAndVerify(encodedQRPayload, pcds);
+        const result = await deserializeAndVerify(
+          encodedQRPayload,
+          stateContext
+        );
         setVerifyResult(result);
       } else {
         const payload = JSON.parse(Buffer.from(id, "base64").toString());
-        const result = await verifyById(payload.ticketId, payload.timestamp);
+        const result = await verifyById(
+          payload.ticketId,
+          payload.timestamp,
+          stateContext
+        );
         setVerifyResult(result);
       }
     })();
-  }, [setVerifyResult, pcds, encodedQRPayload, id]);
+  }, [setVerifyResult, pcds, encodedQRPayload, id, stateContext]);
 
   const bg =
     verifyResult && verifyResult.outcome === VerifyOutcome.KnownTicketType
@@ -163,15 +174,17 @@ function VerifiedAndKnownTicket({
  */
 async function deserializeAndVerify(
   pcdStr: string,
-  pcds: PCDCollection
+  stateContext: StateContextValue
 ): Promise<VerifyResult> {
   // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
   const decodedPCD = decodeQRPayload(pcdStr);
 
-  const result = await zuconnectCheckByPCDWithOffline(decodedPCD);
+  const result = await zuconnectCheckByPCDWithOffline(decodedPCD, stateContext);
 
   if (result.success && result.value.verified) {
-    const pcd = await pcds.deserialize(JSON.parse(decodedPCD));
+    const pcd = await stateContext
+      .getState()
+      .pcds.deserialize(JSON.parse(decodedPCD));
 
     // This check is mostly for the benefit of the TypeScript type-checker
     // If requestVerifyTicket() succeeded then the PCD type must be
@@ -201,9 +214,14 @@ async function deserializeAndVerify(
 
 async function verifyById(
   ticketId: string,
-  timestamp: string
+  timestamp: string,
+  stateContext: StateContextValue
 ): Promise<VerifyResult> {
-  const result = await zuconnectCheckByIdWithOffline(ticketId, timestamp);
+  const result = await zuconnectCheckByIdWithOffline(
+    ticketId,
+    timestamp,
+    stateContext
+  );
 
   if (result.success && result.value.verified) {
     return {

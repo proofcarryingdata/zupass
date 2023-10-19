@@ -7,7 +7,7 @@ import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { useIdentity, useQuery } from "../../src/appHooks";
+import { useQuery, useStateContext } from "../../src/appHooks";
 import {
   devconnectCheckByIdWithOffline,
   devconnectCheckInByIdWithOffline
@@ -257,7 +257,7 @@ function useCheckTicketById(ticketId: string | undefined):
     } {
   const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<CheckTicketByIdResult | undefined>();
-  const identity = useIdentity();
+  const stateContext = useStateContext();
 
   const doCheckTicketById = useCallback(
     async (ticketId: string | undefined) => {
@@ -269,12 +269,12 @@ function useCheckTicketById(ticketId: string | undefined):
 
       const checkTicketByIdResult = await devconnectCheckByIdWithOffline(
         ticketId,
-        identity
+        stateContext
       );
       setInProgress(false);
       setResult(checkTicketByIdResult);
     },
-    [identity]
+    [stateContext]
   );
 
   useEffect(() => {
@@ -289,11 +289,11 @@ function useCheckTicketById(ticketId: string | undefined):
 }
 
 function CheckInSection({ ticketId }: { ticketId: string }) {
+  const dispatchContext = useStateContext();
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const [checkinError, setCheckinError] = useState<TicketError | null>(null);
-  const identity = useIdentity();
 
   const onCheckInClick = useCallback(async () => {
     if (inProgress) {
@@ -303,7 +303,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
     setInProgress(true);
     const checkinResult = await devconnectCheckInByIdWithOffline(
       ticketId,
-      identity
+      dispatchContext
     );
     setInProgress(false);
 
@@ -314,7 +314,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
       setCheckedIn(true);
       setFinishedCheckinAttempt(true);
     }
-  }, [inProgress, identity, ticketId]);
+  }, [inProgress, ticketId, dispatchContext]);
 
   return (
     <CheckinSectionContainer>
