@@ -9,9 +9,11 @@ export function NoWASMScreen() {
         <TextCenter>
           <H2>No Web Assembly</H2>
           <Spacer h={24} />
-          Sorry, your device does not currently support Web Assembly. Please
-          consider enabling it, or alternatively, try using Zupass on a
-          different device.
+         Your browser does not currently support WebAssembly, which is
+         required for Zupass to generate zero-knowledge proofs. Try using
+         Zupass on a different browser, and check that WebAssembly
+         is not disabled. You can view a list of supported browsers
+         <a href="https://webassembly.org/roadmap/">here</a>.
         </TextCenter>
         <Spacer h={64} />
       </AppContainer>
