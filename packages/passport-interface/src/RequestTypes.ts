@@ -3,9 +3,9 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { NamedAPIError } from "./api/apiResult";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
-import { NamedAPIError } from "./api/apiResult";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -286,6 +286,31 @@ export interface CheckTicketInByIdRequest {
    */
   ticketId: string;
 }
+
+export interface GetOfflineTicketsRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine whether the checker has the required permissions
+   * to check this ticket in.
+   */
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export interface GetOfflineTicketsResponseValue {
+  offlineTickets: OfflineTickets;
+}
+
+export interface UploadOfflineCheckinsRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine whether the checker has the required permissions
+   * to check this ticket in.
+   */
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  offlineTickets: OfflineTickets;
+}
+
+export interface UploadOfflineCheckinsResponseValue {}
 
 /**
  * On the happy path, {@link CheckTicketInByIdRequest} has nothing to say and
@@ -589,3 +614,16 @@ export type KnownTicketTypesRequest = undefined;
  * issue the user.
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
+
+export interface OfflineTickets {
+  devconnectTickets: OfflineDevconnectTicket[];
+  zuconnectTickets: OfflineZuconnectTicket[];
+}
+
+export interface OfflineDevconnectTicket {
+  id: string;
+}
+
+export interface OfflineZuconnectTicket {
+  id: string;
+}

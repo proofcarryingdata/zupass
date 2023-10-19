@@ -1,11 +1,18 @@
 import { HexString } from "@pcd/passport-crypto";
 import {
   ConfirmEmailResponseValue,
+  GetOfflineTicketsRequest,
+  GetOfflineTicketsResponseValue,
+  UploadOfflineCheckinsRequest,
+  UploadOfflineCheckinsResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Response } from "express";
 import { UserRow } from "../database/models";
+import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   updateUserAccountRestTimestamps,
@@ -86,8 +93,9 @@ export class UserService {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
 
-    const newEmailToken =
-      await this.emailTokenService.saveNewTokenForEmail(email);
+    const newEmailToken = await this.emailTokenService.saveNewTokenForEmail(
+      email
+    );
 
     const existingCommitment = await fetchUserByEmail(
       this.context.dbPool,
@@ -321,6 +329,50 @@ export class UserService {
     }
 
     return user;
+  }
+
+  public async handleGetOfflineTickets(
+    req: GetOfflineTicketsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    const offlineTickets = await fetchOfflineTicketsForChecker(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment
+    );
+
+    res.json({
+      offlineTickets
+    } satisfies GetOfflineTicketsResponseValue);
+  }
+
+  public async handleUploadOfflineCheckins(
+    req: UploadOfflineCheckinsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    await checkInOfflineTickets(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment,
+      req.offlineTickets
+    );
+
+    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 

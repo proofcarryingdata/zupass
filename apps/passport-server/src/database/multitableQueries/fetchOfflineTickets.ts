@@ -1,3 +1,8 @@
+import {
+  OfflineDevconnectTicket,
+  OfflineTickets,
+  OfflineZuconnectTicket
+} from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicketDB, ZuconnectTicketDB } from "../models";
@@ -5,7 +10,7 @@ import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusersForEmail
 } from "../queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { fetchUserByUUID } from "../queries/users";
+import { fetchUserByCommitment } from "../queries/users";
 import {
   fetchAllZuconnectTickets,
   fetchZuconnectTicketsByEmail
@@ -13,11 +18,14 @@ import {
 
 export async function fetchOfflineTicketsForChecker(
   dbPool: Pool,
-  userUUID: string
+  userCommitment: string
 ): Promise<OfflineTickets> {
   const result = {
-    devconnectTickets: await fetchOfflineDevconnectTickets(dbPool, userUUID),
-    zuconnectTickets: await fetchOfflineZuconnectTickets(dbPool, userUUID)
+    devconnectTickets: await fetchOfflineDevconnectTickets(
+      dbPool,
+      userCommitment
+    ),
+    zuconnectTickets: await fetchOfflineZuconnectTickets(dbPool, userCommitment)
   };
 
   return result;
@@ -25,11 +33,11 @@ export async function fetchOfflineTicketsForChecker(
 
 async function fetchOfflineZuconnectTickets(
   dbPool: Pool,
-  userUUID: string
+  userCommitment: string
 ): Promise<OfflineZuconnectTicket[]> {
-  const user = await fetchUserByUUID(dbPool, userUUID);
+  const user = await fetchUserByCommitment(dbPool, userCommitment);
   if (!user) {
-    throw new Error(`no user found for uuid ${userUUID}`);
+    throw new Error(`no user found for uuid ${userCommitment}`);
   }
 
   const zuconnectTickets = await fetchZuconnectTicketsByEmail(
@@ -48,11 +56,11 @@ async function fetchOfflineZuconnectTickets(
 
 async function fetchOfflineDevconnectTickets(
   dbPool: Pool,
-  userUUID: string
+  userCommitment: string
 ): Promise<OfflineDevconnectTicket[]> {
-  const user = await fetchUserByUUID(dbPool, userUUID);
+  const user = await fetchUserByCommitment(dbPool, userCommitment);
   if (!user) {
-    throw new Error(`no user found for uuid ${userUUID}`);
+    throw new Error(`no user found for commitment ${userCommitment}`);
   }
 
   const superuserTickets = await fetchDevconnectSuperusersForEmail(
@@ -85,17 +93,4 @@ function zuconnectTicketToOfflineTicket(
   ticket: ZuconnectTicketDB
 ): OfflineZuconnectTicket {
   return { id: ticket.id };
-}
-
-export interface OfflineTickets {
-  devconnectTickets: OfflineDevconnectTicket[];
-  zuconnectTickets: OfflineZuconnectTicket[];
-}
-
-export interface OfflineDevconnectTicket {
-  id: string;
-}
-
-export interface OfflineZuconnectTicket {
-  id: string;
 }
