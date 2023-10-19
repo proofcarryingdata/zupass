@@ -649,7 +649,7 @@ export const chatsToPostIn = async (
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
+      `Type \`/\` to see a list of commands or email passport@0xparc.org for help!`
     );
   }
 };
@@ -657,7 +657,7 @@ export const helpResponse = async (ctx: BotContext): Promise<void> => {
 export const uwuResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
+      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
     );
   }
 };
