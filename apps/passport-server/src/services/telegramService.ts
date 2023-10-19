@@ -7,6 +7,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
+import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
