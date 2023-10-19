@@ -9,8 +9,8 @@ import {
 import { sqlQuery } from "../../sqlQuery";
 
 /*
- * Fetch all users that have a ticket on pretix, even if they haven't
- * logged into Zupass.
+ * Fetch all unredacted tickets (tickets belonging to users who have logged)
+ * in and accepted legal/privacy terms.
  */
 export async function fetchAllNonDeletedDevconnectPretixTickets(
   client: Pool
@@ -25,8 +25,9 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
 }
 
 /*
- * Fetch users by org and event that have a ticket on pretix, even if they haven't
- * logged into Zupass.
+ * Fetch users by org and event that have a ticket on pretix.
+ * Won't fetch tickets for users who have not logged in, as those tickets
+ * would be redacted.
  */
 export async function fetchDevconnectPretixTicketsByEvent(
   client: Pool,
@@ -36,10 +37,7 @@ export async function fetchDevconnectPretixTicketsByEvent(
     client,
     `\
     select t.* from devconnect_pretix_tickets t
-    join devconnect_pretix_items_info i on t.devconnect_pretix_items_info_id = i.id
-    join devconnect_pretix_events_info e on e.id = i.devconnect_pretix_events_info_id
-    where e.pretix_events_config_id = $1
-    and t.is_deleted = false`,
+    where t.pretix_events_config_id = $1 and t.is_deleted = false`,
     [eventConfigID]
   );
 

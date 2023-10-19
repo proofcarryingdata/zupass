@@ -52,6 +52,7 @@ export interface DevconnectPretixTicket {
   email: string;
   full_name: string;
   devconnect_pretix_items_info_id: string;
+  pretix_events_config_id: string;
   is_deleted: boolean;
   is_consumed: boolean;
   position_id: string;
@@ -88,7 +89,7 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
 export interface DevconnectPretixRedactedTicket {
   hashed_email: string;
   devconnect_pretix_items_info_id: string;
-  devconnect_pretix_events_info_id: string;
+  pretix_events_config_id: string;
   is_consumed: boolean;
   position_id: string;
   secret: string;

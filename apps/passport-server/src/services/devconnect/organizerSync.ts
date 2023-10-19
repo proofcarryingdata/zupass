@@ -685,7 +685,8 @@ export class OrganizerSync {
         const ticketsFromPretix = this.ordersToDevconnectTickets(
           eventInfo,
           pretixOrders,
-          updatedItemsInfo
+          updatedItemsInfo,
+          eventConfigID
         );
 
         let approvedTickets: DevconnectPretixTicket[] = [];
@@ -846,7 +847,8 @@ export class OrganizerSync {
               secret: redactedTicket.secret,
               is_consumed: redactedTicket.is_consumed,
               devconnect_pretix_items_info_id:
-                redactedTicket.devconnect_pretix_items_info_id
+                redactedTicket.devconnect_pretix_items_info_id,
+              pretix_events_config_id: eventConfigID
             });
           }
 
@@ -862,6 +864,7 @@ export class OrganizerSync {
 
           await deleteDevconnectPretixRedactedTicketsByPositionIds(
             this.db,
+            eventConfigID,
             removedRedactedTickets.map((t) => t.position_id)
           );
         }
@@ -896,7 +899,8 @@ export class OrganizerSync {
   private ordersToDevconnectTickets(
     eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
-    itemsInfo: PretixItemInfo[]
+    itemsInfo: PretixItemInfo[],
+    eventConfigID: string
   ): DevconnectPretixTicket[] {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
@@ -964,6 +968,7 @@ export class OrganizerSync {
             email,
             full_name: attendee_name,
             devconnect_pretix_items_info_id: existingItem.id,
+            pretix_events_config_id: eventConfigID,
             is_deleted: false,
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),

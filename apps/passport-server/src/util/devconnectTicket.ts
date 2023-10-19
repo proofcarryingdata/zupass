@@ -50,6 +50,10 @@ export function pretixTicketsDifferent(
     }
   }
 
+  if (oldTicket.pretix_events_config_id !== newTicket.pretix_events_config_id) {
+    return true;
+  }
+
   return false;
 }
 
