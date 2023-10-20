@@ -23,6 +23,8 @@ export interface TelegramConversation {
   telegram_user_id: number;
   telegram_chat_id: number;
   verified: boolean;
+  semaphore_id: string;
+  telegram_username: string;
 }
 
 /**
