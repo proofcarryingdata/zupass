@@ -1,3 +1,4 @@
+import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
@@ -45,6 +46,7 @@ import {
   helpResponse,
   isDirectMessage,
   isGroupWithTopics,
+  ratResponse,
   senderIsAdmin,
   setBotInfo,
   uwuResponse
@@ -347,18 +349,15 @@ export class TelegramService {
     });
 
     this.anonBot.command("anonsend", async (ctx) => {
-      if (!isDirectMessage(ctx)) {
-        const messageThreadId = ctx.message?.message_thread_id;
-
-        await ctx.reply("Please message directly within a private chat.", {
-          message_thread_id: messageThreadId
+      if (isDirectMessage(ctx)) {
+        await ctx.reply("Choose a chat to post in anonymously ⬇", {
+          reply_markup: anonSendMenu
         });
-        return;
+      } else {
+        await ctx.reply("Please message directly within a private chat.", {
+          message_thread_id: ctx.message?.message_thread_id
+        });
       }
-
-      await ctx.reply("Choose a chat to post in anonymously ⬇", {
-        reply_markup: anonSendMenu
-      });
     });
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
@@ -521,28 +520,23 @@ export class TelegramService {
     // Edge case logic to handle routing people between bots
     if (this.anonBotExists()) {
       this.authBot.command("anonsend", async (ctx) => {
-        await ctx.reply(
-          `Please message ZuRat to send anonymous messages 😎: ${ctx.session.anonBotURL}?start=anonsend`
-        );
+        if (isDirectMessage(ctx)) {
+          await ctx.reply(
+            `Please message ZuRat to send anonymous messages 😎: ${ctx.session.anonBotURL}?start=anonsend`
+          );
+        }
       });
 
       this.anonBot.command("start", async (ctx) => {
-        if (!isDirectMessage(ctx)) {
-          const messageThreadId = ctx.message?.message_thread_id;
-
-          await ctx.reply("Please message directly within a private chat.", {
-            message_thread_id: messageThreadId
+        if (isDirectMessage(ctx)) {
+          await ctx.reply("Choose a chat to post in anonymously ⬇", {
+            reply_markup: anonSendMenu
           });
-          return;
         }
-
-        await ctx.reply("Choose a chat to post in anonymously ⬇", {
-          reply_markup: anonSendMenu
-        });
       });
 
       this.anonBot.command("help", helpResponse);
-      this.anonBot.on("message", uwuResponse);
+      this.anonBot.on("message", ratResponse);
     }
 
     this.authBot.command("help", helpResponse);
@@ -971,8 +965,17 @@ export async function startTelegramService(
   );
 
   service.startBot(authBot);
+  authBot.api.config.use(autoRetry({
+    maxRetryAttempts: 3, // only repeat requests once
+    maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
+  }))
+
   if (anonBotExists) {
     service.startBot(anonBot);
+    anonBot.api.config.use(autoRetry({
+      maxRetryAttempts: 3, // only repeat requests once
+      maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
+    }))
   }
 
   return service;

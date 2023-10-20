@@ -66,6 +66,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0",
+    "@grammyjs/auto-retry": "^1.1.1",
     "@grammyjs/menu": "^1.2.1",
     "@pcd/eslint-config-custom": "0.7.1",
     "@pcd/tsconfig": "0.7.1",

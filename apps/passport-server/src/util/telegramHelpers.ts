@@ -181,6 +181,7 @@ export const setBotInfo = async (
       privateChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       { scope: { type: "all_private_chats" } }
     );
+
     anonBot.api.setMyCommands(
       adminGroupChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       {
@@ -648,7 +649,7 @@ export const chatsToPostIn = async (
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
+      `Type \`/\` to see a list of commands.`
     );
   }
 };
@@ -656,7 +657,15 @@ export const helpResponse = async (ctx: BotContext): Promise<void> => {
 export const uwuResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
+      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
+    );
+  }
+};
+
+export const ratResponse = async (ctx: BotContext): Promise<void> => {
+  if (isDirectMessage(ctx)) {
+    await ctx.reply(
+      `I don't know that command 🐭.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
     );
   }
 };
