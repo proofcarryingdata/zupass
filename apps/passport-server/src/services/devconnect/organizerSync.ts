@@ -23,7 +23,7 @@ import {
   PretixItemInfo
 } from "../../database/models";
 import {
-  deleteDevconnectPretixRedactedTicketsByPositionIds,
+  deleteDevconnectPretixRedactedTickets,
   fetchDevconnectPretixRedactedTicketsByEvent,
   insertDevconnectPretixRedactedTicket
 } from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
@@ -64,7 +64,7 @@ interface EventData {
   items: DevconnectPretixItem[];
   tickets: DevconnectPretixOrder[];
   checkinLists: DevconnectPretixCheckinList[];
-  approvedLegalTermsEmails?: Set<string>;
+  approvedLegalTermsEmails: Set<string>;
 }
 
 interface EventDataFromPretix {
@@ -383,16 +383,16 @@ export class OrganizerSync {
     return traced(NAME, "fetchEventData", async () => {
       const { orgURL, token } = organizer;
       const { eventID } = event;
-      let approvedLegalTermsEmails: Set<string> | undefined = undefined;
+      const approvedLegalTermsEmails: Set<string> = new Set();
 
       if (this.enableRedaction) {
         const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
           this.db,
           UNREDACT_TICKETS_TERMS_VERSION
         );
-        approvedLegalTermsEmails = new Set(
-          usersApprovingPII.map((user) => user.email)
-        );
+        for (const user of usersApprovingPII) {
+          approvedLegalTermsEmails.add(user.email);
+        }
       }
 
       const settings = await this.pretixAPI.fetchEventSettings(
@@ -676,7 +676,7 @@ export class OrganizerSync {
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
     pretixOrders: DevconnectPretixOrder[],
-    approvedLegalTermsEmails?: Set<string>
+    approvedLegalTermsEmails: Set<string>
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
@@ -701,18 +701,19 @@ export class OrganizerSync {
           eventInfo.id
         );
 
-        const ticketsFromPretix = this.ordersToDevconnectTickets(
+        const ticketsFromPretix = await this.ordersToDevconnectTickets(
           eventInfo,
           pretixOrders,
           updatedItemsInfo,
-          eventConfigID
+          eventConfigID,
+          approvedLegalTermsEmails
         );
 
         let approvedTickets: DevconnectPretixTicket[] = [];
         let redactedTickets: DevconnectPretixTicket[] = [];
         let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
 
-        if (this.enableRedaction && approvedLegalTermsEmails) {
+        if (this.enableRedaction) {
           const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
             approvedLegalTermsEmails.has(ticket.email) ? "approved" : "redacted"
           );
@@ -791,13 +792,6 @@ export class OrganizerSync {
           const oldTicket = existingTicketsByPositionId.get(
             updatedTicket.position_id
           );
-          logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
-              updatedTicket
-            )}`
-          );
 
           // These values do not come from Pretix sync, so we have to compute
           // them. We start with the old ticket as default.
@@ -828,6 +822,14 @@ export class OrganizerSync {
           if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
             updatedTicket.is_consumed = true;
           }
+
+          logger(
+            `[DEVCONNECT PRETIX] [${
+              eventInfo.event_name
+            }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
+              { ...updatedTicket, checker, zupass_checkin_timestamp }
+            )}`
+          );
 
           // Merge the checkin details into the ticket for saving.
           await updateDevconnectPretixTicket(this.db, {
@@ -880,7 +882,7 @@ export class OrganizerSync {
             }
           );
 
-          await deleteDevconnectPretixRedactedTicketsByPositionIds(
+          await deleteDevconnectPretixRedactedTickets(
             this.db,
             eventConfigID,
             removedRedactedTickets.map((t) => t.position_id)
@@ -917,12 +919,13 @@ export class OrganizerSync {
    * `DevconnectPretixTicket` to equal to the date ranges of the visitor
    * subevent events they have in their order.
    */
-  private ordersToDevconnectTickets(
+  private async ordersToDevconnectTickets(
     eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
     itemsInfo: PretixItemInfo[],
-    eventConfigID: string
-  ): DevconnectPretixTicket[] {
+    eventConfigID: string,
+    approvedLegalTermsEmails: Set<string>
+  ): Promise<DevconnectPretixTicket[]> {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
     // already fixing the event_id and organizer_url in this function,
@@ -947,14 +950,28 @@ export class OrganizerSync {
         if (existingItem) {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
-            logger(
-              `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
-              JSON.stringify({
-                orderCode: order.code,
-                positionID: positionid,
-                orderEmail: order.email
-              })
-            );
+            if (
+              this.enableRedaction &&
+              !approvedLegalTermsEmails.has(order.email)
+            ) {
+              logger(
+                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
+                JSON.stringify({
+                  orderCode: order.code,
+                  positionID: positionid,
+                  orderEmail: await getHash(order.email)
+                })
+              );
+            } else {
+              logger(
+                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
+                JSON.stringify({
+                  orderCode: order.code,
+                  positionID: positionid,
+                  orderEmail: order.email
+                })
+              );
+            }
           }
           const email = normalizeEmail(attendee_email || order.email);
 

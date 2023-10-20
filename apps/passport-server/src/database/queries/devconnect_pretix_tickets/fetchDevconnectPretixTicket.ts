@@ -25,7 +25,7 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
 }
 
 /*
- * Fetch users by org and event that have a ticket on pretix.
+ * Fetch tickets for a given event.
  * Won't fetch tickets for users who have not logged in, as those tickets
  * would be redacted.
  */

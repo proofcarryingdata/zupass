@@ -31,7 +31,7 @@ export async function insertDevconnectPretixRedactedTicket(
   );
 }
 
-export async function deleteDevconnectPretixRedactedTicketsByPositionIds(
+export async function deleteDevconnectPretixRedactedTickets(
   client: Pool,
   eventConfigID: string,
   ids: string[]
