@@ -629,7 +629,12 @@ export function defaultOfflineTickets(): OfflineTickets {
 
 export interface OfflineDevconnectTicket {
   id: string;
+  attendeeEmail: string;
+  attendeeName: string;
+  eventName: string;
+  ticketName: string;
   checkinTimestamp?: string;
+  checker: string | null;
 }
 
 export interface OfflineSecondPartyTicket {

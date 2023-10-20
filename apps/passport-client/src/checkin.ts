@@ -116,14 +116,39 @@ export async function devconnectCheckByIdWithOffline(
       };
     }
 
+    const ticket = getOfflineDevconnectTicket(ticketId, stateContext);
+
+    if (ticket) {
+      if (ticket.checkinTimestamp) {
+        return {
+          success: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            detailedMessage: "This attendee has already been checked in",
+            checkinTimestamp: ticket.checkinTimestamp,
+            checker: ticket.checker
+          }
+        };
+      }
+
+      return {
+        success: true,
+        value: {
+          attendeeEmail: ticket.attendeeEmail,
+          attendeeName: ticket.attendeeName,
+          eventName: ticket.eventName,
+          ticketName: ticket.ticketName
+        }
+      };
+    }
+
     return {
-      success: true,
-      value: {
-        // todo
-        attendeeEmail: "offline",
-        attendeeName: "offline",
-        eventName: "offline",
-        ticketName: "offline"
+      success: false,
+      error: {
+        name: "NetworkError",
+        detailedMessage:
+          "You are in offline mode, " +
+          "and this ticket is not present in the local ticket backup."
       }
     };
   } else {

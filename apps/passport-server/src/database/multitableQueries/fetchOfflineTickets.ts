@@ -9,7 +9,7 @@ import { Pool } from "postgres-pool";
 import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../../services/issuanceService";
 import { zuzaluRoleToProductId } from "../../util/zuzaluUser";
 import {
-  DevconnectPretixTicketDB,
+  DevconnectPretixTicketDBWithEmailAndItem,
   LoggedInZuzaluUser,
   ZuconnectTicketDB
 } from "../models";
@@ -122,9 +122,19 @@ async function fetchOfflineDevconnectTickets(
 }
 
 function devconnectTicketToOfflineTicket(
-  ticket: DevconnectPretixTicketDB
+  ticket: DevconnectPretixTicketDBWithEmailAndItem
 ): OfflineDevconnectTicket {
-  return { id: ticket.id };
+  return {
+    id: ticket.id,
+    checkinTimestamp:
+      ticket.pretix_checkin_timestamp?.toISOString() ??
+      ticket.zupass_checkin_timestamp?.toISOString(),
+    checker: ticket.checker,
+    attendeeEmail: ticket.email,
+    attendeeName: ticket.full_name,
+    eventName: ticket.event_name,
+    ticketName: ticket.item_name
+  };
 }
 
 function zuconnectTicketToOfflineTicket(

@@ -80,17 +80,22 @@ describe.only("offline checkin database queries should work", function () {
   step(
     "checking that users only get their appropriate offline tickets",
     async function () {
+      const superItemName = "superuser";
+      const gaItemName = "ga";
+      const progCryptoEventName = "progcrypto";
+      const awEventName = "aw";
+
       const oxparc = await insertPretixOrganizerConfig(db, "test.com", "test");
       const progCrypto = await insertPretixEventConfig(
         db,
         oxparc,
         ["1", "1000"],
         ["1000"],
-        "event-1"
+        progCryptoEventName
       );
       const progCryptoInfo = await insertPretixEventsInfo(
         db,
-        "progcrypto",
+        progCryptoEventName,
         progCrypto,
         "0"
       );
@@ -98,28 +103,28 @@ describe.only("offline checkin database queries should work", function () {
         db,
         "1",
         progCryptoInfo,
-        "normal"
+        gaItemName
       );
       const progCryptoSuper = await insertPretixItemsInfo(
         db,
         "1000",
         progCryptoInfo,
-        "superuser"
+        superItemName
       );
       const aw = await insertPretixEventConfig(
         db,
         oxparc,
         ["2", "2000"],
         ["2000"],
-        "event-2"
+        awEventName
       );
-      const awInfo = await insertPretixEventsInfo(db, "aw", aw, "0");
-      const awGA = await insertPretixItemsInfo(db, "2", awInfo, "normal");
+      const awInfo = await insertPretixEventsInfo(db, awEventName, aw, "0");
+      const awGA = await insertPretixItemsInfo(db, "2", awInfo, gaItemName);
       const awSuper = await insertPretixItemsInfo(
         db,
         "2000",
         awInfo,
-        "superuser"
+        superItemName
       );
 
       let positionId = 0;
@@ -231,12 +236,60 @@ describe.only("offline checkin database queries should work", function () {
         ),
         {
           devconnectTickets: [
-            { id: user1ProgCryptoGA.id },
-            { id: user1AwGA.id },
-            { id: user2ProgCryptoGA.id },
-            { id: user2ProgCryptoSuper.id },
-            { id: user2AwSuper.id },
-            { id: user3AwSuper.id }
+            {
+              id: user1ProgCryptoGA.id,
+              attendeeEmail: user1.email,
+              attendeeName: user1.fullName,
+              eventName: progCryptoEventName,
+              ticketName: gaItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user1AwGA.id,
+              attendeeEmail: user1.email,
+              attendeeName: user1.fullName,
+              eventName: awEventName,
+              ticketName: gaItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user2ProgCryptoGA.id,
+              attendeeEmail: user2.email,
+              attendeeName: user2.fullName,
+              eventName: progCryptoEventName,
+              ticketName: gaItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user2ProgCryptoSuper.id,
+              attendeeEmail: user2.email,
+              attendeeName: user2.fullName,
+              eventName: progCryptoEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user2AwSuper.id,
+              attendeeEmail: user2.email,
+              attendeeName: user2.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user3AwSuper.id,
+              attendeeEmail: user3.email,
+              attendeeName: user3.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            }
           ],
           secondPartyTickets: [
             {
@@ -264,9 +317,33 @@ describe.only("offline checkin database queries should work", function () {
         ),
         {
           devconnectTickets: [
-            { id: user1AwGA.id },
-            { id: user2AwSuper.id },
-            { id: user3AwSuper.id }
+            {
+              id: user1AwGA.id,
+              attendeeEmail: user1.email,
+              attendeeName: user1.fullName,
+              eventName: awEventName,
+              ticketName: gaItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user2AwSuper.id,
+              attendeeEmail: user2.email,
+              attendeeName: user2.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            },
+            {
+              id: user3AwSuper.id,
+              attendeeEmail: user3.email,
+              attendeeName: user3.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            }
           ],
           secondPartyTickets: [
             {
