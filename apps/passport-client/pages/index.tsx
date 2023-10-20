@@ -50,6 +50,7 @@ import {
   loadPCDs,
   loadSelf,
   loadSubscriptions,
+  saveCheckedInOfflineTickets,
   saveIdentity,
   saveOfflineTickets,
   saveSubscriptions
@@ -146,21 +147,20 @@ class App extends React.Component<object, AppState> {
       return;
     }
 
-    const checkinOfflineTicketsResult = await offlineTicketsCheckin(
-      appConfig.zupassServer,
-      this.state.identity,
-      this.state.checkedinOfflineDevconnectTickets
-    );
+    if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
+      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+        appConfig.zupassServer,
+        this.state.identity,
+        this.state.checkedinOfflineDevconnectTickets
+      );
 
-    if (checkinOfflineTicketsResult.success) {
-      // this.update({
-      //   ...this.state,
-      //   checkedinOfflineTickets: {
-      //     devconnectTickets: [],
-      //     zuconnectTickets: []
-      //   }
-      // });
-      // saveCheckedInOfflineTickets(undefined);
+      if (checkinOfflineTicketsResult.success) {
+        this.update({
+          ...this.state,
+          checkedinOfflineDevconnectTickets: []
+        });
+        saveCheckedInOfflineTickets(undefined);
+      }
     }
 
     const offlineTicketsResult = await offlineTickets(

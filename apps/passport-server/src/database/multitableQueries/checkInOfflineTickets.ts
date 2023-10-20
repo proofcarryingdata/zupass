@@ -27,17 +27,22 @@ export async function checkInOfflineTickets(
     user.email
   );
   logger(
-    `[OFFLINE_CHECKIN] ${checkerCommitment} has ${superuserTickets.length} superuser tickets`
+    `[OFFLINE_CHECKIN] ${checkerCommitment} has ${superuserTickets.length} superuser tickets` +
+      ` for events ${JSON.stringify(
+        superuserTickets.map((t) => t.pretix_events_config_id)
+      )}`
   );
 
   const checkableItemIds = new Set(
     await fetchItemInfoIdsBelongingToEvents(
       dbPool,
-      superuserTickets.map((t) => t.devconnect_pretix_items_info_id)
+      superuserTickets.map((t) => t.pretix_events_config_id)
     )
   );
   logger(
-    `[OFFLINE_CHECKIN] ${checkerCommitment} can check in these products ${checkableItemIds}`
+    `[OFFLINE_CHECKIN] ${checkerCommitment} can check in these products ${JSON.stringify(
+      Array.from(checkableItemIds)
+    )}`
   );
 
   const tickets = await Promise.all(

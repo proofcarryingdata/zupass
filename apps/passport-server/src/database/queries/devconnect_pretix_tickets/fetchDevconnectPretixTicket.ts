@@ -222,14 +222,15 @@ export async function fetchProductIdsBelongingToEvents(
   const result = await sqlQuery(
     client,
     `\
-    select distinct(i.id)
+  select distinct(i.id) as product_id
     from devconnect_pretix_items_info i
     left join devconnect_pretix_events_info ei on i.devconnect_pretix_events_info_id = ei.id
     left join pretix_events_config e on ei.pretix_events_config_id = e.id
-    where e.id = ANY($1::UUID[])
+    where e.id = any($1::uuid[]);
 `,
     [eventIds]
   );
 
-  return result.rows;
+  const productIds = result.rows.map((r) => r.product_id);
+  return productIds;
 }
