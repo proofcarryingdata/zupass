@@ -21,7 +21,6 @@ export * from "./api/requestCheckInById";
 export * from "./api/requestCheckTicketById";
 export * from "./api/requestConfirmationEmail";
 export * from "./api/requestCreateNewUser";
-export * from "./api/requestDeviceLogin";
 export * from "./api/requestDownloadAndDecryptStorage";
 export * from "./api/requestEncryptedStorage";
 export * from "./api/requestIssuanceServiceEnabled";

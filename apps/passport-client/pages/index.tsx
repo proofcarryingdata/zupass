@@ -14,7 +14,6 @@ import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
-import { DeviceLoginScreen } from "../components/screens/LoginScreens/DeviceLoginScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
@@ -177,7 +176,6 @@ function RouterImpl() {
             path="checkin-by-id"
             element={<DevconnectCheckinByIdScreen />}
           />
-          <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />

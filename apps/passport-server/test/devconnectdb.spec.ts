@@ -9,7 +9,6 @@ import {
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
-  fetchDevconnectDeviceLoginTicket,
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectPretixTicketsByEvent,
@@ -529,31 +528,6 @@ describe("database reads and writes for devconnect ticket features", function ()
 
     expect(actualEmailSet).to.deep.eq(expectedEmailSet);
   });
-
-  step("fetching device logins should work", async function () {
-    const ticket = testTickets[1];
-    const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
-      db,
-      ticket.email,
-      ticket.secret
-    );
-
-    expect(fetchedDeviceLogin).to.have.property("email", ticket.email);
-  });
-
-  step(
-    "fetching device logins should fail for non-superusers",
-    async function () {
-      const ticket = testTickets[0];
-      const fetchedDeviceLogin = await fetchDevconnectDeviceLoginTicket(
-        db,
-        ticket.email,
-        ticket.secret
-      );
-
-      expect(fetchedDeviceLogin).to.be.undefined;
-    }
-  );
 
   step("fetching all superusers should work", async function () {
     const dbSuperUsers = await fetchDevconnectSuperusers(db);
