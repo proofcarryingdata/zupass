@@ -19,7 +19,11 @@ import {
   saveOfflineTickets
 } from "./localstorage";
 
-const IS_OFFLINE = true;
+/**
+ * For debugging purposes, makes the checkin flow go through the offline-mode
+ * version even in the case that we're actually online.
+ */
+const DEBUG_FORCE_OFFLINE = false;
 
 function getOfflineDevconnectTicket(
   ticketId: string,
@@ -99,7 +103,7 @@ export async function devconnectCheckByIdWithOffline(
   ticketId: string,
   stateContext: StateContextValue
 ): Promise<CheckTicketByIdResult> {
-  if (IS_OFFLINE) {
+  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
     if (isOfflineDevconnectTicketCheckedIn(ticketId, stateContext)) {
       const checkedInTicket = getCheckedInOfflineDevconnectTicket(
         ticketId,
@@ -164,7 +168,7 @@ export async function devconnectCheckInByIdWithOffline(
   ticketId: string,
   stateContext: StateContextValue
 ): Promise<CheckTicketInByIdResult> {
-  if (IS_OFFLINE) {
+  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
     if (isOfflineDevconnectTicketCheckedIn(ticketId, stateContext)) {
       const checkedInTicket = getCheckedInOfflineDevconnectTicket(
         ticketId,
@@ -204,7 +208,7 @@ export async function secondPartyCheckByIdWithOffline(
   timestamp: string,
   stateContext: StateContextValue
 ): Promise<VerifyTicketByIdResult> {
-  if (IS_OFFLINE) {
+  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
     const ticket = getOfflineSecondPartyTicket(ticketId, stateContext);
 
     if (!ticket) {
@@ -238,7 +242,7 @@ export async function secondPartyCheckByPCDWithOffline(
   pcd: string, // JSON.stringify(SerializedPCD<ZKEdDSAEventTicketPCD>)
   stateContext: StateContextValue
 ): Promise<VerifyTicketResult> {
-  if (IS_OFFLINE) {
+  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
     const parsed = await ZKEdDSAEventTicketPCDPackage.deserialize(
       JSON.parse(pcd).pcd
     );
