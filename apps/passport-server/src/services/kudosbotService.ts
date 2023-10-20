@@ -5,6 +5,8 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { sleep } from "@pcd/util";
 import { Bot, session } from "grammy";
+import { fetchTelegramConversationsByChatId } from "../database/queries/telegram/fetchTelegramConversation";
+import { updateTelegramUsername } from "../database/queries/telegram/insertTelegramConversation";
 import { sqlQuery } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -175,6 +177,53 @@ export class KudosbotService {
         logger("[KUDOSBOT] kudos error", e);
         this.rollbarService?.reportError(e);
       }
+    });
+
+    this.bot.command("refresh", async (ctx) => {
+      const payload = ctx.match;
+      const chatId = Number(payload);
+      const telegramConversations = await fetchTelegramConversationsByChatId(
+        this.context.dbPool,
+        chatId
+      );
+      if (telegramConversations.length == 0) {
+        return await ctx.reply(
+          "Error fetching conversations for given telegram chat id"
+        );
+      }
+      await ctx.reply("Running username refresh");
+      logger(
+        `[KUDOSBOT] running username refresh for telegram chat id ${chatId}`
+      );
+      for (const telegramConversation of telegramConversations) {
+        const chatId = telegramConversation.telegram_chat_id;
+        const userId = telegramConversation.telegram_user_id;
+        try {
+          const { user } = await ctx.api.getChatMember(chatId, userId);
+          const username = user.username;
+          if (username && username.length > 0) {
+            logger(
+              `[KUDOSBOT] updating telegram user id ${userId} to have username ${username}`
+            );
+            await updateTelegramUsername(
+              this.context.dbPool,
+              userId.toString(),
+              username
+            );
+          } else {
+            logger(
+              `[KUDOSBOT] unable to update telegram user id ${userId} because they do not have a username`
+            );
+          }
+        } catch (e) {
+          logger(
+            `[KUDOSBOT] error refreshing username for telegram user id ${userId}`,
+            e
+          );
+          return await ctx.reply("Error when running username refresh");
+        }
+      }
+      await ctx.reply("Successfully finished running username refresh");
     });
   }
 
