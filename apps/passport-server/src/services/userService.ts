@@ -244,7 +244,11 @@ export class UserService {
       commitment,
       salt,
       encryptionKey,
-      terms_agreed: LATEST_TERMS
+      // If the user already exists, then they're accessing this via the
+      // "forgot password" flow, and not the registration flow in which they
+      // are prompted to agree to the latest legal terms. In this case,
+      // preserve whichever version they already agreed to.
+      terms_agreed: existingUser ? existingUser.terms_agreed : LATEST_TERMS
     });
 
     // Reload Merkle trees
