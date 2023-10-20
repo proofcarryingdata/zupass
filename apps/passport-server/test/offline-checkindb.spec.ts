@@ -218,7 +218,8 @@ describe.only("offline checkin database queries should work", function () {
         ),
         {
           devconnectTickets: [],
-          zuconnectTickets: []
+          zuconnectTickets: [],
+          zuzaluTickets: []
         }
       );
 
@@ -239,7 +240,8 @@ describe.only("offline checkin database queries should work", function () {
           zuconnectTickets: [
             { id: user3Zuconnect.id },
             { id: user2Zuconnect.id }
-          ]
+          ],
+          zuzaluTickets: []
         }
       );
 
@@ -257,7 +259,8 @@ describe.only("offline checkin database queries should work", function () {
           zuconnectTickets: [
             { id: user3Zuconnect.id },
             { id: user2Zuconnect.id }
-          ]
+          ],
+          zuzaluTickets: []
         }
       );
     }

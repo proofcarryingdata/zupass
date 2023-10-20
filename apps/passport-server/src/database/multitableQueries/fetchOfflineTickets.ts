@@ -1,11 +1,16 @@
 import {
   OfflineDevconnectTicket,
   OfflineTickets,
-  OfflineZuconnectTicket
+  OfflineZuconnectTicket,
+  OfflineZuzaluTicket
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
-import { DevconnectPretixTicketDB, ZuconnectTicketDB } from "../models";
+import {
+  DevconnectPretixTicketDB,
+  ZuconnectTicketDB,
+  ZuzaluUser
+} from "../models";
 import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusersForEmail
@@ -15,6 +20,10 @@ import {
   fetchAllZuconnectTickets,
   fetchZuconnectTicketsByEmail
 } from "../queries/zuconnect/fetchZuconnectTickets";
+import {
+  fetchAllZuzaluUsers,
+  fetchZuzaluUser
+} from "../queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 
 export async function fetchOfflineTicketsForChecker(
   dbPool: Pool,
@@ -25,10 +34,34 @@ export async function fetchOfflineTicketsForChecker(
       dbPool,
       userCommitment
     ),
-    zuconnectTickets: await fetchOfflineZuconnectTickets(dbPool, userCommitment)
+    zuconnectTickets: await fetchOfflineZuconnectTickets(
+      dbPool,
+      userCommitment
+    ),
+    zuzaluTickets: await fetchOfflineZuzaluTickets(dbPool, userCommitment)
   };
 
   return result;
+}
+
+async function fetchOfflineZuzaluTickets(
+  dbPool: Pool,
+  userCommitment: string
+): Promise<OfflineZuzaluTicket[]> {
+  const user = await fetchUserByCommitment(dbPool, userCommitment);
+  if (!user) {
+    throw new Error(`no user found for uuid ${userCommitment}`);
+  }
+
+  const zuzaluTicket = await fetchZuzaluUser(dbPool, user.email);
+
+  // only attendees of zuzalu get offline zuzalu tickets
+  if (!zuzaluTicket) {
+    return [];
+  }
+
+  const allZuconnectTickets = await fetchAllZuzaluUsers(dbPool);
+  return allZuconnectTickets.map(zuzaluUserToOfflineTicket);
 }
 
 async function fetchOfflineZuconnectTickets(
@@ -93,4 +126,8 @@ function zuconnectTicketToOfflineTicket(
   ticket: ZuconnectTicketDB
 ): OfflineZuconnectTicket {
   return { id: ticket.id };
+}
+
+function zuzaluUserToOfflineTicket(ticket: ZuzaluUser): OfflineZuzaluTicket {
+  return { id: ticket.order_id };
 }

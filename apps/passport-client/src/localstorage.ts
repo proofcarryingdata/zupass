@@ -58,17 +58,15 @@ export function saveOfflineTickets(offlineTickets: OfflineTickets | undefined) {
   }
 }
 export function loadOfflineTickets(): OfflineTickets {
+  let tickets = defaultOfflineTickets();
+
   try {
-    const offlineTickets = JSON.parse(
-      window.localStorage.getItem(OFFLINE_TICKETS_KEY)
-    );
-    return offlineTickets ?? defaultOfflineTickets();
+    tickets = JSON.parse(window.localStorage.getItem(OFFLINE_TICKETS_KEY));
   } catch (e) {
-    return {
-      devconnectTickets: [],
-      zuconnectTickets: []
-    };
+    //
   }
+
+  return tickets;
 }
 
 const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_tickets";
@@ -85,17 +83,17 @@ export function saveCheckedInOfflineTickets(
   }
 }
 export function loadCheckedInOfflineTickets(): OfflineTickets | undefined {
+  let tickets = defaultOfflineTickets();
+
   try {
-    return (
-      JSON.parse(window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY)) ??
-      defaultOfflineTickets()
+    tickets = JSON.parse(
+      window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY)
     );
   } catch (e) {
-    return {
-      devconnectTickets: [],
-      zuconnectTickets: []
-    };
+    //
   }
+
+  return tickets;
 }
 
 export function saveEncryptionKey(key: string): void {

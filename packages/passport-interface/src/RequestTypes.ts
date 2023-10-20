@@ -618,12 +618,14 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
 export interface OfflineTickets {
   devconnectTickets: OfflineDevconnectTicket[];
   zuconnectTickets: OfflineZuconnectTicket[];
+  zuzaluTickets: OfflineZuzaluTicket[];
 }
 
 export function defaultOfflineTickets(): OfflineTickets {
   return {
     devconnectTickets: [],
-    zuconnectTickets: []
+    zuconnectTickets: [],
+    zuzaluTickets: []
   };
 }
 
@@ -633,5 +635,9 @@ export interface OfflineDevconnectTicket {
 }
 
 export interface OfflineZuconnectTicket {
+  id: string;
+}
+
+export interface OfflineZuzaluTicket {
   id: string;
 }
