@@ -5,8 +5,23 @@ import {
 } from "@pcd/passport-crypto";
 import { getErrorMessage } from "@pcd/util";
 import { SyncedEncryptedStorage } from "../EncryptedStorage";
-import { APIResult } from "./apiResult";
+import {
+  APIResult,
+  ERROR_NAME_BAD_RESPONSE,
+  ERROR_NAME_UNKNOWN,
+  NamedAPIError
+} from "./apiResult";
 import { requestEncryptedStorage } from "./requestEncryptedStorage";
+
+export type StorageWithRevision = {
+  storage: SyncedEncryptedStorage;
+  revision: string;
+};
+
+export type DownloadAndDecryptResult = APIResult<
+  StorageWithRevision,
+  NamedAPIError
+>;
 
 /**
  * Downloads and decrypts a user's end-to-end encrypted backup of their
@@ -19,37 +34,102 @@ export async function requestDownloadAndDecryptStorage(
   zupassServerUrl: string,
   encryptionKey: string
 ): Promise<DownloadAndDecryptResult> {
+  const result = await requestDownloadAndDecryptUpdatedStorage(
+    zupassServerUrl,
+    encryptionKey,
+    undefined
+  );
+  if (!result.success) {
+    return { error: result.error, success: false };
+  }
+  if (!result.value.storage) {
+    console.error("unexpectedly missing e2ee data");
+    return {
+      error: {
+        name: ERROR_NAME_BAD_RESPONSE,
+        detailedMessage: "unexpectedly missing e2ee data"
+      },
+      success: false
+    };
+  }
+  return {
+    value: { storage: result.value.storage, revision: result.value.revision },
+    success: true
+  };
+}
+
+export type DownloadAndDecryptUpdate = {
+  storage?: SyncedEncryptedStorage;
+  revision: string;
+};
+
+export type DownloadAndDecryptUpdateResult = APIResult<
+  DownloadAndDecryptUpdate,
+  NamedAPIError
+>;
+
+/**
+ * Downloads and decrypts a user's end-to-end encrypted backup of their
+ * PCDs, given their encryption key. The server never learns the encryption
+ * key.
+ *
+ * The knownRevision indicates the previous version already known to the client.
+ * If that is the latest version, no storage is returned.
+ *
+ * Never rejects. All information encoded in the resolved response.
+ */
+export async function requestDownloadAndDecryptUpdatedStorage(
+  zupassServerUrl: string,
+  encryptionKey: string,
+  knownRevision: string | undefined
+): Promise<DownloadAndDecryptUpdateResult> {
   try {
     const encryptionKeyHash = await getHash(encryptionKey);
     const storageResult = await requestEncryptedStorage(
       zupassServerUrl,
-      encryptionKeyHash
+      encryptionKeyHash,
+      knownRevision
     );
 
     if (!storageResult.success) {
       console.error(`error loading e2ee data`, storageResult.error);
-      return { error: "couldn't download e2ee data", success: false };
+      return storageResult;
     }
 
-    // TODO(artwyman): Add and implement revision handling.  Also propagate
-    // different types of errors so they're not all incorrect password.
     if (!storageResult.value.encryptedBlob) {
-      console.error("unexpectedly missing e2ee data");
-      return { error: "unexpectedly missing e2ee data", success: false };
+      if (!knownRevision) {
+        console.error("unexpectedly missing e2ee data");
+        return {
+          error: {
+            name: ERROR_NAME_BAD_RESPONSE,
+            detailedMessage: "unexpectedly missing e2ee data"
+          },
+          success: false
+        };
+      }
+      return {
+        value: { revision: storageResult.value.revision },
+        success: true
+      };
     }
+
     const encryptedStorage = JSON.parse(
       storageResult.value.encryptedBlob
     ) as EncryptedPacket;
 
     const decrypted = await passportDecrypt(encryptedStorage, encryptionKey);
     return {
-      value: JSON.parse(decrypted) as SyncedEncryptedStorage,
+      value: {
+        storage: JSON.parse(decrypted) as SyncedEncryptedStorage,
+        revision: storageResult.value.revision
+      },
       success: true
     };
   } catch (e) {
     console.error(`error loading e2ee data`, e);
-    return { error: getErrorMessage(e), success: false };
+    return {
+      error: { name: ERROR_NAME_UNKNOWN, detailedMessage: getErrorMessage(e) },
+      success: false
+    };
   }
 }
-
-export type DownloadAndDecryptResult = APIResult<SyncedEncryptedStorage>;

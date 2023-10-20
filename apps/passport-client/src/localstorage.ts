@@ -77,3 +77,12 @@ export function loadPrivacyNoticeAgreed(): number | null {
 export function savePrivacyNoticeAgreed(version: number): void {
   window.localStorage["privacy_notice_agreed"] = version.toString();
 }
+
+export function saveServerStorageRevision(revision: string): void {
+  window.localStorage["server_storage_revision"] = revision;
+}
+
+export function loadServerStorageRevision(): string | undefined {
+  const rev = window.localStorage["server_storage_revision"];
+  return rev ? rev : undefined;
+}

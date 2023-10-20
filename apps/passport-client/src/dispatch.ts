@@ -3,19 +3,17 @@ import {
   agreeTerms,
   applyActions,
   CredentialManager,
+  deserializeStorage,
   Feed,
   FeedSubscriptionManager,
-  isSyncedEncryptedStorageV2,
-  isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
-  SyncedEncryptedStorage,
+  StorageWithRevision,
   User
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -37,6 +35,7 @@ import {
   saveIdentity,
   savePCDs,
   saveSelf,
+  saveServerStorageRevision,
   saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -84,8 +83,8 @@ export type Action =
     }
   | { type: "participant-invalid" }
   | {
-      type: "load-from-sync";
-      storage: SyncedEncryptedStorage;
+      type: "load-after-login";
+      storage: StorageWithRevision;
       encryptionKey: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
@@ -158,8 +157,8 @@ export async function dispatch(
       return clearError(state, update);
     case "reset-passport":
       return resetPassport(state, update);
-    case "load-from-sync":
-      return loadFromSync(action.encryptionKey, action.storage, update);
+    case "load-after-login":
+      return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -448,31 +447,20 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
   update({ pcds: state.pcds });
 }
 
-async function loadFromSync(
+async function loadAfterLogin(
   encryptionKey: string,
-  storage: SyncedEncryptedStorage,
+  storage: StorageWithRevision,
   update: ZuUpdate
 ) {
-  let pcds: PCDCollection;
-  let subscriptions: FeedSubscriptionManager;
-
-  if (isSyncedEncryptedStorageV3(storage)) {
-    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
-    subscriptions = FeedSubscriptionManager.deserialize(
-      new NetworkFeedApi(),
-      storage.subscriptions
-    );
-  } else if (isSyncedEncryptedStorageV2(storage)) {
-    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
-  } else {
-    pcds = await new PCDCollection(await getPackages());
-    await pcds.deserializeAllAndAdd(storage.pcds);
-  }
+  const { pcds, subscriptions } = await deserializeStorage(
+    storage.storage,
+    await getPackages()
+  );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
     appConfig.zupassServer,
-    storage.self.uuid
+    storage.storage.self.uuid
   );
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
@@ -491,7 +479,7 @@ async function loadFromSync(
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
     encryptionKey == null &&
-    storage.self.salt == null
+    storage.storage.self.salt == null
   ) {
     console.log("Asking existing user to set a password");
     modal = { modalType: "upgrade-account-modal" };
@@ -502,6 +490,7 @@ async function loadFromSync(
   }
 
   await savePCDs(pcds);
+  saveServerStorageRevision(storage.revision);
   saveEncryptionKey(encryptionKey);
   saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
@@ -604,10 +593,10 @@ async function sync(state: AppState, update: ZuUpdate) {
      * downloading from a pre-v3 version of encrypted storage
      * {@link SyncedEncryptedStorageV3}
      * */
-    const downloaded = await downloadStorage();
+    const dlRes = await downloadStorage();
 
-    if (downloaded != null && downloaded.pcds != null) {
-      const { pcds, subscriptions } = downloaded;
+    if (dlRes.success && dlRes.value != null && dlRes.value.pcds != null) {
+      const { pcds, subscriptions } = dlRes.value;
 
       if (subscriptions) {
         addDefaultSubscriptions(subscriptions);

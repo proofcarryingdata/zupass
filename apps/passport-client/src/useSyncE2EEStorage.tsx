@@ -1,16 +1,15 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
+  APIResult,
   ChangeBlobKeyResult,
   FeedSubscriptionManager,
-  isSyncedEncryptedStorageV2,
-  isSyncedEncryptedStorageV3,
-  requestChangeBlobKey,
-  requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage,
   SyncedEncryptedStorageV2,
-  SyncedEncryptedStorageV3
+  SyncedEncryptedStorageV3,
+  deserializeStorage,
+  requestChangeBlobKey,
+  requestDownloadAndDecryptUpdatedStorage,
+  requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { appConfig } from "./appConfig";
@@ -20,8 +19,10 @@ import {
   loadEncryptionKey,
   loadPCDs,
   loadSelf,
+  loadServerStorageRevision,
   loadSubscriptions,
   savePCDs,
+  saveServerStorageRevision,
   saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -92,60 +93,59 @@ export async function uploadStorage(): Promise<void> {
   }
 }
 
+export type SyncStorageResult = APIResult<
+  {
+    pcds: PCDCollection | null;
+    subscriptions: FeedSubscriptionManager | null;
+  } | null,
+  null
+>;
+
 /**
  * Given the encryption key in local storage, downloads the e2ee
- * encrypted storage from the server.
+ * encrypted storage from the server.  This can succeed with a null
+ * result if the download detects that storage is unchanged from the
+ * last saved revision.
  */
-export async function downloadStorage(): Promise<{
-  pcds: PCDCollection | null;
-  subscriptions: FeedSubscriptionManager | null;
-} | null> {
+export async function downloadStorage(): Promise<SyncStorageResult> {
   console.log("[SYNC] downloading e2ee storage");
 
   const encryptionKey = loadEncryptionKey();
-  const storageResult = await requestDownloadAndDecryptStorage(
+  const knownServerRevision = loadServerStorageRevision();
+  const storageResult = await requestDownloadAndDecryptUpdatedStorage(
     appConfig.zupassServer,
-    encryptionKey
+    encryptionKey,
+    knownServerRevision
   );
 
   if (!storageResult.success) {
     console.error("[SYNC] error downloading e2ee storage", storageResult.error);
-    return null;
+    return { error: null, success: false };
+  }
+
+  if (!storageResult.value.storage) {
+    console.error(
+      "[SYNC] e2ee storage unchanged from revision",
+      storageResult.value.revision
+    );
+    return { value: null, success: true };
   }
 
   try {
-    let pcds: PCDCollection;
-    let subscriptions: FeedSubscriptionManager | null = null;
-
-    if (isSyncedEncryptedStorageV3(storageResult.value)) {
-      pcds = await PCDCollection.deserialize(
-        await getPackages(),
-        storageResult.value.pcds
-      );
-
-      subscriptions = FeedSubscriptionManager.deserialize(
-        new NetworkFeedApi(),
-        storageResult.value.subscriptions
-      );
-    } else if (isSyncedEncryptedStorageV2(storageResult.value)) {
-      pcds = await PCDCollection.deserialize(
-        await getPackages(),
-        storageResult.value.pcds
-      );
-    } else {
-      pcds = new PCDCollection(await getPackages());
-      await pcds.deserializeAllAndAdd(storageResult.value.pcds);
-    }
-
+    const { pcds, subscriptions } = await deserializeStorage(
+      storageResult.value.storage,
+      await getPackages()
+    );
     if (subscriptions) {
       await saveSubscriptions(subscriptions);
     }
 
     await savePCDs(pcds);
-    return { pcds, subscriptions };
+    saveServerStorageRevision(storageResult.value.revision);
+    return { value: { pcds, subscriptions }, success: true };
   } catch (e) {
     console.error("[SYNC] uploaded storage is corrupted - ignoring it", e);
-    return null;
+    return { error: null, success: false };
   }
 }
 
