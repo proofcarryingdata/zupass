@@ -1,5 +1,19 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.1.2
+
+### Patch Changes
+
+- publish new versions of packages
+- Updated dependencies
+  - @pcd/eddsa-pcd@0.2.2
+  - @pcd/eddsa-ticket-pcd@0.2.2
+  - @pcd/passport-ui@0.7.2
+  - @pcd/pcd-types@0.7.2
+  - @pcd/semaphore-identity-pcd@0.7.2
+  - @pcd/semaphore-signature-pcd@0.7.2
+  - @pcd/util@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
