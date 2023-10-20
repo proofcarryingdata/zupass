@@ -79,20 +79,46 @@ function checkinOfflineDevconnectTicket(
   checkedinOfflineTickets.devconnectTickets.push(ticketCopy);
   saveOfflineTickets(offlineTickets);
   saveCheckedInOfflineTickets(checkedinOfflineTickets);
+  state.update({
+    offlineTickets,
+    checkedinOfflineTickets
+  });
   return ticketCopy;
 }
 
-export async function devconnectCheckInByIdWithOffline(
+export async function devconnectCheckByIdWithOffline(
   ticketId: string,
   stateContext: StateContextValue
-): Promise<CheckTicketInByIdResult> {
+): Promise<CheckTicketByIdResult> {
   if (IS_OFFLINE) {
+    if (isOfflineDevconnectTicketCheckedIn(ticketId, stateContext)) {
+      const checkedInTicket = getCheckedInOfflineDevconnectTicket(
+        ticketId,
+        stateContext
+      );
+      return {
+        success: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          detailedMessage: "You've checked this ticket in in offline mode.",
+          checker: "You",
+          checkinTimestamp: checkedInTicket?.checkinTimestamp
+        }
+      };
+    }
+
     return {
       success: true,
-      value: undefined
+      value: {
+        // todo
+        attendeeEmail: "offline",
+        attendeeName: "offline",
+        eventName: "offline",
+        ticketName: "offline"
+      }
     };
   } else {
-    return await checkinTicketById(
+    return await checkTicketById(
       appConfig.zupassServer,
       ticketId,
       stateContext.getState().identity
@@ -100,10 +126,10 @@ export async function devconnectCheckInByIdWithOffline(
   }
 }
 
-export async function devconnectCheckByIdWithOffline(
+export async function devconnectCheckInByIdWithOffline(
   ticketId: string,
   stateContext: StateContextValue
-): Promise<CheckTicketByIdResult> {
+): Promise<CheckTicketInByIdResult> {
   if (IS_OFFLINE) {
     if (isOfflineDevconnectTicketCheckedIn(ticketId, stateContext)) {
       const checkedInTicket = getCheckedInOfflineDevconnectTicket(
@@ -128,16 +154,10 @@ export async function devconnectCheckByIdWithOffline(
 
     return {
       success: true,
-      value: {
-        // todo
-        attendeeEmail: "offline",
-        attendeeName: "offline",
-        eventName: "offline",
-        ticketName: "offline"
-      }
+      value: undefined
     };
   } else {
-    return await checkTicketById(
+    return await checkinTicketById(
       appConfig.zupassServer,
       ticketId,
       stateContext.getState().identity

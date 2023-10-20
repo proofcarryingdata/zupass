@@ -1,4 +1,5 @@
 import {
+  defaultOfflineTickets,
   FeedSubscriptionManager,
   OfflineTickets,
   User
@@ -56,11 +57,17 @@ export function saveOfflineTickets(offlineTickets: OfflineTickets | undefined) {
     );
   }
 }
-export function loadOfflineTickets(): OfflineTickets | undefined {
+export function loadOfflineTickets(): OfflineTickets {
   try {
-    return JSON.parse(window.localStorage.getItem(OFFLINE_TICKETS_KEY));
+    const offlineTickets = JSON.parse(
+      window.localStorage.getItem(OFFLINE_TICKETS_KEY)
+    );
+    return offlineTickets ?? defaultOfflineTickets();
   } catch (e) {
-    return undefined;
+    return {
+      devconnectTickets: [],
+      zuconnectTickets: []
+    };
   }
 }
 
@@ -79,11 +86,15 @@ export function saveCheckedInOfflineTickets(
 }
 export function loadCheckedInOfflineTickets(): OfflineTickets | undefined {
   try {
-    return JSON.parse(
-      window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY)
+    return (
+      JSON.parse(window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY)) ??
+      defaultOfflineTickets()
     );
   } catch (e) {
-    return undefined;
+    return {
+      devconnectTickets: [],
+      zuconnectTickets: []
+    };
   }
 }
 

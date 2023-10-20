@@ -620,6 +620,13 @@ export interface OfflineTickets {
   zuconnectTickets: OfflineZuconnectTicket[];
 }
 
+export function defaultOfflineTickets(): OfflineTickets {
+  return {
+    devconnectTickets: [],
+    zuconnectTickets: []
+  };
+}
+
 export interface OfflineDevconnectTicket {
   id: string;
   checkinTimestamp?: string;

@@ -59,8 +59,8 @@ export interface AppState {
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
 
-  offlineTickets?: OfflineTickets;
-  checkedinOfflineTickets?: OfflineTickets;
+  offlineTickets: OfflineTickets;
+  checkedinOfflineTickets: OfflineTickets;
 }
 
 export interface AppError {

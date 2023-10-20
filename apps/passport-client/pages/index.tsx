@@ -43,12 +43,13 @@ import {
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadCheckedInOfflineTickets,
   loadEncryptionKey,
   loadIdentity,
+  loadOfflineTickets,
   loadPCDs,
   loadSelf,
   loadSubscriptions,
-  saveCheckedInOfflineTickets,
   saveIdentity,
   saveOfflineTickets,
   saveSubscriptions
@@ -77,7 +78,8 @@ class App extends React.Component<object, AppState> {
   stateContextState: StateContextValue = {
     getState: () => this.state,
     stateEmitter: this.stateEmitter,
-    dispatch: this.dispatch
+    dispatch: this.dispatch,
+    update: this.update
   };
 
   render() {
@@ -148,11 +150,14 @@ class App extends React.Component<object, AppState> {
       );
 
       if (checkinOfflineTicketsResult.success) {
-        this.update({
-          ...this.state,
-          checkedinOfflineTickets: undefined
-        });
-        saveCheckedInOfflineTickets(undefined);
+        // this.update({
+        //   ...this.state,
+        //   checkedinOfflineTickets: {
+        //     devconnectTickets: [],
+        //     zuconnectTickets: []
+        //   }
+        // });
+        // saveCheckedInOfflineTickets(undefined);
       }
     }
 
@@ -223,6 +228,7 @@ function RouterImpl() {
   );
 }
 
+// TODO: move to a separate file
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
 
@@ -236,6 +242,8 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
+  const offlineTickets = loadOfflineTickets();
+  const checkedinOfflineTickets = loadCheckedInOfflineTickets();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
@@ -265,7 +273,9 @@ async function loadInitialState(): Promise<AppState> {
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,
-    credentialCache
+    credentialCache,
+    offlineTickets,
+    checkedinOfflineTickets
   };
 }
 

@@ -119,7 +119,9 @@ export type StateContextValue = {
   getState: GetState;
   stateEmitter: StateEmitter;
   dispatch: Dispatcher;
+  update: ZuUpdate;
 };
+
 export const StateContext = createContext<StateContextValue>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
