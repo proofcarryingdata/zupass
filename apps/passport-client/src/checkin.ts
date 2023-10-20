@@ -5,8 +5,7 @@ import {
   CheckTicketInByIdResult,
   KnownTicketGroup,
   OfflineDevconnectTicket,
-  OfflineZuconnectTicket,
-  OfflineZuzaluTicket,
+  OfflineSecondPartyTicket,
   requestVerifyTicket,
   requestVerifyTicketById,
   VerifyTicketByIdResult,
@@ -25,88 +24,74 @@ const IS_OFFLINE = true;
 
 function getOfflineDevconnectTicket(
   ticketId: string,
-  state: StateContextValue
+  stateContext: StateContextValue
 ): OfflineDevconnectTicket | undefined {
-  return state
+  return stateContext
     .getState()
     .offlineTickets?.devconnectTickets?.find((t) => t.id === ticketId);
 }
 
 function getCheckedInOfflineDevconnectTicket(
   ticketId: string,
-  state: StateContextValue
+  stateContext: StateContextValue
 ): OfflineDevconnectTicket | undefined {
-  return state
-    .getState()
-    .checkedinOfflineTickets?.devconnectTickets?.find((t) => t.id === ticketId);
+  const state = stateContext.getState();
+  return state.checkedinOfflineDevconnectTickets?.find(
+    (t) => t.id === ticketId
+  );
 }
 
 function isOfflineDevconnectTicketCheckedIn(
   ticketId: string,
-  state: StateContextValue
+  stateContext: StateContextValue
 ): boolean {
-  return getCheckedInOfflineDevconnectTicket(ticketId, state) !== undefined;
+  return (
+    getCheckedInOfflineDevconnectTicket(ticketId, stateContext) !== undefined
+  );
 }
 
 function getOfflineSecondPartyTicket(
   ticketId: string,
-  state: StateContextValue
-) {
-  const zuconnectTicket = getOfflineZuconnectTicket(ticketId, state);
+  stateContext: StateContextValue
+): OfflineSecondPartyTicket | undefined {
+  const state = stateContext.getState();
+  const ticket = state.offlineTickets.secondPartyTickets.find(
+    (t) => t.id === ticketId
+  );
 
-  if (zuconnectTicket) {
-    return zuconnectTicket;
-  }
-
-  const zuzaluTicket = getOfflineZuzaluTicket(ticketId, state);
-
-  return zuzaluTicket;
-}
-
-function getOfflineZuconnectTicket(
-  ticketId: string,
-  state: StateContextValue
-): OfflineZuconnectTicket | undefined {
-  return state
-    .getState()
-    .offlineTickets?.zuconnectTickets?.find((t) => t.id === ticketId);
-}
-
-function getOfflineZuzaluTicket(
-  ticketId: string,
-  state: StateContextValue
-): OfflineZuzaluTicket | undefined {
-  return state
-    .getState()
-    .offlineTickets?.zuzaluTickets?.find((t) => t.id === ticketId);
+  return ticket;
 }
 
 function checkinOfflineDevconnectTicket(
   ticketId: string,
-  state: StateContextValue
+  stateContext: StateContextValue
 ): OfflineDevconnectTicket | undefined {
-  const offlineTickets = state.getState().offlineTickets;
-  const checkedinOfflineTickets = state.getState().checkedinOfflineTickets;
+  const state = stateContext.getState();
+  const offlineTickets = stateContext.getState().offlineTickets;
+  const checkedinOfflineDevconnectTickets =
+    state.checkedinOfflineDevconnectTickets;
 
-  if (!offlineTickets || !checkedinOfflineTickets) {
+  if (!offlineTickets || !checkedinOfflineDevconnectTickets) {
     return undefined;
   }
 
-  const ticket = getOfflineDevconnectTicket(ticketId, state);
+  const ticket = getOfflineDevconnectTicket(ticketId, stateContext);
 
   if (!ticket) {
     return undefined;
   }
 
+  _.remove(offlineTickets.devconnectTickets, (t) => t.id === ticketId);
+
   const ticketCopy = { ...ticket };
   ticketCopy.checkinTimestamp = new Date().toISOString();
-  _.remove(offlineTickets.devconnectTickets, (t) => t.id === ticketId);
-  checkedinOfflineTickets.devconnectTickets.push(ticketCopy);
+  checkedinOfflineDevconnectTickets.push(ticketCopy);
+
   saveOfflineTickets(offlineTickets);
-  saveCheckedInOfflineTickets(checkedinOfflineTickets);
-  state.update({
+  saveCheckedInOfflineTickets(checkedinOfflineDevconnectTickets);
+  stateContext.update({
     offlineTickets,
-    checkedinOfflineTickets
+    checkedinOfflineDevconnectTickets
   });
   return ticketCopy;
 }

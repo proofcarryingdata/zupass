@@ -307,7 +307,7 @@ export interface UploadOfflineCheckinsRequest {
    * to check this ticket in.
    */
   checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
-  offlineTickets: OfflineTickets;
+  checkedOfflineInDevconnectTicketIDs: string[];
 }
 
 export interface UploadOfflineCheckinsResponseValue {}
@@ -617,15 +617,13 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
 
 export interface OfflineTickets {
   devconnectTickets: OfflineDevconnectTicket[];
-  zuconnectTickets: OfflineZuconnectTicket[];
-  zuzaluTickets: OfflineZuzaluTicket[];
+  secondPartyTickets: OfflineSecondPartyTicket[];
 }
 
 export function defaultOfflineTickets(): OfflineTickets {
   return {
     devconnectTickets: [],
-    zuconnectTickets: [],
-    zuzaluTickets: []
+    secondPartyTickets: []
   };
 }
 
@@ -634,10 +632,6 @@ export interface OfflineDevconnectTicket {
   checkinTimestamp?: string;
 }
 
-export interface OfflineZuconnectTicket {
-  id: string;
-}
-
-export interface OfflineZuzaluTicket {
+export interface OfflineSecondPartyTicket {
   id: string;
 }

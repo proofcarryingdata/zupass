@@ -5,7 +5,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
   ISSUANCE_STRING,
-  OfflineTickets,
+  OfflineDevconnectTicket,
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue
 } from "../RequestTypes";
@@ -34,10 +34,12 @@ export async function requestOfflineTicketsCheckin(
 export async function offlineTicketsCheckin(
   passportServer: string,
   checkerIdentity: Identity,
-  offlineTickets: OfflineTickets
+  checkedOfflineInDevconnectTickets: OfflineDevconnectTicket[]
 ): Promise<OfflineTicketsCheckinResult> {
   return requestOfflineTicketsCheckin(passportServer, {
-    offlineTickets,
+    checkedOfflineInDevconnectTicketIDs: checkedOfflineInDevconnectTickets.map(
+      (t) => t.id
+    ),
     checkerProof: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
         identity: {

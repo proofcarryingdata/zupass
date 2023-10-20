@@ -43,7 +43,7 @@ import {
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
-  loadCheckedInOfflineTickets,
+  loadCheckedInOfflineDevconnectTickets,
   loadEncryptionKey,
   loadIdentity,
   loadOfflineTickets,
@@ -142,23 +142,25 @@ class App extends React.Component<object, AppState> {
   }
 
   jobSyncOfflineCheckins = async () => {
-    if (this.state.checkedinOfflineTickets) {
-      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
-        appConfig.zupassServer,
-        this.state.identity,
-        this.state.checkedinOfflineTickets
-      );
+    if (!this.state.self) {
+      return;
+    }
 
-      if (checkinOfflineTicketsResult.success) {
-        // this.update({
-        //   ...this.state,
-        //   checkedinOfflineTickets: {
-        //     devconnectTickets: [],
-        //     zuconnectTickets: []
-        //   }
-        // });
-        // saveCheckedInOfflineTickets(undefined);
-      }
+    const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+      appConfig.zupassServer,
+      this.state.identity,
+      this.state.checkedinOfflineDevconnectTickets
+    );
+
+    if (checkinOfflineTicketsResult.success) {
+      // this.update({
+      //   ...this.state,
+      //   checkedinOfflineTickets: {
+      //     devconnectTickets: [],
+      //     zuconnectTickets: []
+      //   }
+      // });
+      // saveCheckedInOfflineTickets(undefined);
     }
 
     const offlineTicketsResult = await offlineTickets(
@@ -243,7 +245,8 @@ async function loadInitialState(): Promise<AppState> {
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
   const offlineTickets = loadOfflineTickets();
-  const checkedinOfflineTickets = loadCheckedInOfflineTickets();
+  const checkedOfflineInDevconnectTickets =
+    loadCheckedInOfflineDevconnectTickets();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
@@ -275,7 +278,7 @@ async function loadInitialState(): Promise<AppState> {
     resolvingSubscriptionId: undefined,
     credentialCache,
     offlineTickets,
-    checkedinOfflineTickets
+    checkedinOfflineDevconnectTickets: checkedOfflineInDevconnectTickets
   };
 }
 

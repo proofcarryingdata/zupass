@@ -1,8 +1,7 @@
 import {
   OfflineDevconnectTicket,
-  OfflineTickets,
-  OfflineZuconnectTicket,
-  OfflineZuzaluTicket
+  OfflineSecondPartyTicket,
+  OfflineTickets
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
@@ -29,16 +28,19 @@ export async function fetchOfflineTicketsForChecker(
   dbPool: Pool,
   userCommitment: string
 ): Promise<OfflineTickets> {
+  const devconnectTickets = await fetchOfflineDevconnectTickets(
+    dbPool,
+    userCommitment
+  );
+  const zuconnectTickets = await fetchOfflineZuconnectTickets(
+    dbPool,
+    userCommitment
+  );
+  const zuzaluTickets = await fetchOfflineZuzaluTickets(dbPool, userCommitment);
+
   const result = {
-    devconnectTickets: await fetchOfflineDevconnectTickets(
-      dbPool,
-      userCommitment
-    ),
-    zuconnectTickets: await fetchOfflineZuconnectTickets(
-      dbPool,
-      userCommitment
-    ),
-    zuzaluTickets: await fetchOfflineZuzaluTickets(dbPool, userCommitment)
+    devconnectTickets,
+    secondPartyTickets: [...zuconnectTickets, ...zuzaluTickets]
   };
 
   return result;
@@ -47,7 +49,7 @@ export async function fetchOfflineTicketsForChecker(
 async function fetchOfflineZuzaluTickets(
   dbPool: Pool,
   userCommitment: string
-): Promise<OfflineZuzaluTicket[]> {
+): Promise<OfflineSecondPartyTicket[]> {
   const user = await fetchUserByCommitment(dbPool, userCommitment);
   if (!user) {
     throw new Error(`no user found for uuid ${userCommitment}`);
@@ -67,7 +69,7 @@ async function fetchOfflineZuzaluTickets(
 async function fetchOfflineZuconnectTickets(
   dbPool: Pool,
   userCommitment: string
-): Promise<OfflineZuconnectTicket[]> {
+): Promise<OfflineSecondPartyTicket[]> {
   const user = await fetchUserByCommitment(dbPool, userCommitment);
   if (!user) {
     throw new Error(`no user found for uuid ${userCommitment}`);
@@ -124,12 +126,12 @@ function devconnectTicketToOfflineTicket(
 
 function zuconnectTicketToOfflineTicket(
   ticket: ZuconnectTicketDB
-): OfflineZuconnectTicket {
+): OfflineSecondPartyTicket {
   return { id: ticket.id };
 }
 
 function zuzaluUserToOfflineTicket(
   ticket: LoggedInZuzaluUser
-): OfflineZuzaluTicket {
+): OfflineSecondPartyTicket {
   return { id: ticket.uuid };
 }

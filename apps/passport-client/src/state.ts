@@ -3,6 +3,7 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  OfflineDevconnectTicket,
   OfflineTickets,
   User
 } from "@pcd/passport-interface";
@@ -60,7 +61,7 @@ export interface AppState {
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
 
   offlineTickets: OfflineTickets;
-  checkedinOfflineTickets: OfflineTickets;
+  checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
 }
 
 export interface AppError {

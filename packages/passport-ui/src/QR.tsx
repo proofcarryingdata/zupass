@@ -79,9 +79,6 @@ export function QRDisplayWithRegenerateAndStorage({
   const maybeGenerateQR = useCallback(async () => {
     const timestamp = Date.now();
     if (savedState && timestamp - savedState.timestamp < regenerateAfterMs) {
-      console.log(
-        `[QR] ('${uniqueId}') not regenerating, timestamp ${timestamp}`
-      );
       return;
     }
     console.log(`[QR] ('${uniqueId}') regenerating data ${timestamp}`);

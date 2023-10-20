@@ -1315,7 +1315,7 @@ export class IssuanceService {
     await checkInOfflineTickets(
       this.context.dbPool,
       signaturePCD.claim.identityCommitment,
-      req.offlineTickets
+      req.checkedOfflineInDevconnectTicketIDs
     );
 
     res.json({} satisfies UploadOfflineCheckinsResponseValue);

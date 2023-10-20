@@ -218,8 +218,7 @@ describe.only("offline checkin database queries should work", function () {
         ),
         {
           devconnectTickets: [],
-          zuconnectTickets: [],
-          zuzaluTickets: []
+          secondPartyTickets: []
         }
       );
 
@@ -237,11 +236,10 @@ describe.only("offline checkin database queries should work", function () {
             { id: user2AwSuper.id },
             { id: user3AwSuper.id }
           ],
-          zuconnectTickets: [
+          secondPartyTickets: [
             { id: user3Zuconnect.id },
             { id: user2Zuconnect.id }
-          ],
-          zuzaluTickets: []
+          ]
         }
       );
 
@@ -256,11 +254,10 @@ describe.only("offline checkin database queries should work", function () {
             { id: user2AwSuper.id },
             { id: user3AwSuper.id }
           ],
-          zuconnectTickets: [
+          secondPartyTickets: [
             { id: user3Zuconnect.id },
             { id: user2Zuconnect.id }
-          ],
-          zuzaluTickets: []
+          ]
         }
       );
     }
@@ -274,7 +271,7 @@ function expectOfflineTickets(
   expect(actual.devconnectTickets).to.deep.equalInAnyOrder(
     expected.devconnectTickets
   );
-  expect(actual.zuconnectTickets).to.deep.equalInAnyOrder(
-    expected.zuconnectTickets
+  expect(actual.secondPartyTickets).to.deep.equalInAnyOrder(
+    expected.secondPartyTickets
   );
 }
