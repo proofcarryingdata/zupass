@@ -1,0 +1,1 @@
+ALTER TABLE telegram_bot_conversations ADD COLUMN telegram_username VARCHAR DEFAULT NULL;

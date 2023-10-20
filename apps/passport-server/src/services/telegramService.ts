@@ -736,11 +736,19 @@ export class TelegramService {
 
     // We've verified that the chat exists, now add the user to our list.
     // This will be important later when the user requests to join.
+    const {
+      user: { username }
+    } = await this.authBot.api.getChatMember(telegramChatId, telegramUserId);
+
+    username
+      ? logger(`[TELEGRAM] inserting ${username} into the db`)
+      : logger(`[TELEGRAM] ${telegramUserId} does not have a username`);
     await insertTelegramVerification(
       this.context.dbPool,
       telegramUserId,
       parseInt(telegramChatId),
-      attendeeSemaphoreId
+      attendeeSemaphoreId,
+      username
     );
 
     // Send invite link
@@ -965,17 +973,21 @@ export async function startTelegramService(
   );
 
   service.startBot(authBot);
-  authBot.api.config.use(autoRetry({
-    maxRetryAttempts: 3, // only repeat requests once
-    maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
-  }))
+  authBot.api.config.use(
+    autoRetry({
+      maxRetryAttempts: 3, // only repeat requests once
+      maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+    })
+  );
 
   if (anonBotExists) {
     service.startBot(anonBot);
-    anonBot.api.config.use(autoRetry({
-      maxRetryAttempts: 3, // only repeat requests once
-      maxDelaySeconds: 5, // fail immediately if we have to wait >5 seconds
-    }))
+    anonBot.api.config.use(
+      autoRetry({
+        maxRetryAttempts: 3, // only repeat requests once
+        maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+      })
+    );
   }
 
   return service;
