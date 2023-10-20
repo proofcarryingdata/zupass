@@ -48,6 +48,7 @@ import {
 import { fetchUsersByMinimumAgreedTerms } from "../../database/queries/users";
 import {
   mostRecentCheckinEvent,
+  pretixRedactedTicketsDifferent,
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
@@ -710,7 +711,7 @@ export class OrganizerSync {
         );
 
         let approvedTickets: DevconnectPretixTicket[] = [];
-        let redactedTickets: DevconnectPretixTicket[] = [];
+        let ticketsToRedact: DevconnectPretixTicket[] = [];
         let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
 
         if (this.enableRedaction) {
@@ -719,7 +720,7 @@ export class OrganizerSync {
           );
 
           approvedTickets = groupedTickets.approved ?? [];
-          redactedTickets = groupedTickets.redacted ?? [];
+          ticketsToRedact = groupedTickets.redacted ?? [];
 
           redactedTicketsInDB =
             await fetchDevconnectPretixRedactedTicketsByEvent(
@@ -858,18 +859,43 @@ export class OrganizerSync {
         let redactedTicketsDeleted = 0;
         if (this.enableRedaction) {
           // Step 4 of saving: save redacted tickets
-          for (const redactedTicket of redactedTickets) {
-            await insertDevconnectPretixRedactedTicket(this.db, {
-              hashed_email: await getHash(redactedTicket.email),
-              position_id: redactedTicket.position_id,
-              checker: redactedTicket.is_consumed ? PRETIX_CHECKER : null,
-              pretix_checkin_timestamp: redactedTicket.pretix_checkin_timestamp,
-              secret: redactedTicket.secret,
-              is_consumed: redactedTicket.is_consumed,
-              devconnect_pretix_items_info_id:
-                redactedTicket.devconnect_pretix_items_info_id,
-              pretix_events_config_id: eventConfigID
-            });
+          // Grouping by position ID is safe here because all of these tickets
+          // belong to the same event, and position ID is locally unique.
+          const redactedTickets = await Promise.all(
+            ticketsToRedact.map(async (ticket) => {
+              return {
+                hashed_email: await getHash(ticket.email),
+                position_id: ticket.position_id,
+                checker: ticket.is_consumed ? PRETIX_CHECKER : null,
+                pretix_checkin_timestamp: ticket.pretix_checkin_timestamp,
+                secret: ticket.secret,
+                is_consumed: ticket.is_consumed,
+                devconnect_pretix_items_info_id:
+                  ticket.devconnect_pretix_items_info_id,
+                pretix_events_config_id: eventConfigID
+              };
+            })
+          );
+
+          const existingRedactedTicketsByPositionId = new Map(
+            redactedTicketsInDB.map((ticket) => [ticket.position_id, ticket])
+          );
+
+          const newOrUpdatedRedactedTickets = redactedTickets.filter(
+            (ticket) => {
+              const existingTicket = existingRedactedTicketsByPositionId.get(
+                ticket.position_id
+              );
+
+              return (
+                !existingTicket ||
+                pretixRedactedTicketsDifferent(existingTicket, ticket)
+              );
+            }
+          );
+
+          for (const redactedTicket of newOrUpdatedRedactedTickets) {
+            await insertDevconnectPretixRedactedTicket(this.db, redactedTicket);
           }
 
           const newRedactedTicketsByPositionId = new Map(
@@ -894,7 +920,7 @@ export class OrganizerSync {
         span?.setAttribute("ticketsInserted", newTickets.length);
         span?.setAttribute("ticketsUpdated", updatedTickets.length);
         span?.setAttribute("ticketsDeleted", removedTickets.length);
-        span?.setAttribute("redactedTicketsInserted", redactedTickets.length);
+        span?.setAttribute("redactedTicketsInserted", ticketsToRedact.length);
         span?.setAttribute("redactedTicketsDeleted", redactedTicketsDeleted);
         span?.setAttribute(
           "ticketsTotal",

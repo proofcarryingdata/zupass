@@ -1,5 +1,8 @@
 import { DevconnectPretixCheckin } from "../apis/devconnect/devconnectPretixAPI";
-import { DevconnectPretixTicket } from "../database/models";
+import {
+  DevconnectPretixRedactedTicket,
+  DevconnectPretixTicket
+} from "../database/models";
 
 /**
  * Sometimes the ticket we load from pretix is updated.
@@ -26,6 +29,54 @@ export function pretixTicketsDifferent(
   }
 
   if (oldTicket.email !== newTicket.email) {
+    return true;
+  }
+
+  if (
+    oldTicket.pretix_checkin_timestamp !== newTicket.pretix_checkin_timestamp
+  ) {
+    // The inequality might be because one of these is null, but it might
+    // also be because both are date objects, in which case we need a
+    // stricter check.
+    if (
+      oldTicket.pretix_checkin_timestamp instanceof Date &&
+      newTicket.pretix_checkin_timestamp instanceof Date
+    ) {
+      if (
+        oldTicket.pretix_checkin_timestamp.getTime() !==
+        newTicket.pretix_checkin_timestamp.getTime()
+      ) {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
+
+  if (oldTicket.pretix_events_config_id !== newTicket.pretix_events_config_id) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Almost exactly the same as {@link pretixTicketsDifferent}, but for
+ * redacted tickets.
+ */
+export function pretixRedactedTicketsDifferent(
+  oldTicket: DevconnectPretixRedactedTicket,
+  newTicket: DevconnectPretixRedactedTicket
+): boolean {
+  if (oldTicket.secret !== newTicket.secret) {
+    return true;
+  }
+
+  if (oldTicket.is_consumed !== newTicket.is_consumed) {
+    return true;
+  }
+
+  if (oldTicket.hashed_email !== newTicket.hashed_email) {
     return true;
   }
 
