@@ -7,6 +7,7 @@ import Libhoney from "libhoney";
 import urljoin from "url-join";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { getCommitMessage } from "../util/util";
 
 // todo get rid of these globals
 let honeyClient: Libhoney | null;
@@ -40,17 +41,18 @@ export async function startTelemetry(
 
   logger("[INIT] Starting telemetry");
 
-  return sdk
-    .start()
-    .then(() => {
-      logger("[INIT] Tracing initialized");
-      writeMarker(
-        context.gitCommitHash,
-        MarkerType.Deploy,
-        urljoin(ZUPASS_GITHUB_REPOSITORY_URL, "commit", context.gitCommitHash)
-      );
-    })
-    .catch((error) => logger("Error initializing tracing", error));
+  try {
+    await sdk.start();
+    logger("[INIT] Tracing initialized");
+    const commitMsgPreview = (await getCommitMessage()).slice(0, 20);
+    writeMarker(
+      commitMsgPreview,
+      MarkerType.Deploy,
+      urljoin(ZUPASS_GITHUB_REPOSITORY_URL, "commit", context.gitCommitHash)
+    );
+  } catch (error) {
+    logger("Error initializing tracing", error);
+  }
 }
 
 export const enum MarkerType {
