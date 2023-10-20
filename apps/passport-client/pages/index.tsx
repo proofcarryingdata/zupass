@@ -120,6 +120,33 @@ class App extends React.Component<object, AppState> {
     console.log("[JOB] Starting background jobs...");
     this.jobPollUser();
     this.startJobSyncOfflineCheckins();
+    this.jobCheckConnectivity();
+  };
+
+  jobCheckConnectivity = async () => {
+    console.log(
+      `[CONNECTIVITY] ${window.navigator.onLine ? "online" : "offline"}`
+    );
+    this.update({
+      ...this.state,
+      offline: window.navigator.onLine
+    });
+
+    window.addEventListener("offline", () => {
+      console.log("[CONNECTIVITY] offline");
+      this.update({
+        ...this.state,
+        offline: true
+      });
+    });
+
+    window.addEventListener("online", () => {
+      console.log("[CONNECTIVITY] online");
+      this.update({
+        ...this.state,
+        offline: false
+      });
+    });
   };
 
   jobPollUser = async () => {
@@ -278,7 +305,8 @@ async function loadInitialState(): Promise<AppState> {
     resolvingSubscriptionId: undefined,
     credentialCache,
     offlineTickets,
-    checkedinOfflineDevconnectTickets: checkedOfflineInDevconnectTickets
+    checkedinOfflineDevconnectTickets: checkedOfflineInDevconnectTickets,
+    offline: window.navigator.onLine
   };
 }
 

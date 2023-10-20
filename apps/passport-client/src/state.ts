@@ -62,6 +62,7 @@ export interface AppState {
 
   offlineTickets: OfflineTickets;
   checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
+  offline: boolean;
 }
 
 export interface AppError {
