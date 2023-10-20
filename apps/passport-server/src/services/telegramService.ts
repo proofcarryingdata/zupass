@@ -381,47 +381,15 @@ export class TelegramService {
     });
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
-      const topicName = ctx.update?.message?.forum_topic_created.name;
-      const messageThreadId = ctx.update.message?.message_thread_id;
-      const chatId = ctx.chat.id;
+      return traced("telegram","forum_topic_created", async (span) => {
+        const topicName = ctx.update?.message?.forum_topic_created.name;
+        const messageThreadId = ctx.update.message?.message_thread_id;
+        const chatId = ctx.chat.id;
+        span?.setAttributes({topicName, messageThreadId, chatId})
 
-      if (!chatId || !topicName || !messageThreadId)
-        throw new Error(`Missing chatId or topic name`);
+        if (!chatId || !topicName || !messageThreadId)
+          throw new Error(`Missing chatId or topic name`);
 
-      await insertTelegramTopic(
-        this.context.dbPool,
-        chatId,
-        messageThreadId,
-        topicName,
-        false
-      );
-
-      logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
-    });
-
-    this.authBot.on(":forum_topic_edited", async (ctx) => {
-      const topicName = ctx.update?.message?.forum_topic_edited.name;
-      const chatId = ctx.chat.id;
-      const messageThreadId = ctx.update.message?.message_thread_id;
-      if (!messageThreadId)
-        return logger(
-          `[TELEGRAM] ignoring edit for general topic ${topicName}`
-        );
-
-      if (!chatId || !topicName)
-        throw new Error(`Missing chatId or topic name`);
-
-      const topicsForChat = await fetchTelegramTopicsByChatId(
-        this.context.dbPool,
-        chatId
-      );
-
-      const topic = topicsForChat.find(
-        (e) => e.topic_id?.toString() === messageThreadId?.toString()
-      );
-
-      if (!topic) {
-        logger(`[TELEGRAM] editing topic and adding to db`);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
@@ -429,17 +397,56 @@ export class TelegramService {
           topicName,
           false
         );
-      } else {
-        logger(`[TELEGRAM] editing topic and updating db`);
-        await insertTelegramTopic(
+
+        logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
+      });
+    });
+
+    this.authBot.on(":forum_topic_edited", async (ctx) => {
+      return traced("telegram","forum_topic_edited", async (span) => {
+        const topicName = ctx.update?.message?.forum_topic_edited.name;
+        const chatId = ctx.chat.id;
+        const messageThreadId = ctx.update.message?.message_thread_id;
+        span?.setAttributes({topicName, messageThreadId, chatId})
+
+        if (!messageThreadId)
+          return logger(
+            `[TELEGRAM] ignoring edit for general topic ${topicName}`
+          );
+
+        if (!chatId || !topicName)
+          throw new Error(`Missing chatId or topic name`);
+
+        const topicsForChat = await fetchTelegramTopicsByChatId(
           this.context.dbPool,
-          chatId,
-          messageThreadId,
-          topicName,
-          topic.is_anon_topic
+          chatId
         );
-      }
-      logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
+
+        const topic = topicsForChat.find(
+          (e) => e.topic_id?.toString() === messageThreadId?.toString()
+        );
+
+        if (!topic) {
+          logger(`[TELEGRAM] editing topic and adding to db`);
+          await insertTelegramTopic(
+            this.context.dbPool,
+            chatId,
+            messageThreadId,
+            topicName,
+            false
+          );
+        } else {
+          logger(`[TELEGRAM] editing topic and updating db`);
+          await insertTelegramTopic(
+            this.context.dbPool,
+            chatId,
+            messageThreadId,
+            topicName,
+            topic.is_anon_topic
+          );
+        }
+        logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
+      });
     });
 
     this.anonBot.command("incognito", async (ctx) => {
@@ -609,7 +616,7 @@ export class TelegramService {
   private async verifyZKEdDSAEventTicketPCD(
     serializedZKEdDSATicket: string
   ): Promise<ZKEdDSAEventTicketPCD | null> {
-    return traced("telegram", "verifyZKEdDSAEventTicketPCD", async () => {
+    return traced("telegram", "verifyZKEdDSAEventTicketPCD", async (span) => {
       let pcd: ZKEdDSAEventTicketPCD;
 
       try {
@@ -634,6 +641,7 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
+        span?.setAttribute('signerMatch', signerMatch)
       if (
         // TODO: wrap in a MultiProcessService?
         (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
