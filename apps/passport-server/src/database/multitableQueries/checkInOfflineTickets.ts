@@ -14,7 +14,9 @@ export async function checkInOfflineTickets(
   checkerCommitment: string,
   checkedOfflineInDevconnectTicketIDs: string[]
 ): Promise<void> {
-  logger(dbPool, checkerCommitment, checkedOfflineInDevconnectTicketIDs);
+  logger(
+    `[OFFLINE_CHECKIN] use ${checkerCommitment} attempting to check in ${checkedOfflineInDevconnectTicketIDs}`
+  );
   const user = await fetchUserByCommitment(dbPool, checkerCommitment);
   if (!user) {
     throw new Error(`no user found for commitment ${checkerCommitment}`);
@@ -24,12 +26,18 @@ export async function checkInOfflineTickets(
     dbPool,
     user.email
   );
+  logger(
+    `[OFFLINE_CHECKIN] ${checkerCommitment} has ${superuserTickets.length} superuser tickets`
+  );
 
   const checkableItemIds = new Set(
     await fetchItemInfoIdsBelongingToEvents(
       dbPool,
       superuserTickets.map((t) => t.devconnect_pretix_items_info_id)
     )
+  );
+  logger(
+    `[OFFLINE_CHECKIN] ${checkerCommitment} can check in these products ${checkableItemIds}`
   );
 
   const tickets = await Promise.all(
@@ -43,8 +51,26 @@ export async function checkInOfflineTickets(
   ) as DevconnectPretixTicketDBWithEmailAndItem[];
 
   for (const ticket of existingTickets) {
-    if (checkableItemIds.has(ticket.devconnect_pretix_items_info_id)) {
-      await consumeDevconnectPretixTicket(dbPool, ticket.id, user.email);
+    if (!checkableItemIds.has(ticket.devconnect_pretix_items_info_id)) {
+      logger(
+        `[OFFLINE_CHECKIN] ${checkerCommitment} attempted to check in ticket` +
+          ` ${ticket.id} with item id ${ticket.devconnect_pretix_items_info_id} but did not have permission`
+      );
+      continue;
     }
+
+    if (ticket.is_consumed) {
+      logger(
+        `[OFFLINE_CHECKIN] ${checkerCommitment} attempted to check in ticket` +
+          ` ${ticket.id} but it was already checked in at ${
+            ticket.pretix_checkin_timestamp ?? ticket.zupass_checkin_timestamp
+          } by ${ticket.checker}`
+      );
+    }
+
+    await consumeDevconnectPretixTicket(dbPool, ticket.id, user.email);
+    logger(
+      `[OFFLINE_CHECKIN] ${checkerCommitment} checked in ticket ${ticket.id}`
+    );
   }
 }
