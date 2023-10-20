@@ -5,6 +5,7 @@ import {
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
+import { ZUPASS_SENDER_EMAIL } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
@@ -171,7 +172,7 @@ function SendEmailVerification({ email }: { email: string }) {
         <TextCenter>
           <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
-          Check your inbox for an email from <span>passport@0xparc.org</span>.
+          Check your inbox for an email from <span>{ZUPASS_SENDER_EMAIL}</span>.
           Use the most recent code you received to continue.
         </TextCenter>
         <Spacer h={24} />

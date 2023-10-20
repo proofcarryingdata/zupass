@@ -3,6 +3,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -648,16 +649,14 @@ export const chatsToPostIn = async (
 
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
-    await ctx.reply(
-      `Type \`/\` to see a list of commands.`
-    );
+    await ctx.reply(`Type \`/\` to see a list of commands.`);
   }
 };
 
 export const uwuResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
+      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email ${ZUPASS_SUPPORT_EMAIL}`
     );
   }
 };
@@ -665,7 +664,7 @@ export const uwuResponse = async (ctx: BotContext): Promise<void> => {
 export const ratResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `I don't know that command 🐭.\n\nType \`/\` to see a list of commands or email passport@0xparc.org`
+      `I don't know that command 🐭.\n\nType \`/\` to see a list of commands or email ${ZUPASS_SUPPORT_EMAIL}`
     );
   }
 };
