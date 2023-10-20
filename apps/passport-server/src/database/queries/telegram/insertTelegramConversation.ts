@@ -88,3 +88,18 @@ export async function insertOrUpdateTelegramNullifier(
 
   await sqlQuery(client, query, [nullifierHash, messageTimestamps]);
 }
+
+export async function updateTelegramUsername(
+  client: Pool,
+  telegramUserId: string,
+  telegramUsername: string
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `\
+    update telegram_bot_conversations set telegram_username = $1
+    where telegram_user_id = $2
+    `,
+    [telegramUsername, telegramUserId]
+  );
+}
