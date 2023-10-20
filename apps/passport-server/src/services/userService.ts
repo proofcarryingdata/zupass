@@ -354,18 +354,23 @@ export class UserService {
         };
       }
 
-      if (payload.version < UNREDACT_TICKETS_TERMS_VERSION) {
-        await upsertUser(this.context.dbPool, {
-          ...user,
-          terms_agreed: payload.version
-        });
-      } else {
+      // If the user hasn't already agreed to have their tickets unredacted,
+      // do it now
+      if (
+        payload.version >= UNREDACT_TICKETS_TERMS_VERSION &&
+        user.terms_agreed < UNREDACT_TICKETS_TERMS_VERSION
+      ) {
         logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
         await agreeTermsAndUnredactTickets(
           this.context.dbPool,
           user.email,
           payload.version
         );
+      } else {
+        await upsertUser(this.context.dbPool, {
+          ...user,
+          terms_agreed: payload.version
+        });
       }
 
       return {

@@ -2530,8 +2530,8 @@ describe("devconnect functionality", function () {
 
     const testEmail = ordersForEvent[0].email;
 
-    // Return the user to having not agreed terms
-    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
+    // Wipe our existing user
+    await sqlQuery(db, "DELETE FROM users WHERE email = $1", [testEmail]);
 
     const redactedTickets =
       await fetchDevconnectPretixRedactedTicketsByHashedEmail(
