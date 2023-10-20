@@ -214,3 +214,22 @@ export async function fetchDevconnectProducts(
 
   return result.rows;
 }
+
+export async function fetchProductIdsBelongingToEvents(
+  client: Pool,
+  eventIds: string[]
+): Promise<string[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select distinct(i.id)
+    from devconnect_pretix_items_info i
+    left join devconnect_pretix_events_info ei on i.devconnect_pretix_events_info_id = ei.id
+    left join pretix_events_config e on ei.pretix_events_config_id = e.id
+    where e.id in $1;
+`,
+    [eventIds]
+  );
+
+  return result.rows;
+}
