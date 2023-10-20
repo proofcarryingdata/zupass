@@ -15,7 +15,22 @@ export function ZuconnectKnownTicketDetails({
 }) {
   const type = Object.entries(ZUCONNECT_PRODUCT_ID_MAPPINGS).find(
     ([_name, product]) => product.id === productId
-  )[0];
+  )?.[0];
+
+  if (type === undefined) {
+    return (
+      <CardContainerExpanded>
+        <CardOutlineExpanded>
+          <CardHeader col="var(--accent-lite)">
+            <div>VERIFIED ZUCONNECT '23 TICKET</div>
+            <div>SIGNED BY: {publicKeyName}</div>
+            <ZuzaluRole>Unknown</ZuzaluRole>
+          </CardHeader>
+        </CardOutlineExpanded>
+      </CardContainerExpanded>
+    );
+  }
+
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>
