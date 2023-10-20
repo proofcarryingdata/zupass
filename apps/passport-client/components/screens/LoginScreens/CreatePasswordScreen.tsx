@@ -160,7 +160,7 @@ export function CreatePasswordScreen() {
 
   return (
     <>
-      <MaybeModal />
+      <MaybeModal fullScreen />
       <AppContainer bg="primary">{content}</AppContainer>
     </>
   );

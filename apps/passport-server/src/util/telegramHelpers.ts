@@ -220,11 +220,11 @@ export const setBotInfo = async (
   }
 
   bot.api.setMyDescription(
-    "I'm Zucat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
+    "I'm ZuKat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
   );
 
   bot.api.setMyShortDescription(
-    "Zucat manages events and groups with zero-knowledge proofs"
+    "ZuKat manages events and groups with zero-knowledge proofs"
   );
 };
 
@@ -412,7 +412,7 @@ const generateTicketProofUrl = async (
       genericProveScreen: true,
       title: "",
       description:
-        "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+        "ZuKat requests a zero-knowledge proof of your ticket to join a Telegram group."
     });
     span?.setAttribute("proofUrl", proofUrl);
 

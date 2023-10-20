@@ -100,7 +100,7 @@ async function requestProof(
     genericProveScreen: true,
     title: "",
     description:
-      "Zucat requests a zero-knowledge proof of your ticket to post an anonymous message."
+      "ZuRat requests a zero-knowledge proof of your ticket to post an anonymous message."
   });
 
   window.location.href = proofUrl;
