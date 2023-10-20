@@ -4,8 +4,8 @@ import {
   getQRCodeColorOverride
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  QRDisplayWithRegenerateAndStorage,
-  encodeQRPayload
+  encodeQRPayload,
+  QRDisplayWithRegenerateAndStorage
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -35,7 +35,6 @@ function makeTicketIdVerifyLink(ticketId: string): string {
 function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   const pcds = usePCDCollection();
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     if (zk) {
       const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
       const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(

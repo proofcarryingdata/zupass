@@ -634,4 +634,7 @@ export interface OfflineDevconnectTicket {
 
 export interface OfflineSecondPartyTicket {
   id: string;
+  group: KnownTicketGroup;
+  publicKeyName: string;
+  productId?: string;
 }

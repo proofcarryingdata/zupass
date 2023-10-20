@@ -1,10 +1,13 @@
 import {
+  KnownTicketGroup,
   OfflineDevconnectTicket,
   OfflineSecondPartyTicket,
   OfflineTickets
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
+import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../../services/issuanceService";
+import { zuzaluRoleToProductId } from "../../util/zuzaluUser";
 import {
   DevconnectPretixTicketDB,
   LoggedInZuzaluUser,
@@ -127,11 +130,21 @@ function devconnectTicketToOfflineTicket(
 function zuconnectTicketToOfflineTicket(
   ticket: ZuconnectTicketDB
 ): OfflineSecondPartyTicket {
-  return { id: ticket.id };
+  return {
+    id: ticket.id,
+    group: KnownTicketGroup.Zuconnect23,
+    publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    productId: ticket.product_id
+  };
 }
 
 function zuzaluUserToOfflineTicket(
   ticket: LoggedInZuzaluUser
 ): OfflineSecondPartyTicket {
-  return { id: ticket.uuid };
+  return {
+    id: ticket.uuid,
+    group: KnownTicketGroup.Zuzalu23,
+    publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
+    productId: zuzaluRoleToProductId(ticket.role)
+  };
 }

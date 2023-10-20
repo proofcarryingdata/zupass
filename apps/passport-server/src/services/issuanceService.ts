@@ -100,6 +100,7 @@ import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
+import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -941,12 +942,7 @@ export class IssuanceService {
             attendeeName: user.name,
             attendeeEmail: user.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId:
-              user.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : user.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            productId: zuzaluRoleToProductId(user.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,

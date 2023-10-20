@@ -1,6 +1,6 @@
 import {
   encodeQRPayload,
-  QRDisplayWithRegenerateAndStorage,
+  QRDisplayWithRegenerateAndStorage
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import styled from "styled-components";
@@ -24,10 +24,8 @@ export function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
 
 function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     const serialized = await RSATicketPCDPackage.serialize(pcd);
     const serializedPCD = JSON.stringify(serialized);
-    console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
     if (!initArgs.makeEncodedVerifyLink) {
       throw new Error("must provide makeEncodedVerifyLink");

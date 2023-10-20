@@ -3,7 +3,6 @@ import {
   checkTicketById,
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
-  KnownTicketGroup,
   OfflineDevconnectTicket,
   OfflineSecondPartyTicket,
   requestVerifyTicket,
@@ -181,12 +180,9 @@ export async function secondPartyCheckByIdWithOffline(
   stateContext: StateContextValue
 ): Promise<VerifyTicketByIdResult> {
   if (IS_OFFLINE) {
-    const offlineZuconnectTicket = getOfflineSecondPartyTicket(
-      ticketId,
-      stateContext
-    );
+    const ticket = getOfflineSecondPartyTicket(ticketId, stateContext);
 
-    if (!offlineZuconnectTicket) {
+    if (!ticket) {
       return {
         success: true,
         value: {
@@ -199,10 +195,10 @@ export async function secondPartyCheckByIdWithOffline(
     return {
       success: true,
       value: {
-        group: KnownTicketGroup.Zuconnect23,
-        publicKeyName: "",
+        group: ticket.group,
+        publicKeyName: ticket.publicKeyName,
         verified: true,
-        productId: ""
+        productId: ticket.productId
       }
     };
   } else {
@@ -237,9 +233,9 @@ export async function secondPartyCheckByPCDWithOffline(
     return {
       success: true,
       value: {
-        group: KnownTicketGroup.Zuconnect23,
+        group: ticket.group,
         // todo
-        publicKeyName: "todo",
+        publicKeyName: ticket.publicKeyName,
         verified: true
       }
     };

@@ -1,4 +1,10 @@
-import { ZupassUserJson, ZuzaluUserRole } from "@pcd/passport-interface";
+import {
+  ZupassUserJson,
+  ZuzaluUserRole,
+  ZUZALU_23_ORGANIZER_PRODUCT_ID,
+  ZUZALU_23_RESIDENT_PRODUCT_ID,
+  ZUZALU_23_VISITOR_PRODUCT_ID
+} from "@pcd/passport-interface";
 import _ from "lodash";
 import { UserRow, ZuzaluPretixTicket } from "../database/models";
 
@@ -56,4 +62,12 @@ export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
       role: ZuzaluUserRole.Resident
     }
   );
+}
+
+export function zuzaluRoleToProductId(role: ZuzaluUserRole): string {
+  return role === ZuzaluUserRole.Visitor
+    ? ZUZALU_23_VISITOR_PRODUCT_ID
+    : role === ZuzaluUserRole.Organizer
+    ? ZUZALU_23_ORGANIZER_PRODUCT_ID
+    : ZUZALU_23_RESIDENT_PRODUCT_ID;
 }
