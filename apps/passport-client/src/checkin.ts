@@ -48,6 +48,21 @@ function isOfflineDevconnectTicketCheckedIn(
   return getCheckedInOfflineDevconnectTicket(ticketId, state) !== undefined;
 }
 
+function getOfflineSecondPartyTicket(
+  ticketId: string,
+  state: StateContextValue
+) {
+  const zuconnectTicket = getOfflineZuconnectTicket(ticketId, state);
+
+  if (zuconnectTicket) {
+    return zuconnectTicket;
+  }
+
+  const zuzaluTicket = getOfflineZuzaluTicket(ticketId, state);
+
+  return zuzaluTicket;
+}
+
 function getOfflineZuconnectTicket(
   ticketId: string,
   state: StateContextValue
@@ -175,13 +190,13 @@ export async function devconnectCheckInByIdWithOffline(
   }
 }
 
-export async function zuconnectCheckByIdWithOffline(
+export async function secondPartyCheckByIdWithOffline(
   ticketId: string,
   timestamp: string,
   stateContext: StateContextValue
 ): Promise<VerifyTicketByIdResult> {
   if (IS_OFFLINE) {
-    const offlineZuconnectTicket = getOfflineZuconnectTicket(
+    const offlineZuconnectTicket = getOfflineSecondPartyTicket(
       ticketId,
       stateContext
     );
@@ -213,7 +228,7 @@ export async function zuconnectCheckByIdWithOffline(
   }
 }
 
-export async function zuconnectCheckByPCDWithOffline(
+export async function secondPartyCheckByPCDWithOffline(
   pcd: string, // JSON.stringify(SerializedPCD<ZKEdDSAEventTicketPCD>)
   stateContext: StateContextValue
 ): Promise<VerifyTicketResult> {
@@ -222,12 +237,9 @@ export async function zuconnectCheckByPCDWithOffline(
       JSON.parse(pcd).pcd
     );
     const ticketId = parsed.claim.partialTicket.ticketId;
-    const offlineZuconnectTicket = getOfflineZuconnectTicket(
-      ticketId,
-      stateContext
-    );
+    const ticket = getOfflineSecondPartyTicket(ticketId, stateContext);
 
-    if (!offlineZuconnectTicket) {
+    if (!ticket) {
       return {
         success: true,
         value: {

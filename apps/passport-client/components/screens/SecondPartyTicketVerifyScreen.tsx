@@ -9,8 +9,8 @@ import {
   useStateContext
 } from "../../src/appHooks";
 import {
-  zuconnectCheckByIdWithOffline,
-  zuconnectCheckByPCDWithOffline
+  secondPartyCheckByIdWithOffline,
+  secondPartyCheckByPCDWithOffline
 } from "../../src/checkin";
 import { StateContextValue } from "../../src/dispatch";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
@@ -179,7 +179,10 @@ async function deserializeAndVerify(
   // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
   const decodedPCD = decodeQRPayload(pcdStr);
 
-  const result = await zuconnectCheckByPCDWithOffline(decodedPCD, stateContext);
+  const result = await secondPartyCheckByPCDWithOffline(
+    decodedPCD,
+    stateContext
+  );
 
   if (result.success && result.value.verified) {
     const pcd = await stateContext
@@ -217,7 +220,7 @@ async function verifyById(
   timestamp: string,
   stateContext: StateContextValue
 ): Promise<VerifyResult> {
-  const result = await zuconnectCheckByIdWithOffline(
+  const result = await secondPartyCheckByIdWithOffline(
     ticketId,
     timestamp,
     stateContext
