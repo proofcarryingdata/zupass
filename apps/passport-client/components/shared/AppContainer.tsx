@@ -1,4 +1,5 @@
 import { ReactNode, useCallback } from "react";
+import { Toaster } from "react-hot-toast";
 import styled, { createGlobalStyle } from "styled-components";
 import { useAppError, useDispatch } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
@@ -25,6 +26,7 @@ export function AppContainer({
       <GlobalBackground color={col} />
       <Background>
         <Container>
+          {children && <Toaster />}
           {children ?? <ScreenLoader text="Zupass" />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </Container>

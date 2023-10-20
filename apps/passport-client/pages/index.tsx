@@ -6,6 +6,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
+import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
@@ -124,30 +125,32 @@ class App extends React.Component<object, AppState> {
   };
 
   jobCheckConnectivity = async () => {
-    console.log(
-      `[CONNECTIVITY] ${window.navigator.onLine ? "online" : "offline"}`
-    );
+    window.addEventListener("offline", () => this.setOfflineState(true));
+    window.addEventListener("online", () => this.setOfflineState(false));
+  };
+
+  setOfflineState(offline: boolean) {
+    console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
     this.update({
       ...this.state,
-      offline: window.navigator.onLine
+      offline: offline
     });
-
-    window.addEventListener("offline", () => {
-      console.log("[CONNECTIVITY] offline");
-      this.update({
-        ...this.state,
-        offline: true
+    if (offline) {
+      toast("Offline", {
+        icon: "❌",
+        style: {
+          width: "80vw"
+        }
       });
-    });
-
-    window.addEventListener("online", () => {
-      console.log("[CONNECTIVITY] online");
-      this.update({
-        ...this.state,
-        offline: false
+    } else {
+      toast("Back Online", {
+        icon: "👍",
+        style: {
+          width: "80vw"
+        }
       });
-    });
-  };
+    }
+  }
 
   jobPollUser = async () => {
     console.log("[JOB] polling user");
