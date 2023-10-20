@@ -3,7 +3,7 @@ import { Pool, PoolClient } from "postgres-pool";
 import { DevconnectPretixRedactedTicket } from "../../models";
 import { sqlQuery, sqlTransaction } from "../../sqlQuery";
 
-export async function insertDevconnectPretixRedactedTicket(
+export async function upsertDevconnectPretixRedactedTicket(
   client: Pool,
   params: DevconnectPretixRedactedTicket
 ): Promise<void> {

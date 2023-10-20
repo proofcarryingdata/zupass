@@ -1,5 +1,5 @@
 import { Pool } from "postgres-pool";
-import { DevconnectPretixTicketDB } from "../../models";
+import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -8,7 +8,7 @@ import { sqlQuery } from "../../sqlQuery";
  */
 export async function softDeleteDevconnectPretixTicket(
   client: Pool,
-  params: DevconnectPretixTicketDB
+  params: DevconnectPretixTicket
 ): Promise<void> {
   await sqlQuery(
     client,

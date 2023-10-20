@@ -19,13 +19,14 @@ import {
   DevconnectPretixRedactedTicket,
   DevconnectPretixTicket,
   DevconnectPretixTicketDB,
+  DevconnectPretixTicketWithCheckin,
   PretixEventInfo,
   PretixItemInfo
 } from "../../database/models";
 import {
   deleteDevconnectPretixRedactedTickets,
   fetchDevconnectPretixRedactedTicketsByEvent,
-  insertDevconnectPretixRedactedTicket
+  upsertDevconnectPretixRedactedTicket
 } from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   fetchDevconnectPretixTicketsByEvent,
@@ -52,7 +53,7 @@ import {
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
-import { normalizeEmail } from "../../util/util";
+import { compareArrays, normalizeEmail } from "../../util/util";
 import { setError, traced } from "../telemetryService";
 
 const NAME = "OrganizerSync";
@@ -669,6 +670,74 @@ export class OrganizerSync {
     });
   }
 
+  private checkinDataForNewTicket(
+    ticket: DevconnectPretixTicket
+  ): DevconnectPretixTicketWithCheckin {
+    let checker = null;
+    let zupass_checkin_timestamp = null;
+
+    // This is the first time we've seen this ticket, and it's already
+    // checked in on Pretix.
+    if (ticket.pretix_checkin_timestamp) {
+      checker = PRETIX_CHECKER;
+      zupass_checkin_timestamp = ticket.pretix_checkin_timestamp;
+    }
+
+    return {
+      ...ticket,
+      checker,
+      zupass_checkin_timestamp
+    };
+  }
+
+  private checkinDataForExistingTicket(
+    updatedTicket: DevconnectPretixTicket,
+    oldTicket: DevconnectPretixTicketWithCheckin
+  ): DevconnectPretixTicketWithCheckin {
+    // These values do not come from Pretix sync, so we have to compute
+    // them. We start with the old ticket as default.
+    let checker = oldTicket?.checker ?? null;
+    let zupass_checkin_timestamp = oldTicket?.zupass_checkin_timestamp ?? null;
+
+    // If a ticket has been checked in on Pretix, but was not checked
+    // in on our side, then use the checkin details provided by Pretix.
+    if (!oldTicket?.is_consumed && updatedTicket.pretix_checkin_timestamp) {
+      checker = PRETIX_CHECKER;
+      zupass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
+    }
+
+    // Here we are checking for a ticket which, prior to this point,
+    // has been checked in (is_consumed) but not synced (does not have
+    // a pretix_checkin_timestamp). This is the same check that we do
+    // in fetchDevconnectTicketsAwaitingSync().
+    //
+    // In this.ordersToDevconnectPretixTickets(), we set is_consumed
+    // based on data from Pretix, but since there has been no push-sync
+    // yet, this will be set to 'false'. Instead, we should ensure
+    // that is_consumed remains true, so that the Zupass UI shows the
+    // expected values while sync remains pending.
+    if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
+      updatedTicket.is_consumed = true;
+    }
+
+    return { ...updatedTicket, checker, zupass_checkin_timestamp };
+  }
+
+  private async prepareRedactedTicket(
+    ticket: DevconnectPretixTicket
+  ): Promise<DevconnectPretixRedactedTicket> {
+    return {
+      hashed_email: await getHash(ticket.email),
+      position_id: ticket.position_id,
+      checker: ticket.is_consumed ? PRETIX_CHECKER : null,
+      pretix_checkin_timestamp: ticket.pretix_checkin_timestamp,
+      secret: ticket.secret,
+      is_consumed: ticket.is_consumed,
+      devconnect_pretix_items_info_id: ticket.devconnect_pretix_items_info_id,
+      pretix_events_config_id: ticket.pretix_events_config_id
+    };
+  }
+
   /**
    * Sync and update data for Pretix tickets under event.
    * Returns whether update was successful.
@@ -731,123 +800,66 @@ export class OrganizerSync {
           approvedTickets = ticketsFromPretix;
         }
 
-        const newTicketsByPositionId = new Map(
-          approvedTickets.map((t) => [t.position_id, t])
-        );
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
           eventConfigID
         );
+
+        const changes = compareArrays(
+          existingTickets,
+          approvedTickets,
+          "position_id",
+          pretixTicketsDifferent
+        );
+
         const existingTicketsByPositionId = new Map(
           existingTickets.map((t) => [t.position_id, t])
-        );
-        const newTickets = approvedTickets.filter(
-          (t) => !existingTicketsByPositionId.has(t.position_id)
         );
 
         // Step 1 of saving: insert tickets that are new
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${newTickets.length} new tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${changes.new.length} new tickets`
         );
-        for (const ticket of newTickets) {
+        for (const ticket of changes.new.map(this.checkinDataForNewTicket)) {
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Inserting ticket ${JSON.stringify(ticket)}`
           );
 
-          let checker = null;
-          let zupass_checkin_timestamp = null;
-
-          // This is the first time we've seen this ticket, and it's already
-          // checked in on Pretix.
-          if (ticket.pretix_checkin_timestamp) {
-            checker = PRETIX_CHECKER;
-            zupass_checkin_timestamp = ticket.pretix_checkin_timestamp;
-          }
-
-          await insertDevconnectPretixTicket(this.db, {
-            ...ticket,
-            checker,
-            zupass_checkin_timestamp
-          });
+          await insertDevconnectPretixTicket(this.db, ticket);
         }
 
         // Step 2 of saving: update tickets that have changed
-        // Filter to tickets that existed before, and filter to those that have changed.
-        const updatedTickets = approvedTickets
-          .filter((t) => existingTicketsByPositionId.has(t.position_id))
-          .filter((t) => {
-            const oldTicket = existingTicketsByPositionId.get(
-              t.position_id
-            ) as DevconnectPretixTicketDB;
-            const newTicket = t;
-            return pretixTicketsDifferent(oldTicket, newTicket);
-          });
-
         // For the tickets that have changed, update them in the database.
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${changes.updated.length} tickets`
         );
-        for (const updatedTicket of updatedTickets) {
+        for (const ticket of changes.updated) {
           const oldTicket = existingTicketsByPositionId.get(
-            updatedTicket.position_id
+            ticket.position_id
+          ) as DevconnectPretixTicketDB;
+          const updatedTicket = this.checkinDataForExistingTicket(
+            ticket,
+            oldTicket
           );
-
-          // These values do not come from Pretix sync, so we have to compute
-          // them. We start with the old ticket as default.
-          let checker = oldTicket?.checker ?? null;
-          let zupass_checkin_timestamp =
-            oldTicket?.zupass_checkin_timestamp ?? null;
-
-          // If a ticket has been checked in on Pretix, but was not checked
-          // in on our side, then use the checkin details provided by Pretix.
-          if (
-            !oldTicket?.is_consumed &&
-            updatedTicket.pretix_checkin_timestamp
-          ) {
-            checker = PRETIX_CHECKER;
-            zupass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
-          }
-
-          // Here we are checking for a ticket which, prior to this point,
-          // has been checked in (is_consumed) but not synced (does not have
-          // a pretix_checkin_timestamp). This is the same check that we do
-          // in fetchDevconnectTicketsAwaitingSync().
-          //
-          // In this.ordersToDevconnectPretixTickets(), we set is_consumed
-          // based on data from Pretix, but since there has been no push-sync
-          // yet, this will be set to 'false'. Instead, we should ensure
-          // that is_consumed remains true, so that the Zupass UI shows the
-          // expected values while sync remains pending.
-          if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
-            updatedTicket.is_consumed = true;
-          }
-
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
-              { ...updatedTicket, checker, zupass_checkin_timestamp }
+              updatedTicket
             )}`
           );
 
           // Merge the checkin details into the ticket for saving.
-          await updateDevconnectPretixTicket(this.db, {
-            ...updatedTicket,
-            checker,
-            zupass_checkin_timestamp
-          });
+          await updateDevconnectPretixTicket(this.db, updatedTicket);
         }
 
         // Step 3 of saving: soft delete tickets that don't exist anymore
-        const removedTickets = existingTickets.filter(
-          (existing) => !newTicketsByPositionId.has(existing.position_id)
-        );
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${changes.removed.length} tickets`
         );
-        for (const removedTicket of removedTickets) {
+        for (const removedTicket of changes.removed) {
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
@@ -862,69 +874,41 @@ export class OrganizerSync {
           // Grouping by position ID is safe here because all of these tickets
           // belong to the same event, and position ID is locally unique.
           const redactedTickets = await Promise.all(
-            ticketsToRedact.map(async (ticket) => {
-              return {
-                hashed_email: await getHash(ticket.email),
-                position_id: ticket.position_id,
-                checker: ticket.is_consumed ? PRETIX_CHECKER : null,
-                pretix_checkin_timestamp: ticket.pretix_checkin_timestamp,
-                secret: ticket.secret,
-                is_consumed: ticket.is_consumed,
-                devconnect_pretix_items_info_id:
-                  ticket.devconnect_pretix_items_info_id,
-                pretix_events_config_id: eventConfigID
-              };
-            })
+            ticketsToRedact.map(this.prepareRedactedTicket)
           );
 
-          const existingRedactedTicketsByPositionId = new Map(
-            redactedTicketsInDB.map((ticket) => [ticket.position_id, ticket])
-          );
+          const redactionChanges =
+            compareArrays<DevconnectPretixRedactedTicket>(
+              redactedTicketsInDB,
+              redactedTickets,
+              "position_id",
+              pretixRedactedTicketsDifferent
+            );
 
-          const newOrUpdatedRedactedTickets = redactedTickets.filter(
-            (ticket) => {
-              const existingTicket = existingRedactedTicketsByPositionId.get(
-                ticket.position_id
-              );
-
-              return (
-                !existingTicket ||
-                pretixRedactedTicketsDifferent(existingTicket, ticket)
-              );
-            }
-          );
-
-          for (const redactedTicket of newOrUpdatedRedactedTickets) {
-            await insertDevconnectPretixRedactedTicket(this.db, redactedTicket);
+          for (const redactedTicket of [
+            ...redactionChanges.new,
+            ...redactionChanges.updated
+          ]) {
+            await upsertDevconnectPretixRedactedTicket(this.db, redactedTicket);
           }
-
-          const newRedactedTicketsByPositionId = new Map(
-            redactedTickets.map((r) => [r.position_id, r])
-          );
-
-          const removedRedactedTickets = redactedTicketsInDB.filter(
-            (existing) => {
-              return !newRedactedTicketsByPositionId.has(existing.position_id);
-            }
-          );
 
           await deleteDevconnectPretixRedactedTickets(
             this.db,
             eventConfigID,
-            removedRedactedTickets.map((t) => t.position_id)
+            redactionChanges.removed.map((t) => t.position_id)
           );
 
-          redactedTicketsDeleted = removedRedactedTickets.length;
+          redactedTicketsDeleted = redactionChanges.removed.length;
         }
 
-        span?.setAttribute("ticketsInserted", newTickets.length);
-        span?.setAttribute("ticketsUpdated", updatedTickets.length);
-        span?.setAttribute("ticketsDeleted", removedTickets.length);
+        span?.setAttribute("ticketsInserted", changes.new.length);
+        span?.setAttribute("ticketsUpdated", changes.updated.length);
+        span?.setAttribute("ticketsDeleted", changes.removed.length);
         span?.setAttribute("redactedTicketsInserted", ticketsToRedact.length);
         span?.setAttribute("redactedTicketsDeleted", redactedTicketsDeleted);
         span?.setAttribute(
           "ticketsTotal",
-          existingTickets.length + newTickets.length - removedTickets.length
+          existingTickets.length + changes.new.length - changes.removed.length
         );
       } catch (e) {
         logger(
