@@ -140,6 +140,22 @@ class App extends React.Component<object, AppState> {
   }
 
   jobSyncOfflineCheckins = async () => {
+    if (this.state.checkedinOfflineTickets) {
+      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+        appConfig.zupassServer,
+        this.state.identity,
+        this.state.checkedinOfflineTickets
+      );
+
+      if (checkinOfflineTicketsResult.success) {
+        this.update({
+          ...this.state,
+          checkedinOfflineTickets: undefined
+        });
+        saveCheckedInOfflineTickets(undefined);
+      }
+    }
+
     const offlineTicketsResult = await offlineTickets(
       appConfig.zupassServer,
       this.state.identity
@@ -151,24 +167,6 @@ class App extends React.Component<object, AppState> {
         offlineTickets: offlineTicketsResult.value.offlineTickets
       });
       saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
-    }
-
-    if (!this.state.checkedinOfflineTickets) {
-      return;
-    }
-
-    const checkinOfflineTicketsResult = await offlineTicketsCheckin(
-      appConfig.zupassServer,
-      this.state.identity,
-      this.state.checkedinOfflineTickets
-    );
-
-    if (checkinOfflineTicketsResult.success) {
-      this.update({
-        ...this.state,
-        checkedinOfflineTickets: undefined
-      });
-      saveCheckedInOfflineTickets(undefined);
     }
   };
 }
