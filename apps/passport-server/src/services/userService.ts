@@ -360,13 +360,20 @@ export class UserService {
         payload.version >= UNREDACT_TICKETS_TERMS_VERSION &&
         user.terms_agreed < UNREDACT_TICKETS_TERMS_VERSION
       ) {
-        logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+        logger(
+          `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
+          user.email
+        );
         await agreeTermsAndUnredactTickets(
           this.context.dbPool,
           user.email,
           payload.version
         );
       } else {
+        logger(
+          `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
+          user.email
+        );
         await upsertUser(this.context.dbPool, {
           ...user,
           terms_agreed: payload.version
