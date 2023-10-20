@@ -3,7 +3,7 @@ import {
   ConfirmEmailResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_HOUR_MS, SUPPORT_ZUPASS_EMAIL } from "@pcd/util";
 import { Response } from "express";
 import { UserRow } from "../database/models";
 import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -173,7 +173,7 @@ export class UserService {
       throw new PCDHTTPError(
         429,
         "You've exceeded the maximum number of account resets." +
-          " Please contact passport@0xparc.org for further assistance."
+          ` Please contact ${SUPPORT_ZUPASS_EMAIL} for further assistance.`
       );
     }
 

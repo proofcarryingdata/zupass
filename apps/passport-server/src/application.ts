@@ -1,5 +1,7 @@
+import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
 import process from "node:process";
 import * as path from "path";
+import urljoin from "url-join";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -50,12 +52,11 @@ export async function startApplication(
   const commitMessage = await getCommitMessage();
   const discordAlertMessage = `Server \`${
     process.env.ROLLBAR_ENV_NAME
-  }\` started at [\`${context.gitCommitHash.substring(
-    0,
-    8
-  )}\`](<https://github.com/proofcarryingdata/zupass/commit/${
+  }\` started at [\`${context.gitCommitHash.substring(0, 8)}\`](<${urljoin(
+    ZUPASS_GITHUB_REPOSITORY_URL,
+    "commit",
     context.gitCommitHash
-  }>)\n\`\`\`\n${commitMessage}\n\`\`\``;
+  )}>)\n\`\`\`\n${commitMessage}\n\`\`\``;
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(discordAlertMessage);
 

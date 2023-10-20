@@ -2,7 +2,9 @@ import { HoneycombSDK } from "@honeycombio/opentelemetry-node";
 import opentelemetry, { Span, Tracer } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
 import Libhoney from "libhoney";
+import urljoin from "url-join";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 
@@ -45,7 +47,7 @@ export async function startTelemetry(
       writeMarker(
         context.gitCommitHash,
         MarkerType.Deploy,
-        `https://github.com/proofcarryingdata/zupass/commit/${context.gitCommitHash}`
+        urljoin(ZUPASS_GITHUB_REPOSITORY_URL, "commit", context.gitCommitHash)
       );
     })
     .catch((error) => logger("Error initializing tracing", error));
