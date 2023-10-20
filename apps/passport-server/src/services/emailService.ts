@@ -46,7 +46,7 @@ export class EmailService {
 
       const msg = {
         to: to,
-        from: ZUPASS_SENDER_EMAIL,
+        from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
         subject: "Welcome to Zupass",
         ...(await this.composeTokenEmail(token))
       };
