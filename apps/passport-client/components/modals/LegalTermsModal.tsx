@@ -6,7 +6,7 @@ import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity } from "../../src/appHooks";
 import { saveTermsAgreed } from "../../src/localstorage";
 import { Button, H2 } from "../core";
-import { Spinner } from "../shared/Spinner";
+import { RippleLoader } from "../core/RippleLoader";
 import { TermsOfUse } from "../shared/TermsOfUse";
 
 export function LegalTermsModal() {
@@ -39,9 +39,8 @@ export function LegalTermsModal() {
       <p>To continue using Zupass, please agree to the following terms:</p>
       <TermsOfUse />
       <Spacer h={24} />
-      <Button onClick={onClick}>
-        <Spinner text="Agree" show={isSubmitting} />
-      </Button>
+      {isSubmitting && <RippleLoader />}
+      {!isSubmitting && <Button onClick={onClick}>Agree</Button>}
     </Container>
   );
 }
