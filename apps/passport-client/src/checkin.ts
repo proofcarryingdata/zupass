@@ -6,6 +6,7 @@ import {
   KnownTicketGroup,
   OfflineDevconnectTicket,
   OfflineZuconnectTicket,
+  OfflineZuzaluTicket,
   requestVerifyTicket,
   requestVerifyTicketById,
   VerifyTicketByIdResult,
@@ -54,6 +55,15 @@ function getOfflineZuconnectTicket(
   return state
     .getState()
     .offlineTickets?.zuconnectTickets?.find((t) => t.id === ticketId);
+}
+
+function getOfflineZuzaluTicket(
+  ticketId: string,
+  state: StateContextValue
+): OfflineZuzaluTicket | undefined {
+  return state
+    .getState()
+    .offlineTickets?.zuzaluTickets?.find((t) => t.id === ticketId);
 }
 
 function checkinOfflineDevconnectTicket(

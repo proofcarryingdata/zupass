@@ -8,8 +8,8 @@ import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixTicketDB,
-  ZuconnectTicketDB,
-  ZuzaluUser
+  LoggedInZuzaluUser,
+  ZuconnectTicketDB
 } from "../models";
 import {
   fetchDevconnectPretixTicketsByEvent,
@@ -21,7 +21,7 @@ import {
   fetchZuconnectTicketsByEmail
 } from "../queries/zuconnect/fetchZuconnectTickets";
 import {
-  fetchAllZuzaluUsers,
+  fetchAllLoggedInZuzaluUsers,
   fetchZuzaluUser
 } from "../queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 
@@ -60,7 +60,7 @@ async function fetchOfflineZuzaluTickets(
     return [];
   }
 
-  const allZuconnectTickets = await fetchAllZuzaluUsers(dbPool);
+  const allZuconnectTickets = await fetchAllLoggedInZuzaluUsers(dbPool);
   return allZuconnectTickets.map(zuzaluUserToOfflineTicket);
 }
 
@@ -128,6 +128,8 @@ function zuconnectTicketToOfflineTicket(
   return { id: ticket.id };
 }
 
-function zuzaluUserToOfflineTicket(ticket: ZuzaluUser): OfflineZuzaluTicket {
-  return { id: ticket.order_id };
+function zuzaluUserToOfflineTicket(
+  ticket: LoggedInZuzaluUser
+): OfflineZuzaluTicket {
+  return { id: ticket.uuid };
 }
