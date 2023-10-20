@@ -5,6 +5,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   QRDisplayWithRegenerateAndStorage,
+  Spacer,
   encodeQRPayload
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -13,6 +14,7 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
+import { RedactedText } from "../../core/RedactedText";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
 
@@ -115,7 +117,7 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
         key={pcd.id}
         generateQRPayload={generate}
         maxAgeMs={1000 * 60}
-        uniqueId={`${pcd.id}`}
+        uniqueId={pcd.id}
         fgColor={getQRCodeColorOverride(pcd)}
       />
     );
@@ -132,8 +134,11 @@ export function DevconnectCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
     <Container>
       <TicketInfo>
         <TicketQR zk={zk} pcd={pcd} />
-        <span>{ticketData?.attendeeName}</span>
-        <span>{ticketData?.attendeeEmail}</span>
+        <Spacer h={8} />
+        {ticketData?.attendeeName && (
+          <RedactedText redacted={zk}>{ticketData?.attendeeName}</RedactedText>
+        )}
+        <RedactedText redacted={zk}>{ticketData?.attendeeEmail}</RedactedText>
         <ZKMode>
           <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
         </ZKMode>
