@@ -1,4 +1,4 @@
-import { NOREPLY_ZUPASS_EMAIL } from "@pcd/util";
+import { ZUPASS_SENDER_EMAIL } from "@pcd/util";
 import { readFile } from "fs/promises";
 import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
@@ -46,7 +46,7 @@ export class EmailService {
 
       const msg = {
         to: to,
-        from: NOREPLY_ZUPASS_EMAIL,
+        from: ZUPASS_SENDER_EMAIL,
         subject: "Welcome to Zupass",
         ...(await this.composeTokenEmail(token))
       };
