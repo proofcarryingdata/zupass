@@ -381,11 +381,11 @@ export class TelegramService {
     });
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
-      return traced("telegram","forum_topic_created", async (span) => {
+      return traced("telegram", "forum_topic_created", async (span) => {
         const topicName = ctx.update?.message?.forum_topic_created.name;
         const messageThreadId = ctx.update.message?.message_thread_id;
         const chatId = ctx.chat.id;
-        span?.setAttributes({topicName, messageThreadId, chatId})
+        span?.setAttributes({ topicName, messageThreadId, chatId });
 
         if (!chatId || !topicName || !messageThreadId)
           throw new Error(`Missing chatId or topic name`);
@@ -403,11 +403,11 @@ export class TelegramService {
     });
 
     this.authBot.on(":forum_topic_edited", async (ctx) => {
-      return traced("telegram","forum_topic_edited", async (span) => {
+      return traced("telegram", "forum_topic_edited", async (span) => {
         const topicName = ctx.update?.message?.forum_topic_edited.name;
         const chatId = ctx.chat.id;
         const messageThreadId = ctx.update.message?.message_thread_id;
-        span?.setAttributes({topicName, messageThreadId, chatId})
+        span?.setAttributes({ topicName, messageThreadId, chatId });
 
         if (!messageThreadId)
           return logger(
@@ -641,7 +641,7 @@ export class TelegramService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
-        span?.setAttribute('signerMatch', signerMatch)
+      span?.setAttribute("signerMatch", signerMatch);
       if (
         // TODO: wrap in a MultiProcessService?
         (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
@@ -909,6 +909,8 @@ export class TelegramService {
             maxDailyPostsPerTopic,
             rlDuration
           );
+        span?.setAttribute("rateLimitExceeded", rateLimitExceeded);
+
         if (!rateLimitExceeded) {
           await insertOrUpdateTelegramNullifier(
             this.context.dbPool,
