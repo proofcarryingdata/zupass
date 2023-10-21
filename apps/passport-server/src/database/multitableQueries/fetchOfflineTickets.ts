@@ -27,6 +27,15 @@ import {
   fetchZuzaluUser
 } from "../queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 
+/**
+ * Fetches the relevant tickets for the given user. Relevant tickets are
+ * defined as follows:
+ *
+ * - if a user has a zuconnect ticket, then all zuconnect tickets are relevant
+ * - if a user has a zuzalu ticket, then all zuconnect tickets are relevant
+ * - for each devconnect event that this user has a superuser ticket to, all
+ *   tickets belonging to that event are relevant.
+ */
 export async function fetchOfflineTicketsForChecker(
   dbPool: Pool,
   userCommitment: string
