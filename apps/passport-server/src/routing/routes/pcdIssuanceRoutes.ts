@@ -156,7 +156,8 @@ export function initPCDIssuanceRoutes(
   );
 
   /**
-   * As above, but using only the ticket ID.
+   * Downloads relevant tickets for offline verification/checkin from the
+   * perspective of the user hitting this route.
    */
   app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
@@ -167,7 +168,8 @@ export function initPCDIssuanceRoutes(
   });
 
   /**
-   * As above, but using only the ticket ID.
+   * Attempts to bulk-check-in tickets that were checked in by a user
+   * in offline mode.
    */
   app.post(
     "/issue/checkin-offline-tickets",
