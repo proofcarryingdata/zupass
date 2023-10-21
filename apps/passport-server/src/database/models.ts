@@ -246,3 +246,14 @@ export interface UserIDWithChatIDs {
 export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
   isChatMember: boolean;
 };
+
+export interface ChatsReceiving {
+  chat_id: number;
+  topic_id?: number; // Using optional because it can be null
+}
+
+export interface ChatsForwarding {
+  chat_id: number;
+  topic_id?: number; // Using optional because it can be null
+  chat_receiving_id: number;
+}

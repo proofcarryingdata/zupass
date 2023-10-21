@@ -10,6 +10,10 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
+import {
+  fetchFromChatsReceivingByChatId,
+  insertIntoChatsReceiving
+} from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import {
@@ -48,8 +52,7 @@ import {
   isGroupWithTopics,
   ratResponse,
   senderIsAdmin,
-  setBotInfo,
-  uwuResponse
+  setBotInfo
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -566,8 +569,58 @@ export class TelegramService {
       this.anonBot.on("message", ratResponse);
     }
 
+    this.authBot.command("receive", async (ctx) => {
+      logger(`[TELEGRAM] running receive command`);
+      const messageThreadId = ctx.message?.message_thread_id;
+      const topicName =
+        ctx.message?.reply_to_message?.forum_topic_created?.name;
+
+      try {
+        // Check if user is admin
+        // Add topic to chatReceiving DB
+        await insertIntoChatsReceiving(
+          this.context.dbPool,
+          ctx.chat.id,
+          messageThreadId
+        );
+        await ctx.reply(
+          `Set topic <b>${
+            topicName || messageThreadId
+          }</b> to receive forwarded messages`,
+          { reply_to_message_id: messageThreadId, parse_mode: "HTML" }
+        );
+      } catch (error) {
+        logger(`[ERROR] ${error}`);
+        await ctx.reply(`Failed set chat to receive: ${error}`, {
+          message_thread_id: messageThreadId
+        });
+      }
+    });
+
+    this.authBot.on("message", async (ctx) => {
+      // Forward to receive chat
+      logger(`[MESSAGE]`, ctx.message);
+      const recipientChats = await fetchFromChatsReceivingByChatId(
+        this.context.dbPool,
+        -1001943944469
+      );
+      if (recipientChats && recipientChats.length > 1 && ctx.message?.text) {
+        // Forward message to first recipient
+        const chatId = recipientChats[0].chat_id;
+        const chat = await getGroupChat(ctx.api, chatId);
+        await this.authBot.api.sendMessage(
+          chatId,
+          `<i>fwd from <b>${chat.title}</b>:</i>\n\n${ctx.message.text}`,
+          {
+            message_thread_id: recipientChats[0].topic_id,
+            parse_mode: "HTML"
+          }
+        );
+        logger(`[TELEGRAM] forwarded ${ctx.message.text} to chat ${chatId}`);
+      }
+    });
     this.authBot.command("help", helpResponse);
-    this.authBot.on("message", uwuResponse);
+    // this.authBot.on("message", uwuResponse);
   }
 
   public anonBotExists(): boolean {
