@@ -133,11 +133,11 @@ class App extends React.Component<object, AppState> {
   };
 
   jobCheckConnectivity = async () => {
-    window.addEventListener("offline", () => this.setOfflineState(true));
-    window.addEventListener("online", () => this.setOfflineState(false));
+    window.addEventListener("offline", () => this.setIsOffline(true));
+    window.addEventListener("online", () => this.setIsOffline(false));
   };
 
-  setOfflineState(offline: boolean) {
+  setIsOffline(offline: boolean) {
     console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
     this.update({
       ...this.state,
