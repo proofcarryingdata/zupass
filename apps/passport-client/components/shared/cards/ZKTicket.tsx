@@ -5,7 +5,8 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   encodeQRPayload,
-  QRDisplayWithRegenerateAndStorage
+  QRDisplayWithRegenerateAndStorage,
+  Spacer
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -14,6 +15,7 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
+import { RedactedText } from "../../core/RedactedText";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
 
@@ -127,8 +129,9 @@ export function ZKTicketPCDCard({ pcd }: { pcd: EdDSATicketPCD }) {
     <Container>
       <TicketInfo>
         <TicketQR zk={zk} pcd={pcd} />
-        <span>{ticketData?.attendeeName}</span>
-        <span>{ticketData?.attendeeEmail}</span>
+        <Spacer h={8} />
+        <RedactedText redacted={zk}>{ticketData?.attendeeName}</RedactedText>
+        <RedactedText redacted={zk}>{ticketData?.attendeeEmail}</RedactedText>
         <ZKMode>
           <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
         </ZKMode>
