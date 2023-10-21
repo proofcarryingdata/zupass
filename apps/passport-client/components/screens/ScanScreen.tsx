@@ -2,10 +2,11 @@ import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { Spacer, TextCenter } from "../core";
+import { H5, Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
@@ -26,8 +27,16 @@ export function ScanScreen() {
         ViewFinder={ViewFinder}
         containerStyle={{ width: "100%" }}
       />
-      <Spacer h={24} />
+      <Spacer h={16} />
       <TextCenter>Scan a ticket to verify</TextCenter>
+      <Spacer h={32} />
+      <IndicateIfOffline>
+        <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
+        <Spacer h={8} />
+        You're offline. Zupass is using a backed up copy of event tickets.
+        Check-ins will be synced the next time you start the app with a working
+        network connection.
+      </IndicateIfOffline>
     </AppContainer>
   );
 }
@@ -75,6 +84,7 @@ const ScanOverlayWrap = styled.div`
   bottom: 0;
   right: 0;
   z-index: 1;
+  margin: 16px;
 `;
 
 const Guidebox = styled.div`
