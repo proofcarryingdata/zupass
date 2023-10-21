@@ -93,27 +93,6 @@ export class KudosbotService {
       await ctx.reply("hello");
     });
 
-    this.bot.command("test", async (ctx) => {
-      logger("[KUDOSBOT] test command called");
-      const userId = ctx?.from?.id;
-      try {
-        if (isDirectMessage(ctx) && userId) {
-          const chatMember = await ctx.api.getChatMember(ctx.chat.id, userId);
-          const username2 = chatMember.user.username;
-          logger(
-            `[KUDOSBOT] chat id ${ctx.chat.id}, user id ${userId},  username ${username2}`
-          );
-          const username = ctx?.from?.username;
-          const firstName = ctx?.from?.first_name;
-          const name = firstName || username;
-          await ctx.reply(`Welcome ${name}! This is a test command.`);
-        }
-      } catch (e) {
-        logger("[KUDOSBOT] test error", e);
-        this.rollbarService?.reportError(e);
-      }
-    });
-
     this.bot.command("kudos", async (ctx) => {
       const kudosGiver = ctx.from?.username;
       const payload = ctx.match;
