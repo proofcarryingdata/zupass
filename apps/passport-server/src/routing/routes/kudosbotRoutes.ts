@@ -24,7 +24,7 @@ export function initKudosbotRoutes(
     return { giver: kudosDataArr[1], receiver: kudosDataArr[2] };
   };
 
-  app.get("/upload", async (req: Request, res: Response) => {
+  app.get("/kudos/upload", async (req: Request, res: Response) => {
     const proof = req.query.proof;
     if (typeof proof !== "string") {
       return res.status(200).send("Error: no proof was uploaded.");

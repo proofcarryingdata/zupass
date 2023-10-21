@@ -11,7 +11,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import { CollapsableCode } from "../components/Core";
 import { ExampleContainer } from "../components/ExamplePage";
-import { KUDOSBOT_SERVER_UPLOAD_URL, ZUPASS_URL } from "../constants";
+import { KUDOSBOT_UPLOAD_URL, PASSPORT_CLIENT_URL } from "../constants";
 
 export function constructProofUrl<T extends PCDPackage>(
   zupassClientUrl: string,
@@ -95,9 +95,9 @@ export default function Page() {
           onClick={useCallback(
             () =>
               openSemaphoreSignaturePopup(
-                ZUPASS_URL,
+                PASSPORT_CLIENT_URL,
                 window.location.origin + "#/popup",
-                KUDOSBOT_SERVER_UPLOAD_URL,
+                KUDOSBOT_UPLOAD_URL,
                 messageToSign
               ),
             [messageToSign]

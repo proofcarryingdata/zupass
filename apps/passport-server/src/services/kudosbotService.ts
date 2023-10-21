@@ -18,10 +18,11 @@ import {
 } from "../util/telegramHelpers";
 import { RollbarService } from "./rollbarService";
 
-const ZUPASS_CLIENT_URL =
+const PASSPORT_CLIENT_URL =
   process.env.PASSPORT_CLIENT_URL || "https://dev.local:3000";
-// TODO: figure out url for upload / aggregation server
-const KUDOSBOT_SERVER_UPLOAD_URL = "https://dev.local:3005/upload";
+const PASSPORT_SERVER_URL =
+  process.env.PASSPORT_SERVER_URL || "https://dev.local:3002";
+const KUDOSBOT_UPLOAD_URL = PASSPORT_SERVER_URL + "/kudos/upload";
 
 export class KudosbotService {
   private context: ApplicationContext;
@@ -76,8 +77,8 @@ export class KudosbotService {
         const kudosGiver = ctx.session.kudosData?.giver;
         const kudosReceiver = ctx.session.kudosData?.receiver;
         const proofUrl = getProofUrl(
-          ZUPASS_CLIENT_URL,
-          KUDOSBOT_SERVER_UPLOAD_URL,
+          PASSPORT_CLIENT_URL,
+          KUDOSBOT_UPLOAD_URL,
           `KUDOS:${kudosGiver}:${kudosReceiver}`
         );
         menu.webApp("Send kudos", proofUrl);
