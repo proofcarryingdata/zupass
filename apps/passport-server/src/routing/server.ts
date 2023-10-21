@@ -14,6 +14,7 @@ import { respondWithError } from "./pcdHttpError";
 import { initAccountRoutes } from "./routes/accountRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
 import { initProvingRoutes } from "./routes/provingRoutes";
@@ -119,6 +120,7 @@ function initAllRoutes(
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
+  initKudosbotRoutes(app, context, globalServices);
   initLogRoutes(app);
 }
 
