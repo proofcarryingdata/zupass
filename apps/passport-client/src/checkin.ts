@@ -185,10 +185,7 @@ export async function devconnectCheckInByIdWithOffline(
       };
     }
 
-    const checkedInTicket = checkinOfflineDevconnectTicket(
-      ticketId,
-      stateContext
-    );
+    checkinOfflineDevconnectTicket(ticketId, stateContext);
 
     return {
       success: true,
