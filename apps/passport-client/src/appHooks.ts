@@ -66,6 +66,10 @@ export function useDispatch(): Dispatcher {
   return dispatch;
 }
 
+export function useIsOffline(): boolean {
+  return useSelector<boolean>((s) => !!s.offline, []);
+}
+
 export function useStateContext(): StateContextValue {
   return useContext(StateContext);
 }

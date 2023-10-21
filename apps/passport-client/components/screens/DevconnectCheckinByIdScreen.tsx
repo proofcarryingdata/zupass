@@ -15,6 +15,7 @@ import {
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
 import {
   CardBodyContainer,
   CardHeader,
@@ -37,7 +38,20 @@ export function DevconnectCheckinByIdScreen() {
     content = <CheckInById ticketId={ticketId} />;
   }
 
-  return <>{content}</>;
+  return (
+    <AppContainer bg={"primary"}>
+      <Container>
+        <IndicateIfOffline>
+          <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
+          <Spacer h={8} />
+          You're offline. Zupass is using a backed up copy of event tickets.
+          Check-ins will be synced the next time you start the app with a
+          working network connection.
+        </IndicateIfOffline>
+        {content}
+      </Container>
+    </AppContainer>
+  );
 }
 
 function CheckInById({ ticketId }: { ticketId: string }) {
@@ -185,20 +199,18 @@ function TicketErrorContent({ error }: { error: TicketError }) {
 
 function TicketError({ error }: { error: TicketError }) {
   return (
-    <AppContainer bg={"primary"}>
-      <Container>
-        <TicketErrorContent error={error} />
-        <div
-          style={{
-            marginTop: "16px",
-            width: "100%"
-          }}
-        >
-          <ScanAnotherTicket />
-          <Home />
-        </div>
-      </Container>
-    </AppContainer>
+    <>
+      <TicketErrorContent error={error} />
+      <div
+        style={{
+          marginTop: "16px",
+          width: "100%"
+        }}
+      >
+        <ScanAnotherTicket />
+        <Home />
+      </div>
+    </>
   );
 }
 
@@ -237,12 +249,10 @@ function UserReadyForCheckin({
   ticketId: string;
 }) {
   return (
-    <AppContainer bg={"primary"}>
-      <Container>
-        <TicketInfoSection ticketData={ticketData} />
-        <CheckInSection ticketId={ticketId} />
-      </Container>
-    </AppContainer>
+    <>
+      <TicketInfoSection ticketData={ticketData} />
+      <CheckInSection ticketId={ticketId} />
+    </>
   );
 }
 

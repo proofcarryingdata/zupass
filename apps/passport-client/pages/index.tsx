@@ -309,7 +309,7 @@ async function loadInitialState(): Promise<AppState> {
     credentialCache,
     offlineTickets,
     checkedinOfflineDevconnectTickets: checkedOfflineInDevconnectTickets,
-    offline: window.navigator.onLine
+    offline: !window.navigator.onLine
   };
 }
 
