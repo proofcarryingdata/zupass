@@ -3,6 +3,7 @@ import {
   offlineTickets,
   offlineTicketsCheckin
 } from "@pcd/passport-interface";
+import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
@@ -18,12 +19,12 @@ import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
-import { DeviceLoginScreen } from "../components/screens/LoginScreens/DeviceLoginScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
+import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
@@ -94,8 +95,15 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        {!hasStack && <Router />}
-        {hasStack && (
+        {!isWebAssemblySupported() ? (
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<NoWASMScreen />} />
+            </Routes>
+          </HashRouter>
+        ) : !hasStack ? (
+          <Router />
+        ) : (
           <HashRouter>
             <Routes>
               <Route path="*" element={<AppContainer bg="gray" />} />
@@ -249,7 +257,6 @@ function RouterImpl() {
             path="checkin-by-id"
             element={<DevconnectCheckinByIdScreen />}
           />
-          <Route path="device-login" element={<DeviceLoginScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />

@@ -1,7 +1,6 @@
 import {
   ConfirmEmailRequest,
   CreateNewUserRequest,
-  DeviceLoginRequest,
   SaltResponseValue,
   VerifyTokenRequest,
   VerifyTokenResponseValue
@@ -145,34 +144,6 @@ export function initAccountRoutes(
       encryptionKey,
       res
     );
-  });
-
-  /**
-   * Allows users to login as a particular email without having to go through
-   * the email verification flow.
-   *
-   * Caller must provide a `secret`, which corresponds to the `secret` on a valid
-   * ticket stored in pretix for the given email that is a superuser ticket.
-   *
-   * In the case that no such ticket exists, returns a 403 server error.
-   *
-   * In the case that a user has already signed in with that email, overwrites
-   * their account.
-   *
-   * If logging in was successful, returns a {@link ZupassUserJson}, otherwise
-   * a 500 server error.
-   */
-  app.post("/account/device-login", async (req: Request, res: Response) => {
-    const secret = checkBody<DeviceLoginRequest, "secret">(req, "secret");
-    const email = normalizeEmail(
-      checkBody<DeviceLoginRequest, "email">(req, "email")
-    );
-    const commitment = checkBody<DeviceLoginRequest, "commitment">(
-      req,
-      "commitment"
-    );
-
-    await userService.handleNewDeviceLogin(secret, email, commitment, res);
   });
 
   /**

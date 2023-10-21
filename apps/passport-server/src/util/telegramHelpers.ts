@@ -3,6 +3,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -32,6 +33,7 @@ import {
   insertTelegramChat,
   insertTelegramEvent
 } from "../database/queries/telegram/insertTelegramConversation";
+import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.SupergroupChat | null;
@@ -62,11 +64,15 @@ export const getGroupChat = async (
   api: Api<RawApi>,
   chatId: string | number
 ): Promise<Chat.SupergroupChat> => {
-  const chat = await api.getChat(chatId);
-  if (!chat) throw new Error(`No chat found for id ${chatId}`);
-  if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
-  else throw new Error(`Chat is not a group with topics enabled`);
+  return traced("telegram", "getGroupChat", async (span) => {
+    span?.setAttribute("chatId", chatId);
+    const chat = await api.getChat(chatId);
+    if (!chat) throw new Error(`No chat found for id ${chatId}`);
+    if (isGroupWithTopics(chat)) return chat as Chat.SupergroupChat;
+    else throw new Error(`Chat is not a group with topics enabled`);
+  });
 };
+
 const privateChatCommands: BotCommandWithAnon[] = [
   {
     command: "/start",
@@ -181,6 +187,7 @@ export const setBotInfo = async (
       privateChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       { scope: { type: "all_private_chats" } }
     );
+
     anonBot.api.setMyCommands(
       adminGroupChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
       {
@@ -227,27 +234,28 @@ export const setBotInfo = async (
 export const chatIDsToChats = async <
   T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
 >(
-  db: Pool,
   ctx: BotContext,
   chats: T[]
 ): Promise<ChatIDWithChat<T>[]> => {
-  const chatIDsToChatRequests = chats.map(async (e) => {
-    return {
-      ...e,
-      chat: e.telegramChatID
-        ? ((await ctx.api.getChat(e.telegramChatID)) as TopicChat)
-        : null
-    };
+  return traced("telegram", "chatIDsToChats", async () => {
+    const chatIDsToChatRequests = chats.map(async (e) => {
+      return {
+        ...e,
+        chat: e.telegramChatID
+          ? ((await ctx.api.getChat(e.telegramChatID)) as TopicChat)
+          : null
+      };
+    });
+    const eventsWithChatsSettled = await Promise.allSettled(
+      chatIDsToChatRequests
+    );
+
+    const eventsWithChats = eventsWithChatsSettled
+      .filter(isFulfilled)
+      .map((e) => e.value);
+
+    return eventsWithChats;
   });
-  const eventsWithChatsSettled = await Promise.allSettled(
-    chatIDsToChatRequests
-  );
-
-  const eventsWithChats = eventsWithChatsSettled
-    .filter(isFulfilled)
-    .map((e) => e.value);
-
-  return eventsWithChats;
 };
 
 export const findChatByEventIds = (
@@ -325,83 +333,91 @@ const editOrSendMessage = async (
   }
 };
 
-const generateTicketProofUrl = (
+const generateTicketProofUrl = async (
   telegramUserId: string,
   validEventIds: string[]
-): string => {
-  const fieldsToReveal: EdDSATicketFieldsToReveal = {
-    revealTicketId: false,
-    revealEventId: false,
-    revealProductId: false,
-    revealTimestampConsumed: false,
-    revealTimestampSigned: false,
-    revealAttendeeSemaphoreId: true,
-    revealIsConsumed: false,
-    revealIsRevoked: false
-  };
+): Promise<string> => {
+  return traced("telegram", "generateTicketProofUrl", async (span) => {
+    span?.setAttribute("userId", telegramUserId);
+    span?.setAttribute("validEventIds", validEventIds);
 
-  const args: ZKEdDSAEventTicketPCDArgs = {
-    ticket: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: EdDSATicketPCDPackage.name,
-      value: undefined,
-      userProvided: true,
-      displayName: "Your Ticket",
-      description: "",
-      validatorParams: {
-        eventIds: validEventIds,
-        productIds: [],
-        // TODO: surface which event ticket we are looking for
-        notFoundMessage: "You don't have a ticket to this event."
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: false,
+      revealEventId: false,
+      revealProductId: false,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: true,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+        displayName: "Your Ticket",
+        description: "",
+        validatorParams: {
+          eventIds: validEventIds,
+          productIds: [],
+          // TODO: surface which event ticket we are looking for
+          notFoundMessage: "You don't have a ticket to this event."
+        },
+        hideIcon: true
       },
-      hideIcon: true
-    },
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
-      value: undefined,
-      userProvided: true
-    },
-    fieldsToReveal: {
-      argumentType: ArgumentTypeName.ToggleList,
-      value: fieldsToReveal,
-      userProvided: false,
-      hideIcon: true
-    },
-    externalNullifier: {
-      argumentType: ArgumentTypeName.BigInt,
-      value: undefined,
-      userProvided: false
-    },
-    validEventIds: {
-      argumentType: ArgumentTypeName.StringArray,
-      value: validEventIds,
-      userProvided: false
-    },
-    watermark: {
-      argumentType: ArgumentTypeName.BigInt,
-      value: telegramUserId.toString(),
-      userProvided: false,
-      description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false,
+        hideIcon: true
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: undefined,
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: validEventIds,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: telegramUserId.toString(),
+        userProvided: false,
+        description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
     }
-  };
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    span?.setAttribute("returnUrl", returnUrl);
 
-  let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
-  if (passportOrigin === "http://localhost:3000/") {
-    // TG bot doesn't like localhost URLs
-    passportOrigin = "http://127.0.0.1:3000/";
-  }
-  const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    const proofUrl = constructZupassPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: "",
+      description:
+        "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    });
+    span?.setAttribute("proofUrl", proofUrl);
 
-  const proofUrl = constructZupassPcdGetRequestUrl<
-    typeof ZKEdDSAEventTicketPCDPackage
-  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-    genericProveScreen: true,
-    title: "",
-    description:
-      "Zucat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    return proofUrl;
   });
-  return proofUrl;
 };
 
 const getChatsWithMembershipStatus = async (
@@ -409,18 +425,21 @@ const getChatsWithMembershipStatus = async (
   ctx: BotContext,
   userId: number
 ): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
-  const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
-    db,
-    userId
-  );
+  return traced("telegram", "getChatsWithMembershipStatus", async (span) => {
+    span?.setAttribute("userId", userId.toString());
 
-  const chatsWithMembership = await chatIDsToChats(
-    db,
-    ctx,
-    chatIdsWithMembership
-  );
+    const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
+      db,
+      userId
+    );
 
-  return chatsWithMembership;
+    const chatsWithMembership = await chatIDsToChats(
+      ctx,
+      chatIdsWithMembership
+    );
+
+    return chatsWithMembership;
+  });
 };
 
 export const eventsToLink = async (
@@ -506,157 +525,171 @@ export const chatsToJoin = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
-  const db = ctx.session.dbPool;
-  if (!db) {
-    range.text(`Database not connected. Try again...`);
-    return;
-  }
-  const userId = ctx.from?.id;
-  if (!userId) {
-    range.text(`User not found. Try again...`);
-    return;
-  }
-
-  const chatsWithMembership = await getChatsWithMembershipStatus(
-    db,
-    ctx,
-    userId
-  );
-
-  if (chatsWithMembership.length === 0) {
-    range.text(`No groups to join at this time`);
-    return;
-  }
-
-  for (const chat of chatsWithMembership) {
-    if (chat.isChatMember) {
-      const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
-        creates_join_request: true
-      });
-      range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
-      range.row();
-    } else {
-      const proofUrl = generateTicketProofUrl(
-        userId.toString(),
-        chat.ticketEventIds
-      );
-      range.webApp(`${chat.chat?.title}`, proofUrl).row();
+  return traced("telegram", "chatsToJoin", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
     }
-  }
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+
+    const chatsWithMembership = await getChatsWithMembershipStatus(
+      db,
+      ctx,
+      userId
+    );
+
+    if (chatsWithMembership.length === 0) {
+      range.text(`No groups to join at this time`);
+      return;
+    }
+
+    for (const chat of chatsWithMembership) {
+      if (chat.isChatMember) {
+        const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
+          creates_join_request: true
+        });
+        range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+        range.row();
+      } else {
+        const proofUrl = await generateTicketProofUrl(
+          userId.toString(),
+          chat.ticketEventIds
+        );
+        range.webApp(`${chat.chat?.title}`, proofUrl).row();
+      }
+    }
+  });
 };
 
 export const chatsToPostIn = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
 ): Promise<void> => {
-  const db = ctx.session.dbPool;
-  if (!db) {
-    range.text(`Database not connected. Try again...`);
-    return;
-  }
-  const userId = ctx.from?.id;
-  if (!userId) {
-    range.text(`User not found. Try again...`);
-    return;
-  }
-  try {
-    // If a chat has been selected, give the user a choice of topics to send to.
-    if (ctx.session.selectedChat) {
-      const chat = ctx.session.selectedChat;
-
-      // Fetch anon topics for the selected chat
-      const topics = await fetchTelegramAnonTopicsByChatId(
-        ctx.session.dbPool,
-        chat.id
-      );
-
-      // Fetch telegram event Ids for the selected chat.
-      const telegramEvents = await fetchTelegramEventsByChatId(
-        ctx.session.dbPool,
-        chat.id
-      );
-
-      const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
-
-      if (topics.length === 0) {
-        range
-          .text(`↰  No topics found`, async (ctx) => {
-            ctx.session.selectedChat = undefined;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
-      } else {
-        range
-          .text(`↰  ${chat.title} Topics`, async (ctx) => {
-            ctx.session.selectedChat = undefined;
-            await ctx.menu.update({ immediate: true });
-          })
-          .row();
-        for (const topic of topics) {
-          const encodedTopicData = base64EncodeTopicData(
-            chat.id,
-            topic.topic_name,
-            topic.topic_id,
-            validEventIds
-          );
-          range
-            .webApp(
-              `${topic.topic_name}`,
-              `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-            )
-            .row();
-        }
-      }
+  return traced("telegram", "chatsToPostIn", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
     }
-    // Otherwise, give the user a list of chats that they are members of.
-    else {
-      // Only show chats a user is in
-      const chatsWithMembership = (
-        await getChatsWithMembershipStatus(db, ctx, userId)
-      ).filter((c) => c.isChatMember);
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+    if (ctx.chat?.id) span?.setAttribute("chatId", ctx.chat.id);
 
-      if (chatsWithMembership.length > 0) {
-        for (const chat of chatsWithMembership) {
-          // Only show the chats the user is a member of
-          if (chat.isChatMember) {
+    try {
+      // If a chat has been selected, give the user a choice of topics to send to.
+      if (ctx.session.selectedChat) {
+        const chat = ctx.session.selectedChat;
+
+        // Fetch anon topics for the selected chat
+        const topics = await fetchTelegramAnonTopicsByChatId(
+          ctx.session.dbPool,
+          chat.id
+        );
+
+        // Fetch telegram event Ids for the selected chat.
+        const telegramEvents = await fetchTelegramEventsByChatId(
+          ctx.session.dbPool,
+          chat.id
+        );
+
+        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+
+        if (topics.length === 0) {
+          range
+            .text(`↰  No topics found`, async (ctx) => {
+              ctx.session.selectedChat = undefined;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+        } else {
+          range
+            .text(`↰  ${chat.title} Topics`, async (ctx) => {
+              ctx.session.selectedChat = undefined;
+              await ctx.menu.update({ immediate: true });
+            })
+            .row();
+          for (const topic of topics) {
+            const encodedTopicData = base64EncodeTopicData(
+              chat.id,
+              topic.topic_name,
+              topic.topic_id,
+              validEventIds
+            );
             range
-              .text(`✅ ${chat.chat?.title}`, async (ctx) => {
-                ctx.session.selectedChat = chat.chat;
-                await ctx.menu.update({ immediate: true });
-              })
+              .webApp(
+                `${topic.topic_name}`,
+                `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+              )
               .row();
           }
         }
-      } else {
-        if (ctx.session.anonBotExists) {
-          await ctx.reply(
-            `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
-          );
+      }
+      // Otherwise, give the user a list of chats that they are members of.
+      else {
+        // Only show chats a user is in
+        const chatsWithMembership = (
+          await getChatsWithMembershipStatus(db, ctx, userId)
+        ).filter((c) => c.isChatMember);
+
+        if (chatsWithMembership.length > 0) {
+          for (const chat of chatsWithMembership) {
+            // Only show the chats the user is a member of
+            if (chat.isChatMember) {
+              range
+                .text(`✅ ${chat.chat?.title}`, async (ctx) => {
+                  ctx.session.selectedChat = chat.chat;
+                  await ctx.menu.update({ immediate: true });
+                })
+                .row();
+            }
+          }
         } else {
-          await ctx.reply(
-            `No chats found to post in. Type /start to join one!`
-          );
+          if (ctx.session.anonBotExists) {
+            await ctx.reply(
+              `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
+            );
+          } else {
+            await ctx.reply(
+              `No chats found to post in. Type /start to join one!`
+            );
+          }
         }
       }
+    } catch (error) {
+      range.text(`Action failed ${error}`);
+      return;
     }
-  } catch (error) {
-    range.text(`Action failed ${error}`);
-    return;
-  }
+  });
 };
 
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
-    await ctx.reply(
-      `Type \`/\` to see a list of commands or DM https://t.me/zupass_support for help!`
-    );
+    await ctx.reply(`Type \`/\` to see a list of commands.`);
   }
 };
 
 export const uwuResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(
-      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or DM https://t.me/zupass_support`
+      `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email ${ZUPASS_SUPPORT_EMAIL}`
+    );
+  }
+};
+
+export const ratResponse = async (ctx: BotContext): Promise<void> => {
+  if (isDirectMessage(ctx)) {
+    await ctx.reply(
+      `I don't know that command 🐭.\n\nType \`/\` to see a list of commands or email ${ZUPASS_SUPPORT_EMAIL}`
     );
   }
 };

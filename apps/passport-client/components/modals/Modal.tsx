@@ -64,7 +64,8 @@ function isModalDismissable(modal: AppState["modal"]) {
     "changed-password",
     "another-device-changed-password",
     "upgrade-account-modal",
-    "require-add-password"
+    "require-add-password",
+    "confirm-setup-later"
   ].includes(modal.modalType);
 }
 

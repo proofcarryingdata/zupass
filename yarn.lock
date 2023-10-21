@@ -1946,6 +1946,11 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.1.4.tgz#19654d1026cc410975d46445180e70a5089b3e7d"
   integrity sha512-qprfWkn82Iw821mcKofJ5Pk9wgioHicxcQMxx+5zt5GSKoqdWvgG5AxVmpmUUjzTLPVSH5auBrhI93Deayn/DA==
 
+"@grammyjs/auto-retry@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@grammyjs/auto-retry/-/auto-retry-1.1.1.tgz#0391aec411585b30269eaaab7ca10043b099054a"
+  integrity sha512-vaQDl45Unhidi4r5+JrwDKfmPFJuJpAh9YmE38pACcP3TyKnwUMQxQ3bRdl0Y1ME/uBwTm9YiX1pwol0vnubCw==
+
 "@grammyjs/menu@^1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@grammyjs/menu/-/menu-1.2.1.tgz#4c29c10374ec2974ba9c158fda96f5129fb331fd"

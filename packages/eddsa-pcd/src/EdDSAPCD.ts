@@ -12,16 +12,16 @@ import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
 /**
+ * The globally unique type name of the {@link EdDSAPCD}.
+ */
+export const EdDSAPCDTypeName = "eddsa-pcd";
+
+/**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being
  * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
  * format and is internally converted to and from the Montgomery format as needed.
  */
 export type EdDSAPublicKey = [string, string];
-
-/**
- * The globally unique type name of the {@link EdDSAPCD}.
- */
-export const EdDSAPCDTypeName = "eddsa-pcd";
 
 /**
  * Interface containing the arguments that 3rd parties use to
@@ -120,8 +120,8 @@ async function ensureInitialized() {
 }
 
 /**
- * Creates a new {@link EdDSAPCD} by generating a {@link EdDSAPCDProof}
- * and deriving a {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
+ * Creates a new {@link EdDSAPCD} by generating an {@link EdDSAPCDProof}
+ * and deriving an {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   await ensureInitialized();
@@ -214,7 +214,7 @@ function reviver(key: any, value: any): any {
 }
 
 /**
- * Serializes an {@link EdDSAPCD} to {@link SerializedPCD<EdDSAPCD>}.
+ * Serializes an {@link EdDSAPCD}.
  * @param pcd The EdDSA PCD to be serialized.
  * @returns The serialized version of the EdDSA PCD.
  */
@@ -228,7 +228,7 @@ export async function serialize(
 }
 
 /**
- * Deserializes a {@link SerializedPCD<EdDSAPCD>} to {@link EdDSAPCD}.
+ * Deserializes a serialized {@link EdDSAPCD}.
  * @param serialized The serialized PCD to deserialize.
  * @returns The deserialized version of the EdDSA PCD.
  */
@@ -257,7 +257,7 @@ export function getDisplayOptions(pcd: EdDSAPCD): DisplayOptions {
 
 /**
  * The PCD package of the EdDSA PCD. It exports an object containing
- * the code necessary to operate on this PCD's data.
+ * the code necessary to operate on this PCD data.
  */
 export const EdDSAPCDPackage: PCDPackage<
   EdDSAPCDClaim,

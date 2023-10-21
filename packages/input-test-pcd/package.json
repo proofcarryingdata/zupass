@@ -1,6 +1,6 @@
 {
   "name": "@pcd/input-test-pcd",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -20,7 +20,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.7.1",
+    "@pcd/pcd-types": "0.7.2",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"
   },

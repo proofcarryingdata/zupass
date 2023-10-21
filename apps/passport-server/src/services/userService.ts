@@ -3,10 +3,9 @@ import {
   ConfirmEmailResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
 import { UserRow } from "../database/models";
-import { fetchDevconnectDeviceLoginTicket } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
@@ -174,7 +173,7 @@ export class UserService {
       throw new PCDHTTPError(
         429,
         "You've exceeded the maximum number of account resets." +
-          " Please contact passport@0xparc.org for further assistance."
+          ` Please contact ${ZUPASS_SUPPORT_EMAIL} for further assistance.`
       );
     }
 
@@ -261,40 +260,6 @@ export class UserService {
     const userJson = userRowToZupassUserJson(user);
 
     res.status(200).json(userJson);
-  }
-
-  public async handleNewDeviceLogin(
-    secret: string,
-    email: string,
-    commitment: string,
-    res: Response
-  ): Promise<void> {
-    const ticket = await fetchDevconnectDeviceLoginTicket(
-      this.context.dbPool,
-      email,
-      secret
-    );
-
-    if (!ticket) {
-      throw new PCDHTTPError(
-        403,
-        `Secret key is not valid, or no such device login exists.`
-      );
-    }
-
-    logger(`[USER_SERVICE] Saving new commitment: ${commitment}`);
-    await upsertUser(this.context.dbPool, { email, commitment });
-    this.semaphoreService.scheduleReload();
-
-    const user = await fetchUserByEmail(this.context.dbPool, email);
-    if (!user) {
-      throw new PCDHTTPError(403, `no user with email '${email}' exists`);
-    }
-
-    const userJson = userRowToZupassUserJson(user);
-
-    logger(`[USER_SERVICE] logged in a device login user`, userJson);
-    res.status(200).json(userJson satisfies ZupassUserJson);
   }
 
   /**

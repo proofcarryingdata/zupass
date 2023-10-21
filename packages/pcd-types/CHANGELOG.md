@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.7.2
+
+### Patch Changes
+
+- publish new versions of packages
+
 ## 0.7.1
 
 ### Patch Changes

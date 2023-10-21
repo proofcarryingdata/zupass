@@ -1,4 +1,5 @@
 import { requestVerifyToken } from "@pcd/passport-interface";
+import { ZUPASS_SENDER_EMAIL } from "@pcd/util";
 import { useCallback, useLayoutEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
 import { useQuery } from "../../src/appHooks";
@@ -30,7 +31,7 @@ export function EnterConfirmationCodeScreen() {
 
     if (token === "") {
       return setError(
-        "Check your email for an access token from passport@0xparc.org, and enter it here."
+        `Check your email for an access token from ${ZUPASS_SENDER_EMAIL}, and enter it here.`
       );
     }
 
@@ -78,7 +79,7 @@ export function EnterConfirmationCodeScreen() {
         <TextCenter>
           <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
-          Check your inbox for an email from <span>passport@0xparc.org</span>.
+          Check your inbox for an email from <span>{ZUPASS_SENDER_EMAIL}</span>.
           Use the most recent code you received to continue.
         </TextCenter>
         <Spacer h={24} />

@@ -4,6 +4,7 @@ import closeWhite from "./close-white.svg";
 import eyeClosed from "./eye-closed.svg";
 import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
+import github from "./github.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";
 import info from "./info.svg";
@@ -49,5 +50,6 @@ export const icons = {
   upArrow,
   verifyInProgress,
   verifyInvalid,
-  verifyValid
+  verifyValid,
+  github // Official GitHub logo. Usage complies to standards listed in https://github.com/logos.
 };

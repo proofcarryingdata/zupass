@@ -1,5 +1,11 @@
 # @pcd/emitter
 
+## 0.1.2
+
+### Patch Changes
+
+- publish new versions of packages
+
 ## 0.1.1
 
 ### Patch Changes

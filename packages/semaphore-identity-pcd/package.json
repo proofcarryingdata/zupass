@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-identity-pcd",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -20,9 +20,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.7.1",
-    "@pcd/pcd-types": "0.7.1",
-    "@pcd/util": "0.1.1",
+    "@pcd/passport-ui": "0.7.2",
+    "@pcd/pcd-types": "0.7.2",
+    "@pcd/util": "0.1.2",
     "@semaphore-protocol/identity": "^3.14.0",
     "json-bigint": "^1.0.0",
     "react": "^18.2.0",
