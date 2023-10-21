@@ -3,16 +3,18 @@ import styled from "styled-components";
 import { useIsOffline } from "../../src/appHooks";
 
 export function IndicateIfOffline({
-  children
+  children,
+  marginBottom
 }: {
   children?: React.ReactNode | React.ReactNode[];
+  marginBottom?: string;
 }) {
   const isOffline = useIsOffline();
   if (!isOffline) {
     return undefined;
   }
 
-  return <Container>{children}</Container>;
+  return <Container style={{ marginBottom }}>{children}</Container>;
 }
 
 const Container = styled.div`
@@ -22,5 +24,4 @@ const Container = styled.div`
   background-color: white;
   border: 1px solid var(--danger);
   color: black;
-  margin-bottom: 16px;
 `;

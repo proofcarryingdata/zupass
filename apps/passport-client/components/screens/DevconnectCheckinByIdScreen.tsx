@@ -41,7 +41,7 @@ export function DevconnectCheckinByIdScreen() {
   return (
     <AppContainer bg={"primary"}>
       <Container>
-        <IndicateIfOffline>
+        <IndicateIfOffline marginBottom="16px">
           <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
           <Spacer h={8} />
           You're offline. Zupass is using a backed up copy of event tickets.

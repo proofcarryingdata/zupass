@@ -13,12 +13,13 @@ import {
   secondPartyCheckByPCDWithOffline
 } from "../../src/checkin";
 import { StateContextValue } from "../../src/dispatch";
-import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
+import { CenterColumn, H4, H5, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
 import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
+import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
 
 enum VerifyOutcome {
   // We recognize this ticket
@@ -95,7 +96,11 @@ export function SecondPartyTicketVerifyScreen() {
   return (
     <AppContainer bg={bg}>
       <Spacer h={48} />
-
+      <IndicateIfOffline marginBottom="32px">
+        <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
+        <Spacer h={8} />
+        You're offline. Zupass is using a backed up copy of event tickets.
+      </IndicateIfOffline>
       <TextCenter>
         <img draggable="false" width="90" height="90" src={icon} />
         <Spacer h={24} />
