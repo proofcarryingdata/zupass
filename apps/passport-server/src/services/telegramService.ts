@@ -60,8 +60,7 @@ const ALLOWED_TICKET_MANAGERS = [
   "notdavidhuang",
   "richardyliu",
   "gubsheep",
-  "chubivan",
-  "ezboi98"
+  "chubivan"
 ];
 
 const adminBotChannel = "Admins";
