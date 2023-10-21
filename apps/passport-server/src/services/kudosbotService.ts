@@ -5,9 +5,9 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { sleep } from "@pcd/util";
 import { Bot, session } from "grammy";
+import { fetchSemaphoreIdFromTelegramUsername } from "../database/queries/telegram/fetchSemaphoreId";
 import { fetchTelegramConversationsByChatId } from "../database/queries/telegram/fetchTelegramConversation";
 import { updateTelegramUsername } from "../database/queries/telegram/insertTelegramConversation";
-import { sqlQuery } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
@@ -93,24 +93,6 @@ export class KudosbotService {
       await ctx.reply("hello");
     });
 
-    const getSemaphoreIdFromTelegramUsername = async (
-      telegramUsername: string
-    ): Promise<string | null> => {
-      const result = await sqlQuery(
-        this.context.dbPool,
-        `\
-        select semaphore_id from telegram_bot_conversations
-        where telegram_username = $1
-        `,
-        [telegramUsername]
-      );
-      if (result.rowCount == 0) {
-        return null;
-      }
-      const semaphoreId: string = result.rows[0].semaphore_id;
-      return semaphoreId;
-    };
-
     this.bot.command("test", async (ctx) => {
       logger("[KUDOSBOT] test command called");
       const userId = ctx?.from?.id;
@@ -152,14 +134,20 @@ export class KudosbotService {
         if (isDirectMessage(ctx) && kudosGiver) {
           // look up kudos receiever handle in db to see if it's a valid telegram handle to receieve kudos
           const kudosGiverSemaphoreId =
-            await getSemaphoreIdFromTelegramUsername(kudosGiver);
+            await fetchSemaphoreIdFromTelegramUsername(
+              this.context.dbPool,
+              kudosGiver
+            );
           if (!kudosGiverSemaphoreId) {
             return await ctx.reply(
               "Error retrieving your Zupass information. Please make sure to join the group before sending a kudos."
             );
           }
           const kudosReceiverSemaphoreId =
-            await getSemaphoreIdFromTelegramUsername(kudosReceiver);
+            await fetchSemaphoreIdFromTelegramUsername(
+              this.context.dbPool,
+              kudosReceiver
+            );
           if (!kudosReceiverSemaphoreId) {
             return await ctx.reply(
               "Error retrieving recipient's Zupass information. Please enter a valid kudos recipient handle for a user in the group."
