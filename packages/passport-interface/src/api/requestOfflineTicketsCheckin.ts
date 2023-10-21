@@ -29,8 +29,6 @@ export async function requestOfflineTicketsCheckin(
   );
 }
 
-/**
- */
 export async function offlineTicketsCheckin(
   passportServer: string,
   checkerIdentity: Identity,

@@ -28,8 +28,6 @@ export async function requestOfflineTickets(
   );
 }
 
-/**
- */
 export async function offlineTickets(
   passportServer: string,
   checkerIdentity: Identity

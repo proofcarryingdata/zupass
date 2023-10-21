@@ -287,29 +287,52 @@ export interface CheckTicketInByIdRequest {
   ticketId: string;
 }
 
+/**
+ * Ask the server for tickets relevant to this user for offline storage,
+ * so that offline verification and checkin can work on the client.
+ */
 export interface GetOfflineTicketsRequest {
   /**
    * A semaphore signature from the checker, used by the server to
-   * determine whether the checker has the required permissions
-   * to check this ticket in.
+   * determine which tickets should be returned.
    */
   checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
+/**
+ * Result value server sends client in response to a {@link GetOfflineTicketsRequest}.
+ */
 export interface GetOfflineTicketsResponseValue {
+  /**
+   * Collection of tickets the client should save to localstorage so that
+   * they work offline.
+   */
   offlineTickets: OfflineTickets;
 }
 
+/**
+ * Asks the server to checkin the given tickets. Only affects valid
+ * un-checked-in tickets check-in-able by the given user. Silently
+ * skips tickets the given user can't check in for any reason.
+ */
 export interface UploadOfflineCheckinsRequest {
   /**
    * A semaphore signature from the checker, used by the server to
-   * determine whether the checker has the required permissions
-   * to check this ticket in.
+   * determine which tickets can actually be checked in.
    */
   checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * List of ticket ids to attempt to check in.
+   */
   checkedOfflineInDevconnectTicketIDs: string[];
 }
 
+/**
+ * Server gives no feedback in response to a {@link UploadOfflineCheckinsRequest}.
+ * That request only fails in the case of a network error, internal server error,
+ * and the like.
+ */
 export interface UploadOfflineCheckinsResponseValue {}
 
 /**
@@ -615,11 +638,18 @@ export type KnownTicketTypesRequest = undefined;
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
 
+/**
+ * Collection of tickets that some clients keep track of so that the tickets
+ * contained within it function offline.
+ */
 export interface OfflineTickets {
   devconnectTickets: OfflineDevconnectTicket[];
   secondPartyTickets: OfflineSecondPartyTicket[];
 }
 
+/**
+ * New empty {@link OfflineTickets}.
+ */
 export function defaultOfflineTickets(): OfflineTickets {
   return {
     devconnectTickets: [],
@@ -627,6 +657,10 @@ export function defaultOfflineTickets(): OfflineTickets {
   };
 }
 
+/**
+ * @todo - redact this? I think devconnect tickets are fine because
+ * only event staff have access to this.
+ */
 export interface OfflineDevconnectTicket {
   id: string;
   attendeeEmail: string;
@@ -637,6 +671,10 @@ export interface OfflineDevconnectTicket {
   checker: string | null;
 }
 
+/**
+ * @todo - redacting the contents of this server-side before giving it to the
+ * client probably makes sense.
+ */
 export interface OfflineSecondPartyTicket {
   id: string;
   group: KnownTicketGroup;
