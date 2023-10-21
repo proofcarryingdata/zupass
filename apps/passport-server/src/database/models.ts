@@ -248,12 +248,13 @@ export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
 };
 
 export interface ChatsReceiving {
+  id: number;
   chat_id: number;
-  topic_id?: number; // Using optional because it can be null
+  topic_id?: number;
 }
 
 export interface ChatsForwarding {
   chat_id: number;
-  topic_id?: number; // Using optional because it can be null
+  topic_id?: number;
   chat_receiving_id: number;
 }

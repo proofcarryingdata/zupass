@@ -11,7 +11,10 @@ import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import {
-  fetchFromChatsReceivingByChatId,
+  fetchFromChatsForwarding,
+  fetchFromChatsReceiving,
+  fetchFromChatsReceivingById,
+  insertIntoChatsForwarding,
   insertIntoChatsReceiving
 } from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
@@ -597,26 +600,83 @@ export class TelegramService {
       }
     });
 
-    this.authBot.on("message", async (ctx) => {
-      // Forward to receive chat
-      logger(`[MESSAGE]`, ctx.message);
-      const recipientChats = await fetchFromChatsReceivingByChatId(
-        this.context.dbPool,
-        -1001943944469
-      );
-      if (recipientChats && recipientChats.length > 1 && ctx.message?.text) {
-        // Forward message to first recipient
-        const chatId = recipientChats[0].chat_id;
-        const chat = await getGroupChat(ctx.api, chatId);
-        await this.authBot.api.sendMessage(
-          chatId,
-          `<i>fwd from <b>${chat.title}</b>:</i>\n\n${ctx.message.text}`,
-          {
-            message_thread_id: recipientChats[0].topic_id,
-            parse_mode: "HTML"
-          }
+    this.authBot.command("forward", async (ctx) => {
+      logger(`[TELEGRAM] running forward command`);
+      const messageThreadId = ctx.message?.message_thread_id;
+      const topicName =
+        ctx.message?.reply_to_message?.forum_topic_created?.name;
+
+      try {
+        // TODO: replace hard coded id with user input
+        const chatsToReceive = await fetchFromChatsReceiving(
+          this.context.dbPool,
+          -1001943944469
         );
-        logger(`[TELEGRAM] forwarded ${ctx.message.text} to chat ${chatId}`);
+        if (chatsToReceive?.length > 0) {
+          const chatToReceive = chatsToReceive[1];
+          // Check if user is admin
+          // Add topic to chatReceiving DB
+          await insertIntoChatsForwarding(
+            this.context.dbPool,
+            ctx.chat.id,
+            chatToReceive.id,
+            messageThreadId
+          );
+          const chat = await getGroupChat(ctx.api, chatToReceive.chat_id);
+          await ctx.reply(
+            `Now forwarding messages from <b>${
+              topicName || messageThreadId
+            }</b> to <i>${chat.title}</i>`,
+            { reply_to_message_id: messageThreadId, parse_mode: "HTML" }
+          );
+        } else {
+          logger(`[TELEGRAM] no chats found to receive`);
+          await ctx.reply(`no chats found to receive`, {
+            message_thread_id: messageThreadId
+          });
+        }
+      } catch (error) {
+        logger(`[ERROR] ${error}`);
+        await ctx.reply(`Failed set forwarding chat: ${error}`, {
+          message_thread_id: messageThreadId
+        });
+      }
+    });
+
+    this.authBot.on("message", async (ctx) => {
+      logger(`[MESSAGE]`, ctx.message);
+
+      // Forward to receive chat
+      // If current chat + topic exists chats to forward, fetch chats to forward's recipient.
+      const messageThreadId = ctx.message?.message_thread_id;
+      const chatToForwardFrom = await fetchFromChatsForwarding(
+        this.context.dbPool,
+        ctx.chat.id,
+        messageThreadId
+      );
+      logger(`[TELEGRAM] chatToForwardFrom`, ctx.chat.id, messageThreadId);
+      if (chatToForwardFrom) {
+        logger(`[TELEGRAM] chat to forward from`, chatToForwardFrom);
+        // Lookup recipient chat.
+        const recipient = await fetchFromChatsReceivingById(
+          this.context.dbPool,
+          chatToForwardFrom.chat_receiving_id
+        );
+        if (recipient && ctx.message?.text) {
+          logger(`[TELEGRAM] forwarding message...`);
+          const chat = await getGroupChat(ctx.api, chatToForwardFrom.chat_id);
+          await this.authBot.api.sendMessage(
+            recipient.chat_id,
+            `<i>fwd from <b>${chat.title}</b>:</i>\n\n${ctx.message.text}`,
+            {
+              message_thread_id: recipient?.topic_id,
+              parse_mode: "HTML"
+            }
+          );
+          logger(
+            `[TELEGRAM] forwarded ${ctx.message.text} to chat ${recipient.chat_id}`
+          );
+        }
       }
     });
     this.authBot.command("help", helpResponse);

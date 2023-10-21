@@ -17,27 +17,44 @@ export async function insertIntoChatsReceiving(
   );
 }
 
-export async function fetchFromChatsReceivingByChatId(
+export async function fetchFromChatsReceiving(
   client: Pool,
-  chatId: number
+  chatId: number,
+  topicId?: number
 ): Promise<ChatsReceiving[]> {
+  let query = `SELECT * FROM chats_receiving WHERE chat_id = $1`;
+  const values = [chatId];
+
+  if (topicId !== undefined) {
+    query += ` AND topic_id = $2`;
+    values.push(topicId);
+  }
+
+  const result = await sqlQuery(client, query, values);
+  return result.rows;
+}
+
+export async function fetchFromChatsReceivingById(
+  client: Pool,
+  id: number
+): Promise<ChatsReceiving> {
   const result = await sqlQuery(
     client,
     `\
     SELECT * FROM chats_receiving
-    WHERE chat_id = $1
+    WHERE id = $1
     `,
-    [chatId]
+    [id]
   );
 
-  return result.rows;
+  return result.rows[0] || null;
 }
 
 export async function insertIntoChatsForwarding(
   client: Pool,
   chatId: number,
-  topicId: number | null,
-  chatReceivingId: number
+  chatReceivingId: number,
+  topicId: number | undefined
 ): Promise<void> {
   await sqlQuery(
     client,
@@ -49,18 +66,19 @@ export async function insertIntoChatsForwarding(
   );
 }
 
-export async function fetchFromChatsForwardingByChatId(
+export async function fetchFromChatsForwarding(
   client: Pool,
-  chatId: number
-): Promise<ChatsForwarding[]> {
+  chatId: number,
+  topicId?: number
+): Promise<ChatsForwarding | null> {
   const result = await sqlQuery(
     client,
     `\
     SELECT * FROM chats_forwarding
-    WHERE chat_id = $1
+    WHERE chat_id = $1 and topic_id = $2
     `,
-    [chatId]
+    [chatId, topicId]
   );
 
-  return result.rows;
+  return result.rows[0] || null;
 }

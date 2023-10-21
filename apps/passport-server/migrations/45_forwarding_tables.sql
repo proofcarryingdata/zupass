@@ -11,6 +11,5 @@ CREATE TABLE chats_receiving (
 CREATE TABLE chats_forwarding (
     chat_id VARCHAR,
     topic_id VARCHAR NULL,
-    UNIQUE (chat_id, topic_id),
-    chat_receiving_id_id SERIAL NOT NULL REFERENCES chats_receiving(id)
+    chat_receiving_id SERIAL NOT NULL REFERENCES chats_receiving(id)
 );
