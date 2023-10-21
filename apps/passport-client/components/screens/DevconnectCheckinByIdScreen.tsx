@@ -15,7 +15,7 @@ import {
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
-import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import {
   CardBodyContainer,
   CardHeader,

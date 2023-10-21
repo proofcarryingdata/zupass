@@ -19,7 +19,7 @@ import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
 import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
-import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 enum VerifyOutcome {
   // We recognize this ticket

@@ -6,7 +6,7 @@ import { H5, Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
-import { IndicateIfOffline } from "../shared/OfflineModeIndicator";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
