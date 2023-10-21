@@ -241,14 +241,14 @@ export async function startKudosbotService(
   context: ApplicationContext,
   rollbarService: RollbarService | null
 ): Promise<KudosbotService | null> {
-  if (!process.env.KUDOSBOT_TELEGRAM_TOKEN) {
+  if (!process.env.TELEGRAM_KUDOSBOT_TOKEN) {
     logger(
-      `[INIT] missing KUDOSBOT_TELEGRAM_TOKEN, not instantiating Telegram service`
+      `[INIT] missing TELEGRAM_KUDOSBOT_TOKEN, not instantiating Telegram service`
     );
     return null;
   }
 
-  const bot = new Bot<BotContext>(process.env.KUDOSBOT_TELEGRAM_TOKEN);
+  const bot = new Bot<BotContext>(process.env.TELEGRAM_KUDOSBOT_TOKEN);
   const initial = (): SessionData => {
     return {
       dbPool: context.dbPool,

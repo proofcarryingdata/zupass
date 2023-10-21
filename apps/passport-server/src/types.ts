@@ -93,5 +93,5 @@ export interface EnvironmentVariables {
   ACCOUNT_RESET_RATE_LIMIT_DISABLED?: string;
   ACCOUNT_RESET_LIMIT_QUANTITY?: string;
   ACCOUNT_RESET_LIMIT_DURATION_MS?: string;
-  KUDOSBOT_TELEGRAM_TOKEN?: string;
+  TELEGRAM_KUDOSBOT_TOKEN?: string;
 }
