@@ -13,6 +13,7 @@ import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { IssuanceService } from "./services/issuanceService";
+import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PersistentCacheService } from "./services/persistentCacheService";
@@ -46,6 +47,7 @@ export interface GlobalServices {
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
+  kudosbotService: KudosbotService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
 }
@@ -91,4 +93,5 @@ export interface EnvironmentVariables {
   ACCOUNT_RESET_RATE_LIMIT_DISABLED?: string;
   ACCOUNT_RESET_LIMIT_QUANTITY?: string;
   ACCOUNT_RESET_LIMIT_DURATION_MS?: string;
+  TELEGRAM_KUDOSBOT_TOKEN?: string;
 }

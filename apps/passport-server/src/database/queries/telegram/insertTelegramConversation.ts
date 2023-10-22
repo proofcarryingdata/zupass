@@ -8,14 +8,16 @@ export async function insertTelegramVerification(
   client: Pool,
   telegramUserId: number,
   telegramChatId: number,
-  semaphoreId: string
+  semaphoreId: string,
+  telegramUsername?: string
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id, verified, semaphore_id)
-values ($1, $2, true, $3);`,
-    [telegramUserId, telegramChatId, semaphoreId]
+    insert into telegram_bot_conversations (telegram_user_id, telegram_chat_id, verified, semaphore_id, telegram_username)
+    values ($1, $2, true, $3, $4);
+    `,
+    [telegramUserId, telegramChatId, semaphoreId, telegramUsername]
   );
   return result.rowCount;
 }
@@ -85,4 +87,19 @@ export async function insertOrUpdateTelegramNullifier(
   `;
 
   await sqlQuery(client, query, [nullifierHash, messageTimestamps]);
+}
+
+export async function updateTelegramUsername(
+  client: Pool,
+  telegramUserId: string,
+  telegramUsername: string
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `\
+    update telegram_bot_conversations set telegram_username = $1
+    where telegram_user_id = $2
+    `,
+    [telegramUsername, telegramUserId]
+  );
 }
