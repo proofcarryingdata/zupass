@@ -444,8 +444,20 @@ export class TelegramService {
     });
 
     this.authBot.command("receive", async (ctx) => {
-      // Look up topic.
+      if (isDirectMessage(ctx))
+        return ctx.reply(`/receive can only be run in a group chat`);
+
       const messageThreadId = ctx.message?.message_thread_id;
+
+      if (!ctx.from?.username) throw new Error(`No username found`);
+
+      if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+        return ctx.reply(
+          `Only Zupass team members are allowed to run this command.`,
+          { reply_to_message_id: messageThreadId }
+        );
+
+      // Look up topic.
       const topic = await fetchTelegramTopic(
         this.context.dbPool,
         ctx.chat.id,
