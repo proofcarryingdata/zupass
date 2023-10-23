@@ -108,7 +108,7 @@ export async function fetchTelegramAnonTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1 and is_anon_topic is true
     `,
     [telegramChatId]
@@ -123,10 +123,23 @@ export async function fetchTelegramTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1
     `,
     [telegramChatId]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramTopics(
+  client: Pool
+): Promise<TelegramTopic[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
+    `,
+    []
   );
   return result.rows;
 }
@@ -190,7 +203,7 @@ export async function fetchTelegramTopic(
   const result = await sqlQuery(
     client,
     ` 
-    SELECT * 
+    SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics
     WHERE 
         telegram_chat_id = $1 AND 

@@ -176,12 +176,14 @@ export interface PretixItemInfo {
 }
 
 export interface TelegramTopic {
-  telegram_chat_id: string;
+  telegramChatID: string;
   topic_id: string;
   topic_name: string;
   is_anon_topic: boolean;
   is_receiving: boolean;
   is_forwarding: boolean;
+  receiving_chat_id: string;
+  receiving_topic_id: string;
 }
 
 // Representation of a "known public key" as fetched from the DB
@@ -248,16 +250,3 @@ export interface UserIDWithChatIDs {
 export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
   isChatMember: boolean;
 };
-
-export interface ChatReceiving {
-  id: number;
-  telegramChatID: string;
-  topic_id?: number;
-  topic_name?: string;
-}
-
-export interface ChatForwarding {
-  telegramChatID: string;
-  topic_id?: number;
-  chat_receiving_id: number;
-}

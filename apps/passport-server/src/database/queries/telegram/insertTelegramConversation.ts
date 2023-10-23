@@ -31,8 +31,7 @@ export async function insertTelegramChat(
     `\
     insert into telegram_chats(telegram_chat_id)
     values ($1)
-    on conflict (telegram_chat_id) do update 
-    set telegram_chat_id = $1`,
+    on conflict (telegram_chat_id) do nothing`,
     [telegramChatId]
   );
   return result.rowCount;
@@ -62,22 +61,26 @@ export async function insertTelegramTopic(
   topicName: string,
   isAnon: boolean,
   isReceiving?: boolean,
-  isForwarding?: boolean
+  isForwarding?: boolean,
+  receivingChatID?: number,
+  receivingTopicID?: number
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_chat_topics (telegram_chat_id, topic_id, topic_name, is_anon_topic, is_receiving, is_forwarding)
-values ($1, $2, $3, $4, $5, $6)
+insert into telegram_chat_topics (telegram_chat_id, topic_id, topic_name, is_anon_topic, is_receiving, is_forwarding, receiving_chat_id, receiving_topic_id)
+values ($1, $2, $3, $4, $5, $6, $7, $8)
 on conflict (telegram_chat_id, topic_id) do update 
-set topic_name = $3, is_anon_topic = $4, is_receiving = $5, is_forwarding = $6;`,
+set topic_name = $3, is_anon_topic = $4, is_receiving = $5, is_forwarding = $6, receiving_chat_id = $7, receiving_topic_id = $8;`,
     [
       telegramChatId,
       topicId,
       topicName,
       isAnon,
       isReceiving || false,
-      isForwarding || false
+      isForwarding || false,
+      receivingChatID || null,
+      receivingTopicID || null
     ]
   );
   return result.rowCount;

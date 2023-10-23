@@ -10,10 +10,6 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
-import {
-  fetchFromChatsForwarding,
-  fetchFromChatsReceivingById
-} from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import {
@@ -640,42 +636,14 @@ export class TelegramService {
       // Forward to receive chat
       // If current chat + topic exists chats to forward, fetch chats to forward's recipient.
       const messageThreadId = ctx.message?.message_thread_id;
-      const chatToForwardFrom = await fetchFromChatsForwarding(
+      const chatId = ctx.chat.id;
+      const topic = await fetchTelegramTopic(
         this.context.dbPool,
-        ctx.chat.id,
-        messageThreadId
+        chatId,
+        messageThreadId || 0
       );
-      logger(`[TELEGRAM] chatToForwardFrom`, ctx.chat.id, messageThreadId);
-      if (chatToForwardFrom) {
-        logger(`[TELEGRAM] chat to forward from`, chatToForwardFrom);
-        // Lookup recipient chat.
-        const recipient = await fetchFromChatsReceivingById(
-          this.context.dbPool,
-          chatToForwardFrom.chat_receiving_id
-        );
-        if (recipient && ctx.message?.text) {
-          logger(`[TELEGRAM] forwarding message...`);
-          logger(`[TELEGRAM] recipient`, recipient);
-          const chat = await getGroupChat(
-            ctx.api,
-            chatToForwardFrom.telegramChatID
-          );
-          await this.authBot.api.sendMessage(
-            recipient.telegramChatID,
-            `<i>fwd from <b>${chat.title}</b>:</i>\n\n${ctx.message.text}`,
-            {
-              message_thread_id: recipient?.topic_id,
-              parse_mode: "HTML"
-            }
-          );
-          logger(
-            `[TELEGRAM] forwarded ${ctx.message.text} to chat ${recipient.telegramChatID}`
-          );
-        }
-      }
     });
     this.authBot.command("help", helpResponse);
-    // this.authBot.on("message", uwuResponse);
   }
 
   public anonBotExists(): boolean {

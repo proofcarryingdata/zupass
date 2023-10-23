@@ -20,23 +20,22 @@ import { Pool } from "postgres-pool";
 import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
-  ChatReceiving,
-  LinkedPretixTelegramEvent
+  LinkedPretixTelegramEvent,
+  TelegramTopic
 } from "../database/models";
-import {
-  fetchChatsReceiving,
-  insertIntoChatsForwarding
-} from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChatsWithMembershipStatus,
-  fetchTelegramEventsByChatId
+  fetchTelegramEventsByChatId,
+  fetchTelegramTopic,
+  fetchTelegramTopics
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
-  insertTelegramEvent
+  insertTelegramEvent,
+  insertTelegramTopic
 } from "../database/queries/telegram/insertTelegramConversation";
 import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
@@ -61,7 +60,7 @@ export interface SessionData {
   lastMessageId?: number;
   selectedChat?: TopicChat;
   kudosData?: { giver: string; receiver: string };
-  chatReceiving?: ChatIDWithChat<ChatReceiving>;
+  chatReceiving?: ChatIDWithChat<TelegramTopic>;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
@@ -711,7 +710,6 @@ export const chatsToForwardTo = async (
   range: MenuRange<BotContext>
 ): Promise<void> => {
   return traced("telegram", "chatsToForwardTo", async (span) => {
-    logger(`[CHATS TO FORWARD] ctx`, ctx.update.callback_query?.message);
     const db = ctx.session.dbPool;
     if (!db) {
       range.text(`Database not connected. Try again...`);
@@ -726,41 +724,64 @@ export const chatsToForwardTo = async (
     if (ctx.chat?.id) span?.setAttribute("chatId", ctx.chat.id);
 
     try {
-      // If a chat has been selected, give the user a choice of topics to send to.
       if (ctx.session.chatReceiving?.chat) {
-        const chat = ctx.session.chatReceiving;
-
-        range.text(`↰  ${chat.chat?.title} - ${chat.topic_id}`).row();
+        const chatReceiving = ctx.session.chatReceiving;
+        range
+          .text(
+            `↰  ${chatReceiving.chat?.title} - ${chatReceiving.topic_name}`,
+            async (ctx) => {
+              ctx.session.chatReceiving = undefined;
+              await ctx.menu.update({ immediate: true });
+            }
+          )
+          .row();
         range.text(`Forward Messages`, async (ctx) => {
           const message = ctx.update.callback_query?.message;
-          const topicName =
-            message?.reply_to_message?.forum_topic_created?.name;
           const messageThreadId = message?.message_thread_id;
+          const chatId = ctx.chat?.id;
+          if (!chatId) throw new Error(`No chat id found in context`);
 
-          logger(`[TELEGRAM] message thread id`, messageThreadId);
-
-          await insertIntoChatsForwarding(
+          const topicForwarding = await fetchTelegramTopic(
             db,
-            chat.telegramChatID,
-            chat.id,
-            chat.topic_id
+            chatId,
+            messageThreadId || 0
           );
-
+          if (!topicForwarding)
+            throw new Error(`No topic found to forward from`);
+          await insertTelegramChat(db, chatId),
+            logger(
+              `[TELEGRAM] insertion`,
+              topicForwarding,
+              parseInt(topicForwarding.telegramChatID),
+              parseInt(topicForwarding.topic_id)
+            );
+          await insertTelegramTopic(
+            db,
+            parseInt(topicForwarding.telegramChatID),
+            parseInt(topicForwarding.topic_id),
+            topicForwarding.topic_name,
+            false,
+            false,
+            true,
+            parseInt(chatReceiving.telegramChatID),
+            parseInt(chatReceiving.topic_id)
+          );
           await ctx.reply(
             `Now forwarding messages from <b>${
-              topicName || messageThreadId
-            }</b> to <i>${chat.chat?.title} - ${chat.topic_name} </i>`,
+              chatReceiving.topic_name || messageThreadId
+            }</b> to <i>${chatReceiving.chat?.title} - ${
+              chatReceiving.topic_name
+            } </i>`,
             {
               reply_to_message_id: messageThreadId,
               parse_mode: "HTML"
             }
           );
         });
-      }
-      // Otherwise, give the user a list of chats that they are members of.
-      else {
-        // Only show chats a user is in
-        const chatIdsReceiving = await fetchChatsReceiving(ctx.session.dbPool);
+      } else {
+        const chatIdsReceiving = (await fetchTelegramTopics(db)).filter(
+          (c) => c.is_receiving && c.telegramChatID !== ctx.chat?.id.toString()
+        );
 
         const chatIdsToChats = await chatIDsToChats(ctx, chatIdsReceiving);
 
@@ -768,17 +789,16 @@ export const chatsToForwardTo = async (
           for (const chat of chatIdsToChats) {
             // Only show the chats the user is a member of
             range
-              .text(
-                `Chat: ${chat.chat?.title} => Topic: ${chat.topic_name}`,
-                async (ctx) => {
-                  ctx.session.chatReceiving = chat;
-                  await ctx.menu.update({ immediate: true });
-                }
-              )
+              .text(`${chat.chat?.title} - ${chat.topic_name}`, async (ctx) => {
+                ctx.session.chatReceiving = chat;
+                await ctx.menu.update({ immediate: true });
+              })
               .row();
           }
         } else {
-          ctx.reply(`No chats found to receive messages`);
+          await ctx.reply(`No chats found to receive messages`, {
+            message_thread_id: ctx.message?.message_thread_id
+          });
         }
       }
     } catch (error) {
