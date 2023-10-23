@@ -25,6 +25,7 @@ import {
 import {
   insertOrUpdateTelegramNullifier,
   insertTelegramChat,
+  insertTelegramForward,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -418,7 +419,6 @@ export class TelegramService {
           chatId,
           messageThreadId || 0
         );
-        logger(`[TELEGRAM] topic`, topic);
 
         if (!topic) {
           logger(`[TELEGRAM] adding topic ${topicName} to db`);
@@ -441,6 +441,69 @@ export class TelegramService {
           );
         }
       });
+    });
+
+    this.authBot.command("receive", async (ctx) => {
+      // Look up topic.
+      const messageThreadId = ctx.message?.message_thread_id;
+      const topic = await fetchTelegramTopic(
+        this.context.dbPool,
+        ctx.chat.id,
+        messageThreadId || 0
+      );
+      const chatId = ctx.chat.id;
+      const isReceving = true;
+
+      // If the topic doesn't exist, add it and the chatId to the DB.
+      if (!topic) {
+        logger(`[TELEGRAM] topic not found to mark as receiving.`);
+        const topicName =
+          ctx.message?.reply_to_message?.forum_topic_created?.name;
+
+        await insertTelegramChat(this.context.dbPool, chatId);
+        await insertTelegramTopic(
+          this.context.dbPool,
+          chatId,
+          messageThreadId || 0,
+          topicName || "NOT FOUND",
+          false
+        );
+        // Fetch the newly created topic
+        const newTopic = await fetchTelegramTopic(
+          this.context.dbPool,
+          ctx.chat.id,
+          messageThreadId || 0
+        );
+
+        if (!newTopic) throw new Error(`Failed to fetch new topic`);
+        // Add it to the forwarding table
+        await insertTelegramForward(
+          this.context.dbPool,
+          newTopic.id,
+          false,
+          isReceving
+        );
+
+        await ctx.reply(
+          `Added <b>${topicName}</b> to receive messages. If this name is incorrect, edit the name to update the database.`,
+          {
+            reply_to_message_id: messageThreadId,
+            parse_mode: "HTML"
+          }
+        );
+      } else {
+        await insertTelegramForward(
+          this.context.dbPool,
+          topic.id,
+          false,
+          isReceving
+        );
+        logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
+        await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
+          reply_to_message_id: messageThreadId,
+          parse_mode: "HTML"
+        });
+      }
     });
 
     this.anonBot.command("incognito", async (ctx) => {
