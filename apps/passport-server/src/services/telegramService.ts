@@ -50,8 +50,7 @@ import {
   isGroupWithTopics,
   ratResponse,
   senderIsAdmin,
-  setBotInfo,
-  uwuResponse
+  setBotInfo
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -666,7 +665,9 @@ export class TelegramService {
     }
 
     this.authBot.command("help", helpResponse);
-    this.authBot.on("message", uwuResponse);
+    this.authBot.on("message", async (ctx) => {
+      logger(`[TELEGRAM] got message`, ctx.message);
+    });
   }
 
   public anonBotExists(): boolean {
