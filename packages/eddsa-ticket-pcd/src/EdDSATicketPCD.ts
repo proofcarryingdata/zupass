@@ -213,7 +213,7 @@ export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   const messageDerivedFromClaim = ticketDataToBigInts(pcd.claim.ticket);
 
   if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
-    throw new Error(`ticket data does not match proof`);
+    return false;
   }
 
   return EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
