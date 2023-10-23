@@ -20,8 +20,7 @@ import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
-  fetchTelegramTopic,
-  fetchTelegramTopicsByChatId
+  fetchTelegramTopic
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
@@ -416,24 +415,21 @@ export class TelegramService {
 
         const topicName = ctx.update?.message?.forum_topic_edited.name;
         const chatId = ctx.chat.id;
-        let messageThreadId = ctx.update.message?.message_thread_id;
+        const messageThreadId = ctx.update.message?.message_thread_id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!messageThreadId)
+        if (!messageThreadId || !ctx.message?.is_topic_message)
           logger(`[TELEGRAM] edititing for general topic ${topicName}`);
-        messageThreadId = 0;
 
         if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
-        const topicsForChat = await fetchTelegramTopicsByChatId(
+        const topic = await fetchTelegramTopic(
           this.context.dbPool,
-          chatId
+          chatId,
+          messageThreadId || 0
         );
-
-        const topic = topicsForChat.find(
-          (e) => e.topic_id?.toString() === messageThreadId?.toString()
-        );
+        logger(`[TELEGRAM] fetched topic`, topic);
 
         if (!topic) {
           logger(`[TELEGRAM] editing topic and adding to db`);
@@ -441,7 +437,7 @@ export class TelegramService {
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId,
+            messageThreadId || 0,
             topicName,
             false
           );
@@ -450,7 +446,7 @@ export class TelegramService {
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId,
+            parseInt(topic.topic_id),
             topicName,
             topic.is_anon_topic
           );
@@ -632,6 +628,7 @@ export class TelegramService {
 
     this.authBot.on("message", async (ctx) => {
       logger(`[MESSAGE]`, ctx.message);
+      if (!ctx.message.text) return logger(`[TELEGRAM] no text to forward`);
 
       // Forward to receive chat
       // If current chat + topic exists chats to forward, fetch chats to forward's recipient.
@@ -642,6 +639,20 @@ export class TelegramService {
         chatId,
         messageThreadId || 0
       );
+      if (topic && topic.is_forwarding && topic.receiving_chat_id) {
+        logger(`[TELEGRAM] ${topic.topic_name} is forwarding`);
+        const chatReceiving = await fetchTelegramTopic(
+          this.context.dbPool,
+          parseInt(topic.receiving_chat_id),
+          parseInt(topic.receiving_topic_id)
+        );
+        if (!chatReceiving) throw new Error(`No chat found to receive`);
+        await ctx.api.sendMessage(
+          chatReceiving.telegramChatID,
+          ctx.message.text,
+          { message_thread_id: parseInt(chatReceiving.topic_id) || undefined }
+        );
+      }
     });
     this.authBot.command("help", helpResponse);
   }
