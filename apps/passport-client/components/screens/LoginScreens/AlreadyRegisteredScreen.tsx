@@ -146,6 +146,7 @@ export function AlreadyRegisteredScreen() {
         storage: storageResult.value,
         encryptionKey: encryptionKey
       });
+      window.location.hash = "#/login-interstitial";
     },
     [dispatch, password, salt]
   );
