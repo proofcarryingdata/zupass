@@ -31,8 +31,7 @@ export async function insertTelegramChat(
     `\
     insert into telegram_chats(telegram_chat_id)
     values ($1)
-    on conflict (telegram_chat_id) do update 
-    set telegram_chat_id = $1`,
+    on conflict (telegram_chat_id) do nothing`,
     [telegramChatId]
   );
   return result.rowCount;

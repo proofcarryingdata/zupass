@@ -20,11 +20,11 @@ import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
-  fetchTelegramTopic,
-  fetchTelegramTopicsByChatId
+  fetchTelegramTopic
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
+  insertTelegramChat,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -390,6 +390,7 @@ export class TelegramService {
         if (!chatId || !topicName || !messageThreadId)
           throw new Error(`Missing chatId or topic name`);
 
+        await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
@@ -417,17 +418,15 @@ export class TelegramService {
         if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
-        const topicsForChat = await fetchTelegramTopicsByChatId(
+        const topic = await fetchTelegramTopic(
           this.context.dbPool,
-          chatId
-        );
-
-        const topic = topicsForChat.find(
-          (e) => e.topic_id?.toString() === messageThreadId?.toString()
+          chatId,
+          messageThreadId
         );
 
         if (!topic) {
-          logger(`[TELEGRAM] editing topic and adding to db`);
+          logger(`[TELEGRAM] adding topic ${topicName} to db`);
+          await insertTelegramChat(this.context.dbPool, chatId);
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
@@ -436,7 +435,7 @@ export class TelegramService {
             false
           );
         } else {
-          logger(`[TELEGRAM] editing topic and updating db`);
+          logger(`[TELEGRAM] updating topic ${topicName} in db`);
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
@@ -445,7 +444,6 @@ export class TelegramService {
             topic.is_anon_topic
           );
         }
-        logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
       });
     });
 
