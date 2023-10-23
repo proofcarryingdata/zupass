@@ -191,7 +191,7 @@ export interface PretixItemInfo {
 }
 
 export interface TelegramTopic {
-  telegram_chat_id: string;
+  telegramChatID: string;
   topic_id: string;
   topic_name: string;
   is_anon_topic: boolean;
@@ -245,7 +245,7 @@ export interface ZuconnectTicketDB {
 }
 
 export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
+  telegramChatID: string | undefined;
   eventName: string;
   configEventID: string;
   isLinkedToCurrentChat: boolean;

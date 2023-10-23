@@ -108,7 +108,7 @@ export async function fetchTelegramAnonTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    SELECT telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1 and is_anon_topic is true
     `,
     [telegramChatId]
@@ -123,7 +123,7 @@ export async function fetchTelegramTopicsByChatId(
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    SELECT telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1
     `,
     [telegramChatId]
@@ -190,7 +190,7 @@ export async function fetchTelegramTopic(
   const result = await sqlQuery(
     client,
     ` 
-    SELECT * 
+    SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics
     WHERE 
         telegram_chat_id = $1 AND 
@@ -199,4 +199,19 @@ export async function fetchTelegramTopic(
     [telegramChatId, topicId]
   );
   return result.rows[0] ?? null;
+}
+
+export async function fetchTelegramTopicsReceving(
+  client: Pool
+): Promise<TelegramTopic[]> {
+  const result = await sqlQuery(
+    client,
+    ` 
+    SELECT telegram_chat_id AS "telegramChatID", * 
+    FROM telegram_chat_topics tct
+    JOIN telegram_forwarding tf ON tct.id = tf.telegram_chat_topics_id
+    WHERE tf.is_receiving = true;`,
+    []
+  );
+  return result.rows;
 }

@@ -37,6 +37,7 @@ import {
   TopicChat,
   base64EncodeTopicData,
   chatIDsToChats,
+  chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
   eventsToLink,
@@ -87,16 +88,19 @@ export class TelegramService {
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu<BotContext>("anonsend");
+    const forwardMenu = new Menu<BotContext>("forward");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
+    forwardMenu.dynamic(chatsToForwardTo);
 
     this.authBot.use(eventsMenu);
     this.authBot.use(zupassMenu);
     this.anonBot.use(anonSendMenu);
+    this.authBot.use(forwardMenu);
 
     // Users gain access to gated chats by requesting to join. The authBot
     // receives a notification of this, and will approve requests from
@@ -449,7 +453,10 @@ export class TelegramService {
 
       const messageThreadId = ctx.message?.message_thread_id;
 
-      if (!ctx.from?.username) throw new Error(`No username found`);
+      if (!ctx.from?.username)
+        return ctx.reply(`No username found`, {
+          reply_to_message_id: messageThreadId
+        });
 
       if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
         return ctx.reply(
@@ -524,7 +531,10 @@ export class TelegramService {
 
       const messageThreadId = ctx.message?.message_thread_id;
 
-      if (!ctx.from?.username) throw new Error(`No username found`);
+      if (!ctx.from?.username)
+        return ctx.reply(`No username found`, {
+          reply_to_message_id: messageThreadId
+        });
 
       if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
         return ctx.reply(
@@ -532,8 +542,9 @@ export class TelegramService {
           { reply_to_message_id: messageThreadId }
         );
 
-      await ctx.reply(`Choose a topic to forward messages to`, {
-        reply_markup: zupassMenu
+      await ctx.reply(`Choose a group and topic to forward messages to`, {
+        reply_markup: forwardMenu,
+        message_thread_id: messageThreadId
       });
     });
 
