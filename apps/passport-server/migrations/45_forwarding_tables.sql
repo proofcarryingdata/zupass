@@ -3,6 +3,7 @@ CREATE TABLE chats_receiving (
     id SERIAL PRIMARY KEY,
     chat_id VARCHAR,
     topic_id VARCHAR NULL,
+    topic_name VARCHAR NULL,
     UNIQUE (chat_id, topic_id)
 
 );

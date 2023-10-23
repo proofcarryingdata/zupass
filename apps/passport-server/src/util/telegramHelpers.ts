@@ -20,8 +20,13 @@ import { Pool } from "postgres-pool";
 import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
+  ChatReceiving,
   LinkedPretixTelegramEvent
 } from "../database/models";
+import {
+  fetchChatsReceiving,
+  insertIntoChatsForwarding
+} from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
 import {
   fetchEventsWithTelegramChats,
@@ -38,10 +43,9 @@ import { logger } from "./logger";
 
 export type TopicChat = Chat.SupergroupChat | null;
 
-type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
-  T & {
-    chat: TopicChat;
-  };
+type ChatIDWithChat<T extends { telegramChatID?: string }> = T & {
+  chat: TopicChat;
+};
 
 interface BotCommandWithAnon extends BotCommand {
   isAnon: boolean;
@@ -57,6 +61,7 @@ export interface SessionData {
   lastMessageId?: number;
   selectedChat?: TopicChat;
   kudosData?: { giver: string; receiver: string };
+  chatReceiving?: ChatIDWithChat<ChatReceiving>;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
@@ -232,9 +237,7 @@ export const setBotInfo = async (
 /**
  * Fetches the chat object for a list contaning a telegram chat id
  */
-export const chatIDsToChats = async <
-  T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
->(
+export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   ctx: BotContext,
   chats: T[]
 ): Promise<ChatIDWithChat<T>[]> => {
@@ -702,3 +705,85 @@ export function msToTimeString(duration: number): string {
 
   return `${hours} hours, ${minutes} minutes, and ${seconds} seconds`;
 }
+
+export const chatsToForwardTo = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  return traced("telegram", "chatsToForwardTo", async (span) => {
+    logger(`[CHATS TO FORWARD] ctx`, ctx.update.callback_query?.message);
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
+    }
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+    if (ctx.chat?.id) span?.setAttribute("chatId", ctx.chat.id);
+
+    try {
+      // If a chat has been selected, give the user a choice of topics to send to.
+      if (ctx.session.chatReceiving?.chat) {
+        const chat = ctx.session.chatReceiving;
+
+        range.text(`↰  ${chat.chat?.title} - ${chat.topic_id}`).row();
+        range.text(`Forward Messages`, async (ctx) => {
+          const message = ctx.update.callback_query?.message;
+          const topicName =
+            message?.reply_to_message?.forum_topic_created?.name;
+          const messageThreadId = message?.message_thread_id;
+
+          logger(`[TELEGRAM] message thread id`, messageThreadId);
+
+          await insertIntoChatsForwarding(
+            db,
+            chat.telegramChatID,
+            chat.id,
+            chat.topic_id
+          );
+
+          await ctx.reply(
+            `Now forwarding messages from <b>${
+              topicName || messageThreadId
+            }</b> to <i>${chat.chat?.title} - ${chat.topic_name} </i>`,
+            {
+              reply_to_message_id: messageThreadId,
+              parse_mode: "HTML"
+            }
+          );
+        });
+      }
+      // Otherwise, give the user a list of chats that they are members of.
+      else {
+        // Only show chats a user is in
+        const chatIdsReceiving = await fetchChatsReceiving(ctx.session.dbPool);
+
+        const chatIdsToChats = await chatIDsToChats(ctx, chatIdsReceiving);
+
+        if (chatIdsToChats.length > 0) {
+          for (const chat of chatIdsToChats) {
+            // Only show the chats the user is a member of
+            range
+              .text(
+                `Chat: ${chat.chat?.title} => Topic: ${chat.topic_name}`,
+                async (ctx) => {
+                  ctx.session.chatReceiving = chat;
+                  await ctx.menu.update({ immediate: true });
+                }
+              )
+              .row();
+          }
+        } else {
+          ctx.reply(`No chats found to receive messages`);
+        }
+      }
+    } catch (error) {
+      range.text(`Action failed ${error}`);
+      return;
+    }
+  });
+};

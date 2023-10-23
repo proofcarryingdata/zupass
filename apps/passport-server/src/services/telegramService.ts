@@ -12,9 +12,7 @@ import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import {
   fetchFromChatsForwarding,
-  fetchFromChatsReceiving,
   fetchFromChatsReceivingById,
-  insertIntoChatsForwarding,
   insertIntoChatsReceiving
 } from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
@@ -43,6 +41,7 @@ import {
   TopicChat,
   base64EncodeTopicData,
   chatIDsToChats,
+  chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
   eventsToLink,
@@ -92,16 +91,19 @@ export class TelegramService {
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu<BotContext>("anonsend");
+    const forwardMenu = new Menu<BotContext>("forward");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
+    forwardMenu.dynamic(chatsToForwardTo);
 
     this.authBot.use(eventsMenu);
     this.authBot.use(zupassMenu);
     this.anonBot.use(anonSendMenu);
+    this.authBot.use(forwardMenu);
 
     // Users gain access to gated chats by requesting to join. The authBot
     // receives a notification of this, and will approve requests from
@@ -584,7 +586,8 @@ export class TelegramService {
         await insertIntoChatsReceiving(
           this.context.dbPool,
           ctx.chat.id,
-          messageThreadId
+          messageThreadId,
+          topicName
         );
         await ctx.reply(
           `Set topic <b>${
@@ -603,38 +606,11 @@ export class TelegramService {
     this.authBot.command("forward", async (ctx) => {
       logger(`[TELEGRAM] running forward command`);
       const messageThreadId = ctx.message?.message_thread_id;
-      const topicName =
-        ctx.message?.reply_to_message?.forum_topic_created?.name;
-
       try {
-        // TODO: replace hard coded id with user input
-        const chatsToReceive = await fetchFromChatsReceiving(
-          this.context.dbPool,
-          -1001943944469
-        );
-        if (chatsToReceive?.length > 0) {
-          const chatToReceive = chatsToReceive[1];
-          // Check if user is admin
-          // Add topic to chatReceiving DB
-          await insertIntoChatsForwarding(
-            this.context.dbPool,
-            ctx.chat.id,
-            chatToReceive.id,
-            messageThreadId
-          );
-          const chat = await getGroupChat(ctx.api, chatToReceive.chat_id);
-          await ctx.reply(
-            `Now forwarding messages from <b>${
-              topicName || messageThreadId
-            }</b> to <i>${chat.title}</i>`,
-            { reply_to_message_id: messageThreadId, parse_mode: "HTML" }
-          );
-        } else {
-          logger(`[TELEGRAM] no chats found to receive`);
-          await ctx.reply(`no chats found to receive`, {
-            message_thread_id: messageThreadId
-          });
-        }
+        await ctx.reply(`Choose a chat to receive messages`, {
+          reply_markup: forwardMenu,
+          message_thread_id: messageThreadId
+        });
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(`Failed set forwarding chat: ${error}`, {
@@ -664,9 +640,13 @@ export class TelegramService {
         );
         if (recipient && ctx.message?.text) {
           logger(`[TELEGRAM] forwarding message...`);
-          const chat = await getGroupChat(ctx.api, chatToForwardFrom.chat_id);
+          logger(`[TELEGRAM] recipient`, recipient);
+          const chat = await getGroupChat(
+            ctx.api,
+            chatToForwardFrom.telegramChatID
+          );
           await this.authBot.api.sendMessage(
-            recipient.chat_id,
+            recipient.telegramChatID,
             `<i>fwd from <b>${chat.title}</b>:</i>\n\n${ctx.message.text}`,
             {
               message_thread_id: recipient?.topic_id,
@@ -674,7 +654,7 @@ export class TelegramService {
             }
           );
           logger(
-            `[TELEGRAM] forwarded ${ctx.message.text} to chat ${recipient.chat_id}`
+            `[TELEGRAM] forwarded ${ctx.message.text} to chat ${recipient.telegramChatID}`
           );
         }
       }

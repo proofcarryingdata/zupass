@@ -228,7 +228,7 @@ export interface ZuconnectTicketDB {
 }
 
 export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
+  telegramChatID: string | undefined;
   eventName: string;
   configEventID: string;
   isLinkedToCurrentChat: boolean;
@@ -247,14 +247,15 @@ export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
   isChatMember: boolean;
 };
 
-export interface ChatsReceiving {
+export interface ChatReceiving {
   id: number;
-  chat_id: number;
+  telegramChatID: string;
   topic_id?: number;
+  topic_name?: string;
 }
 
-export interface ChatsForwarding {
-  chat_id: number;
+export interface ChatForwarding {
+  telegramChatID: string;
   topic_id?: number;
   chat_receiving_id: number;
 }

@@ -1,19 +1,20 @@
 import { Pool } from "postgres-pool";
-import { ChatsForwarding, ChatsReceiving } from "../../models";
+import { ChatForwarding, ChatReceiving } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 export async function insertIntoChatsReceiving(
   client: Pool,
   chatId: number,
-  topicId: number | undefined
+  topicId: number | undefined,
+  topicName: string | undefined
 ): Promise<void> {
   await sqlQuery(
     client,
     `\
-    INSERT INTO chats_receiving (chat_id, topic_id)
-    VALUES ($1, $2)
+    INSERT INTO chats_receiving (chat_id, topic_id, topic_name)
+    VALUES ($1, $2, $3)
     `,
-    [chatId, topicId]
+    [chatId, topicId, topicName]
   );
 }
 
@@ -21,8 +22,8 @@ export async function fetchFromChatsReceiving(
   client: Pool,
   chatId: number,
   topicId?: number
-): Promise<ChatsReceiving[]> {
-  let query = `SELECT * FROM chats_receiving WHERE chat_id = $1`;
+): Promise<ChatReceiving[]> {
+  let query = `SELECT chat_id as "telegramChatID", * FROM chats_receiving WHERE chat_id = $1`;
   const values = [chatId];
 
   if (topicId !== undefined) {
@@ -34,14 +35,27 @@ export async function fetchFromChatsReceiving(
   return result.rows;
 }
 
-export async function fetchFromChatsReceivingById(
-  client: Pool,
-  id: number
-): Promise<ChatsReceiving> {
+export async function fetchChatsReceiving(
+  client: Pool
+): Promise<ChatReceiving[]> {
   const result = await sqlQuery(
     client,
     `\
-    SELECT * FROM chats_receiving
+    SELECT chat_id as "telegramChatID", * FROM chats_receiving
+    `
+  );
+
+  return result.rows;
+}
+
+export async function fetchFromChatsReceivingById(
+  client: Pool,
+  id: number
+): Promise<ChatReceiving> {
+  const result = await sqlQuery(
+    client,
+    `\
+    SELECT chat_id as "telegramChatID", * FROM chats_receiving
     WHERE id = $1
     `,
     [id]
@@ -52,7 +66,7 @@ export async function fetchFromChatsReceivingById(
 
 export async function insertIntoChatsForwarding(
   client: Pool,
-  chatId: number,
+  chatId: string,
   chatReceivingId: number,
   topicId: number | undefined
 ): Promise<void> {
@@ -70,11 +84,11 @@ export async function fetchFromChatsForwarding(
   client: Pool,
   chatId: number,
   topicId?: number
-): Promise<ChatsForwarding | null> {
+): Promise<ChatForwarding | null> {
   const result = await sqlQuery(
     client,
     `\
-    SELECT * FROM chats_forwarding
+    SELECT chat_id as "telegramChatID", * FROM chats_forwarding
     WHERE chat_id = $1 and topic_id = $2
     `,
     [chatId, topicId]
