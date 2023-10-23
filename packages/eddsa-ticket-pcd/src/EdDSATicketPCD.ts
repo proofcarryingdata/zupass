@@ -53,8 +53,6 @@ export enum TicketCategory {
  */
 export interface ITicketData {
   // The fields below are not signed and are used for display purposes.
-  attendeeName: string;
-  attendeeEmail: string;
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
@@ -69,6 +67,8 @@ export interface ITicketData {
   isConsumed: boolean;
   isRevoked: boolean;
   ticketCategory: TicketCategory;
+  attendeeName: string;
+  attendeeEmail: string;
 }
 
 /**
