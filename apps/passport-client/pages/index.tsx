@@ -211,7 +211,7 @@ async function loadInitialState(): Promise<AppState> {
   let modal = { modalType: "none" } as AppState["modal"];
 
   if (
-    // If on Zupass legacy login, ask user to set passwrod
+    // If on Zupass legacy login, ask user to set password
     self != null &&
     encryptionKey == null &&
     self.salt == null

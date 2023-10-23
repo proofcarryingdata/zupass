@@ -104,8 +104,9 @@ export function useUserForcedToLogout(): boolean {
 export function useUserShouldAgreeNewTerms(): void {
   const self = useSelf();
   const dispatch = useDispatch();
+  const invalidUser = useUserForcedToLogout();
 
-  if (self && self.terms_agreed < LATEST_TERMS) {
+  if (!invalidUser && self && self.terms_agreed < LATEST_TERMS) {
     dispatch({
       type: "prompt-to-agree-terms"
     });

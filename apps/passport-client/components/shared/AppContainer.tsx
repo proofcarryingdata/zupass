@@ -1,6 +1,10 @@
 import { ReactNode, useCallback } from "react";
 import styled, { createGlobalStyle } from "styled-components";
-import { useAppError, useDispatch } from "../../src/appHooks";
+import {
+  useAppError,
+  useDispatch,
+  useUserShouldAgreeNewTerms
+} from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
 
@@ -13,6 +17,7 @@ export function AppContainer({
 }) {
   const dispatch = useDispatch();
   const error = useAppError();
+  useUserShouldAgreeNewTerms();
 
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),

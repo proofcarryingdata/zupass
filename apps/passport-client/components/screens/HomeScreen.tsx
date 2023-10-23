@@ -14,12 +14,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import {
-  useFolders,
-  usePCDsInFolder,
-  useSelf,
-  useUserShouldAgreeNewTerms
-} from "../../src/appHooks";
+import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -38,7 +33,6 @@ export function HomeScreenImpl() {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
-  useUserShouldAgreeNewTerms();
 
   const [browsingFolder, setBrowsingFolder] = useState("/");
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
