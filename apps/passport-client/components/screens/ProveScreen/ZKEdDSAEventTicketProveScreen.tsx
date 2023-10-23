@@ -524,5 +524,9 @@ const ExpandablePre = styled.pre<{ expanded: boolean }>`
   overflow: ${(p) => (p.expanded ? "auto" : "hidden")};
   font-size: 14px;
   line-height: 18px;
-  max-height: ${(p) => (p.expanded ? "72px" : "18px")};
+  max-height: ${(p) => (p.expanded ? "80px" : "26px")};
+
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(var(--white-rgb), 0.05);
 `;
