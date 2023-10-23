@@ -2,7 +2,7 @@ import back from "./back.svg";
 import checkCircle from "./check-circle.svg";
 import checkmark from "./checkmark.svg";
 import closeWhite from "./close-white.svg";
-import crossCircle from "./cross-circle.svg";
+import cross from "./cross.svg";
 import eyeClosed from "./eye-closed.svg";
 import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
@@ -32,7 +32,7 @@ export const icons = {
   checkmark,
   checkCircle,
   closeWhite,
-  crossCircle,
+  cross,
   eyeClosed,
   eyeOpen,
   folder,

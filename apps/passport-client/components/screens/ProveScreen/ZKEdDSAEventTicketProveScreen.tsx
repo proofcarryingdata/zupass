@@ -405,7 +405,7 @@ function RevealedField({
   return (
     <FieldContainer>
       <RevealIcon
-        src={revealed ? icons.checkCircle : icons.crossCircle}
+        src={revealed ? icons.checkCircle : icons.cross}
         draggable={false}
         revealed={revealed}
       />
