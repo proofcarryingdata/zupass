@@ -180,6 +180,8 @@ export interface TelegramTopic {
   topic_id: string;
   topic_name: string;
   is_anon_topic: boolean;
+  is_receiving: boolean;
+  is_forwarding: boolean;
 }
 
 // Representation of a "known public key" as fetched from the DB

@@ -12,8 +12,7 @@ import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
 import {
   fetchFromChatsForwarding,
-  fetchFromChatsReceivingById,
-  insertIntoChatsReceiving
+  fetchFromChatsReceivingById
 } from "../database/queries/telegram/chatForwarding";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
@@ -30,6 +29,7 @@ import {
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
+  insertTelegramChat,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -391,13 +391,18 @@ export class TelegramService {
     this.authBot.on(":forum_topic_created", async (ctx) => {
       return traced("telegram", "forum_topic_created", async (span) => {
         const topicName = ctx.update?.message?.forum_topic_created.name;
-        const messageThreadId = ctx.update.message?.message_thread_id;
+        let messageThreadId = ctx.update.message?.message_thread_id;
         const chatId = ctx.chat.id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!chatId || !topicName || !messageThreadId)
+        if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
+        if (!messageThreadId) {
+          messageThreadId = 0;
+          logger(`[TELEGRAM] general topic ${topicName} created`);
+        }
 
+        await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
@@ -409,18 +414,18 @@ export class TelegramService {
         logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
       });
     });
-
     this.authBot.on(":forum_topic_edited", async (ctx) => {
       return traced("telegram", "forum_topic_edited", async (span) => {
+        logger(`[EDITED]`, ctx.message);
+
         const topicName = ctx.update?.message?.forum_topic_edited.name;
         const chatId = ctx.chat.id;
-        const messageThreadId = ctx.update.message?.message_thread_id;
+        let messageThreadId = ctx.update.message?.message_thread_id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
         if (!messageThreadId)
-          return logger(
-            `[TELEGRAM] ignoring edit for general topic ${topicName}`
-          );
+          logger(`[TELEGRAM] edititing for general topic ${topicName}`);
+        messageThreadId = 0;
 
         if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
@@ -436,6 +441,7 @@ export class TelegramService {
 
         if (!topic) {
           logger(`[TELEGRAM] editing topic and adding to db`);
+          await insertTelegramChat(this.context.dbPool, chatId);
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
@@ -577,22 +583,31 @@ export class TelegramService {
     this.authBot.command("receive", async (ctx) => {
       logger(`[TELEGRAM] running receive command`);
       const messageThreadId = ctx.message?.message_thread_id;
-      const topicName =
-        ctx.message?.reply_to_message?.forum_topic_created?.name;
 
       try {
-        // Check if user is admin
-        // Add topic to chatReceiving DB
-        await insertIntoChatsReceiving(
+        const topic = await fetchTelegramTopic(
           this.context.dbPool,
           ctx.chat.id,
-          messageThreadId,
-          topicName
+          messageThreadId || 0
         );
+
+        if (!topic) {
+          throw new Error(`No topic found`);
+        }
+
+        // Check if user is admin
+        // Add topic to chatReceiving DB
+        await insertTelegramTopic(
+          this.context.dbPool,
+          ctx.chat.id,
+          messageThreadId || 0,
+          topic.topic_name,
+          false,
+          true // isReceiving
+        );
+
         await ctx.reply(
-          `Set topic <b>${
-            topicName || messageThreadId
-          }</b> to receive forwarded messages`,
+          `Set topic <b>${topic.topic_name}</b> to receive forwarded messages`,
           { reply_to_message_id: messageThreadId, parse_mode: "HTML" }
         );
       } catch (error) {
