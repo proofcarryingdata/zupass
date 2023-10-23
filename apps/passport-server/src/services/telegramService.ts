@@ -387,14 +387,14 @@ export class TelegramService {
         const chatId = ctx.chat.id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!chatId || !topicName || !messageThreadId)
+        if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
         await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId,
+          messageThreadId || 0,
           topicName,
           false
         );
@@ -410,19 +410,15 @@ export class TelegramService {
         const messageThreadId = ctx.update.message?.message_thread_id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!messageThreadId)
-          return logger(
-            `[TELEGRAM] ignoring edit for general topic ${topicName}`
-          );
-
         if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
         const topic = await fetchTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId
+          messageThreadId || 0
         );
+        logger(`[TELEGRAM] topic`, topic);
 
         if (!topic) {
           logger(`[TELEGRAM] adding topic ${topicName} to db`);
@@ -430,7 +426,7 @@ export class TelegramService {
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId,
+            messageThreadId || 0,
             topicName,
             false
           );
@@ -439,7 +435,7 @@ export class TelegramService {
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId,
+            messageThreadId || 0,
             topicName,
             topic.is_anon_topic
           );

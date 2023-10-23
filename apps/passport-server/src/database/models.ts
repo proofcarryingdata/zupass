@@ -195,6 +195,7 @@ export interface TelegramTopic {
   topic_id: string;
   topic_name: string;
   is_anon_topic: boolean;
+  id: number;
 }
 
 // Representation of a "known public key" as fetched from the DB

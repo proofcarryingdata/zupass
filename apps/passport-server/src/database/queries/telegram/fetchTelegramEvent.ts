@@ -184,8 +184,8 @@ export async function fetchTelegramChatsWithMembershipStatus(
 
 export async function fetchTelegramTopic(
   client: Pool,
-  telegramChatId: number,
-  topicId: number
+  telegramChatId: number | string,
+  topicId: number | string
 ): Promise<TelegramTopic | null> {
   const result = await sqlQuery(
     client,
