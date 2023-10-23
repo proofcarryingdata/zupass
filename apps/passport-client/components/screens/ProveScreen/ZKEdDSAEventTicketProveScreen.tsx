@@ -371,7 +371,7 @@ function RevealedTicketFields({
     .map((key) => key.replace(/^reveal/, ""))
     .map(_.startCase);
 
-  if (revealed ? fields.length === 0 : fields.length > 0) {
+  if (fields.length === 0) {
     return null;
   }
 
@@ -404,9 +404,10 @@ function RevealedField({
 }) {
   return (
     <FieldContainer>
-      <img
+      <RevealIcon
         src={revealed ? icons.checkCircle : icons.crossCircle}
         draggable={false}
+        revealed={revealed}
       />
       <div>
         <span>{text}</span>
@@ -487,10 +488,6 @@ const FieldContainer = styled.div`
   gap: 8px;
   align-items: flex-start;
 
-  & > img {
-    width: 24px;
-    height: 24px;
-  }
   & > div {
     display: flex;
     flex-direction: column;
@@ -505,6 +502,14 @@ const FieldContainer = styled.div`
       margin: 2px 0;
     }
   }
+`;
+
+const RevealIcon = styled.img<{ revealed: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: ${(p) =>
+    p.revealed ? "var(--bg-lite-primary)" : "rgba(var(--white-rgb), 0.2)"};
 `;
 
 const Divider = styled(Separator)`
