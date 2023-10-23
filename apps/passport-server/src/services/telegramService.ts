@@ -20,7 +20,8 @@ import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
-  fetchTelegramTopic
+  fetchTelegramTopic,
+  fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
@@ -667,6 +668,49 @@ export class TelegramService {
     this.authBot.command("help", helpResponse);
     this.authBot.on("message", async (ctx) => {
       logger(`[TELEGRAM] got message`, ctx.message);
+      const text = ctx.message.text;
+
+      if (isDirectMessage(ctx)) {
+        return ctx.reply(`TODO HELP MESSAGE`);
+      } else {
+        const messageThreadId = ctx.message?.message_thread_id;
+        if (!text)
+          return ctx.reply(`No message text found`, {
+            message_thread_id: messageThreadId
+          });
+
+        try {
+          // Check to see if message is from a topic in the forwarding table
+          const topicForwarding = await fetchTelegramTopicForwarding(
+            this.context.dbPool,
+            ctx.chat.id,
+            messageThreadId || 0
+          );
+
+          if (topicForwarding?.length > 0) {
+            // For now, only support forwarding to one topic
+            const topic = topicForwarding[0];
+            logger(`topic`, topic);
+            const chat = await getGroupChat(ctx.api, topic.telegramChatID);
+
+            // Send the message to each destination
+            const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
+            await ctx.api.sendMessage(
+              topic.forwardDestination.telegramChatID,
+              fwdText,
+              {
+                parse_mode: "HTML",
+                message_thread_id: parseInt(topic.forwardDestination.topic_id)
+              }
+            );
+            logger(
+              `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${topic.forwardDestination.topic_name}`
+            );
+          }
+        } catch (error) {
+          ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
+        }
+      }
     });
   }
 
