@@ -1,5 +1,3 @@
--- FKey to chat topics. is_forwarding. is_receiving. receving_topic fkey to chat topics as well. 
-
 CREATE TABLE telegram_forwarding (
   telegram_chat_topics_id INTEGER NOT NULL, 
   FOREIGN KEY (telegram_chat_topics_id) REFERENCES telegram_chat_topics(id),
