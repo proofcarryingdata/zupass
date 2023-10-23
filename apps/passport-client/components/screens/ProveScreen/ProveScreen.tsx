@@ -1,6 +1,7 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
@@ -23,6 +24,7 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
+import { ZKEdDSAEventTicketProveScreen } from "./ZKEdDSAEventTicketProveScreen";
 
 export function ProveScreen() {
   useSyncE2EEStorage();
@@ -110,6 +112,8 @@ function getScreen(request: PCDGetRequest) {
       title = "Sign a message";
     }
     body = <SemaphoreSignatureProveScreen req={request} />;
+  } else if (request.pcdType === ZKEdDSAEventTicketPCDPackage.name) {
+    return <ZKEdDSAEventTicketProveScreen req={request} />;
   } else {
     return <GenericProveScreen req={request} />;
   }

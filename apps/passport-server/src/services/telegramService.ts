@@ -953,20 +953,22 @@ export class TelegramService {
           throw new Error(`No anonymous topic found`);
 
         // Get valid eventIds for this chat
-        const telegramEvents = await fetchTelegramEventsByChatId(
+        const events = await fetchEventsWithTelegramChats(
           this.context.dbPool,
           telegramChatId
         );
-        if (telegramEvents.length === 0)
+        if (events.length === 0)
           throw new Error(`No events associated with this group`);
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+        const validEventIds = events.map((e) => e.configEventID);
+        const eventNames = events.map((e) => e.eventName);
 
         const encodedTopicData = base64EncodeTopicData(
           telegramChatId,
           topic.topic_name,
           topic.topic_id,
-          validEventIds
+          validEventIds,
+          eventNames
         );
 
         const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;

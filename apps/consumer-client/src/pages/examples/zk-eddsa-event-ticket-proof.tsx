@@ -406,7 +406,6 @@ export function openZKEdDSAEventTicketPopup(
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
   >(urlToZupassWebsite, popupUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-    genericProveScreen: true,
     title: "ZKEdDSA Proof",
     description: "zkeddsa ticket pcd request"
   });

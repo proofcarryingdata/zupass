@@ -57,7 +57,7 @@ let eddsa: Eddsa;
 let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 
 /**
- * Specifies which fields of an EdDSATicket should be revealed in a proof.
+ * Specifies which fields of an EdDSATicket should be revealed in a proof. Only explicitly specified fields will be shown in the proof UI.
  */
 export type EdDSATicketFieldsToReveal = {
   revealTicketId?: boolean;
@@ -465,7 +465,10 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
           eventIds: [],
           productIds: [],
           notFoundMessage: "You do not have any eligible tickets."
-        }
+        },
+        // NB: we will select a valid ticket by default and this is safe due to the privacy preserving nature of this PCD
+        // User can still select a different ticket if they want to
+        defaultVisible: false
       },
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
@@ -480,7 +483,6 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
       },
       validEventIds: {
         argumentType: ArgumentTypeName.StringArray,
-        defaultVisible: false,
         description:
           "The list of valid event IDs that the ticket can be used for. If this is not provided, the proof will not check the validity of the event ID. When this is provided and event id is not directly revealed, the proof can only be used to prove that the ticket is valid for one of the events in the list."
       },

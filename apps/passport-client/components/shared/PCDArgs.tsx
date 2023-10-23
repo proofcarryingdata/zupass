@@ -520,7 +520,7 @@ export function PCDArgInput({
 }
 
 function ArgContainer({
-  arg: { argumentType, displayName, description, hideIcon },
+  arg: { argumentType, displayName, description },
   hidden,
   error,
   children,
@@ -535,14 +535,12 @@ function ArgContainer({
 }) {
   return (
     <ArgItemContainer hidden={hidden} error={!!error}>
-      {!hideIcon && (
-        <ArgItemIcon
-          src={argTypeIcons[argumentType]}
-          draggable={false}
-          aria-label={argumentType}
-          title={argumentType}
-        />
-      )}
+      <ArgItemIcon
+        src={argTypeIcons[argumentType]}
+        draggable={false}
+        aria-label={argumentType}
+        title={argumentType}
+      />
       <ArgItem>
         <ArgName>
           {displayName ? (

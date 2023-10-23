@@ -224,10 +224,6 @@ export interface Argument<
    */
   defaultVisible?: boolean;
   /**
-   * Whether to hide the icon left to the argument. Defaults to false.
-   */
-  hideIcon?: boolean;
-  /**
    * Can be used to validate user input before proof generation as well as
    * proactive filtering of options, such as PCDs, in the UI.
    */

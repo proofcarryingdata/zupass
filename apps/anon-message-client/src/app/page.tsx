@@ -14,7 +14,6 @@ import {
 import sha256 from "js-sha256";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-
 const MAX_HEADER_SIZE = 280; // max tweet size
 
 function getMessageWatermark(message: string): bigint {
@@ -27,13 +26,15 @@ interface TopicData {
   topicName: string;
   topicId: string;
   validEventIds: string[];
+  eventNames: string[];
 }
 
 async function requestProof(
   message: string,
   chatId: string,
   topicId: string,
-  validEventIds: string[]
+  validEventIds: string[],
+  eventNames: string[]
 ) {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
@@ -51,9 +52,8 @@ async function requestProof(
         eventIds: validEventIds,
         productIds: [],
         // TODO: surface which event ticket we are looking for
-        notFoundMessage: "You don't have a ticket for this event."
-      },
-      hideIcon: true
+        notFoundMessage: "You don't have a ticket to the event(s)"
+      }
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -64,13 +64,11 @@ async function requestProof(
     fieldsToReveal: {
       argumentType: ArgumentTypeName.ToggleList,
       value: revealedFields,
-      userProvided: false,
-      description: Object.keys(revealedFields).length
-        ? "The following fields will be revealed"
-        : "No information will be revealed"
+      userProvided: false
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
+      description: "Telegram chat and topic ID",
       value: getAnonTopicNullifier(
         parseInt(chatId),
         parseInt(topicId)
@@ -80,16 +78,19 @@ async function requestProof(
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
       value: validEventIds,
-      userProvided: false
+      userProvided: false,
+      description: JSON.stringify(eventNames)
     },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
+      displayName: "Your signed message",
+      description: message,
       value: watermark,
       userProvided: false
     }
   };
 
-  let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
+  const passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
   }/telegram/message?message=${encodeURIComponent(message)}&topicId=${topicId}`;
@@ -97,10 +98,8 @@ async function requestProof(
   const proofUrl = await constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
   >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-    genericProveScreen: true,
-    title: "",
-    description:
-      "ZuRat requests a zero-knowledge proof of your ticket to post an anonymous message."
+    title: "ZuKat",
+    description: "requests a zero-knowledge proof"
   });
 
   window.location.href = proofUrl;
@@ -133,12 +132,19 @@ export default function () {
 
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
-    if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
+    if (
+      !topicData ||
+      !topicData.topicId ||
+      !topicData.validEventIds ||
+      !topicData.eventNames
+    )
+      return;
     await requestProof(
       message,
       topicData.chatId,
       topicData.topicId,
-      topicData.validEventIds
+      topicData.validEventIds,
+      topicData.eventNames
     );
     setLoadingProofUrl(false);
   }, [message]);

@@ -1,6 +1,8 @@
 import back from "./back.svg";
+import checkCircle from "./check-circle.svg";
 import checkmark from "./checkmark.svg";
 import closeWhite from "./close-white.svg";
+import crossCircle from "./cross-circle.svg";
 import eyeClosed from "./eye-closed.svg";
 import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
@@ -28,7 +30,9 @@ import verifyValid from "./verify-valid.svg";
 export const icons = {
   back,
   checkmark,
+  checkCircle,
   closeWhite,
+  crossCircle,
   eyeClosed,
   eyeOpen,
   folder,

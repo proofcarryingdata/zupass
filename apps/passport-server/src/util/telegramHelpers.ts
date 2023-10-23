@@ -26,8 +26,7 @@ import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegram
 import {
   fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
-  fetchTelegramChatsWithMembershipStatus,
-  fetchTelegramEventsByChatId
+  fetchTelegramChatsWithMembershipStatus
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -121,7 +120,8 @@ export const base64EncodeTopicData = (
   chatId: number | string,
   topicName: string,
   topicId: number | string,
-  validEventIds: string[]
+  validEventIds: string[],
+  eventNames: string[]
 ): string => {
   const topicData = Buffer.from(
     encodeURIComponent(
@@ -129,7 +129,8 @@ export const base64EncodeTopicData = (
         chatId,
         topicName,
         topicId,
-        validEventIds
+        validEventIds,
+        eventNames
       })
     ),
     "utf-8"
@@ -336,22 +337,20 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
-  validEventIds: string[]
+  telegramUserName: string,
+  events: LinkedPretixTelegramEvent[]
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId);
-    span?.setAttribute("validEventIds", validEventIds);
 
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
-      revealProductId: false,
-      revealTimestampConsumed: false,
-      revealTimestampSigned: false,
-      revealAttendeeSemaphoreId: true,
-      revealIsConsumed: false,
-      revealIsRevoked: false
+      revealAttendeeSemaphoreId: true
     };
+    const validEventIds = events.map((e) => e.configEventID);
+    span?.setAttribute("validEventIds", validEventIds);
+    const eventNames = events.map((e) => e.eventName);
 
     const args: ZKEdDSAEventTicketPCDArgs = {
       ticket: {
@@ -365,9 +364,8 @@ const generateTicketProofUrl = async (
           eventIds: validEventIds,
           productIds: [],
           // TODO: surface which event ticket we are looking for
-          notFoundMessage: "You don't have a ticket to this event."
-        },
-        hideIcon: true
+          notFoundMessage: "You don't have a ticket to the event(s)"
+        }
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
@@ -378,8 +376,7 @@ const generateTicketProofUrl = async (
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
         value: fieldsToReveal,
-        userProvided: false,
-        hideIcon: true
+        userProvided: false
       },
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
@@ -389,13 +386,14 @@ const generateTicketProofUrl = async (
       validEventIds: {
         argumentType: ArgumentTypeName.StringArray,
         value: validEventIds,
-        userProvided: false
+        userProvided: false,
+        description: JSON.stringify(eventNames)
       },
       watermark: {
         argumentType: ArgumentTypeName.BigInt,
         value: telegramUserId.toString(),
         userProvided: false,
-        description: `This encodes your Telegram user ID so that the proof can grant only you access to the TG group.`
+        displayName: `Telegram User ID for @${telegramUserName}`
       }
     };
 
@@ -410,10 +408,8 @@ const generateTicketProofUrl = async (
     const proofUrl = constructZupassPcdGetRequestUrl<
       typeof ZKEdDSAEventTicketPCDPackage
     >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
-      genericProveScreen: true,
-      title: "",
-      description:
-        "ZuKat requests a zero-knowledge proof of your ticket to join a Telegram group."
+      title: "ZuKat",
+      description: "requests a zero-knowledge proof"
     });
     span?.setAttribute("proofUrl", proofUrl);
 
@@ -539,6 +535,13 @@ export const chatsToJoin = async (
     }
     span?.setAttribute("userId", userId?.toString());
 
+    const userName = ctx.from?.username;
+    if (!userName) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userName", userName);
+
     const chatsWithMembership = await getChatsWithMembershipStatus(
       db,
       ctx,
@@ -558,9 +561,14 @@ export const chatsToJoin = async (
         range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
         range.row();
       } else {
+        const events = await fetchEventsWithTelegramChats(
+          ctx.session.dbPool,
+          +chat.telegramChatID
+        );
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
-          chat.ticketEventIds
+          userName,
+          events
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
       }
@@ -598,12 +606,13 @@ export const chatsToPostIn = async (
         );
 
         // Fetch telegram event Ids for the selected chat.
-        const telegramEvents = await fetchTelegramEventsByChatId(
+        const events = await fetchEventsWithTelegramChats(
           ctx.session.dbPool,
           chat.id
         );
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+        const validEventIds = events.map((e) => e.configEventID);
+        const eventNames = events.map((e) => e.eventName);
 
         if (topics.length === 0) {
           range
@@ -624,7 +633,8 @@ export const chatsToPostIn = async (
               chat.id,
               topic.topic_name,
               topic.topic_id,
-              validEventIds
+              validEventIds,
+              eventNames
             );
             range
               .webApp(
