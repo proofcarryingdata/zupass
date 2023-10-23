@@ -518,6 +518,25 @@ export class TelegramService {
       }
     });
 
+    this.authBot.command("forward", async (ctx) => {
+      if (isDirectMessage(ctx))
+        return ctx.reply(`/forward can only be run in a group chat`);
+
+      const messageThreadId = ctx.message?.message_thread_id;
+
+      if (!ctx.from?.username) throw new Error(`No username found`);
+
+      if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+        return ctx.reply(
+          `Only Zupass team members are allowed to run this command.`,
+          { reply_to_message_id: messageThreadId }
+        );
+
+      await ctx.reply(`Choose a topic to forward messages to`, {
+        reply_markup: zupassMenu
+      });
+    });
+
     this.anonBot.command("incognito", async (ctx) => {
       const messageThreadId = ctx.message?.message_thread_id;
 
