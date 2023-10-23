@@ -216,6 +216,20 @@ export async function fetchTelegramTopicsReceving(
   return result.rows;
 }
 
+const linkedDestinationToTopic = (
+  row: any
+): TelegramTopic & { forwardDestination: TelegramTopic } => {
+  return {
+    ...row,
+    forwardDestination: {
+      id: row.forwardingID,
+      topic_id: row.forwardingTopicID,
+      topic_name: row.forwardingTopicName,
+      telegramChatID: row.forwardingChatID
+    }
+  };
+};
+
 export async function fetchTelegramTopicForwarding(
   client: Pool,
   telegramChatID: string | number,
@@ -237,13 +251,27 @@ export async function fetchTelegramTopicForwarding(
     WHERE tct.telegram_chat_id = $1 AND tct.topic_id = $2 AND tf.is_forwarding = true;`,
     [telegramChatID, topicId]
   );
-  return result.rows.map((row) => ({
-    ...row,
-    forwardDestination: {
-      id: row.forwardingID,
-      topic_id: row.forwardingTopicID,
-      topic_name: row.forwardingTopicName,
-      telegramChatID: row.forwardingChatID
-    }
-  }));
+  return result.rows.map((row) => linkedDestinationToTopic(row));
+}
+
+export async function fetchTelegramTopicsForwarding(
+  client: Pool
+): Promise<(TelegramTopic & { forwardDestination: TelegramTopic })[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT 
+      tct.telegram_chat_id AS "telegramChatID",
+      tct.*,
+      tf2.id AS "forwardingID",
+      tf2.topic_id AS "forwardingTopicID",
+      tf2.topic_name AS "forwardingTopicName",
+      tf2.telegram_chat_id AS "forwardingChatID"
+    FROM telegram_chat_topics tct
+    JOIN telegram_forwarding tf ON tct.id = tf.telegram_chat_topics_id
+    LEFT JOIN telegram_chat_topics tf2 ON tf.forward_topic_destination = tf2.id
+    WHERE tf.is_forwarding = true;`,
+    []
+  );
+  return result.rows.map((row) => linkedDestinationToTopic(row));
 }
