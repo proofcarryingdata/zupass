@@ -41,6 +41,7 @@ export function AlreadyRegisteredScreen() {
   const identityCommitment = query?.get("identityCommitment");
   const [error, setError] = useState<string | undefined>();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [sendingConfirmationEmail, setSendingConfirmationEmail] =
     useState(false);
   const [password, setPassword] = useState("");
@@ -141,12 +142,12 @@ export function AlreadyRegisteredScreen() {
         );
       }
 
+      setIsLoadingUser(true);
       dispatch({
         type: "load-from-sync",
         storage: storageResult.value,
         encryptionKey: encryptionKey
       });
-      window.location.hash = "#/login-interstitial";
     },
     [dispatch, password, salt]
   );
@@ -157,6 +158,7 @@ export function AlreadyRegisteredScreen() {
 
   useEffect(() => {
     if (self || !email) {
+      setIsLoadingUser(false);
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
@@ -179,7 +181,7 @@ export function AlreadyRegisteredScreen() {
     content = (
       <ScreenLoader text="Sending you an email with a reset token..." />
     );
-  } else if (isLoggingIn) {
+  } else if (isLoggingIn || isLoadingUser) {
     content = <ScreenLoader text="Logging you in..." />;
   } else {
     content = (
