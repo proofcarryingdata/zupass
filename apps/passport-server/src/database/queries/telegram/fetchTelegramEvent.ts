@@ -210,7 +210,7 @@ export async function fetchTelegramTopicsReceiving(
     SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics tct
     JOIN telegram_forwarding tf ON tct.id = tf.receiver_chat_topic_id
-    WHERE tf.receiver_chat_topic_id IS NOT NULL;`,
+    WHERE tf.receiver_chat_topic_id IS NOT NULL AND tf.sender_chat_topic_id IS NULL;`,
     []
   );
   return result.rows;

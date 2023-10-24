@@ -669,10 +669,6 @@ export class TelegramService {
         return ctx.reply(`TODO HELP MESSAGE`);
       } else {
         const messageThreadId = ctx.message?.message_thread_id;
-        if (!text)
-          return ctx.reply(`No message text found`, {
-            message_thread_id: messageThreadId
-          });
 
         try {
           // Check to see if message is from a topic in the forwarding table
@@ -683,20 +679,16 @@ export class TelegramService {
           );
 
           if (topicForwarding?.length > 0) {
-            const chat = await getGroupChat(ctx.api, ctx.chat.id);
-
-            const sentMessages = await topicForwarding.map((t) => {
-              logger(`topic`, t);
-              const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
+            const sentMessages = topicForwarding.map((t) => {
               const destinationTopicID = t.forwardDestination.topic_id;
               logger(
-                `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${t.forwardDestination.topic_name}`
+                `[TElEGRAM] forwarding message ${text} to ${t.topic_name} - ${t.forwardDestination.topic_name}`
               );
-              return ctx.api.sendMessage(
+              return ctx.api.forwardMessage(
                 t.forwardDestination.telegramChatID,
-                fwdText,
+                t.telegramChatID,
+                ctx.message.message_id,
                 {
-                  parse_mode: "HTML",
                   message_thread_id: destinationTopicID
                     ? parseInt(destinationTopicID)
                     : undefined
