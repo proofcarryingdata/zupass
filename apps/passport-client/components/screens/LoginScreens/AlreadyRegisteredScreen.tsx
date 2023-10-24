@@ -141,11 +141,16 @@ export function AlreadyRegisteredScreen() {
         );
       }
 
-      dispatch({
-        type: "load-from-sync",
-        storage: storageResult.value,
-        encryptionKey: encryptionKey
-      });
+      try {
+        await dispatch({
+          type: "load-from-sync",
+          storage: storageResult.value,
+          encryptionKey: encryptionKey
+        });
+      } catch (e) {
+        setIsLoggingIn(false);
+        return setError(e.message);
+      }
     },
     [dispatch, password, salt]
   );
