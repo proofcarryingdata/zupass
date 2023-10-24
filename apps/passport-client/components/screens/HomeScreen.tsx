@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   useFolders,
-  useLaserScanner,
+  useLaserScannerKeystrokeInput,
   usePCDsInFolder,
   useSelf
 } from "../../src/appHooks";
@@ -35,7 +35,7 @@ export const HomeScreen = React.memo(HomeScreenImpl);
  * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function HomeScreenImpl() {
-  useLaserScanner();
+  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();

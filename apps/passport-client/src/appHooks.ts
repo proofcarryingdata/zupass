@@ -170,12 +170,12 @@ export function useRequirePassword() {
   }
 }
 
-export function useLaserScanner() {
+// Hook that enables keystroke inputs for the purpose of laser-scanning tickets
+export function useLaserScannerKeystrokeInput() {
   const [typedText, setTypedText] = useState("");
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      console.log(event.key);
       if (event.key === "Enter") {
         // Check url regex and navigate
         const url = getLastValidURL(typedText);
