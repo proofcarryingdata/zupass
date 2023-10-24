@@ -10,11 +10,7 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import {
-  useIdentity,
-  useLaserScannerKeystrokeInput,
-  useQuery
-} from "../../src/appHooks";
+import { useIdentity, useQuery } from "../../src/appHooks";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -25,7 +21,6 @@ import {
 } from "../shared/PCDCard";
 
 export function DevconnectCheckinByIdScreen() {
-  useLaserScannerKeystrokeInput();
   const { loading: verifyingTicketId, ticketId } = useTicketId();
 
   let content = null;

@@ -9,11 +9,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
-import {
-  useLaserScannerKeystrokeInput,
-  usePCDCollection,
-  useQuery
-} from "../../src/appHooks";
+import { usePCDCollection, useQuery } from "../../src/appHooks";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
@@ -49,7 +45,6 @@ type VerifyResult =
 // since the presented ticket does not match any known pattern of event ID,
 // product ID and signing key.
 export function SecondPartyTicketVerifyScreen() {
-  useLaserScannerKeystrokeInput();
   const query = useQuery();
   const encodedQRPayload = query.get("pcd");
   const id = query.get("id");

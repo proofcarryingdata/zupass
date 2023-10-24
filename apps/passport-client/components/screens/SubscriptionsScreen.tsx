@@ -2,7 +2,6 @@ import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
 import React, { useCallback, useEffect } from "react";
 import styled from "styled-components";
 import {
-  useLaserScannerKeystrokeInput,
   useSelf,
   useSubscriptions,
   useUserForcedToLogout
@@ -20,7 +19,6 @@ import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
-  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
   const self = useSelf();

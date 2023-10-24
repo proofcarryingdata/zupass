@@ -1,11 +1,9 @@
 import { useLocation } from "react-router-dom";
-import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { CenterColumn, H1, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 export function MissingScreen() {
-  useLaserScannerKeystrokeInput();
   const loc = useLocation();
 
   return (

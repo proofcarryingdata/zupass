@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  useDispatch,
-  useIsSyncSettled,
-  useLaserScannerKeystrokeInput
-} from "../../../src/appHooks";
+import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -16,7 +12,6 @@ import { AddHaloScreen } from "./AddHaloScreen";
  * corresponds to a specific Zuzalu Experience.
  */
 export function HaloScreen() {
-  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();

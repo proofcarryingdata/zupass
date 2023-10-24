@@ -14,12 +14,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import {
-  useFolders,
-  useLaserScannerKeystrokeInput,
-  usePCDsInFolder,
-  useSelf
-} from "../../src/appHooks";
+import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -35,7 +30,6 @@ export const HomeScreen = React.memo(HomeScreenImpl);
  * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function HomeScreenImpl() {
-  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
