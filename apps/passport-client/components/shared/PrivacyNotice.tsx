@@ -5,7 +5,7 @@ import { Button, Spacer } from "../core";
 function PrivacyNoticeText() {
   return (
     <Prose>
-      <NoticeTitle>ZUPASS PRIVACY NOTICE</NoticeTitle>
+      <h2>ZUPASS PRIVACY NOTICE</h2>
       <p>
         <strong>Last Updated:</strong> October 24, 2023
       </p>
@@ -345,15 +345,15 @@ const ExpandedTermsTextContainer = styled.div`
   padding: 32px 16px;
   background: white;
 `;
-
-const NoticeTitle = styled.h2`
-  text-align: center;
-  font-weight: bold;
-`;
-
 const Prose = styled.div`
   p {
     margin: 12px 0px;
+  }
+
+  h2 {
+    margin: 0px 0px 12px 0px;
+    font-weight: bold;
+    text-align: center;
   }
 
   h3 {
