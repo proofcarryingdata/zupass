@@ -332,65 +332,65 @@ export class UserService {
     const pcd = await SemaphoreSignaturePCDPackage.deserialize(
       serializedPCD.pcd
     );
-    if (await SemaphoreSignaturePCDPackage.verify(pcd)) {
-      const parsedPayload = AgreedTermsSchema.safeParse(
-        JSON.parse(pcd.claim.signedMessage)
-      );
-
-      if (!parsedPayload.success) {
-        return {
-          success: false,
-          error: "Invalid terms specified"
-        };
-      }
-
-      const payload = parsedPayload.data;
-      const user = await fetchUserByCommitment(
-        this.context.dbPool,
-        pcd.claim.identityCommitment
-      );
-      if (!user) {
-        return {
-          success: false,
-          error: "User does not exist"
-        };
-      }
-
-      // If the user hasn't already agreed to have their tickets unredacted,
-      // do it now
-      if (
-        payload.version >= UNREDACT_TICKETS_TERMS_VERSION &&
-        user.terms_agreed < UNREDACT_TICKETS_TERMS_VERSION
-      ) {
-        logger(
-          `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
-          user.email
-        );
-        await agreeTermsAndUnredactTickets(
-          this.context.dbPool,
-          user.email,
-          payload.version
-        );
-      } else {
-        logger(
-          `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
-          user.email
-        );
-        await upsertUser(this.context.dbPool, {
-          ...user,
-          terms_agreed: payload.version
-        });
-      }
-
+    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
       return {
-        success: true,
-        value: { version: payload.version }
+        success: false,
+        error: "Invalid signature"
       };
     }
 
+    const parsedPayload = AgreedTermsSchema.safeParse(
+      JSON.parse(pcd.claim.signedMessage)
+    );
+
+    if (!parsedPayload.success) {
+      return {
+        success: false,
+        error: "Invalid terms specified"
+      };
+    }
+
+    const payload = parsedPayload.data;
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      pcd.claim.identityCommitment
+    );
+    if (!user) {
+      return {
+        success: false,
+        error: "User does not exist"
+      };
+    }
+
+    // If the user hasn't already agreed to have their tickets unredacted,
+    // do it now
+    if (
+      payload.version >= UNREDACT_TICKETS_TERMS_VERSION &&
+      user.terms_agreed < UNREDACT_TICKETS_TERMS_VERSION
+    ) {
+      logger(
+        `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
+        user.email
+      );
+      await agreeTermsAndUnredactTickets(
+        this.context.dbPool,
+        user.email,
+        payload.version
+      );
+    } else {
+      logger(
+        `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
+        user.email
+      );
+      await upsertUser(this.context.dbPool, {
+        ...user,
+        terms_agreed: payload.version
+      });
+    }
+
     return {
-      success: false,
-      error: "Invalid signature"
+      success: true,
+      value: { version: payload.version }
     };
   }
 }

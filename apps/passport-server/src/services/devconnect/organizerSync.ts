@@ -868,7 +868,6 @@ export class OrganizerSync {
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
-        let redactedTicketsDeleted = 0;
         if (this.enableRedaction) {
           // Step 4 of saving: save redacted tickets
           // Grouping by position ID is safe here because all of these tickets
@@ -898,14 +897,24 @@ export class OrganizerSync {
             redactionChanges.removed.map((t) => t.position_id)
           );
 
-          redactedTicketsDeleted = redactionChanges.removed.length;
+          span?.setAttribute(
+            "redactedTicketsInserted",
+            redactionChanges.new.length
+          );
+          span?.setAttribute(
+            "redactedTicketsUpdated",
+            redactionChanges.updated.length
+          );
+          span?.setAttribute(
+            "redactedTicketsDeleted",
+            redactionChanges.removed.length
+          );
         }
 
         span?.setAttribute("ticketsInserted", changes.new.length);
         span?.setAttribute("ticketsUpdated", changes.updated.length);
         span?.setAttribute("ticketsDeleted", changes.removed.length);
-        span?.setAttribute("redactedTicketsInserted", ticketsToRedact.length);
-        span?.setAttribute("redactedTicketsDeleted", redactedTicketsDeleted);
+
         span?.setAttribute(
           "ticketsTotal",
           existingTickets.length + changes.new.length - changes.removed.length
