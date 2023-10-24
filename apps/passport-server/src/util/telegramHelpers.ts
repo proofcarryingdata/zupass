@@ -30,7 +30,7 @@ import {
   fetchTelegramChatsWithMembershipStatus,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
-  fetchTelegramTopicsReceving
+  fetchTelegramTopicsReceiving
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
@@ -749,7 +749,7 @@ export const chatsToForwardTo = async (
       }
       // Otherwise, give the user a list of topics that are receiving messages.
       else {
-        const topicsReceving = await fetchTelegramTopicsReceving(db);
+        const topicsReceving = await fetchTelegramTopicsReceiving(db);
         const topicsWithChats = await chatIDsToChats(ctx, topicsReceving);
         for (const topic of topicsWithChats) {
           range
