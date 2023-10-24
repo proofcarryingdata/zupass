@@ -233,11 +233,10 @@ export async function verify(pcd: EdDSAFrogPCD): Promise<boolean> {
 
   const messageDerivedFromClaim = frogDataToBigInts(pcd.claim.data);
 
-  if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
-    throw new Error(`frog data does not match proof`);
-  }
-
-  return EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
+  return (
+    _.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message) &&
+    EdDSAPCDPackage.verify(pcd.proof.eddsaPCD)
+  );
 }
 
 /**

@@ -1,9 +1,13 @@
+import { EdDSAPCDClaim } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
+import JSONBig from "json-bigint";
 import "mocha";
 import {
   Biome,
   EdDSAFrogPCD,
+  EdDSAFrogPCDArgs,
+  EdDSAFrogPCDClaim,
   EdDSAFrogPCDPackage,
   IFrogData,
   Rarity,
@@ -14,6 +18,7 @@ describe("EdDSA frog should work", function () {
   this.timeout(1000 * 30);
 
   let frog: EdDSAFrogPCD;
+  let pcdArgs: EdDSAFrogPCDArgs;
 
   this.beforeAll(async () => {
     await EdDSAFrogPCDPackage.init?.({});
@@ -43,7 +48,7 @@ describe("EdDSA frog should work", function () {
       ownerSemaphoreId: "12345"
     };
 
-    frog = await EdDSAFrogPCDPackage.prove({
+    pcdArgs = {
       data: {
         value: frogData,
         argumentType: ArgumentTypeName.Object
@@ -56,7 +61,9 @@ describe("EdDSA frog should work", function () {
         value: undefined,
         argumentType: ArgumentTypeName.String
       }
-    });
+    };
+
+    frog = await EdDSAFrogPCDPackage.prove(pcdArgs);
   });
 
   it("should be able to create and verify a signed frog", async function () {
@@ -67,5 +74,75 @@ describe("EdDSA frog should work", function () {
     const serialized = await EdDSAFrogPCDPackage.serialize(frog);
     const deserialized = await EdDSAFrogPCDPackage.deserialize(serialized.pcd);
     expect(deserialized).to.deep.eq(frog);
+  });
+
+  it("should not verify a proof with incorrect frog claims", async function () {
+    async function testVerifyBadClaim(
+      mutateClaim: (claim: EdDSAFrogPCDClaim) => void
+    ): Promise<void> {
+      // Clone the valid PCD so we can mutate it to be invalid.
+      const invalidPCD: EdDSAFrogPCD = JSONBig.parse(JSONBig.stringify(frog));
+      mutateClaim(invalidPCD.claim);
+
+      const verificationRes = await EdDSAFrogPCDPackage.verify(invalidPCD);
+      expect(verificationRes).to.be.false;
+    }
+
+    await testVerifyBadClaim((claim) => {
+      claim.data.frogId = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.biome = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.rarity = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.temperament = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.jump = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.speed = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.intelligence = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.intelligence = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.beauty = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.timestampSigned = 1;
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.data.ownerSemaphoreId = "123";
+    });
+  });
+
+  it("should not verify a proof with incorrect eddsa claims", async function () {
+    async function testVerifyBadClaim(
+      mutateClaim: (claim: EdDSAPCDClaim) => void
+    ): Promise<void> {
+      // Clone the valid PCD so we can mutate it to be invalid.
+      const invalidPCD: EdDSAFrogPCD = JSONBig.parse(JSONBig.stringify(frog));
+      mutateClaim(invalidPCD.proof.eddsaPCD.claim);
+
+      const verificationRes = await EdDSAFrogPCDPackage.verify(invalidPCD);
+      expect(verificationRes).to.be.false;
+    }
+
+    await testVerifyBadClaim((claim) => {
+      claim.message[0] = BigInt(1);
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.publicKey[0] = "123";
+    });
+    await testVerifyBadClaim((claim) => {
+      claim.publicKey[1] = "123";
+    });
   });
 });
