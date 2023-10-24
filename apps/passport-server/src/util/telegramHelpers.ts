@@ -622,18 +622,20 @@ export const chatsToPostIn = async (
             })
             .row();
           for (const topic of topics) {
-            const encodedTopicData = base64EncodeTopicData(
-              chat.id,
-              topic.topic_name,
-              topic.topic_id,
-              validEventIds
-            );
-            range
-              .webApp(
-                `${topic.topic_name}`,
-                `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-              )
-              .row();
+            if (topic.topic_id) {
+              const encodedTopicData = base64EncodeTopicData(
+                chat.id,
+                topic.topic_name,
+                topic.topic_id,
+                validEventIds
+              );
+              range
+                .webApp(
+                  `${topic.topic_name}`,
+                  `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+                )
+                .row();
+            }
           }
         }
       }

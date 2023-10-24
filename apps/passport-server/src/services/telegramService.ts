@@ -399,8 +399,8 @@ export class TelegramService {
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId || 0,
           topicName,
+          messageThreadId,
           false
         );
 
@@ -421,8 +421,9 @@ export class TelegramService {
         const topic = await fetchTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId || 0
+          messageThreadId
         );
+        logger(`[TOPIC IN DB]`, topic, messageThreadId);
 
         if (!topic) {
           logger(`[TELEGRAM] adding topic ${topicName} to db`);
@@ -430,17 +431,17 @@ export class TelegramService {
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId || 0,
             topicName,
+            messageThreadId,
             false
           );
         } else {
           logger(`[TELEGRAM] updating topic ${topicName} in db`);
           await insertTelegramTopic(
             this.context.dbPool,
-            chatId,
-            messageThreadId || 0,
+            topic.telegramChatID,
             topicName,
+            topic.topic_id,
             topic.is_anon_topic
           );
         }
@@ -468,8 +469,9 @@ export class TelegramService {
       const topic = await fetchTelegramTopic(
         this.context.dbPool,
         ctx.chat.id,
-        messageThreadId || 0
+        messageThreadId
       );
+      logger(`[TOPIC IN DB]`, topic);
       const chatId = ctx.chat.id;
       const isReceving = true;
 
@@ -478,13 +480,14 @@ export class TelegramService {
         logger(`[TELEGRAM] topic not found to mark as receiving.`);
         const topicName =
           ctx.message?.reply_to_message?.forum_topic_created?.name;
+        if (!topicName) throw new Error(`No topic name found`);
 
         await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId || 0,
-          topicName || "NOT FOUND",
+          topicName,
+          messageThreadId,
           false
         );
         // Fetch the newly created topic
@@ -611,8 +614,8 @@ export class TelegramService {
         await insertTelegramTopic(
           this.context.dbPool,
           ctx.chat.id,
-          messageThreadId,
           topicName,
+          messageThreadId,
           true
         );
 
@@ -693,19 +696,19 @@ export class TelegramService {
             logger(`topic`, topic);
             const chat = await getGroupChat(ctx.api, topic.telegramChatID);
 
-            // Send the message to each destination
-            const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
-            await ctx.api.sendMessage(
-              topic.forwardDestination.telegramChatID,
-              fwdText,
-              {
-                parse_mode: "HTML",
-                message_thread_id: parseInt(topic.forwardDestination.topic_id)
-              }
-            );
-            logger(
-              `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${topic.forwardDestination.topic_name}`
-            );
+            // // Send the message to each destination
+            // const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
+            // await ctx.api.sendMessage(
+            //   topic.forwardDestination.telegramChatID,
+            //   fwdText,
+            //   {
+            //     parse_mode: "HTML",
+            //     message_thread_id: parseInt(topic.forwardDestination.topic_id)
+            //   }
+            // );
+            // logger(
+            //   `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${topic.forwardDestination.topic_name}`
+            // );
           }
         } catch (error) {
           ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
@@ -1010,7 +1013,7 @@ export class TelegramService {
         parseInt(topicId)
       );
 
-      if (!topic || !topic.is_anon_topic) {
+      if (!topic || !topic.is_anon_topic || !topic.topic_id) {
         throw new Error(`this group doesn't have any anon topics`);
       }
 
@@ -1093,7 +1096,7 @@ export class TelegramService {
           topicId
         );
 
-        if (!topic || !topic.is_anon_topic)
+        if (!topic || !topic.is_anon_topic || !topic.topic_id)
           throw new Error(`No anonymous topic found`);
 
         // Get valid eventIds for this chat

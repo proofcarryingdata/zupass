@@ -192,7 +192,7 @@ export interface PretixItemInfo {
 
 export interface TelegramTopic {
   telegramChatID: string;
-  topic_id: string;
+  topic_id: string | null;
   topic_name: string;
   is_anon_topic: boolean;
   id: number;

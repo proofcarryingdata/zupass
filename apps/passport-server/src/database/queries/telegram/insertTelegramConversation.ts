@@ -57,9 +57,9 @@ set telegram_chat_id = $2;`,
 export async function insertTelegramTopic(
   client: Pool,
   telegramChatId: string | number,
-  topicId: string | number,
   topicName: string,
-  isAnon: boolean
+  topicId?: string | number | null,
+  isAnon?: boolean
 ): Promise<number> {
   const result = await sqlQuery(
     client,
@@ -68,7 +68,7 @@ insert into telegram_chat_topics (telegram_chat_id, topic_id, topic_name, is_ano
 values ($1, $2, $3, $4)
 on conflict (telegram_chat_id, topic_id) do update 
 set topic_name = $3, is_anon_topic = $4;`,
-    [telegramChatId, topicId, topicName, isAnon]
+    [telegramChatId, topicId || null, topicName, isAnon || false]
   );
   return result.rowCount;
 }

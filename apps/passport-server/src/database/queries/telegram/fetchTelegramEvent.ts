@@ -185,19 +185,19 @@ export async function fetchTelegramChatsWithMembershipStatus(
 export async function fetchTelegramTopic(
   client: Pool,
   telegramChatId: number | string,
-  topicId: number | string
+  topicId?: number | string
 ): Promise<TelegramTopic | null> {
-  const result = await sqlQuery(
-    client,
-    ` 
+  const query = `
     SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics
     WHERE 
         telegram_chat_id = $1 AND 
-        topic_id = $2
-  `,
-    [telegramChatId, topicId]
-  );
+        (topic_id = $2 OR ($2 IS NULL AND topic_id IS NULL))
+  `;
+  const result = await sqlQuery(client, query, [
+    telegramChatId,
+    topicId || null
+  ]);
   return result.rows[0] ?? null;
 }
 
