@@ -69,11 +69,11 @@ export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
 }
 
-export function loadTermsAgreed(): number | null {
-  const stored = window.localStorage["agreed_terms"];
+export function loadPrivacyNoticeAgreed(): number | null {
+  const stored = window.localStorage["privacy_notice_agreed"];
   return stored ? parseInt(stored) : null;
 }
 
-export function saveTermsAgreed(version: number): void {
-  window.localStorage["terms_agreed"] = version.toString();
+export function savePrivacyNoticeAgreed(version: number): void {
+  window.localStorage["privacy_notice_agreed"] = version.toString();
 }

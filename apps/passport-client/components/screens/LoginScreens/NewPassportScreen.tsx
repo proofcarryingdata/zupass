@@ -84,7 +84,7 @@ function SendEmailVerification({ email }: { email: string }) {
             encryptionKey
           });
         } else {
-          window.location.hash = `#/legal-terms?email=${encodeURIComponent(
+          window.location.hash = `#/privacy-notice?email=${encodeURIComponent(
             email
           )}&token=${encodeURIComponent(token)}`;
         }

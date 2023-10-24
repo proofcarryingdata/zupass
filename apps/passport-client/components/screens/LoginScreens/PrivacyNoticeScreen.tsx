@@ -3,9 +3,9 @@ import { useQuery } from "../../../src/appHooks";
 import { Button, H2, Spacer, TextCenter } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
-import { TermsOfUse } from "../../shared/TermsOfUse";
+import { PrivacyNotice } from "../../shared/PrivacyNotice";
 
-export function LegalTermsScreen() {
+export function PrivacyNoticeScreen() {
   const query = useQuery();
   const email = query.get("email");
   const token = query.get("token");
@@ -25,7 +25,7 @@ export function LegalTermsScreen() {
           <H2>Terms of Use</H2>
           <Spacer h={24} />
           <p>To begin using Zupass, please agree to the following terms:</p>
-          <TermsOfUse />
+          <PrivacyNotice />
           <Spacer h={8} />
           <Button onClick={onClick}>Agree</Button>
         </TextCenter>

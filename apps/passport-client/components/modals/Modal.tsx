@@ -11,7 +11,7 @@ import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
-import { LegalTermsModal } from "./LegalTermsModal";
+import { PrivacyNoticeModal } from "./PrivacyNoticeModal";
 import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
@@ -60,15 +60,17 @@ export function MaybeModal({
 }
 
 function isModalDismissable(modal: AppState["modal"]) {
-  return ![
+  const nonDismissable: AppState["modal"]["modalType"][] = [
     "invalid-participant",
     "changed-password",
     "another-device-changed-password",
     "upgrade-account-modal",
     "require-add-password",
     "confirm-setup-later",
-    "legal-terms"
-  ].includes(modal.modalType);
+    "privacy-notice"
+  ];
+
+  return !nonDismissable.includes(modal.modalType);
 }
 
 function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
@@ -91,8 +93,8 @@ function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
       return <UpgradeAccountModal />;
     case "require-add-password":
       return <RequireAddPasswordModal />;
-    case "legal-terms":
-      return <LegalTermsModal />;
+    case "privacy-notice":
+      return <PrivacyNoticeModal />;
     case "none":
       return null;
     default:

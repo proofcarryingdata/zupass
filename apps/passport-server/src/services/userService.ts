@@ -2,7 +2,7 @@ import { HexString } from "@pcd/passport-crypto";
 import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
-  LATEST_TERMS,
+  LATEST_PRIVACY_NOTICE,
   UNREDACT_TICKETS_TERMS_VERSION,
   ZupassUserJson
 } from "@pcd/passport-interface";
@@ -35,7 +35,7 @@ import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
 
 const AgreedTermsSchema = z.object({
-  version: z.number().max(LATEST_TERMS)
+  version: z.number().max(LATEST_PRIVACY_NOTICE)
 });
 
 /**
@@ -248,7 +248,9 @@ export class UserService {
       // "forgot password" flow, and not the registration flow in which they
       // are prompted to agree to the latest legal terms. In this case,
       // preserve whichever version they already agreed to.
-      terms_agreed: existingUser ? existingUser.terms_agreed : LATEST_TERMS
+      terms_agreed: existingUser
+        ? existingUser.terms_agreed
+        : LATEST_PRIVACY_NOTICE
     });
 
     // Reload Merkle trees
@@ -266,7 +268,7 @@ export class UserService {
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
       user.email,
-      LATEST_TERMS
+      LATEST_PRIVACY_NOTICE
     );
 
     const userJson = userRowToZupassUserJson(user);

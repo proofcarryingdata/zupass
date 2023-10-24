@@ -1,4 +1,4 @@
-import { LATEST_TERMS } from "@pcd/passport-interface";
+import { LATEST_PRIVACY_NOTICE } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -134,7 +134,7 @@ describe("telegram bot functionality", function () {
     const uuid = await upsertUser(db, {
       email: "ivan@0xparc.org",
       commitment: newCommitment,
-      terms_agreed: LATEST_TERMS
+      terms_agreed: LATEST_PRIVACY_NOTICE
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");

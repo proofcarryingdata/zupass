@@ -9,7 +9,7 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   KnownTicketGroup,
   KnownTicketTypesResult,
-  LATEST_TERMS,
+  LATEST_PRIVACY_NOTICE,
   PollFeedResponseValue,
   User,
   ZUZALU_23_EVENT_ID,
@@ -2608,7 +2608,7 @@ describe("devconnect functionality", function () {
 
     const result = await agreeTerms(
       application.expressContext.localEndpoint,
-      LATEST_TERMS,
+      LATEST_PRIVACY_NOTICE,
       unredactUser?.identity as Identity
     );
 

@@ -8,7 +8,7 @@ import {
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
-  LATEST_TERMS,
+  LATEST_PRIVACY_NOTICE,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
@@ -31,8 +31,8 @@ import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  loadPrivacyNoticeAgreed,
   loadSelf,
-  loadTermsAgreed,
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
@@ -111,11 +111,11 @@ export type Action =
       knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     }
   | {
-      type: "handle-agreed-terms";
+      type: "handle-agreed-privacy-notice";
       version: number;
     }
   | {
-      type: "prompt-to-agree-terms";
+      type: "prompt-to-agree-privacy-notice";
     };
 
 export type StateContextState = {
@@ -206,10 +206,10 @@ export async function dispatch(
         update,
         action.knownTicketTypesAndKeys
       );
-    case "handle-agreed-terms":
-      return handleAgreedTerms(state, update, action.version);
-    case "prompt-to-agree-terms":
-      return promptToAgreeTerms(state, update);
+    case "handle-agreed-privacy-notice":
+      return handleAgreedPrivacyNotice(state, update, action.version);
+    case "prompt-to-agree-privacy-notice":
+      return promptToAgreePrivacyNotice(state, update);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -797,7 +797,7 @@ async function setKnownTicketTypesAndKeys(
  * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
  * feed refresh, and dismiss the "legal terms" modal.
  */
-async function handleAgreedTerms(
+async function handleAgreedPrivacyNotice(
   state: AppState,
   update: ZuUpdate,
   version: number
@@ -817,15 +817,19 @@ async function handleAgreedTerms(
  * to sync it. If so, sync to server. If not, prompt user with an
  * un-dismissable modal.
  */
-async function promptToAgreeTerms(state: AppState, update: ZuUpdate) {
-  const cachedTerms = loadTermsAgreed();
-  if (cachedTerms === LATEST_TERMS) {
+async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
+  const cachedTerms = loadPrivacyNoticeAgreed();
+  if (cachedTerms === LATEST_PRIVACY_NOTICE) {
     // sync to server
-    await agreeTerms(appConfig.zupassServer, LATEST_TERMS, state.identity);
+    await agreeTerms(
+      appConfig.zupassServer,
+      LATEST_PRIVACY_NOTICE,
+      state.identity
+    );
   } else {
     update({
       modal: {
-        modalType: "legal-terms"
+        modalType: "privacy-notice"
       }
     });
   }

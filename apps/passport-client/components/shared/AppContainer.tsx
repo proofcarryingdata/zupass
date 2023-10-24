@@ -3,7 +3,7 @@ import styled, { createGlobalStyle } from "styled-components";
 import {
   useAppError,
   useDispatch,
-  useUserShouldAgreeNewTerms
+  useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
@@ -17,7 +17,7 @@ export function AppContainer({
 }) {
   const dispatch = useDispatch();
   const error = useAppError();
-  useUserShouldAgreeNewTerms();
+  useUserShouldAgreeNewPrivacyNotice();
 
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),
