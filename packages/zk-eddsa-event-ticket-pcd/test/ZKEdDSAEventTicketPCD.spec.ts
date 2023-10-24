@@ -140,6 +140,11 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealTimestampSigned: true
   };
 
+  const fieldsToReveal4: EdDSATicketFieldsToReveal = {
+    revealAttendeeEmail: true,
+    revealAttendeeName: true
+  };
+
   const fieldsToRevealNone: EdDSATicketFieldsToReveal = {
     revealTicketId: false,
     revealEventId: false,
@@ -149,7 +154,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealAttendeeSemaphoreId: false,
     revealIsConsumed: false,
     revealIsRevoked: false,
-    revealTicketCategory: false
+    revealTicketCategory: false,
+    revealAttendeeEmail: false,
+    revealAttendeeName: false
   };
 
   const fieldsToRevealAll: EdDSATicketFieldsToReveal = {
@@ -161,7 +168,9 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     revealAttendeeSemaphoreId: true,
     revealIsConsumed: true,
     revealIsRevoked: true,
-    revealTicketCategory: true
+    revealTicketCategory: true,
+    revealAttendeeEmail: true,
+    revealAttendeeName: true
   };
 
   const validEventIdsContainingTicket: string[] = [
@@ -311,6 +320,27 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(verificationRes).to.be.true;
   });
 
+  it("should reveal attendeeEmail and attendeeName if requested", async function () {
+    const pcdArgs = await toArgs(
+      ticketData1,
+      fieldsToReveal4,
+      true /* withNullifier */,
+      validEventIdsContainingTicket
+    );
+    const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
+
+    const claim = pcd.claim;
+    expect(claim.partialTicket.attendeeEmail).to.be.equal(
+      ticketData1.attendeeEmail
+    );
+    expect(claim.partialTicket.attendeeName).to.be.equal(
+      ticketData1.attendeeName
+    );
+
+    const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
+    expect(verificationRes).to.be.true;
+  });
+
   it("should reveal semaphore ID, ticketCategory, and timestamps if requested, and no more", async function () {
     const pcdArgs = await toArgs(ticketData1, fieldsToReveal3, true);
     const pcd = await ZKEdDSAEventTicketPCDPackage.prove(pcdArgs);
@@ -334,6 +364,8 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(pcd.claim.partialTicket.productId).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isConsumed).to.be.equal(undefined);
     expect(pcd.claim.partialTicket.isRevoked).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.attendeeEmail).to.be.equal(undefined);
+    expect(pcd.claim.partialTicket.attendeeName).to.be.equal(undefined);
 
     const verificationRes = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
@@ -500,6 +532,12 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeEmail = "wrongemail@example.com";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeName = "Some guy who doesn't exist";
     });
   });
 
