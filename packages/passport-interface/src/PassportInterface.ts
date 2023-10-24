@@ -1,11 +1,18 @@
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { sha256 } from "js-sha256";
 
-export enum PCDRequestType {
+export const enum PCDRequestType {
   Get = "Get",
   GetWithoutProving = "GetWithoutProving",
   Add = "Add",
   ProveAndAdd = "ProveAndAdd"
+}
+
+export const PCDRequestTypeValues = {
+  Get : "Get",
+  GetWithoutProving : "GetWithoutProving",
+  Add : "Add",
+  ProveAndAdd : "ProveAndAdd"
 }
 
 export interface PCDRequest {

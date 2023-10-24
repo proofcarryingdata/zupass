@@ -4,13 +4,13 @@ import {
   FeedSubscriptionManager,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
+  NetworkFeedApi,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
   requestUploadEncryptedStorage,
   SyncedEncryptedStorageV2,
   SyncedEncryptedStorageV3
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { appConfig } from "./appConfig";

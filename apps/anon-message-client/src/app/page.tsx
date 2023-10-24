@@ -4,7 +4,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   constructZupassPcdGetRequestUrl,
   getAnonTopicNullifier
-} from "@pcd/passport-interface/src/PassportInterface";
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {

@@ -25,7 +25,7 @@ export interface PendingPCD {
   hash: string;
 }
 
-export enum PendingPCDStatus {
+export const enum PendingPCDStatus {
   QUEUED = "queued",
   PROVING = "proving",
   COMPLETE = "complete",

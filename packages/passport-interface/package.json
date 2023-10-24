@@ -2,7 +2,7 @@
   "name": "@pcd/passport-interface",
   "version": "0.7.2",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
+  "main": "./dist/node/index.js",
   "types": "./src/index.ts",
   "files": [
     "./src/*",
@@ -10,16 +10,30 @@
     "./README.md",
     "./LICENSE"
   ],
+  "exports": {
+    ".": {
+      "node": {
+        "default": "./dist/node/index.js"
+      },
+      "browser": {
+        "default": "./dist/browser/index.js"
+      }
+    }
+  },
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup --platform=browser --config tsup-browser.config.ts src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
+    "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
+    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
+    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@pcd/eddsa-ticket-pcd": "0.2.2",
     "@pcd/emitter": "0.1.2",
     "@pcd/passport-crypto": "0.7.2",

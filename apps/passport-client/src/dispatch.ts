@@ -7,13 +7,13 @@ import {
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
+  NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {

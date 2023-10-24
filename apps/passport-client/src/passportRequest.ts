@@ -1,6 +1,6 @@
 import {
   PCDRequest,
-  PCDRequestType,
+  PCDRequestTypeValues,
   PendingPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -15,7 +15,7 @@ export function validateRequest<T extends PCDRequest>(
   }
 
   const req = JSON.parse(reqJSON) as T;
-  if (!Object.keys(PCDRequestType).includes(req.type)) {
+  if (!Object.keys(PCDRequestTypeValues).includes(req.type)) {
     throw new Error("Invalid request type: " + req.type);
   }
 
