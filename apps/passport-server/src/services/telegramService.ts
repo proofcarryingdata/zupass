@@ -712,6 +712,46 @@ export class TelegramService {
           }
         }
       });
+
+      this.forwardBot.on(":forum_topic_edited", async (ctx) => {
+        return traced("telegram", "forum_topic_edited", async (span) => {
+          const topicName = ctx.update?.message?.forum_topic_edited.name;
+          const chatId = ctx.chat.id;
+          const messageThreadId = ctx.update.message?.message_thread_id;
+          span?.setAttributes({ topicName, messageThreadId, chatId });
+
+          if (!chatId || !topicName)
+            throw new Error(`Missing chatId or topic name`);
+
+          const topic = await fetchTelegramTopic(
+            this.context.dbPool,
+            chatId,
+            messageThreadId
+          );
+          logger(`[TOPIC IN DB]`, topic, messageThreadId);
+
+          if (!topic) {
+            logger(`[TELEGRAM] adding topic ${topicName} to db`);
+            await insertTelegramChat(this.context.dbPool, chatId);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              chatId,
+              topicName,
+              messageThreadId,
+              false
+            );
+          } else {
+            logger(`[TELEGRAM] updating topic ${topicName} in db`);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              topic.telegramChatID,
+              topicName,
+              topic.topic_id,
+              topic.is_anon_topic
+            );
+          }
+        });
+      });
     }
 
     this.authBot.command("help", helpResponse);
