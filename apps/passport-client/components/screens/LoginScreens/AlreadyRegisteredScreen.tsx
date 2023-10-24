@@ -41,7 +41,6 @@ export function AlreadyRegisteredScreen() {
   const identityCommitment = query?.get("identityCommitment");
   const [error, setError] = useState<string | undefined>();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
   const [sendingConfirmationEmail, setSendingConfirmationEmail] =
     useState(false);
   const [password, setPassword] = useState("");
@@ -133,16 +132,15 @@ export function AlreadyRegisteredScreen() {
         appConfig.zupassServer,
         encryptionKey
       );
-      setIsLoggingIn(false);
 
       if (!storageResult.success) {
+        setIsLoggingIn(false);
         return setError(
           "Password incorrect. Double-check your password. " +
             "If you've lost access, you can reset your account below."
         );
       }
 
-      setIsLoadingUser(true);
       dispatch({
         type: "load-from-sync",
         storage: storageResult.value,
@@ -158,7 +156,6 @@ export function AlreadyRegisteredScreen() {
 
   useEffect(() => {
     if (self || !email) {
-      setIsLoadingUser(false);
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
@@ -181,7 +178,7 @@ export function AlreadyRegisteredScreen() {
     content = (
       <ScreenLoader text="Sending you an email with a reset token..." />
     );
-  } else if (isLoggingIn || isLoadingUser) {
+  } else if (isLoggingIn) {
     content = <ScreenLoader text="Logging you in..." />;
   } else {
     content = (
