@@ -1,5 +1,11 @@
 # @pcd/passport-ui
 
+## 0.8.0
+
+### Minor Changes
+
+- new package versions
+
 ## 0.7.2
 
 ### Patch Changes

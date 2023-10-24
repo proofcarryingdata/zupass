@@ -1,6 +1,6 @@
 {
   "name": "@pcd/email-pcd",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -20,9 +20,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.2.2",
-    "@pcd/pcd-types": "0.7.2",
-    "@pcd/util": "0.1.2",
+    "@pcd/eddsa-pcd": "0.3.0",
+    "@pcd/pcd-types": "0.8.0",
+    "@pcd/util": "0.2.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",

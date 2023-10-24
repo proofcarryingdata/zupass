@@ -1,5 +1,11 @@
 # @pcd/halo-nonce-pcd
 
+## 0.4.0
+
+### Minor Changes
+
+- new package versions
+
 ## 0.3.2
 
 ### Patch Changes
