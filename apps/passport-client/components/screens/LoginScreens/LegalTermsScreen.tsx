@@ -26,7 +26,7 @@ export function LegalTermsScreen() {
           <Spacer h={24} />
           <p>To begin using Zupass, please agree to the following terms:</p>
           <TermsOfUse />
-          <Spacer h={24} />
+          <Spacer h={8} />
           <Button onClick={onClick}>Agree</Button>
         </TextCenter>
       </AppContainer>

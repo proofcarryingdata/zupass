@@ -38,7 +38,7 @@ export function LegalTermsModal() {
       <Spacer h={24} />
       <p>To continue using Zupass, please agree to the following terms:</p>
       <TermsOfUse />
-      <Spacer h={24} />
+      <Spacer h={8} />
       {isSubmitting && <RippleLoader />}
       {!isSubmitting && <Button onClick={onClick}>Agree</Button>}
     </Container>
