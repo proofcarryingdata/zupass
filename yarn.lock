@@ -3201,6 +3201,44 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.8.0.tgz#fe2aa90e6df050a11cd57f5c0f47b0641fd2cad3"
   integrity sha512-TYh1MRcm4JnvpqtqOwT9WYaBYY4KERHdToxs/suDTLviGRsQkIjS5yYROTYTSJQUnYLOn/TuOh5GoMwfLSU+Ew==
 
+"@pcd/eddsa-pcd@0.2.2":
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/@pcd/eddsa-pcd/-/eddsa-pcd-0.2.2.tgz#ad910a9cc68be5804e01880086301d86511ab3b4"
+  integrity sha512-z1E8kUXlVDEYgxh8an8Uevm/A7Ts1CBZFWvauJ+OwvDK+aReEU/WHlMKdgpfrXY6LvGYRmxDS3pJNgcA29w/BA==
+  dependencies:
+    "@pcd/passport-ui" "0.7.2"
+    "@pcd/pcd-types" "0.7.2"
+    "@pcd/util" "0.1.2"
+    chai "^4.3.7"
+    circomlibjs "^0.1.7"
+    react "^18.2.0"
+    styled-components "^5.3.9"
+    uuid "^9.0.0"
+
+"@pcd/passport-ui@0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@pcd/passport-ui/-/passport-ui-0.7.2.tgz#23832fca5153dc849f3f5a0a523b881ae3d51858"
+  integrity sha512-k5ybS8tMWJoXfiAGVvZlm5PLa+nUl56RSHAaY6G1eov94SUfJoZ/FaDvUuDgOapTQfAp1kpQ9r772jx9Dht9TA==
+  dependencies:
+    pako "^2.1.0"
+    qr-image "^3.2.0"
+    react "^18.2.0"
+    styled-components "^5.3.9"
+
+"@pcd/pcd-types@0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.7.2.tgz#9f8b8c676ffda1e4be37ce6a6cde57cd1573b4ea"
+  integrity sha512-ejkyJE7u8xBj34yonJVdLw5vE+yOMU2cXUVgm76S76Yw5BLv4qw+xzgK1j1hXS9iFRNHWTVinsDcAptjUIBasg==
+
+"@pcd/util@0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@pcd/util/-/util-0.1.2.tgz#057f4f276a2e464752b9a3cb5888098edc240f43"
+  integrity sha512-8VHfNrh2918R0N3HBPYpvMce5TbozsjWS9atasHTAZ47wN67i95UyyUUhL6sBdpAuEz/t0M6Q0emxz1H7+vELA==
+  dependencies:
+    chai "^4.3.7"
+    js-sha256 "^0.10.1"
+    uuid "^9.0.0"
+
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-android/-/asn1-android-2.3.6.tgz#20363c23bc5b9a91f7ffd80d7c3842dccff8c20b"
