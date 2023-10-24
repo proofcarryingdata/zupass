@@ -9,7 +9,7 @@ ALTER TABLE telegram_chat_topics ADD CONSTRAINT telegram_chat_topics_idx UNIQUE 
 ALTER TABLE telegram_chat_topics ADD COLUMN id SERIAL PRIMARY KEY;
 
 CREATE TABLE telegram_forwarding (
-  sender_chat_topic_id INTEGER NOT NULL, 
+  sender_chat_topic_id INTEGER  NULL, 
   FOREIGN KEY (sender_chat_topic_id) REFERENCES telegram_chat_topics(id),
   receiver_chat_topic_id INTEGER NULL,
   FOREIGN KEY (receiver_chat_topic_id) REFERENCES telegram_chat_topics(id),

@@ -721,8 +721,9 @@ export const chatsToForwardTo = async (
           const topic = await fetchTelegramTopic(
             db,
             chatId,
-            message?.message_thread_id || 0
+            message?.message_thread_id
           );
+
           if (!topic) {
             ctx.reply(`Topic not found to forward from`, {
               message_thread_id: message?.message_thread_id
@@ -731,14 +732,7 @@ export const chatsToForwardTo = async (
           }
           logger(`[TELEGRAM] topic to set as forwarding`, topic);
           // Add event to telegramForwarding table
-          const isForwarding = true;
-          await insertTelegramForward(
-            db,
-            topic.id,
-            isForwarding,
-            false,
-            topicToForwardTo.id
-          );
+          await insertTelegramForward(db, topic.id, topicToForwardTo.id);
           logger(
             `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
           );
@@ -768,7 +762,9 @@ export const chatsToForwardTo = async (
         }
       }
     } catch (error) {
-      range.text(`Action failed ${error}`);
+      ctx.reply(`Action failed ${error}`, {
+        reply_to_message_id: ctx.message?.message_thread_id
+      });
       return;
     }
   });

@@ -209,8 +209,8 @@ export async function fetchTelegramTopicsReceving(
     ` 
     SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics tct
-    JOIN telegram_forwarding tf ON tct.id = tf.telegram_chat_topics_id
-    WHERE tf.is_receiving = true;`,
+    JOIN telegram_forwarding tf ON tct.id = tf.receiver_chat_topic_id
+    WHERE tf.receiver_chat_topic_id IS NOT NULL AND tf.sender_chat_topic_id IS NULL;`,
     []
   );
   return result.rows;
@@ -233,7 +233,7 @@ const linkedDestinationToTopic = (
 export async function fetchTelegramTopicForwarding(
   client: Pool,
   telegramChatID: string | number,
-  topicId: string | number
+  topicId?: string | number
 ): Promise<(TelegramTopic & { forwardDestination: TelegramTopic })[]> {
   const result = await sqlQuery(
     client,
@@ -246,10 +246,10 @@ export async function fetchTelegramTopicForwarding(
       tf2.topic_name AS "forwardingTopicName",
       tf2.telegram_chat_id AS "forwardingChatID"
     FROM telegram_chat_topics tct
-    JOIN telegram_forwarding tf ON tct.id = tf.telegram_chat_topics_id
-    LEFT JOIN telegram_chat_topics tf2 ON tf.forward_topic_destination = tf2.id
-    WHERE tct.telegram_chat_id = $1 AND tct.topic_id = $2 AND tf.is_forwarding = true;`,
-    [telegramChatID, topicId]
+    JOIN telegram_forwarding tf ON tct.id = tf.sender_chat_topic_id
+    LEFT JOIN telegram_chat_topics tf2 ON tf.receiver_chat_topic_id = tf2.id
+    WHERE tct.telegram_chat_id = $1 AND tct.topic_id = $2 AND tf.sender_chat_topic_id IS NOT NULL;`,
+    [telegramChatID, topicId || null]
   );
   return result.rows.map((row) => linkedDestinationToTopic(row));
 }

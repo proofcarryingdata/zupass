@@ -105,23 +105,15 @@ export async function updateTelegramUsername(
 
 export async function insertTelegramForward(
   client: Pool,
-  telegramChatTopicId: number,
-  isForwarding: boolean,
-  isReceiving: boolean,
-  forwardTopicDestination?: number
+  senderChatTopicID: number | null,
+  receiverChatTopicID: number | null
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-insert into telegram_forwarding (telegram_chat_topics_id, is_forwarding, is_receiving, forward_topic_destination)
-values ($1, $2, $3, $4)
-on conflict (telegram_chat_topics_id, is_forwarding, is_receiving, forward_topic_destination) do nothing;`,
-    [
-      telegramChatTopicId,
-      isForwarding,
-      isReceiving,
-      forwardTopicDestination || null
-    ]
+insert into telegram_forwarding (sender_chat_topic_id, receiver_chat_topic_id)
+values ($1, $2)`,
+    [senderChatTopicID || null, receiverChatTopicID || null]
   );
   return result.rowCount;
 }

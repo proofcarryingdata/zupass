@@ -473,14 +473,16 @@ export class TelegramService {
       );
       logger(`[TOPIC IN DB]`, topic);
       const chatId = ctx.chat.id;
-      const isReceving = true;
 
       // If the topic doesn't exist, add it and the chatId to the DB.
       if (!topic) {
         logger(`[TELEGRAM] topic not found to mark as receiving.`);
         const topicName =
           ctx.message?.reply_to_message?.forum_topic_created?.name;
-        if (!topicName) throw new Error(`No topic name found`);
+        if (!topicName)
+          return ctx.reply(`No topic name found`, {
+            reply_to_message_id: messageThreadId
+          });
 
         await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
@@ -499,12 +501,7 @@ export class TelegramService {
 
         if (!newTopic) throw new Error(`Failed to fetch new topic`);
         // Add it to the forwarding table
-        await insertTelegramForward(
-          this.context.dbPool,
-          newTopic.id,
-          false,
-          isReceving
-        );
+        await insertTelegramForward(this.context.dbPool, null, newTopic.id);
 
         await ctx.reply(
           `Added <b>${topicName}</b> to receive messages. If this name is incorrect, edit the name to update the database.`,
@@ -514,12 +511,7 @@ export class TelegramService {
           }
         );
       } else {
-        await insertTelegramForward(
-          this.context.dbPool,
-          topic.id,
-          false,
-          isReceving
-        );
+        await insertTelegramForward(this.context.dbPool, null, topic.id);
         logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
         await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
           reply_to_message_id: messageThreadId,
@@ -687,28 +679,31 @@ export class TelegramService {
           const topicForwarding = await fetchTelegramTopicForwarding(
             this.context.dbPool,
             ctx.chat.id,
-            messageThreadId || 0
+            messageThreadId
           );
 
           if (topicForwarding?.length > 0) {
-            // For now, only support forwarding to one topic
-            const topic = topicForwarding[0];
-            logger(`topic`, topic);
-            const chat = await getGroupChat(ctx.api, topic.telegramChatID);
+            const chat = await getGroupChat(ctx.api, ctx.chat.id);
 
-            // // Send the message to each destination
-            // const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
-            // await ctx.api.sendMessage(
-            //   topic.forwardDestination.telegramChatID,
-            //   fwdText,
-            //   {
-            //     parse_mode: "HTML",
-            //     message_thread_id: parseInt(topic.forwardDestination.topic_id)
-            //   }
-            // );
-            // logger(
-            //   `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${topic.forwardDestination.topic_name}`
-            // );
+            const sentMessages = await topicForwarding.map((t) => {
+              logger(`topic`, t);
+              const fwdText = `<i>fwd from ${chat.title}:</i>\n\n${text}`;
+              const destinationTopicID = t.forwardDestination.topic_id;
+              logger(
+                `[TElEGRAM] forwarded message ${text} to ${chat.title} - ${t.forwardDestination.topic_name}`
+              );
+              return ctx.api.sendMessage(
+                t.forwardDestination.telegramChatID,
+                fwdText,
+                {
+                  parse_mode: "HTML",
+                  message_thread_id: destinationTopicID
+                    ? parseInt(destinationTopicID)
+                    : undefined
+                }
+              );
+            });
+            await Promise.allSettled(sentMessages);
           }
         } catch (error) {
           ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
