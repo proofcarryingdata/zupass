@@ -198,6 +198,11 @@ export interface TelegramTopic {
   id: number;
 }
 
+export interface TelegramTopicWithFwdInfo extends TelegramTopic {
+  sender_chat_topic_id: number | null;
+  receiver_chat_topic_id: number | null;
+}
+
 // Representation of a "known public key" as fetched from the DB
 export interface KnownPublicKeyDB {
   public_key_name: string;

@@ -21,9 +21,12 @@ import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
-  TelegramTopic
+  TelegramTopicWithFwdInfo
 } from "../database/models";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import {
+  deleteTelegramEvent,
+  deleteTelegramForward
+} from "../database/queries/telegram/deleteTelegramEvent";
 import {
   fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
@@ -60,7 +63,7 @@ export interface SessionData {
   lastMessageId?: number;
   selectedChat?: TopicChat;
   kudosData?: { giver: string; receiver: string };
-  topicToForwardTo?: ChatIDWithChat<TelegramTopic>;
+  topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
@@ -697,6 +700,23 @@ export const chatsToForwardTo = async (
       range.text(`Chat not found. Try again...`);
       return;
     }
+
+    const message = ctx.update.message;
+
+    const topic = await fetchTelegramTopic(
+      db,
+      chatId,
+      message?.message_thread_id
+    );
+
+    if (!topic) {
+      ctx.reply(`Topic not found to forward from`, {
+        message_thread_id: message?.message_thread_id
+      });
+      return;
+    }
+    logger(`[TOPIC TO FORWARD FROM]`, topic);
+
     span?.setAttribute("userId", userId.toString());
     span?.setAttribute("chatId", ctx.chat.id);
 
@@ -714,50 +734,67 @@ export const chatsToForwardTo = async (
             }
           )
           .row();
-        range.text(`Forward Messages`, async (ctx) => {
-          if (!(await senderIsAdmin(ctx))) return;
-          const message = ctx.update.callback_query.message;
-
-          const topic = await fetchTelegramTopic(
-            db,
-            chatId,
-            message?.message_thread_id
-          );
-
-          if (!topic) {
-            ctx.reply(`Topic not found to forward from`, {
-              message_thread_id: message?.message_thread_id
-            });
-            return;
-          }
-          logger(`[TELEGRAM] topic to set as forwarding`, topic);
-          // Add event to telegramForwarding table
-          await insertTelegramForward(db, topic.id, topicToForwardTo.id);
-          logger(
-            `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
-          );
-          ctx.reply(
-            `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
-            {
-              message_thread_id: message?.message_thread_id,
-              parse_mode: "HTML"
+        // If sender_chat_topic_id exists, this topic is already linked to the forwarding topic
+        if (topicToForwardTo.sender_chat_topic_id) {
+          range.text(`Stop Forwarding`, async (ctx) => {
+            if (
+              topicToForwardTo.sender_chat_topic_id &&
+              topicToForwardTo.receiver_chat_topic_id
+            ) {
+              await deleteTelegramForward(
+                db,
+                topicToForwardTo.sender_chat_topic_id,
+                topicToForwardTo.receiver_chat_topic_id
+              );
+              await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
+                reply_to_message_id: message?.message_thread_id
+              });
+              ctx.session.topicToForwardTo = undefined;
+              ctx.menu.update();
+            } else {
+              ctx.reply(`Can't delete this topic`, {
+                reply_to_message_id: message?.message_thread_id
+              });
             }
-          );
-          ctx.session.topicToForwardTo = undefined;
-          ctx.menu.close();
-        });
+          });
+        } else {
+          range.text(`Forward Messages`, async (ctx) => {
+            if (!(await senderIsAdmin(ctx))) return;
+
+            logger(`[TELEGRAM] topic to set as forwarding`, topic);
+            // Add event to telegramForwarding table
+            await insertTelegramForward(db, topic.id, topicToForwardTo.id);
+            logger(
+              `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
+            );
+            ctx.reply(
+              `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
+              {
+                message_thread_id: message?.message_thread_id,
+                parse_mode: "HTML"
+              }
+            );
+            ctx.session.topicToForwardTo = undefined;
+            ctx.menu.update();
+          });
+        }
       }
       // Otherwise, give the user a list of topics that are receiving messages.
       else {
         const topicsReceving = await fetchTelegramTopicsReceiving(db);
-        const topicsWithChats = await chatIDsToChats(ctx, topicsReceving);
+        const finalTopics = reduceFwdList(topic.id, topicsReceving);
+        const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
         for (const topic of topicsWithChats) {
           range
-            .text(`${topic.chat?.title} - ${topic.topic_name}`, async (ctx) => {
-              if (!(await senderIsAdmin(ctx))) return;
-              ctx.session.topicToForwardTo = topic;
-              ctx.menu.update();
-            })
+            .text(
+              `${topic.sender_chat_topic_id ? "✅" : ""} ${topic.chat
+                ?.title} - ${topic.topic_name}`,
+              async (ctx) => {
+                if (!(await senderIsAdmin(ctx))) return;
+                ctx.session.topicToForwardTo = topic;
+                ctx.menu.update();
+              }
+            )
             .row();
         }
       }
@@ -799,3 +836,30 @@ export function msToTimeString(duration: number): string {
 
   return `${hours} hours, ${minutes} minutes, and ${seconds} seconds`;
 }
+
+const reduceFwdList = (
+  senderId: number,
+  topics: TelegramTopicWithFwdInfo[]
+): TelegramTopicWithFwdInfo[] => {
+  //
+  const reducedList = topics.reduce((acc: TelegramTopicWithFwdInfo[], curr) => {
+    // Check if the receiver already exists in the accumulator
+    const existing = acc.find(
+      (item) => item.receiver_chat_topic_id === curr.receiver_chat_topic_id
+    );
+
+    // If it exists and the current sender is the desired value, replace the existing item
+    if (existing && curr.sender_chat_topic_id === senderId) {
+      const index = acc.indexOf(existing);
+      acc[index] = curr;
+    }
+    // If it doesn't exist, add the current item to the accumulator
+    else if (!existing) {
+      acc.push(curr);
+    }
+
+    return acc;
+  }, []);
+
+  return reducedList;
+};

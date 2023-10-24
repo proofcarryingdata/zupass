@@ -6,6 +6,7 @@ import {
   TelegramChat,
   TelegramEvent,
   TelegramTopic,
+  TelegramTopicWithFwdInfo,
   UserIDWithChatIDs
 } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
@@ -203,14 +204,14 @@ export async function fetchTelegramTopic(
 
 export async function fetchTelegramTopicsReceiving(
   client: Pool
-): Promise<TelegramTopic[]> {
+): Promise<TelegramTopicWithFwdInfo[]> {
   const result = await sqlQuery(
     client,
     ` 
     SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics tct
     JOIN telegram_forwarding tf ON tct.id = tf.receiver_chat_topic_id
-    WHERE tf.receiver_chat_topic_id IS NOT NULL AND tf.sender_chat_topic_id IS NULL;`,
+    WHERE tf.receiver_chat_topic_id IS NOT NULL;`,
     []
   );
   return result.rows;
@@ -248,7 +249,7 @@ export async function fetchTelegramTopicForwarding(
     FROM telegram_chat_topics tct
     JOIN telegram_forwarding tf ON tct.id = tf.sender_chat_topic_id
     LEFT JOIN telegram_chat_topics tf2 ON tf.receiver_chat_topic_id = tf2.id
-    WHERE tct.telegram_chat_id = $1 AND tct.topic_id = $2 AND tf.sender_chat_topic_id IS NOT NULL;`,
+    WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL)) AND tf.sender_chat_topic_id IS NOT NULL;`,
     [telegramChatID, topicId || null]
   );
   return result.rows.map((row) => linkedDestinationToTopic(row));
