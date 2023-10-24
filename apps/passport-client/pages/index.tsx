@@ -17,9 +17,9 @@ import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreateP
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
-import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
+import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
