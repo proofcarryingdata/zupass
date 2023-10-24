@@ -1,27 +1,20 @@
-import _ from "lodash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { loadFull } from "tsparticles";
 import { tsParticles } from "tsparticles-engine";
-import { usePCDCollection } from "../../../src/appHooks";
 
-const FOLDER_PREFIXES = ["Devconnect"];
+const FOLDERS = ["Devconnect"];
 
 export function FrogFolder({
-  Container
+  Container,
+  folder
 }: {
+  folder: string;
   Container: React.ComponentType<any>;
 }) {
-  const pcds = usePCDCollection();
-  const showFrogFolder = useMemo(
-    () =>
-      !!FOLDER_PREFIXES.find((folder) =>
-        _.values(pcds.folders).find((f) => f.startsWith(folder))
-      ),
-    [pcds]
-  );
+  const showFrogFolder = useMemo(() => FOLDERS.includes(folder), [folder]);
   const divRef = useRef<HTMLDivElement>(null);
-  useParticles(divRef);
+  useParticles(showFrogFolder ? divRef : null);
 
   if (!showFrogFolder) {
     return null;
@@ -29,13 +22,19 @@ export function FrogFolder({
 
   return (
     <Container ref={divRef}>
-      <FrogFont>FrogCrypto</FrogFont>
+      <img
+        draggable="false"
+        src="/images/frogs/pixel_frog.png"
+        width={24}
+        height={24}
+      />
+      <img draggable="false" src="/images/frogs/frogcrypto.svg" height={24} />
       <NewFont>SOON</NewFont>
     </Container>
   );
 }
 
-function useParticles(ref: React.RefObject<HTMLDivElement>) {
+function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const load = async () => {
@@ -46,7 +45,7 @@ function useParticles(ref: React.RefObject<HTMLDivElement>) {
   }, []);
 
   useEffect(() => {
-    if (!ready) {
+    if (!ready || !ref) {
       return;
     }
 
@@ -75,7 +74,7 @@ function useParticles(ref: React.RefObject<HTMLDivElement>) {
             ],
             animation: {
               enable: true,
-              speed: 180,
+              speed: 100,
               sync: true
             }
           },
@@ -90,10 +89,10 @@ function useParticles(ref: React.RefObject<HTMLDivElement>) {
             value: 1
           },
           size: {
-            value: { min: 128, max: 256 },
+            value: { min: 100, max: 200 },
             animation: {
               enable: true,
-              speed: 5,
+              speed: 10,
               minimumValue: 1,
               sync: true,
               startValue: "min",
@@ -124,7 +123,7 @@ function useParticles(ref: React.RefObject<HTMLDivElement>) {
           modes: {
             trail: {
               delay: 0.1,
-              quantity: 5
+              quantity: 3
             }
           }
         },
@@ -134,16 +133,12 @@ function useParticles(ref: React.RefObject<HTMLDivElement>) {
   }, [ready, ref]);
 }
 
-const FrogFont = styled.h2`
-  font-size: 20px;
-  color: var(--accent-dark);
-`;
-
 const NewFont = styled.div`
-  font-size: 8px;
+  font-size: 12px;
   vertical-align: super;
   animation: color-change 1s infinite;
   font-family: monospace;
+  align-self: stretch;
 
   @keyframes color-change {
     0% {

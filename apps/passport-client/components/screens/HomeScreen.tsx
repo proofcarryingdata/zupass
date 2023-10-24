@@ -128,7 +128,10 @@ export function HomeScreenImpl() {
                     />
                   );
                 })}
-              {isRoot && <FrogFolder Container={FolderEntryContainer} />}
+              <FrogFolder
+                folder={browsingFolder}
+                Container={FolderEntryContainer}
+              />
             </FolderExplorerContainer>
           )}
           {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
