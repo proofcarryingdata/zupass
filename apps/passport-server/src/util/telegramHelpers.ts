@@ -715,7 +715,6 @@ export const chatsToForwardTo = async (
       });
       return;
     }
-    logger(`[TOPIC TO FORWARD FROM]`, topic);
 
     span?.setAttribute("userId", userId.toString());
     span?.setAttribute("chatId", ctx.chat.id);
@@ -784,6 +783,14 @@ export const chatsToForwardTo = async (
         const topicsReceving = await fetchTelegramTopicsReceiving(db);
         const finalTopics = reduceFwdList(topic.id, topicsReceving);
         const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
+
+        if (topicsWithChats.length === 0) {
+          ctx.reply(`No chats are open to receiving`, {
+            message_thread_id: message?.message_thread_id
+          });
+          return;
+        }
+
         for (const topic of topicsWithChats) {
           range
             .text(

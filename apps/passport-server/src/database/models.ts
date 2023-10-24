@@ -190,7 +190,7 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramTopic {
+export interface TelegramTopicFetch {
   telegramChatID: string;
   topic_id: string | null;
   topic_name: string;
@@ -198,7 +198,7 @@ export interface TelegramTopic {
   id: number;
 }
 
-export interface TelegramTopicWithFwdInfo extends TelegramTopic {
+export interface TelegramTopicWithFwdInfo extends TelegramTopicFetch {
   sender_chat_topic_id: number | null;
   receiver_chat_topic_id: number | null;
 }

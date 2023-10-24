@@ -5,7 +5,7 @@ import {
   LinkedPretixTelegramEvent,
   TelegramChat,
   TelegramEvent,
-  TelegramTopic,
+  TelegramTopicFetch,
   TelegramTopicWithFwdInfo,
   UserIDWithChatIDs
 } from "../../models";
@@ -105,7 +105,7 @@ export async function fetchEventsPerChat(
 export async function fetchTelegramAnonTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramTopic[]> {
+): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -120,7 +120,7 @@ export async function fetchTelegramAnonTopicsByChatId(
 export async function fetchTelegramTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramTopic[]> {
+): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -187,7 +187,7 @@ export async function fetchTelegramTopic(
   client: Pool,
   telegramChatId: number | string,
   topicId?: number | string
-): Promise<TelegramTopic | null> {
+): Promise<TelegramTopicFetch | null> {
   const query = `
     SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics
@@ -219,7 +219,7 @@ export async function fetchTelegramTopicsReceiving(
 
 const linkedDestinationToTopic = (
   row: any
-): TelegramTopic & { forwardDestination: TelegramTopic } => {
+): TelegramTopicFetch & { forwardDestination: TelegramTopicFetch } => {
   return {
     ...row,
     forwardDestination: {
@@ -235,7 +235,9 @@ export async function fetchTelegramTopicForwarding(
   client: Pool,
   telegramChatID: string | number,
   topicId?: string | number
-): Promise<(TelegramTopic & { forwardDestination: TelegramTopic })[]> {
+): Promise<
+  (TelegramTopicFetch & { forwardDestination: TelegramTopicFetch })[]
+> {
   const result = await sqlQuery(
     client,
     `

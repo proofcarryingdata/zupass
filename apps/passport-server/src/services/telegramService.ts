@@ -2,7 +2,7 @@ import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, sleep } from "@pcd/util";
+import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -666,7 +666,9 @@ export class TelegramService {
       const text = ctx.message.text;
 
       if (isDirectMessage(ctx)) {
-        return ctx.reply(`TODO HELP MESSAGE`);
+        return await ctx.reply(
+          `I don't know that command uwu.\n\nType \`/\` to see a list of commands or email ${ZUPASS_SUPPORT_EMAIL}`
+        );
       } else {
         const messageThreadId = ctx.message?.message_thread_id;
 
