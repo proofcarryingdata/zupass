@@ -451,6 +451,12 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
       ticket.isRevoked = !ticket.isRevoked;
     });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.attendeeEmail = "invalid@example.com";
+    });
+    await testProveBadTicketArgs(validArgs, async (ticket: ITicketData) => {
+      ticket.attendeeName = "Invalid Name";
+    });
 
     // Non-ticket arguments set to incorrect values.
     await testProveBadArgs(
@@ -537,7 +543,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       claim.partialTicket.attendeeEmail = "wrongemail@example.com";
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.partialTicket.attendeeName = "Some guy who doesn't exist";
+      claim.partialTicket.attendeeName = "Some person who doesn't exist";
     });
   });
 
@@ -576,6 +582,12 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.partialTicket.ticketCategory = TicketCategory.PcdWorkingGroup;
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeEmail = "incorrect@example.com";
+    });
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
+      claim.partialTicket.attendeeName = "Incorrect name";
     });
   });
 

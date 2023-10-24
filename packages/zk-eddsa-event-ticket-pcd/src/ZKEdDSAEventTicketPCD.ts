@@ -314,10 +314,11 @@ function snarkInputForProof(
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
     revealTicketCategory: fieldsToReveal.revealTicketCategory ? "1" : "0",
-    // Now used for attendee email:
+    // This field was previously reserved, but is now used for attendee email.
+    // See later comment to explain the concept of reserved fields.
     reservedSignedField1: ticketAsBigIntArray[9].toString(),
     revealReservedSignedField1: fieldsToReveal.revealAttendeeEmail ? "1" : "0",
-    // Now used for attendee name:
+    // This field was previously reserved, but is now used for attendee name:
     reservedSignedField2: ticketAsBigIntArray[10].toString(),
     revealReservedSignedField2: fieldsToReveal.revealAttendeeName ? "1" : "0",
 
