@@ -3,7 +3,12 @@ import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
+import {
+  useDispatch,
+  useHasSetupPassword,
+  useLaserScannerKeystrokeInput,
+  useSelf
+} from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
@@ -15,6 +20,7 @@ import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { PasswordInput } from "../shared/PasswordInput";
 
 export function ChangePasswordScreen() {
+  useLaserScannerKeystrokeInput();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
   // We want the `isChangePassword` state to persist on future renders,

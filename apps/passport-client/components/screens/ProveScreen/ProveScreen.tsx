@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 import {
   useDispatch,
   useIsSyncSettled,
+  useLaserScannerKeystrokeInput,
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
@@ -25,6 +26,7 @@ import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function ProveScreen() {
+  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();

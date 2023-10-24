@@ -18,6 +18,7 @@ import {
   useCredentialCache,
   useDispatch,
   useIdentity,
+  useLaserScannerKeystrokeInput,
   usePCDCollection,
   useQuery,
   useSelf,
@@ -39,6 +40,7 @@ import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
 export function AddSubscriptionScreen() {
+  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";

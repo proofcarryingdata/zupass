@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
   useDispatch,
+  useLaserScannerKeystrokeInput,
   useRequirePassword,
   useSelf,
   useUserForcedToLogout
@@ -30,6 +31,7 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  * is freshly generated in Zupass via a proving screen.
  */
 export function AddScreen() {
+  useLaserScannerKeystrokeInput();
   useSyncE2EEStorage();
   useRequirePassword();
   const dispatch = useDispatch();

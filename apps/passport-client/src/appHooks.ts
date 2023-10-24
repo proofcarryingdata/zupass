@@ -170,7 +170,7 @@ export function useRequirePassword() {
   }
 }
 
-// Hook that enables keystroke inputs for the purpose of laser-scanning tickets
+// Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
 export function useLaserScannerKeystrokeInput() {
   const [typedText, setTypedText] = useState("");
 
