@@ -177,13 +177,13 @@ export function useLaserScannerKeystrokeInput() {
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Enter") {
-        // Check url regex and navigate
+        // Check URL regex and navigate to the last match, if it exists
         const url = getLastValidURL(typedText);
         if (url) {
           window.location.href = url;
         }
       }
-      // Check if the pressed key is a url string
+      // Ignore characters that could not be in a valid URL
       if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#/]$/.test(event.key)) {
         setTypedText((prevText) => prevText + event.key);
       }
