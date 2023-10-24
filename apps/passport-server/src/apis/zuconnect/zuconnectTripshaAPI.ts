@@ -5,6 +5,17 @@ import { z } from "zod";
 import { logger } from "../../util/logger";
 import { instrumentedFetch } from "../fetch";
 
+const DAY_PASSES: Record<string, string> = {
+  "601fed54-a065-4a55-9846-46534eff59f9": "Tuesday Oct 31 - Neuroscience",
+  "1ef87069-c90c-4f0a-892e-ace558f6aeae": "Wednesday Nov 1 - New Governance",
+  "8303310a-5726-427f-8da1-56f4318f4f54":
+    "Thursday Nov 2 - AI morning, Art afternoon",
+  "bfe5b185-f5de-42c0-980a-4d9908e2b32d": "Friday Nov 3 - DeSci & Longevity",
+  "46bbcc6e-4278-42f0-b26c-c06c15efe692": "Saturday Nov 4 - Public Goods",
+  "8e48846d-5bdb-480c-8354-30d503157ed9": "Monday Nov 6 - Zero Knowledge",
+  "36647eb2-d54f-4bd8-b13e-49f0e18be3cc": "Tuesday Nov 7 - Decentralized Social"
+};
+
 /**
  * A schema for validating the API response from Tripsha.
  */
@@ -19,17 +30,32 @@ const ZuconnectTripshaSchema = z.object({
     .string()
     .nullable()
     .optional()
-    .transform((last) => last ?? "")
+    .transform((last) => last ?? ""),
+  options: z.array(z.object({ id: z.string(), name: z.string() })).optional()
 });
 
-const ZuconnectTripshaNormalizedNameSchema = ZuconnectTripshaSchema
-  // Handle the logic of name concatenation here
-  .transform(({ first, last, id, ticketName, email }) => {
+const ZuconnectTripshaNormalizedSchema = ZuconnectTripshaSchema
+  // Transform results by concatenating name fields and turning "options" into
+  // an array of strings.
+  .transform(({ first, last, id, ticketName, email, options }) => {
+    const extraInfo: string[] = [];
+    if (
+      ticketName === "For people only using Day Passes (add-ons)" &&
+      options &&
+      options.length > 0
+    ) {
+      for (const option of options) {
+        if (option.id in DAY_PASSES) {
+          extraInfo.push(DAY_PASSES[option.id]);
+        }
+      }
+    }
     return {
       id,
       ticketName,
       email,
-      fullName: `${first} ${last}`.trim()
+      fullName: `${first} ${last}`.trim(),
+      extraInfo
     };
   });
 
@@ -37,9 +63,7 @@ const ZuconnectTripshaNormalizedNameSchema = ZuconnectTripshaSchema
  * Infer a type from the schema.
  */
 export type ZuconnectRawTripshaTicket = z.infer<typeof ZuconnectTripshaSchema>;
-export type ZuconnectTicket = z.infer<
-  typeof ZuconnectTripshaNormalizedNameSchema
->;
+export type ZuconnectTicket = z.infer<typeof ZuconnectTripshaNormalizedSchema>;
 
 /**
  * The Zuconnect Tripsha API - can only do one thing, which is fetch tickets.
@@ -79,8 +103,7 @@ export class ZuconnectTripshaAPI {
 
     if (_.isArray(data.tickets)) {
       const parsed = data.tickets.flatMap((ticket: any) => {
-        const parsedTicket =
-          ZuconnectTripshaNormalizedNameSchema.safeParse(ticket);
+        const parsedTicket = ZuconnectTripshaNormalizedSchema.safeParse(ticket);
 
         if (parsedTicket.success) {
           return parsedTicket.data;

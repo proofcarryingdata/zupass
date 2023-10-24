@@ -225,6 +225,7 @@ export interface ZuconnectTicketDB {
   attendee_name: string;
   is_deleted: boolean;
   is_mock_ticket: boolean;
+  extra_info: string[];
 }
 
 export interface LinkedPretixTelegramEvent {

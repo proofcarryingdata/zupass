@@ -13,11 +13,11 @@ export async function upsertZuconnectTicket(
     client,
     `\
     INSERT INTO zuconnect_tickets
-    (external_ticket_id, attendee_email, attendee_name, product_id, is_deleted, is_mock_ticket)
-    VALUES($1, $2, $3, $4, $5, $6)
+    (external_ticket_id, attendee_email, attendee_name, product_id, is_deleted, is_mock_ticket, extra_info)
+    VALUES($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT(external_ticket_id)
     DO UPDATE SET attendee_email = $2, attendee_name = $3,
-    product_id = $4, is_deleted = FALSE
+    product_id = $4, is_deleted = FALSE, extra_info = $7
     RETURNING *`,
     [
       params.external_ticket_id,
@@ -25,7 +25,8 @@ export async function upsertZuconnectTicket(
       params.attendee_name,
       params.product_id,
       params.is_deleted,
-      params.is_mock_ticket
+      params.is_mock_ticket,
+      params.extra_info
     ]
   );
 

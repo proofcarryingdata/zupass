@@ -30,6 +30,7 @@ import {
   VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
+  ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
   ZUCONNECT_PRODUCT_ID_MAPPINGS,
   ZUZALU_23_EVENT_ID,
   ZUZALU_23_ORGANIZER_PRODUCT_ID,
@@ -986,13 +987,17 @@ export class IssuanceService {
         const pcds = [];
 
         for (const ticket of tickets) {
+          const ticketName =
+            ticket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
+              ? ticket.extra_info.join("\n")
+              : zuconnectProductIdToName(ticket.product_id);
           pcds.push(
             await this.getOrGenerateTicket({
               attendeeSemaphoreId: user.commitment,
               eventName: "Zuconnect October-November '23",
               checkerEmail: undefined,
               ticketId: ticket.id,
-              ticketName: zuconnectProductIdToName(ticket.product_id),
+              ticketName,
               attendeeName: `${ticket.attendee_name}`,
               attendeeEmail: ticket.attendee_email,
               eventId: zuconnectProductIdToEventId(ticket.product_id),

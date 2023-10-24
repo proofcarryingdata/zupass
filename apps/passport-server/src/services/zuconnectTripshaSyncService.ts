@@ -1,4 +1,5 @@
 import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
+import _ from "lodash";
 import {
   IZuconnectTripshaAPI,
   ZuconnectTicket
@@ -122,7 +123,8 @@ export class ZuconnectTripshaSyncService {
       existingTicket?.attendee_email !== newTicket.email ||
       existingTicket.attendee_name !== newTicket.fullName ||
       existingTicket.product_id !==
-        ZUCONNECT_PRODUCT_ID_MAPPINGS[newTicket.ticketName]?.id
+        ZUCONNECT_PRODUCT_ID_MAPPINGS[newTicket.ticketName]?.id ||
+      !_.isEqual(existingTicket.extra_info, newTicket.extraInfo)
     );
   }
 
@@ -166,7 +168,8 @@ export class ZuconnectTripshaSyncService {
             attendee_email: ticket.email,
             attendee_name: ticket.fullName,
             is_deleted: false,
-            is_mock_ticket: false
+            is_mock_ticket: false,
+            extra_info: ticket.extraInfo
           })
         );
       }
@@ -236,7 +239,8 @@ export async function startZuconnectTripshaSyncService(
           product_id:
             ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
           is_deleted: false,
-          is_mock_ticket: true
+          is_mock_ticket: true,
+          extra_info: []
         });
       }
     } catch (e) {
