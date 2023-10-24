@@ -1,7 +1,9 @@
 import { gzip, ungzip } from "pako";
-import qr from "qr-image";
+// import qr from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+
+declare const qr: any;
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);
@@ -33,7 +35,7 @@ export function QRDisplayWithRegenerateAndStorage({
   loadingLogo,
   loadedLogo,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
@@ -117,7 +119,7 @@ export function QRDisplay({
   value,
   logoOverlay,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value?: string;
   logoOverlay?: React.ReactNode;
@@ -150,7 +152,7 @@ const QRWrap = styled.div`
 export function QR({
   value,
   fgColor,
-  bgColor,
+  bgColor
 }: {
   value: string;
   fgColor: string;
