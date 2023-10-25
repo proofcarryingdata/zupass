@@ -58,6 +58,10 @@ import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
+  readonly BG_POLL_INTERVAL_MS = 1000 * 60;
+  lastBackgroundPoll = 0;
+  activePollTimout: NodeJS.Timeout | undefined = undefined;
+
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
     this.setState(diff, () => {
@@ -130,23 +134,86 @@ class App extends React.Component<object, AppState> {
   }
 
   startBackgroundJobs = () => {
-    console.log("Starting background jobs...");
-    this.jobPollUser();
+    console.log("[JOB] Starting background jobs...");
+    document.addEventListener("visibilitychange", () => {
+      this.setupPolling();
+    });
+    this.setupPolling();
   };
 
-  jobPollUser = async () => {
-    console.log("[JOB] polling user");
-
-    try {
-      if (this.state?.self) {
-        await pollUser(this.state.self, this.dispatch);
+  /**
+   * Idempotently enables or disables periodic polling of jobPollServerUpdates,
+   * based on whether the window is visible or invisible.
+   *
+   * If there is an existing poll scheduled, it will not be rescheduled,
+   * but may be cancelled.  If there is no poll scheduled, a new one may be
+   * scheduled.  It may happen immediately after the window becomes visible,
+   * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
+   */
+  setupPolling = async () => {
+    if (!document.hidden) {
+      if (!this.activePollTimout) {
+        const nextPollDelay = Math.max(
+          0,
+          this.lastBackgroundPoll + this.BG_POLL_INTERVAL_MS - Date.now()
+        );
+        this.activePollTimout = setTimeout(
+          this.jobPollServerUpdates,
+          nextPollDelay
+        );
+        console.log(
+          `[JOB] next poll for updates scheduled in ${nextPollDelay}ms`
+        );
       }
-    } catch (e) {
-      console.log("[JOB] failed poll user");
-      console.log(e);
+    } else {
+      if (this.activePollTimout) {
+        clearTimeout(this.activePollTimout);
+        this.activePollTimout = undefined;
+        console.log("[JOB] poll for updates disabled");
+      }
+    }
+  };
+
+  /**
+   * Periodic job for polling the server.  Is scheduled by setupPolling, and
+   * will reschedule itself in the same way.
+   */
+  jobPollServerUpdates = async () => {
+    // Mark that poll has started.
+    console.log("[JOB] polling server for updates");
+    this.activePollTimout = undefined;
+    try {
+      // Do the real work of the poll.
+      this.doPollServerUpdates();
+    } finally {
+      // Reschedule next poll.
+      this.lastBackgroundPoll = Date.now();
+      this.setupPolling();
+    }
+  };
+
+  doPollServerUpdates = async () => {
+    if (
+      !this.state?.self ||
+      !!this.state.userInvalid ||
+      !!this.state.anotherDeviceChangedPassword
+    ) {
+      console.log("[JOB] skipping poll with invalid user");
+      return;
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60);
+    // Check for updates to User object.
+    try {
+      await pollUser(this.state.self, this.dispatch);
+    } catch (e) {
+      console.log("[JOB] failed poll user", e);
+    }
+
+    // Trigger sync of E2EE storage, but only if the first-time sync had time
+    // to complete.
+    if (this.state.completedFirstSync) {
+      this.update({ ...this.state, extraDownloadRequested: true });
+    }
   };
 }
 

@@ -50,12 +50,15 @@ export interface AppState {
   anotherDeviceChangedPassword?: boolean;
 
   // Dynamic (in-memory-only) state-machine for sync of E2EE encrypted data.
+  // TODO(artwyman): The parts of this not needed by the rest of the app
+  // might be better stored elsewhere, to avoid issues with reentrancy
+  // and stale snapshots delivered via dispatch().
   uploadedUploadId?: string;
-  uploadingUploadId?: string;
   downloadedPCDs?: boolean;
-  downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
-  loadingIssuedPCDs?: boolean;
+  loadingIssuedPCDs?: boolean; // Used only to update UI
+  completedFirstSync?: boolean;
+  extraDownloadRequested?: boolean;
 
   // Persistent sync state-machine fields, saved in local storage as a
   // PersistentSyncStatus object.  This is structured to allow for more

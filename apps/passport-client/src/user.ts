@@ -5,8 +5,8 @@ import { Dispatcher } from "./dispatch";
 // Starts polling the user from the server, in the background.
 export async function pollUser(self: User, dispatch: Dispatcher) {
   try {
+    console.log("[USER_POLL] polling user");
     const response = await requestUser(appConfig.zupassServer, self.uuid);
-
     if (response.error?.userMissing) {
       // this user was previously a valid user, but now the
       // app isn't able to find them, so we should log the
