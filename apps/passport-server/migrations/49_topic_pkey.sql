@@ -1,9 +1,9 @@
--- Add a unique index instead of a primary key constraint
+-- Drop the primary key constraint on (telegram_chat_id, topic_id)
 ALTER TABLE telegram_chat_topics DROP CONSTRAINT telegram_chat_anon_topics_pkey;
--- Make topic id nullable
+-- Drop the requirement that topic_id must be not null
 ALTER TABLE telegram_chat_topics ALTER COLUMN topic_id DROP NOT NULL;
+-- Add a unique index instead of a primary key constraint which accomodates the General topic being NULL
 ALTER TABLE telegram_chat_topics ADD CONSTRAINT telegram_chat_topics_idx UNIQUE NULLS NOT DISTINCT(telegram_chat_id, topic_id);
-
 -- A unique id for every entry in telegram_chat_topics 
 ALTER TABLE telegram_chat_topics ADD COLUMN id SERIAL PRIMARY KEY;
 

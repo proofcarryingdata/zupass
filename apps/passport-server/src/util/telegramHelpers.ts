@@ -689,8 +689,6 @@ const getCurrentTopic = async (
   topic: TelegramTopicFetch;
   messageThreadId: number | undefined;
 }> => {
-  logger(`[FETCHING TELEGRAM TOPIC...]`);
-
   const message = ctx.update.message || ctx.update.callback_query?.message;
 
   const topic = await fetchTelegramTopic(
@@ -776,7 +774,6 @@ export const chatsToForwardTo = async (
           range.text(`Forward Messages`, async (ctx) => {
             if (!(await senderIsAdmin(ctx))) return;
 
-            logger(`[TELEGRAM] topic to set as forwarding`, topic);
             // Add event to telegramForwarding table
             await insertTelegramForward(db, topic.id, topicToForwardTo.id);
             logger(

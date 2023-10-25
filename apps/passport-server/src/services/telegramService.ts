@@ -728,7 +728,6 @@ export class TelegramService {
             chatId,
             messageThreadId
           );
-          logger(`[TOPIC IN DB]`, topic, messageThreadId);
 
           if (!topic) {
             logger(`[TELEGRAM] adding topic ${topicName} to db`);
