@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { Button, Spacer } from "../core";
 
-function PrivacyNoticeText() {
+export function PrivacyNoticeText() {
   return (
     <Prose>
       <h2>ZUPASS PRIVACY NOTICE</h2>
