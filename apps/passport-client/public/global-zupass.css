@@ -76,6 +76,10 @@ a:visited {
   src: url(/fonts/IBMPlexSans-SemiBold.ttf) format("truetype")
     url(/fonts/IBMPlexSans-SemiBold.woff) format("woff");
 }
+@font-face {
+  font-family: "SuperFunky";
+  src: url(/fonts/SuperFunky.ttf) format("truetype");
+}
 
 /*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
 html,
