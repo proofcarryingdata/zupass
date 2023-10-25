@@ -66,7 +66,9 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/fonts/IBMPlexSans-LightItalic.woff",
   "/fonts/IBMPlexSans-Regular.woff",
   "/fonts/IBMPlexSans-Medium.woff",
-  "/fonts/IBMPlexSans-SemiBold.woff"
+  "/fonts/IBMPlexSans-SemiBold.woff",
+  "/fonts/SuperFunky.ttf",
+  "/images/frogs/pixel_frog.png"
 ]);
 
 /**
