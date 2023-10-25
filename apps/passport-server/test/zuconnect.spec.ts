@@ -54,6 +54,7 @@ describe("zuconnect functionality", function () {
   let identity: Identity;
   let user: User;
   let ticketPCD: EdDSATicketPCD;
+  const numberOfValidTickets = goodResponse.tickets.length;
 
   const zkeyFilePath = path.join(
     __dirname,
@@ -63,7 +64,6 @@ describe("zuconnect functionality", function () {
     __dirname,
     `../public/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm`
   );
-
   this.afterEach(async () => {
     server.resetHandlers();
   });
@@ -115,14 +115,38 @@ describe("zuconnect functionality", function () {
   it("should sync with good API response", async () => {
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(5);
+    expect(tickets.length).to.eq(numberOfValidTickets);
+  });
+
+  it("tickets should have expected values after sync", async () => {
+    const tickets = await fetchAllZuconnectTickets(db);
+
+    tickets.forEach((ticket, idx) => {
+      expect(ticket.attendee_email).to.eq(goodResponse.tickets[idx].email);
+      expect(ticket.external_ticket_id).to.eq(goodResponse.tickets[idx].id);
+      expect(ticket.extra_info.length).to.eq(
+        (goodResponse.tickets[idx].options ?? []).length
+      );
+    });
+
+    expect(tickets[5].extra_info.length).to.eq(2);
+    expect(tickets[5].extra_info[0]).to.eq(
+      goodResponse.tickets[5].options?.[0].name
+    );
+    expect(tickets[5].extra_info[1]).to.eq(
+      goodResponse.tickets[5].options?.[1].name
+    );
   });
 
   it("should soft-delete when tickets do not appear in API response", async () => {
-    server.use(makeHandler({ tickets: goodResponse.tickets.slice(0, 4) }));
+    server.use(
+      makeHandler({
+        tickets: goodResponse.tickets.slice(0, numberOfValidTickets - 1)
+      })
+    );
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(4);
+    expect(tickets.length).to.eq(numberOfValidTickets - 1);
 
     const deleted = await sqlQuery(
       db,
@@ -130,14 +154,14 @@ describe("zuconnect functionality", function () {
     );
     expect(deleted.rowCount).to.eq(1);
     expect(deleted.rows[0].external_ticket_id).to.eq(
-      goodResponse.tickets[4].id
+      goodResponse.tickets[numberOfValidTickets - 1].id
     );
   });
 
   it("soft-deleted ticket should be un-deleted if ticket appears again in API response", async () => {
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(5);
+    expect(tickets.length).to.eq(numberOfValidTickets);
 
     const deleted = await sqlQuery(
       db,
@@ -153,11 +177,12 @@ describe("zuconnect functionality", function () {
       attendee_email: "mock@example.com",
       attendee_name: "Mock User",
       is_deleted: false,
-      is_mock_ticket: true
+      is_mock_ticket: true,
+      extra_info: []
     });
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(6);
+    expect(tickets.length).to.eq(numberOfValidTickets + 1);
 
     const deleted = await sqlQuery(
       db,
@@ -207,7 +232,7 @@ describe("zuconnect functionality", function () {
     server.resetHandlers();
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(5);
+    expect(tickets.length).to.eq(numberOfValidTickets);
   });
 
   it("should be able to log in", async function () {
@@ -400,7 +425,7 @@ describe("zuconnect functionality", function () {
     );
     await zuconnectTripshaSyncService.sync();
     const tickets = await fetchAllZuconnectTickets(db);
-    expect(tickets.length).to.eq(6);
+    expect(tickets.length).to.eq(numberOfValidTickets + 1);
 
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());

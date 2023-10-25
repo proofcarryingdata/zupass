@@ -1,5 +1,6 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
+  agreeTerms,
   applyActions,
   CredentialManager,
   Feed,
@@ -7,6 +8,7 @@ import {
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
+  LATEST_PRIVACY_NOTICE,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
@@ -29,6 +31,7 @@ import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
+  loadPrivacyNoticeAgreed,
   loadSelf,
   saveEncryptionKey,
   saveIdentity,
@@ -106,6 +109,13 @@ export type Action =
   | {
       type: "set-known-ticket-types-and-keys";
       knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
+    }
+  | {
+      type: "handle-agreed-privacy-notice";
+      version: number;
+    }
+  | {
+      type: "prompt-to-agree-privacy-notice";
     };
 
 export type StateContextState = {
@@ -196,6 +206,10 @@ export async function dispatch(
         update,
         action.knownTicketTypesAndKeys
       );
+    case "handle-agreed-privacy-notice":
+      return handleAgreedPrivacyNotice(state, update, action.version);
+    case "prompt-to-agree-privacy-notice":
+      return promptToAgreePrivacyNotice(state, update);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -776,4 +790,47 @@ async function setKnownTicketTypesAndKeys(
     knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
     knownPublicKeys: keyMap
   });
+}
+
+/**
+ * After the user has agreed to the terms, save the updated user record, set
+ * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
+ * feed refresh, and dismiss the "legal terms" modal.
+ */
+async function handleAgreedPrivacyNotice(
+  state: AppState,
+  update: ZuUpdate,
+  version: number
+) {
+  await saveSelf({ ...state.self, terms_agreed: version });
+  update({
+    self: { ...state.self, terms_agreed: version },
+    loadedIssuedPCDs: false,
+    loadingIssuedPCDs: false,
+    modal: { modalType: "none" }
+  });
+}
+
+/**
+ * If the `user` object doesn't indicate that the user has agreed to the
+ * latest terms, check local storage in case they've agreed but we failed
+ * to sync it. If so, sync to server. If not, prompt user with an
+ * un-dismissable modal.
+ */
+async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
+  const cachedTerms = loadPrivacyNoticeAgreed();
+  if (cachedTerms === LATEST_PRIVACY_NOTICE) {
+    // sync to server
+    await agreeTerms(
+      appConfig.zupassServer,
+      LATEST_PRIVACY_NOTICE,
+      state.identity
+    );
+  } else {
+    update({
+      modal: {
+        modalType: "privacy-notice"
+      }
+    });
+  }
 }

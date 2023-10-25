@@ -63,6 +63,64 @@ describe("EdDSA ticket should work", function () {
     expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.true;
   });
 
+  it("should not be possible to verify a ticket that has been tampered with", async function () {
+    const originalTicketData = ticket.claim.ticket;
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      attendeeEmail: "hacker@example.com"
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      attendeeName: "Not The Ticket Holder"
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = { ...originalTicketData, eventId: uuid() };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = { ...originalTicketData, productId: uuid() };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = { ...originalTicketData, ticketId: uuid() };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      attendeeSemaphoreId: "54321"
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = { ...originalTicketData, isConsumed: true };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = { ...originalTicketData, isRevoked: true };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      timestampConsumed: 0
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      timestampSigned: 0
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    ticket.claim.ticket = {
+      ...originalTicketData,
+      ticketCategory: TicketCategory.PcdWorkingGroup
+    };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.false;
+
+    // Just to show that the original data definitely still works
+    ticket.claim.ticket = { ...originalTicketData };
+    expect(await EdDSATicketPCDPackage.verify(ticket)).to.be.true;
+  });
+
   it("should be possible to serialize and deserialize the pcd", async function () {
     const serialized = await EdDSATicketPCDPackage.serialize(ticket);
     const deserialized = await EdDSATicketPCDPackage.deserialize(

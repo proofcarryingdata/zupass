@@ -3,6 +3,7 @@ import {
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
 import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
@@ -86,6 +87,14 @@ function HeaderContent({
     header = "ZUPASS IDENTITY";
   } else if (displayOptions?.header) {
     header = displayOptions.header.toUpperCase();
+  }
+
+  if (
+    isEdDSATicketPCD(pcd) &&
+    pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect &&
+    pcd.claim.ticket.productId === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
+  ) {
+    header = "ZUCONNECT '23 DAY PASS";
   }
 
   const headerContent = header ? (

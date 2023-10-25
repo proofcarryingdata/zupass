@@ -86,3 +86,46 @@ export function checkSlidingWindowRateLimit(
     newTimestamps: requestsSinceStartTime.map((t) => new Date(t).toISOString())
   };
 }
+
+/**
+ * Compares two arrays representing existing and potentially new or updated
+ * items. Returns three arrays: new items, which are present in `b` but not
+ * in `a`; updated items, which are present but different in both; and removed
+ * items which are present in `a` but not in `b`.
+ *
+ * Takes two arrays to compare, an identifier which specifies a field on the
+ * array items to use as a unique identifier, and a comparator function for
+ * comparing items.
+ *
+ * Type T is the type of the item in the array, and I is the identifier
+ * property.
+ */
+export function compareArrays<T>(
+  a: T[],
+  b: T[],
+  identifier: keyof T,
+  comparator: (a: T, b: T) => boolean
+): {
+  new: T[];
+  updated: T[];
+  removed: T[];
+} {
+  const aByIdentifier = new Map(a.map((item) => [item[identifier], item]));
+
+  const newItems = b.filter((item) => !aByIdentifier.has(item[identifier]));
+
+  const updatedItems = b.filter((item) => {
+    const existingItem = aByIdentifier.get(item[identifier]);
+    return existingItem && comparator(item, existingItem);
+  });
+
+  const bByIdentifier = new Map(b.map((item) => [item[identifier], item]));
+
+  const removedItems = a.filter((item) => !bByIdentifier.has(item[identifier]));
+
+  return {
+    new: newItems,
+    updated: updatedItems,
+    removed: removedItems
+  };
+}

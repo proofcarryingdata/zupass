@@ -17,9 +17,10 @@ import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreateP
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
-import { NoWASMScreen } from "../components/screens/NoWASMScreen";
+import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
+import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
@@ -153,6 +154,7 @@ function RouterImpl() {
             element={<AlreadyRegisteredScreen />}
           />
           <Route path="sync-existing" element={<SyncExistingScreen />} />
+          <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
           <Route
@@ -209,7 +211,7 @@ async function loadInitialState(): Promise<AppState> {
   let modal = { modalType: "none" } as AppState["modal"];
 
   if (
-    // If on Zupass legacy login, ask user to set passwrod
+    // If on Zupass legacy login, ask user to set password
     self != null &&
     encryptionKey == null &&
     self.salt == null

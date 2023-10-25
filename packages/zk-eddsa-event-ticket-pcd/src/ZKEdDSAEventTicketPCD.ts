@@ -69,6 +69,8 @@ export type EdDSATicketFieldsToReveal = {
   revealIsConsumed?: boolean;
   revealIsRevoked?: boolean;
   revealTicketCategory?: boolean;
+  revealAttendeeEmail?: boolean;
+  revealAttendeeName?: boolean;
 };
 
 /**
@@ -312,15 +314,19 @@ function snarkInputForProof(
     revealTicketIsRevoked: fieldsToReveal.revealIsRevoked ? "1" : "0",
     ticketCategory: ticketAsBigIntArray[8].toString(),
     revealTicketCategory: fieldsToReveal.revealTicketCategory ? "1" : "0",
-    reservedSignedField1: "0",
-    // These fields currently do not have any preset semantic meaning, although the intention
-    // is for them to convert into meaningful fields in the future. We are reserving them now
+    // This field was previously reserved, but is now used for attendee email.
+    // See later comment to explain the concept of reserved fields.
+    reservedSignedField1: ticketAsBigIntArray[9].toString(),
+    revealReservedSignedField1: fieldsToReveal.revealAttendeeEmail ? "1" : "0",
+    // This field was previously reserved, but is now used for attendee name:
+    reservedSignedField2: ticketAsBigIntArray[10].toString(),
+    revealReservedSignedField2: fieldsToReveal.revealAttendeeName ? "1" : "0",
+
+    // This field currently does not have any preset semantic meaning, although the intention
+    // is for it to convert into a meaningful field in the future. We are reserving it now
     // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
     // and we would only need to change the TypeScript. For now, we will treat the inputs as
     // 0 in terms of signatures.
-    revealReservedSignedField1: "0",
-    reservedSignedField2: "0",
-    revealReservedSignedField2: "0",
     reservedSignedField3: "0",
     revealReservedSignedField3: "0",
 
@@ -386,20 +392,17 @@ function claimFromProofResult(
   if (!babyJubIsNegativeOne(publicSignals[8])) {
     partialTicket.ticketCategory = parseInt(publicSignals[8]);
   }
-  // These three fields are currently not typed or being used, but are kept
-  // as reserved fields that are hardcoded to zero and included in the preimage
-  // of the hashed signature. As such, the flags for revealing these reserved
-  // signed fields should always be -1 until they are being typed and used.
   if (!babyJubIsNegativeOne(publicSignals[9])) {
-    throw new Error(
-      "ZkEdDSAEventTicketPCD: reservedSignedField1 is not in use"
-    );
+    partialTicket.attendeeEmail = ticketPCD.claim.ticket.attendeeEmail;
   }
   if (!babyJubIsNegativeOne(publicSignals[10])) {
-    throw new Error(
-      "ZkEdDSAEventTicketPCD: reservedSignedField2 is not in use"
-    );
+    partialTicket.attendeeName = ticketPCD.claim.ticket.attendeeName;
   }
+
+  // This field is currently not typed or being used, but is being kept as
+  // a reserved field that is hardcoded to zero and included in the preimage
+  // of the hashed signature. As such, the flags for revealing this reserved
+  // signed field should always be -1 until it is being typed and used.
   if (!babyJubIsNegativeOne(publicSignals[11])) {
     throw new Error(
       "ZkEdDSAEventTicketPCD: reservedSignedField3 is not in use"
@@ -569,8 +572,20 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
       ? negOne
       : numberToBigInt(t.ticketCategory).toString()
   );
-  // Placeholder for reserved fields
-  ret.push(negOne, negOne, negOne);
+  ret.push(
+    t.attendeeEmail === undefined
+      ? negOne
+      : generateSnarkMessageHash(t.attendeeEmail).toString()
+  );
+  ret.push(
+    t.attendeeName === undefined
+      ? negOne
+      : generateSnarkMessageHash(t.attendeeName).toString()
+  );
+
+  // Placeholder for reserved field
+  ret.push(negOne);
+
   ret.push(claim.nullifierHash || negOne);
 
   // Public inputs appear in public signals in declaration order
