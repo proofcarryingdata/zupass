@@ -21,6 +21,7 @@ import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
+  TelegramTopicFetch,
   TelegramTopicWithFwdInfo
 } from "../database/models";
 import {
@@ -680,6 +681,31 @@ export const chatsToPostIn = async (
   });
 };
 
+const getCurrentTopic = async (
+  db: Pool,
+  ctx: BotContext,
+  chatId: number
+): Promise<{
+  topic: TelegramTopicFetch;
+  messageThreadId: number | undefined;
+}> => {
+  logger(`[FETCHING TELEGRAM TOPIC...]`);
+
+  const message = ctx.update.message || ctx.update.callback_query?.message;
+
+  const topic = await fetchTelegramTopic(
+    db,
+    chatId,
+    message?.message_thread_id
+  );
+
+  if (!topic) {
+    throw new Error(`Topic not found to forward from`);
+  }
+
+  return { topic, messageThreadId: message?.message_thread_id };
+};
+
 export const chatsToForwardTo = async (
   ctx: BotContext,
   range: MenuRange<BotContext>
@@ -701,21 +727,6 @@ export const chatsToForwardTo = async (
       return;
     }
 
-    const message = ctx.update.message;
-
-    const topic = await fetchTelegramTopic(
-      db,
-      chatId,
-      message?.message_thread_id
-    );
-
-    if (!topic) {
-      ctx.reply(`Topic not found to forward from`, {
-        message_thread_id: message?.message_thread_id
-      });
-      return;
-    }
-
     span?.setAttribute("userId", userId.toString());
     span?.setAttribute("chatId", ctx.chat.id);
 
@@ -723,6 +734,11 @@ export const chatsToForwardTo = async (
       // If a topic has been selected, confirm forwarding to this topic.
       if (ctx.session.topicToForwardTo) {
         const topicToForwardTo = ctx.session.topicToForwardTo;
+        const { topic, messageThreadId } = await getCurrentTopic(
+          db,
+          ctx,
+          chatId
+        );
         range
           .text(
             `↰  ${topicToForwardTo.chat?.title} - ${topicToForwardTo.topic_name}`,
@@ -746,13 +762,13 @@ export const chatsToForwardTo = async (
                 topicToForwardTo.receiver_chat_topic_id
               );
               await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
-                reply_to_message_id: message?.message_thread_id
+                reply_to_message_id: messageThreadId
               });
               ctx.session.topicToForwardTo = undefined;
               ctx.menu.update();
             } else {
               ctx.reply(`Can't delete this topic`, {
-                reply_to_message_id: message?.message_thread_id
+                reply_to_message_id: messageThreadId
               });
             }
           });
@@ -769,7 +785,7 @@ export const chatsToForwardTo = async (
             ctx.reply(
               `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
               {
-                message_thread_id: message?.message_thread_id,
+                message_thread_id: messageThreadId,
                 parse_mode: "HTML"
               }
             );
@@ -780,6 +796,12 @@ export const chatsToForwardTo = async (
       }
       // Otherwise, give the user a list of topics that are receiving messages.
       else {
+        const { topic, messageThreadId } = await getCurrentTopic(
+          db,
+          ctx,
+          chatId
+        );
+
         const topicsReceving = await fetchTelegramTopicsReceiving(db);
         const finalTopics = reduceFwdList(
           topic.id,
@@ -789,7 +811,7 @@ export const chatsToForwardTo = async (
 
         if (topicsWithChats.length === 0) {
           ctx.reply(`No chats are open to receiving`, {
-            message_thread_id: message?.message_thread_id
+            message_thread_id: messageThreadId
           });
           return;
         }
@@ -809,8 +831,10 @@ export const chatsToForwardTo = async (
         }
       }
     } catch (error) {
+      const message = ctx.update.message || ctx.update.callback_query?.message;
+
       ctx.reply(`Action failed ${error}`, {
-        reply_to_message_id: ctx.message?.message_thread_id
+        reply_to_message_id: message?.message_thread_id
       });
       return;
     }
