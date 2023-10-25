@@ -1,3 +1,4 @@
+import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { loadFull } from "tsparticles";
@@ -25,13 +26,52 @@ export function FrogFolder({
       <img
         draggable="false"
         src="/images/frogs/pixel_frog.png"
-        width={24}
-        height={24}
+        width={18}
+        height={18}
       />
-      <img draggable="false" src="/images/frogs/frogcrypto.svg" height={24} />
-      <NewFont>SOON</NewFont>
+      <img
+        draggable="false"
+        src="/images/frogs/frogcrypto.svg"
+        height={12}
+        width={135}
+        style={{ transform: "translate(-2.5px, 1px)" }}
+      />
+      <NewFont>
+        <CountDown />
+      </NewFont>
     </Container>
   );
+}
+
+function CountDown() {
+  const end = useMemo(() => {
+    return new Date("13 Nov 2023 23:00:00 PST");
+  }, []);
+
+  const [diffText, setDiffText] = useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const diffMs = end.getTime() - now.getTime();
+      if (diffMs < 0) {
+        setDiffText("");
+      } else {
+        const diffString = prettyMilliseconds(diffMs, {
+          millisecondsDecimalDigits: 0,
+          secondsDecimalDigits: 0,
+          unitCount: 4
+        });
+        setDiffText(diffString);
+      }
+    }, 1000 / 30);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [end]);
+
+  return <>{diffText}</>;
 }
 
 function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
@@ -89,7 +129,7 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
             value: 1
           },
           size: {
-            value: { min: 100, max: 200 },
+            value: { min: 1000, max: 2000 },
             animation: {
               enable: true,
               speed: 10,
@@ -123,7 +163,7 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
           modes: {
             trail: {
               delay: 0.1,
-              quantity: 3
+              quantity: 10
             }
           }
         },
@@ -134,11 +174,11 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
 }
 
 const NewFont = styled.div`
-  font-size: 12px;
-  vertical-align: super;
+  font-size: 15px;
+  /* vertical-align: super; */
   animation: color-change 1s infinite;
   font-family: monospace;
-  align-self: stretch;
+  /* align-self: stretch; */
 
   @keyframes color-change {
     0% {
