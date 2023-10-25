@@ -5,6 +5,7 @@ import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
 export const testingEnv: EnvironmentVariables = Object.freeze({
+  PORT: 47891,
   NODE_ENV: "production",
   MAILGUN_API_KEY: undefined,
   DATABASE_USERNAME: "admin",
