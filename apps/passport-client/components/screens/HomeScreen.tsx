@@ -23,6 +23,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
 import { PCDCard } from "../shared/PCDCard";
+import { FrogFolder } from "./FrogScreens/FrogFolder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -127,6 +128,10 @@ export function HomeScreenImpl() {
                     />
                   );
                 })}
+              <FrogFolder
+                folder={browsingFolder}
+                Container={FolderEntryContainer}
+              />
             </FolderExplorerContainer>
           )}
           {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
