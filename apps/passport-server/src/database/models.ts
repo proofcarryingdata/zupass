@@ -190,11 +190,17 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramTopic {
-  telegram_chat_id: string;
-  topic_id: string;
+export interface TelegramTopicFetch {
+  telegramChatID: string;
+  topic_id: string | null;
   topic_name: string;
   is_anon_topic: boolean;
+  id: number;
+}
+
+export interface TelegramTopicWithFwdInfo extends TelegramTopicFetch {
+  sender_chat_topic_id: number | null;
+  receiver_chat_topic_id: number | null;
 }
 
 // Representation of a "known public key" as fetched from the DB
@@ -244,7 +250,7 @@ export interface ZuconnectTicketDB {
 }
 
 export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
+  telegramChatID: string | undefined;
   eventName: string;
   configEventID: string;
   isLinkedToCurrentChat: boolean;
@@ -259,6 +265,17 @@ export interface UserIDWithChatIDs {
   telegramChatIDs: string[];
 }
 
-export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+export interface ChatIDWithEventsAndMembership extends ChatIDWithEventIDs {
   isChatMember: boolean;
-};
+}
+
+export interface TelegramForwardFetch {
+  senderID: number;
+  senderTopicID: string | null;
+  senderTopicName: string;
+  senderChatID: string;
+  receiverID: number;
+  receiverTopicID: string | null;
+  receiverTopicName: string;
+  receiverChatID: string;
+}

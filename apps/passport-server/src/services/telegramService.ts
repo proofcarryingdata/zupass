@@ -21,10 +21,12 @@ import {
   fetchEventsWithTelegramChats,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
-  fetchTelegramTopicsByChatId
+  fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
+  insertTelegramChat,
+  insertTelegramForward,
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
@@ -36,6 +38,7 @@ import {
   TopicChat,
   base64EncodeTopicData,
   chatIDsToChats,
+  chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
   eventsToLink,
@@ -69,33 +72,40 @@ export class TelegramService {
   private context: ApplicationContext;
   private authBot: Bot<BotContext>;
   private anonBot: Bot<BotContext>;
+  private forwardBot: Bot<BotContext> | undefined;
   private rollbarService: RollbarService | null;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
     authBot: Bot<BotContext>,
-    anonBot: Bot<BotContext>
+    anonBot: Bot<BotContext>,
+    forwardBot?: Bot<BotContext>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
     this.authBot = authBot;
     this.anonBot = anonBot;
-    setBotInfo(authBot, anonBot, this.anonBotExists());
+    this.forwardBot = forwardBot;
+
+    setBotInfo(authBot, anonBot, this.anonBotExists(), forwardBot);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
     const anonSendMenu = new Menu<BotContext>("anonsend");
+    const forwardMenu = new Menu<BotContext>("forward");
 
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(eventsToLink);
     zupassMenu.dynamic(chatsToJoin);
     anonSendMenu.dynamic(chatsToPostIn);
+    forwardMenu.dynamic(chatsToForwardTo);
 
     this.authBot.use(eventsMenu);
     this.authBot.use(zupassMenu);
     this.anonBot.use(anonSendMenu);
+    this.forwardBot?.use(forwardMenu);
 
     // Users gain access to gated chats by requesting to join. The authBot
     // receives a notification of this, and will approve requests from
@@ -387,14 +397,15 @@ export class TelegramService {
         const chatId = ctx.chat.id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!chatId || !topicName || !messageThreadId)
+        if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
+        await insertTelegramChat(this.context.dbPool, chatId);
         await insertTelegramTopic(
           this.context.dbPool,
           chatId,
-          messageThreadId,
           topicName,
+          messageThreadId,
           false
         );
 
@@ -409,43 +420,35 @@ export class TelegramService {
         const messageThreadId = ctx.update.message?.message_thread_id;
         span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!messageThreadId)
-          return logger(
-            `[TELEGRAM] ignoring edit for general topic ${topicName}`
-          );
-
         if (!chatId || !topicName)
           throw new Error(`Missing chatId or topic name`);
 
-        const topicsForChat = await fetchTelegramTopicsByChatId(
+        const topic = await fetchTelegramTopic(
           this.context.dbPool,
-          chatId
-        );
-
-        const topic = topicsForChat.find(
-          (e) => e.topic_id?.toString() === messageThreadId?.toString()
+          chatId,
+          messageThreadId
         );
 
         if (!topic) {
-          logger(`[TELEGRAM] editing topic and adding to db`);
+          logger(`[TELEGRAM] adding topic ${topicName} to db`);
+          await insertTelegramChat(this.context.dbPool, chatId);
           await insertTelegramTopic(
             this.context.dbPool,
             chatId,
-            messageThreadId,
             topicName,
+            messageThreadId,
             false
           );
         } else {
-          logger(`[TELEGRAM] editing topic and updating db`);
+          logger(`[TELEGRAM] updating topic ${topicName} in db`);
           await insertTelegramTopic(
             this.context.dbPool,
-            chatId,
-            messageThreadId,
+            topic.telegramChatID,
             topicName,
+            topic.topic_id,
             topic.is_anon_topic
           );
         }
-        logger(`[TELEGRAM] Updated topic ${topicName} in the db`);
       });
     });
 
@@ -512,8 +515,8 @@ export class TelegramService {
         await insertTelegramTopic(
           this.context.dbPool,
           ctx.chat.id,
-          messageThreadId,
           topicName,
+          messageThreadId,
           true
         );
 
@@ -564,6 +567,188 @@ export class TelegramService {
 
       this.anonBot.command("help", helpResponse);
       this.anonBot.on("message", ratResponse);
+    }
+
+    if (this.forwardBot) {
+      this.forwardBot.command("receive", async (ctx) => {
+        const messageThreadId = ctx.message?.message_thread_id;
+        try {
+          logger(`[TELEGRAM] running receive`);
+          if (isDirectMessage(ctx))
+            return ctx.reply(`/receive can only be run in a group chat`);
+
+          if (!ctx.from?.username)
+            return ctx.reply(`No username found`, {
+              reply_to_message_id: messageThreadId
+            });
+
+          if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+            return ctx.reply(
+              `Only Zupass team members are allowed to run this command.`,
+              { reply_to_message_id: messageThreadId }
+            );
+
+          // Look up topic.
+          const topic = await fetchTelegramTopic(
+            this.context.dbPool,
+            ctx.chat.id,
+            messageThreadId
+          );
+          const chatId = ctx.chat.id;
+
+          // If the topic doesn't exist, add it and the chatId to the DB.
+          if (!topic) {
+            logger(`[TELEGRAM] topic not found to mark as receiving.`);
+            const topicName =
+              ctx.message?.reply_to_message?.forum_topic_created?.name;
+            if (!topicName)
+              return ctx.reply(`No topic name found`, {
+                reply_to_message_id: messageThreadId
+              });
+
+            await insertTelegramChat(this.context.dbPool, chatId);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              chatId,
+              topicName,
+              messageThreadId,
+              false
+            );
+            // Fetch the newly created topic
+            const newTopic = await fetchTelegramTopic(
+              this.context.dbPool,
+              ctx.chat.id,
+              messageThreadId
+            );
+
+            if (!newTopic) throw new Error(`Failed to fetch new topic`);
+            // Add it to the forwarding table
+            await insertTelegramForward(this.context.dbPool, null, newTopic.id);
+
+            await ctx.reply(
+              `Added <b>${topicName}</b> to receive messages. If this name is incorrect, edit the name to update the database.`,
+              {
+                reply_to_message_id: messageThreadId,
+                parse_mode: "HTML"
+              }
+            );
+          } else {
+            await insertTelegramForward(this.context.dbPool, null, topic.id);
+            logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
+            await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
+              reply_to_message_id: messageThreadId,
+              parse_mode: "HTML"
+            });
+          }
+        } catch (error) {
+          ctx.reply(`Error: ${error}`, {
+            reply_to_message_id: messageThreadId
+          });
+        }
+      });
+
+      this.forwardBot.command("forward", async (ctx) => {
+        if (isDirectMessage(ctx))
+          return ctx.reply(`/forward can only be run in a group chat`);
+
+        const messageThreadId = ctx.message?.message_thread_id;
+
+        if (!ctx.from?.username)
+          return ctx.reply(`No username found`, {
+            reply_to_message_id: messageThreadId
+          });
+
+        if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+          return ctx.reply(
+            `Only Zupass team members are allowed to run this command.`,
+            { reply_to_message_id: messageThreadId }
+          );
+
+        await ctx.reply(`Choose a group and topic to forward messages to`, {
+          reply_markup: forwardMenu,
+          message_thread_id: messageThreadId
+        });
+      });
+
+      this.forwardBot.on("message", async (ctx) => {
+        const text = ctx.message.text;
+
+        if (isDirectMessage(ctx)) {
+          return await ctx.reply(`I can only forward messages in a group chat`);
+        } else {
+          const messageThreadId = ctx.message?.message_thread_id;
+
+          try {
+            // Check to see if message is from a topic in the forwarding table
+            const forwardResults = await fetchTelegramTopicForwarding(
+              this.context.dbPool,
+              ctx.chat.id,
+              messageThreadId
+            );
+
+            if (forwardResults?.length > 0) {
+              const sentMessages = forwardResults.map((f) => {
+                const destinationTopicID = f.receiverTopicID
+                  ? parseInt(f.receiverTopicID)
+                  : undefined;
+                logger(
+                  `[TElEGRAM] forwarding message ${text} to ${f.receiverTopicName}`
+                );
+                return ctx.api.forwardMessage(
+                  f.receiverChatID,
+                  f.senderChatID,
+                  ctx.message.message_id,
+                  {
+                    message_thread_id: destinationTopicID
+                  }
+                );
+              });
+              await Promise.allSettled(sentMessages);
+            }
+          } catch (error) {
+            ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
+          }
+        }
+      });
+
+      this.forwardBot.on(":forum_topic_edited", async (ctx) => {
+        return traced("telegram", "forum_topic_edited", async (span) => {
+          const topicName = ctx.update?.message?.forum_topic_edited.name;
+          const chatId = ctx.chat.id;
+          const messageThreadId = ctx.update.message?.message_thread_id;
+          span?.setAttributes({ topicName, messageThreadId, chatId });
+
+          if (!chatId || !topicName)
+            throw new Error(`Missing chatId or topic name`);
+
+          const topic = await fetchTelegramTopic(
+            this.context.dbPool,
+            chatId,
+            messageThreadId
+          );
+
+          if (!topic) {
+            logger(`[TELEGRAM] adding topic ${topicName} to db`);
+            await insertTelegramChat(this.context.dbPool, chatId);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              chatId,
+              topicName,
+              messageThreadId,
+              false
+            );
+          } else {
+            logger(`[TELEGRAM] updating topic ${topicName} in db`);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              topic.telegramChatID,
+              topicName,
+              topic.topic_id,
+              topic.is_anon_topic
+            );
+          }
+        });
+      });
     }
 
     this.authBot.command("help", helpResponse);
@@ -866,7 +1051,7 @@ export class TelegramService {
         parseInt(topicId)
       );
 
-      if (!topic || !topic.is_anon_topic) {
+      if (!topic || !topic.is_anon_topic || !topic.topic_id) {
         throw new Error(`this group doesn't have any anon topics`);
       }
 
@@ -949,7 +1134,7 @@ export class TelegramService {
           topicId
         );
 
-        if (!topic || !topic.is_anon_topic)
+        if (!topic || !topic.is_anon_topic || !topic.topic_id)
           throw new Error(`No anonymous topic found`);
 
         // Get valid eventIds for this chat
@@ -991,6 +1176,7 @@ export async function startTelegramService(
 ): Promise<TelegramService | null> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const anonBotToken = process.env.TELEGRAM_ANON_BOT_TOKEN;
+  const forwardBotToken = process.env.TELEGRAM_FORWARD_BOT_TOKEN;
   const anonBotExists = !!(anonBotToken && anonBotToken !== botToken);
 
   if (!botToken) {
@@ -1005,6 +1191,7 @@ export async function startTelegramService(
   await authBot.init();
   const authBotURL = await getBotURL(authBot);
   let anonBot: Bot<BotContext>;
+  let forwardBot: Bot<BotContext> | undefined = undefined;
   let anonBotURL: string;
 
   if (anonBotExists) {
@@ -1014,6 +1201,11 @@ export async function startTelegramService(
   } else {
     anonBot = authBot;
     anonBotURL = authBotURL;
+  }
+
+  if (forwardBotToken) {
+    forwardBot = new Bot<BotContext>(forwardBotToken);
+    await forwardBot.init();
   }
 
   // Start sessions
@@ -1028,6 +1220,11 @@ export async function startTelegramService(
     anonBot.use(session({ initial, getSessionKey }));
     anonBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
   }
+  if (forwardBot) {
+    forwardBot.use(session({ initial, getSessionKey }));
+    forwardBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
+  }
+
   authBot.use(session({ initial, getSessionKey }));
   authBot.catch((error) => logger(`[TELEGRAM] Bot error`, error));
 
@@ -1035,7 +1232,8 @@ export async function startTelegramService(
     context,
     rollbarService,
     authBot,
-    anonBot
+    anonBot,
+    forwardBot
   );
 
   service.startBot(authBot);
@@ -1049,6 +1247,15 @@ export async function startTelegramService(
   if (anonBotExists) {
     service.startBot(anonBot);
     anonBot.api.config.use(
+      autoRetry({
+        maxRetryAttempts: 3, // only repeat requests once
+        maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+      })
+    );
+  }
+  if (forwardBot) {
+    service.startBot(forwardBot);
+    forwardBot.api.config.use(
       autoRetry({
         maxRetryAttempts: 3, // only repeat requests once
         maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds

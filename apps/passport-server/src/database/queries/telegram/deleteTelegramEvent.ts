@@ -46,3 +46,18 @@ export async function deleteTelegramChatTopic(
     [telegramChatId, telegramTopicId]
   );
 }
+
+export async function deleteTelegramForward(
+  client: Pool,
+  senderChatTopicID: number,
+  receiverChatTopicID: number
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `\
+    delete from telegram_forwarding
+    where sender_chat_topic_id = $1 and receiver_chat_topic_id = $2
+    `,
+    [senderChatTopicID, receiverChatTopicID]
+  );
+}

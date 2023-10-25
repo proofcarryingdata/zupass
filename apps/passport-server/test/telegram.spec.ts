@@ -275,24 +275,22 @@ describe("telegram bot functionality", function () {
     }
   );
   step("should be able to add multiple anon topics", async function () {
-    await insertTelegramTopic(db, dummyChatId, anonChannelID, "test", true);
+    await insertTelegramTopic(db, dummyChatId, "test", anonChannelID, true);
     const insertedAnonTopic = await fetchTelegramAnonTopicsByChatId(
       db,
       dummyChatId
     );
-    expect(insertedAnonTopic[0]?.telegram_chat_id).to.eq(
-      dummyChatId.toString()
-    );
+    expect(insertedAnonTopic[0]?.telegramChatID).to.eq(dummyChatId.toString());
     expect(insertedAnonTopic[0]?.topic_id).to.eq(anonChannelID.toString());
     expect(insertedAnonTopic[0]?.topic_name).to.eq("test");
-    await insertTelegramTopic(db, dummyChatId, anonChannelID_1, "test1", true);
+    await insertTelegramTopic(db, dummyChatId, "test1", anonChannelID_1, true);
 
     const insertedAnonTopic_1 = await fetchTelegramAnonTopicsByChatId(
       db,
       dummyChatId
     );
     expect(insertedAnonTopic_1.length).to.eq(2);
-    expect(insertedAnonTopic_1[1]?.telegram_chat_id).to.eq(
+    expect(insertedAnonTopic_1[1]?.telegramChatID).to.eq(
       dummyChatId.toString()
     );
     expect(insertedAnonTopic_1[1]?.topic_id).to.eq(anonChannelID_1.toString());

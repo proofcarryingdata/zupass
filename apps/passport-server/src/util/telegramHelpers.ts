@@ -20,28 +20,35 @@ import { Pool } from "postgres-pool";
 import {
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
-  LinkedPretixTelegramEvent
+  LinkedPretixTelegramEvent,
+  TelegramTopicFetch,
+  TelegramTopicWithFwdInfo
 } from "../database/models";
-import { deleteTelegramEvent } from "../database/queries/telegram/deleteTelegramEvent";
+import {
+  deleteTelegramEvent,
+  deleteTelegramForward
+} from "../database/queries/telegram/deleteTelegramEvent";
 import {
   fetchEventsWithTelegramChats,
   fetchTelegramAnonTopicsByChatId,
   fetchTelegramChatsWithMembershipStatus,
-  fetchTelegramEventsByChatId
+  fetchTelegramEventsByChatId,
+  fetchTelegramTopic,
+  fetchTelegramTopicsReceiving
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertTelegramChat,
-  insertTelegramEvent
+  insertTelegramEvent,
+  insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
 import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.SupergroupChat | null;
 
-type ChatIDWithChat<T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs> =
-  T & {
-    chat: TopicChat;
-  };
+type ChatIDWithChat<T extends { telegramChatID?: string }> = T & {
+  chat: TopicChat;
+};
 
 interface BotCommandWithAnon extends BotCommand {
   isAnon: boolean;
@@ -57,6 +64,7 @@ export interface SessionData {
   lastMessageId?: number;
   selectedChat?: TopicChat;
   kudosData?: { giver: string; receiver: string };
+  topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
 export type BotContext = Context & SessionFlavor<SessionData>;
@@ -154,7 +162,8 @@ export const getBotURL = async (
 export const setBotInfo = async (
   bot: Bot<BotContext, Api<RawApi>>,
   anonBot: Bot<BotContext, Api<RawApi>>,
-  anonBotExists: boolean
+  anonBotExists: boolean,
+  forwardBot?: Bot<BotContext, Api<RawApi>>
 ): Promise<void> => {
   // Set Zupass as the default menu item
   if (process.env.PASSPORT_CLIENT_URL) {
@@ -227,14 +236,21 @@ export const setBotInfo = async (
   bot.api.setMyShortDescription(
     "ZuKat manages events and groups with zero-knowledge proofs"
   );
+
+  if (forwardBot) {
+    forwardBot.api.setMyDescription(
+      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
+    );
+    forwardBot.api.setMyShortDescription(
+      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
+    );
+  }
 };
 
 /**
  * Fetches the chat object for a list contaning a telegram chat id
  */
-export const chatIDsToChats = async <
-  T extends LinkedPretixTelegramEvent | ChatIDWithEventIDs
->(
+export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   ctx: BotContext,
   chats: T[]
 ): Promise<ChatIDWithChat<T>[]> => {
@@ -620,18 +636,24 @@ export const chatsToPostIn = async (
             })
             .row();
           for (const topic of topics) {
-            const encodedTopicData = base64EncodeTopicData(
-              chat.id,
-              topic.topic_name,
-              topic.topic_id,
-              validEventIds
-            );
-            range
-              .webApp(
-                `${topic.topic_name}`,
-                `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
-              )
-              .row();
+            if (topic.topic_id) {
+              const encodedTopicData = base64EncodeTopicData(
+                chat.id,
+                topic.topic_name,
+                topic.topic_id,
+                validEventIds
+              );
+              range
+                .webApp(
+                  `${topic.topic_name}`,
+                  `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
+                )
+                .row();
+            } else {
+              throw new Error(
+                `Cannot anon send to a topic ${topic.topic_name} but no id`
+              );
+            }
           }
         }
       }
@@ -673,6 +695,163 @@ export const chatsToPostIn = async (
   });
 };
 
+const getCurrentTopic = async (
+  db: Pool,
+  ctx: BotContext,
+  chatId: number
+): Promise<{
+  topic: TelegramTopicFetch;
+  messageThreadId: number | undefined;
+}> => {
+  const message = ctx.update.message || ctx.update.callback_query?.message;
+
+  const topic = await fetchTelegramTopic(
+    db,
+    chatId,
+    message?.message_thread_id
+  );
+
+  if (!topic) {
+    throw new Error(`Topic not found to forward from`);
+  }
+
+  return { topic, messageThreadId: message?.message_thread_id };
+};
+
+export const chatsToForwardTo = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  return traced("telegram", "chatsToForwardTo", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
+    }
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    const chatId = ctx.chat?.id;
+    if (!chatId) {
+      range.text(`Chat not found. Try again...`);
+      return;
+    }
+
+    span?.setAttribute("userId", userId.toString());
+    span?.setAttribute("chatId", ctx.chat.id);
+
+    try {
+      // If a topic has been selected, confirm forwarding to this topic.
+      if (ctx.session.topicToForwardTo) {
+        const topicToForwardTo = ctx.session.topicToForwardTo;
+        const { topic, messageThreadId } = await getCurrentTopic(
+          db,
+          ctx,
+          chatId
+        );
+        range
+          .text(
+            `↰  ${topicToForwardTo.chat?.title} - ${topicToForwardTo.topic_name}`,
+            async (ctx) => {
+              if (!(await senderIsAdmin(ctx))) return;
+              ctx.session.topicToForwardTo = undefined;
+              ctx.menu.update();
+            }
+          )
+          .row();
+        // If sender_chat_topic_id exists, this topic is already linked to the forwarding topic
+        if (topicToForwardTo.sender_chat_topic_id) {
+          range.text(`Stop Forwarding`, async (ctx) => {
+            if (
+              topicToForwardTo.sender_chat_topic_id &&
+              topicToForwardTo.receiver_chat_topic_id
+            ) {
+              await deleteTelegramForward(
+                db,
+                topicToForwardTo.sender_chat_topic_id,
+                topicToForwardTo.receiver_chat_topic_id
+              );
+              await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
+                reply_to_message_id: messageThreadId
+              });
+              ctx.session.topicToForwardTo = undefined;
+              ctx.menu.update();
+            } else {
+              ctx.reply(`Can't delete this topic`, {
+                reply_to_message_id: messageThreadId
+              });
+            }
+          });
+        } else {
+          range.text(`Forward Messages`, async (ctx) => {
+            if (!(await senderIsAdmin(ctx))) return;
+
+            // Add event to telegramForwarding table
+            await insertTelegramForward(db, topic.id, topicToForwardTo.id);
+            logger(
+              `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
+            );
+            ctx.reply(
+              `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
+              {
+                message_thread_id: messageThreadId,
+                parse_mode: "HTML"
+              }
+            );
+            ctx.session.topicToForwardTo = undefined;
+            ctx.menu.update();
+          });
+        }
+      }
+      // Otherwise, give the user a list of topics that are receiving messages.
+      else {
+        const { topic, messageThreadId } = await getCurrentTopic(
+          db,
+          ctx,
+          chatId
+        );
+
+        const topicsReceving = await fetchTelegramTopicsReceiving(db);
+        const finalTopics = reduceFwdList(
+          topic.id,
+          topicsReceving.filter((t) => t.id !== topic.id)
+        );
+        const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
+
+        if (topicsWithChats.length === 0) {
+          ctx.reply(`No chats are open to receiving`, {
+            message_thread_id: messageThreadId
+          });
+          return;
+        }
+
+        for (const topic of topicsWithChats) {
+          range
+            .text(
+              `${topic.sender_chat_topic_id ? "✅" : ""} ${topic.chat
+                ?.title} - ${topic.topic_name}`,
+              async (ctx) => {
+                if (!(await senderIsAdmin(ctx))) return;
+                ctx.session.topicToForwardTo = topic;
+                ctx.menu.update();
+              }
+            )
+            .row();
+        }
+      }
+    } catch (error) {
+      const message = ctx.update.message || ctx.update.callback_query?.message;
+
+      ctx.reply(`Action failed ${error}`, {
+        reply_to_message_id: message?.message_thread_id
+      });
+      return;
+    }
+  });
+};
+
 export const helpResponse = async (ctx: BotContext): Promise<void> => {
   if (isDirectMessage(ctx)) {
     await ctx.reply(`Type \`/\` to see a list of commands.`);
@@ -702,3 +881,29 @@ export function msToTimeString(duration: number): string {
 
   return `${hours} hours, ${minutes} minutes, and ${seconds} seconds`;
 }
+
+const reduceFwdList = (
+  senderId: number,
+  topics: TelegramTopicWithFwdInfo[]
+): TelegramTopicWithFwdInfo[] => {
+  const reducedList = topics.reduce((acc: TelegramTopicWithFwdInfo[], curr) => {
+    // Check if the receiver already exists in the accumulator
+    const existing = acc.find(
+      (item) => item.receiver_chat_topic_id === curr.receiver_chat_topic_id
+    );
+
+    // If it exists and the current sender is the desired value, replace the existing item
+    if (existing && curr.sender_chat_topic_id === senderId) {
+      const index = acc.indexOf(existing);
+      acc[index] = curr;
+    }
+    // If it doesn't exist, add the current item to the accumulator
+    else if (!existing) {
+      acc.push(curr);
+    }
+
+    return acc;
+  }, []);
+
+  return reducedList;
+};
