@@ -1,6 +1,5 @@
 import { Spacer } from "@pcd/passport-ui";
 import { useCallback } from "react";
-import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Button, CenterColumn, H2, TextCenter } from "../core";
 import { AppContainer } from "../shared/AppContainer";
@@ -40,7 +39,3 @@ export function ConfirmSkipSetupModal({
     </AppContainer>
   );
 }
-
-const Container = styled.div`
-  padding: 24px;
-`;
