@@ -162,7 +162,8 @@ export const getBotURL = async (
 export const setBotInfo = async (
   bot: Bot<BotContext, Api<RawApi>>,
   anonBot: Bot<BotContext, Api<RawApi>>,
-  anonBotExists: boolean
+  anonBotExists: boolean,
+  forwardBot?: Bot<BotContext, Api<RawApi>>
 ): Promise<void> => {
   // Set Zupass as the default menu item
   if (process.env.PASSPORT_CLIENT_URL) {
@@ -235,6 +236,15 @@ export const setBotInfo = async (
   bot.api.setMyShortDescription(
     "ZuKat manages events and groups with zero-knowledge proofs"
   );
+
+  if (forwardBot) {
+    forwardBot.api.setMyDescription(
+      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
+    );
+    forwardBot.api.setMyShortDescription(
+      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
+    );
+  }
 };
 
 /**

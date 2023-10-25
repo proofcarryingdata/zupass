@@ -88,7 +88,7 @@ export class TelegramService {
     this.anonBot = anonBot;
     this.forwardBot = forwardBot;
 
-    setBotInfo(authBot, anonBot, this.anonBotExists());
+    setBotInfo(authBot, anonBot, this.anonBotExists(), forwardBot);
 
     const zupassMenu = new Menu<BotContext>("zupass");
     const eventsMenu = new Menu<BotContext>("events");
