@@ -112,7 +112,8 @@ export async function insertTelegramForward(
     client,
     `\
 insert into telegram_forwarding (sender_chat_topic_id, receiver_chat_topic_id)
-values ($1, $2)`,
+values ($1, $2)
+on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
     [senderChatTopicID || null, receiverChatTopicID || null]
   );
   return result.rowCount;

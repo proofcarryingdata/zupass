@@ -781,7 +781,10 @@ export const chatsToForwardTo = async (
       // Otherwise, give the user a list of topics that are receiving messages.
       else {
         const topicsReceving = await fetchTelegramTopicsReceiving(db);
-        const finalTopics = reduceFwdList(topic.id, topicsReceving);
+        const finalTopics = reduceFwdList(
+          topic.id,
+          topicsReceving.filter((t) => t.id !== topic.id)
+        );
         const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
 
         if (topicsWithChats.length === 0) {
