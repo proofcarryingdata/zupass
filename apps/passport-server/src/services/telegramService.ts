@@ -682,26 +682,26 @@ export class TelegramService {
 
           try {
             // Check to see if message is from a topic in the forwarding table
-            const topicForwarding = await fetchTelegramTopicForwarding(
+            const forwardResults = await fetchTelegramTopicForwarding(
               this.context.dbPool,
               ctx.chat.id,
               messageThreadId
             );
 
-            if (topicForwarding?.length > 0) {
-              const sentMessages = topicForwarding.map((t) => {
-                const destinationTopicID = t.forwardDestination.topic_id;
+            if (forwardResults?.length > 0) {
+              const sentMessages = forwardResults.map((f) => {
+                const destinationTopicID = f.receiverTopicID
+                  ? parseInt(f.receiverTopicID)
+                  : undefined;
                 logger(
-                  `[TElEGRAM] forwarding message ${text} to ${t.topic_name} - ${t.forwardDestination.topic_name}`
+                  `[TElEGRAM] forwarding message ${text} to ${f.receiverTopicName}`
                 );
                 return ctx.api.forwardMessage(
-                  t.forwardDestination.telegramChatID,
-                  t.telegramChatID,
+                  f.receiverChatID,
+                  f.senderChatID,
                   ctx.message.message_id,
                   {
                     message_thread_id: destinationTopicID
-                      ? parseInt(destinationTopicID)
-                      : undefined
                   }
                 );
               });

@@ -5,6 +5,7 @@ import {
   LinkedPretixTelegramEvent,
   TelegramChat,
   TelegramEvent,
+  TelegramForwardFetch,
   TelegramTopicFetch,
   TelegramTopicWithFwdInfo,
   UserIDWithChatIDs
@@ -217,42 +218,37 @@ export async function fetchTelegramTopicsReceiving(
   return result.rows;
 }
 
-const linkedDestinationToTopic = (
-  row: any
-): TelegramTopicFetch & { forwardDestination: TelegramTopicFetch } => {
-  return {
-    ...row,
-    forwardDestination: {
-      id: row.forwardingID,
-      topic_id: row.forwardingTopicID,
-      topic_name: row.forwardingTopicName,
-      telegramChatID: row.forwardingChatID
-    }
-  };
-};
-
+/**
+ * This query looks to see if the sendingTopicID a) exists in the forwarding table and b) has a receiving topic.
+ * If so, it performs two left joins and populates the sending and receiving ids with the actual telegram chat topic.
+ * The resulting value can be used to determine the source and destination for the forwarded message.
+ */
 export async function fetchTelegramTopicForwarding(
   client: Pool,
-  telegramChatID: string | number,
-  topicId?: string | number
-): Promise<
-  (TelegramTopicFetch & { forwardDestination: TelegramTopicFetch })[]
-> {
+  sendingChatID: string | number,
+  sendingTopicID?: string | number
+): Promise<TelegramForwardFetch[]> {
   const result = await sqlQuery(
     client,
     `
     SELECT 
       tct.telegram_chat_id AS "telegramChatID",
       tct.*,
-      tf2.id AS "forwardingID",
-      tf2.topic_id AS "forwardingTopicID",
-      tf2.topic_name AS "forwardingTopicName",
-      tf2.telegram_chat_id AS "forwardingChatID"
-    FROM telegram_chat_topics tct
-    JOIN telegram_forwarding tf ON tct.id = tf.sender_chat_topic_id
-    LEFT JOIN telegram_chat_topics tf2 ON tf.receiver_chat_topic_id = tf2.id
-    WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL)) AND tf.sender_chat_topic_id IS NOT NULL;`,
-    [telegramChatID, topicId || null]
+      sender_topic.id AS "senderID",
+      sender_topic.topic_id AS "senderTopicID",
+      sender_topic.topic_name AS "senderTopicName",
+      sender_topic.telegram_chat_id AS "senderChatID",
+      receiver_topic.id AS "receiverID",
+      receiver_topic.topic_id AS "receiverTopicID",
+      receiver_topic.topic_name AS "receiverTopicName",
+      receiver_topic.telegram_chat_id AS "receiverChatID"
+    FROM telegram_forwarding tf
+    LEFT JOIN telegram_chat_topics tct ON tf.sender_chat_topic_id = tct.id
+    LEFT JOIN telegram_chat_topics sender_topic ON tf.sender_chat_topic_id = sender_topic.id
+    LEFT JOIN telegram_chat_topics receiver_topic ON tf.receiver_chat_topic_id = receiver_topic.id
+    WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL));
+    `,
+    [sendingChatID, sendingTopicID || null]
   );
-  return result.rows.map((row) => linkedDestinationToTopic(row));
+  return result.rows;
 }

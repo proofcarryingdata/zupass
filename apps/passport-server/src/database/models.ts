@@ -265,6 +265,17 @@ export interface UserIDWithChatIDs {
   telegramChatIDs: string[];
 }
 
-export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+export interface ChatIDWithEventsAndMembership extends ChatIDWithEventIDs {
   isChatMember: boolean;
-};
+}
+
+export interface TelegramForwardFetch {
+  senderID: number;
+  senderTopicID: string | null;
+  senderTopicName: string;
+  senderChatID: string;
+  receiverID: number;
+  receiverTopicID: string | null;
+  receiverTopicName: string;
+  receiverChatID: string;
+}
