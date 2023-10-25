@@ -14,6 +14,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 
 export interface FrogCryptoFeedConfig {
   /**
@@ -92,10 +93,16 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
   ): Promise<PollFeedResponseValue> {
     const feed = this.hostedFeed.find((f) => f.feed.id === request.feedId);
     if (!feed) {
-      throw new Error(`couldn't find feed with id ${request.feedId}`);
+      throw new PCDHTTPError(
+        404,
+        `couldn't find feed with id ${request.feedId}`
+      );
     }
     if (!feed.feed.active) {
-      throw new Error(`feed with id ${request.feedId} is not active`);
+      throw new PCDHTTPError(
+        404,
+        `feed with id ${request.feedId} is not active`
+      );
     }
 
     return feed.handleRequest(request);
@@ -114,7 +121,7 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
 
 // TODO: This is a temporary hack to get the server to work.
 // We will store this in the database eventually.
-// This hack assumes a single feed
+// This key is `${feedId}_${identity}`
 const LAST_FETCHED_AT = new Map<string, number>();
 
 /**
@@ -124,7 +131,7 @@ export async function getNextFetchAvailable(
   id: string,
   feed: FrogCryptoFeedConfig
 ): Promise<number> {
-  const lastFetchedAt = LAST_FETCHED_AT.get(id) ?? 0;
+  const lastFetchedAt = LAST_FETCHED_AT.get(`${feed.id}_${id}`) ?? 0;
   const now = Date.now();
   return Math.max(0, lastFetchedAt + feed.cooldown * 1000 - now);
 }
@@ -141,11 +148,12 @@ export async function createFrogData(
 
   const nextFetchAvailable = await getNextFetchAvailable(id, feed);
   if (nextFetchAvailable > 0) {
-    throw new Error(
+    throw new PCDHTTPError(
+      403,
       `Next fetch available in ${nextFetchAvailable} milliseconds`
     );
   }
-  LAST_FETCHED_AT.set(id, Date.now());
+  LAST_FETCHED_AT.set(`${feed.id}_${id}`, Date.now());
 
   // TODO: sample frog from db
   const frogPaths: string[] = [

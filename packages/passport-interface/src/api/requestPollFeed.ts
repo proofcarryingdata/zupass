@@ -29,9 +29,10 @@ export async function pollFeed(
   zupassServerUrl: string,
   identity: Identity,
   signedMessage: string,
-  feedId: string
+  feedId: string,
+  feedUrl = `${zupassServerUrl}/feeds`
 ): Promise<PollFeedResult> {
-  return requestPollFeed(`${zupassServerUrl}/feeds`, {
+  return requestPollFeed(feedUrl, {
     feedId,
     pcd: await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
