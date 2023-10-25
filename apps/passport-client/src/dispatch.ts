@@ -330,8 +330,6 @@ async function finishAccountCreation(
     });
   }
 
-  await addDefaultSubscriptions(state.subscriptions);
-
   // Save to local storage.
   await setSelf(user, state, update);
 
@@ -596,7 +594,6 @@ async function sync(state: AppState, update: ZuUpdate) {
     const dlRes = await downloadStorage(state.serverStorageRevision);
     if (dlRes.success && dlRes.value != null) {
       const { pcds, subscriptions, revision } = dlRes.value;
-      addDefaultSubscriptions(subscriptions);
 
       // Calculating this ID tracks that there's no need to upload what we
       // just downloaded, which reduces unnecessary revision conflicts.
@@ -638,6 +635,7 @@ async function sync(state: AppState, update: ZuUpdate) {
 
     try {
       console.log("[SYNC] loading issued pcds");
+      addDefaultSubscriptions(state.subscriptions);
       console.log(
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
@@ -655,7 +653,8 @@ async function sync(state: AppState, update: ZuUpdate) {
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
       await savePCDs(state.pcds);
-      console.log("[SYNC] loaded and saved issued pcds");
+      await saveSubscriptions(state.subscriptions);
+      console.log("[SYNC] saved issued pcds and updated subscriptions");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
@@ -663,7 +662,8 @@ async function sync(state: AppState, update: ZuUpdate) {
     update({
       loadingIssuedPCDs: false,
       loadedIssuedPCDs: true,
-      pcds: state.pcds
+      pcds: state.pcds,
+      subscriptions: state.subscriptions
     });
     return;
   }

@@ -31,7 +31,6 @@ import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
-import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
   StateContext,
@@ -204,10 +203,6 @@ async function loadInitialState(): Promise<AppState> {
   const subscriptions = await loadSubscriptions();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
-
-  if (self) {
-    await addDefaultSubscriptions(subscriptions);
-  }
 
   let modal = { modalType: "none" } as AppState["modal"];
 
