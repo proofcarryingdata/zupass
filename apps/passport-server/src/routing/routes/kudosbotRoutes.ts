@@ -4,12 +4,15 @@ import {
   verify
 } from "@pcd/semaphore-signature-pcd";
 import express, { Request, Response } from "express";
+import { fetchKudosbotProofs } from "../../database/queries/telegram/fetchKudosbotProof";
+import { fetchTelegramUsernameFromSemaphoreId } from "../../database/queries/telegram/fetchTelegramUsername";
+import { insertKudosbotProof } from "../../database/queries/telegram/insertKudosbotProof";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 
 export function initKudosbotRoutes(
   app: express.Application,
-  _context: ApplicationContext,
+  context: ApplicationContext,
   _globalServices: GlobalServices
 ): void {
   logger("[INIT] Initializing Kudosbot routes");
@@ -24,9 +27,29 @@ export function initKudosbotRoutes(
     return { giver: kudosDataArr[1], receiver: kudosDataArr[2] };
   };
 
+  app.get("/kudos/list", async (_req: Request, res: Response) => {
+    const proofs = await fetchKudosbotProofs(context.dbPool);
+    res.status(200).json({ proofs });
+  });
+
+  app.get("/kudos/username", async (req: Request, res: Response) => {
+    const semaphoreId = req.query.semaphore_id;
+    if (typeof semaphoreId !== "string" || semaphoreId.length === 0) {
+      return res.status(200).send("Error: no semaphore id was passed in.");
+    }
+    const username = await fetchTelegramUsernameFromSemaphoreId(
+      context.dbPool,
+      semaphoreId
+    );
+    if (username === null) {
+      return res.status(200).send("Error: no username for semaphore id.");
+    }
+    res.status(200).json({ username });
+  });
+
   app.get("/kudos/upload", async (req: Request, res: Response) => {
     const proof = req.query.proof;
-    if (typeof proof !== "string") {
+    if (typeof proof !== "string" || proof.length === 0) {
       return res.status(200).send("Error: no proof was uploaded.");
     }
 
@@ -46,8 +69,17 @@ export function initKudosbotRoutes(
     const kudosDataRaw = pcd.claim.signedMessage;
     const kudosData = deserializeKudosData(kudosDataRaw);
     if (!kudosData) {
-      return res.status(400);
+      return res.status(200).send("Error: not a valid kudos proof.");
     }
+    if (kudosData.giver != kudosGiverSemaphoreId) {
+      return res
+        .status(200)
+        .send(
+          "Error: kudos giver semaphore id does not match proof identity commitment"
+        );
+    }
+
+    await insertKudosbotProof(context.dbPool, proof);
 
     res
       .status(200)
