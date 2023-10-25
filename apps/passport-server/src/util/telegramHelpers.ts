@@ -875,7 +875,6 @@ const reduceFwdList = (
   senderId: number,
   topics: TelegramTopicWithFwdInfo[]
 ): TelegramTopicWithFwdInfo[] => {
-  //
   const reducedList = topics.reduce((acc: TelegramTopicWithFwdInfo[], curr) => {
     // Check if the receiver already exists in the accumulator
     const existing = acc.find(

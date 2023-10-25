@@ -114,7 +114,7 @@ export async function insertTelegramForward(
 insert into telegram_forwarding (sender_chat_topic_id, receiver_chat_topic_id)
 values ($1, $2)
 on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
-    [senderChatTopicID || null, receiverChatTopicID || null]
+    [senderChatTopicID, receiverChatTopicID]
   );
   return result.rowCount;
 }

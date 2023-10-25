@@ -1,6 +1,5 @@
 -- Add a unique index instead of a primary key constraint
 ALTER TABLE telegram_chat_topics DROP CONSTRAINT telegram_chat_anon_topics_pkey;
-
 -- Make topic id nullable
 ALTER TABLE telegram_chat_topics ALTER COLUMN topic_id DROP NOT NULL;
 ALTER TABLE telegram_chat_topics ADD CONSTRAINT telegram_chat_topics_idx UNIQUE NULLS NOT DISTINCT(telegram_chat_id, topic_id);

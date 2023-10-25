@@ -620,7 +620,7 @@ export class TelegramService {
             const newTopic = await fetchTelegramTopic(
               this.context.dbPool,
               ctx.chat.id,
-              messageThreadId || 0
+              messageThreadId
             );
 
             if (!newTopic) throw new Error(`Failed to fetch new topic`);
