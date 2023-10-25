@@ -286,7 +286,7 @@ const FolderEntryContainer = styled.div`
   }
 `;
 
-const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
+export const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
 
 function WrappedPCDCardImpl({
   pcd,

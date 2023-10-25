@@ -19,6 +19,7 @@
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@opentelemetry/sdk-node": "^0.34.0",
     "@pcd/eddsa-pcd": "0.3.0",
+    "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/email-pcd": "0.3.0",
     "@pcd/passport-crypto": "0.8.0",

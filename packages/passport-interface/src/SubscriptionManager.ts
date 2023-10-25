@@ -96,6 +96,10 @@ export class FeedSubscriptionManager {
     );
 
     for (const subscription of this.activeSubscriptions) {
+      // nb: undefined fetchOnLoad defaults to true
+      if (subscription.feed.fetchOnLoad === false) {
+        continue;
+      }
       responsePromises.push(
         this.fetchSingleSubscription(subscription, credentialManager)
       );
@@ -514,6 +518,12 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   partialArgs?: ArgsOf<T>;
   permissions: PCDPermission[];
   credentialRequest: CredentialRequest;
+  /**
+   * If false, the feed will not automatic poll for updates.
+   *
+   * @default true
+   */
+  fetchOnLoad?: boolean;
 }
 
 export interface Subscription {

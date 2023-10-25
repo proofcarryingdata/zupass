@@ -12,6 +12,7 @@ import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { respondWithError } from "./pcdHttpError";
 import { initAccountRoutes } from "./routes/accountRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
+import { initFrogcryptoRoutes } from "./routes/frogcryptoRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -119,6 +120,7 @@ function initAllRoutes(
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
   initKudosbotRoutes(app, context, globalServices);
+  initFrogcryptoRoutes(app, context, globalServices);
   initLogRoutes(app);
 }
 

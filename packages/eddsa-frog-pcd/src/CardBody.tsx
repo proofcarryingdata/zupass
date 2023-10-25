@@ -35,7 +35,9 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
     </Container>
   ) : (
     <Container>
-      <a onClick={() => setShowPCD(true)}>View as proof-carrying data</a>
+      <Button onClick={() => setShowPCD(true)}>
+        View as proof-carrying data
+      </Button>
       <FrogImg src={frogData?.imageUrl} draggable={false} />
       <FrogInfo>
         <FrogAttribute label="JUMP" title="Jump" value={frogData.jump} />
@@ -69,9 +71,9 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
           </FrogInfo>
         </>
       )}
-      <a onClick={() => setShowMore(!showMore)}>
+      <Button onClick={() => setShowMore(!showMore)}>
         {showMore ? "Collapse" : "See more"}
-      </a>
+      </Button>
     </Container>
   );
 }
@@ -151,7 +153,9 @@ function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }) {
     setTimeout(() => setCopied(false), 1000);
   }, [pcd]);
 
-  return <a onClick={onClick}>{copied ? "Copied!" : "Copy frog PCD"}</a>;
+  return (
+    <Button onClick={onClick}>{copied ? "Copied!" : "Copy frog PCD"}</Button>
+  );
 }
 
 const Container = styled.div`
@@ -177,7 +181,7 @@ const FrogImg = styled.img`
 
 const Description = styled.div`
   font-size: 14px;
-  color: rgba(var(--white-rgb), 0.8);
+  color: rgba(var(--black-rgb), 0.8);
 `;
 
 const Attribute = styled.div`
@@ -195,4 +199,10 @@ const AttrTitle = styled.div`
 
 const AttrValue = styled.div`
   font-size: 14px;
+`;
+
+const Button = styled.a`
+  color: var(--accent-darker);
+  cursor: pointer;
+  text-decoration: none;
 `;

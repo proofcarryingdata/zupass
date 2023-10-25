@@ -1,3 +1,4 @@
+import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
@@ -88,6 +89,12 @@ import {
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
+import {
+  FROGCRYPTO_FEEDS,
+  FrogCryptoFeedConfig,
+  FrogCryptoFeedHost,
+  createFrogData
+} from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import {
@@ -101,11 +108,16 @@ import { traced } from "./telemetryService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
+export enum FeedProviderName {
+  ZUPASS = "Zupass",
+  FROGCRYPTO = "FrogCrypto"
+}
+
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
-  private readonly feedHost: FeedHost;
+  private readonly feedHosts: Record<FeedProviderName, FeedHost>;
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
@@ -129,12 +141,11 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    const FEED_PROVIDER_NAME = "Zupass";
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
 
-    this.feedHost = new FeedHost(
+    const zupassFeedHost = new FeedHost(
       [
         {
           handleRequest: async (
@@ -383,30 +394,91 @@ export class IssuanceService {
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
-      FEED_PROVIDER_NAME
+      FeedProviderName.ZUPASS
+    );
+    const frogcryptoFeedHost = new FrogCryptoFeedHost(
+      FROGCRYPTO_FEEDS.map((feed) => ({
+        handleRequest: async (
+          req: PollFeedRequest
+        ): Promise<PollFeedResponseValue> => {
+          try {
+            if (req.pcd === undefined) {
+              throw new Error(`Missing credential`);
+            }
+            await verifyFeedCredential(
+              req.pcd,
+              this.cachedVerifySignaturePCD.bind(this)
+            );
+            return {
+              actions: [
+                {
+                  pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
+                  folder: "FrogCrypto",
+                  type: PCDActionType.AppendToFolder
+                } as AppendToFolderAction
+              ]
+            };
+          } catch (e) {
+            logger(`Error encountered while serving feed:`, e);
+            this.rollbarService?.reportError(e);
+          }
+          return { actions: [] };
+        },
+        feed: {
+          ...feed,
+          fetchOnLoad: false,
+          inputPCDType: undefined,
+          partialArgs: undefined,
+          credentialRequest: {
+            signatureType: "sempahore-signature-pcd"
+          },
+          permissions: [
+            {
+              folder: "FrogCrypto",
+              type: PCDPermissionType.AppendToFolder
+            } as AppendToFolderPermission
+          ]
+        }
+      })),
+      `${process.env.PASSPORT_SERVER_URL}/frogcrypto/feeds`,
+      FeedProviderName.FROGCRYPTO
+    );
+
+    this.feedHosts = [zupassFeedHost, frogcryptoFeedHost].reduce(
+      (acc, feedHost) => {
+        acc[feedHost.getProviderName()] = feedHost;
+        return acc;
+      },
+      {} as Record<string, FeedHost>
     );
   }
 
   public async handleListFeedsRequest(
-    request: ListFeedsRequest
+    request: ListFeedsRequest,
+    feedProvider: FeedProviderName
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListFeedsRequest(request);
+    return this.feedHosts[feedProvider].handleListFeedsRequest(request);
   }
 
   public async handleListSingleFeedRequest(
-    request: ListSingleFeedRequest
+    request: ListSingleFeedRequest,
+    feedProvider: FeedProviderName
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListSingleFeedRequest(request);
+    return this.feedHosts[feedProvider].handleListSingleFeedRequest(request);
   }
 
   public async handleFeedRequest(
-    request: PollFeedRequest
+    request: PollFeedRequest,
+    feedProvider: FeedProviderName
   ): Promise<PollFeedResponseValue> {
-    return this.feedHost.handleFeedRequest(request);
+    return this.feedHosts[feedProvider].handleFeedRequest(request);
   }
 
-  public hasFeedWithId(feedId: string): boolean {
-    return this.feedHost.hasFeedWithId(feedId);
+  public hasFeedWithId(
+    feedId: string,
+    feedProvider: FeedProviderName
+  ): boolean {
+    return this.feedHosts[feedProvider].hasFeedWithId(feedId);
   }
 
   public getRSAPublicKey(): string {
@@ -844,6 +916,42 @@ export class IssuanceService {
         id: {
           argumentType: ArgumentTypeName.String,
           value: id
+        }
+      })
+    );
+
+    return [frogPCD];
+  }
+
+  private async issueEdDSAFrogPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    feed: FrogCryptoFeedConfig
+  ): Promise<SerializedPCD[]> {
+    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+
+    if (!serverUrl) {
+      logger("[ISSUE] can't issue frogs - unaware of the client location");
+      return [];
+    }
+
+    // TODO: return as user facing error
+    if (!feed.active) {
+      logger("[ISSUE] can't issue frogs - feed is inactive");
+      return [];
+    }
+
+    const frogPCD = await EdDSAFrogPCDPackage.serialize(
+      await EdDSAFrogPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: this.exportedRSAPrivateKey
+        },
+        data: {
+          argumentType: ArgumentTypeName.Object,
+          value: await createFrogData(credential, feed)
+        },
+        id: {
+          argumentType: ArgumentTypeName.String
         }
       })
     );
