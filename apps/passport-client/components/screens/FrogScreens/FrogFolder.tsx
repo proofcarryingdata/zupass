@@ -3,7 +3,7 @@ import styled from "styled-components";
 import { loadFull } from "tsparticles";
 import { tsParticles } from "tsparticles-engine";
 
-const FOLDERS = ["Devconnect"];
+const FOLDERS = ["", "/"];
 
 export function FrogFolder({
   Container,
