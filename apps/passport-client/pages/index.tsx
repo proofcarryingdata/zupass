@@ -43,6 +43,7 @@ import {
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
+  loadPersistentSyncStatus,
   loadSelf,
   loadSubscriptions,
   saveIdentity,
@@ -222,6 +223,8 @@ async function loadInitialState(): Promise<AppState> {
 
   const credentialCache = createStorageBackedCredentialCache();
 
+  const persistentSyncStatus = loadPersistentSyncStatus();
+
   return {
     self,
     encryptionKey,
@@ -230,7 +233,8 @@ async function loadInitialState(): Promise<AppState> {
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,
-    credentialCache
+    credentialCache,
+    serverStorageRevision: persistentSyncStatus.serverStorageRevision
   };
 }
 

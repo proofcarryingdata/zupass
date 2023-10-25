@@ -69,10 +69,10 @@ export async function deserializeStorage(
   pcdPackages: PCDPackage[]
 ): Promise<{
   pcds: PCDCollection;
-  subscriptions: FeedSubscriptionManager | null;
+  subscriptions: FeedSubscriptionManager;
 }> {
   let pcds: PCDCollection;
-  let subscriptions: FeedSubscriptionManager | null = null;
+  let subscriptions: FeedSubscriptionManager;
 
   if (isSyncedEncryptedStorageV3(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
@@ -82,9 +82,11 @@ export async function deserializeStorage(
     );
   } else if (isSyncedEncryptedStorageV2(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   } else if (isSyncedEncryptedStorageV1(storage)) {
     pcds = new PCDCollection(pcdPackages);
     await pcds.deserializeAllAndAdd(storage.pcds);
+    subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   } else {
     throw new Error(
       `Unknown SyncedEncryptedStorage version 

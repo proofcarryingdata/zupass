@@ -59,9 +59,6 @@ export function SyncExistingScreen() {
             "An error occurred while downloading encrypted storage."
           );
         }
-
-        setError("");
-        return;
       }
 
       dispatch({

@@ -34,8 +34,8 @@ import {
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
+  savePersistentSyncStatus,
   saveSelf,
-  saveServerStorageRevision,
   saveSubscriptions
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
@@ -257,7 +257,7 @@ async function createNewUserSkipPassword(
   );
 
   if (newUserResult.success) {
-    return finishLogin(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -296,7 +296,7 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishLogin(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -311,7 +311,11 @@ async function createNewUserWithPassword(
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
+async function finishAccountCreation(
+  user: User,
+  state: AppState,
+  update: ZuUpdate
+) {
   // Verify that the identity is correct.
   const { identity } = state;
 
@@ -332,7 +336,7 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
   await setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
-  await uploadStorage();
+  await uploadStorage(user, state.pcds, state.subscriptions);
 
   // Close any existing modal, if it exists
   update({ modal: { modalType: "none" } });
@@ -466,7 +470,7 @@ async function loadAfterLogin(
     throw new Error(userResponse.error.errorMessage);
   }
 
-  // assumes that we only have one semaphore identity in Zupass.
+  // TODO: this assumes that we only have one semaphore identity in Zupass.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
@@ -474,6 +478,8 @@ async function loadAfterLogin(
   let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {
     // TODO: handle error gracefully
+    // TODO: Also check that identityPCD's commitment matches the one
+    // in storage.self
     throw new Error("no identity found in encrypted storage");
   } else if (
     // If on Zupass legacy login, ask user to set passwrod
@@ -485,12 +491,9 @@ async function loadAfterLogin(
     modal = { modalType: "upgrade-account-modal" };
   }
 
-  if (subscriptions) {
-    await saveSubscriptions(subscriptions);
-  }
-
   await savePCDs(pcds);
-  saveServerStorageRevision(storage.revision);
+  await saveSubscriptions(subscriptions);
+  savePersistentSyncStatus({ serverStorageRevision: storage.revision });
   saveEncryptionKey(encryptionKey);
   saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
@@ -498,6 +501,7 @@ async function loadAfterLogin(
   update({
     encryptionKey,
     pcds,
+    serverStorageRevision: storage.revision,
     identity: identityPCD.claim.identity,
     self: userResponse.value,
     modal
@@ -505,8 +509,7 @@ async function loadAfterLogin(
 
   await sleep(1);
 
-  console.log("Loaded from sync key, redirecting to home screen...");
-  window.localStorage["savedSyncKey"] = "true";
+  console.log("Loaded after login, redirecting to home screen...");
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
@@ -587,42 +590,34 @@ async function sync(state: AppState, update: ZuUpdate) {
       downloadingPCDs: true
     });
 
-    /**
-     * Get both PCDs and subscriptions
-     * Subscriptions might be null even if we got PCDs, if we were
-     * downloading from a pre-v3 version of encrypted storage
-     * {@link SyncedEncryptedStorageV3}
-     * */
-    const dlRes = await downloadStorage();
+    // Download user's E2EE storage, which includes both PCDs and subscriptions.
+    // We'll skip this if it fails, or if the server indicates no changes based
+    // on the last revision we downloaded.
+    const dlRes = await downloadStorage(state.serverStorageRevision);
+    if (dlRes.success && dlRes.value != null) {
+      const { pcds, subscriptions, revision } = dlRes.value;
+      addDefaultSubscriptions(subscriptions);
 
-    if (dlRes.success && dlRes.value != null && dlRes.value.pcds != null) {
-      const { pcds, subscriptions } = dlRes.value;
-
-      if (subscriptions) {
-        addDefaultSubscriptions(subscriptions);
-      }
+      // Calculating this ID tracks that there's no need to upload what we
+      // just downloaded, which reduces unnecessary revision conflicts.
+      // TODO(artwyman): Tracking the "dirty" state corresponding to this
+      // variable in local storage would allow us to avoid unnecessary
+      // uploads even when download is skipped.
+      const uploadedUploadId = await makeUploadId(pcds, subscriptions);
 
       update({
         downloadedPCDs: true,
         downloadingPCDs: false,
-        pcds: pcds,
-        // If we got subscriptions, add them and generate an upload ID.
-        // The upload ID is a combination of hashes of the states of the PCDs
-        // and subscriptions.
-        // If later subscription-polling doesn't change the PCD set, we can
-        // avoid having to do an upload.
-        // If we didn't get subscriptions, it's because we downloaded from a
-        // pre-v3 version of encrypted storage and therefore we definitely
-        // want to do an upload.
-        ...(subscriptions !== null
-          ? {
-              uploadedUploadId: await makeUploadId(pcds, subscriptions),
-              subscriptions
-            }
-          : {})
+        uploadedUploadId,
+        pcds,
+        subscriptions,
+        serverStorageRevision: revision
       });
     } else {
-      console.log(`[SYNC] skipping download`);
+      console.log(
+        `[SYNC] skipping download:`,
+        dlRes.success ? "no changes" : "failed"
+      );
       update({
         downloadedPCDs: true,
         downloadingPCDs: false
@@ -690,11 +685,19 @@ async function sync(state: AppState, update: ZuUpdate) {
     return;
   }
 
+  // Uploading requires state.self be set, which should be set by now.  If it's
+  // not, wait to upload on another sync triggered when self changes.
+  if (!state.self) {
+    console.error("[SYNC] no user available to upload");
+  }
+
   console.log("[SYNC] sync action: upload");
   update({
     uploadingUploadId: uploadId
   });
-  await uploadStorage();
+  // TODO(artwyman): Add serverStorageRevision here, but only after
+  // we're able to respond to a conflict by downloading.
+  await uploadStorage(state.self, state.pcds, state.subscriptions);
   update({
     uploadingUploadId: undefined,
     uploadedUploadId: uploadId

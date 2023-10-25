@@ -78,11 +78,33 @@ export function savePrivacyNoticeAgreed(version: number): void {
   window.localStorage["privacy_notice_agreed"] = version.toString();
 }
 
-export function saveServerStorageRevision(revision: string): void {
-  window.localStorage["server_storage_revision"] = revision;
+/**
+ * Holds the persistent status of the state-machine for E2EE storage.
+ * This should be kept up-to-date with the other storage-related fields
+ * such as encryption key, PCDs, and subscription feeds.  This object is
+ * intended to leave room for more fields to be added later, which can be
+ * loaded/stored atomically.
+ */
+export interface PersistentSyncStatus {
+  /**
+   * Represents the most recent revision returned by the server when
+   * downloading E2EE storage.  Should change once that download has been
+   * integrated and saved into local storage.  Can be used to detect changes
+   * on future download, and conflicts on future upload.
+   */
+  serverStorageRevision?: string;
 }
 
-export function loadServerStorageRevision(): string | undefined {
-  const rev = window.localStorage["server_storage_revision"];
-  return rev ? rev : undefined;
+export function savePersistentSyncStatus(status: PersistentSyncStatus): void {
+  window.localStorage["sync_status"] = JSON.stringify(status);
+}
+
+export function loadPersistentSyncStatus(): PersistentSyncStatus {
+  const statusString = window.localStorage["sync_status"];
+  try {
+    return JSON.parse(statusString);
+  } catch (e) {
+    console.error("Local storage PersistentSyncStatus is malformed.", e);
+    return {};
+  }
 }
