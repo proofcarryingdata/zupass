@@ -15,7 +15,7 @@ export function mailgunSendEmail({
   to,
   subject,
   text,
-  html,
+  html
 }: {
   from: string;
   to: string;
@@ -25,13 +25,13 @@ export function mailgunSendEmail({
 }): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     request(
-      "https://api.mailgun.net/v3/0xparc.org/messages",
+      "https://api.mailgun.net/v3/zupass.org/messages",
       {
         headers: {
-          Authorization: `Basic ${process.env.MAILGUN_API_KEY}`,
+          Authorization: `Basic ${process.env.MAILGUN_API_KEY}`
         },
         method: "POST",
-        formData: { from, to, subject, text, html },
+        formData: { from, to, subject, text, html }
       },
       (err: any, _res: any, _body: any) => {
         if (err) {
