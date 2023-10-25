@@ -38,11 +38,11 @@ export async function upsertZuconnectTicket(
  */
 export async function softDeleteZuconnectTicket(
   client: Pool,
-  ticket_id: string
+  external_ticket_id: string
 ): Promise<void> {
   await sqlQuery(
     client,
-    `UPDATE zuconnect_tickets SET is_deleted = TRUE WHERE id = $1`,
-    [ticket_id]
+    `UPDATE zuconnect_tickets SET is_deleted = TRUE WHERE external_ticket_id = $1`,
+    [external_ticket_id]
   );
 }
