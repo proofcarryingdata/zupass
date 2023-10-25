@@ -8,12 +8,11 @@ import {
   useSubscriptions
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
+import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
-import { WrappedPCDCard } from "../HomeScreen";
 
 /** A placeholder screen for FrogCrypto.
  *
@@ -76,9 +75,7 @@ export function FrogHomeScreen() {
       <MaybeModal fullScreen />
       <AppContainer bg="gray">
         <Container>
-          <Spacer h={16} />
           <AppHeader />
-          <Spacer h={16} />
 
           <button disabled={!frogSub} onClick={getFrog}>
             Get Frog
@@ -87,15 +84,16 @@ export function FrogHomeScreen() {
           {frogPCDs.length > 0 && (
             <>
               <Separator />
-              {frogPCDs.map((pcd) => (
-                <WrappedPCDCard
-                  key={pcd.id}
-                  pcd={pcd}
-                  mainIdPCD=""
-                  onPcdClick={onPcdClick}
-                  expanded={pcd.id === selectedPCD?.id}
-                />
-              ))}
+              <PCDContainer>
+                {frogPCDs.map((pcd) => (
+                  <PCDCard
+                    key={pcd.id}
+                    pcd={pcd}
+                    onClick={onPcdClick}
+                    expanded={pcd.id === selectedPCD?.id}
+                  />
+                ))}
+              </PCDContainer>
             </>
           )}
         </Container>
@@ -109,4 +107,14 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   max-width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const PCDContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
