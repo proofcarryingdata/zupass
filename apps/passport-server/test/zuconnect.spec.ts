@@ -121,21 +121,30 @@ describe("zuconnect functionality", function () {
   it("tickets should have expected values after sync", async () => {
     const tickets = await fetchAllZuconnectTickets(db);
 
-    tickets.forEach((ticket, idx) => {
-      expect(ticket.attendee_email).to.eq(goodResponse.tickets[idx].email);
-      expect(ticket.external_ticket_id).to.eq(goodResponse.tickets[idx].id);
-      expect(ticket.extra_info.length).to.eq(
-        (goodResponse.tickets[idx].options ?? []).length
-      );
-    });
+    const dbTicketsByExternalId = new Map(
+      tickets.map((ticket) => [ticket.external_ticket_id, ticket])
+    );
+    const apiTicketsByExternalId = new Map(
+      goodResponse.tickets.map((ticket) => [ticket.id, ticket])
+    );
 
-    expect(tickets[5].extra_info.length).to.eq(2);
-    expect(tickets[5].extra_info[0]).to.eq(
-      goodResponse.tickets[5].options?.[0].name
-    );
-    expect(tickets[5].extra_info[1]).to.eq(
-      goodResponse.tickets[5].options?.[1].name
-    );
+    for (const ticket of tickets) {
+      expect(ticket.attendee_email).to.eq(
+        apiTicketsByExternalId.get(ticket.external_ticket_id)?.email
+      );
+    }
+
+    const idOfTicketWithAddons = goodResponse.tickets[5].id;
+
+    expect(
+      dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info.length
+    ).to.eq(2);
+    expect(
+      dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[0]
+    ).to.eq(goodResponse.tickets[5].options?.[0].name);
+    expect(
+      dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[1]
+    ).to.eq(goodResponse.tickets[5].options?.[1].name);
   });
 
   it("should soft-delete when tickets do not appear in API response", async () => {
