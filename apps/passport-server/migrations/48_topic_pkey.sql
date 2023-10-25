@@ -15,9 +15,11 @@ CREATE TABLE telegram_forwarding (
   FOREIGN KEY (receiver_chat_topic_id) REFERENCES telegram_chat_topics(id),
   UNIQUE NULLS NOT DISTINCT (sender_chat_topic_id, receiver_chat_topic_id),
 
-  -- Ensure that both columns are not null and the columns don't equal each other
   CHECK (
-    (sender_chat_topic_id IS NOT NULL AND receiver_chat_topic_id IS NOT NULL) AND
-    (sender_chat_topic_id <> receiver_chat_topic_id)
+      -- Ensure that both columns are not NULL simultaneously
+      (sender_chat_topic_id IS NOT NULL OR receiver_chat_topic_id IS NOT NULL) AND
+      -- Ensure that the columns don't have the same value, if neither is NULL
+      (sender_chat_topic_id IS NULL OR receiver_chat_topic_id IS NULL OR sender_chat_topic_id <> receiver_chat_topic_id)
   )
+
 );
