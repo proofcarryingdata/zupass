@@ -428,7 +428,6 @@ export class TelegramService {
           chatId,
           messageThreadId
         );
-        logger(`[TOPIC IN DB]`, topic, messageThreadId);
 
         if (!topic) {
           logger(`[TELEGRAM] adding topic ${topicName} to db`);
@@ -595,7 +594,6 @@ export class TelegramService {
             ctx.chat.id,
             messageThreadId
           );
-          logger(`[TOPIC IN DB]`, topic);
           const chatId = ctx.chat.id;
 
           // If the topic doesn't exist, add it and the chatId to the DB.
