@@ -639,6 +639,10 @@ export const chatsToPostIn = async (
                   `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`
                 )
                 .row();
+            } else {
+              throw new Error(
+                `Cannot anon send to a topic ${topic.topic_name} but no id`
+              );
             }
           }
         }
