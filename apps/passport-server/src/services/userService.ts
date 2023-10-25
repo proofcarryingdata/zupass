@@ -1,16 +1,30 @@
 import { HexString } from "@pcd/passport-crypto";
 import {
+  AgreeTermsResult,
   ConfirmEmailResponseValue,
+  LATEST_PRIVACY_NOTICE,
+  UNREDACT_TICKETS_TERMS_VERSION,
   ZupassUserJson
 } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
+import { z } from "zod";
 import { UserRow } from "../database/models";
+import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
 } from "../database/queries/saveUser";
-import { fetchUserByEmail, fetchUserByUUID } from "../database/queries/users";
+import {
+  fetchUserByCommitment,
+  fetchUserByEmail,
+  fetchUserByUUID
+} from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -19,6 +33,10 @@ import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { SemaphoreService } from "./semaphoreService";
+
+const AgreedTermsSchema = z.object({
+  version: z.number().max(LATEST_PRIVACY_NOTICE)
+});
 
 /**
  * Responsible for high-level user-facing functionality like logging in.
@@ -225,7 +243,14 @@ export class UserService {
       email,
       commitment,
       salt,
-      encryptionKey
+      encryptionKey,
+      // If the user already exists, then they're accessing this via the
+      // "forgot password" flow, and not the registration flow in which they
+      // are prompted to agree to the latest legal terms. In this case,
+      // preserve whichever version they already agreed to.
+      terms_agreed: existingUser
+        ? existingUser.terms_agreed
+        : LATEST_PRIVACY_NOTICE
     });
 
     // Reload Merkle trees
@@ -235,6 +260,16 @@ export class UserService {
     if (!user) {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
+
+    // Slightly redundantly, this will set the "terms agreed" again
+    // However, having a single canonical transaction for this seems like
+    // a benefit
+    logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+    await agreeTermsAndUnredactTickets(
+      this.context.dbPool,
+      user.email,
+      LATEST_PRIVACY_NOTICE
+    );
 
     const userJson = userRowToZupassUserJson(user);
 
@@ -286,6 +321,77 @@ export class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * Updates the version of the legal terms the user agrees to
+   */
+  public async handleAgreeTerms(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<AgreeTermsResult> {
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+      serializedPCD.pcd
+    );
+    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+      return {
+        success: false,
+        error: "Invalid signature"
+      };
+    }
+
+    const parsedPayload = AgreedTermsSchema.safeParse(
+      JSON.parse(pcd.claim.signedMessage)
+    );
+
+    if (!parsedPayload.success) {
+      return {
+        success: false,
+        error: "Invalid terms specified"
+      };
+    }
+
+    const payload = parsedPayload.data;
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      pcd.claim.identityCommitment
+    );
+    if (!user) {
+      return {
+        success: false,
+        error: "User does not exist"
+      };
+    }
+
+    // If the user hasn't already agreed to have their tickets unredacted,
+    // do it now
+    if (
+      payload.version >= UNREDACT_TICKETS_TERMS_VERSION &&
+      user.terms_agreed < UNREDACT_TICKETS_TERMS_VERSION
+    ) {
+      logger(
+        `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
+        user.email
+      );
+      await agreeTermsAndUnredactTickets(
+        this.context.dbPool,
+        user.email,
+        payload.version
+      );
+    } else {
+      logger(
+        `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
+        user.email
+      );
+      await upsertUser(this.context.dbPool, {
+        ...user,
+        terms_agreed: payload.version
+      });
+    }
+
+    return {
+      success: true,
+      value: { version: payload.version }
+    };
   }
 }
 
