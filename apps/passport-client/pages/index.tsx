@@ -25,6 +25,7 @@ import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
+import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import {
@@ -88,6 +89,7 @@ class App extends React.Component<object, AppState> {
         {!isWebAssemblySupported() ? (
           <HashRouter>
             <Routes>
+              <Route path="/terms" element={<TermsScreen />} />
               <Route path="*" element={<NoWASMScreen />} />
             </Routes>
           </HashRouter>
@@ -143,6 +145,7 @@ function RouterImpl() {
     <HashRouter>
       <Routes>
         <Route path="/">
+          <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
