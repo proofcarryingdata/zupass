@@ -62,7 +62,7 @@ export function isSyncedEncryptedStorageV3(
  * Deserialize a decrypted storage object and set up the PCDCollection and
  * FeedSubscriptionManager to manage its data.  If the storage comes from
  * an older format which doesn't include subscriptions, then the
- * FeedSubscriptionManager will be null.
+ * FeedSubscriptionManager will be empty.
  */
 export async function deserializeStorage(
   storage: SyncedEncryptedStorage,
