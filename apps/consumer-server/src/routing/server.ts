@@ -1,10 +1,24 @@
+import cors from "cors";
 import express from "express";
+import { ironSession } from "iron-session/express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
+import { anonLogin } from "./routes/zu-auth/anon-login";
+import { generateNonce } from "./routes/zu-auth/generateNonce";
+import { isLoggedIn } from "./routes/zu-auth/isLoggedIn";
+import { login } from "./routes/zu-auth/login";
+import { logout } from "./routes/zu-auth/logout";
 import { RouteInitializer } from "./types";
 
-const routes: RouteInitializer[] = [initHealthcheckRoutes];
+const routes: RouteInitializer[] = [
+  initHealthcheckRoutes,
+  login,
+  anonLogin,
+  isLoggedIn,
+  logout,
+  generateNonce
+];
 
 export async function startServer(
   context: ApplicationContext
@@ -13,6 +27,22 @@ export async function startServer(
     const port = process.env.PORT ?? 3003;
     const app = express();
     app.use(morgan("tiny"));
+
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+    app.use(cors({ origin: true, credentials: true }));
+
+    app.use(
+      ironSession({
+        ttl: 1209600, // Expiry: 14 days.
+        cookieName: "consumer_app_cookie",
+        // eslint-disable-next-line turbo/no-undeclared-env-vars
+        password: process.env.IRON_SESSION_PASSWORD as string,
+        cookieOptions: {
+          secure: process.env.NODE_ENV === "production"
+        }
+      })
+    );
 
     routes.forEach((r) => r(app, context));
 
