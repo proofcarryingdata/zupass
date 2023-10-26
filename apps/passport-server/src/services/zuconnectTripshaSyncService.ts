@@ -20,6 +20,47 @@ import { setError, traced } from "./telemetryService";
 const NAME = "Zuconnect Tripsha";
 
 /**
+ * Compares two Zuconnect tickets.
+ */
+export function zuconnectTicketsDifferent(
+  existingTicket: Omit<ZuconnectTicketDB, "id">,
+  newTicket: Omit<ZuconnectTicketDB, "id">
+): boolean {
+  return (
+    existingTicket?.attendee_email !== newTicket.attendee_email ||
+    existingTicket.attendee_name !== newTicket.attendee_name ||
+    existingTicket.product_id !== newTicket.product_id ||
+    !_.isEqual(existingTicket.extra_info, newTicket.extra_info)
+  );
+}
+
+/**
+ * Convert a Tripsha ticket type to a product ID.
+ */
+function ticketTypeToProductId(type: ZuconnectTicket["ticketName"]): string {
+  return ZUCONNECT_PRODUCT_ID_MAPPINGS[type].id;
+}
+
+/**
+ * Converts tickets received from the API to their DB representation.
+ */
+export function apiTicketsToDBTickets(
+  tickets: ZuconnectTicket[]
+): Omit<ZuconnectTicketDB, "id">[] {
+  return tickets.map((ticket) => {
+    return {
+      external_ticket_id: ticket.id,
+      product_id: ticketTypeToProductId(ticket.ticketName),
+      attendee_email: ticket.email,
+      attendee_name: ticket.fullName,
+      is_deleted: false,
+      is_mock_ticket: false,
+      extra_info: ticket.extraInfo
+    };
+  });
+}
+
+/**
  * Fetches ticket data from Tripsha's API and stores it in the database.
  */
 export class ZuconnectTripshaSyncService {
@@ -105,27 +146,8 @@ export class ZuconnectTripshaSyncService {
     return this.zuconnectTripshaAPI.fetchTickets();
   }
 
-  /**
-   * Convert a Tripsha ticket type to a product ID.
-   */
-  private ticketTypeToProductId(type: ZuconnectTicket["ticketName"]): string {
-    return ZUCONNECT_PRODUCT_ID_MAPPINGS[type].id;
-  }
-
   private isMockTicketRecord(ticket: Omit<ZuconnectTicketDB, "id">): boolean {
     return ticket.is_mock_ticket;
-  }
-
-  private ticketsDifferent(
-    existingTicket: Omit<ZuconnectTicketDB, "id">,
-    newTicket: Omit<ZuconnectTicketDB, "id">
-  ): boolean {
-    return (
-      existingTicket?.attendee_email !== newTicket.attendee_email ||
-      existingTicket.attendee_name !== newTicket.attendee_name ||
-      existingTicket.product_id !== newTicket.product_id ||
-      existingTicket.extra_info !== newTicket.extra_info
-    );
   }
 
   /**
@@ -138,26 +160,12 @@ export class ZuconnectTripshaSyncService {
       const existingTickets = await fetchAllZuconnectTickets(
         this.context.dbPool
       );
-      // Tickets we just received from Tripsha only have an "external" ID, so
-      // we should use this to check for existing tickets
-
-      const apiTicketsToDBTickets = tickets.map((ticket) => {
-        return {
-          external_ticket_id: ticket.id,
-          product_id: this.ticketTypeToProductId(ticket.ticketName),
-          attendee_email: ticket.email,
-          attendee_name: ticket.fullName,
-          is_deleted: false,
-          is_mock_ticket: false,
-          extra_info: ticket.extraInfo
-        };
-      });
 
       const changes = compareArrays<Omit<ZuconnectTicketDB, "id">>(
         existingTickets,
-        apiTicketsToDBTickets,
+        apiTicketsToDBTickets(tickets),
         "external_ticket_id",
-        this.ticketsDifferent
+        zuconnectTicketsDifferent
       );
 
       for (const ticket of [...changes.new, ...changes.updated]) {

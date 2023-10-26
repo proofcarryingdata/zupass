@@ -23,12 +23,17 @@ import path from "path";
 import { Pool } from "postgres-pool";
 import { ZuconnectTripshaAPI } from "../src/apis/zuconnect/zuconnectTripshaAPI";
 import { stopApplication } from "../src/application";
+import { ZuconnectTicketDB } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllZuconnectTickets } from "../src/database/queries/zuconnect/fetchZuconnectTickets";
 import { upsertZuconnectTicket } from "../src/database/queries/zuconnect/insertZuconnectTicket";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { sqlQuery } from "../src/database/sqlQuery";
-import { ZuconnectTripshaSyncService } from "../src/services/zuconnectTripshaSyncService";
+import {
+  ZuconnectTripshaSyncService,
+  apiTicketsToDBTickets,
+  zuconnectTicketsDifferent
+} from "../src/services/zuconnectTripshaSyncService";
 import { Zupass } from "../src/types";
 import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import {
@@ -55,6 +60,10 @@ describe("zuconnect functionality", function () {
   let user: User;
   let ticketPCD: EdDSATicketPCD;
   const numberOfValidTickets = goodResponse.tickets.length;
+  const zuconnectTripshaAPI = new ZuconnectTripshaAPI(
+    MOCK_ZUCONNECT_TRIPSHA_URL,
+    MOCK_ZUCONNECT_TRIPSHA_KEY
+  );
 
   const zkeyFilePath = path.join(
     __dirname,
@@ -76,10 +85,7 @@ describe("zuconnect functionality", function () {
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
-      zuconnectTripshaAPI: new ZuconnectTripshaAPI(
-        MOCK_ZUCONNECT_TRIPSHA_URL,
-        MOCK_ZUCONNECT_TRIPSHA_KEY
-      )
+      zuconnectTripshaAPI
     });
 
     if (!application.services.zuconnectTripshaSyncService) {
@@ -119,16 +125,17 @@ describe("zuconnect functionality", function () {
   });
 
   it("tickets should have expected values after sync", async () => {
-    const tickets = await fetchAllZuconnectTickets(db);
+    const dbTickets = await fetchAllZuconnectTickets(db);
+    const apiTickets = await zuconnectTripshaAPI.fetchTickets();
 
     const dbTicketsByExternalId = new Map(
-      tickets.map((ticket) => [ticket.external_ticket_id, ticket])
+      dbTickets.map((ticket) => [ticket.external_ticket_id, ticket])
     );
     const apiTicketsByExternalId = new Map(
-      goodResponse.tickets.map((ticket) => [ticket.id, ticket])
+      apiTickets.map((ticket) => [ticket.id, ticket])
     );
 
-    for (const ticket of tickets) {
+    for (const ticket of dbTickets) {
       expect(ticket.attendee_email).to.eq(
         apiTicketsByExternalId.get(ticket.external_ticket_id)?.email
       );
@@ -141,10 +148,26 @@ describe("zuconnect functionality", function () {
     ).to.eq(2);
     expect(
       dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[0]
-    ).to.eq(goodResponse.tickets[5].options?.[0].name);
+    ).to.eq(apiTickets[5].extraInfo[0]);
     expect(
       dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[1]
-    ).to.eq(goodResponse.tickets[5].options?.[1].name);
+    ).to.eq(apiTickets[5].extraInfo[1]);
+  });
+
+  it("tickets from the API should show as being unchanged from the DB after sync", async () => {
+    const apiTickets = await zuconnectTripshaAPI.fetchTickets();
+    const dbTickets = await fetchAllZuconnectTickets(db);
+
+    const dbTicketsByExternalId = new Map(
+      dbTickets.map((ticket) => [ticket.external_ticket_id, ticket])
+    );
+
+    for (const apiTicket of apiTicketsToDBTickets(apiTickets)) {
+      const dbTicket = dbTicketsByExternalId.get(
+        apiTicket.external_ticket_id
+      ) as ZuconnectTicketDB;
+      expect(zuconnectTicketsDifferent(apiTicket, dbTicket)).to.be.false;
+    }
   });
 
   it("should soft-delete when tickets do not appear in API response", async () => {
