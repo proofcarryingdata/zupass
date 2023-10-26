@@ -9,6 +9,7 @@ import { fetchTelegramUsernameFromSemaphoreId } from "../../database/queries/tel
 import { insertKudosbotProof } from "../../database/queries/telegram/insertKudosbotProof";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkQueryParam } from "../params";
 
 export function initKudosbotRoutes(
   app: express.Application,
@@ -33,10 +34,7 @@ export function initKudosbotRoutes(
   });
 
   app.get("/kudos/username", async (req: Request, res: Response) => {
-    const semaphoreId = req.query.semaphore_id;
-    if (typeof semaphoreId !== "string" || semaphoreId.length === 0) {
-      return res.status(400).send("Error: no semaphore id was passed in.");
-    }
+    const semaphoreId = checkQueryParam(req, "semaphore_id");
     const username = await fetchTelegramUsernameFromSemaphoreId(
       context.dbPool,
       semaphoreId
@@ -48,10 +46,7 @@ export function initKudosbotRoutes(
   });
 
   app.get("/kudos/upload", async (req: Request, res: Response) => {
-    const proof = req.query.proof;
-    if (typeof proof !== "string" || proof.length === 0) {
-      return res.status(400).send("Error: no proof was uploaded.");
-    }
+    const proof = checkQueryParam(req, "proof");
 
     let pcd: SemaphoreSignaturePCD;
     try {

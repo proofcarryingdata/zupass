@@ -1,6 +1,6 @@
 import { useSemaphoreSignatureProof } from "@pcd/passport-interface";
 import { useState } from "react";
-import { CollapsableCode } from "../components/Core";
+import { CollapsableCode } from "./Core";
 
 const SingleKudosDisplay = (props: { proof: string; id: number }) => {
   const [signatureProofValid, setSignatureProofValid] = useState<
@@ -22,8 +22,6 @@ const SingleKudosDisplay = (props: { proof: string; id: number }) => {
     }
     return { giver: kudosDataArr[1], receiver: kudosDataArr[2] };
   };
-
-  console.log("proof", signatureProof);
 
   const kudosData =
     signatureProof && deserializeKudosData(signatureProof.claim.signedMessage);
