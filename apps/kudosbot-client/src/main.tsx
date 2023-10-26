@@ -3,12 +3,8 @@ import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import KudosDisplay from "./pages/KudosDisplay";
-import ZupassPopupRedirect from "./pages/popup";
 
-const router = createHashRouter([
-  { path: "/", element: <KudosDisplay /> },
-  { path: "popup", element: <ZupassPopupRedirect /> }
-]);
+const router = createHashRouter([{ path: "/", element: <KudosDisplay /> }]);
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
