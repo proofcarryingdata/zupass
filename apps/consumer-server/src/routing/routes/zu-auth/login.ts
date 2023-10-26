@@ -113,7 +113,7 @@ export function login(
     } catch (error: any) {
       console.error(`[ERROR] ${error.message}`);
 
-      res.send(500);
+      res.sendStatus(500);
     }
   });
 }

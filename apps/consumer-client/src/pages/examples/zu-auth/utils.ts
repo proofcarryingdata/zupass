@@ -106,10 +106,10 @@ export async function logout(): Promise<void> {
  *
  * @param serialized The stringified serialized form of an EdDSATicketPCD.
  */
-export async function authenticate(serialized: string): Promise<void> {
+export async function authenticate(serialized: string): Promise<boolean> {
   const { pcd, type } = JSON.parse(serialized);
 
-  await fetch(
+  const response = await fetch(
     urlJoin(
       CONSUMER_SERVER_URL,
       `auth/${
@@ -127,6 +127,8 @@ export async function authenticate(serialized: string): Promise<void> {
       body: JSON.stringify({ pcd, type })
     }
   );
+
+  return response.status === 200
 }
 
 /**

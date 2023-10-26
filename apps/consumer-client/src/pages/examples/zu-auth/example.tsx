@@ -81,7 +81,7 @@ export default function ZuAuthExample() {
         <label>ZK mode 🕶</label>
       </ExampleContainer>
 
-      <p>{authenticated ? "✅ Authenticated" : ""}</p>
+      <p>{authenticated ? "✅ Authenticated" : "✖️ Not authenticated"} {``}</p>
     </div>
   );
 }
