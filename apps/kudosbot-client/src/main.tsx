@@ -2,11 +2,11 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
-import KudosbotProofDemo from "./pages/KudosbotProofDemo";
+import KudosDisplay from "./pages/KudosDisplay";
 import ZupassPopupRedirect from "./pages/popup";
 
 const router = createHashRouter([
-  { path: "/", element: <KudosbotProofDemo /> },
+  { path: "/", element: <KudosDisplay /> },
   { path: "popup", element: <ZupassPopupRedirect /> }
 ]);
 

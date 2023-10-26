@@ -11,3 +11,5 @@ export const PASSPORT_CLIENT_URL =
 export const PASSPORT_SERVER_URL =
   process.env.PASSPORT_SERVER_URL || "https://dev.local:3002";
 export const KUDOSBOT_UPLOAD_URL = PASSPORT_SERVER_URL + "/kudos/upload";
+export const KUDOSBOT_LIST_URL = PASSPORT_SERVER_URL + "/kudos/list";
+export const KUDOSBOT_USERNAME_URL = PASSPORT_SERVER_URL + "/kudos/username";
