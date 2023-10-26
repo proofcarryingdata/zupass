@@ -184,7 +184,7 @@ export function useLaserScanner() {
         }
       }
       // Check if the pressed key is a url string
-      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#/]$/.test(event.key)) {
+      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#?/]$/.test(event.key)) {
         setTypedText((prevText) => prevText + event.key);
       }
     }
