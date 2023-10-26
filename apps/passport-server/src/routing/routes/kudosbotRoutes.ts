@@ -35,14 +35,14 @@ export function initKudosbotRoutes(
   app.get("/kudos/username", async (req: Request, res: Response) => {
     const semaphoreId = req.query.semaphore_id;
     if (typeof semaphoreId !== "string" || semaphoreId.length === 0) {
-      return res.status(200).send("Error: no semaphore id was passed in.");
+      return res.status(400).send("Error: no semaphore id was passed in.");
     }
     const username = await fetchTelegramUsernameFromSemaphoreId(
       context.dbPool,
       semaphoreId
     );
     if (username === null) {
-      return res.status(200).send("Error: no username for semaphore id.");
+      return res.status(400).send("Error: no username for semaphore id.");
     }
     res.status(200).json({ username });
   });
@@ -50,30 +50,30 @@ export function initKudosbotRoutes(
   app.get("/kudos/upload", async (req: Request, res: Response) => {
     const proof = req.query.proof;
     if (typeof proof !== "string" || proof.length === 0) {
-      return res.status(200).send("Error: no proof was uploaded.");
+      return res.status(400).send("Error: no proof was uploaded.");
     }
 
     let pcd: SemaphoreSignaturePCD;
     try {
       pcd = await deserialize(JSON.parse(proof).pcd);
     } catch (e) {
-      return res.status(200).send("Error: proof deserialization error.");
+      return res.status(400).send("Error: proof deserialization error.");
     }
 
     const pcdValid = await verify(pcd);
     if (!pcdValid) {
-      return res.status(200).send("Error: proof is not valid.");
+      return res.status(400).send("Error: proof is not valid.");
     }
 
     const kudosGiverSemaphoreId = pcd.claim.identityCommitment;
     const kudosDataRaw = pcd.claim.signedMessage;
     const kudosData = deserializeKudosData(kudosDataRaw);
     if (!kudosData) {
-      return res.status(200).send("Error: not a valid kudos proof.");
+      return res.status(400).send("Error: not a valid kudos proof.");
     }
     if (kudosData.giver != kudosGiverSemaphoreId) {
       return res
-        .status(200)
+        .status(400)
         .send(
           "Error: kudos giver semaphore id does not match proof identity commitment"
         );
