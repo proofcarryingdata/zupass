@@ -99,9 +99,9 @@ export default function ZuAuthButton({
           type === ZKEdDSAEventTicketPCDPackage.name ||
           type === SemaphoreSignaturePCDPackage.name
         ) {
-          await authenticate(pcdStr);
+          const isAuthenticated = await authenticate(pcdStr);
 
-          setAuthenticated(true);
+          setAuthenticated(isAuthenticated);
         }
 
         if (type === EdDSATicketPCDPackage.name) {
