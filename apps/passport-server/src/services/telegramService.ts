@@ -2,7 +2,7 @@ import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, sleep } from "@pcd/util";
+import { ONE_HOUR_MS, bigintToPseudonym, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -852,7 +852,8 @@ export class TelegramService {
 
       try {
         await this.anonBot.api.sendMessage(chatId, message, {
-          message_thread_id: topicId
+          message_thread_id: topicId,
+          parse_mode: "HTML"
         });
       } catch (error: { error_code: number; description: string } & any) {
         const isDeletedThread =
@@ -989,12 +990,12 @@ export class TelegramService {
 
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
-    message: string,
+    rawMessage: string,
     topicId: string
   ): Promise<void> {
     return traced("telegram", "handleSendAnonymousMessage", async (span) => {
       span?.setAttribute("topicId", topicId);
-      span?.setAttribute("message", message);
+      span?.setAttribute("message", rawMessage);
 
       logger("[TELEGRAM] Verifying anonymous message");
 
@@ -1033,10 +1034,10 @@ export class TelegramService {
         return BigInt("0x" + hashed);
       }
 
-      if (getMessageWatermark(message).toString() !== watermark.toString()) {
+      if (getMessageWatermark(rawMessage).toString() !== watermark.toString()) {
         throw new Error(
-          `Anonymous message string ${message} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
-            message
+          `Anonymous message string ${rawMessage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+            rawMessage
           ).toString()}`
         );
       }
@@ -1074,11 +1075,12 @@ export class TelegramService {
         nullifierHash
       );
 
+      const currentTime = new Date();
       if (!nullifierData) {
         await insertOrUpdateTelegramNullifier(
           this.context.dbPool,
           nullifierHash,
-          [new Date().toISOString()]
+          [currentTime.toISOString()]
         );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
@@ -1111,10 +1113,17 @@ export class TelegramService {
         }
       }
 
+      const formattedMessage = `${bigintToPseudonym(BigInt(nullifierHash))}
+
+${rawMessage}
+
+<i>submitted ${currentTime.toLocaleString("en-DB")}</i>
+      `;
+
       await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
-        message
+        formattedMessage
       );
     });
   }
