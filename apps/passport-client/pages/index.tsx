@@ -87,22 +87,31 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        {!isWebAssemblySupported() ? (
-          <HashRouter>
-            <Routes>
-              <Route path="/terms" element={<TermsScreen />} />
-              <Route path="*" element={<NoWASMScreen />} />
-            </Routes>
-          </HashRouter>
-        ) : !hasStack ? (
-          <Router />
-        ) : (
-          <HashRouter>
-            <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
-            </Routes>
-          </HashRouter>
-        )}
+        {/*
+         * <AppThemeProvider /> currently has the wrong prop typing.
+         * This will be fixed once this pull request is merged:
+         * https://github.com/skiff-org/skiff-ui/pull/392.
+         */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore */}
+        <AppThemeProvider>
+          {!isWebAssemblySupported() ? (
+            <HashRouter>
+              <Routes>
+                <Route path="/terms" element={<TermsScreen />} />
+                <Route path="*" element={<NoWASMScreen />} />
+              </Routes>
+            </HashRouter>
+          ) : !hasStack ? (
+            <Router />
+          ) : (
+            <HashRouter>
+              <Routes>
+                <Route path="*" element={<AppContainer bg="gray" />} />
+              </Routes>
+            </HashRouter>
+          )}
+        </AppThemeProvider>
       </StateContext.Provider>
     );
   }
@@ -243,8 +252,6 @@ registerServiceWorker();
 const root = createRoot(document.querySelector("#root"));
 root.render(
   <RollbarProvider>
-    <AppThemeProvider>
-      <App />
-    </AppThemeProvider>
+    <App />
   </RollbarProvider>
 );
