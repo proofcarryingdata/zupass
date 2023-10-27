@@ -689,6 +689,7 @@ async function sync(state: AppState, update: ZuUpdate) {
   // not, wait to upload on another sync triggered when self changes.
   if (!state.self) {
     console.error("[SYNC] no user available to upload");
+    return;
   }
 
   console.log("[SYNC] sync action: upload");
