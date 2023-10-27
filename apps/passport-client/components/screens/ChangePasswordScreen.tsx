@@ -149,6 +149,8 @@ export function ChangePasswordScreen() {
         <HR />
         <Spacer h={24} />
         <LinkButton to={"/"}>Cancel</LinkButton>
+        <Spacer h={128} />
+        <Spacer h={128} />
       </>
     );
   }
