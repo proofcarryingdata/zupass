@@ -1,6 +1,7 @@
 import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { AppThemeProvider } from "@skiff-org/skiff-ui";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -242,6 +243,8 @@ registerServiceWorker();
 const root = createRoot(document.querySelector("#root"));
 root.render(
   <RollbarProvider>
-    <App />
+    <AppThemeProvider>
+      <App />
+    </AppThemeProvider>
   </RollbarProvider>
 );
