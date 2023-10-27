@@ -22,15 +22,13 @@ const PasswordStrengthProgress: FC<PasswordStrengthProgressProps> = ({
       case PasswordStrength.MODERATE:
         return {
           progressColor: "yellow",
-          progress: 75,
-          tooltip: "Medium password"
+          progress: 75
         };
       case PasswordStrength.STRONG:
       default:
         return {
           progressColor: "green",
-          progress: 100,
-          tooltip: "Strong password"
+          progress: 100
         };
     }
   };
