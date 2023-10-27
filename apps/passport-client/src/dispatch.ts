@@ -695,13 +695,24 @@ async function sync(state: AppState, update: ZuUpdate) {
   update({
     uploadingUploadId: uploadId
   });
-  // TODO(artwyman): Add serverStorageRevision here, but only after
+  // TODO(artwyman): Add serverStorageRevision input here, but only after
   // we're able to respond to a conflict by downloading.
-  await uploadStorage(state.self, state.pcds, state.subscriptions);
-  update({
-    uploadingUploadId: undefined,
-    uploadedUploadId: uploadId
-  });
+  const upRes = await uploadStorage(
+    state.self,
+    state.pcds,
+    state.subscriptions
+  );
+  if (upRes.success) {
+    update({
+      uploadingUploadId: undefined,
+      uploadedUploadId: uploadId,
+      serverStorageRevision: upRes.value.revision
+    });
+  } else {
+    update({
+      uploadingUploadId: undefined
+    });
+  }
 }
 
 async function resolveSubscriptionError(

@@ -5,6 +5,7 @@ import {
   FeedSubscriptionManager,
   SyncedEncryptedStorageV2,
   SyncedEncryptedStorageV3,
+  UploadEncryptedStorageResult,
   User,
   deserializeStorage,
   requestChangeBlobKey,
@@ -65,7 +66,7 @@ export async function uploadStorage(
   user: User,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager
-): Promise<void> {
+): Promise<UploadEncryptedStorageResult> {
   const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 
@@ -96,6 +97,7 @@ export async function uploadStorage(
   } else {
     console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
   }
+  return uploadResult;
 }
 
 export type SyncStorageResult = APIResult<
