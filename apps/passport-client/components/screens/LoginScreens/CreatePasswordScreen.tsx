@@ -154,8 +154,8 @@ export function CreatePasswordScreen() {
             </Button>
           </TextCenter>
         </CenterColumn>
-        <Spacer h={128} />
-        <Spacer h={128} />
+        {/* Add spacing to bottom for iOS keyboard */}
+        <Spacer h={512} />
       </>
     );
   }
