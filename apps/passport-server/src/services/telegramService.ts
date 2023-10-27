@@ -641,7 +641,6 @@ export class TelegramService {
             messageThreadId
           );
 
-          // If the topic doesn't exist, add it and the chatId to the DB.
           if (!topic)
             throw new Error(
               `No topic found. Edit the topic name and try again!`
