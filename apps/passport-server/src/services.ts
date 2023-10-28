@@ -1,8 +1,11 @@
+import { startAnonBotService } from "./services/anonBotService";
+import { startAuthBotService } from "./services/authBotService";
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
+import { startFwdBotService } from "./services/fwdBotService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
@@ -11,7 +14,6 @@ import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startProvingService } from "./services/provingService";
 import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
-import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
 import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
@@ -29,7 +31,9 @@ export async function startServices(
   const multiprocessService = startMultiProcessService();
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
-  const telegramService = await startTelegramService(context, rollbarService);
+  const authBotService = await startAuthBotService(context, rollbarService);
+  const anonBotService = await startAnonBotService(context, rollbarService);
+  const fwdBotService = await startFwdBotService(context, rollbarService);
   const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
@@ -84,10 +88,12 @@ export async function startServices(
     metricsService,
     issuanceService,
     discordService,
-    telegramService,
     kudosbotService,
     persistentCacheService,
-    multiprocessService
+    multiprocessService,
+    authBotService,
+    anonBotService,
+    fwdBotService
   };
   return services;
 }
@@ -97,7 +103,9 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.semaphoreService.stop();
   services.zuzaluPretixSyncService?.stop();
   services.metricsService.stop();
-  services.telegramService?.stop();
+  services.authBotService?.stop();
+  services.anonBotService?.stop();
+  services.fwdBotService?.stop();
   services.kudosbotService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();

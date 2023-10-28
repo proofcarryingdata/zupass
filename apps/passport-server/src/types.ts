@@ -5,6 +5,8 @@ import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import { AnonBotService } from "./services/anonBotService";
+import { AuthBotService } from "./services/authBotService";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -12,6 +14,7 @@ import {
 import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
+import { FwdBotService } from "./services/fwdBotService";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
@@ -20,7 +23,6 @@ import { PersistentCacheService } from "./services/persistentCacheService";
 import { ProvingService } from "./services/provingService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
-import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
 import { ZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
@@ -46,7 +48,9 @@ export interface GlobalServices {
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
-  telegramService: TelegramService | null;
+  authBotService: AuthBotService | null;
+  anonBotService: AnonBotService | null;
+  fwdBotService: FwdBotService | null;
   kudosbotService: KudosbotService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;

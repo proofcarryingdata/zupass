@@ -1,4 +1,5 @@
 import { MenuRange } from "@grammyjs/menu";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -6,6 +7,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
+  ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -44,6 +46,14 @@ import {
 import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
 
+export const ALLOWED_TICKET_MANAGERS = [
+  "cha0sg0d",
+  "notdavidhuang",
+  "richardyliu",
+  "gubsheep",
+  "chubivan"
+];
+
 export type TopicChat = Chat.SupergroupChat | null;
 
 type ChatIDWithChat<T extends { telegramChatID?: string }> = T & {
@@ -57,17 +67,21 @@ interface BotCommandWithAnon extends BotCommand {
 
 export interface SessionData {
   dbPool: Pool;
-  selectedEvent?: LinkedPretixTelegramEvent;
-  anonBotExists: boolean;
-  authBotURL: string;
-  anonBotURL: string;
-  lastMessageId?: number;
+  anonBotExists?: boolean;
   selectedChat?: TopicChat;
   kudosData?: { giver: string; receiver: string };
   topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
+export interface AuthSessionData extends SessionData {
+  lastMessageId?: number;
+  selectedEvent?: LinkedPretixTelegramEvent;
+}
+
 export type BotContext = Context & SessionFlavor<SessionData>;
+export interface AuthBotContext
+  extends Context,
+    SessionFlavor<AuthSessionData> {}
 
 export const getGroupChat = async (
   api: Api<RawApi>,
@@ -82,7 +96,7 @@ export const getGroupChat = async (
   });
 };
 
-const privateChatCommands: BotCommandWithAnon[] = [
+export const privateChatCommands: BotCommandWithAnon[] = [
   {
     command: "/start",
     description: "Join a group with a proof of ticket",
@@ -101,7 +115,7 @@ const privateChatCommands: BotCommandWithAnon[] = [
   }
 ];
 
-const adminGroupChatCommands: BotCommandWithAnon[] = [
+export const adminGroupChatCommands: BotCommandWithAnon[] = [
   {
     command: "/incognito",
     description: "Set a topic for anonymous posting",
@@ -316,7 +330,7 @@ export const isGroupWithTopics = (chat: Chat): boolean => {
   return !!(chat?.type && chat?.type === "supergroup");
 };
 
-const checkDeleteMessage = (ctx: BotContext): void => {
+const checkDeleteMessage = (ctx: AuthBotContext): void => {
   if (ctx.chat?.id && ctx.session?.lastMessageId) {
     ctx.api.deleteMessage(ctx.chat.id, ctx.session.lastMessageId);
     ctx.session.lastMessageId = 0;
@@ -324,7 +338,7 @@ const checkDeleteMessage = (ctx: BotContext): void => {
 };
 
 const editOrSendMessage = async (
-  ctx: BotContext,
+  ctx: AuthBotContext,
   replyText: string
 ): Promise<void> => {
   if (ctx.chat?.id && ctx.session.lastMessageId) {
@@ -460,8 +474,8 @@ const getChatsWithMembershipStatus = async (
 };
 
 export const eventsToLink = async (
-  ctx: BotContext,
-  range: MenuRange<BotContext>
+  ctx: AuthBotContext,
+  range: MenuRange<AuthBotContext>
 ): Promise<void> => {
   const db = ctx.session.dbPool;
   if (!db) {
@@ -539,8 +553,8 @@ export const eventsToLink = async (
 };
 
 export const chatsToJoin = async (
-  ctx: BotContext,
-  range: MenuRange<BotContext>
+  ctx: AuthBotContext,
+  range: MenuRange<AuthBotContext>
 ): Promise<void> => {
   return traced("telegram", "chatsToJoin", async (span) => {
     const db = ctx.session.dbPool;
@@ -677,15 +691,9 @@ export const chatsToPostIn = async (
             }
           }
         } else {
-          if (ctx.session.anonBotExists) {
-            await ctx.reply(
-              `No chats found to post in. Click here to join one: ${ctx.session.authBotURL}?start=auth`
-            );
-          } else {
-            await ctx.reply(
-              `No chats found to post in. Type /start to join one!`
-            );
-          }
+          await ctx.reply(
+            `No chats found to post in. Type /start to join one!`
+          );
         }
       }
     } catch (error) {
@@ -906,4 +914,46 @@ const reduceFwdList = (
   }, []);
 
   return reducedList;
+};
+
+export const verifyZKEdDSAEventTicketPCD = async (
+  serializedZKEdDSATicket: string
+): Promise<ZKEdDSAEventTicketPCD | null> => {
+  return traced("telegram", "verifyZKEdDSAEventTicketPCD", async (span) => {
+    let pcd: ZKEdDSAEventTicketPCD;
+
+    try {
+      pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+        JSON.parse(serializedZKEdDSATicket).pcd
+      );
+    } catch (e) {
+      throw new Error(`Deserialization error, ${e}`);
+    }
+
+    let signerMatch = false;
+
+    if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
+      throw new Error(`Missing server eddsa private key .env value`);
+
+    // This Pubkey value should work for staging + prod as well, but needs to be tested
+    const TICKETING_PUBKEY = await getEdDSAPublicKey(
+      process.env.SERVER_EDDSA_PRIVATE_KEY
+    );
+
+    signerMatch =
+      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
+
+    span?.setAttribute("signerMatch", signerMatch);
+    if (
+      // TODO: wrap in a MultiProcessService?
+      (await ZKEdDSAEventTicketPCDPackage.verify(pcd)) &&
+      signerMatch
+    ) {
+      return pcd;
+    } else {
+      logger("[TELEGRAM] pcd invalid");
+      return null;
+    }
+  });
 };

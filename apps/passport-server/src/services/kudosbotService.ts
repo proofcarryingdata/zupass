@@ -253,9 +253,7 @@ export async function startKudosbotService(
   const initial = (): SessionData => {
     return {
       dbPool: context.dbPool,
-      anonBotExists: false,
-      authBotURL: "",
-      anonBotURL: ""
+      anonBotExists: false
     };
   };
 

@@ -10,7 +10,7 @@ import { checkQueryParam, checkUrlParam } from "../params";
 export function initTelegramRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { telegramService, rollbarService }: GlobalServices
+  { authBotService, anonBotService, rollbarService }: GlobalServices
 ): void {
   logger("[INIT] initializing Telegram routes");
 
@@ -43,10 +43,10 @@ export function initTelegramRoutes(
 
       logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
 
-      if (!telegramService) {
-        throw new Error("Telegram service not initialized");
+      if (!authBotService) {
+        throw new Error("Telegram auth service not initialized");
       }
-      await telegramService.handleVerification(
+      await authBotService.handleVerification(
         proof,
         parseInt(telegram_user_id)
       );
@@ -92,11 +92,11 @@ export function initTelegramRoutes(
         throw new Error("topicId field needs to be a string and be non-empty");
       }
 
-      if (!telegramService) {
+      if (!anonBotService) {
         throw new Error("Telegram service not initialized");
       }
 
-      await telegramService.handleSendAnonymousMessage(proof, message, topicId);
+      await anonBotService.handleSendAnonymousMessage(proof, message, topicId);
       logger(`[TELEGRAM] Posted anonymous message: ${message}`);
       res.setHeader("Content-Type", "text/html");
       res.send(closeWebviewHtml);
@@ -116,11 +116,11 @@ export function initTelegramRoutes(
       const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
       if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
 
-      if (!telegramService) {
+      if (!anonBotService) {
         throw new Error("Telegram service not initialized");
       }
       const redirectUrl =
-        await telegramService.handleRequestAnonymousMessageLink(
+        await anonBotService.handleRequestAnonymousMessageLink(
           parseInt(chatId),
           parseInt(topicId)
         );
