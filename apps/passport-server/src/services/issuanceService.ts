@@ -1182,7 +1182,11 @@ export class IssuanceService {
           verified: true,
           group: KnownTicketGroup.Zuconnect23,
           publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-          productId: zuconnectTicket.product_id
+          productId: zuconnectTicket.product_id,
+          ticketName:
+            zuconnectTicket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
+              ? zuconnectTicket.extra_info.join("\n")
+              : zuconnectProductIdToName(zuconnectTicket.product_id)
         }
       };
     } else {
@@ -1202,7 +1206,8 @@ export class IssuanceService {
                 ? ZUZALU_23_VISITOR_PRODUCT_ID
                 : zuzaluTicket.role === ZuzaluUserRole.Organizer
                 ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID
+                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            ticketName: undefined
           }
         };
       }

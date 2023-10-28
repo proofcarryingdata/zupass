@@ -30,6 +30,7 @@ type VerifyResult =
       productId: string;
       group: KnownTicketGroup;
       publicKeyName: string;
+      ticketName?: string;
     }
   | {
       outcome: VerifyOutcome.NotVerified;
@@ -110,6 +111,7 @@ export function SecondPartyTicketVerifyScreen() {
               productId={verifyResult.productId}
               category={verifyResult.group}
               publicKeyName={verifyResult.publicKeyName}
+              ticketName={verifyResult.ticketName}
             />
           )}
       </Placeholder>
@@ -133,11 +135,13 @@ export function SecondPartyTicketVerifyScreen() {
 function VerifiedAndKnownTicket({
   productId,
   publicKeyName,
-  category
+  category,
+  ticketName
 }: {
   productId: string;
   publicKeyName: string;
   category: KnownTicketGroup;
+  ticketName: string | undefined;
 }) {
   // Devconnect tickets with the "simple" QR code have a separate "check-in"
   // flow and never come here.
@@ -148,6 +152,7 @@ function VerifiedAndKnownTicket({
       <ZuconnectKnownTicketDetails
         productId={productId}
         publicKeyName={publicKeyName}
+        ticketName={ticketName}
       />
     );
   }
@@ -215,7 +220,8 @@ async function verifyById(
       outcome: VerifyOutcome.KnownTicketType,
       productId: result.value.productId,
       publicKeyName: result.value.publicKeyName,
-      group: result.value.group
+      group: result.value.group,
+      ticketName: result.value.ticketName
     };
   }
 

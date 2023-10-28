@@ -354,6 +354,7 @@ export type VerifyTicketByIdResponseValue =
       publicKeyName: string;
       group: KnownTicketGroup;
       productId: string;
+      ticketName?: string;
     }
   | {
       verified: false;
