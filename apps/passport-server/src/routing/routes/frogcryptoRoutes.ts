@@ -1,9 +1,14 @@
 import {
+  FrogCryptoManageFrogsRequest,
+  FrogCryptoManageFrogsResponseValue,
+  FrogCryptoUserStateRequest,
+  FrogCryptoUserStateResponseValue,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import * as uuid from "uuid";
 import {
   FeedProviderName,
   IssuanceService
@@ -16,7 +21,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 export function initFrogcryptoRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { issuanceService }: GlobalServices
+  { issuanceService, frogcryptoService }: GlobalServices
 ): void {
   logger("[INIT] initializing frogcrypto routes");
 
@@ -69,5 +74,48 @@ export function initFrogcryptoRoutes(
         FeedProviderName.FROGCRYPTO
       )
     );
+  });
+
+  app.get("/frogcrypto/user-state", async (req, res) => {
+    const result = await frogcryptoService.getUserState(
+      req.body as FrogCryptoUserStateRequest
+    );
+    res.json(result satisfies FrogCryptoUserStateResponseValue);
+  });
+
+  // TODO: serve real frog images
+  app.get("/frogcrypto/images/:uuid", async (req, res) => {
+    const imageId = checkUrlParam(req, "uuid");
+
+    let parsedUuid;
+    try {
+      parsedUuid = uuid.parse(imageId);
+    } catch (e) {
+      throw new PCDHTTPError(400, `invalid uuid ${imageId}`);
+    }
+
+    // convert to integer - see answers to https://stackoverflow.com/q/39346517/2860309
+    const buffer = Buffer.from(parsedUuid);
+    const result = buffer.readUInt32BE(0);
+
+    const frogPaths: string[] = [
+      "images/frogs/frog.jpeg",
+      "images/frogs/frog2.jpeg",
+      "images/frogs/frog3.jpeg",
+      "images/frogs/frog4.jpeg"
+    ];
+
+    res.redirect(
+      `${process.env.PASSPORT_CLIENT_URL}/${
+        frogPaths[result % frogPaths.length]
+      }`
+    );
+  });
+
+  app.post("/frogcrypto/manage/frogs", async (req, res) => {
+    const result = await frogcryptoService.manageFrogData(
+      req.body as FrogCryptoManageFrogsRequest
+    );
+    res.json(result satisfies FrogCryptoManageFrogsResponseValue);
   });
 }

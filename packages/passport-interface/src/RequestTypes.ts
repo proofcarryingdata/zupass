@@ -3,6 +3,7 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { FrogCryptoFrogData } from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
@@ -612,3 +613,26 @@ export interface AgreeToTermsResponseValue {
  * issue the user.
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
+
+/**
+ * User asks metadata about themselves such as when they can get next frog.
+ */
+export interface FrogCryptoUserStateRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+export interface FrogCryptoComputedUserState {
+  feedId: string;
+  lastFetchedAt: number;
+  nextFetchAt: number;
+}
+export interface FrogCryptoUserStateResponseValue {
+  feeds: FrogCryptoComputedUserState[];
+}
+
+export interface FrogCryptoManageFrogsRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  frogs: FrogCryptoFrogData[];
+}
+export interface FrogCryptoManageFrogsResponseValue {
+  frogs: FrogCryptoFrogData[];
+}

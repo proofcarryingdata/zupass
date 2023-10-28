@@ -279,3 +279,11 @@ export interface TelegramForwardFetch {
   receiverTopicName: string;
   receiverChatID: string;
 }
+
+/**
+ * FrogCrypto Data Models
+ */
+export interface FrogCryptoUserFeedState {
+  feed_id: string;
+  last_fetched_at: Date;
+}

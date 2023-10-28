@@ -74,6 +74,9 @@ export enum Temperament {
   YOLO
 }
 
+export const TEMPERAMENT_MIN = Temperament.ANGY;
+export const TEMPERAMENT_MAX = Temperament.YOLO;
+
 /**
  * FROGCRYPTO Data Model
  */

@@ -1,9 +1,6 @@
 import {
   Biome,
   EdDSAFrogPCDPackage,
-  IFrogData,
-  Rarity,
-  Temperament
 } from "@pcd/eddsa-frog-pcd";
 import {
   Feed,
@@ -15,12 +12,8 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
-import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
+import { PCDPackage } from "@pcd/pcd-types";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { FeedProviderName } from "../services/issuanceService";
 
@@ -51,6 +44,10 @@ export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
    * How long to wait between each PCD issuance in seconds
    */
   cooldown: number;
+  /**
+   * Biomes that can be issued from this feed
+   */
+  biomes: Biome[];
 }
 
 const commonFeedConfig: Pick<
@@ -86,7 +83,8 @@ export const FROGCRYPTO_FEEDS: FrogCryptoFeed[] = [
     description: "Bog",
     private: false,
     active: true,
-    cooldown: 60
+    cooldown: 60,
+    biomes: [Biome.Jungle, Biome.Swamp, Biome.Unknown]
   },
   {
     id: "9e827420-79c4-4a84-b8d3-65cecdf495bc",
@@ -94,7 +92,8 @@ export const FROGCRYPTO_FEEDS: FrogCryptoFeed[] = [
     description: "Cog",
     private: true,
     active: true,
-    cooldown: 180
+    cooldown: 180,
+    biomes: [Biome.Jungle, Biome.Swamp, Biome.Unknown]
   },
   {
     id: "4fdb8af9-5334-4037-a176-cef05158ef66",
@@ -102,7 +101,17 @@ export const FROGCRYPTO_FEEDS: FrogCryptoFeed[] = [
     description: "Dog",
     private: true,
     active: false,
-    cooldown: 60
+    cooldown: 60,
+    biomes: [Biome.Jungle, Biome.Swamp, Biome.Unknown]
+  },
+  {
+    id: "ca2e9b76-2337-4eb6-8b08-40191bb5017d",
+    name: "God",
+    description: "God",
+    private: true,
+    active: true,
+    cooldown: 600,
+    biomes: [Biome.TheWrithingVoid]
   }
 ].map((config) => ({ ...config, ...commonFeedConfig }));
 
@@ -144,65 +153,4 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
       feeds: this.hostedFeed.map((f) => f.feed).filter((f) => !f.private)
     };
   }
-}
-
-// TODO: This is a temporary hack to get the server to work.
-// We will store this in the database eventually.
-// This key is `${feedId}_${identity}`
-const LAST_FETCHED_AT = new Map<string, number>();
-
-/**
- * Returns the number of milliseconds until the next fetch is available.
- */
-export async function getNextFetchAvailable(
-  id: string,
-  feed: FrogCryptoFeed
-): Promise<number> {
-  const lastFetchedAt = LAST_FETCHED_AT.get(`${feed.id}_${id}`) ?? 0;
-  const now = Date.now();
-  return Math.max(0, lastFetchedAt + feed.cooldown * 1000 - now);
-}
-
-export async function createFrogData(
-  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-  feed: FrogCryptoFeed
-): Promise<IFrogData> {
-  if (serializedPCD.type !== SemaphoreSignaturePCDPackage.name) {
-    throw new Error("Invalid PCD type");
-  }
-  const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
-  const id = pcd.claim.identityCommitment;
-
-  const nextFetchAvailable = await getNextFetchAvailable(id, feed);
-  if (nextFetchAvailable > 0) {
-    throw new PCDHTTPError(
-      403,
-      `Next fetch available in ${nextFetchAvailable} milliseconds`
-    );
-  }
-  LAST_FETCHED_AT.set(`${feed.id}_${id}`, Date.now());
-
-  // TODO: sample frog from db
-  const frogPaths: string[] = [
-    "images/frogs/frog.jpeg",
-    "images/frogs/frog2.jpeg",
-    "images/frogs/frog3.jpeg",
-    "images/frogs/frog4.jpeg"
-  ];
-
-  return {
-    name: "test name",
-    description: "test description",
-    imageUrl: _.sample(frogPaths) ?? "",
-    frogId: 0,
-    biome: Biome.Unknown,
-    rarity: Rarity.Unknown,
-    temperament: Temperament.UNKNOWN,
-    jump: _.random(0, 10),
-    speed: _.random(0, 10),
-    intelligence: _.random(0, 10),
-    beauty: _.random(0, 10),
-    timestampSigned: Date.now(),
-    ownerSemaphoreId: id
-  };
 }

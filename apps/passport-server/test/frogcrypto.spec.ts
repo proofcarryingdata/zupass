@@ -1,4 +1,4 @@
-import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   PollFeedResult,
   createFeedCredentialPayload,
@@ -13,12 +13,19 @@ import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
+import { insertFrogData } from "../src/database/queries/frogcrypto";
 import { Zupass } from "../src/types";
-import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
-import { testLogin } from "./user/testLoginPCDPass";
+import {
+  FROGCRYPTO_FEEDS,
+  FrogCryptoFeed,
+} from "../src/util/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
+import { testFrogs } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
-import { randomEmail } from "./util/util";
+
+const DATE_EPOCH_1H = new Date(60 * 60 * 1000);
+const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
+const DATE_EPOCH_1H1M59S = new Date(DATE_EPOCH_1H1M.getTime() + 59 * 1000);
 
 describe("frogcrypto functionality", function () {
   this.timeout(30_000);
@@ -30,6 +37,7 @@ describe("frogcrypto functionality", function () {
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
     db = await getDB();
+    await insertFrogData(db, testFrogs);
 
     application = await startTestingApp();
 
@@ -41,21 +49,8 @@ describe("frogcrypto functionality", function () {
     await db.end();
   });
 
-  it("should be able to log in", async function () {
-    const result = await testLogin(application, randomEmail(), {
-      expectEmailIncorrect: false,
-      expectUserAlreadyLoggedIn: false,
-      force: false,
-      skipSetupPassword: false
-    });
-
-    if (!result) {
-      throw new Error("failed to log in");
-    }
-
-    expect(result).to.not.be.undefined;
-
-    identity = result.identity;
+  this.beforeEach(async () => {
+    identity = new Identity();
   });
 
   it("should be able to discover only public feeds", async function () {
@@ -76,20 +71,7 @@ describe("frogcrypto functionality", function () {
     expect(feed.active).to.be.true;
     expect(feed.private).to.be.false;
 
-    const response = await getFrog(feed);
-    expect(response.success).to.be.true;
-
-    expect(response.value?.actions.length).to.eq(1);
-    const populateAction = response.value?.actions[0] as AppendToFolderAction;
-    expect(populateAction.type).to.eq(PCDActionType.AppendToFolder);
-    expect(populateAction.folder).to.eq("FrogCrypto");
-    expect(populateAction.pcds[0].type).to.eq(EdDSAFrogPCDPackage.name);
-
-    frogPCD = await EdDSAFrogPCDPackage.deserialize(populateAction.pcds[0].pcd);
-    expect(frogPCD.claim.data.ownerSemaphoreId).to.eq(
-      identity.commitment.toString()
-    );
-    expect(EdDSAFrogPCDPackage.verify(frogPCD)).to.eventually.become(true);
+    await testGetFrog(feed, DATE_EPOCH_1H);
   });
 
   it("should be able to get frog even if feed is private", async () => {
@@ -97,7 +79,55 @@ describe("frogcrypto functionality", function () {
     expect(feed.active).to.be.true;
     expect(feed.private).to.be.true;
 
-    const response = await getFrog(feed);
+    await testGetFrog(feed, DATE_EPOCH_1H);
+  });
+
+  it("should not be able to get frog if feed is inactive", async () => {
+    const feed = FROGCRYPTO_FEEDS[2];
+    expect(feed.active).to.be.false;
+    expect(feed.private).to.be.true;
+
+    await testGetFrogFail(feed, DATE_EPOCH_1H, "not active");
+  });
+
+  it("should be able to get frog if after cooldown", async () => {
+    const feed = FROGCRYPTO_FEEDS[0];
+    expect(feed.active).to.be.true;
+    expect(feed.private).to.be.false;
+    expect(feed.cooldown).to.eq(60);
+
+    await testGetFrog(feed, DATE_EPOCH_1H);
+    await testGetFrog(feed, DATE_EPOCH_1H1M);
+  });
+
+  it("should not be able to get frog if before cooldown", async () => {
+    const feed = FROGCRYPTO_FEEDS[0];
+    expect(feed.active).to.be.true;
+    expect(feed.private).to.be.false;
+    expect(feed.cooldown).to.eq(60);
+
+    await testGetFrog(feed, DATE_EPOCH_1H1M);
+    await testGetFrogFail(
+      feed,
+      DATE_EPOCH_1H1M59S,
+      "Next fetch available at 3720000"
+    );
+  });
+
+  it("should get 404 if no frogs are available", async () => {
+    const feed = FROGCRYPTO_FEEDS[3];
+    expect(feed.active).to.be.true;
+    expect(feed.private).to.be.true;
+    expect(feed.biomes).to.have.same.members([Biome.TheWrithingVoid]);
+
+    await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog Not Found");
+  });
+
+  async function testGetFrog(
+    feed: FrogCryptoFeed,
+    now: Date
+  ): Promise<PollFeedResult> {
+    const response = await getFrog(feed, now);
     expect(response.success).to.be.true;
 
     expect(response.value?.actions.length).to.eq(1);
@@ -107,24 +137,29 @@ describe("frogcrypto functionality", function () {
     expect(populateAction.pcds[0].type).to.eq(EdDSAFrogPCDPackage.name);
 
     frogPCD = await EdDSAFrogPCDPackage.deserialize(populateAction.pcds[0].pcd);
+    expect(EdDSAFrogPCDPackage.verify(frogPCD)).to.eventually.become(true);
     expect(frogPCD.claim.data.ownerSemaphoreId).to.eq(
       identity.commitment.toString()
     );
-    expect(EdDSAFrogPCDPackage.verify(frogPCD)).to.eventually.become(true);
-  });
+    return response;
+  }
 
-  it("should not be able to get frog if feed is inactive", async () => {
-    const feed = FROGCRYPTO_FEEDS[2];
-    expect(feed.active).to.be.false;
-    expect(feed.private).to.be.true;
-
-    const response = await getFrog(feed);
+  async function testGetFrogFail(
+    feed: FrogCryptoFeed,
+    now: Date,
+    error: string
+  ): Promise<PollFeedResult> {
+    const response = await getFrog(feed, now);
     expect(response.success).to.be.false;
-    expect(response.error).to.include("not active");
-  });
+    expect(response.error).to.include(error);
+    return response;
+  }
 
-  async function getFrog(feed: FrogCryptoFeed): Promise<PollFeedResult> {
-    MockDate.set(new Date());
+  async function getFrog(
+    feed: FrogCryptoFeed,
+    now: Date
+  ): Promise<PollFeedResult> {
+    MockDate.set(now);
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
       `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
