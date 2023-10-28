@@ -1,7 +1,7 @@
 import { gzip, ungzip } from "pako";
 import qr from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);
@@ -109,6 +109,7 @@ export function QRDisplayWithRegenerateAndStorage({
       value={savedState?.payload}
       fgColor={fgColor}
       bgColor={bgColor}
+      saved={!!savedState}
     />
   );
 }
@@ -117,15 +118,17 @@ export function QRDisplay({
   value,
   logoOverlay,
   fgColor,
-  bgColor
+  bgColor,
+  saved
 }: {
   value?: string;
   logoOverlay?: React.ReactNode;
   fgColor?: string;
   bgColor?: string;
+  saved: boolean;
 }) {
   return (
-    <QRWrap>
+    <QRWrap saved={saved}>
       {value !== undefined && (
         <QR
           value={value}
@@ -139,9 +142,13 @@ export function QRDisplay({
 }
 
 // Style constants
-const QRWrap = styled.div`
+const QRWrap = styled.div<{ saved: boolean }>`
+  ${({ saved }) => (saved ? css`` : css``)}
+  height: 0;
+  padding-bottom: 100%;
   position: relative;
   margin: 0 auto;
+  width: 100%;
 `;
 
 export function QR({
@@ -184,6 +191,7 @@ const Container = styled.div`
   height: 100% !important;
 
   svg {
+    position: absolute;
     width: 100%;
     height: 100%;
   }
