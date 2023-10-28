@@ -23,9 +23,14 @@ import { SemaphoreSignatureKudosPCDCardBody } from "./CardBody";
 export const SemaphoreSignatureKudosPCDTypeName =
   "semaphore-signature-kudos-pcd";
 
+export interface KudosUserInfo {
+  semaphoreID: string;
+  telegramUsername: string;
+}
+
 export interface IKudosData {
-  senderSemaphoreID: string;
-  recipientSemaphoreID: string;
+  sender: KudosUserInfo;
+  recipient: KudosUserInfo;
   watermark: string;
 }
 
@@ -236,7 +241,7 @@ export function getDisplayOptions(
     };
   }
 
-  const header = `#${kudosData.senderSemaphoreID} ${kudosData.recipientSemaphoreID} ${kudosData.watermark}`;
+  const header = `@${kudosData.sender.telegramUsername} gave @${kudosData.recipient.telegramUsername} a kudos: ${kudosData.watermark}`;
 
   return {
     header,
