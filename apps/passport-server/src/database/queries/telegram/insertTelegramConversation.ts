@@ -47,8 +47,7 @@ export async function insertTelegramEvent(
     `\
 insert into telegram_bot_events (ticket_event_id, telegram_chat_id)
 values ($1, $2)
-on conflict (ticket_event_id) do update
-set telegram_chat_id = $2;`,
+on conflict (ticket_event_id, telegram_chat_id) do nothing;`,
     [ticketEventId, telegramChatId]
   );
   return result.rowCount;
