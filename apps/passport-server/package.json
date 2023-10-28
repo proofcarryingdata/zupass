@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -32,7 +32,7 @@
     "@pcd/semaphore-group-pcd": "0.8.0",
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "@pcd/semaphore-signature-pcd": "0.8.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "0.2.0",
+    "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
     "@semaphore-protocol/group": "^3.14.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@sendgrid/mail": "^7.7.0",
