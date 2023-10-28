@@ -7,6 +7,7 @@ import {
 import styled from "styled-components";
 import { BigInput } from "../core";
 import { icons } from "../icons";
+import PasswordStrengthProgress from "./PasswordStrengthProgress";
 
 interface SetPasswordInputProps {
   value: string;
@@ -14,6 +15,7 @@ interface SetPasswordInputProps {
   revealPassword: boolean;
   setRevealPassword: Dispatch<SetStateAction<boolean>>;
   placeholder: string;
+  showStrengthProgress?: boolean;
   onEnter?: (e: KeyboardEvent<HTMLInputElement>) => void;
   inputRef?: MutableRefObject<HTMLInputElement>;
   autoFocus?: boolean;
@@ -26,12 +28,14 @@ export function PasswordInput({
   autoFocus,
   setRevealPassword,
   placeholder,
+  showStrengthProgress,
   inputRef,
   onEnter
 }: SetPasswordInputProps) {
   return (
     <Container>
       <PasswordBigInput
+        $showStrengthProgress={showStrengthProgress}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             onEnter?.(e);
@@ -44,12 +48,17 @@ export function PasswordInput({
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
+      {showStrengthProgress && (
+        <PasswordStrengthProgressContainer>
+          <PasswordStrengthProgress password={value} />
+        </PasswordStrengthProgressContainer>
+      )}
       <ShowHidePasswordIconContainer>
         <ShowHidePasswordIcon
           draggable="false"
           src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
-          width={32}
-          height={32}
+          width={24}
+          height={24}
           onClick={() => setRevealPassword((curr) => !curr)}
         />
       </ShowHidePasswordIconContainer>
@@ -57,15 +66,24 @@ export function PasswordInput({
   );
 }
 
-const PasswordBigInput = styled(BigInput)`
+const PasswordBigInput = styled(BigInput)<{ $showStrengthProgress?: boolean }>`
   /* To account for show/hide password icon. We add it to both sides to preserve center text alignment. */
-  padding-right: 48px;
-  padding-left: 48px;
+  padding-right: ${(props) => (props.$showStrengthProgress ? "64px" : "40px")};
+  padding-left: ${(props) => (props.$showStrengthProgress ? "64px" : "40px")};
 `;
 
 const Container = styled.div`
   width: 100%;
   position: relative;
+`;
+
+const PasswordStrengthProgressContainer = styled.div`
+  position: absolute;
+  right: 40px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  top: 0;
 `;
 
 const ShowHidePasswordIconContainer = styled.div`

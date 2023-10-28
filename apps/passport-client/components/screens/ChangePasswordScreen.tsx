@@ -149,6 +149,8 @@ export function ChangePasswordScreen() {
         <HR />
         <Spacer h={24} />
         <LinkButton to={"/"}>Cancel</LinkButton>
+        {/* Add spacing to bottom for iOS keyboard */}
+        <Spacer h={512} />
       </>
     );
   }
