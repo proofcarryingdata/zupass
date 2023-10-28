@@ -100,7 +100,11 @@ export const zupassDefaultSubscriptions: Record<
         type: PCDPermissionType.DeleteFolder
       } as DeleteFolderPermission,
       {
-        folder: "Zuconnect",
+        folder: "ZuConnect",
+        type: PCDPermissionType.DeleteFolder
+      } as DeleteFolderPermission,
+      {
+        folder: "ZuConnect",
         type: PCDPermissionType.ReplaceInFolder
       } as ReplaceInFolderPermission
     ]
