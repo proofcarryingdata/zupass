@@ -1,8 +1,8 @@
 import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, sleep } from "@pcd/util";
-import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
+import { ONE_HOUR_MS } from "@pcd/util";
+import { Bot, InlineKeyboard, session } from "grammy";
 import { sha256 } from "js-sha256";
 import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
 import { fetchAnonTopicNullifier } from "../database/queries/telegram/fetchTelegramConversation";
@@ -32,6 +32,7 @@ import {
   privateChatCommands,
   ratResponse,
   senderIsAdmin,
+  startBot,
   verifyZKEdDSAEventTicketPCD
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
@@ -224,46 +225,6 @@ export class AnonBotService {
       }
     );
   };
-
-  /**
-   * Telegram does not allow two instances of a authBot to be running at once.
-   * During deployment, a new instance of the app will be started before the
-   * old one is shut down, so we might end up with two instances running at
-   * the same time. This method allows us to delay starting the authBot by an
-   * amount configurable per-environment.
-   *
-   * Since this function awaits on authBot.start(), it will likely be very long-
-   * lived.
-   */
-  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
-    const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
-    if (startDelay > 0) {
-      logger(
-        `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
-      );
-      await sleep(startDelay);
-    }
-
-    logger(`[TELEGRAM] Starting authBot`);
-
-    try {
-      // This will not resolve while the authBot remains running.
-      await bot.start({
-        allowed_updates: [
-          "chat_join_request",
-          "chat_member",
-          "message",
-          "callback_query"
-        ],
-        onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
-        }
-      });
-    } catch (e) {
-      logger(`[TELEGRAM] Error starting authBot`, e);
-      this.rollbarService?.reportError(e);
-    }
-  }
 
   private async sendToAnonymousChannel(
     chatId: number,
@@ -504,7 +465,7 @@ export async function startAnonBotService(
 
   const service = new AnonBotService(context, rollbarService, anonBot);
 
-  service.startBot(anonBot);
+  startBot(anonBot, rollbarService);
   anonBot.api.config.use(
     autoRetry({
       maxRetryAttempts: 3, // only repeat requests once

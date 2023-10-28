@@ -4,7 +4,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL, sleep } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
@@ -43,6 +43,7 @@ import {
   insertTelegramEvent,
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
+import { RollbarService } from "../services/rollbarService";
 import { traced } from "../services/telemetryService";
 import { logger } from "./logger";
 
@@ -171,94 +172,6 @@ export const getBotURL = async (
 ): Promise<string> => {
   const { username } = await bot.api.getMe();
   return `https://t.me/${username}`;
-};
-
-export const setBotInfo = async (
-  bot: Bot<BotContext, Api<RawApi>>,
-  anonBot: Bot<BotContext, Api<RawApi>>,
-  anonBotExists: boolean,
-  forwardBot?: Bot<BotContext, Api<RawApi>>
-): Promise<void> => {
-  // Set Zupass as the default menu item
-  if (process.env.PASSPORT_CLIENT_URL) {
-    bot.api.setChatMenuButton({
-      menu_button: {
-        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
-        type: "web_app",
-        text: "Zupass"
-      }
-    });
-  }
-
-  if (anonBotExists) {
-    anonBot.api.setChatMenuButton({
-      menu_button: {
-        web_app: { url: process.env.PASSPORT_CLIENT_URL + "/#telegram" },
-        type: "web_app",
-        text: "Zupass"
-      }
-    });
-
-    anonBot.api.setMyDescription(
-      "I'm ZuRat! I send anonmyous messages with zero-knowledge proofs"
-    );
-
-    anonBot.api.setMyShortDescription(
-      "ZuRat sends anonmyous messages with zero-knowledge proofs"
-    );
-
-    anonBot.api.setMyCommands(
-      privateChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
-      { scope: { type: "all_private_chats" } }
-    );
-
-    anonBot.api.setMyCommands(
-      adminGroupChatCommands.filter((c) => c.isAnon || c.alwaysInclude),
-      {
-        scope: { type: "all_chat_administrators" }
-      }
-    );
-
-    // Only add non-anon commands to main bot
-    bot.api.setMyCommands(
-      adminGroupChatCommands.filter((c) => !c.isAnon || c.alwaysInclude),
-      {
-        scope: { type: "all_chat_administrators" }
-      }
-    );
-
-    bot.api.setMyCommands(
-      privateChatCommands.filter((c) => !c.isAnon || c.alwaysInclude),
-      {
-        scope: { type: "all_private_chats" }
-      }
-    );
-  } else {
-    bot.api.setMyCommands(adminGroupChatCommands, {
-      scope: { type: "all_chat_administrators" }
-    });
-
-    bot.api.setMyCommands(privateChatCommands, {
-      scope: { type: "all_private_chats" }
-    });
-  }
-
-  bot.api.setMyDescription(
-    "I'm ZuKat! I manage fun events with zero-knowledge proofs. Press START to begin 😽"
-  );
-
-  bot.api.setMyShortDescription(
-    "ZuKat manages events and groups with zero-knowledge proofs"
-  );
-
-  if (forwardBot) {
-    forwardBot.api.setMyDescription(
-      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
-    );
-    forwardBot.api.setMyShortDescription(
-      `To join the Devconnect Community Hub, send a DM here: https://t.me/zucat_bot?start=auth`
-    );
-  }
 };
 
 /**
@@ -956,4 +869,35 @@ export const verifyZKEdDSAEventTicketPCD = async (
       return null;
     }
   });
+};
+
+export const startBot = async (
+  bot: Bot<BotContext, Api<RawApi>>,
+  rollbarService: RollbarService | null
+): Promise<void> => {
+  const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
+  if (startDelay > 0) {
+    logger(`[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`);
+    await sleep(startDelay);
+  }
+
+  logger(`[TELEGRAM] Starting authBot`);
+
+  try {
+    // This will not resolve while the bot remains running.
+    await bot.start({
+      allowed_updates: [
+        "chat_join_request",
+        "chat_member",
+        "message",
+        "callback_query"
+      ],
+      onStart: (info) => {
+        logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+      }
+    });
+  } catch (e) {
+    logger(`[TELEGRAM] Error starting authBot`, e);
+    rollbarService?.reportError(e);
+  }
 };

@@ -1,7 +1,6 @@
 import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
-import { sleep } from "@pcd/util";
-import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
+import { Bot, InlineKeyboard, session } from "grammy";
 import { Chat } from "grammy/types";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import { fetchTelegramVerificationStatus } from "../database/queries/telegram/fetchTelegramConversation";
@@ -34,6 +33,7 @@ import {
   isGroupWithTopics,
   privateChatCommands,
   senderIsAdmin,
+  startBot,
   uwuResponse,
   verifyZKEdDSAEventTicketPCD
 } from "../util/telegramHelpers";
@@ -438,45 +438,6 @@ export class AuthBotService {
       });
     }
   }
-  /**
-   * Telegram does not allow two instances of a authBot to be running at once.
-   * During deployment, a new instance of the app will be started before the
-   * old one is shut down, so we might end up with two instances running at
-   * the same time. This method allows us to delay starting the authBot by an
-   * amount configurable per-environment.
-   *
-   * Since this function awaits on authBot.start(), it will likely be very long-
-   * lived.
-   */
-  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
-    const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
-    if (startDelay > 0) {
-      logger(
-        `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
-      );
-      await sleep(startDelay);
-    }
-
-    logger(`[TELEGRAM] Starting authBot`);
-
-    try {
-      // This will not resolve while the bot remains running.
-      await bot.start({
-        allowed_updates: [
-          "chat_join_request",
-          "chat_member",
-          "message",
-          "callback_query"
-        ],
-        onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
-        }
-      });
-    } catch (e) {
-      logger(`[TELEGRAM] Error starting authBot`, e);
-      this.rollbarService?.reportError(e);
-    }
-  }
 
   private async sendInviteLink(
     userId: number,
@@ -624,7 +585,7 @@ export async function startAuthBotService(
 
   const service = new AuthBotService(context, rollbarService, authBot);
 
-  service.startBot(authBot);
+  startBot(authBot, rollbarService);
   authBot.api.config.use(
     autoRetry({
       maxRetryAttempts: 3, // only repeat requests once

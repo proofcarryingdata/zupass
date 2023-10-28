@@ -1,6 +1,6 @@
+import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
-import { sleep } from "@pcd/util";
-import { Api, Bot, RawApi, session } from "grammy";
+import { Bot, session } from "grammy";
 import {
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
@@ -18,7 +18,8 @@ import {
   SessionData,
   chatsToForwardTo,
   getSessionKey,
-  isDirectMessage
+  isDirectMessage,
+  startBot
 } from "../util/telegramHelpers";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
@@ -235,36 +236,6 @@ export class FwdBotService {
     );
   }
 
-  public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
-    const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
-    if (startDelay > 0) {
-      logger(
-        `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
-      );
-      await sleep(startDelay);
-    }
-
-    logger(`[TELEGRAM] Starting authBot`);
-
-    try {
-      // This will not resolve while the authBot remains running.
-      await bot.start({
-        allowed_updates: [
-          "chat_join_request",
-          "chat_member",
-          "message",
-          "callback_query"
-        ],
-        onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
-        }
-      });
-    } catch (e) {
-      logger(`[TELEGRAM] Error starting authBot`, e);
-      this.rollbarService?.reportError(e);
-    }
-  }
-
   public stop(): void {
     this.forwardBot.stop();
   }
@@ -302,7 +273,13 @@ export async function startFwdBotService(
     forwardBot
   );
 
-  service.startBot(forwardBot);
+  startBot(forwardBot, rollbarService);
+  forwardBot.api.config.use(
+    autoRetry({
+      maxRetryAttempts: 3, // only repeat requests once
+      maxDelaySeconds: 5 // fail immediately if we have to wait >5 seconds
+    })
+  );
 
   return service;
 }
