@@ -14,7 +14,8 @@ import {
   BotContext,
   SessionData,
   getSessionKey,
-  isDirectMessage
+  isDirectMessage,
+  isGroupWithTopics
 } from "../util/telegramHelpers";
 import { RollbarService } from "./rollbarService";
 
@@ -148,8 +149,12 @@ export class KudosbotService {
     });
 
     this.bot.command("refresh", async (ctx) => {
-      const payload = ctx.match;
-      const chatId = Number(payload);
+      if (!isGroupWithTopics(ctx.chat)) {
+        return await ctx.reply(
+          "Can only perform /refresh in a group with Topics enabled."
+        );
+      }
+      const chatId = ctx.chat.id;
       const telegramConversations = await fetchTelegramConversationsByChatId(
         this.context.dbPool,
         chatId
