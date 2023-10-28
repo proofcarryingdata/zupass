@@ -16,7 +16,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
-    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\"",
+    "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\" \"yarn workspace kudosbot-client dev\"",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn passport:dev",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
