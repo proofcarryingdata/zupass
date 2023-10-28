@@ -351,16 +351,23 @@ export class IssuanceService {
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
 
-              // Clear out the folder
+              // Clear out the old folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuconnect",
                 recursive: false
               } as DeleteFolderAction);
 
+              // Clear out the folder
+              actions.push({
+                type: PCDActionType.DeleteFolder,
+                folder: "ZuConnect",
+                recursive: false
+              } as DeleteFolderAction);
+
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
-                folder: "Zuconnect",
+                folder: "ZuConnect",
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )

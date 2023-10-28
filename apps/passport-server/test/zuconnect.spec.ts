@@ -333,10 +333,10 @@ describe("zuconnect functionality", function () {
 
     expect(response.success).to.be.true;
 
-    expect(response.value?.actions.length).to.eq(2);
-    const populateAction = response.value?.actions[1] as ReplaceInFolderAction;
+    expect(response.value?.actions.length).to.eq(3);
+    const populateAction = response.value?.actions[2] as ReplaceInFolderAction;
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
-    expect(populateAction.folder).to.eq("Zuconnect");
+    expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds[0].type).to.eq(EdDSATicketPCDPackage.name);
 
     ticketPCD = await EdDSATicketPCDPackage.deserialize(
@@ -471,10 +471,10 @@ describe("zuconnect functionality", function () {
 
     expect(response.success).to.be.true;
 
-    expect(response.value?.actions.length).to.eq(2);
-    const populateAction = response.value?.actions[1] as ReplaceInFolderAction;
+    expect(response.value?.actions.length).to.eq(3);
+    const populateAction = response.value?.actions[2] as ReplaceInFolderAction;
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
-    expect(populateAction.folder).to.eq("Zuconnect");
+    expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds.length).to.eq(2);
     for (const pcd of populateAction.pcds) {
       expect(
