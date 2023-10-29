@@ -3,7 +3,7 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { FrogCryptoFrogData } from "./FrogCrypto";
+import { FrogCryptoFrogData, FrogCryptoScore } from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
@@ -641,6 +641,7 @@ export interface FrogCryptoComputedUserState {
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
   possibleFrogCount: number;
+  score?: FrogCryptoScore;
 }
 
 /**

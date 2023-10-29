@@ -29,6 +29,22 @@ import { SuperFunkyFont } from "./FrogFolder";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab } from "./ScoreTab";
 
+const TABS = [
+  {
+    tab: "get",
+    label: "get frogs"
+  },
+  {
+    tab: "score",
+    label: "hi scores"
+  },
+  {
+    tab: "dex",
+    label: "frogedex"
+  }
+] as const;
+type Tab = (typeof TABS)[number]["tab"];
+
 /** A placeholder screen for FrogCrypto.
  *
  * We might want to consider slotting this into the existing HomeScreen to better integrate with PCD explorer.
@@ -46,10 +62,8 @@ export function FrogHomeScreen() {
         .filter((sub) => sub.providerUrl.includes("frogcrypto")),
     [subs]
   );
-
-  const [tab, setTab] = useState<"get" | "score" | "dex">("get");
-
   const initFrog = useInitializeFrogSubscriptions();
+  const [tab, setTab] = useState<Tab>("get");
 
   if (!syncSettled) {
     return <SyncingPCDs />;
@@ -66,6 +80,8 @@ export function FrogHomeScreen() {
             <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
           </SuperFunkyFont>
 
+          {userState?.score?.score && <Score>Score {userState?.score?.score}</Score>}
+
           {frogSubs.length === 0 && (
             <ActionButton onClick={initFrog}>light fire</ActionButton>
           )}
@@ -80,24 +96,15 @@ export function FrogHomeScreen() {
             ) : (
               <>
                 <ButtonGroup>
-                  <Button
-                    disabled={tab === "get"}
-                    onClick={() => setTab("get")}
-                  >
-                    get frogs
-                  </Button>
-                  <Button
-                    disabled={tab === "score"}
-                    onClick={() => setTab("score")}
-                  >
-                    hi scores
-                  </Button>
-                  <Button
-                    disabled={tab === "dex"}
-                    onClick={() => setTab("dex")}
-                  >
-                    frogedex
-                  </Button>
+                  {TABS.map(({ tab: t, label }) => (
+                    <Button
+                      key={t}
+                      disabled={tab === t}
+                      onClick={() => setTab(t)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </ButtonGroup>
 
                 {tab === "get" && (
@@ -108,7 +115,7 @@ export function FrogHomeScreen() {
                     pcds={frogPCDs}
                   />
                 )}
-                {tab === "score" && <ScoreTab />}
+                {tab === "score" && <ScoreTab  score={userState?.score}/>}
                 {tab === "dex" && (
                   <DexTab
                     possibleFrogCount={userState.possibleFrogCount}
@@ -117,6 +124,28 @@ export function FrogHomeScreen() {
                 )}
               </>
             ))}
+
+          <Disclaimer>
+            <p>By engaging with FrogCrypto, you hereby consent to:</p>
+            <ol>
+              <li>
+                Permit ZuKat to disclose your Telegram username to FrogCrypto.
+              </li>
+              <li>
+                Acknowledge that ZuKat can only access and share your Telegram
+                username if you've joined a Telegram group by producing a
+                zero-knowledge proof for your event ticket.
+              </li>
+              <li>
+                Understand that FrogCrypto collects traffic analytics for the
+                purposes of score tallying and product improvement. Yet, any
+                Frog PCDs you possess are stored solely in your end-to-end
+                encrypted storage. FrogCrypto cannot, under any circumstances,
+                view any of your PCDs without your explicit authorization nor
+                can they restore any Frog PCD you may delete or misplace.
+              </li>
+            </ol>
+          </Disclaimer>
         </Container>
       </AppContainer>
     </>
@@ -205,4 +234,14 @@ const Container = styled.div`
 const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
+`;
+
+const Score = styled.div`
+  font-size: 16px;
+  text-align: center;
+`;
+
+const Disclaimer = styled.div`
+  font-size: 12px;
+  color: rgba(var(--white-rgb), 0.5);
 `;

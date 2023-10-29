@@ -1,7 +1,8 @@
 import { Biome } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoDbFrogData,
-  FrogCryptoFrogData
+  FrogCryptoFrogData,
+  FrogCryptoScore
 } from "@pcd/passport-interface/src/FrogCrypto";
 import _ from "lodash";
 import { Client } from "pg";
@@ -193,4 +194,56 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
     uuid: dbFrogData.uuid,
     ...dbFrogData.frog
   };
+}
+
+export async function incrementScore(
+  client: Client,
+  semaphoreId: string
+): Promise<FrogCryptoScore> {
+  const res = await client.query(
+    `insert into frogcrypto_user_scores
+    (semaphore_id, score)
+    values ($1, 1)
+    on conflict (semaphore_id) do update set score = frogcrypto_user_scores.score + 1
+    returning *`,
+    [semaphoreId]
+  );
+
+  return res.rows[0];
+}
+
+export async function getScores(
+  pool: Pool,
+  limit = 50
+): Promise<FrogCryptoScore[]> {
+  const result = await sqlQuery(
+    pool,
+    `select score, rank, telegram_username from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+      order by score desc
+      limit $1
+    ) scores
+    left join telegram_bot_conversations using(semaphore_id)
+    order by rank asc`,
+    [limit]
+  );
+
+  return result.rows;
+}
+
+export async function getScore(
+  pool: Pool,
+  semaphoreId: string
+): Promise<FrogCryptoScore | undefined> {
+  const result = await sqlQuery(
+    pool,
+    `select score, rank, telegram_username from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+    ) scores
+    left join telegram_bot_conversations using(semaphore_id)
+    where semaphore_id = $1`,
+    [semaphoreId]
+  );
+
+  return result.rows[0];
 }
