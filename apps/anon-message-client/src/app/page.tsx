@@ -29,6 +29,10 @@ interface TopicData {
   validEventIds: string[];
 }
 
+interface InvalidMessage {
+  reason: string | undefined;
+}
+
 async function requestProof(
   message: string,
   chatId: string,
@@ -108,7 +112,9 @@ async function requestProof(
 
 export default function () {
   const [message, setMessage] = useState("");
-  const [messageInvalid, setMessageInvalid] = useState(false);
+  const [invalidMessage, setInvalidMessage] = useState<
+    InvalidMessage | undefined
+  >();
   const [topicData, setTopicData] = useState<TopicData | undefined>();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
   const searchParams = useSearchParams();
@@ -125,9 +131,13 @@ export default function () {
 
   useEffect(() => {
     if (message.length > MAX_HEADER_SIZE) {
-      setMessageInvalid(true);
-    } else if (messageInvalid) {
-      setMessageInvalid(false);
+      setInvalidMessage({ reason: "Message is too long" });
+    } else if (message.startsWith("/")) {
+      setInvalidMessage({ reason: "Message cannot start with '/'" });
+    } else if (message.length === 0) {
+      setInvalidMessage({ reason: undefined });
+    } else if (invalidMessage) {
+      setInvalidMessage(undefined);
     }
   }, [message]);
 
@@ -167,20 +177,12 @@ export default function () {
             placeholder="Type your anonymous message here"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className={`border-2 ${
-              messageInvalid ? "border-red-500" : ""
-            } text-2xl rounded-lg text-black resize-none p-2 h-[25vh] select-text`}
+            className={`border-2 text-2xl rounded-lg text-black resize-none p-2 h-[25vh] select-text`}
             autoFocus
           />
         </div>
         <div className="mt-8 text-center flex flex-col w-full">
-          {messageInvalid && (
-            <div className="p-2 bg-red-500 rounded-md mb-2">
-              <span className="text-white pb-2">Message is too long!</span>
-            </div>
-          )}
-          <span className="text-white pb-2">🔒 Anonymous posting</span>
-          {message.length != 0 && !messageInvalid && (
+          {!invalidMessage ? (
             <button
               onClick={onClick}
               className="w-full bg-white text-[#037ee5] text-xl font-bold px-4 rounded-full focus:outline-none focus:shadow-outline py-4"
@@ -189,7 +191,18 @@ export default function () {
                 ? `Loading...`
                 : `Send to ${topicData.topicName}`}
             </button>
+          ) : (
+            <>
+              {invalidMessage.reason && (
+                <div className="p-2 bg-red-500 rounded-md mb-2">
+                  <span className="text-white pb-2">
+                    {invalidMessage.reason}
+                  </span>
+                </div>
+              )}
+            </>
           )}
+          <span className="text-white mt-2">🔒 Anonymous posting</span>
         </div>
       </div>
     );
