@@ -1117,7 +1117,7 @@ export class TelegramService {
 
 ${rawMessage}
 
-<i>submitted ${currentTime.toLocaleString("en-DB")}</i>
+<i>submitted ${currentTime.toLocaleString("en-GB")}</i>
 ----------------------------------------------------------
       `;
 
