@@ -79,7 +79,7 @@ export function initFrogcryptoRoutes(
     );
   });
 
-  app.get("/frogcrypto/user-state", async (req, res) => {
+  app.post("/frogcrypto/user-state", async (req, res) => {
     const result = await frogcryptoService.getUserState(
       req.body as FrogCryptoUserStateRequest
     );

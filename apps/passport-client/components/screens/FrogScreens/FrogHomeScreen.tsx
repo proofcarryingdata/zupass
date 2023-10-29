@@ -1,8 +1,16 @@
-import { Separator } from "@pcd/passport-ui";
-import { useCallback, useMemo, useState } from "react";
-import styled from "styled-components";
+import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
+  CredentialManager,
+  FrogCryptoUserStateResponseValue,
+  requestFrogCryptoGetUserState
+} from "@pcd/passport-interface";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
+import { appConfig } from "../../../src/appConfig";
+import {
+  useCredentialCache,
   useDispatch,
+  useIdentity,
   useIsSyncSettled,
   usePCDsInFolder,
   useSubscriptions
@@ -11,8 +19,11 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
-import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
+import { ActionButton, Button } from "./Button";
+import { DexTab } from "./DEXTab";
+import { GetFrogTab } from "./GetFrogTab";
+import { ScoreTab } from "./ScoreTab";
 
 /** A placeholder screen for FrogCrypto.
  *
@@ -20,49 +31,12 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
  */
 export function FrogHomeScreen() {
   useSyncE2EEStorage();
-  const dispatch = useDispatch();
   const syncSettled = useIsSyncSettled();
-  const { value: subs } = useSubscriptions();
-  const frogSub = useMemo(
-    () => subs.getActiveSubscriptions().find((sub) => sub.feed.name === "Bog"),
-    [subs]
-  );
   const frogPCDs = usePCDsInFolder("FrogCrypto");
+  const { subs, frogs, refetch } = useFrogSubscriptions();
+  const [tab, setTab] = useState<"get" | "score" | "dex">("get");
 
-  const getFrog = useCallback(async () => {
-    if (!frogSub) {
-      return;
-    }
-
-    dispatch({
-      type: "sync-subscription",
-      subscriptionId: frogSub.id
-    });
-  }, [dispatch, frogSub]);
-
-  const [selectedPCDID, setSelectedPCDID] = useState("");
-  const selectedPCD = useMemo(() => {
-    // if user just added a PCD, highlight that one
-    if (sessionStorage.newAddedPCDID) {
-      const added = frogPCDs.find(
-        (pcd) => pcd.id === sessionStorage.newAddedPCDID
-      );
-      if (added) {
-        return added;
-      }
-    }
-
-    const selected = frogPCDs.find((pcd) => pcd.id === selectedPCDID);
-    if (selected) {
-      return selected;
-    }
-
-    // default to first PCD if no selected PCD found
-    return frogPCDs[0];
-  }, [frogPCDs, selectedPCDID]);
-  const onPcdClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
+  const initFrog = useInitializeFrogSubscriptions();
 
   if (!syncSettled) {
     return <SyncingPCDs />;
@@ -75,30 +49,124 @@ export function FrogHomeScreen() {
         <Container>
           <AppHeader />
 
-          <button disabled={!frogSub} onClick={getFrog}>
-            Get Frog
-          </button>
+          <img
+            draggable="false"
+            src="/images/frogs/frogcrypto.svg"
+            width="100%"
+            style={{ transform: "translate(-2.5px, 1px)" }}
+          />
 
-          {frogPCDs.length > 0 && (
-            <>
-              <Separator />
-              <PCDContainer>
-                {frogPCDs.map((pcd) => (
-                  <PCDCard
-                    key={pcd.id}
-                    pcd={pcd}
-                    onClick={onPcdClick}
-                    expanded={pcd.id === selectedPCD?.id}
-                  />
-                ))}
-              </PCDContainer>
-            </>
+          {subs.length === 0 && (
+            <ActionButton onClick={initFrog}>light fire</ActionButton>
           )}
+          {subs.length > 0 &&
+            (frogPCDs.length === 0 ? (
+              <GetFrogTab subs={subs} refetch={refetch} />
+            ) : (
+              <>
+                <ButtonGroup>
+                  <Button
+                    disabled={tab === "get"}
+                    onClick={() => setTab("get")}
+                  >
+                    get frogs
+                  </Button>
+                  <Button
+                    disabled={tab === "score"}
+                    onClick={() => setTab("score")}
+                  >
+                    hi scores
+                  </Button>
+                  <Button
+                    disabled={tab === "dex"}
+                    onClick={() => setTab("dex")}
+                  >
+                    frogedex
+                  </Button>
+                </ButtonGroup>
+
+                {tab === "get" && <GetFrogTab subs={subs} refetch={refetch} />}
+                {tab === "score" && <ScoreTab />}
+                {tab === "dex" && <DexTab frogs={frogs} pcds={frogPCDs} />}
+              </>
+            ))}
         </Container>
       </AppContainer>
     </>
   );
 }
+
+const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+
+function useFrogSubscriptions() {
+  const subs = useSubscriptions();
+  const frogSubscriptions = useMemo(
+    () =>
+      subs.value
+        .getActiveSubscriptions()
+        .filter((sub) => sub.providerUrl.includes("frogcrypto")),
+    [subs]
+  );
+
+  const [userState, setUserState] =
+    useState<FrogCryptoUserStateResponseValue>();
+  const identity = useIdentity();
+  const pcds = usePCDCollection();
+  const credentialCache = useCredentialCache();
+  const credentialManager = useMemo(
+    () => new CredentialManager(identity, pcds, credentialCache),
+    [credentialCache, identity, pcds]
+  );
+  const refreshUserState = useCallback(async () => {
+    const pcd = await credentialManager.requestCredential({
+      signatureType: "sempahore-signature-pcd"
+    });
+
+    const state = await requestFrogCryptoGetUserState(appConfig.zupassServer, {
+      pcd
+    });
+
+    setUserState(state.value);
+  }, [credentialManager]);
+  useEffect(() => {
+    refreshUserState();
+  }, [refreshUserState]);
+
+  return useMemo(
+    () => ({
+      subs: frogSubscriptions.map((sub) => ({
+        ...sub,
+        nextFetchAt: userState?.feeds?.find(
+          (feed) => feed.feedId === sub.feed.id
+        )?.nextFetchAt
+      })),
+      frogs: userState?.frogs,
+      refetch: refreshUserState
+    }),
+    [frogSubscriptions, userState, refreshUserState]
+  );
+}
+
+const useInitializeFrogSubscriptions = () => {
+  const dispatch = useDispatch();
+  const { value: subs } = useSubscriptions();
+
+  return useCallback(async () => {
+    subs.getOrAddProvider(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL, "FrogCrypto");
+
+    // Subscribe to public feeds
+    await subs.listFeeds(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL).then((res) =>
+      res.feeds.forEach((feed) =>
+        dispatch({
+          type: "add-subscription",
+          providerUrl: DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+          providerName: "FrogCrypto",
+          feed
+        })
+      )
+    );
+  }, [dispatch, subs]);
+};
 
 const Container = styled.div`
   padding: 16px;
@@ -108,11 +176,10 @@ const Container = styled.div`
 
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 32px;
 `;
 
-const PCDContainer = styled.div`
+const ButtonGroup = styled.div`
   display: flex;
-  flex-direction: column;
   gap: 8px;
 `;

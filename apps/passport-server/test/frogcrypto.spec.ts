@@ -1,7 +1,9 @@
 import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
+  FrogCryptoUserStateResult,
   PollFeedResult,
   createFeedCredentialPayload,
+  frogCryptoGetUserState,
   pollFeed,
   requestListFeeds
 } from "@pcd/passport-interface";
@@ -120,6 +122,31 @@ describe("frogcrypto functionality", function () {
     await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog Not Found");
   });
 
+  it("should update user state after getting frog", async () => {
+    const feed = FROGCRYPTO_FEEDS[0];
+    expect(feed.active).to.be.true;
+    expect(feed.private).to.be.false;
+
+    let userState = await getUserState();
+    expect(userState.success).to.be.true;
+    expect(userState.value?.frogs?.count).to.be.greaterThan(0);
+    expect(userState.value?.feeds).to.be.empty;
+
+    const response = await getFrog(feed, DATE_EPOCH_1H);
+    expect(response.success).to.be.true;
+
+    userState = await getUserState();
+    expect(userState.success).to.be.true;
+    expect(userState.value?.frogs?.count).to.be.greaterThan(0);
+    expect(userState.value?.feeds).to.be.not.empty;
+    const feedState = userState.value?.feeds?.[0];
+    expect(feedState?.feedId).to.eq(feed.id);
+    expect(feedState?.lastFetchedAt).to.eq(DATE_EPOCH_1H.getTime());
+    expect(feedState?.nextFetchAt).to.eq(
+      DATE_EPOCH_1H.getTime() + feed.cooldown * 1000
+    );
+  });
+
   async function testGetFrog(
     feed: FrogCryptoFeed,
     now: Date
@@ -167,5 +194,14 @@ describe("frogcrypto functionality", function () {
     MockDate.reset();
 
     return response;
+  }
+
+  async function getUserState(): Promise<FrogCryptoUserStateResult> {
+    const payload = JSON.stringify(createFeedCredentialPayload());
+    return frogCryptoGetUserState(
+      application.expressContext.localEndpoint,
+      identity,
+      payload
+    );
   }
 });

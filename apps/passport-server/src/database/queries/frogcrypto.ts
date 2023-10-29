@@ -150,6 +150,16 @@ export async function deleteFrogData(
   );
 }
 
+export async function getFrogCount(pool: Pool): Promise<number> {
+  const result = await sqlQuery(
+    pool,
+    `select count(*) as count from frogcrypto_frogs`,
+    []
+  );
+
+  return +result.rows[0].count;
+}
+
 /**
  * Sample a single frog based on drop_weight
  *
