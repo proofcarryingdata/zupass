@@ -238,7 +238,11 @@ export default function () {
                 <button
                   className="flex items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium"
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
+                    navigator.clipboard.writeText(
+                      window.location.origin +
+                        window.location.pathname +
+                        window.location.search
+                    );
                     setCopied(true);
                   }}
                 >
