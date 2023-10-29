@@ -18,7 +18,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchTelegramEventByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent> {
+): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -26,6 +26,23 @@ export async function fetchTelegramEventByEventId(
     where ticket_event_id = $1
     `,
     [eventId]
+  );
+
+  return result.rows;
+}
+
+export async function fetchTelegramBotEvent(
+  client: Pool,
+  eventId: string,
+  telegramChatID: string | number
+): Promise<TelegramEvent> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_bot_events
+    where ticket_event_id = $1 and telegram_chat_id = $2
+    `,
+    [eventId, telegramChatID]
   );
 
   return result.rows[0] ?? null;
