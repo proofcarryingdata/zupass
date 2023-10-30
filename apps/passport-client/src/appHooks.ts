@@ -197,7 +197,7 @@ export function useLaserScannerKeystrokeInput() {
         }
       }
       // Ignore characters that could not be in a valid URL
-      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#/]$/.test(event.key)) {
+      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#?/]$/.test(event.key)) {
         setTypedText((prevText) => prevText + event.key);
       }
     }
