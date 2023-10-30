@@ -3,16 +3,23 @@
   "version": "0.2.0",
   "license": "MIT",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
-    "./src/*",
     "./dist/*",
     "./README.md",
     "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",

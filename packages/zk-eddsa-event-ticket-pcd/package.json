@@ -2,22 +2,36 @@
   "name": "@pcd/zk-eddsa-event-ticket-pcd",
   "version": "0.2.1",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/node/index.js",
+  "module": "./dist/node/index.mjs",
+  "types": "./dist/node/index.d.ts",
+  "exports": {
+    ".": {
+      "node": {
+        "require": "./dist/node/index.js",
+        "import": "./dist/node/index.mjs",
+        "types": "./dist/node/index.d.ts"
+      },
+      "browser": {
+        "require": "./dist/browser/index.js",
+        "import": "./dist/browser/index.mjs",
+        "types": "./dist/browser/index.d.ts"
+      }
+    }
+  },
   "files": [
     "./artifacts/*",
-    "./src/*",
     "./dist/*",
     "./README.md",
     "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format cjs,esm --dts --clean && tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules",
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd"
   },
