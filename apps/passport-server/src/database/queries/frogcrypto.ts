@@ -1,5 +1,9 @@
 import { Biome } from "@pcd/eddsa-frog-pcd";
-import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
+import {
+  FrogCryptoDbFrogData,
+  FrogCryptoFrogData
+} from "@pcd/passport-interface/src/FrogCrypto";
+import _ from "lodash";
 import { Client } from "pg";
 import { Pool } from "postgres-pool";
 import { FrogCryptoUserFeedState } from "../models";
@@ -72,30 +76,15 @@ export async function insertFrogData(
   frogDataList: FrogCryptoFrogData[]
 ): Promise<void> {
   for (const frogData of frogDataList) {
-    console.log(`inserting frog ${frogData.id}`, frogData);
     await sqlQuery(
       client,
       `insert into frogcrypto_frogs
-    (id, name, description, biome, rarity, temperament, drop_weight, jump_min, jump_max, speed_min, speed_max, intelligence_min, intelligence_max, beauty_min, beauty_max)
-    values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-    on conflict (id) do nothing`,
-      [
-        frogData.id,
-        frogData.name,
-        frogData.description,
-        frogData.biome,
-        frogData.rarity,
-        frogData.temperament,
-        frogData.drop_weight,
-        frogData.jump_min,
-        frogData.jump_max,
-        frogData.speed_min,
-        frogData.speed_max,
-        frogData.intelligence_min,
-        frogData.intelligence_max,
-        frogData.beauty_min,
-        frogData.beauty_max
-      ]
+    (id, uuid, frog)
+    values ($1, $2, $3)
+    on conflict (id) do update
+    set uuid = $2, frog = $3
+    `,
+      [frogData.id, frogData.uuid, _.omit(frogData, ["id", "uuid"])]
     );
   }
 }
@@ -103,7 +92,7 @@ export async function insertFrogData(
 export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
   const result = await sqlQuery(pool, `select * from frogcrypto_frogs`, []);
 
-  return result.rows;
+  return result.rows.map(toFrogData);
 }
 
 /**
@@ -120,11 +109,23 @@ export async function sampleFrogData(
   const result = await sqlQuery(
     pool,
     `select * from frogcrypto_frogs
-    where biome ilike any($1)
-    order by random() ^ (1.0 / drop_weight)
+    where frog->>'biome' ilike any($1)
+    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision))
     limit 1`,
     [biomeSet]
   );
 
-  return result.rows[0];
+  if (result.rowCount === 0) {
+    return undefined;
+  }
+
+  return toFrogData(result.rows[0]);
+}
+
+function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
+  return {
+    ...dbFrogData.frog,
+    id: dbFrogData.id,
+    uuid: dbFrogData.uuid
+  };
 }

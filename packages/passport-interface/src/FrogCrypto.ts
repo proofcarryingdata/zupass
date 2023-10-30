@@ -16,3 +16,12 @@ export interface FrogCryptoFrogData {
   beauty_min: number | undefined;
   beauty_max: number | undefined;
 }
+
+/**
+ * DB schema for frog data
+ */
+export interface FrogCryptoDbFrogData {
+  id: number;
+  uuid: string;
+  frog: Omit<FrogCryptoFrogData, "id" | "uuid">;
+}

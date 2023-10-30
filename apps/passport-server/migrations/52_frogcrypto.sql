@@ -1,20 +1,7 @@
 create table frogcrypto_frogs (
   id SERIAL PRIMARY KEY,
   uuid UUID NOT NULL DEFAULT uuid_generate_v4(),
-  name VARCHAR NOT NULL,
-  description VARCHAR NOT NULL,
-  biome VARCHAR NOT NULL,
-  rarity VARCHAR NOT NULL,
-  temperament VARCHAR,
-  drop_weight DOUBLE PRECISION NOT NUlL,
-  jump_min INT,
-  jump_max INT,
-  speed_min INT,
-  speed_max INT,
-  intelligence_min INT,
-  intelligence_max INT,
-  beauty_min INT,
-  beauty_max INT
+  frog JSONB NOT NULL
 );
 
 create table frogcrypto_user_scores (
