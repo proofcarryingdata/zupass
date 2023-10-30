@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.23",
+  "version": "0.0.24",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -22,7 +22,7 @@
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "@pcd/semaphore-signature-pcd": "0.8.0",
     "@pcd/webauthn-pcd": "0.8.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "0.2.0",
+    "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
     "@pcd/util": "0.2.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/identity": "^3.14.0",
