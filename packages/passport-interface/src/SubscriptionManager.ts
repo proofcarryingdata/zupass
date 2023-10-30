@@ -519,7 +519,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
   permissions: PCDPermission[];
   credentialRequest: CredentialRequest;
   /**
-   * If false, the feed will not automatic poll for updates.
+   * If false, the feed will not automatically poll for updates.
    *
    * @default true
    */
