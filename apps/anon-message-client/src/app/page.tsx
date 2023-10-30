@@ -231,8 +231,8 @@ export default function () {
                 </div>
               </div>
               <span className="text-white opacity-80">
-                We never learn your Zupass identity and only see a proof you
-                have a ticket and a unique ID not linked to your email.
+                ZuRat never learns your Zupass account or email, only a proof that
+                you have a ticket and a unique nullifier not linked to your email.
               </span>
               <div className="flex item-center gap-4 mx-auto mt-4">
                 <button
