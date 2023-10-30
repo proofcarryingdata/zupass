@@ -3,6 +3,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { KudosUserInfo } from "@pcd/semaphore-signature-kudos-pcd";
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
@@ -63,7 +64,7 @@ export interface SessionData {
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
-  kudosData?: { giver: string; receiver: string };
+  kudosData?: { sender: KudosUserInfo; recipient: KudosUserInfo };
   topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
