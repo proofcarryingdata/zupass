@@ -14,10 +14,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import {
-  AppendToFolderPermission,
-  PCDPermissionType
-} from "@pcd/pcd-collection";
+import { PCDPermissionType } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -74,7 +71,7 @@ const commonFeedConfig: Pick<
     {
       folder: "FrogCrypto",
       type: PCDPermissionType.AppendToFolder
-    } as AppendToFolderPermission
+    }
   ]
 };
 
