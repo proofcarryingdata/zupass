@@ -35,7 +35,6 @@ interface InvalidMessage {
 
 async function requestProof(
   message: string,
-  chatId: string,
   topicId: string,
   validEventIds: string[]
 ) {
@@ -75,10 +74,7 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: getAnonTopicNullifier(
-        parseInt(chatId),
-        parseInt(topicId)
-      ).toString(),
+      value: getAnonTopicNullifier().toString(),
       userProvided: false
     },
     validEventIds: {
@@ -146,12 +142,7 @@ export default function () {
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
     if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
-    await requestProof(
-      message,
-      topicData.chatId,
-      topicData.topicId,
-      topicData.validEventIds
-    );
+    await requestProof(message, topicData.topicId, topicData.validEventIds);
     setLoadingProofUrl(false);
   }, [message]);
 
@@ -231,8 +222,9 @@ export default function () {
                 </div>
               </div>
               <span className="text-white opacity-80">
-                ZuRat never learns your Zupass account or email, only a proof that
-                you have a ticket and a unique nullifier not linked to your email.
+                ZuRat never learns your Zupass account or email, only a proof
+                that you have a ticket and a unique nullifier not linked to your
+                email.
               </span>
               <div className="flex item-center gap-4 mx-auto mt-4">
                 <button

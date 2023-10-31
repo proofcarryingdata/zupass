@@ -60,15 +60,19 @@ export async function fetchTelegramVerificationStatus(
 
 export async function fetchAnonTopicNullifier(
   client: Pool,
-  nullifierHash: string
+  nullifierHash: string,
+  telegramChatId: number,
+  topicId: number
 ): Promise<AnonNullifierInfo | undefined> {
   const result = await sqlQuery(
     client,
     `\
       select * from telegram_chat_anon_nullifiers 
       where nullifier = $1
+      and telegram_chat_id = $2
+      and topic_id = $3
     `,
-    [nullifierHash]
+    [nullifierHash, telegramChatId, topicId]
   );
   return result.rows[0];
 }

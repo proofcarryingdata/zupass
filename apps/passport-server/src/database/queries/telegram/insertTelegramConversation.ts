@@ -75,16 +75,23 @@ set topic_name = $3, is_anon_topic = $4;`,
 export async function insertOrUpdateTelegramNullifier(
   client: Pool,
   nullifierHash: string,
-  messageTimestamps: string[]
+  messageTimestamps: string[],
+  chatId: string | number,
+  topicId: number
 ): Promise<void> {
   const query = `
-    insert into telegram_chat_anon_nullifiers (nullifier, message_timestamps)
-    values ($1, $2)
-    on conflict (nullifier) do update
+    insert into telegram_chat_anon_nullifiers (nullifier, message_timestamps, topic_id, telegram_chat_id)
+    values ($1, $2, $3, $4)
+    on conflict (nullifier, topic_id, telegram_chat_id) do update
       set message_timestamps = $2
   `;
 
-  await sqlQuery(client, query, [nullifierHash, messageTimestamps]);
+  await sqlQuery(client, query, [
+    nullifierHash,
+    messageTimestamps,
+    topicId,
+    chatId
+  ]);
 }
 
 export async function updateTelegramUsername(

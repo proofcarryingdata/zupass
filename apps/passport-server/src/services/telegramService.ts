@@ -1084,25 +1084,27 @@ export class TelegramService {
 
       if (!nullifierHash) throw new Error(`Nullifier hash not found`);
 
-      const expectedExternalNullifier = getAnonTopicNullifier(
-        chat.id,
-        parseInt(topicId)
-      ).toString();
+      const expectedExternalNullifier = getAnonTopicNullifier().toString();
 
-      if (externalNullifier !== expectedExternalNullifier)
+      if (externalNullifier !== expectedExternalNullifier.toString())
         throw new Error("Nullifier mismatch - try proving again.");
 
       const nullifierData = await fetchAnonTopicNullifier(
         this.context.dbPool,
-        nullifierHash
+        nullifierHash,
+        parseInt(telegramChatId),
+        parseInt(topicId)
       );
 
       const currentTime = new Date();
+
       if (!nullifierData) {
         await insertOrUpdateTelegramNullifier(
           this.context.dbPool,
           nullifierHash,
-          [currentTime.toISOString()]
+          [currentTime.toISOString()],
+          telegramChatId,
+          parseInt(topicId)
         );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
@@ -1124,7 +1126,9 @@ export class TelegramService {
           await insertOrUpdateTelegramNullifier(
             this.context.dbPool,
             nullifierHash,
-            newTimestamps
+            newTimestamps,
+            telegramChatId,
+            parseInt(topicId)
           );
         } else {
           const rlError = new Error(
@@ -1135,12 +1139,11 @@ export class TelegramService {
         }
       }
 
-      const formattedMessage = `${bigintToPseudonym(BigInt(nullifierHash))}
-
-${rawMessage}
-
-<i>submitted ${currentTime.toLocaleString("en-GB")}</i>
-----------------------------------------------------------
+      const formattedMessage = `
+      ${bigintToPseudonym(BigInt(nullifierHash))}
+      ${rawMessage}
+      <i>submitted ${currentTime.toLocaleString("en-GB")}</i>
+      ----------------------------------------------------------
       `;
 
       await this.sendToAnonymousChannel(
