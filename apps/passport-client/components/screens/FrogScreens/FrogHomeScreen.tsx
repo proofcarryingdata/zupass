@@ -4,7 +4,7 @@ import styled from "styled-components";
 import {
   useDispatch,
   useIsSyncSettled,
-  usePCDCollection,
+  usePCDsInFolder,
   useSubscriptions
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -27,9 +27,7 @@ export function FrogHomeScreen() {
     () => subs.getActiveSubscriptions().find((sub) => sub.feed.name === "Bog"),
     [subs]
   );
-  const pcds = usePCDCollection();
-  // NB: we cannot use useMemo because pcds are mutate in-place
-  const frogPCDs = pcds.getAllPCDsInFolder("FrogCrypto");
+  const frogPCDs = usePCDsInFolder("FrogCrypto");
 
   const getFrog = useCallback(async () => {
     if (!frogSub) {
@@ -72,7 +70,7 @@ export function FrogHomeScreen() {
 
   return (
     <>
-      <MaybeModal fullScreen />
+      <MaybeModal />
       <AppContainer bg="gray">
         <Container>
           <AppHeader />

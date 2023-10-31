@@ -26,11 +26,10 @@ export async function requestPollFeed(
 }
 
 export async function pollFeed(
-  zupassServerUrl: string,
+  feedUrl: string,
   identity: Identity,
   signedMessage: string,
-  feedId: string,
-  feedUrl = `${zupassServerUrl}/feeds`
+  feedId: string
 ): Promise<PollFeedResult> {
   return requestPollFeed(feedUrl, {
     feedId,

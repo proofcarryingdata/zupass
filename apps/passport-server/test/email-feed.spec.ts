@@ -59,7 +59,7 @@ describe("attested email feed functionality", function () {
     async function () {
       const payload = JSON.stringify(createFeedCredentialPayload());
       const pollFeedResult = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Email

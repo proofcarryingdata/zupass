@@ -96,8 +96,8 @@ export class FeedSubscriptionManager {
     );
 
     for (const subscription of this.activeSubscriptions) {
-      // nb: undefined fetchOnLoad defaults to true
-      if (subscription.feed.fetchOnLoad === false) {
+      // nb: undefined autoPoll defaults to true
+      if (subscription.feed.autoPoll === false) {
         continue;
       }
       responsePromises.push(
@@ -523,7 +523,7 @@ export interface Feed<T extends PCDPackage = PCDPackage> {
    *
    * @default true
    */
-  fetchOnLoad?: boolean;
+  autoPoll?: boolean;
 }
 
 export interface Subscription {

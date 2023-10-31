@@ -90,7 +90,7 @@ describe("zuzalu pcdpass functionality", function () {
     async function () {
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Zuzalu_23

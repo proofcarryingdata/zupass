@@ -91,7 +91,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import {
   FROGCRYPTO_FEEDS,
-  FrogCryptoFeedConfig,
+  FrogCryptoFeed,
   FrogCryptoFeedHost,
   createFrogData
 } from "../util/frogcrypto";
@@ -424,24 +424,8 @@ export class IssuanceService {
           }
           return { actions: [] };
         },
-        feed: {
-          ...feed,
-          fetchOnLoad: false,
-          inputPCDType: undefined,
-          partialArgs: undefined,
-          credentialRequest: {
-            signatureType: "sempahore-signature-pcd"
-          },
-          permissions: [
-            {
-              folder: "FrogCrypto",
-              type: PCDPermissionType.AppendToFolder
-            } as AppendToFolderPermission
-          ]
-        }
-      })),
-      `${process.env.PASSPORT_SERVER_URL}/frogcrypto/feeds`,
-      FeedProviderName.FROGCRYPTO
+        feed
+      }))
     );
 
     this.feedHosts = [zupassFeedHost, frogcryptoFeedHost].reduce(
@@ -925,7 +909,7 @@ export class IssuanceService {
 
   private async issueEdDSAFrogPCDs(
     credential: SerializedPCD<SemaphoreSignaturePCD>,
-    feed: FrogCryptoFeedConfig
+    feed: FrogCryptoFeed
   ): Promise<SerializedPCD[]> {
     const serverUrl = process.env.PASSPORT_CLIENT_URL;
 

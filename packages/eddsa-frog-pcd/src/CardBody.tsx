@@ -1,4 +1,5 @@
 import {
+  LinkButton,
   QRDisplayWithRegenerateAndStorage,
   encodeQRPayload
 } from "@pcd/passport-ui";
@@ -35,9 +36,9 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
     </Container>
   ) : (
     <Container>
-      <Button onClick={() => setShowPCD(true)}>
+      <LinkButton onClick={() => setShowPCD(true)}>
         View as proof-carrying data
-      </Button>
+      </LinkButton>
       <FrogImg src={frogData?.imageUrl} draggable={false} />
       <FrogInfo>
         <FrogAttribute label="JUMP" title="Jump" value={frogData.jump} />
@@ -71,9 +72,9 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
           </FrogInfo>
         </>
       )}
-      <Button onClick={() => setShowMore(!showMore)}>
+      <LinkButton onClick={() => setShowMore(!showMore)}>
         {showMore ? "Collapse" : "See more"}
-      </Button>
+      </LinkButton>
     </Container>
   );
 }
@@ -154,7 +155,9 @@ function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }) {
   }, [pcd]);
 
   return (
-    <Button onClick={onClick}>{copied ? "Copied!" : "Copy frog PCD"}</Button>
+    <LinkButton onClick={onClick}>
+      {copied ? "Copied!" : "Copy frog PCD"}
+    </LinkButton>
   );
 }
 
@@ -199,10 +202,4 @@ const AttrTitle = styled.div`
 
 const AttrValue = styled.div`
   font-size: 14px;
-`;
-
-const Button = styled.a`
-  color: var(--accent-darker);
-  cursor: pointer;
-  text-decoration: none;
 `;

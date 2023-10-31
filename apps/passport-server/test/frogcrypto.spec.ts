@@ -1,28 +1,24 @@
-import { expect } from "chai";
-import MockDate from "mockdate";
-import { Pool } from "postgres-pool";
 import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
+  PollFeedResult,
   createFeedCredentialPayload,
   pollFeed,
-  PollFeedResult,
   requestListFeeds
 } from "@pcd/passport-interface";
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
+import { expect } from "chai";
+import "mocha";
+import MockDate from "mockdate";
+import { Pool } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { Zupass } from "../src/types";
-import {
-  FROGCRYPTO_FEEDS,
-  FrogCryptoFeed,
-  FrogCryptoFeedConfig
-} from "../src/util/frogcrypto";
-import { goodResponse } from "./tripsha/mockTripshaAPI";
+import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
 import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import "mocha";
+import { randomEmail } from "./util/util";
 
 describe("frogcrypto functionality", function () {
   this.timeout(30_000);
@@ -46,7 +42,7 @@ describe("frogcrypto functionality", function () {
   });
 
   it("should be able to log in", async function () {
-    const result = await testLogin(application, goodResponse.tickets[0].email, {
+    const result = await testLogin(application, randomEmail(), {
       expectEmailIncorrect: false,
       expectUserAlreadyLoggedIn: false,
       force: false,
@@ -93,6 +89,7 @@ describe("frogcrypto functionality", function () {
     expect(frogPCD.claim.data.ownerSemaphoreId).to.eq(
       identity.commitment.toString()
     );
+    expect(EdDSAFrogPCDPackage.verify(frogPCD)).to.eventually.become(true);
   });
 
   it("should be able to get frog even if feed is private", async () => {
@@ -113,6 +110,7 @@ describe("frogcrypto functionality", function () {
     expect(frogPCD.claim.data.ownerSemaphoreId).to.eq(
       identity.commitment.toString()
     );
+    expect(EdDSAFrogPCDPackage.verify(frogPCD)).to.eventually.become(true);
   });
 
   it("should not be able to get frog if feed is inactive", async () => {
@@ -125,15 +123,14 @@ describe("frogcrypto functionality", function () {
     expect(response.error).to.include("not active");
   });
 
-  async function getFrog(feed: FrogCryptoFeedConfig): Promise<PollFeedResult> {
+  async function getFrog(feed: FrogCryptoFeed): Promise<PollFeedResult> {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
       identity,
       payload,
-      feed.id,
-      `${application.expressContext.localEndpoint}/frogcrypto/feeds`
+      feed.id
     );
     MockDate.reset();
 

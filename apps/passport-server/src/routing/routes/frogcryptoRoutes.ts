@@ -1,6 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  IssuanceEnabledResponseValue,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -32,43 +30,6 @@ export function initFrogcryptoRoutes(
       throw new PCDHTTPError(503, "issuance service not instantiated");
     }
   }
-
-  /**
-   * If either of the {@code process.env.SERVER_RSA_PRIVATE_KEY_BASE64} or
-   * {@code process.env.SERVER_EDDSA_PRIVATE_KEY} are not initialized properly,
-   * then this server won't have an {@link IssuanceService}. It'll continue
-   * to work, except users won't get any 'issued' frogs.
-   */
-  app.get("/frogcrypto/issue/enabled", async (req: Request, res: Response) => {
-    const result = issuanceService != null;
-    res.json(result satisfies IssuanceEnabledResponseValue);
-  });
-
-  /**
-   * Gets the RSA public key this server is using for its attestations, so that
-   * 3rd parties can verify whether users have proper attestations.
-   */
-  app.get(
-    "/frogcrypto/issue/rsa-public-key",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      const result = issuanceService.getRSAPublicKey();
-      res.send(result satisfies string);
-    }
-  );
-
-  /**
-   * Gets the EdDSA public key this server is using for its attestations, so that
-   * 3rd parties can verify whether users have proper attestations.
-   */
-  app.get(
-    "/frogcrypto/issue/eddsa-public-key",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      const result = await issuanceService.getEdDSAPublicKey();
-      res.send(result satisfies EdDSAPublicKey);
-    }
-  );
 
   /**
    * Lets a Zupass client (or even a 3rd-party-developed client get PCDs from a

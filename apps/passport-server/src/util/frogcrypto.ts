@@ -1,4 +1,10 @@
-import { Biome, IFrogData, Rarity, Temperament } from "@pcd/eddsa-frog-pcd";
+import {
+  Biome,
+  EdDSAFrogPCDPackage,
+  IFrogData,
+  Rarity,
+  Temperament
+} from "@pcd/eddsa-frog-pcd";
 import {
   Feed,
   FeedHost,
@@ -8,6 +14,10 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import {
+  AppendToFolderPermission,
+  PCDPermissionType
+} from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -15,14 +25,14 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import { PCDHTTPError } from "../routing/pcdHttpError";
+import { FeedProviderName } from "../services/issuanceService";
 
-export interface FrogCryptoFeedConfig {
-  /**
-   * Unique identifier for this feed. It is important to ensure that the feed cannot be discovered by guessing the ID.
-   */
-  id: string;
-  name: string;
-  description: string;
+/**
+ * FrogCrypto specific feed configurations
+ *
+ * Note: It is important to ensure that the feed cannot be discovered by guessing the {@link Feed#id}
+ */
+export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
   /**
    * Whether this feed is discoverable in GET /feeds
    *
@@ -46,11 +56,33 @@ export interface FrogCryptoFeedConfig {
   cooldown: number;
 }
 
+const commonFeedConfig: Pick<
+  Feed,
+  | "autoPoll"
+  | "inputPCDType"
+  | "partialArgs"
+  | "credentialRequest"
+  | "permissions"
+> = {
+  autoPoll: false,
+  inputPCDType: undefined,
+  partialArgs: undefined,
+  credentialRequest: {
+    signatureType: "sempahore-signature-pcd"
+  },
+  permissions: [
+    {
+      folder: "FrogCrypto",
+      type: PCDPermissionType.AppendToFolder
+    } as AppendToFolderPermission
+  ]
+};
+
 /**
  * Feed configuration that will eventually be stored in the database
  * and can be updated by GMs via a TG bot
  */
-export const FROGCRYPTO_FEEDS: FrogCryptoFeedConfig[] = [
+export const FROGCRYPTO_FEEDS: FrogCryptoFeed[] = [
   {
     id: "85b139fa-3665-4b96-a7bd-77c6c4ed18cd",
     name: "Bog",
@@ -75,17 +107,15 @@ export const FROGCRYPTO_FEEDS: FrogCryptoFeedConfig[] = [
     active: false,
     cooldown: 60
   }
-];
-
-export interface FrogCryptoFeed extends Feed, FrogCryptoFeedConfig {}
+].map((config) => ({ ...config, ...commonFeedConfig }));
 
 export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
-  public constructor(
-    feeds: HostedFeed<FrogCryptoFeed>[],
-    providerUrl: string,
-    providerName: string
-  ) {
-    super(feeds, providerUrl, providerName);
+  public constructor(feeds: HostedFeed<FrogCryptoFeed>[]) {
+    super(
+      feeds,
+      `${process.env.PASSPORT_SERVER_URL}/frogcrypto/feeds`,
+      FeedProviderName.FROGCRYPTO
+    );
   }
 
   public handleFeedRequest(
@@ -129,7 +159,7 @@ const LAST_FETCHED_AT = new Map<string, number>();
  */
 export async function getNextFetchAvailable(
   id: string,
-  feed: FrogCryptoFeedConfig
+  feed: FrogCryptoFeed
 ): Promise<number> {
   const lastFetchedAt = LAST_FETCHED_AT.get(`${feed.id}_${id}`) ?? 0;
   const now = Date.now();
@@ -138,7 +168,7 @@ export async function getNextFetchAvailable(
 
 export async function createFrogData(
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-  feed: FrogCryptoFeedConfig
+  feed: FrogCryptoFeed
 ): Promise<IFrogData> {
   if (serializedPCD.type !== SemaphoreSignaturePCDPackage.name) {
     throw new Error("Invalid PCD type");
