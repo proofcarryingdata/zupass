@@ -468,7 +468,10 @@ async function loadAfterLogin(
     throw new Error(userResponse.error.errorMessage);
   }
 
-  // TODO: this assumes that we only have one semaphore identity in Zupass.
+  // TODO: This fragile mechanism of fetching the user's identity PCD assumes
+  // it's always the first one created, and that changes never cause the order
+  // to change.  We should do something more robust, probably tied to the
+  // commitment stored in self.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;

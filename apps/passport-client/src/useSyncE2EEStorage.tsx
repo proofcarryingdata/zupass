@@ -84,7 +84,8 @@ export async function uploadStorage(
     appConfig.zupassServer,
     blobKey,
     encryptedStorage
-    // TODO(artwyman): Expose access to knownRevision when needed
+    // TODO(artwyman): Expose access to knownRevision when a caller is ready
+    // to handle conflicts.
   );
 
   if (uploadResult.success) {

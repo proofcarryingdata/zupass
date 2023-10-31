@@ -58,13 +58,13 @@ export async function requestDownloadAndDecryptStorage(
   };
 }
 
-export type DownloadAndDecryptUpdate = {
+export type OptionalStorageWithRevision = {
   storage?: SyncedEncryptedStorage;
   revision: string;
 };
 
 export type DownloadAndDecryptUpdateResult = APIResult<
-  DownloadAndDecryptUpdate,
+  OptionalStorageWithRevision,
   NamedAPIError
 >;
 
@@ -98,11 +98,12 @@ export async function requestDownloadAndDecryptUpdatedStorage(
 
     if (!storageResult.value.encryptedBlob) {
       if (!knownRevision) {
-        console.error("unexpectedly missing e2ee data");
+        console.error("missing e2ee data when downloading without revision");
         return {
           error: {
             name: ERROR_NAME_BAD_RESPONSE,
-            detailedMessage: "unexpectedly missing e2ee data"
+            detailedMessage:
+              "missing e2ee data when downloading without revision"
           },
           success: false
         };
