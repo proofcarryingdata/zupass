@@ -305,7 +305,7 @@ export class DevconnectPretixDataMocker {
 
     return {
       code: orderId,
-      name: "name",
+      name: this.randomName(),
       status: "p",
       testmode: false,
       secret: this.randomSecret(),

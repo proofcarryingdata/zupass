@@ -245,14 +245,14 @@ describe("devconnect functionality", function () {
             {
               id: eventAConfigId,
               eventID: "event-a",
-              superuserItemIds: ["10002"],
-              activeItemIDs: ["10001", "10002"]
+              superuserItemIds: ["10003"],
+              activeItemIDs: ["10001", "10003"]
             },
             {
               id: eventBConfigId,
               eventID: "event-b",
-              activeItemIDs: ["10003"],
-              superuserItemIds: ["10003"]
+              activeItemIDs: ["10005"],
+              superuserItemIds: ["10005"]
             },
             {
               id: eventCConfigId,
