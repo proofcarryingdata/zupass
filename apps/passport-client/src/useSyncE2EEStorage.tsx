@@ -2,15 +2,15 @@ import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   ChangeBlobKeyResult,
   FeedSubscriptionManager,
+  NetworkFeedApi,
+  SyncedEncryptedStorageV2,
+  SyncedEncryptedStorageV3,
   isSyncedEncryptedStorageV2,
   isSyncedEncryptedStorageV3,
   requestChangeBlobKey,
   requestDownloadAndDecryptStorage,
-  requestUploadEncryptedStorage,
-  SyncedEncryptedStorageV2,
-  SyncedEncryptedStorageV3
+  requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { appConfig } from "./appConfig";

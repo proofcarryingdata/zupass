@@ -1,5 +1,6 @@
 export * from "./CredentialManager";
 export * from "./EncryptedStorage";
+export * from "./FeedAPI";
 export * from "./FeedCredential";
 export * from "./FeedHost";
 export * from "./PassportInterface";
