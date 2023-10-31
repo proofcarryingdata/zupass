@@ -22,23 +22,29 @@ export function ScanScreen() {
 
   return (
     <AppContainer bg="gray">
-      <QrReader
-        onResult={(result, error) => {
-          if (result != null) {
-            console.log(`Got result, considering redirect`, result.getText());
-            const newLoc = maybeRedirect(result.getText());
-            if (newLoc) nav(newLoc);
-          } else if (error != null) {
-            //    console.info(error);
-          }
-        }}
-        constraints={{ facingMode: "environment", aspectRatio: 1 }}
-        ViewFinder={ViewFinder}
-        containerStyle={{
-          width: "100%",
-          hidden: scannerMode === ScannerMode.LASER_KEYSTROKE
-        }}
-      />
+      {scannerMode === ScannerMode.CAMERA && (
+        <QrReader
+          onResult={(result, error) => {
+            if (result != null) {
+              console.log(`Got result, considering redirect`, result.getText());
+              const newLoc = maybeRedirect(result.getText());
+              if (newLoc) nav(newLoc);
+            } else if (error != null) {
+              //    console.info(error);
+            }
+          }}
+          constraints={{ facingMode: "environment", aspectRatio: 1 }}
+          ViewFinder={ViewFinder}
+          containerStyle={{
+            width: "100%"
+          }}
+        />
+      )}
+      {scannerMode === ScannerMode.LASER_KEYSTROKE && (
+        <FullWidthRow>
+          <CloseButton />
+        </FullWidthRow>
+      )}
       <Spacer h={24} />
       <TextCenter>Scan a ticket to verify</TextCenter>
       <Spacer h={24} />
@@ -89,6 +95,10 @@ const ScanOverlayWrap = styled.div`
   bottom: 0;
   right: 0;
   z-index: 1;
+`;
+
+const FullWidthRow = styled.div`
+  width: 100%;
 `;
 
 const Guidebox = styled.div`
