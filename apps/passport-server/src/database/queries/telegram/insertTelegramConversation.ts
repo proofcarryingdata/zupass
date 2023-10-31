@@ -122,3 +122,21 @@ on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
   );
   return result.rowCount;
 }
+
+export async function insertTelegramAnonMessage(
+  client: Pool,
+  nullifierHash: string,
+  chatTopicId: number,
+  message: string,
+  proof: string
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `\
+    insert into telegram_chat_anon_messages (nullifier, chat_topic_id, content, proof)
+    values ($1, $2, $3, $4)
+    `,
+    [nullifierHash, chatTopicId, message, proof]
+  );
+  return result.rowCount;
+}

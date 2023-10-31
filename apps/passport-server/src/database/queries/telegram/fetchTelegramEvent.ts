@@ -1,5 +1,6 @@
 import { Pool } from "postgres-pool";
 import {
+  AnonMessage,
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
@@ -269,6 +270,21 @@ export async function fetchTelegramTopicForwarding(
     WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL));
     `,
     [sendingChatID, sendingTopicID || null]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramAnonMessagesByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessage[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select * from telegram_chat_anon_messages 
+    where nullifier = $1
+    `,
+    [nullifierHash]
   );
   return result.rows;
 }

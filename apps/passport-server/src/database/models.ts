@@ -307,3 +307,11 @@ export interface FrogCryptoUserFeedState {
    */
   last_fetched_at: Date;
 }
+
+export interface AnonMessage {
+  id: number;
+  nullifier: string;
+  chat_topic_id: number;
+  content: string;
+  proof: string;
+}

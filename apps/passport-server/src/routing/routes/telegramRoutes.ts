@@ -146,4 +146,23 @@ export function initTelegramRoutes(
       res.status(500).send(errorHtmlWithDetails(e as Error));
     }
   });
+
+  app.get(
+    "/telegram/anonget/:nullifier",
+    async (req: Request, res: Response) => {
+      try {
+        const nullifierHash = checkUrlParam(req, "nullifier");
+        if (!nullifierHash || typeof nullifierHash !== "string") {
+          throw new Error(
+            "nullifierHash field needs to be a string and be non-empty"
+          );
+        }
+        const messages =
+          await telegramService?.handleGetAnonMessages(nullifierHash);
+        res.json(messages);
+      } catch (e) {
+        logger("[TELEGRAM] failed to get posts", e);
+      }
+    }
+  );
 }

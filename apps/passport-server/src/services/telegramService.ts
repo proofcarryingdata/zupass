@@ -10,6 +10,7 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
+import { AnonMessage } from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -22,12 +23,14 @@ import {
 import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
+  fetchTelegramAnonMessagesByNullifier,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   insertOrUpdateTelegramNullifier,
+  insertTelegramAnonMessage,
   insertTelegramChat,
   insertTelegramForward,
   insertTelegramTopic,
@@ -1104,6 +1107,13 @@ export class TelegramService {
           [currentTime.toISOString()],
           topic.id
         );
+        await insertTelegramAnonMessage(
+          this.context.dbPool,
+          nullifierHash,
+          topic.id,
+          rawMessage,
+          serializedZKEdDSATicket
+        );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
           new Date(t).getTime()
@@ -1126,6 +1136,13 @@ export class TelegramService {
             nullifierHash,
             newTimestamps,
             topic.id
+          );
+          await insertTelegramAnonMessage(
+            this.context.dbPool,
+            nullifierHash,
+            topic.id,
+            rawMessage,
+            serializedZKEdDSATicket
           );
         } else {
           const rlError = new Error(
@@ -1187,7 +1204,7 @@ export class TelegramService {
         );
 
         const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
-        span?.setAttribute(`redriect url`, url);
+        span?.setAttribute(`redirect url`, url);
         logger(
           `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
         );
@@ -1195,6 +1212,21 @@ export class TelegramService {
         return url;
       }
     );
+  }
+
+  public async handleGetAnonMessages(
+    nullifierHash: string
+  ): Promise<AnonMessage[]> {
+    return traced("telegram", "handleGetAnonMessages", async () => {
+      const messages = await fetchTelegramAnonMessagesByNullifier(
+        this.context.dbPool,
+        nullifierHash
+      );
+
+      if (messages.length === 0) throw new Error(`No messages found`);
+
+      return messages;
+    });
   }
 
   public stop(): void {
