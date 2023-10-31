@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  DevconnectPretixCategory,
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
@@ -28,6 +29,7 @@ export interface IOrganizer {
   eventByEventID: Map<string, DevconnectPretixEvent>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
   settingsByEventID: Map<string, DevconnectPretixEventSettings>;
+  categoriesByEventId: Map<string, DevconnectPretixCategory[]>;
 
   // specific data for easier testing
   eventAItem1: DevconnectPretixItem;
@@ -195,6 +197,10 @@ export class DevconnectPretixDataMocker {
     const eventBSettings = this.newEventSettings();
     const eventCSettings = this.newEventSettings();
 
+    const eventACategories = this.newEventCategories();
+    const eventBCategories = this.newEventCategories();
+    const eventCCategories = this.newEventCategories();
+
     const eventAItem1 = this.newItem("item-1");
     const eventAItem2 = this.newItem("item-2");
     const eventBItem3 = this.newItem("item-3");
@@ -244,6 +250,12 @@ export class DevconnectPretixDataMocker {
     settingsByEventID.set(eventB.slug, eventBSettings);
     settingsByEventID.set(eventC.slug, eventCSettings);
 
+    const categoriesByEventId: Map<string, DevconnectPretixCategory[]> =
+      new Map();
+    categoriesByEventId.set(eventA.slug, eventACategories);
+    categoriesByEventId.set(eventB.slug, eventBCategories);
+    categoriesByEventId.set(eventC.slug, eventCCategories);
+
     return {
       orgUrl,
       token,
@@ -260,6 +272,7 @@ export class DevconnectPretixDataMocker {
       eventASettings,
       eventBSettings,
       eventCSettings,
+      categoriesByEventId,
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
@@ -278,6 +291,7 @@ export class DevconnectPretixDataMocker {
     return {
       id: this.nextId(),
       name: { en: name },
+      category: this.nextId(),
       admission: true,
       personalized: true
     };
@@ -291,6 +305,7 @@ export class DevconnectPretixDataMocker {
 
     return {
       code: orderId,
+      name: "name",
       status: "p",
       testmode: false,
       secret: this.randomSecret(),
@@ -326,6 +341,10 @@ export class DevconnectPretixDataMocker {
       attendee_emails_asked: true,
       attendee_emails_required: true
     };
+  }
+
+  private newEventCategories(): DevconnectPretixCategory[] {
+    return [];
   }
 
   private nextId(): number {
