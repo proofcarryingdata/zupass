@@ -5,7 +5,11 @@ import {
   closeWebviewHtml,
   errorHtmlWithDetails
 } from "../../util/telegramWebApp";
-import { checkQueryParam, checkUrlParam } from "../params";
+import {
+  checkOptionalUrlParam,
+  checkQueryParam,
+  checkUrlParam
+} from "../params";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -23,45 +27,55 @@ export function initTelegramRoutes(
    * an invite to the chat. In that case, we redirect the user back to
    * Telegram.
    */
-  app.get("/telegram/verify/:id", async (req: Request, res: Response) => {
-    try {
-      const { proof } = req.query;
-      const telegram_user_id = checkUrlParam(req, "id");
-      if (!proof || typeof proof !== "string") {
-        throw new Error("proof field needs to be a string and be non-empty");
-      }
+  app.get(
+    "/telegram/verify/:id/:username?",
+    async (req: Request, res: Response) => {
+      try {
+        const { proof } = req.query;
+        const telegram_user_id = checkUrlParam(req, "id");
+        let telegram_username = checkOptionalUrlParam(req, "username");
+        if (!proof || typeof proof !== "string") {
+          throw new Error("proof field needs to be a string and be non-empty");
+        }
 
-      if (
-        !telegram_user_id ||
-        typeof telegram_user_id !== "string" ||
-        !/^-?\d+$/.test(telegram_user_id)
-      ) {
-        throw new Error(
-          "telegram_user_id field needs to be a numeric string and be non-empty"
+        if (!telegram_user_id || !/^-?\d+$/.test(telegram_user_id)) {
+          throw new Error(
+            "telegram_user_id field needs to be a numeric string and be non-empty"
+          );
+        }
+
+        // express path param value should always be undefined rather than empty string, but adding this just in case
+        if (telegram_username?.length === 0) {
+          telegram_username = undefined;
+        }
+
+        logger(
+          `[TELEGRAM] Verifying ticket for ${telegram_user_id}` +
+            (telegram_username && ` with username ${telegram_username}`)
         );
-      }
 
-      logger(`[TELEGRAM] Verifying ticket for ${telegram_user_id}`);
-
-      if (!telegramService) {
-        throw new Error("Telegram service not initialized");
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
+        await telegramService.handleVerification(
+          proof,
+          parseInt(telegram_user_id),
+          telegram_username
+        );
+        logger(
+          `[TELEGRAM] Redirecting to telegram for user id ${telegram_user_id}` +
+            (telegram_username && ` with username ${telegram_username}`)
+        );
+        res.setHeader("Content-Type", "text/html");
+        res.send(closeWebviewHtml);
+      } catch (e) {
+        logger("[TELEGRAM] failed to verify", e);
+        rollbarService?.reportError(e);
+        res.set("Content-Type", "text/html");
+        res.status(500).send(errorHtmlWithDetails(e as Error));
       }
-      await telegramService.handleVerification(
-        proof,
-        parseInt(telegram_user_id)
-      );
-      logger(
-        `[TELEGRAM] Redirecting to telegram for user id  ${telegram_user_id}`
-      );
-      res.setHeader("Content-Type", "text/html");
-      res.send(closeWebviewHtml);
-    } catch (e) {
-      logger("[TELEGRAM] failed to verify", e);
-      rollbarService?.reportError(e);
-      res.set("Content-Type", "text/html");
-      res.status(500).send(errorHtmlWithDetails(e as Error));
     }
-  });
+  );
 
   /**
    * When an EdDSATicket holder wants to send an anonymous message to
