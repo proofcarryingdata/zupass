@@ -63,7 +63,11 @@ export interface SessionData {
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
-  kudosData?: { giver: string; receiver: string };
+  kudosData?: {
+    senderSemaphoreId: string;
+    recipientSemaphoreId: string;
+    recipientUsername: string;
+  };
   topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
