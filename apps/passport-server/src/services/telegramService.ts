@@ -931,7 +931,8 @@ export class TelegramService {
    */
   public async handleVerification(
     serializedZKEdDSATicket: string,
-    telegramUserId: number
+    telegramUserId: number,
+    telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
       span?.setAttribute("userId", telegramUserId.toString());
@@ -989,7 +990,10 @@ export class TelegramService {
 
       span?.setAttribute("chatTitle", chat.title);
 
-      logger(`[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}`);
+      logger(
+        `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}` +
+          (telegramUsername && `, username ${telegramUsername}`)
+      );
 
       // We've verified that the chat exists, now add the user to our list.
       // This will be important later when the user requests to join.
@@ -997,7 +1001,8 @@ export class TelegramService {
         this.context.dbPool,
         telegramUserId,
         parseInt(telegramChatId),
-        attendeeSemaphoreId
+        attendeeSemaphoreId,
+        telegramUsername
       );
 
       // Send invite link

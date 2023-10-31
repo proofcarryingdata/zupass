@@ -74,14 +74,14 @@ export class KudosbotService {
     const kudosbotMenu = new Menu<BotContext>("kudos");
     kudosbotMenu.dynamic((ctx, menu) => {
       if (ctx.session.kudosData) {
-        const kudosGiver = ctx.session.kudosData?.giver;
-        const kudosReceiver = ctx.session.kudosData?.receiver;
+        const { senderSemaphoreId, recipientSemaphoreId, recipientUsername } =
+          ctx.session.kudosData;
         const proofUrl = getProofUrl(
           PASSPORT_CLIENT_URL,
           KUDOSBOT_UPLOAD_URL,
-          `KUDOS:${kudosGiver}:${kudosReceiver}`
+          `KUDOS:${senderSemaphoreId}:${recipientSemaphoreId}`
         );
-        menu.webApp("Send kudos", proofUrl);
+        menu.webApp(`Send kudos to @${recipientUsername}`, proofUrl);
       } else {
         ctx.reply("Kudosbot encountered an error.");
       }
@@ -134,8 +134,9 @@ export class KudosbotService {
             );
           }
           ctx.session.kudosData = {
-            giver: kudosGiverSemaphoreId,
-            receiver: kudosReceiverSemaphoreId
+            senderSemaphoreId: kudosGiverSemaphoreId,
+            recipientSemaphoreId: kudosReceiverSemaphoreId,
+            recipientUsername: kudosReceiver
           };
           await ctx.reply("Send a kudos by pressing on the button.", {
             reply_markup: kudosbotMenu
