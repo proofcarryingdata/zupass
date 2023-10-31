@@ -6,9 +6,10 @@ import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import { PCDCard } from "./PCDCard";
 
-type Sortable = {
+type Sortable<T = unknown> = {
   name: string;
-  order: number;
+  index: number;
+  value: T;
 };
 type SortKey = keyof Sortable;
 type SortOption = {
@@ -21,7 +22,7 @@ const SORT_OPTIONS: SortOption[] = [
    * PCDs are naturally sorted by order of when it is added to the collection.
    * The order of its sequence proximates the time it was added.
    */
-  { render: () => <ClockIcon />, key: "order" }
+  { render: () => <ClockIcon />, key: "index" }
 ];
 type SortState = {
   sortBy?: SortKey;
@@ -36,13 +37,13 @@ export function PCDCardList({ pcds }: { pcds: PCD[] }) {
   }, [pcds]);
 
   const pcdCollection = usePCDCollection();
-  const sortablePCDs = useMemo(
+  const sortablePCDs = useMemo<Sortable<PCD>[]>(
     () =>
       pcds.map((pcd, i) => ({
-        pcd,
+        value: pcd,
         name: pcdCollection.getPackage(pcd.type).getDisplayOptions?.(pcd)
           ?.displayName,
-        order: i
+        index: i
       })),
     [pcdCollection, pcds]
   );
@@ -51,12 +52,14 @@ export function PCDCardList({ pcds }: { pcds: PCD[] }) {
     () =>
       SORT_OPTIONS.filter(
         (option) =>
-          !sortablePCDs.some((pcd) => typeof pcd[option.key] === "undefined")
+          !sortablePCDs.some(
+            (sortable) => typeof sortable[option.key] === "undefined"
+          )
       ),
     [sortablePCDs]
   );
   const [sortState, setSortState] = useState<SortState>({
-    sortBy: "order",
+    sortBy: "index",
     sortOrder: "asc"
   });
   const sortedPCDs = useMemo(
@@ -64,7 +67,7 @@ export function PCDCardList({ pcds }: { pcds: PCD[] }) {
       (sortState.sortBy && sortState.sortOrder
         ? _.orderBy(sortablePCDs, [sortState.sortBy], [sortState.sortOrder])
         : sortablePCDs
-      ).map((o) => o.pcd),
+      ).map((o) => o.value),
     [sortState, sortablePCDs]
   );
 
@@ -126,14 +129,17 @@ function ToolBar({
 
   return (
     <ToolBarContainer>
+      <ToolBarText>Sort:</ToolBarText>
       {sortOptions.map((o) => {
         const active = sortState.sortBy === o.key;
         const onClick = () => {
-          if (active) {
+          if (active && sortState.sortOrder === "asc") {
             onSortStateChange({
               sortBy: o.key,
-              sortOrder: sortState.sortOrder === "asc" ? "desc" : "asc"
+              sortOrder: "desc"
             });
+          } else if (active && sortState.sortOrder === "desc") {
+            onSortStateChange({});
           } else {
             onSortStateChange({
               sortBy: o.key,
@@ -170,7 +176,6 @@ const Container = styled.div`
 
 const ToolBarContainer = styled.div`
   display: flex;
-  flex-direction: row-reverse;
   gap: 8px;
   align-items: center;
 `;
@@ -178,14 +183,27 @@ const ToolBarContainer = styled.div`
 const ToolBarItem = styled.div`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
+  padding: 4px;
+
+  &:hover {
+    box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+  }
+`;
+
+const ToolBarText = styled.span`
+  margin-left: auto;
+  user-select: none;
+  color: rgba(var(--white-rgb), 0.8);
+  font-size: 18px;
 `;
 
 const SortIconContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 `;
 
 const SortIconUp = styled.div<{ active: boolean }>`
@@ -197,7 +215,7 @@ const SortIconUp = styled.div<{ active: boolean }>`
   background: transparent;
   border-bottom: solid 7px
     ${(p) =>
-      p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.6)"};
+      p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.8)"};
   border-top-width: 0;
 `;
 
@@ -210,28 +228,28 @@ const SortIconDown = styled.div<{ active: boolean }>`
   background: transparent;
   border-top: solid 7px
     ${(p) =>
-      p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.6)"};
+      p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.8)"};
   border-bottom-width: 0;
 `;
 
 const ClockIcon = styled.div`
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  background-color: rgba(var(--white-rgb), 0.6);
+  background-color: rgba(var(--white-rgb), 0.8);
   position: relative;
   display: block;
 
   &::before {
     content: "";
-    height: 9px;
+    height: 10px;
     width: 1px;
     background-color: var(--black);
     display: block;
     position: absolute;
-    left: 9px;
+    left: 10px;
     top: 3px;
-    opacity: 0.6;
+    opacity: 0.8;
   }
   &::after {
     content: "";
@@ -240,40 +258,40 @@ const ClockIcon = styled.div`
     background-color: var(--black);
     display: block;
     position: absolute;
-    top: 7px;
-    left: 11px;
+    top: 8px;
+    left: 12px;
     transform: rotate(45deg);
-    opacity: 0.6;
+    opacity: 0.8;
   }
 `;
 
 const NameIcon = styled.div`
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   position: relative;
   display: block;
 
   &::before {
     content: "A";
-    font-size: 12px;
-    line-height: 12px;
+    font-size: 14px;
+    line-height: 14px;
     font-weight: 600;
     color: var(--white);
     display: block;
     position: absolute;
     top: 0px;
-    opacity: 0.6;
+    opacity: 0.8;
   }
   &::after {
     content: "Z";
-    font-size: 12px;
-    line-height: 12px;
+    font-size: 14px;
+    line-height: 14px;
     font-weight: 600;
     color: var(--white);
     display: block;
     position: absolute;
     right: 0px;
     bottom: 0px;
-    opacity: 0.6;
+    opacity: 0.8;
   }
 `;
