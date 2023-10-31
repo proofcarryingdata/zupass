@@ -325,7 +325,7 @@ function SinglePermission({ permission }: { permission: PCDPermission }) {
   } else {
     return (
       <PermissionListItem>
-        Unknown permission {permission.type}
+        Unknown permission {permission["type"]}
       </PermissionListItem>
     );
   }

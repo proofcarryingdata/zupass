@@ -9,7 +9,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -49,6 +49,7 @@ import {
 import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
   this.timeout(30_000);
@@ -334,7 +335,8 @@ describe("zuconnect functionality", function () {
     expect(response.success).to.be.true;
 
     expect(response.value?.actions.length).to.eq(3);
-    const populateAction = response.value?.actions[2] as ReplaceInFolderAction;
+    const populateAction = response.value?.actions[2];
+    expectToExist(populateAction, isReplaceInFolderAction);
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
     expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds[0].type).to.eq(EdDSATicketPCDPackage.name);
@@ -472,7 +474,8 @@ describe("zuconnect functionality", function () {
     expect(response.success).to.be.true;
 
     expect(response.value?.actions.length).to.eq(3);
-    const populateAction = response.value?.actions[2] as ReplaceInFolderAction;
+    const populateAction = response.value?.actions[2];
+    expectToExist(populateAction, isReplaceInFolderAction);
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
     expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds.length).to.eq(2);
