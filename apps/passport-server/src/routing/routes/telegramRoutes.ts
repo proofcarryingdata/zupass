@@ -31,12 +31,9 @@ export function initTelegramRoutes(
     "/telegram/verify/:id/:username?",
     async (req: Request, res: Response) => {
       try {
-        const { proof } = req.query;
+        const proof = checkQueryParam(req, "proof");
         const telegram_user_id = checkUrlParam(req, "id");
         let telegram_username = checkOptionalUrlParam(req, "username");
-        if (!proof || typeof proof !== "string") {
-          throw new Error("proof field needs to be a string and be non-empty");
-        }
 
         if (!telegram_user_id || !/^-?\d+$/.test(telegram_user_id)) {
           throw new Error(
