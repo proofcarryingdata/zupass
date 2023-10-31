@@ -72,8 +72,10 @@ export function login(
 
       const isValidTicket = value.knownTicketTypes.some((ticketType: any) => {
         return (
-          ticketType.eventId === pcd.claim.partialTicket.eventId &&
-          ticketType.productId === pcd.claim.partialTicket.productId &&
+          (!pcd.claim.partialTicket.eventId ||
+            ticketType.eventId === pcd.claim.partialTicket.eventId) &&
+          (!pcd.claim.partialTicket.productId ||
+            ticketType.productId === pcd.claim.partialTicket.productId) &&
           ticketType.publicKey[0] === pcd.claim.signer[0] &&
           ticketType.publicKey[1] === pcd.claim.signer[1]
         );
