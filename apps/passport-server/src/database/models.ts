@@ -234,8 +234,7 @@ export interface KnownTicketTypeWithKey extends KnownTicketType {
 export interface AnonNullifierInfo {
   nullifier: string;
   message_timestamps: string[];
-  topic_id: number;
-  telegram_chat_id: string;
+  chat_topic_id: number;
 }
 
 /**

@@ -1092,8 +1092,7 @@ export class TelegramService {
       const nullifierData = await fetchAnonTopicNullifier(
         this.context.dbPool,
         nullifierHash,
-        parseInt(telegramChatId),
-        parseInt(topicId)
+        topic.id
       );
 
       const currentTime = new Date();
@@ -1103,8 +1102,7 @@ export class TelegramService {
           this.context.dbPool,
           nullifierHash,
           [currentTime.toISOString()],
-          telegramChatId,
-          parseInt(topicId)
+          topic.id
         );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
@@ -1127,8 +1125,7 @@ export class TelegramService {
             this.context.dbPool,
             nullifierHash,
             newTimestamps,
-            telegramChatId,
-            parseInt(topicId)
+            topic.id
           );
         } else {
           const rlError = new Error(
