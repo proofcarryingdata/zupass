@@ -243,10 +243,10 @@ export class OrganizerSync {
   }
 
   /**
-   * Validate that an item/products settings match our expectations.
-   * These settings correspond to the product either being an add-on OR of
-   * type "Admission", "Personalization" being set to "Personalized ticket",
-   * and "Generate tickets" in the "Tickets & Badges" section being set to
+   * Validate that an item / product's settings match our expectations.
+   * These settings correspond to the product (1) either being an add-on item OR of
+   * type "Admission" with "Personalization" being set to "Personalized ticket"
+   * and (2) "Generate tickets" in the "Tickets & Badges" section being set to
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
   private validateEventItem(
@@ -256,6 +256,7 @@ export class OrganizerSync {
     const errors = [];
 
     // If item is not an add-on, check that it is an Admission product and
+    // that "Personalization" is set to "Personalized Ticket"
     if (!addonCategoryIdSet.has(item.category)) {
       if (item.admission !== true) {
         errors.push(`Product type is not "Admission"`);
