@@ -76,9 +76,12 @@ export function SyncExistingScreen() {
         <H2>LOGIN WITH SYNC KEY</H2>
         <Spacer h={32} />
         <TextCenter>
-          If you've already registered, you can sync with your other device here
-          using your Sync Key. You can find your Sync Key on your existing
-          device by clicking on the settings icon.
+          If you've already registered and you've saved your Sync Key, you can
+          sync with your other device here using your Sync Key. If you haven't
+          saved your Sync Key, you may add a password by clicking on the
+          settings icon on another logged-in device, and then refresh to log in
+          with your password. If you've lost access to your account, you can
+          reset your account from the homepage of this website.
         </TextCenter>
         <Spacer h={32} />
         <CenterColumn>
