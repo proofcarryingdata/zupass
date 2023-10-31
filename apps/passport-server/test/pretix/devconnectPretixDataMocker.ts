@@ -35,6 +35,7 @@ export interface IOrganizer {
   eventAItem1: DevconnectPretixItem;
   eventAItem2: DevconnectPretixItem;
   eventBItem3: DevconnectPretixItem;
+  eventBItem4: DevconnectPretixItem;
 
   eventA: DevconnectPretixEvent;
   eventB: DevconnectPretixEvent;
@@ -197,13 +198,20 @@ export class DevconnectPretixDataMocker {
     const eventBSettings = this.newEventSettings();
     const eventCSettings = this.newEventSettings();
 
-    const eventACategories = this.newEventCategories();
-    const eventBCategories = this.newEventCategories();
-    const eventCCategories = this.newEventCategories();
+    const eventACategories = [1, 2, 3].map((n) =>
+      this.newEventCategory(n, false)
+    );
+    const eventBCategories = [
+      this.newEventCategory(1, false),
+      this.newEventCategory(2, true)
+    ];
+    const eventCCategories = [1, 2].map((n) => this.newEventCategory(n, false));
 
-    const eventAItem1 = this.newItem("item-1");
-    const eventAItem2 = this.newItem("item-2");
-    const eventBItem3 = this.newItem("item-3");
+    const eventAItem1 = this.newItem("item-1", 1);
+    const eventAItem2 = this.newItem("item-2", 1);
+    const eventBItem3 = this.newItem("item-3", 1);
+    // Add-on item
+    const eventBItem4 = this.newItem("item-4", 2, true);
 
     const eventAOrders: DevconnectPretixOrder[] = [
       this.newPretixOrder(EMAIL_4, [[eventAItem1.id, EMAIL_4]]),
@@ -242,7 +250,7 @@ export class DevconnectPretixDataMocker {
 
     const itemsByEventID: Map<string, DevconnectPretixItem[]> = new Map();
     itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
-    itemsByEventID.set(eventB.slug, [eventBItem3]);
+    itemsByEventID.set(eventB.slug, [eventBItem3, eventBItem4]);
 
     const settingsByEventID: Map<string, DevconnectPretixEventSettings> =
       new Map();
@@ -266,6 +274,7 @@ export class DevconnectPretixDataMocker {
       eventAItem1,
       eventAItem2,
       eventBItem3,
+      eventBItem4,
       eventA,
       eventB,
       eventC,
@@ -287,13 +296,17 @@ export class DevconnectPretixDataMocker {
     };
   }
 
-  private newItem(name: string): DevconnectPretixItem {
+  private newItem(
+    name: string,
+    category: number,
+    addon = false
+  ): DevconnectPretixItem {
     return {
       id: this.nextId(),
       name: { en: name },
-      category: this.nextId(),
-      admission: true,
-      personalized: true
+      category,
+      admission: !addon,
+      personalized: !addon
     };
   }
 
@@ -343,8 +356,14 @@ export class DevconnectPretixDataMocker {
     };
   }
 
-  private newEventCategories(): DevconnectPretixCategory[] {
-    return [];
+  private newEventCategory(
+    id: number,
+    isAddon: boolean
+  ): DevconnectPretixCategory {
+    return {
+      id,
+      is_addon: isAddon
+    };
   }
 
   private nextId(): number {
