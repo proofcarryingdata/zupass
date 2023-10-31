@@ -26,11 +26,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import {
-  PCDActionType,
-  ReplaceInFolderAction,
-  isReplaceInFolderAction
-} from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -122,6 +118,7 @@ import {
 } from "./user/testUserSync";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 // @todo: merge this with zupass.spec.ts, and delete this file, after completely deprecating pcdpass
 describe("devconnect functionality", function () {
@@ -1770,8 +1767,8 @@ describe("devconnect functionality", function () {
       expect(response.value?.actions?.length).to.eq(3);
 
       // Now we have an action to populate the folder
-      const populateAction = response.value
-        ?.actions?.[2] as ReplaceInFolderAction;
+      const populateAction = response.value?.actions?.[2];
+      expectToExist(populateAction, isReplaceInFolderAction);
 
       expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(populateAction.folder).to.eq("Devconnect/Event A");
@@ -1812,8 +1809,10 @@ describe("devconnect functionality", function () {
     MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[2] as ReplaceInFolderAction;
-    const action2 = response2.actions[2] as ReplaceInFolderAction;
+    const action1 = response1.actions[2];
+    expectToExist(action1, isReplaceInFolderAction);
+    const action2 = response2.actions[2];
+    expectToExist(action2, isReplaceInFolderAction);
 
     const pcds1 = await Promise.all(
       action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
@@ -1866,7 +1865,8 @@ describe("devconnect functionality", function () {
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
 
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      const devconnectAction = responseBody.actions[2];
+      expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
       expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
@@ -1915,7 +1915,8 @@ describe("devconnect functionality", function () {
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      const devconnectAction = responseBody.actions[2];
+      expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
       expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
@@ -1966,7 +1967,8 @@ describe("devconnect functionality", function () {
       MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
 
-      const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+      const action = issueResponseBody.actions[2];
+      expectToExist(action, isReplaceInFolderAction);
       const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
       ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
