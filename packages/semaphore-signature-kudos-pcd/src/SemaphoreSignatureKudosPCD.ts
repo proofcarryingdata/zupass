@@ -12,6 +12,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { ZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
@@ -27,6 +28,10 @@ export interface KudosUserInfo {
   semaphoreID: string;
   telegramUsername: string;
 }
+
+export type KudosRecipient =
+  | { type: "user"; user: KudosUserInfo; post: never }
+  | { type: "post"; user: never; post: ZKEdDSAEventTicketPCD };
 
 export interface IKudosData {
   sender: KudosUserInfo;
