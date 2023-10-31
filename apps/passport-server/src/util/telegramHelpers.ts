@@ -352,7 +352,8 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
-  validEventIds: string[]
+  validEventIds: string[],
+  telegramUsername?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId);
@@ -420,7 +421,12 @@ const generateTicketProofUrl = async (
       // TG bot doesn't like localhost URLs
       passportOrigin = "http://127.0.0.1:3000/";
     }
-    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+
+    // pass telegram username as path param if nonempty
+    const returnUrl =
+      telegramUsername && telegramUsername.length > 0
+        ? `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}/${telegramUsername}`
+        : `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
@@ -566,6 +572,8 @@ export const chatsToJoin = async (
       return;
     }
 
+    const telegramUsername = ctx.from?.username;
+
     for (const chat of chatsWithMembership) {
       if (chat.isChatMember) {
         const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
@@ -576,7 +584,8 @@ export const chatsToJoin = async (
       } else {
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
-          chat.ticketEventIds
+          chat.ticketEventIds,
+          telegramUsername
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
       }
