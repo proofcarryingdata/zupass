@@ -731,7 +731,6 @@ async function syncSubscription(
       state.pcds,
       state.credentialCache
     );
-    console.log("[SYNC] initalized credentialManager", credentialManager);
     const actions = await state.subscriptions.pollSingleSubscription(
       subscription,
       credentialManager
