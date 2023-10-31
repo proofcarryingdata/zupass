@@ -2,9 +2,6 @@ alter table telegram_chat_anon_nullifiers
 	add column chat_topic_id BIGINT;
 
 alter table telegram_chat_anon_nullifiers
-	add column telegram_chat_id BIGINT;
-
-alter table telegram_chat_anon_nullifiers
 	drop constraint telegram_chat_anon_nullifiers_pkey;
 
 alter table telegram_chat_anon_nullifiers
