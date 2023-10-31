@@ -42,13 +42,9 @@ import {
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
-  AppendToFolderAction,
-  AppendToFolderPermission,
-  DeleteFolderAction,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction,
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -140,7 +136,7 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const actions = [];
+            const actions: PCDAction[] = [];
 
             try {
               if (req.pcd === undefined) {
@@ -232,7 +228,7 @@ export class IssuanceService {
                     pcds: await this.issueFrogPCDs(),
                     folder: "Frogs",
                     type: PCDActionType.AppendToFolder
-                  } as AppendToFolderAction
+                  }
                 ]
               };
             } catch (e) {
@@ -254,7 +250,7 @@ export class IssuanceService {
               {
                 folder: "Frogs",
                 type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission
+              }
             ]
           }
         },
@@ -279,7 +275,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Email",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -287,7 +283,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -317,7 +313,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuzalu '23",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -325,7 +321,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -356,14 +352,14 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuconnect",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               // Clear out the folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "ZuConnect",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -371,7 +367,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);

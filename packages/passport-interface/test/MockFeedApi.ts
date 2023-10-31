@@ -1,8 +1,4 @@
-import {
-  PCDActionType,
-  PCDPermission,
-  PCDPermissionType
-} from "@pcd/pcd-collection";
+import { PCDActionType, PCDPermissionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { getErrorMessage } from "@pcd/util";
@@ -41,7 +37,7 @@ export class MockFeedApi implements IFeedApi {
                   {
                     folder: "TEST",
                     type: PCDPermissionType.ReplaceInFolder
-                  } as PCDPermission
+                  }
                 ],
                 inputPCDType: undefined,
                 partialArgs: undefined,
@@ -85,7 +81,7 @@ export class MockFeedApi implements IFeedApi {
                   {
                     folder: "TEST",
                     type: PCDPermissionType.ReplaceInFolder
-                  } as PCDPermission
+                  }
                 ],
                 inputPCDType: undefined,
                 partialArgs: undefined,
