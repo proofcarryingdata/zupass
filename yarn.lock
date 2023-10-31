@@ -3319,6 +3319,25 @@
     js-sha256 "^0.10.1"
     uuid "^9.0.0"
 
+"@pcd/zk-eddsa-event-ticket-pcd@0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@pcd/zk-eddsa-event-ticket-pcd/-/zk-eddsa-event-ticket-pcd-0.2.0.tgz#dedcea2566754310eb2eca0590677ed8b6d36a25"
+  integrity sha512-GyANWO60uZ/hIG9qXoMtjNdfAHNP2dVxqXoc682ZnIMyr4QO2g4J+dEPTkOBc6HXT8sQLItOFBPqT+WZyRj22A==
+  dependencies:
+    "@pcd/eddsa-pcd" "0.3.0"
+    "@pcd/eddsa-ticket-pcd" "0.3.0"
+    "@pcd/passport-ui" "0.8.0"
+    "@pcd/pcd-types" "^0.8.0"
+    "@pcd/semaphore-identity-pcd" "0.8.0"
+    "@pcd/semaphore-signature-pcd" "0.8.0"
+    "@pcd/util" "0.2.0"
+    "@semaphore-protocol/identity" "^3.14.0"
+    "@zk-kit/groth16" "^0.3.0"
+    circomlibjs "^0.1.7"
+    json-bigint "^1.0.0"
+    styled-components "^5.3.9"
+    uuid "^9.0.0"
+
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-android/-/asn1-android-2.3.6.tgz#20363c23bc5b9a91f7ffd80d7c3842dccff8c20b"

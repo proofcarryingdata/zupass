@@ -65,7 +65,10 @@ export class KudosbotService {
           value: {
             watermark: "Kudos",
             sender,
-            recipient
+            recipient: {
+              type: "user",
+              user: recipient
+            }
           }
         }
       };
@@ -144,12 +147,12 @@ export class KudosbotService {
           }
           ctx.session.kudosData = {
             sender: {
-              semaphoreID: kudosSenderSemaphoreId,
-              telegramUsername: kudosSender
+              semaphoreID: kudosSenderSemaphoreId
+              // telegramUsername: kudosSender
             },
             recipient: {
-              semaphoreID: kudosRecipientSemaphoreId,
-              telegramUsername: kudosRecipient
+              semaphoreID: kudosRecipientSemaphoreId
+              // telegramUsername: kudosRecipient
             }
           };
           await ctx.reply("Send a kudos by pressing on the button.", {

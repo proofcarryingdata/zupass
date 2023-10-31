@@ -26,16 +26,15 @@ export const SemaphoreSignatureKudosPCDTypeName =
 
 export interface KudosUserInfo {
   semaphoreID: string;
-  telegramUsername: string;
 }
 
 export type KudosRecipient =
-  | { type: "user"; user: KudosUserInfo; post: never }
-  | { type: "post"; user: never; post: ZKEdDSAEventTicketPCD };
+  | { type: "user"; user: KudosUserInfo }
+  | { type: "post"; post: ZKEdDSAEventTicketPCD };
 
 export interface IKudosData {
   sender: KudosUserInfo;
-  recipient: KudosUserInfo;
+  recipient: KudosRecipient;
   watermark: string;
 }
 
@@ -246,7 +245,7 @@ export function getDisplayOptions(
     };
   }
 
-  const header = `@${kudosData.sender.telegramUsername} gave @${kudosData.recipient.telegramUsername} a kudos: ${kudosData.watermark}`;
+  const header = `@${kudosData.sender} gave @${kudosData.recipient} a kudos: ${kudosData.watermark}`;
 
   return {
     header,
