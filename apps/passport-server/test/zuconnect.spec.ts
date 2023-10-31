@@ -325,7 +325,7 @@ describe("zuconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Zuconnect_23
@@ -464,7 +464,7 @@ describe("zuconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       userWithTwoTicketsRow.identity,
       payload,
       ZupassFeedIds.Zuconnect_23

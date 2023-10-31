@@ -1753,7 +1753,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1795,13 +1795,13 @@ describe("devconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const expressResponse1 = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Devconnect
     );
     const expressResponse2 = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Devconnect
@@ -1856,7 +1856,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1907,7 +1907,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1959,7 +1959,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const issueResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -2011,7 +2011,7 @@ describe("devconnect functionality", function () {
     async function () {
       MockDate.set(new Date());
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         "asdf",
         ZupassFeedIds.Devconnect
@@ -2033,7 +2033,7 @@ describe("devconnect functionality", function () {
       // Attempt to use credential payload one hour later
       MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -2051,7 +2051,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         new Identity(),
         payload,
         ZupassFeedIds.Devconnect
