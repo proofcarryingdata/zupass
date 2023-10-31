@@ -39,7 +39,7 @@ describe("database reads and writes for frogcrypto features", function () {
     expect(db).to.not.eq(null);
   });
 
-  step("insert frogs ", async function () {
+  step("insert frogs", async function () {
     await insertFrogData(db, testFrogs);
 
     const allFrogs = await getFrogData(db);

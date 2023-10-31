@@ -37,6 +37,7 @@ export function FrogManagerScreen() {
 
   useEffect(() => {
     if (error?.includes("not authorized")) {
+      alert("you're not admin, bye bye");
       window.location.replace("/");
     }
   }, [error]);
@@ -204,7 +205,7 @@ function frogParser(data: string): FrogCryptoFrogData[] {
     function parseAttribtue(
       attribute: string
     ): [number, number] | [undefined, undefined] {
-      const value = String(rawFrog[attribute] || "");
+      const value = String(rawFrog[attribute] ?? "");
       if (!value) {
         return [undefined, undefined];
       }
@@ -239,6 +240,6 @@ function frogParser(data: string): FrogCryptoFrogData[] {
       intelligence_max,
       beauty_min,
       beauty_max
-    };
+    } satisfies FrogCryptoFrogData;
   });
 }

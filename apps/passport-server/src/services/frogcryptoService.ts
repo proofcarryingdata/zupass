@@ -116,7 +116,6 @@ export class FrogcryptoService {
         if (!lastFetchedAt) {
           const e = new Error("User feed state unexpectedly not found!");
           logger(`Error encountered while serving feed:`, e);
-          this.rollbarService?.reportError(e);
           throw e;
         }
 
