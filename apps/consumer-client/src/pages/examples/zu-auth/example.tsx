@@ -77,22 +77,21 @@ export default function ZuAuthExample() {
           setAuthenticated={setAuthenticated}
         />
 
-        {!authenticated && (
-          <div>
-            {Object.keys(fieldsToReveal).map((fieldName) => (
-              <div key={fieldName}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={fieldsToReveal[fieldName]}
-                    onChange={() => toggleFieldToReveal(fieldName)}
-                  />
-                  {fieldName}
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
+        <div>
+          {Object.keys(fieldsToReveal).map((fieldName) => (
+            <div key={fieldName}>
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={!!authenticated}
+                  checked={fieldsToReveal[fieldName]}
+                  onChange={() => toggleFieldToReveal(fieldName)}
+                />
+                {fieldName}
+              </label>
+            </div>
+          ))}
+        </div>
       </ExampleContainer>
 
       <p>
