@@ -141,11 +141,11 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
           },
           move: {
             enable: true,
-            speed: { min: 10, max: 20 },
+            speed: { min: 5, max: 20 },
             direction: "top",
-            random: false,
+            random: true,
             straight: false,
-            outMode: "destroy",
+            outMode: "bounce-horizontal",
             gravity: {
               enable: true
             }
@@ -174,11 +174,10 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
 }
 
 const NewFont = styled.div`
-  font-size: 15px;
-  /* vertical-align: super; */
+  font-size: 14px;
   animation: color-change 1s infinite;
   font-family: monospace;
-  /* align-self: stretch; */
+  margin-left: auto;
 
   @keyframes color-change {
     0% {
