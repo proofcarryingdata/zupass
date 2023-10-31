@@ -1,17 +1,25 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
+import { maybeRedirect } from "../../src/util";
 import { Spacer, TextCenter } from "../core";
-import { CircleButton } from "../core/Button";
+import { Button, CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 
+enum ScannerMode {
+  CAMERA = "CAMERA",
+  LASER_KEYSTROKE = "LASER_KEYSTROKE"
+}
+
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
-  useLaserScannerKeystrokeInput();
+  const [scannerMode, setScannerMode] = useState(ScannerMode.CAMERA);
+  useLaserScannerKeystrokeInput(scannerMode === ScannerMode.CAMERA);
   const nav = useNavigate();
+
   return (
     <AppContainer bg="gray">
       <QrReader
@@ -26,40 +34,44 @@ export function ScanScreen() {
         }}
         constraints={{ facingMode: "environment", aspectRatio: 1 }}
         ViewFinder={ViewFinder}
-        containerStyle={{ width: "100%" }}
+        containerStyle={{
+          width: "100%",
+          hidden: scannerMode === ScannerMode.LASER_KEYSTROKE
+        }}
       />
       <Spacer h={24} />
       <TextCenter>Scan a ticket to verify</TextCenter>
+      <Spacer h={24} />
+      <Button
+        onClick={() => {
+          if (scannerMode === ScannerMode.CAMERA) {
+            setScannerMode(ScannerMode.LASER_KEYSTROKE);
+          } else {
+            setScannerMode(ScannerMode.CAMERA);
+          }
+        }}
+      >
+        Switch to {scannerMode === ScannerMode.CAMERA ? "laser" : "camera"}{" "}
+        scanning
+      </Button>
     </AppContainer>
   );
 }
 
-function maybeRedirect(text: string): string | null {
-  const verifyUrlPrefixes = [
-    `${window.location.origin}/#/verify`,
-    `${window.location.origin}#/verify`,
-    `${window.location.origin}/#/checkin`,
-    `${window.location.origin}#/checkin`,
-    `${window.location.origin}/#/checkin-by-id`,
-    `${window.location.origin}#/checkin-by-id`
-  ];
-  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
-    const hash = text.substring(text.indexOf("#") + 1);
-    console.log(`Redirecting to ${hash}`);
-    return hash;
-  }
-  return null;
+function CloseButton() {
+  const nav = useNavigate();
+  const onClose = useCallback(() => nav("/"), [nav]);
+  return (
+    <CircleButton diameter={20} padding={16} onClick={onClose}>
+      <img draggable="false" src={icons.closeWhite} width={20} height={20} />
+    </CircleButton>
+  );
 }
 
 function ViewFinder() {
-  const nav = useNavigate();
-  const onClose = useCallback(() => nav("/"), [nav]);
-
   return (
     <ScanOverlayWrap>
-      <CircleButton diameter={20} padding={16} onClick={onClose}>
-        <img draggable="false" src={icons.closeWhite} width={20} height={20} />
-      </CircleButton>
+      <CloseButton />
       <Guidebox>
         <Corner top left />
         <Corner top />
