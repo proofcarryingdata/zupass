@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.3.0",
+    "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/email-pcd": "0.3.0",
     "@pcd/emitter": "0.2.0",

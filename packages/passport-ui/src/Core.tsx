@@ -25,3 +25,9 @@ export const Separator = styled.div`
 export const FieldLabel = styled.span`
   font-weight: bold;
 `;
+
+export const LinkButton = styled.a`
+  color: var(--accent-darker);
+  cursor: pointer;
+  text-decoration: none;
+`;

@@ -1,17 +1,18 @@
 import { SerializedPCD } from "@pcd/pcd-types";
 
-export enum PCDActionType {
-  ReplaceInFolder = "ReplaceInFolder_action",
-  AppendToFolder = "AppendToFolder_action",
-  DeleteFolder = "DeleteFolder_action"
-}
+export const PCDActionType = {
+  ReplaceInFolder: "ReplaceInFolder_action",
+  AppendToFolder: "AppendToFolder_action",
+  DeleteFolder: "DeleteFolder_action"
+} as const;
 
-export interface PCDAction {
-  type: PCDActionType;
-}
+export type PCDAction =
+  | AppendToFolderAction
+  | ReplaceInFolderAction
+  | DeleteFolderAction;
 
 export interface ReplaceInFolderAction {
-  type: PCDActionType.ReplaceInFolder;
+  type: typeof PCDActionType.ReplaceInFolder;
   folder: string;
   pcds: SerializedPCD[];
 }
@@ -23,7 +24,7 @@ export function isReplaceInFolderAction(
 }
 
 export interface AppendToFolderAction {
-  type: PCDActionType.AppendToFolder;
+  type: typeof PCDActionType.AppendToFolder;
   folder: string;
   pcds: SerializedPCD[];
 }
@@ -35,7 +36,7 @@ export function isAppendToFolderAction(
 }
 
 export interface DeleteFolderAction {
-  type: PCDActionType.DeleteFolder;
+  type: typeof PCDActionType.DeleteFolder;
   folder: string;
   recursive: boolean;
 }

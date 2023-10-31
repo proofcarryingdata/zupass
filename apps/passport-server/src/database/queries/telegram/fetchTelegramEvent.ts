@@ -18,7 +18,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchTelegramEventByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent> {
+): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -26,6 +26,23 @@ export async function fetchTelegramEventByEventId(
     where ticket_event_id = $1
     `,
     [eventId]
+  );
+
+  return result.rows;
+}
+
+export async function fetchTelegramBotEvent(
+  client: Pool,
+  eventId: string,
+  telegramChatID: string | number
+): Promise<TelegramEvent> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_bot_events
+    where ticket_event_id = $1 and telegram_chat_id = $2
+    `,
+    [eventId, telegramChatID]
   );
 
   return result.rows[0] ?? null;
@@ -70,7 +87,7 @@ export async function fetchEventsWithTelegramChats(
   const result = await sqlQuery(
     client,
     `
-    SELECT
+    SELECT DISTINCT ON (tbe.ticket_event_id)
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
@@ -78,7 +95,10 @@ export async function fetchEventsWithTelegramChats(
     FROM 
       devconnect_pretix_events_info dpe 
     LEFT JOIN 
-      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
+      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+    ORDER BY tbe.ticket_event_id, 
+      CASE WHEN tbe.telegram_chat_id = $1 THEN true ELSE false END DESC,
+      tbe.telegram_chat_id;
     `,
     [currentTelegramChatId]
   );
