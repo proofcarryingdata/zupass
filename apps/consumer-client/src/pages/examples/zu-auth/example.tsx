@@ -7,25 +7,25 @@ import { isAuthenticated } from "./utils";
 
 /**
  * This React component serves as an example of the ZuAuthButton integration,
- * supporting both anonymous and non-anonymous authentication flows.
+ * supporting both anonymous and non-anonymous authentication flows making
+ * proofs on top of ZK EdDSA Ticket Event PCD.
  */
 export default function ZuAuthExample() {
   const [authenticated, setAuthenticated] = useState<boolean>(false);
-  const [anonymous, setAnonymous] = useState<boolean>(
-    JSON.parse(localStorage.getItem("anonymous"))
-  );
 
-  const exampleTicketFieldsToReveal: EdDSATicketFieldsToReveal = {
-    revealEventId: true,
-    revealProductId: true,
-    revealTicketId: true,
+  const [fieldsToReveal, setFieldsToReveal] = useState<EdDSATicketFieldsToReveal>({
+    revealTicketId: false,
+    revealEventId: false,
+    revealProductId: false,
+    revealTimestampConsumed: false,
+    revealTimestampSigned: false,
     revealAttendeeSemaphoreId: false,
     revealIsConsumed: false,
     revealIsRevoked: false,
     revealTicketCategory: false,
-    revealTimestampConsumed: false,
-    revealTimestampSigned: false
-  };
+    revealAttendeeEmail: false,
+    revealAttendeeName: false
+  });
 
   // If they are empty, all events and products identifiers are valid.
   const exampleValidTicketsIds: string[] = [];
@@ -37,50 +37,52 @@ export default function ZuAuthExample() {
     })();
   }, []);
 
+  function toggleFieldToReveal(fieldName: string) {
+    setFieldsToReveal((prevState: EdDSATicketFieldsToReveal) => {
+      return {
+        ...prevState,
+        [fieldName]: !prevState[fieldName]
+      };
+    });
+  };
+
   return (
     <div>
       <HomeLink />
-
-      {anonymous ? (
-        <>
-          <h2>Anonymous authentication with a ZK EdDSA Event Ticket PCD</h2>
-          <p>
-            An example of authentication using by making a proof on 
-            ZK EdDSA Event Ticket PCD.
-          </p>
-        </>
-      ) : (
-        <>
-          <h2>Authentication with an EdDSA Ticket PCD</h2>
-          <p>
-            An example of authentication by signing an EdDSA Event
-            Ticket PCD through a Semaphore Signature PCD
-          </p>
-        </>
-      )}
+      <>
+        <h2> Authentication with a ZK EdDSA Event Ticket PCD</h2>
+        <p>
+          An example of authentication using by making a proof on
+          ZK EdDSA Event Ticket PCD revealing a subset of the ticket fields.
+        </p>
+      </>
 
       <ExampleContainer>
         <ZuAuthButton
-          ticketFieldsToReveal={exampleTicketFieldsToReveal}
+          ticketFieldsToReveal={fieldsToReveal}
           validEventIds={exampleValidTicketsIds}
           validProductIds={exampleValidProductIds}
-          useAnonAuthentication={anonymous}
           authenticated={authenticated}
           setAuthenticated={setAuthenticated}
         />
 
-        <input
-          type="checkbox"
-          checked={anonymous}
-          onChange={() => {
-            setAnonymous((anonymous) => !anonymous);
-            localStorage.setItem("anonymous", JSON.stringify(!anonymous));
-          }}
-          disabled={authenticated}
-        />
-        <label>ZK mode 🕶</label>
-      </ExampleContainer>
+        <div>
+          {Object.keys(fieldsToReveal).map((fieldName, index) => (
+            <div key={index}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={fieldsToReveal[fieldName]}
+                  onChange={() => toggleFieldToReveal(fieldName)}
+                />
+                {fieldName}
+              </label>
+            </div>
+          ))}
+        </div>
 
+      </ExampleContainer>
+      {/** @todo show revealed fields here */}
       <p>{authenticated ? "✅ Authenticated" : "✖️ Not authenticated"} {``}</p>
     </div>
   );

@@ -6,7 +6,6 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -107,14 +106,12 @@ export async function logout(): Promise<void> {
  * @param serialized The stringified serialized form of an EdDSATicketPCD.
  */
 export async function authenticate(serialized: string): Promise<boolean> {
-  const { pcd, type } = JSON.parse(serialized);
+  const { pcd } = JSON.parse(serialized);
 
   const response = await fetch(
     urlJoin(
       CONSUMER_SERVER_URL,
-      `auth/${
-        type === SemaphoreSignaturePCDPackage.name ? "login" : "anon-login"
-      }`
+      `auth/login`
     ),
     {
       method: "POST",
@@ -124,7 +121,7 @@ export async function authenticate(serialized: string): Promise<boolean> {
         "Access-Control-Allow-Origin": "*",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ pcd, type })
+      body: JSON.stringify({ pcd })
     }
   );
 

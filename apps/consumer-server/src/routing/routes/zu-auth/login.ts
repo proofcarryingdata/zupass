@@ -1,17 +1,17 @@
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { requestKnownTicketTypes } from "@pcd/passport-interface";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import express, { Request, Response } from "express";
 import { ApplicationContext } from "../../../types";
 
 const nullifiers = new Set<string>();
 
 /**
- * The login checks the validity of the Semaphore Signature PCD and the EdDSA
- * Ticket PCD, ensures that the ticket is indeed supported by Zupass, and
- * that it has been signed with the correct EdDSA key.
- * The nonce is used as a nullifier in the authentication mechanism so that
- * the same nonce cannot be used to login multiple times.
+ * The login checks the validity of the PCD, ensures that the ticket
+ * is indeed supported by Zupass, and that it has been signed with the correct
+ * EdDSA key. The watermark used to create the PCD and as a nonce in the
+ * authentication mechanism must be the same as the one in the current session.
+ * Once all checks are passed, a user session is created in which the watermark
+ * and nullifier are saved.
  */
 export function login(
   app: express.Application,
@@ -26,44 +26,31 @@ export function login(
         return;
       }
 
-      const semaphoreSignaturePCD =
-        await SemaphoreSignaturePCDPackage.deserialize(req.body.pcd);
+      const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(req.body.pcd);
 
-      if (!(await SemaphoreSignaturePCDPackage.verify(semaphoreSignaturePCD))) {
-        console.error(`[ERROR] Semaphore signature PCD is not valid`);
-
-        res.status(401).send();
-        return;
-      }
-
-      const [serializedEdESATicketPCD, nonce] =
-        semaphoreSignaturePCD.claim.signedMessage.split("+");
-
-      await EdDSATicketPCDPackage.init?.({});
-
-      const eddsaTicketPCD = await EdDSATicketPCDPackage.deserialize(
-        serializedEdESATicketPCD
-      );
-
-      if (!(await EdDSATicketPCDPackage.verify(eddsaTicketPCD))) {
-        console.error(`[ERROR] EdDSA ticket PCD is not valid`);
+      if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
+        console.error(`[ERROR] ZK ticket PCD is not valid`);
 
         res.status(401).send();
         return;
       }
 
-      if (
-        semaphoreSignaturePCD.claim.identityCommitment !==
-        eddsaTicketPCD.claim.ticket.attendeeSemaphoreId
-      ) {
-        console.error(`[ERROR] Semaphore identity does not match`);
+      if (pcd.claim.watermark.toString() !== req.session.nonce) {
+        console.error(`[ERROR] PCD watermark doesn't match`);
 
         res.status(401).send();
         return;
       }
 
-      if (nonce !== req.session.nonce) {
-        console.error(`[ERROR] PCD nonce doesn't match`);
+      if (!pcd.claim.nullifierHash) {
+        console.error(`[ERROR] PCD ticket nullifier has not been defined`);
+
+        res.status(401).send();
+        return;
+      }
+
+      if (nullifiers.has(pcd.claim.nullifierHash)) {
+        console.error(`[ERROR] PCD ticket has already been used`);
 
         res.status(401).send();
         return;
@@ -85,12 +72,10 @@ export function login(
 
       const isValidTicket = value.knownTicketTypes.some((ticketType: any) => {
         return (
-          ticketType.eventId === eddsaTicketPCD.claim.ticket.eventId &&
-          ticketType.productId === eddsaTicketPCD.claim.ticket.productId &&
-          ticketType.publicKey[0] ===
-            eddsaTicketPCD.proof.eddsaPCD.claim.publicKey[0] &&
-          ticketType.publicKey[1] ===
-            eddsaTicketPCD.proof.eddsaPCD.claim.publicKey[1]
+          ticketType.eventId === pcd.claim.partialTicket.eventId &&
+          ticketType.productId === pcd.claim.partialTicket.productId &&
+          ticketType.publicKey[0] === pcd.claim.signer[0] &&
+          ticketType.publicKey[1] === pcd.claim.signer[1]
         );
       });
 
@@ -101,11 +86,14 @@ export function login(
         return;
       }
 
-      // The PCD's nonce is saved as a nullifier so that it prevents the
+      // The PCD's nullifier is saved so that it prevents the
       // same PCD from being reused for another login.
-      nullifiers.add(nonce);
+      nullifiers.add(pcd.claim.nullifierHash);
 
-      req.session.user = semaphoreSignaturePCD.claim.identityCommitment;
+      // The user value is anonymous as the nullifier
+      // is the hash of the user's Semaphore identity and the
+      // external nullifier (i.e. nonce).
+      req.session.user = pcd.claim.nullifierHash;
 
       await req.session.save();
 

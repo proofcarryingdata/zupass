@@ -4,7 +4,6 @@ import { ironSession } from "iron-session/express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
-import { anonLogin } from "./routes/zu-auth/anon-login";
 import { generateNonce } from "./routes/zu-auth/generateNonce";
 import { isLoggedIn } from "./routes/zu-auth/isLoggedIn";
 import { login } from "./routes/zu-auth/login";
@@ -14,7 +13,6 @@ import { RouteInitializer } from "./types";
 const routes: RouteInitializer[] = [
   initHealthcheckRoutes,
   login,
-  anonLogin,
   isLoggedIn,
   logout,
   generateNonce
