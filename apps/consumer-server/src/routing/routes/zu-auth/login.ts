@@ -92,14 +92,13 @@ export function login(
       // same PCD from being reused for another login.
       nullifiers.add(pcd.claim.nullifierHash);
 
-      // The user value is anonymous as the nullifier
-      // is the hash of the user's Semaphore identity and the
-      // external nullifier (i.e. nonce).
-      req.session.user = pcd.claim.nullifierHash;
+      // Save the data related to the fields revealed during the generation
+      // of the zero-knowledge proof.
+      req.session.ticket = pcd.claim.partialTicket;
 
       await req.session.save();
 
-      res.status(200).send();
+      res.status(200).send(req.session.ticket);
     } catch (error: any) {
       console.error(`[ERROR] ${error.message}`);
 

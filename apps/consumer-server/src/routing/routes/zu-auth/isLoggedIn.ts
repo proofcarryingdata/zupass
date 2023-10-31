@@ -6,6 +6,6 @@ export function isLoggedIn(
   _context: ApplicationContext
 ): void {
   app.get("/auth/logged-in", async (req: Request, res: Response) => {
-    res.status(200).send(!!req.session.user);
+    res.status(200).send(req.session.ticket || false);
   });
 }

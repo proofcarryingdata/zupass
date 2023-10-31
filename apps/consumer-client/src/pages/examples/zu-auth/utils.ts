@@ -105,37 +105,36 @@ export async function logout(): Promise<void> {
  *
  * @param serialized The stringified serialized form of an EdDSATicketPCD.
  */
-export async function authenticate(serialized: string): Promise<boolean> {
+export async function authenticate(serialized: string): Promise<any> {
   const { pcd } = JSON.parse(serialized);
 
-  const response = await fetch(
-    urlJoin(
-      CONSUMER_SERVER_URL,
-      `auth/login`
-    ),
-    {
-      method: "POST",
-      mode: "cors",
-      credentials: "include",
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ pcd })
-    }
-  );
+  const response = await fetch(urlJoin(CONSUMER_SERVER_URL, `auth/login`), {
+    method: "POST",
+    mode: "cors",
+    credentials: "include",
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ pcd })
+  });
 
-  return response.status === 200
+  return await response.json();
 }
 
 /**
- * Verifies the user's authentication status by sending a GET request to the `consumer-server`,
- * and updates the current session's state variable.
+ * Verifies the user's authentication status by sending a GET request to the `consumer-server`.
+ * If the user is authenticated it returns the ticket data saved in the current session, or false otherwise.
  */
-export async function isAuthenticated(): Promise<boolean> {
+export async function isLoggedIn(): Promise<any | false> {
   const response = await fetch(urlJoin(CONSUMER_SERVER_URL, "auth/logged-in"), {
+    method: "GET",
+    mode: "cors",
     credentials: "include",
-    method: "GET"
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Content-Type": "application/json"
+    }
   });
 
   return await response.json();

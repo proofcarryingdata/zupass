@@ -1,9 +1,5 @@
-import {
-  useZupassPopupMessages
-} from "@pcd/passport-interface";
-import {
-  EdDSATicketFieldsToReveal
-} from "@pcd/zk-eddsa-event-ticket-pcd";
+import { useZupassPopupMessages } from "@pcd/passport-interface";
+import { EdDSATicketFieldsToReveal } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect } from "react";
 import {
   authenticate,
@@ -17,7 +13,7 @@ import {
  * button making proofs on top of the ZK EdDSA Event Ticket PCD.
  *
  * If both `validEventIds` and `validProductIds` lists are provided, they must be of the same length
- * and will be validated in pairs. Empty arrays can be provided to bypass this validation, 
+ * and will be validated in pairs. Empty arrays can be provided to bypass this validation,
  * thereby considering all event and product identifiers as valid.
  */
 export interface ZuAuthButtonProps {
@@ -58,8 +54,8 @@ export interface ZuAuthButtonProps {
 /**
  * This React component provides a customizable button for both authentication
  * facilitating EdDSA ticket PCDs for specific sets of events and products.
- * 
- * A user can authenticate anonymously by selecting a specific subset of ticket 
+ *
+ * A user can authenticate anonymously by selecting a specific subset of ticket
  * fields to reveal during the authentication process.
  */
 export default function ZuAuthButton({
@@ -74,9 +70,9 @@ export default function ZuAuthButton({
   useEffect(() => {
     (async function requestAuthentication() {
       if (pcdStr) {
-        const isAuthenticated = await authenticate(pcdStr);
+        const authenticated = await authenticate(pcdStr);
 
-        setAuthenticated(isAuthenticated);
+        setAuthenticated(authenticated);
       }
     })();
   }, [pcdStr, setAuthenticated]);
@@ -86,23 +82,21 @@ export default function ZuAuthButton({
       onClick={
         !authenticated
           ? async () => {
-            openZKEdDSAEventTicketPopup(
-              ticketFieldsToReveal,
-              BigInt(await generateNonce()),
-              validEventIds,
-              validProductIds
-            );
-          }
+              openZKEdDSAEventTicketPopup(
+                ticketFieldsToReveal,
+                BigInt(await generateNonce()),
+                validEventIds,
+                validProductIds
+              );
+            }
           : async () => {
-            await logout();
+              await logout();
 
-            setAuthenticated(false);
-          }
+              setAuthenticated(false);
+            }
       }
     >
-      {authenticated
-        ? "Logout"
-        : "Login"}
+      {authenticated ? "Logout" : "Login"}
     </button>
   );
 }

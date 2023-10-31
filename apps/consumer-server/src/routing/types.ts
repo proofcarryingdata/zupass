@@ -9,7 +9,7 @@ export interface RouteInitializer {
 
 declare module "iron-session" {
   interface IronSessionData {
-    user?: string;
     nonce?: string;
+    ticket?: Record<string, any>;
   }
 }
