@@ -713,7 +713,9 @@ const getCurrentTopic = async (
   );
 
   if (!topic) {
-    throw new Error(`Topic not found to forward from`);
+    throw new Error(
+      `Topic not found to forward from. Edit the topic name and try again!`
+    );
   }
 
   return { topic, messageThreadId: message?.message_thread_id };
@@ -771,8 +773,8 @@ export const chatsToForwardTo = async (
             ) {
               await deleteTelegramForward(
                 db,
-                topicToForwardTo.sender_chat_topic_id,
-                topicToForwardTo.receiver_chat_topic_id
+                topicToForwardTo.receiver_chat_topic_id,
+                topicToForwardTo.sender_chat_topic_id
               );
               await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
                 reply_to_message_id: messageThreadId

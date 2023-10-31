@@ -4,7 +4,7 @@ import {
   createFeedCredentialPayload,
   pollFeed
 } from "@pcd/passport-interface";
-import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -15,7 +15,7 @@ import { Zupass } from "../src/types";
 import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import { randomEmail } from "./util/util";
+import { expectToExist, randomEmail } from "./util/util";
 
 describe("attested email feed functionality", function () {
   this.timeout(30_000);
@@ -59,7 +59,7 @@ describe("attested email feed functionality", function () {
     async function () {
       const payload = JSON.stringify(createFeedCredentialPayload());
       const pollFeedResult = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Email
@@ -72,8 +72,8 @@ describe("attested email feed functionality", function () {
       expect(pollFeedResult.value?.actions.length).to.eq(2);
 
       // Zeroth action clears the folder, so this one contains the email
-      const action = pollFeedResult?.value
-        ?.actions?.[1] as ReplaceInFolderAction;
+      const action = pollFeedResult?.value?.actions?.[1];
+      expectToExist(action, isReplaceInFolderAction);
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(action.pcds.length).to.eq(1);
       expect(action.pcds[0].type).to.eq(EmailPCDTypeName);

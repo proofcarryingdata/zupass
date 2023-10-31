@@ -1,6 +1,7 @@
 import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { AppThemeProvider } from "@skiff-org/skiff-ui";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -9,6 +10,7 @@ import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScre
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
+import { FrogHomeScreen } from "../components/screens/FrogScreens/FrogHomeScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -86,22 +88,31 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        {!isWebAssemblySupported() ? (
-          <HashRouter>
-            <Routes>
-              <Route path="/terms" element={<TermsScreen />} />
-              <Route path="*" element={<NoWASMScreen />} />
-            </Routes>
-          </HashRouter>
-        ) : !hasStack ? (
-          <Router />
-        ) : (
-          <HashRouter>
-            <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
-            </Routes>
-          </HashRouter>
-        )}
+        {/*
+         * <AppThemeProvider /> currently has the wrong prop typing.
+         * This will be fixed once this pull request is merged:
+         * https://github.com/skiff-org/skiff-ui/pull/392.
+         */}
+        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+        {/* @ts-ignore */}
+        <AppThemeProvider>
+          {!isWebAssemblySupported() ? (
+            <HashRouter>
+              <Routes>
+                <Route path="/terms" element={<TermsScreen />} />
+                <Route path="*" element={<NoWASMScreen />} />
+              </Routes>
+            </HashRouter>
+          ) : !hasStack ? (
+            <Router />
+          ) : (
+            <HashRouter>
+              <Routes>
+                <Route path="*" element={<AppContainer bg="gray" />} />
+              </Routes>
+            </HashRouter>
+          )}
+        </AppThemeProvider>
       </StateContext.Provider>
     );
   }
@@ -184,6 +195,7 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
+          <Route path="frog" element={<FrogHomeScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

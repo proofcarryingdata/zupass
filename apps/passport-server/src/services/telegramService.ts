@@ -10,7 +10,10 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
-import { deleteTelegramChatTopic } from "../database/queries/telegram/deleteTelegramEvent";
+import {
+  deleteTelegramChatTopic,
+  deleteTelegramForward
+} from "../database/queries/telegram/deleteTelegramEvent";
 import { deleteTelegramVerification } from "../database/queries/telegram/deleteTelegramVerification";
 import {
   fetchAnonTopicNullifier,
@@ -594,54 +597,68 @@ export class TelegramService {
             ctx.chat.id,
             messageThreadId
           );
-          const chatId = ctx.chat.id;
 
-          // If the topic doesn't exist, add it and the chatId to the DB.
-          if (!topic) {
-            logger(`[TELEGRAM] topic not found to mark as receiving.`);
-            const topicName =
-              ctx.message?.reply_to_message?.forum_topic_created?.name;
-            if (!topicName)
-              return ctx.reply(`No topic name found`, {
-                reply_to_message_id: messageThreadId
-              });
-
-            await insertTelegramChat(this.context.dbPool, chatId);
-            await insertTelegramTopic(
-              this.context.dbPool,
-              chatId,
-              topicName,
-              messageThreadId,
-              false
-            );
-            // Fetch the newly created topic
-            const newTopic = await fetchTelegramTopic(
-              this.context.dbPool,
-              ctx.chat.id,
-              messageThreadId
+          if (!topic)
+            throw new Error(
+              `No topic found. Edit the topic name and try again!`
             );
 
-            if (!newTopic) throw new Error(`Failed to fetch new topic`);
-            // Add it to the forwarding table
-            await insertTelegramForward(this.context.dbPool, null, newTopic.id);
+          await insertTelegramForward(this.context.dbPool, null, topic.id);
+          logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
+          await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
+            reply_to_message_id: messageThreadId,
+            parse_mode: "HTML"
+          });
+        } catch (error) {
+          ctx.reply(`${error}`, {
+            reply_to_message_id: messageThreadId
+          });
+        }
+      });
 
-            await ctx.reply(
-              `Added <b>${topicName}</b> to receive messages. If this name is incorrect, edit the name to update the database.`,
-              {
-                reply_to_message_id: messageThreadId,
-                parse_mode: "HTML"
-              }
+      this.forwardBot.command("stopreceive", async (ctx) => {
+        const messageThreadId = ctx.message?.message_thread_id;
+        try {
+          logger(`[TELEGRAM] running receive`);
+          if (isDirectMessage(ctx))
+            return ctx.reply(`/receive can only be run in a group chat`);
+
+          if (!ctx.from?.username)
+            return ctx.reply(`No username found`, {
+              reply_to_message_id: messageThreadId
+            });
+
+          if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+            return ctx.reply(
+              `Only Zupass team members are allowed to run this command.`,
+              { reply_to_message_id: messageThreadId }
             );
-          } else {
-            await insertTelegramForward(this.context.dbPool, null, topic.id);
-            logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
-            await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
+
+          // Look up topic.
+          const topic = await fetchTelegramTopic(
+            this.context.dbPool,
+            ctx.chat.id,
+            messageThreadId
+          );
+
+          if (!topic)
+            throw new Error(
+              `No topic found. Edit the topic name and try again!`
+            );
+
+          await deleteTelegramForward(this.context.dbPool, topic.id, null);
+          logger(
+            `[TELEGRAM] ${topic.topic_name} can no longer receive messages`
+          );
+          await ctx.reply(
+            `<b>${topic.topic_name}</b> can no longer receive messages`,
+            {
               reply_to_message_id: messageThreadId,
               parse_mode: "HTML"
-            });
-          }
+            }
+          );
         } catch (error) {
-          ctx.reply(`Error: ${error}`, {
+          ctx.reply(`${error}`, {
             reply_to_message_id: messageThreadId
           });
         }
@@ -667,6 +684,45 @@ export class TelegramService {
         await ctx.reply(`Choose a group and topic to forward messages to`, {
           reply_markup: forwardMenu,
           message_thread_id: messageThreadId
+        });
+      });
+
+      this.forwardBot.on(":forum_topic_edited", async (ctx) => {
+        return traced("telegram", "forum_topic_edited", async (span) => {
+          const topicName = ctx.update?.message?.forum_topic_edited.name;
+          const chatId = ctx.chat.id;
+          const messageThreadId = ctx.update.message?.message_thread_id;
+          span?.setAttributes({ topicName, messageThreadId, chatId });
+
+          if (!chatId || !topicName)
+            throw new Error(`Missing chatId or topic name`);
+
+          const topic = await fetchTelegramTopic(
+            this.context.dbPool,
+            chatId,
+            messageThreadId
+          );
+
+          if (!topic) {
+            logger(`[TELEGRAM] adding topic ${topicName} to db`);
+            await insertTelegramChat(this.context.dbPool, chatId);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              chatId,
+              topicName,
+              messageThreadId,
+              false
+            );
+          } else {
+            logger(`[TELEGRAM] updating topic ${topicName} in db`);
+            await insertTelegramTopic(
+              this.context.dbPool,
+              topic.telegramChatID,
+              topicName,
+              topic.topic_id,
+              topic.is_anon_topic
+            );
+          }
         });
       });
 
@@ -709,45 +765,6 @@ export class TelegramService {
             ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
           }
         }
-      });
-
-      this.forwardBot.on(":forum_topic_edited", async (ctx) => {
-        return traced("telegram", "forum_topic_edited", async (span) => {
-          const topicName = ctx.update?.message?.forum_topic_edited.name;
-          const chatId = ctx.chat.id;
-          const messageThreadId = ctx.update.message?.message_thread_id;
-          span?.setAttributes({ topicName, messageThreadId, chatId });
-
-          if (!chatId || !topicName)
-            throw new Error(`Missing chatId or topic name`);
-
-          const topic = await fetchTelegramTopic(
-            this.context.dbPool,
-            chatId,
-            messageThreadId
-          );
-
-          if (!topic) {
-            logger(`[TELEGRAM] adding topic ${topicName} to db`);
-            await insertTelegramChat(this.context.dbPool, chatId);
-            await insertTelegramTopic(
-              this.context.dbPool,
-              chatId,
-              topicName,
-              messageThreadId,
-              false
-            );
-          } else {
-            logger(`[TELEGRAM] updating topic ${topicName} in db`);
-            await insertTelegramTopic(
-              this.context.dbPool,
-              topic.telegramChatID,
-              topicName,
-              topic.topic_id,
-              topic.is_anon_topic
-            );
-          }
-        });
       });
     }
 
@@ -1117,7 +1134,7 @@ export class TelegramService {
 
 ${rawMessage}
 
-<i>submitted ${currentTime.toLocaleString("en-DB")}</i>
+<i>submitted ${currentTime.toLocaleString("en-GB")}</i>
 ----------------------------------------------------------
       `;
 

@@ -3,12 +3,16 @@ import zxcvbn from "zxcvbn";
 import { Dispatcher } from "./dispatch";
 import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 
-// Must not be "too guessable", "very guessable", or "somewhat guessable"
-export const MINIMUM_PASSWORD_STRENGTH = 2;
+// From https://dropbox.tech/security/zxcvbn-realistic-password-strength-estimation.
+export enum PasswordStrength {
+  WEAK = 0, 
+  MODERATE = 1,
+  STRONG = 2 
+}
 
 export const checkPasswordStrength = (password: string): boolean => {
   const { score } = zxcvbn(password);
-  return score >= MINIMUM_PASSWORD_STRENGTH;
+  return score >= PasswordStrength.STRONG;
 };
 
 export const PASSWORD_MINIMUM_LENGTH = 8;

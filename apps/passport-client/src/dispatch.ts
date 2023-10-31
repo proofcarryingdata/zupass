@@ -9,13 +9,13 @@ import {
   isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
+  NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
   SyncedEncryptedStorage,
   User
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -116,6 +116,10 @@ export type Action =
     }
   | {
       type: "prompt-to-agree-privacy-notice";
+    }
+  | {
+      type: "sync-subscription";
+      subscriptionId: string;
     };
 
 export type StateContextState = {
@@ -210,6 +214,8 @@ export async function dispatch(
       return handleAgreedPrivacyNotice(state, update, action.version);
     case "prompt-to-agree-privacy-notice":
       return promptToAgreePrivacyNotice(state, update);
+    case "sync-subscription":
+      return syncSubscription(state, update, action.subscriptionId);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -710,6 +716,38 @@ async function sync(state: AppState, update: ZuUpdate) {
     uploadingUploadId: undefined,
     uploadedUploadId: uploadId
   });
+}
+
+async function syncSubscription(
+  state: AppState,
+  update: ZuUpdate,
+  subscriptionId: string
+) {
+  try {
+    console.log("[SYNC] loading pcds from subscription", subscriptionId);
+    const subscription = state.subscriptions.getSubscription(subscriptionId);
+    const credentialManager = new CredentialManager(
+      state.identity,
+      state.pcds,
+      state.credentialCache
+    );
+    const actions = await state.subscriptions.pollSingleSubscription(
+      subscription,
+      credentialManager
+    );
+    console.log("[SYNC] fetched actions", actions);
+
+    await applyActions(state.pcds, actions);
+    console.log("[SYNC] applied pcd actions");
+    await savePCDs(state.pcds);
+    console.log("[SYNC] loaded and saved issued pcds");
+
+    update({
+      pcds: state.pcds
+    });
+  } catch (e) {
+    console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
+  }
 }
 
 async function resolveSubscriptionError(

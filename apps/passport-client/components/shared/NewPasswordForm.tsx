@@ -79,6 +79,7 @@ export function NewPasswordForm({
           e.preventDefault();
           confirmPasswordRef.current.focus();
         }}
+        showStrengthProgress
         autoFocus={autoFocus}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
