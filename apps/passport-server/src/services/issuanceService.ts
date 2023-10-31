@@ -411,7 +411,7 @@ export class IssuanceService {
                   pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
                   folder: "FrogCrypto",
                   type: PCDActionType.AppendToFolder
-                } as AppendToFolderAction
+                }
               ]
             };
           } catch (e) {
