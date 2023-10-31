@@ -34,15 +34,24 @@ export default function ZuAuthExample() {
   useEffect(() => {
     (async function () {
       setAuthenticated(await isAuthenticated());
+
+      const savedFields = JSON.parse(localStorage.getItem('fieldsToReveal'));
+      if (savedFields) {
+        setFieldsToReveal(savedFields);
+      }
     })();
   }, []);
 
   function toggleFieldToReveal(fieldName: string) {
     setFieldsToReveal((prevState: EdDSATicketFieldsToReveal) => {
-      return {
+      const revealedFields = {
         ...prevState,
         [fieldName]: !prevState[fieldName]
       };
+
+      localStorage.setItem('fieldsToReveal', JSON.stringify(revealedFields));
+
+      return revealedFields;
     });
   };
 
