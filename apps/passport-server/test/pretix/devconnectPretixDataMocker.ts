@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  DevconnectPretixCategory,
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
   DevconnectPretixItem,
@@ -28,11 +29,13 @@ export interface IOrganizer {
   eventByEventID: Map<string, DevconnectPretixEvent>;
   itemsByEventID: Map<string, DevconnectPretixItem[]>;
   settingsByEventID: Map<string, DevconnectPretixEventSettings>;
+  categoriesByEventId: Map<string, DevconnectPretixCategory[]>;
 
   // specific data for easier testing
   eventAItem1: DevconnectPretixItem;
   eventAItem2: DevconnectPretixItem;
   eventBItem3: DevconnectPretixItem;
+  eventBItem4: DevconnectPretixItem;
 
   eventA: DevconnectPretixEvent;
   eventB: DevconnectPretixEvent;
@@ -195,9 +198,20 @@ export class DevconnectPretixDataMocker {
     const eventBSettings = this.newEventSettings();
     const eventCSettings = this.newEventSettings();
 
-    const eventAItem1 = this.newItem("item-1");
-    const eventAItem2 = this.newItem("item-2");
-    const eventBItem3 = this.newItem("item-3");
+    const eventACategories = [1, 2, 3].map((n) =>
+      this.newEventCategory(n, false)
+    );
+    const eventBCategories = [
+      this.newEventCategory(1, false),
+      this.newEventCategory(2, true)
+    ];
+    const eventCCategories = [1, 2].map((n) => this.newEventCategory(n, false));
+
+    const eventAItem1 = this.newItem("item-1", 1);
+    const eventAItem2 = this.newItem("item-2", 1);
+    const eventBItem3 = this.newItem("item-3", 1);
+    // Add-on item
+    const eventBItem4 = this.newItem("item-4", 2, true);
 
     const eventAOrders: DevconnectPretixOrder[] = [
       this.newPretixOrder(EMAIL_4, [[eventAItem1.id, EMAIL_4]]),
@@ -236,13 +250,19 @@ export class DevconnectPretixDataMocker {
 
     const itemsByEventID: Map<string, DevconnectPretixItem[]> = new Map();
     itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
-    itemsByEventID.set(eventB.slug, [eventBItem3]);
+    itemsByEventID.set(eventB.slug, [eventBItem3, eventBItem4]);
 
     const settingsByEventID: Map<string, DevconnectPretixEventSettings> =
       new Map();
     settingsByEventID.set(eventA.slug, eventASettings);
     settingsByEventID.set(eventB.slug, eventBSettings);
     settingsByEventID.set(eventC.slug, eventCSettings);
+
+    const categoriesByEventId: Map<string, DevconnectPretixCategory[]> =
+      new Map();
+    categoriesByEventId.set(eventA.slug, eventACategories);
+    categoriesByEventId.set(eventB.slug, eventBCategories);
+    categoriesByEventId.set(eventC.slug, eventCCategories);
 
     return {
       orgUrl,
@@ -254,12 +274,14 @@ export class DevconnectPretixDataMocker {
       eventAItem1,
       eventAItem2,
       eventBItem3,
+      eventBItem4,
       eventA,
       eventB,
       eventC,
       eventASettings,
       eventBSettings,
       eventCSettings,
+      categoriesByEventId,
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
@@ -274,12 +296,17 @@ export class DevconnectPretixDataMocker {
     };
   }
 
-  private newItem(name: string): DevconnectPretixItem {
+  private newItem(
+    name: string,
+    category: number,
+    addon = false
+  ): DevconnectPretixItem {
     return {
       id: this.nextId(),
       name: { en: name },
-      admission: true,
-      personalized: true
+      category,
+      admission: !addon,
+      personalized: !addon
     };
   }
 
@@ -291,6 +318,7 @@ export class DevconnectPretixDataMocker {
 
     return {
       code: orderId,
+      name: this.randomName(),
       status: "p",
       testmode: false,
       secret: this.randomSecret(),
@@ -325,6 +353,16 @@ export class DevconnectPretixDataMocker {
     return {
       attendee_emails_asked: true,
       attendee_emails_required: true
+    };
+  }
+
+  private newEventCategory(
+    id: number,
+    isAddon: boolean
+  ): DevconnectPretixCategory {
+    return {
+      id,
+      is_addon: isAddon
     };
   }
 
