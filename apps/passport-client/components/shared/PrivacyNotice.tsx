@@ -307,7 +307,7 @@ const MinimizedNotice = styled.div`
   padding: 16px;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(70, 140, 128, 0.9); // --bg-lite-primary
   }
 `;
 
@@ -343,7 +343,6 @@ const ExpandedTermsTextContainer = styled.div`
   overflow-y: scroll;
   border-radius: 8px;
   padding: 32px 16px;
-  background: white;
 `;
 const Prose = styled.div`
   p {
