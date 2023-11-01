@@ -18,6 +18,7 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
+  FrogCryptoFolderName,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -88,7 +89,7 @@ import { ApplicationContext } from "../types";
 import {
   FROGCRYPTO_FEEDS,
   FrogCryptoFeed,
-  FrogCryptoFeedHost,
+  FrogCryptoFeedHost
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
@@ -413,7 +414,7 @@ export class IssuanceService {
               actions: [
                 {
                   pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
-                  folder: "FrogCrypto",
+                  folder: FrogCryptoFolderName,
                   type: PCDActionType.AppendToFolder
                 }
               ]

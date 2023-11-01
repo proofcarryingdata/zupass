@@ -22,6 +22,7 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
+  getPossibleFrogCount,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
@@ -78,7 +79,8 @@ export class FrogcryptoService {
     return {
       feeds: userFeeds.map((userFeed) =>
         this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
-      )
+      ),
+      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool)
     };
   }
 

@@ -8,6 +8,7 @@ import {
 import {
   Feed,
   FeedHost,
+  FrogCryptoFolderName,
   HostedFeed,
   ListFeedsRequest,
   ListFeedsResponseValue,
@@ -69,7 +70,7 @@ const commonFeedConfig: Pick<
   },
   permissions: [
     {
-      folder: "FrogCrypto",
+      folder: FrogCryptoFolderName,
       type: PCDPermissionType.AppendToFolder
     }
   ]
