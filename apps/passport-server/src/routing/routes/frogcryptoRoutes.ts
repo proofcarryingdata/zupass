@@ -1,8 +1,8 @@
 import {
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
-  FrogCryptoManageFrogsRequest,
-  FrogCryptoManageFrogsResponseValue,
+  FrogCryptoUpdateFrogsRequest,
+  FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
   FrogCryptoUserStateResponseValue,
   ListFeedsResponseValue,
@@ -117,10 +117,10 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
-    const result = await frogcryptoService.manageFrogData(
-      req.body as FrogCryptoManageFrogsRequest
+    const result = await frogcryptoService.updateFrogsData(
+      req.body as FrogCryptoUpdateFrogsRequest
     );
-    res.json(result satisfies FrogCryptoManageFrogsResponseValue);
+    res.json(result satisfies FrogCryptoUpdateFrogsResponseValue);
   });
 
   app.post("/frogcrypto/admin/delete-frogs", async (req, res) => {

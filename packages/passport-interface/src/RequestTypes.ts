@@ -640,7 +640,7 @@ export interface FrogCryptoUserStateResponseValue {
 /**
  * Admin request to manage frogs in the databse.
  */
-export type FrogCryptoManageFrogsRequest = {
+export type FrogCryptoUpdateFrogsRequest = {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
   /**
    * Pass empty array for no-op and return all frogs.
@@ -649,9 +649,9 @@ export type FrogCryptoManageFrogsRequest = {
 };
 
 /**
- * Response to {@link FrogCryptoManageFrogsRequest} and returns all frogs.
+ * Response to {@link FrogCryptoUpdateFrogsRequest} and returns all frogs.
  */
-export interface FrogCryptoManageFrogsResponseValue {
+export interface FrogCryptoUpdateFrogsResponseValue {
   frogs: FrogCryptoFrogData[];
 }
 

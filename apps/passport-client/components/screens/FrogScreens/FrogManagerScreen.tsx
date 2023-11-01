@@ -1,7 +1,7 @@
 import {
   CredentialManager,
   requestFrogCryptoDeleteFrogs,
-  requestFrogCryptoManageFrogs
+  requestFrogCryptoUpdateFrogs
 } from "@pcd/passport-interface";
 import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
 import { Separator } from "@pcd/passport-ui";
@@ -167,7 +167,7 @@ function useFrogs(): {
         let result;
         switch (req.type) {
           case "load":
-            result = await requestFrogCryptoManageFrogs(
+            result = await requestFrogCryptoUpdateFrogs(
               appConfig.zupassServer,
               {
                 pcd,
@@ -176,7 +176,7 @@ function useFrogs(): {
             );
             break;
           case "update":
-            result = await requestFrogCryptoManageFrogs(
+            result = await requestFrogCryptoUpdateFrogs(
               appConfig.zupassServer,
               { pcd, frogs: req.frogs }
             );
@@ -295,7 +295,7 @@ const Container = styled.div`
 
 /**
  * Parses the data from the frog spreadsheet into a format that can be used by the
- * `requestFrogCryptoManageFrogs` API.
+ * `requestFrogCryptoUpdateFrogs` API.
  *
  * @param data The data from the frog spreadsheet as a JSON array of Record<attr name, attr val>.
  * Numeric range value can be empty, a single number, or a range of numbers separated by a dash.

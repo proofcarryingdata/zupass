@@ -27,7 +27,7 @@ export * from "./api/requestCreateNewUser";
 export * from "./api/requestDownloadAndDecryptStorage";
 export * from "./api/requestEncryptedStorage";
 export * from "./api/requestFrogCryptoDeleteFrogs";
-export * from "./api/requestFrogCryptoManageFrogs";
+export * from "./api/requestFrogCryptoUpdateFrogs";
 export * from "./api/requestIssuanceServiceEnabled";
 export * from "./api/requestKnownTickets";
 export * from "./api/requestListFeeds";

@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
 import {
-  FrogCryptoManageFrogsRequest,
-  FrogCryptoManageFrogsResponseValue
+  FrogCryptoUpdateFrogsRequest,
+  FrogCryptoUpdateFrogsResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -11,19 +11,19 @@ import { httpPostSimple } from "./makeRequest";
  *
  * This endpoint is only available to authenticated admin users.
  */
-export async function requestFrogCryptoManageFrogs(
+export async function requestFrogCryptoUpdateFrogs(
   zupassServerUrl: string,
-  req: FrogCryptoManageFrogsRequest
-): Promise<FrogCryptoManageFrogsResult> {
+  req: FrogCryptoUpdateFrogsRequest
+): Promise<FrogCryptoUpdateFrogsResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/frogcrypto/admin/frogs"),
     async (resText) => ({
-      value: JSON.parse(resText) as FrogCryptoManageFrogsResponseValue,
+      value: JSON.parse(resText) as FrogCryptoUpdateFrogsResponseValue,
       success: true
     }),
     req
   );
 }
 
-export type FrogCryptoManageFrogsResult =
-  APIResult<FrogCryptoManageFrogsResponseValue>;
+export type FrogCryptoUpdateFrogsResult =
+  APIResult<FrogCryptoUpdateFrogsResponseValue>;

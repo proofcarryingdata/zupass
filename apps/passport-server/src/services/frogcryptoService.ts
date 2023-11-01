@@ -10,8 +10,8 @@ import {
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
-  FrogCryptoManageFrogsRequest,
-  FrogCryptoManageFrogsResponseValue,
+  FrogCryptoUpdateFrogsRequest,
+  FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
   FrogCryptoUserStateResponseValue,
   verifyFeedCredential
@@ -139,9 +139,9 @@ export class FrogcryptoService {
   /**
    * Upsert frog data into the database and return all frog data.
    */
-  public async manageFrogData(
-    req: FrogCryptoManageFrogsRequest
-  ): Promise<FrogCryptoManageFrogsResponseValue> {
+  public async updateFrogsData(
+    req: FrogCryptoUpdateFrogsRequest
+  ): Promise<FrogCryptoUpdateFrogsResponseValue> {
     await this.cachedVerifyAdminSignaturePCD(req.pcd);
 
     try {
