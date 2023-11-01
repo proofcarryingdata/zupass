@@ -236,15 +236,16 @@ const ClockIcon = styled.div`
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background-color: rgba(var(--white-rgb), 0.8);
+  background-color: #fff;
   position: relative;
   display: block;
+  opacity: 0.8;
 
   &::before {
     content: "";
     height: 10px;
     width: 1px;
-    background-color: var(--black);
+    background-color: #000;
     display: block;
     position: absolute;
     left: 10px;
@@ -255,7 +256,7 @@ const ClockIcon = styled.div`
     content: "";
     height: 6px;
     width: 1px;
-    background-color: var(--black);
+    background-color: #000;
     display: block;
     position: absolute;
     top: 8px;
@@ -276,7 +277,7 @@ const NameIcon = styled.div`
     font-size: 14px;
     line-height: 14px;
     font-weight: 600;
-    color: var(--white);
+    color: #fff;
     display: block;
     position: absolute;
     top: 0px;
@@ -287,7 +288,7 @@ const NameIcon = styled.div`
     font-size: 14px;
     line-height: 14px;
     font-weight: 600;
-    color: var(--white);
+    color: #fff;
     display: block;
     position: absolute;
     right: 0px;
