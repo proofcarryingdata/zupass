@@ -154,11 +154,13 @@ export async function deleteFrogData(
 export async function getPossibleFrogCount(pool: Pool): Promise<number> {
   const result = await sqlQuery(
     pool,
-    `select count(*) as count from frogcrypto_frogs`,
+    `select
+    cast(count(*) as int) as count
+    from frogcrypto_frogs`,
     []
   );
 
-  return +result.rows[0].count;
+  return result.rows[0].count;
 }
 
 /**
@@ -212,13 +214,17 @@ export async function incrementScore(
   return res.rows[0];
 }
 
-export async function getScores(
+export async function getScoreboard(
   pool: Pool,
   limit = 50
 ): Promise<FrogCryptoScore[]> {
   const result = await sqlQuery(
     pool,
-    `select score, rank, telegram_username from (
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    telegram_username
+    from (
       select *, rank() over (order by score desc) from frogcrypto_user_scores
       order by score desc
       limit $1
@@ -231,13 +237,17 @@ export async function getScores(
   return result.rows;
 }
 
-export async function getScore(
+export async function getUserScore(
   pool: Pool,
   semaphoreId: string
 ): Promise<FrogCryptoScore | undefined> {
   const result = await sqlQuery(
     pool,
-    `select score, rank, telegram_username from (
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    telegram_username
+    from (
       select *, rank() over (order by score desc) from frogcrypto_user_scores
     ) scores
     left join telegram_bot_conversations using(semaphore_id)

@@ -3,11 +3,11 @@ import { FrogCryptoScore } from "../FrogCrypto";
 import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
-export async function requestFrogCryptoGetScores(
+export async function requestFrogCryptoGetScoreboard(
   zupassServerUrl: string
-): Promise<FrogCryptoGetScoresResult> {
+): Promise<FrogCryptoGetScoreboardResult> {
   return httpGetSimple(
-    urlJoin(zupassServerUrl, "/frogcrypto/scores"),
+    urlJoin(zupassServerUrl, "/frogcrypto/scoreboard"),
     async (resText) => ({
       value: JSON.parse(resText) as FrogCryptoScore[],
       success: true
@@ -15,4 +15,4 @@ export async function requestFrogCryptoGetScores(
   );
 }
 
-export type FrogCryptoGetScoresResult = APIResult<FrogCryptoScore[]>;
+export type FrogCryptoGetScoreboardResult = APIResult<FrogCryptoScore[]>;

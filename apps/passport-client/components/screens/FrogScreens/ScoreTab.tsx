@@ -1,14 +1,17 @@
-import { requestFrogCryptoGetScores } from "@pcd/passport-interface";
+import { requestFrogCryptoGetScoreboard } from "@pcd/passport-interface";
 import { FrogCryptoScore } from "@pcd/passport-interface/src/FrogCrypto";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { RippleLoader } from "../../core/RippleLoader";
 
+/**
+ * The Score tab shows the user their score and the leaderboard.
+ */
 export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
   const [scores, setScores] = useState<FrogCryptoScore[]>([]);
   useEffect(() => {
-    requestFrogCryptoGetScores(appConfig.zupassServer).then((res) => {
+    requestFrogCryptoGetScoreboard(appConfig.zupassServer).then((res) => {
       setScores(res.value || []);
     });
   }, []);
@@ -50,7 +53,7 @@ function ScoreTable({
         {scores.map((score) => (
           <tr key={score.rank}>
             <td>{score.rank}</td>
-            <td>{score.telegram_username || "<unknown>"}</td>
+            <td>{score.telegram_username || "An Unnamed Toad"}</td>
             <td style={{ textAlign: "right" }}>{score.score}</td>
           </tr>
         ))}

@@ -107,7 +107,7 @@ export const FrogCryptoFolderName = "FrogCrypto";
  * User score data and computed rank
  */
 export interface FrogCryptoScore {
-  telegram_username?: string;
-  score: string;
-  rank: string;
+  telegram_username: string | null;
+  score: number;
+  rank: number;
 }

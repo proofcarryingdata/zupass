@@ -79,8 +79,8 @@ export function initFrogcryptoRoutes(
     );
   });
 
-  app.get("/frogcrypto/scores", async (req, res) => {
-    const result = await frogcryptoService.getScores();
+  app.get("/frogcrypto/scoreboard", async (req, res) => {
+    const result = await frogcryptoService.getScoreboard();
     res.json(result);
   });
 

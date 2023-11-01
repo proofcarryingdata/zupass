@@ -641,7 +641,7 @@ export interface FrogCryptoComputedUserState {
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
   possibleFrogCount: number;
-  score?: FrogCryptoScore;
+  myScore?: FrogCryptoScore;
 }
 
 /**

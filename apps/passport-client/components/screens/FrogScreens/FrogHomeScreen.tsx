@@ -80,7 +80,9 @@ export function FrogHomeScreen() {
             <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
           </SuperFunkyFont>
 
-          {userState?.score?.score && <Score>Score {userState?.score?.score}</Score>}
+          {userState?.myScore?.score && (
+            <Score>Score {userState?.myScore?.score}</Score>
+          )}
 
           {frogSubs.length === 0 && (
             <ActionButton onClick={initFrog}>light fire</ActionButton>
@@ -115,7 +117,7 @@ export function FrogHomeScreen() {
                     pcds={frogPCDs}
                   />
                 )}
-                {tab === "score" && <ScoreTab  score={userState?.score}/>}
+                {tab === "score" && <ScoreTab score={userState?.myScore} />}
                 {tab === "dex" && (
                   <DexTab
                     possibleFrogCount={userState.possibleFrogCount}

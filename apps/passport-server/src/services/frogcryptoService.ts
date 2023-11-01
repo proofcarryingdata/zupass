@@ -3,13 +3,14 @@ import {
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoFrogData,
+  FrogCryptoScore,
   FrogCryptoUpdateFrogsRequest,
   FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
   FrogCryptoUserStateResponseValue,
   verifyFeedCredential
 } from "@pcd/passport-interface";
-import { FrogCryptoFrogData, FrogCryptoScore} from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -23,8 +24,8 @@ import {
   fetchUserFeedsState,
   getFrogData,
   getPossibleFrogCount,
-  getScore,
-  getScores,
+  getScoreboard,
+  getUserScore,
   incrementScore,
   initializeUserFeedState,
   sampleFrogData,
@@ -84,7 +85,7 @@ export class FrogcryptoService {
         this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
       ),
       possibleFrogCount: await getPossibleFrogCount(this.context.dbPool),
-      score: await getScore(this.context.dbPool, semaphoreId)
+      myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }
 
@@ -181,8 +182,8 @@ export class FrogcryptoService {
   /**
    * Return default number of top scores.
    */
-  public async getScores(): Promise<FrogCryptoScore[]> {
-    return getScores(this.context.dbPool);
+  public async getScoreboard(): Promise<FrogCryptoScore[]> {
+    return getScoreboard(this.context.dbPool);
   }
 
   private computeUserFeedState(
